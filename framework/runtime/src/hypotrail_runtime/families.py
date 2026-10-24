@@ -43,6 +43,23 @@ QUALIFIED = tuple(name for name, f in FAMILIES.items() if f['qualified'])
 REQUIRED_SEEDS = {'logistic': ('estimator',)}
 
 
+def normalized_parameters(family: Any, parameters: Any) -> Any:
+    """``parameters`` with every integer given for a real-valued parameter of a registered
+    family written as a float (``C=1`` and ``C=1.0`` are one estimator, so one recipe id).
+    Anything else (an unknown family or parameter, a boolean, a string) is returned as is,
+    for validation to judge."""
+    spec = FAMILIES.get(family) if isinstance(family, str) else None
+    if not spec or not spec['parameters'] or not isinstance(parameters, Mapping):
+        return parameters
+    out = dict(parameters)
+    for name, value in parameters.items():
+        declared = spec['parameters'].get(name)
+        if declared is not None and float in declared[0] and isinstance(value, int) \
+                and not isinstance(value, bool):
+            out[name] = float(value)
+    return out
+
+
 def parameter_issues(task: str, family: str, parameters: Mapping[str, Any]) -> list[dict]:
     spec = FAMILIES.get(family)
     if spec is None:

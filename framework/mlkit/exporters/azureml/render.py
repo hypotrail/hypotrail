@@ -40,6 +40,7 @@ EXPORT_SCHEMA = 'hypotrail.export_manifest/1'
 READINESS_SCHEMA = 'hypotrail.export_readiness/1'
 MARKER = re.compile(r'@@([a-z]+):([a-z0-9_]+)@@')
 MISSING = 'MISSING-'
+OMEGACONF_MISSING = '???'
 KINDS = ('preserved', 'adapted', 'rendered', 'added', 'shared', 'generated', 'copied')
 MANIFEST_PATH = 'data/hypotrail/contracts/export-manifest.json'
 SUMS_PATH = 'data/hypotrail/SHA256SUMS'
@@ -390,11 +391,12 @@ def _shared(module: str) -> bytes:
 
 
 def _no_interpolation(value, path: str) -> None:
-    """A scientific value rendered into Hydra YAML may not look like an interpolation."""
-    if isinstance(value, str) and ('${' in value or '@@' in value):
+    """A scientific value rendered into Hydra YAML may not look like an interpolation, nor
+    be OmegaConf's mandatory-missing marker ``???`` (read back as a missing value)."""
+    if isinstance(value, str) and ('${' in value or '@@' in value or value == OMEGACONF_MISSING):
         raise ExportError('contract_invalid', 'A recipe or plan value contains "${" or "@@", '
-                          'which the project configuration would interpret.', path=path,
-                          remediation='Rename the value in the study.')
+                          'or is "???", which the project configuration would interpret.',
+                          path=path, remediation='Rename the value in the study.')
     if isinstance(value, Mapping):
         for key, item in value.items():
             _no_interpolation(key, f'{path}.{key}')

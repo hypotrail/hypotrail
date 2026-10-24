@@ -9,8 +9,10 @@ contract must also hash, canonically, to the identities frozen in the configurat
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import math
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -166,19 +168,38 @@ def _na_tokens(contract: dict) -> set[str]:
     return {str(v) for v in parser.get("na_values") or []}
 
 
-def _convert(value: str, column: dict, na: set[str]) -> object:
+def _decimal(contract: dict) -> str:
+    return str((contract.get("parser") or {}).get("decimal") or ".")
+
+
+@functools.lru_cache(maxsize=4)
+def _number_pattern(decimal: str) -> re.Pattern:
+    """Return the pattern of the decimal numbers pandas reads (the engine's reader).
+
+    ASCII digits, the contract's decimal mark, an optional exponent, surrounding spaces or
+    tabs; no ``_`` separator, no other decimal mark, no hexadecimal, no non-ASCII digit.
+    """
+    d = re.escape(decimal)
+    return re.compile(rf"[ \t]*[+-]?(?:\d+(?:{d}\d*)?|{d}\d+)(?:[eE][+-]?\d+)?[ \t]*", re.ASCII)
+
+
+INTEGER = re.compile(r"[ \t]*[+-]?\d+[ \t]*", re.ASCII)
+
+
+def _convert(value: str, column: dict, na: set[str], decimal: str = ".") -> object:
     """Convert one text value as declared; return ``None`` for a declared NA token."""
     if value in na or value == "":
         return None
     kind = str(column.get("physical_type"))
     if kind in ("int64", "int32"):
-        text = value.strip()
-        text = text.removesuffix(".0")
-        if not text.lstrip("-").isdigit():
+        text = value.strip(" \t").removesuffix(decimal + "0")
+        if not INTEGER.fullmatch(text):
             raise ValueError(value)
         return int(text)
     if kind in ("float64", "float32"):
-        number = float(value)
+        if not _number_pattern(decimal).fullmatch(value):
+            raise ValueError(value)
+        number = float(value.strip(" \t").replace(decimal, "."))
         if not math.isfinite(number):
             raise ValueError(value)
         return number
@@ -190,13 +211,15 @@ def _convert(value: str, column: dict, na: set[str]) -> object:
     return value
 
 
-def _column_values(column: dict, keys: list[str], raws: list[str], na: set[str], problems: list) -> list:
+def _column_values(
+    column: dict, keys: list[str], raws: list[str], na: set[str], problems: list, decimal: str = ".",
+) -> list:
     """Convert one column, recording each value that breaks the contract in ``problems``."""
     values = []
     allowed = column.get("allowed_values")
     for key, raw in zip(keys, raws, strict=True):
         try:
-            value = _convert(raw, column, na)
+            value = _convert(raw, column, na, decimal)
         except ValueError:
             problems.append({"row_key": key, "column": column["name"], "problem": "not_convertible"})
             value = None
@@ -231,7 +254,8 @@ def typed_frame(frame: pd.DataFrame, contract: dict) -> pd.DataFrame:
     problems: list = []
     out = {KEY_COLUMN: keys}
     for column in columns:
-        out[column["name"]] = _column_values(column, keys, frame[column["name"]].astype(str).tolist(), na, problems)
+        raws = frame[column["name"]].astype(str).tolist()
+        out[column["name"]] = _column_values(column, keys, raws, na, problems, _decimal(contract))
     if problems:
         raise ProjectError(
             "contract_invalid",
@@ -269,7 +293,7 @@ def typed_features(path: Path, contract: dict) -> pd.DataFrame:
     for name in frame.columns:
         column = declared.get(name)
         raws = frame[name].astype(str).tolist()
-        out[name] = _column_values(column, keys, raws, na, problems) if column else raws
+        out[name] = _column_values(column, keys, raws, na, problems, _decimal(contract)) if column else raws
     if problems:
         raise ProjectError(
             "contract_invalid",

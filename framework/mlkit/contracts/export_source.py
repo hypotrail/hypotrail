@@ -9,11 +9,23 @@ registry entries and the bundle manifests. Raw data and final-test labels never 
   open proposals and the junior's words are not exported;
 * ``results``: the current slots with their currency (a stale result stays listed, marked
   not current: earlier evidence is kept, never presented as current);
-* ``predictor``: ``captured`` (a current capture: id, bundle, digests, profile, packages),
-  ``stale`` (a capture that no longer describes current state), ``not_captured`` (no capture:
-  the recipe can be described but no model is invented), or ``not_applicable`` (a study
-  created before the final test existed). ``evidence_status`` is ``evaluated`` only when the
-  final evaluation scored that very predictor;
+* ``predictor``: ``captured`` (a current capture of the confirmed selection: id, bundle,
+  digests, profile, packages), ``stale`` (a capture that no longer describes current state,
+  or that captured another selection than the confirmed one: another configuration, or a
+  confirmation at another revision), ``not_captured`` (no capture: the recipe can be
+  described but no model is invented), or ``not_applicable`` (a study created before the
+  final test existed). ``evidence_status`` is ``evaluated`` only when the final evaluation
+  scored that very predictor and it is still the captured selection;
+* ``scientific_contracts``: the captured bundle's recipe and data contract only when the
+  predictor is ``captured``; otherwise the recipe of the confirmed configuration (never the
+  recipe of a superseded capture);
+* ``study_id``: a stable identity of the study, independent of the folder it is read from:
+  the first 16 hex digits of the SHA-256 of the canonical JSON of its creation time, case
+  id, dataset SHA-256 and final-test partition seed (the same study copied elsewhere has the
+  same id);
+* ``development_plan.n_source_records``: the number of records the engine read in the
+  source file (development, final test and excluded rows), so a reader of the file can
+  check it splits records as the engine did;
 * ``limitations``: what the export cannot claim.
 """
 from __future__ import annotations
@@ -28,14 +40,21 @@ CAPTURE = 'predictor.capture'
 FINAL = 'final_test.evaluation'
 
 
-def _limitations(predictor: dict, opened: bool) -> list[str]:
+def _limitations(predictor: dict, opened: bool, superseded: bool = False) -> list[str]:
     out = ['A development-row parity set checks reproduction, not generalisation.']
     if predictor['status'] == 'not_captured':
         out.append('No predictor was captured: the export can describe the recipe only; no '
                    'model is rebuilt or presented as evaluated.')
     if predictor['status'] == 'stale':
-        out.append('The captured predictor no longer describes current state: it is kept as '
-                   'history, not as the current model.')
+        if superseded:
+            out.append('The captured predictor is not the confirmed selection (another model '
+                       'or a later confirmation): it is not exported as the selected model.')
+        else:
+            out.append('The captured predictor no longer describes current state: it is kept '
+                       'as history, not as the current model.')
+        if opened:
+            out.append('The final test evaluated an earlier predictor: its verdict is not '
+                       'inherited by the recipe of the current selection.')
     if not opened:
         out.append('The final test is sealed: no independent evidence exists yet.')
     elif predictor['evidence_status'] != 'evaluated':
@@ -100,7 +119,7 @@ def _contracts(store, state, predictor: dict, limitations: list) -> dict:
     development rows are read, no value is used), when the model has no tuned
     hyperparameter. A tuned model's value exists only after a fit: no recipe is invented."""
     import json
-    if predictor['bundle_dir'] is not None:
+    if predictor['status'] == 'captured' and predictor['bundle_dir'] is not None:
         from hypotrail_runtime import verify_bundle
         desc = verify_bundle(Path(predictor['bundle_dir']))
         bundle = Path(predictor['bundle_dir'])
@@ -181,6 +200,30 @@ def _conclusion(state) -> dict | None:
             'revision': d.get('revision')}
 
 
+def _study_id(state) -> str:
+    """A stable identity of the study (see the module docstring), not its folder path."""
+    import json
+    basis = {'created': state.get('created'), 'case_id': (state.get('case') or {}).get('id'),
+             'dataset_sha256': (state.get('dataset') or {}).get('sha256'),
+             'partition_seed': (state.get('partition') or {}).get('seed')}
+    text = json.dumps(basis, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()[:16]
+
+
+def _captures_selection(state, entry: dict) -> bool:
+    """Whether a capture registry entry captured the selection confirmed now: the same
+    configuration, from the same confirmation (decision and revision)."""
+    from mlkit.study import state as st
+    config = st.choice_config(state)
+    choice = st.choice_decision(state)
+    decision = state['decisions'].get(choice) or {}
+    reference = entry['inputs'].get('selection_reference') or {}
+    return (config is not None and decision.get('status') == 'confirmed'
+            and entry['inputs'].get('configuration') == dict(config)
+            and reference.get('decision_id') == choice
+            and reference.get('revision') == decision.get('revision'))
+
+
 def read_export_source(study_path, expected_revision: int) -> ExportSource:
     from mlkit.study import read, registry, state as st
     from mlkit.study.store import StudyStore
@@ -215,11 +258,13 @@ def read_export_source(study_path, expected_revision: int) -> ExportSource:
     if not st.has_wp_b1_decisions(state):
         predictor['status'] = 'not_applicable'
     capture_rid = state['current'].get(CAPTURE)
+    superseded = False
     if capture_rid is not None:
         entry = registry.get(store, capture_rid)
         values = entry['output']['values']
         current = study.currency(capture_rid)['current']
-        predictor.update(status='captured' if current else 'stale',
+        superseded = not _captures_selection(state, entry)
+        predictor.update(status='captured' if current and not superseded else 'stale',
                          predictor_id=values['predictor_id'], capture_result_id=capture_rid,
                          bundle_dir=str(Path(store.home) / values['bundle']),
                          recipe_sha256=values['recipe_sha256'],
@@ -230,8 +275,9 @@ def read_export_source(study_path, expected_revision: int) -> ExportSource:
             final = registry.get(store, final_rid)
             used = (final['inputs'].get('predictor') or {}).get('predictor_id')
             if used == values['predictor_id']:
-                predictor['evidence_status'] = 'evaluated' if study.currency(final_rid)[
-                    'current'] else 'stale'
+                evaluated = (predictor['status'] == 'captured'
+                             and study.currency(final_rid)['current'])
+                predictor['evidence_status'] = 'evaluated' if evaluated else 'stale'
     split = state['decisions'].get('split') or {}
     part = state.get('partition') or {}
     final_test = {'status': 'opened' if opened else ('sealed' if part else 'absent'),
@@ -242,11 +288,12 @@ def read_export_source(study_path, expected_revision: int) -> ExportSource:
             'configuration': st.choice_config(state),
             'protocol_id': _protocol(split),
             'partitions': _partitions(store, state, results),
-            'final_test': {'status': final_test['status'], 'n_rows': final_test['n_rows']}}
-    limitations = _limitations(predictor, opened)
+            'final_test': {'status': final_test['status'], 'n_rows': final_test['n_rows']},
+            'n_source_records': part.get('n_rows')}
+    limitations = _limitations(predictor, opened, superseded)
     contracts = _contracts(store, state, predictor, limitations)
     doc = {'schema_version': 'hypotrail.export_source/1',
-           'study_id': hashlib.sha256(str(Path(study_path).resolve()).encode()).hexdigest()[:16],
+           'study_id': _study_id(state),
            'revision': study.revision, 'task': st.task_of(state),
            'case': _case(state),
            'dataset_sha256': state['dataset']['sha256'], 'scientific_contracts': contracts,

@@ -956,6 +956,8 @@ hypotrail export azureml --study DIR --expected-revision REV [--profile FILE]
 
 Implemented in `framework/mlkit/exporters/azureml/` (handoff: `docs/handoff/AZUREML-EXPORT-V1.md`); `cmd_export` only routes it. It reads one revision through chantier A's `read_export_source(study_path, expected_revision)` and never fits, evaluates, reads the final test, contacts Azure or changes the study (no state, event, exposure or channel record). Payload `hypotrail.azureml_export/1`, keys `schema`, `ok`, `plan`, `study_revision`, `snapshot_id`, `export_id`, `out`, `template`, `files`, `configuration_status` (`draft` or `configured`), `artifact_status` (`missing`, `captured` or `packaged`), `checks`, `missing_fields`, `warnings`, `next_commands` (each with `scope` `local`, `network_read` or `azure_write`). `--plan` writes nothing. A refusal is `hypotrail.error/1`, exit code 2, nothing written; its `details` carry `path` and `remediation`. Codes: the existing `stale_revision`, `export_target_exists` (contract code `destination_not_empty` in `details.contract_code`), `read_only` and `invalid_arguments`; and `contract_invalid`, `schema_version_unsupported`, `capability_not_supported`, `optional_dependency_missing`, `model_not_captured`, `artifact_integrity_failed`, `environment_unqualified`, `scientific_config_changed`, `template_layout_mismatch`, `template_unsupported`, `data_identity_mismatch`. These codes are emitted by `mlkit.exporters` (outside `mlkit/study`, so `test_contract_freeze.py` does not scan them); `framework/tests/exporters/azureml/` pins them.
 
+A `hypotrail_runtime` `ContractError` raised while the study is read (a stale `--expected-revision` included) is a refusal like any other: exit code 2, the export code of the same name (`contract_invalid` for a contract code the export does not answer with), and `details.contract_code`, `details.path`, `details.remediation`. Only a capture of the selection confirmed now (same configuration, same confirmation revision) is exported as the selected model: a superseded capture is refused with `model_not_captured` while the final test is sealed (it can be captured again), and is exported recipe-only (`artifact_status: missing`, verdict not inherited) after the opening; a recipe whose `selection_reference` is not the confirmed decision's revision is `contract_invalid` (`details.reason: selection_not_current_decision`); a study that describes no recipe is `capability_not_supported` (`details.reason: no_recipe`) with a remediation the junior can follow. Review fixes of 24 October 2026: `docs/handoff/AZUREML-EXPORT-V1.md` §11.
+
 ## 16. Understanding and handover review (ADR 0008)
 
 Opt-in, **off** by default: a study without `understanding` in its state behaves exactly as
@@ -982,7 +984,8 @@ Payloads: `hypotrail.understanding/1` (stdout of every verb except `verify-expor
 | `handover set --session ID --file F` | mutation | `HandoverContent`; a change stales earlier transfers |
 | `transfer start/submit/review` | mutation | the peer's own task, references and human review |
 | `close --session ID --to STATUS --reason T` | mutation | `active`, `awaiting_review`, `completed`, `abandoned` |
-| `check --milestone M [--policy-file F]` | read | `hypotrail.understanding-gate/1`; informative, never an authorisation |
+| `check --milestone M [--policy-file F] [--repo DIR]` | read | `hypotrail.understanding-gate/1`; informative, never an authorisation; `--repo` is a preview (`repo_note`): the protected action reads each session's recorded repository |
+| `relocate --session ID --repo DIR` | mutation | records the new place of a moved repository for that session (digests unchanged); `check` and `export handoff` then read it |
 | `export preview --session ID --repo DIR` | read | the draft and its `content_digest`, the required contributors |
 | `export approve --session ID --contributor ID --content-digest D` | mutation | one declared approval of exactly that projection |
 | `export write --session ID --repo DIR [--latest]` | mutation | intent, immutable generation `docs/understanding/<review_id>/`, receipt |
@@ -1006,7 +1009,13 @@ pack from that revision into a temporary folder, revalidates under the lock, ren
 `--out` (never a replacement), records the outcome (one revision) and adds
 `understanding: {milestone, decision, reservation_id, assurance, limitations}` to its
 payload. A relevant change in between refuses with `context_changed` and leaves the folder
-as `<out>.candidate-<id>`, never a handoff.
+as `<out>.candidate-<id>`, never a handoff. Revisions made in between by other handoffs
+(their own reservations and records) are not relevant changes, so concurrent handoffs each
+publish. `--expected-revision` is checked against the study before the reservation; the
+pack is then rendered at the reservation's revision, one more than the one given (the
+ungated contract renders at the given revision). Without `--expected-revision`, a
+reservation that loses a race to another write is retried on the new revision (at most three
+times).
 
 State: optional top-level key `understanding` (`hypotrail.understanding-state/1`), §9; a
 newer version is read as `unsupported` and never written. Schemas of the exported review and

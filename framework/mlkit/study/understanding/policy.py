@@ -184,6 +184,10 @@ def _validate(doc: Any) -> dict:
                        field='role_policy/arbiters')
     if doc['mode'] == 'required' and not milestones:
         raise _invalid('A required policy names at least one milestone.', field='milestones')
+    if doc['mode'] == 'required' and (not required or not all(profiles.values())):
+        raise _invalid('A required policy requires something: required dimensions, and at '
+                       'least one dimension per responsibility profile.',
+                       field='required_dimensions')
     canonical.dumps(doc)
     return dict(doc)
 

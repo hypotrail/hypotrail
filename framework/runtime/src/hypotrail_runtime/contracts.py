@@ -58,14 +58,71 @@ def _finite(value: Any, path: str = '') -> None:
             _finite(v, f'{path}/{i}')
 
 
+class FrozenDict(dict):
+    """A ``dict`` that refuses mutation: the containers of a validated contract (review A,
+    2026-10-24). It is still a ``dict`` for Pydantic, ``json`` and the canonical form; a copy
+    (``dict(x)``, ``model_dump``) is an ordinary mutable dict."""
+    __slots__ = ()
+
+    def _refuse(self, *args, **kwargs):
+        raise TypeError('a validated contract is immutable; build a new document instead')
+
+    __setitem__ = __delitem__ = __ior__ = _refuse
+    clear = pop = popitem = setdefault = update = _refuse
+
+    def __reduce__(self):
+        return (FrozenDict, (dict(self),))
+
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, memo):
+        return self
+
+
+class FrozenList(list):
+    """A ``list`` that refuses mutation (see :class:`FrozenDict`)."""
+    __slots__ = ()
+
+    def _refuse(self, *args, **kwargs):
+        raise TypeError('a validated contract is immutable; build a new document instead')
+
+    __setitem__ = __delitem__ = __iadd__ = __imul__ = _refuse
+    append = clear = extend = insert = pop = remove = reverse = sort = _refuse
+
+    def __reduce__(self):
+        return (FrozenList, (list(self),))
+
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, memo):
+        return self
+
+
+def _freeze(value: Any) -> Any:
+    if isinstance(value, (FrozenDict, FrozenList)):
+        return value
+    if isinstance(value, dict):
+        return FrozenDict({k: _freeze(v) for k, v in value.items()})
+    if isinstance(value, list):
+        return FrozenList(_freeze(v) for v in value)
+    return value
+
+
 class Contract(BaseModel):
-    """Base of every v1 contract model."""
+    """Base of every v1 contract model. A validated contract is immutable all the way down:
+    the model is frozen and its dict and list fields refuse mutation, so its digest cannot
+    change after validation."""
     model_config = ConfigDict(strict=True, extra='forbid', frozen=True, allow_inf_nan=False,
                               validate_default=True)
 
     @model_validator(mode='after')
     def _no_non_finite(self):
         _finite(self.model_dump(mode='python'))
+        for name, value in self.__dict__.items():
+            if isinstance(value, (dict, list)):
+                object.__setattr__(self, name, _freeze(value))
         return self
 
     def canonical(self) -> bytes:
@@ -123,6 +180,8 @@ class SelectionReference(Part):
 
 
 class ModelRecipe(Contract):
+    """A recipe. An integer given for a real-valued parameter of a registered family is read
+    as a float before validation (``C=1`` and ``C=1.0`` give one recipe id)."""
     schema_version: Literal['hypotrail.model_recipe/1']
     task: Task
     family: NAME
@@ -139,6 +198,15 @@ class ModelRecipe(Contract):
     method_contract_version: NAME
     runtime_api_version: NAME
     extensions: Extensions = Field(default_factory=dict)
+
+    @model_validator(mode='before')
+    @classmethod
+    def _real_parameters(cls, data):
+        from .families import normalized_parameters
+        if isinstance(data, Mapping) and 'parameters' in data:
+            data = {**data, 'parameters': normalized_parameters(data.get('family'),
+                                                                data['parameters'])}
+        return data
 
 
 # --- DataContract (§3) ----------------------------------------------------------------------

@@ -124,7 +124,7 @@ def current_for(store: StudyStore, state: Mapping, ext: Mapping, *, repo_overrid
     def run(session: Mapping) -> Mapping:
         if session['session_id'] not in cache:
             plan = session_plan(store, session)
-            repo = repo_override or plan.get('repo')
+            repo = repo_override or session.get('repo_override') or plan.get('repo')
             if repo and not Path(repo).is_dir():
                 repo = None
             doc = capture(state, ext, policy_digest=session['policy_digest'],

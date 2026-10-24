@@ -125,8 +125,10 @@ def _start(ctx) -> Handler:
         actor = model.actor(plan['actor_declared_id'], 'actor_declared_id')
         dims = pol.author_dimensions(doc, plan['profile'])
         previous = plan.get('previous_session_id')
-        if previous is not None:
-            _session(ext, previous)
+        if previous is not None and \
+                _session(ext, previous)['actor_declared_id'] != plan['actor_declared_id']:
+            raise refuse('evidence_invalid', 'A linked session continues a session of the same '
+                         'person.', 'Link to a session of this author, or none.')
         sid = model.new_id('us', ctx.request_id)
         ext['sessions'][sid] = {
             'session_id': sid, 'status': 'active', 'actor_declared_id': actor,
@@ -139,7 +141,7 @@ def _start(ctx) -> Handler:
             'plan_blob': params['plan_sha'], 'snapshot_blob': params['snapshot_sha'],
             'local_snapshot_digest': cap['local_snapshot_digest'],
             'source_scope_digest': cap['source_scope_digest'],
-            'created_revision': _rev(state), 'created_at': sv.now(),
+            'created_revision': _rev(state), 'created_at': sv.now(), 'repo_override': None,
             'previous_session_id': previous,
             'transitions': [{'to': 'active', 'revision': _rev(state), 'reason': 'started'}]}
         return {'session_id': sid, 'status': 'active', 'dimensions': dims,
@@ -300,6 +302,7 @@ def _coach(ctx) -> Handler:
 
 def _rectify(ctx) -> Handler:
     def run(state, params):
+        sv.require_mode(ctx.store, state)
         ext = model.require_writable(state)
         a = ext['attempts'].get(params['attempt_id'])
         if a is None:
@@ -326,6 +329,7 @@ def _propose(ctx) -> Handler:
         sv.require_mode(ctx.store, state)
         ext = model.require_writable(state)
         s = _session(ext, params['session_id'])
+        _need_status(s, 'active', 'awaiting_review')
         doc = sv.blob_json(ctx.store, params['proposal_sha'], 'proposal')
         if not isinstance(doc, Mapping) or set(doc) != set(PROPOSAL_KEYS):
             raise refuse('evidence_invalid', 'A proposal has the keys '
@@ -523,7 +527,7 @@ def _review(ctx) -> Handler:
             for rid in resolves:
                 r = ext['reservations'].get(rid)
                 if r is None or r['status'] != 'open' or r['actor'] != actor \
-                        or r['dimension_id'] != dim:
+                        or r['dimension_id'] != dim or r.get('origin') == 'transfer':
                     raise refuse('evidence_invalid', 'resolves_reservation_ids names no open '
                                  'reservation of this person and dimension.',
                                  'Name the open reservation.')
@@ -592,6 +596,7 @@ def _arbitrate(ctx) -> Handler:
         doc_policy = sv.require_mode(ctx.store, state)
         ext = model.require_writable(state)
         s = _session(ext, params['session_id'])
+        _need_status(s, 'active', 'awaiting_review', 'completed')
         doc = sv.blob_json(ctx.store, params['arbitration_sha'], 'arbitration')
         if not isinstance(doc, Mapping) or set(doc) != set(ARBITRATION_KEYS):
             raise refuse('review_required', 'An arbitration has the keys '
@@ -633,16 +638,30 @@ def _arbitrate(ctx) -> Handler:
         if len(actors) > 1 or len(dims) > 1:
             raise refuse('evidence_invalid', 'One arbitration settles one person and one '
                          'dimension.', 'Split the arbitration.')
-        if arbiter in actors and dims & set(doc_policy['critical_dimensions']):
+        # The session's own policy and the current one both apply (the stricter wins): a
+        # policy toggled in between never relaxes who may arbitrate.
+        session_policy = sv.blob_json(ctx.store, s['policy_blob'], 'policy')
+        critical = set(doc_policy['critical_dimensions']) | \
+            set(session_policy['critical_dimensions'])
+        if arbiter in actors and dims & critical:
             raise refuse('review_required', 'On a critical dimension the arbiter is not the '
                          'person reviewed.', 'Ask another declared person.')
+        parties = {d['reviewer_declared_id'] for d in decisions}
+        if arbiter in parties:
+            raise refuse('review_required', 'A reviewer whose decision is in the conflict does '
+                         'not arbitrate it.', 'Ask a third declared person.')
+        evidence = _check_refs(doc['evidence_refs'], _allowed_refs(ctx.store, s),
+                               'evidence_refs')
+        if reservations and not ids and not evidence:
+            raise refuse('evidence_invalid', 'Settling a reservation without a conflict rests '
+                         'on identified evidence (spec §09).', 'Cite the evidence.')
         aid = model.new_id('uarb', ctx.request_id)
         ext['arbitrations'][aid] = {
             'arbitration_id': aid, 'session_id': s['session_id'],
             'conflicting_decision_ids': ids, 'reservation_ids': reservations,
             'chosen_decision_id': chosen, 'arbiter_declared_id': arbiter,
             'rationale': model.text(doc['rationale'], 'rationale', limit=4000),
-            'evidence_refs': model.str_list(doc['evidence_refs'], 'evidence_refs'),
+            'evidence_refs': evidence,
             'policy_digest': s['policy_digest'], 'snapshot_digest': s['local_snapshot_digest'],
             'declaration': declaration, 'simulated': doc['simulated'],
             'recorded_revision': _rev(state)}
@@ -657,6 +676,24 @@ def _arbitrate(ctx) -> Handler:
 
 SELECTION_KEYS = ('milestone', 'actor_scope', 'dimension_decision_map',
                   'transfer_decision_map', 'reservation_resolution_refs')
+
+
+def _selected(ext, field, kind, dim, did, actor) -> None:
+    d = ext['decisions'].get(did)
+    if d is None or d['kind'] != kind:
+        raise refuse('evidence_invalid', f'{field} names an unknown decision.',
+                     'Name recorded decisions.', dimension=dim)
+    session = ext['sessions'].get(d['session_id'])
+    if session is None or session['status'] != 'completed':
+        raise refuse('invalid_transition', 'Only decisions of completed sessions can be '
+                     'selected; an active or awaiting session satisfies no required milestone.',
+                     'Close the session first.', dimension=dim)
+    if kind == 'attempt' and (d['reviewed_actor_id'] != actor or d['dimension_id'] != dim):
+        raise refuse('evidence_invalid', 'A selected decision is about another person or '
+                     'dimension.', 'Correct the map.', dimension=dim)
+    if kind == 'transfer' and dim not in d['dimension_ids']:
+        raise refuse('evidence_invalid', 'A selected transfer review does not cover this '
+                     'dimension.', 'Correct the map.', dimension=dim)
 
 
 def _select(ctx) -> Handler:
@@ -681,25 +718,16 @@ def _select(ctx) -> Handler:
             if not isinstance(m, Mapping) or any(k not in DIMENSIONS for k in m):
                 raise refuse('evidence_invalid', f'{field} maps dimension ids to decision ids.',
                              'Correct the map.')
-            for dim, did in m.items():
-                d = ext['decisions'].get(did)
+            for dim, value in m.items():
                 kind = 'attempt' if field == 'dimension_decision_map' else 'transfer'
-                if d is None or d['kind'] != kind:
-                    raise refuse('evidence_invalid', f'{field} names an unknown decision.',
-                                 'Name recorded decisions.', dimension=dim)
-                session = ext['sessions'].get(d['session_id'])
-                if session is None or session['status'] != 'completed':
-                    raise refuse('invalid_transition', 'Only decisions of completed sessions '
-                                 'can be selected; an active or awaiting session satisfies no '
-                                 'required milestone.', 'Close the session first.',
-                                 dimension=dim)
-                if kind == 'attempt' and (d['reviewed_actor_id'] != actor
-                                          or d['dimension_id'] != dim):
-                    raise refuse('evidence_invalid', 'A selected decision is about another '
-                                 'person or dimension.', 'Correct the map.', dimension=dim)
-                if kind == 'transfer' and dim not in d['dimension_ids']:
-                    raise refuse('evidence_invalid', 'A selected transfer review does not cover '
-                                 'this dimension.', 'Correct the map.', dimension=dim)
+                ids_ = [value] if isinstance(value, str) or kind == 'attempt' else value
+                if not isinstance(ids_, list) or not ids_ or \
+                        not all(isinstance(x, str) for x in ids_) or len(set(ids_)) != len(ids_):
+                    raise refuse('evidence_invalid', f'{field} maps a dimension to a decision '
+                                 'id (a list of distinct ids for transfers).',
+                                 'Correct the map.', dimension=dim)
+                for did in ids_:
+                    _selected(ext, field, kind, dim, did, actor)
         model.str_list(doc['reservation_resolution_refs'], 'reservation_resolution_refs')
         sid = model.new_id('usel', ctx.request_id)
         record = {'selection_id': sid, 'milestone': doc['milestone'],
@@ -779,6 +807,7 @@ def _handover(ctx) -> Handler:
         sv.require_mode(ctx.store, state)
         ext = model.require_writable(state)
         s = _session(ext, params['session_id'])
+        _need_status(s, 'active', 'awaiting_review')
         doc = handover_content(sv.blob_json(ctx.store, params['content_sha'], 'handover'))
         _check_refs(doc['source_refs'], _allowed_refs(ctx.store, s), 'source_refs')
         hid = model.new_id('uh', ctx.request_id)
@@ -788,7 +817,7 @@ def _handover(ctx) -> Handler:
                                  'author_declared_id': s['actor_declared_id'],
                                  'recorded_revision': _rev(state)}
         stale = [t['transfer_id'] for t in ext['transfers'].values()
-                 if t['session_id'] == s['session_id']
+                 if t['author_declared_id'] == s['actor_declared_id']
                  and t['input_note_digest'] != canonical.digest(doc)]
         return {'handover_id': hid, 'digest': canonical.digest(doc),
                 'previous_digest': previous, 'transfers_now_stale': sorted(stale)}
@@ -800,6 +829,7 @@ def _transfer_start(ctx) -> Handler:
         sv.require_mode(ctx.store, state)
         ext = model.require_writable(state)
         s = _session(ext, params['session_id'])
+        _need_status(s, 'active', 'awaiting_review')
         peer = model.actor(params['peer_declared_id'], 'peer_declared_id')
         if peer == s['actor_declared_id']:
             raise refuse('evidence_invalid', 'The peer and the author have the same declared id; '
@@ -836,6 +866,7 @@ def _transfer_submit(ctx) -> Handler:
             raise refuse('invalid_transition', 'The handover task is unknown or already '
                          'answered.', 'Start a new handover task.')
         s = _session(ext, t['session_id'])
+        _need_status(s, 'active', 'awaiting_review')
         if not sv.blob_ok(ctx.store, params['response_sha']):
             raise refuse('evidence_invalid', 'The answer was not stored.', 'Submit again.')
         doc = sv.blob_json(ctx.store, params['evidence_sha'], 'evidence')
@@ -872,8 +903,12 @@ def _transfer_review(ctx) -> Handler:
         if t is None or t['status'] != 'answered':
             raise refuse('invalid_transition', 'A handover task is reviewed once answered.',
                          'Wait for the peer\'s answer.')
+        _need_status(_session(ext, t['session_id']), 'active', 'awaiting_review')
         doc = sv.blob_json(ctx.store, params['review_sha'], 'transfer review')
-        if not isinstance(doc, Mapping) or set(doc) != set(TRANSFER_REVIEW_KEYS):
+        if isinstance(doc, Mapping) and 'resolves_reservation_ids' not in doc:
+            doc = {**doc, 'resolves_reservation_ids': []}
+        if not isinstance(doc, Mapping) or set(doc) != set(TRANSFER_REVIEW_KEYS) | {
+                'resolves_reservation_ids'}:
             raise refuse('review_required', 'A handover review has the keys '
                          + ', '.join(TRANSFER_REVIEW_KEYS) + '.', 'Collect the human review.')
         reviewer = model.actor(doc['reviewer_declared_id'], 'reviewer_declared_id')
@@ -888,6 +923,16 @@ def _transfer_review(ctx) -> Handler:
         if doc['status'] not in TRANSFER_STATUSES:
             raise refuse('evidence_invalid', 'status is ' + ', '.join(TRANSFER_STATUSES) + '.',
                          'Correct the status.')
+        resolves = model.str_list(doc['resolves_reservation_ids'], 'resolves_reservation_ids')
+        for rid in resolves:
+            r = ext['reservations'].get(rid)
+            if r is None or r['status'] != 'open' or r.get('origin') != 'transfer' \
+                    or r['actor'] != t['author_declared_id'] or r['dimension_id'] not in dims \
+                    or r.get('transfer_id') == t['transfer_id'] \
+                    or doc['status'] != 'demonstrated':
+                raise refuse('evidence_invalid', 'A handover reservation is resolved by a '
+                             'demonstrated review of another, later handover task on the same '
+                             'dimension.', 'Run a new handover task.')
         did = model.new_id('udt', ctx.request_id)
         s = _session(ext, t['session_id'])
         ext['decisions'][did] = {
@@ -900,7 +945,23 @@ def _transfer_review(ctx) -> Handler:
             'simulated': doc['simulated'], 'assurance': pol.SUPPORTED_ASSURANCE,
             'recorded_revision': _rev(state), 'reviewed_at': sv.now()}
         t.update(human_review_ref=did, status='reviewed')
-        return {'decision_id': did, 'status': doc['status']}
+        for rid in resolves:
+            ext['reservations'][rid].update(status='resolved', resolved_by=did,
+                                            resolved_revision=_rev(state))
+        opened = []
+        if doc['status'] != 'demonstrated':
+            # A handover that did not succeed is a reservation on the author's dimension: a
+            # later positive handover never hides it (spec §09-§10).
+            for i, dim in enumerate(dims):
+                rid = model.new_id('urt', ctx.request_id, str(i))
+                ext['reservations'][rid] = {
+                    'reservation_id': rid, 'decision_id': did, 'actor': t['author_declared_id'],
+                    'dimension_id': dim, 'kind': 'needs_review' if doc['status'] ==
+                    'needs_review' else 'to_consolidate', 'attempt_ids': [],
+                    'criteria': [], 'status': 'open', 'opened_revision': _rev(state),
+                    'resolved_by': None, 'origin': 'transfer', 'transfer_id': t['transfer_id']}
+                opened.append(rid)
+        return {'decision_id': did, 'status': doc['status'], 'reservations': opened}
     return Handler(frozenset({'transfer_id', 'review_sha'}), run)
 
 
@@ -1054,6 +1115,21 @@ def _milestone_record(ctx) -> Handler:
     return Handler(frozenset({'reservation_id', 'outcome', 'files'}), run)
 
 
+def _relocate(ctx) -> Handler:
+    """The repository of a session moved: record its new local path (the source digests
+    are relative and unchanged; freshness is then read from the new place)."""
+    def run(state, params):
+        sv.require_mode(ctx.store, state)
+        ext = model.require_writable(state)
+        s = _session(ext, params['session_id'])
+        repo = params['repo']
+        if not isinstance(repo, str) or not repo.startswith('/') or len(repo) > 4000:
+            raise refuse('path_outside_scope', 'repo is an absolute path.', 'Give --repo.')
+        s['repo_override'] = repo
+        return {'session_id': s['session_id'], 'repo_recorded': True}
+    return Handler(frozenset({'session_id', 'repo'}), run)
+
+
 FACTORIES = {
     'policy_set': _policy_set, 'start': _start, 'close': _close, 'submit': _submit,
     'coach': _coach, 'rectify': _rectify, 'propose': _propose, 'review': _review,
@@ -1062,6 +1138,7 @@ FACTORIES = {
     'transfer_review': _transfer_review, 'approve': _approve,
     'export_intent': _export_intent, 'export_receipt': _export_receipt,
     'git_receipt': _git_receipt, 'milestone_reserve': _milestone_reserve,
+    'relocate': _relocate,
     'milestone_record': _milestone_record}
 
 

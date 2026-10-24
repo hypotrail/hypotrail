@@ -6,7 +6,8 @@ Typed normalisation comes first (the Pydantic model dumps its fields in JSON mod
 * mappings sorted by Unicode code point of their keys, lists kept in order;
 * UTF-8, compact separators ``(',', ':')``, ``ensure_ascii=False``, ``allow_nan=False``;
 * ``-0.0`` becomes ``0.0``; NaN and infinities are refused (``contract_invalid``);
-* only JSON types: str, int, float, bool, None, list, mapping with string keys.
+* only JSON types: str, int, float, bool, None, list, mapping with string keys;
+* a string (value or key) holding a lone surrogate is refused (``contract_invalid``).
 
 Three digests are distinguished: :func:`scientific_id` (a scientific document),
 :func:`artifact_id` (a content manifest without its own id and its mutable binding) and
@@ -58,8 +59,16 @@ def dumps(value: Any) -> bytes:
     """Canonical bytes of a JSON value (after :func:`normalize`)."""
     if hasattr(value, 'model_dump'):
         value = value.model_dump(mode='json')
-    return json.dumps(normalize(value), sort_keys=True, separators=(',', ':'),
-                      ensure_ascii=False, allow_nan=False).encode('utf-8')
+    text = json.dumps(normalize(value), sort_keys=True, separators=(',', ':'),
+                      ensure_ascii=False, allow_nan=False)
+    try:
+        return text.encode('utf-8')
+    except UnicodeEncodeError as exc:       # a lone surrogate is not a Unicode scalar value
+        raise ContractError('contract_invalid', 'A string holds a lone surrogate, which UTF-8 '
+                            'cannot encode.', path='',
+                            remediation='Send valid Unicode text (decode the source with its '
+                                        'declared encoding).',
+                            details={'position': exc.start}) from None
 
 
 def sha256_hex(data: bytes) -> str:

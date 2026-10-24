@@ -223,7 +223,8 @@ single place, to be confirmed or adjusted once with chantier A (not changed unil
 
 `readiness.json` and the README keep independent statuses: configuration `draft` /
 `configured`; artifact `missing` / `captured` / `packaged`; evidence `evaluated` /
-`unassessed` / `stale` (from the bundle's binding, never inferred); local validation,
+`unassessed` / `stale` (from the study's record in `read_export_source`, which the
+bundle's editable binding can only lower; never inferred, see §11); local validation,
 preflight, job, registration, production authorisation, Azure qualification (all
 `not_run` / `not_submitted` / `not_registered` / `outside_scope` / `not_qualified` in a
 fresh export). A rebuilt candidate is always `rebuilt_candidate`, verdict
@@ -352,3 +353,78 @@ credentials, none of which this work had.
 - The exported project's `validate` reads the model with the runtime's pickle-based
   native format: trusted local artefacts only (a hash does not make a third-party pickle
   safe).
+
+## 11. Fixes of the review of 24 October 2026
+
+From [REVIEW-2026-10-24](../acceptance/REVIEW-2026-10-24.md) (B-M1 to B-M5, E2 and the
+export minor items). Regression tests: `framework/tests/exporters/azureml/test_review_fixes.py`
+(synthetic material, the exported commands in subprocesses) and
+`test_review_fixes_real.py` (real Auto MPG studies through the engine and the CLI).
+
+- **Selected model (B-M1).** `read_export_source` says `captured` only for a current
+  capture whose `selection_reference` is the selection confirmed now: the same
+  configuration and the same confirmation (decision id and revision). A capture of a
+  superseded selection is `stale` (limitation "not the confirmed selection"), its evidence
+  is never `evaluated`, and the scientific contracts are the confirmed configuration's,
+  never the old bundle's. The exporter also refuses a recipe whose `selection_reference`
+  revision is not the confirmed decision's (`contract_invalid`,
+  `selection_not_current_decision`). A stale capture while the final test is sealed is
+  refused (`model_not_captured`, remediation: run `predictor.capture` again), since the
+  capture can still be redone. Re-confirming the same value at a later revision also makes
+  the capture stale (value **and** revision), so it must be captured again before the
+  opening.
+- **After the opening (B-M3).** A study changed after its final test opened (stale capture,
+  which can no longer be redone) is exported **recipe-only** for the confirmed selection:
+  `artifact_status: missing`, evidence `missing`, and the limitation "The final test
+  evaluated an earlier predictor: its verdict is not inherited by the recipe of the current
+  selection." A tuned model has no recipe without a fit; that export is refused with a
+  remediation saying why.
+- **No recipe at all.** A study without a recipe (no confirmed model choice, the constant
+  baseline, a tuned model without capture, a study created before the final test) is
+  refused with `capability_not_supported`, `details.reason: no_recipe`, the study's
+  limitations, and a remediation the junior can follow (never "update the engine").
+- **Reader refusals (E2).** A `hypotrail_runtime` `ContractError` raised by
+  `read_export_source` (for example a stale `--expected-revision`) is an export refusal:
+  exit code 2, `hypotrail.error/1`, the same export code when it is one (else
+  `contract_invalid`), `details.contract_code`, `details.path` and `details.remediation`.
+  The test double `reader_of` raises the runtime's `ContractError`, as the real reader does.
+- **Evidence status.** Read from `read_export_source` (`predictor.evidence_status`);
+  `evaluated` only when the study's record and the bundle's binding both say so; otherwise
+  `stale` if either says so, else `unassessed` (warning
+  `evidence_binding_disagrees_with_study` when the binding said more).
+- **Study identity.** `study_id` is the first 16 hex digits of the SHA-256 of the canonical
+  JSON of `{created, case_id, dataset_sha256, partition_seed}` from the study state, not of
+  the folder path: the same study read from two folders has the same snapshot and export
+  ids.
+- **Records of the source (B-M2, B-M5).** `project.py materialize` reads records with a copy
+  of the engine's reader (`mlkit.study.data.row_index` and `_field_splitter`; the project
+  never imports the engine): split on `\n` only (not on U+2028, U+2029, form feed, vertical
+  tab, NEL or a lone `\r`), the final empty line dropped, a trailing `\r` removed, fields by
+  `csv.reader` on one line or, for `whitespace`, the engine's tokenizer (doubled quotes in a
+  quoted field; backslashes and apostrophes are ordinary characters). A line that is not one
+  record of the contract's width, a source that is not in the contract's encoding, and a
+  file that splits into another number of records than the study counted
+  (`development_plan.n_source_records`, from the partition's `n_rows`) are refused with
+  `data_identity_mismatch`.
+- **Number syntax and decimal mark.** Typed values follow what pandas (the engine's reader)
+  accepts: ASCII digits, the contract's `parser.decimal` (a decimal comma is honoured, and a
+  point is then refused), optional exponent and surrounding spaces; `1_000`, hexadecimal,
+  non-ASCII digits and non-finite values are refused.
+- **The exported commands (B-M4).** `validate`, `predict`, `materialize` and `run-local`
+  always print one JSON document: a refusal (a `ProjectError`, a runtime or packager
+  `ContractError`, an unreadable file, a CSV or pandas parsing error, a Hydra, OmegaConf or
+  YAML error) exits with code 2; a failed check of `validate` exits with code 1 and is
+  written to `outputs/validation.json` whatever failed; an unexpected exception is
+  `internal_error` with code 1. `validate --offline` also compares the composed
+  configuration's scientific projection with the checksummed
+  `data/hypotrail/contracts/scientific-projection.json`, so editing the configuration and
+  its expected identity together fails (`scientific_config_changed`).
+- **README.** `predict --input` accepts a runtime parity frame (`hypotrail.parity_frame/1`)
+  as well as a CSV, so the README's quickstart line works as written.
+- **Other minor items.** A recipe or plan value equal to OmegaConf's `???` is refused at
+  export (`contract_invalid`); a profile that is not UTF-8 is a refusal
+  (`contract_invalid`, exit 2); the published project root follows the umask (it was 0700
+  from the staging folder); `compare` refuses infinities at different rows or of different
+  signs (`infinities_differ`).
+- **Not covered.** `HYPOTRAIL_EXPORT_REAL_RUNTIME` is no longer read: since I1 the suites
+  always run on the real runtime (`export_env.REAL_RUNTIME = True`).

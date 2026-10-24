@@ -15,7 +15,10 @@ fits. ``run-local`` fits a new candidate and is never called by ``validate``. ``
 and ``submit`` print the Azure CLI commands; they run them only with ``--execute``:
 ``preflight`` reads Azure, ``submit`` writes to it (assets, then one pipeline job). Nothing
 here deploys an endpoint or registers a model. Each command prints one JSON document; a
-refusal exits with code 2, a failed check with code 1.
+refusal exits with code 2 (including a refusal of ``hypotrail_runtime``, an unreadable or
+malformed input file and a configuration Hydra cannot compose), a failed check with code 1,
+and an unexpected exception is reported as ``internal_error`` with code 1. ``validate``
+writes ``outputs/validation.json`` whatever its checks found.
 """
 
 from __future__ import annotations
@@ -29,7 +32,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .hypotrail import azure_yaml, canonical, contracts, runtime_bridge, transfer
-from .hypotrail.errors import ProjectError
+from .hypotrail.errors import ProjectError, from_exception, internal_error
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -78,8 +81,10 @@ def _target() -> dict:
 def _check(checks: list, check_id: str, function: Callable[[], object]) -> None:
     try:
         result = function()
-    except ProjectError as error:
-        checks.append({"id": check_id, "status": "failed", "error": error.to_dict()})
+    except Exception as error:  # noqa: BLE001 - every failure of a check is reported, never raised
+        refusal = from_exception(error)
+        found = refusal.to_dict() if refusal is not None else internal_error(error)["error"]
+        checks.append({"id": check_id, "status": "failed", "error": found})
         return
     status, detail = result if isinstance(result, tuple) else (result, None)
     item = {"id": check_id, "status": status}
@@ -101,6 +106,20 @@ def _hydra_config() -> tuple[str, str | None]:
     with initialize_config_dir(config_dir=str(CONF_DIR), version_base=None):
         cfg = compose(config_name="config")
     frozen = freeze(cfg)
+    # The configuration's own expected identity can be edited with it: the authority is the
+    # checksummed projection of the data folder, which every step also verifies.
+    reference = contracts.load_json(DATA_DIR / contracts.FILES["projection"])
+    if canonical.canonical_sha256(reference) != frozen["scientific_sha256"]:
+        from .hypotrail import projection
+
+        actual = projection.from_config(frozen["config"])
+        raise ProjectError(
+            "scientific_config_changed",
+            "The scientific configuration differs from the study's exported projection.",
+            path="src/conf",
+            remediation="Restore the exported configuration files; a new experiment is a new activity of the study.",
+            details={"differences": projection.differences(reference, actual)[:20]},
+        )
     return "passed", frozen["scientific_sha256"]
 
 
@@ -233,7 +252,10 @@ def validate(_args: argparse.Namespace) -> int:
     _check(checks, "evaluated_model_mlflow_package", _mlflow_package)
     _check(checks, "development_rows", _development_rows)
     failed = [c["id"] for c in checks if c["status"] == "failed"]
-    manifest_sha = contracts.sha256_file(DATA_DIR / "contracts" / "export-manifest.json")
+    try:
+        manifest_sha = contracts.sha256_file(DATA_DIR / contracts.FILES["manifest"])
+    except OSError:
+        manifest_sha = None
     document = {
         "schema_version": "hypotrail.local_validation/1",
         "status": "failed" if failed else "passed",
@@ -287,8 +309,13 @@ def predict(args: argparse.Namespace) -> int:
         source = Path(args.input)
     else:
         raise ProjectError("contract_invalid", "Give --input FILE or --parity.", path="input")
-    # Rows given by a user are typed as the data contract declares (never by inference).
-    features = mp.read_table(source) if args.parity else contracts.typed_features(source, bundle_contract(folder))
+    # Rows given by a user are typed as the data contract declares (never by inference); a
+    # runtime parity frame (hypotrail.parity_frame/1, such as the model's own parity features)
+    # carries its declared types and is read by the runtime.
+    if args.parity or _is_parity_frame(source):
+        features = mp.read_table(source)
+    else:
+        features = contracts.typed_features(source, bundle_contract(folder))
     predictor = rt.load_predictor(folder, trusted_roots=[folder])
     frame = mp.batch_frame(predictor.predict(features))
     document = {
@@ -305,15 +332,58 @@ def predict(args: argparse.Namespace) -> int:
     return _emit({"ok": True, "output": str(out), "rows": len(frame), "predictor_id": document["predictor_id"]})
 
 
+def _is_parity_frame(path: Path) -> bool:
+    """Return whether ``path`` is a JSON parity frame of the runtime (not a CSV of rows)."""
+    if path.suffix.lower() != ".json" or not path.is_file():
+        return False
+    try:
+        document = canonical.loads_strict(path.read_text(encoding="utf-8"))
+    except ValueError:
+        return False
+    return isinstance(document, dict) and document.get("schema_version") == "hypotrail.parity_frame/1"
+
+
 # --- materialize -----------------------------------------------------------------------
 
 
-def _source_lines(source: Path, contract: dict, wanted: set[str]) -> tuple[list[str], list[list[str]]]:
-    """Return the development rows of a positional source, selected by line before parsing."""
-    import csv
-    import io
-    import shlex
+# The engine's record reader (``mlkit.study.data.row_index`` and ``_field_splitter``), copied
+# here because this project never imports the engine: records are split on "\n" only (never
+# on U+2028, form feed, NEL or a lone "\r", which ``str.splitlines`` would split on), a final
+# empty line is dropped, a trailing "\r" is removed, and fields are split by ``csv.reader``
+# on one line, or, for ``whitespace``, by the engine's tokenizer (a quoted field with doubled
+# quotes, or a run of non-space characters; no shell rules for backslashes or apostrophes).
+# The keys are physical line numbers: ``L2`` is the first data line of a file with a header.
+MAX_LISTED = 20
 
+
+def _whitespace_tokenizer(quotechar: str) -> Callable[[str], list[str]]:
+    """Return the engine's whitespace field splitter for ``quotechar``."""
+    q = re.escape(quotechar)
+    pattern = re.compile(rf"{q}((?:[^{q}]|{q}{q})*){q}|(\S+)")
+
+    def split(line: str) -> list[str]:
+        return [bare or quoted.replace(quotechar * 2, quotechar) for quoted, bare in pattern.findall(line)]
+
+    return split
+
+
+def _field_splitter(parser: dict) -> Callable[[str], list[str]]:
+    """Return the engine's field splitter of the data contract's parser."""
+    import csv
+
+    quotechar = parser.get("quotechar", '"')
+    delimiter = parser.get("delimiter", ",")
+    if delimiter == "whitespace":
+        return _whitespace_tokenizer(quotechar)
+    return lambda line: next(csv.reader([line], delimiter=delimiter, quotechar=quotechar), [])
+
+
+def _records(source: Path, contract: dict) -> list[tuple[str, list[str]]]:
+    """Return every record of a positional source with its engine row key, in file order.
+
+    A line that does not hold exactly one record of the contract's width is refused, as the
+    engine refuses it: such a file cannot be the one the study read.
+    """
     parser = contract["parser"]
     identity = contract["row_identity"]
     if identity.get("kind") != "source_position":
@@ -322,36 +392,47 @@ def _source_lines(source: Path, contract: dict, wanted: set[str]) -> tuple[list[
             "Only source_position row keys are materialised by this version.",
             path="row_identity.kind",
         )
-    text = source.read_bytes().decode(parser.get("encoding", "utf-8"))
-    lines = text.splitlines()
-    header = 1 if parser.get("header") else 0
+    encoding = parser.get("encoding", "utf-8")
+    try:
+        text = source.read_bytes().decode(encoding)
+    except UnicodeDecodeError as error:
+        raise ProjectError(
+            "data_identity_mismatch",
+            f"The source file is not {encoding} text.",
+            path=str(source),
+            remediation="Use the file the study was made on.",
+        ) from error
+    lines = text.split("\n")
+    if lines and lines[-1] == "":
+        lines.pop()
+    first = 2 if parser.get("header") else 1
+    body = lines[1:] if parser.get("header") else lines
     prefix = identity.get("prefix", "L")
-    names = [c["name"] for c in contract["columns"]]
-    rows, keys = [], []
-    # Keys are physical line numbers, as the engine records them (``L2`` is the first data
-    # line of a file with a header).
-    for number, line in enumerate(lines[header:], 1 + header):
-        key = f"{prefix}{number}"
-        if key not in wanted:
+    split = _field_splitter(parser)
+    width = len(contract["columns"])
+    records, problems = [], []
+    for offset, raw in enumerate(body):
+        key = f"{prefix}{first + offset}"
+        fields = split(raw.rstrip("\r"))
+        if len(fields) != width:
+            problems.append({"row_key": key, "expected": width, "found": len(fields)})
             continue
-        if parser.get("delimiter") == "whitespace":
-            values = shlex.split(line, posix=True)
-        else:
-            values = next(
-                csv.reader(
-                    io.StringIO(line), delimiter=parser.get("delimiter", ","), quotechar=parser.get("quotechar", '"'),
-                ),
-            )
-        if len(values) != len(names):
-            raise ProjectError(
-                "data_identity_mismatch",
-                "A source line does not have the contract's columns.",
-                path=key,
-                details={"expected": len(names), "found": len(values)},
-            )
-        keys.append(key)
-        rows.append(values)
-    return keys, rows
+        records.append((key, fields))
+    if problems:
+        raise ProjectError(
+            "data_identity_mismatch",
+            "A source line does not hold exactly one record of the contract's columns.",
+            path=problems[0]["row_key"],
+            remediation="Use the file the study was made on; the engine reads one record per line.",
+            details={"problems": problems[:MAX_LISTED], "count": len(problems)},
+        )
+    return records
+
+
+def _source_lines(source: Path, contract: dict, wanted: set[str]) -> tuple[list[str], list[list[str]]]:
+    """Return the development rows of a positional source (keys and fields), in file order."""
+    pairs = [(key, fields) for key, fields in _records(source, contract) if key in wanted]
+    return [key for key, _ in pairs], [fields for _, fields in pairs]
 
 
 def materialize(args: argparse.Namespace) -> int:
@@ -372,7 +453,22 @@ def materialize(args: argparse.Namespace) -> int:
             remediation="Use the file the study was made on; a modified file is a new source.",
         )
     wanted = development_keys(plan)
-    keys, rows = _source_lines(source, contract, set(wanted))
+    records = _records(source, contract)
+    # The study recorded how many records the file holds: a reader that split records
+    # differently would shift every key after the difference.
+    expected = plan.get("n_source_records")
+    if isinstance(expected, int) and len(records) != expected:
+        raise ProjectError(
+            "data_identity_mismatch",
+            "The source does not split into the records the study counted.",
+            path=str(source),
+            remediation="Use the file the study was made on, unmodified.",
+            details={"records_found": len(records), "records_expected": expected},
+        )
+    wanted_set = set(wanted)
+    pairs_found = [(key, fields) for key, fields in records if key in wanted_set]
+    keys = [key for key, _ in pairs_found]
+    rows = [fields for _, fields in pairs_found]
     if sorted(keys) != sorted(wanted):
         raise ProjectError(
             "data_identity_mismatch", "The source does not hold every development row.", path=str(source),
@@ -681,12 +777,15 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run one command; a refusal prints its JSON and returns 2."""
+    """Run one command; a refusal prints its JSON and returns 2, an unexpected error 1."""
     args = build_parser().parse_args(argv)
     try:
         return args.handler(args)
-    except ProjectError as error:
-        sys.stdout.write(error.to_json() + "\n")
+    except Exception as error:  # noqa: BLE001 - every outcome is one JSON document
+        refusal = from_exception(error)
+        if refusal is None:
+            return _emit(internal_error(error), 1)
+        sys.stdout.write(refusal.to_json() + "\n")
         return 2
 
 

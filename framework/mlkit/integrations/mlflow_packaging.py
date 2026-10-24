@@ -363,7 +363,8 @@ def batch_frame(batch):
 
 def compare(left, right, rtol: float, atol: float) -> dict:
     """``{equal, max_abs_diff, reason}``: same columns and rows; floats within
-    ``|l - r| <= atol + rtol * |r|`` with NaN at the same places; other values equal."""
+    ``|l - r| <= atol + rtol * |r|`` with NaN, and infinities of the same sign, at the same
+    places; other values equal."""
     np = _import('numpy', 'numpy')
     if list(left.columns) != list(right.columns):
         return {'equal': False, 'max_abs_diff': None, 'reason': 'columns_differ'}
@@ -377,9 +378,10 @@ def compare(left, right, rtol: float, atol: float) -> dict:
             nan_a, nan_b = np.isnan(a), np.isnan(b)
             if not np.array_equal(nan_a, nan_b):
                 return {'equal': False, 'max_abs_diff': None, 'reason': 'nan_positions_differ'}
-            if np.isinf(a).any() or np.isinf(b).any():
-                if not np.array_equal(a[np.isinf(a)], b[np.isinf(b)]):
-                    return {'equal': False, 'max_abs_diff': None, 'reason': 'infinities_differ'}
+            # Infinities must sit at the same rows with the same sign (swapped rows differ).
+            inf_a, inf_b = np.isinf(a), np.isinf(b)
+            if not np.array_equal(inf_a, inf_b) or not np.array_equal(a[inf_a], b[inf_b]):
+                return {'equal': False, 'max_abs_diff': None, 'reason': 'infinities_differ'}
             mask = ~(nan_a | np.isinf(a))
             if mask.any():
                 diff = np.abs(a[mask] - b[mask])

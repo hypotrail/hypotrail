@@ -70,6 +70,10 @@
     "session_ref": {
       "type": "string"
     },
+    "author_alias": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{1,31}$"
+    },
     "public_source_scope": {
       "type": "object",
       "additionalProperties": false,
@@ -629,6 +633,7 @@
     "schema",
     "study_public_id",
     "session_ref",
+    "author_alias",
     "public_source_scope",
     "policy",
     "policy_digest",

@@ -18,6 +18,16 @@ adjusted p-values decide the alerts, otherwise the alerts are exploratory and un
 The thresholds of :data:`DEMONSTRATION_PROFILE` are demonstration values, not business
 guarantees. No alert never means "the model is still valid".
 
+The profile is validated strictly (``"0.05"`` is not a threshold, ``"yes"`` not a boolean)
+and its alert direction must match its statistic: a p-value alerts when it is small
+(``lt``/``le``), a distance when it is large (``gt``/``ge``); an inverted comparison is
+refused. Every column the profile names must be in both populations
+(``contract_invalid`` otherwise). Categorical values are compared as text after an
+integral float is written as an integer, so an integer category read as ``float64``
+because one value is missing (``1.0``) is the same category as ``1``. A profile that
+declares no check is ``failed`` with that reason (nothing was computed), never reported as
+a backend failure.
+
 Evidently runs only on frames the caller is authorised to read
 (``partition_not_authorized`` otherwise), locally (no remote service). A backend exception
 makes its check ``failed`` with the cause and ``alert: null``; a check without enough
@@ -27,9 +37,10 @@ observations is ``insufficient_data``. The Evidently snapshot is kept as a versi
 from __future__ import annotations
 
 import math
-from typing import Iterable, Literal, Mapping, Optional
+from typing import Annotated, Iterable, Literal, Mapping, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt
+from pydantic import (BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt,
+                      StrictStr)
 
 from hypotrail_runtime import canonical
 from hypotrail_runtime.contracts import DiagnosticResult, parse
@@ -39,6 +50,8 @@ PROFILE_SCHEMA = 'hypotrail.diagnostic_profile/1'
 STATISTICS = {'ks': 'p_value', 'chisquare': 'p_value', 'z': 'p_value', 'fisher_exact': 'p_value',
               'wasserstein': 'distance', 'jensenshannon': 'distance', 'psi': 'distance',
               'kl_div': 'distance', 'hellinger': 'distance'}
+# The comparisons that raise an alert in the right direction for each statistic.
+ALERT_COMPARISONS = {'p_value': ('lt', 'le'), 'distance': ('gt', 'ge')}
 
 
 class _Strict(BaseModel):
@@ -57,7 +70,7 @@ class ColumnCheck(_Strict):
 
 
 class Relationship(_Strict):
-    columns: tuple[str, str]
+    columns: Annotated[list[StrictStr], Field(min_length=2, max_length=2)]
     method: Literal['pearson', 'spearman']
     threshold: StrictFloat
     comparison: Literal['ge', 'gt'] = 'ge'
@@ -107,7 +120,7 @@ def profile_of(doc) -> Profile:
     if isinstance(doc, Profile):
         return doc
     try:
-        profile = Profile.model_validate(dict(doc), strict=False)
+        profile = Profile.model_validate(dict(doc), strict=True)
     except Exception as exc:
         raise ContractError('contract_invalid', f'Invalid diagnostic profile: {exc}',
                             path='profile', remediation='Declare every method, threshold and '
@@ -118,7 +131,41 @@ def profile_of(doc) -> Profile:
                                 f'{STATISTICS[check.method]}, not a {check.statistic}.',
                                 path=f'profile/columns/{name}',
                                 remediation='Declare the statistic the method yields.')
+        if check.comparison not in ALERT_COMPARISONS[check.statistic]:
+            raise ContractError('contract_invalid', f'A {check.statistic} alerts with '
+                                f'{" or ".join(ALERT_COMPARISONS[check.statistic])}; '
+                                f'{check.comparison} would invert the alert.',
+                                path=f'profile/columns/{name}/comparison',
+                                remediation='A small p-value or a large distance raises the '
+                                            'alert.')
     return profile
+
+
+def _category_text(series):
+    """Categorical values as text, missing kept missing; an integral float is written as
+    an integer (``1.0`` -> ``'1'``), so a missing value that made pandas read an integer
+    column as ``float64`` does not turn every category into an unseen one."""
+    import numpy as np
+
+    def text(v):
+        if v is None or (isinstance(v, float) and v != v):
+            return np.nan
+        if isinstance(v, (float, np.floating)) and float(v).is_integer():
+            return str(int(v))
+        return str(v)
+    return series.map(text).astype(object)
+
+
+def _require_columns(profile: Profile, reference, current) -> None:
+    names = list(profile.columns) + [c for r in profile.relationships for c in r.columns]
+    for side, frame in (('reference', reference), ('current', current)):
+        absent = sorted({n for n in names if n not in frame.columns})
+        if absent:
+            raise ContractError('contract_invalid', f'The {side} population lacks columns the '
+                                'profile checks.', path=f'{side}/columns',
+                                remediation='Diagnose populations that hold every profile '
+                                            'column, or change the profile.',
+                                details={'columns': absent})
 
 
 def _alert(value: float, threshold: float, comparison: str) -> bool:
@@ -176,12 +223,16 @@ def run(profile, reference, current, *, reference_partition: str, current_partit
                                         'does not need it.', details={'error': str(exc)}) \
             from None
     import numpy as np
+    import pandas as pd
+    _require_columns(profile, reference, current)
     checks: list[dict] = []
     raw: dict = {'evidently_version': backend['version'], 'metrics': {}}
     common = {'reference_partition': reference_partition, 'current_partition': current_partition}
     n_ref_rows, n_cur_rows = int(len(reference)), int(len(current))
     for name, spec in profile.columns.items():
         ref_col, cur_col = reference[name], current[name]
+        if spec.kind == 'categorical':
+            ref_col, cur_col = _category_text(ref_col), _category_text(cur_col)
         # data quality: the missing share (reported separately from the distribution test)
         miss_ref, miss_cur = float(ref_col.isna().mean()) if n_ref_rows else None, \
             float(cur_col.isna().mean()) if n_cur_rows else None
@@ -230,8 +281,10 @@ def run(profile, reference, current, *, reference_partition: str, current_partit
         try:
             snapshot = Report([ValueDrift(column=name, method=spec.method,
                                           threshold=spec.threshold)]).run(
-                Dataset.from_pandas(current[[name]], data_definition=definition),
-                Dataset.from_pandas(reference[[name]], data_definition=definition))
+                Dataset.from_pandas(pd.DataFrame({name: cur_col}),
+                                    data_definition=definition),
+                Dataset.from_pandas(pd.DataFrame({name: ref_col}),
+                                    data_definition=definition))
             payload = snapshot.dict()
             value = payload['metrics'][0]['value']
             raw['metrics'][check_id] = payload['metrics'][0]
@@ -311,7 +364,9 @@ def run(profile, reference, current, *, reference_partition: str, current_partit
     warnings.append('No alert does not mean the model is still valid; a marginal test does '
                     'not see relationships it does not measure.')
     computed = [c for c in checks if c['status'] == 'ok']
-    if not checks or (checks and all(c['status'] == 'failed' for c in checks)):
+    if not checks:
+        status, reason = 'failed', 'the profile declares no check: nothing was computed'
+    elif all(c['status'] == 'failed' for c in checks):
         status, reason = 'failed', 'every check failed in the backend'
     elif not computed:
         status, reason = 'insufficient_data', 'no check could be computed'

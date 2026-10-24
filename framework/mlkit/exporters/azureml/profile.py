@@ -104,6 +104,11 @@ def load(path) -> dict:
         raise ExportError('invalid_arguments', 'The profile file cannot be read.',
                           path='profile', remediation='Pass an existing --profile file.',
                           details={'error': error.strerror}) from error
+    except UnicodeDecodeError as error:
+        raise ExportError('contract_invalid', 'The profile is not UTF-8 text.', path='profile',
+                          remediation='Save the profile as UTF-8 (YAML or JSON) and export '
+                                      'again.',
+                          details={'byte_offset': error.start}) from error
     try:
         if source.suffix.lower() == '.json':
             document = json.loads(text)

@@ -178,8 +178,15 @@ def test_handover_change_stales_the_transfer_but_results_do_not(u):
     # Approvals and an export of the results change nothing for the transfer.
     ukit.approve_all(u, sid)
     assert u.call('check', '--milestone', 'handoff')['gate']['decision'] == 'allowed'
+    # The session is closed (its note can no longer change); the author records a shorter
+    # note in a new session: the transfer done on the earlier note is stale.
+    out = u.m('handover', 'set', '--session', sid, '--file', u.file('h1.json', ukit.HANDOVER),
+              expect=2)
+    assert out['error']['code'] == 'invalid_transition'
+    _, started_ = u.start()
     shorter = dict(ukit.HANDOVER, safety_rules=[])
-    out = u.m('handover', 'set', '--session', sid, '--file', u.file('h2.json', shorter))
+    out = u.m('handover', 'set', '--session', started_['result']['session_id'], '--file',
+              u.file('h2.json', shorter))
     assert out['result']['transfers_now_stale']
     gate = u.call('check', '--milestone', 'handoff')['gate']
     assert gate['decision'] == 'blocked' and gate['missing_peer_dimensions'] == ['D2']

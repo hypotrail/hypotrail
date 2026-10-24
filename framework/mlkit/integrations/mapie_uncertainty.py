@@ -11,7 +11,11 @@ durable ledger (:class:`CalibrationLedger`): the first procedure that uses a par
 it; repeating that exact procedure reproduces it; another procedure (another model, recipe,
 positive class, threshold family or objective) is refused as adaptive reuse
 (``calibration_not_eligible``) — and a changed model invalidates the calibrated object
-without ever making the partition unseen again.
+without ever making the partition unseen again. The ledger keys a use on the *rows*, not on
+the partition's name: the membership digest of ``calibration_ref`` (the same rows under
+another id are the same calibration) and, when the caller passes the row keys, their
+per-row digests (a superset or any overlap of rows already used is refused unless it is
+the very same membership and procedure).
 
 **Risk control (L-16).** Binary classification, scores of a *fixed* model, a threshold grid
 fixed in advance, the per-row rule ``threshold:t``. The target is a minimum precision with a
@@ -33,6 +37,15 @@ independent calibration set, the finite-sample quantile of rank ⌈(n+1)(1−α)
 coverage only (no conditional guarantee: subgroup figures are descriptive). Too few
 calibration rows for the requested level is ``insufficient_data`` (never an infinite bound in
 JSON). Width and empirical coverage are reported on authorised labelled rows only.
+
+The boundary rank (review A, 2026-10-24). The adapter's rule is the finite-sample one: the
+interval is finite when the rank ⌈(n+1)·level⌉ is at most n. MAPIE 1.x is stricter and
+refuses ``n < max(1/α, 1/(1 − α))``, which at usual levels is exactly the case rank = n
+(for example 19 rows at 95 %). There the adapter keeps its own rule and computes the same
+quantile itself (the residual of that rank, here the largest, of the fixed model) rather
+than reporting ``insufficient_data`` for a calibration size its rule accepts; the result
+says so (``hypotrail.quantile``: ``adapter_rank_rule``, and a warning). Otherwise the
+quantile is MAPIE's (``hypotrail.quantile``: ``mapie``).
 
 Exporting a calibrated capability is not qualified (parity, environment and signature of
 MAPIE objects in the exported project are untested): :func:`require_exportable` refuses it
@@ -122,24 +135,64 @@ class CalibrationLedger:
     def procedure_id(procedure: Mapping) -> str:
         return canonical.scientific_id(dict(procedure))
 
-    def claim(self, calibration_ref: str, procedure: Mapping) -> dict:
-        """Record the use before computing; the same procedure may be reproduced, another is
-        refused (``calibration_not_eligible``)."""
+    @staticmethod
+    def membership(calibration_ref: str) -> str:
+        """The row-membership digest of ``<id>@<membership>`` (the name is not the rows)."""
+        name, sep, membership = str(calibration_ref).rpartition('@')
+        if not sep or len(membership) != 64 or not all(c in '0123456789abcdef'
+                                                       for c in membership):
+            raise ContractError('contract_invalid', 'A calibration reference is '
+                                '<partition id>@<membership sha256>.', path='calibration_ref',
+                                remediation='Pass the calibration_ref of eligibility().')
+        return membership
+
+    @staticmethod
+    def row_digests(keys: Iterable[str]) -> list[str]:
+        return sorted({canonical.sha256_hex(str(k).encode()) for k in keys})
+
+    def claim(self, calibration_ref: str, procedure: Mapping, *,
+              keys: Iterable[str] | None = None) -> dict:
+        """Record the use before computing; the same procedure on the same rows may be
+        reproduced; anything else on rows already used is refused
+        (``calibration_not_eligible``). Rows are recognised by their membership digest
+        whatever the partition is called, and, when ``keys`` are given (they must be the rows
+        of ``calibration_ref``), by each row: a superset or an overlap is refused."""
         pid = self.procedure_id(procedure)
+        membership = self.membership(calibration_ref)
+        digests = None
+        if keys is not None:
+            keys = sorted({str(k) for k in keys})
+            if canonical.sha256_hex('\n'.join(keys).encode()) != membership:
+                raise ContractError('contract_invalid', 'The row keys are not the rows of this '
+                                    'calibration reference.', path='keys',
+                                    remediation='Pass the keys the eligibility was computed '
+                                                'on.')
+            digests = self.row_digests(keys)
         for use in self.uses():
-            if use['calibration_ref'] != calibration_ref:
+            used = use.get('membership_sha256') or self.membership(use['calibration_ref'])
+            same_rows = used == membership
+            overlap = same_rows or (digests is not None and use.get('row_digests') is not None
+                                    and not set(digests).isdisjoint(use['row_digests']))
+            if not overlap:
                 continue
-            if use['procedure_id'] == pid:
+            if same_rows and use['procedure_id'] == pid:
                 return use
             raise ContractError('calibration_not_eligible',
-                                'This calibration partition already calibrated another '
-                                'procedure; reusing it adaptively is outside this version.',
+                                'These calibration rows (or some of them) already calibrated '
+                                'a procedure; reusing them adaptively, under any partition '
+                                'name or inside a larger set, is outside this version.',
                                 path='calibration', remediation='Reserve new calibration rows '
                                 'for the new model, rule or objective.',
                                 details={'bound_procedure': use['procedure_id'],
-                                         'requested': pid})
+                                         'requested': pid,
+                                         'bound_calibration_ref': use['calibration_ref'],
+                                         'reason': 'same_rows' if same_rows
+                                         else 'overlapping_rows'})
         use = {'schema': LEDGER_SCHEMA, 'calibration_ref': calibration_ref,
-               'procedure_id': pid, 'procedure': dict(procedure)}
+               'membership_sha256': membership, 'procedure_id': pid,
+               'procedure': dict(procedure)}
+        if digests is not None:
+            use['row_digests'] = digests
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.path, 'a', encoding='utf-8') as fh:
             fh.write(canonical.dumps(use).decode() + '\n')
@@ -250,7 +303,13 @@ def control_precision(scores, y, *, thresholds: Sequence[float], target_precisio
     if len(set(np.unique(labels))) < 2:
         return _result(status='insufficient_data',
                        reason='the calibration rows hold one class only', **common)
-    from mapie.risk_control import BinaryClassificationController, precision
+    try:
+        from mapie.risk_control import BinaryClassificationController, precision
+    except ImportError as exc:
+        raise ContractError('optional_dependency_missing', 'MAPIE is installed without its '
+                            'risk-control module.', remediation='Reinstall the uncertainty '
+                                                                'extra.',
+                            details={'error': str(exc)}) from None
     _check_precision_risk(precision)
     try:
         controller = BinaryClassificationController(
@@ -308,6 +367,12 @@ def finite_sample_rank(n: int, confidence_level: float) -> int:
     return int(math.ceil((n + 1) * confidence_level - 1e-12))
 
 
+def _mapie_refuses(n: int, confidence_level: float) -> bool:
+    """MAPIE 1.x's own size check (``mapie.utils``): ``n < max(1/α, 1/(1 − α))``."""
+    alpha = 1 - float(confidence_level)
+    return n < max(1 / alpha, 1 / (1 - alpha))
+
+
 def split_conformal(predict: Callable, X_cal, y_cal, X_new, *, confidence_level: float,
                     predictor_id: str | None, calibration: Mapping,
                     y_new=None, groups=None) -> UncertaintyResult:
@@ -327,26 +392,47 @@ def split_conformal(predict: Callable, X_cal, y_cal, X_new, *, confidence_level:
                        **common)
     y_cal = np.asarray(y_cal, dtype=float)
     n = len(y_cal)
-    if finite_sample_rank(n, confidence_level) > n or n < 1:
+    rank = finite_sample_rank(n, confidence_level)
+    if n < 1 or rank > n:
         return _result(status='insufficient_data',
                        reason=f'{n} calibration rows cannot give a finite {confidence_level:g} '
                               'interval (the conformal rank exceeds n)', **common)
-    from mapie.regression import SplitConformalRegressor
     try:
-        model = SplitConformalRegressor(estimator=_Fixed(predict).estimator,
-                                        confidence_level=float(confidence_level), prefit=True)
-        model.conformalize(X_cal, y_cal)
-        point, bounds = model.predict_interval(X_new)
+        from mapie.regression import SplitConformalRegressor
+    except ImportError as exc:
+        raise ContractError('optional_dependency_missing', 'MAPIE is installed without its '
+                            'regression module.', remediation='Reinstall the uncertainty '
+                                                              'extra.',
+                            details={'error': str(exc)}) from None
+    ext_quantile, warnings = 'mapie', []
+    try:
+        if _mapie_refuses(n, confidence_level):
+            # MAPIE refuses this size; the adapter's rule (rank <= n) gives a finite bound.
+            residuals = np.sort(np.abs(y_cal - np.asarray(predict(X_cal), dtype=float)))
+            half = float(residuals[rank - 1])
+            point = np.asarray(predict(X_new), dtype=float)
+            low, high = point - half, point + half
+            ext_quantile = 'adapter_rank_rule'
+            warnings.append(f'MAPIE {backend["version"]} refuses {n} calibration rows at this '
+                            f'level; the conformal rank {rank} is at most {n}, so the adapter '
+                            'computed the same finite-sample quantile itself (the residual of '
+                            'that rank).')
+        else:
+            model = SplitConformalRegressor(estimator=_Fixed(predict).estimator,
+                                            confidence_level=float(confidence_level),
+                                            prefit=True)
+            model.conformalize(X_cal, y_cal)
+            point, bounds = model.predict_interval(X_new)
+            low, high = np.asarray(bounds)[:, 0, 0], np.asarray(bounds)[:, 1, 0]
     except ValueError as exc:
         return _result(status='insufficient_data', reason=f'mapie refused: {exc}', **common)
     except Exception as exc:          # noqa: BLE001
         return _result(status='failed', reason=f'backend_failed: {type(exc).__name__}: {exc}',
                        **common)
-    low, high = np.asarray(bounds)[:, 0, 0], np.asarray(bounds)[:, 1, 0]
     if not (np.isfinite(low).all() and np.isfinite(high).all()):
         return _result(status='insufficient_data', reason='an interval bound is not finite',
                        **common)
-    ext = {'hypotrail.n_calibration': n,
+    ext = {'hypotrail.n_calibration': n, 'hypotrail.quantile': ext_quantile,
            'hypotrail.mean_width': float(np.mean(high - low)) if len(low) else None}
     if y_new is not None:
         y_new = np.asarray(y_new, dtype=float)
@@ -359,7 +445,8 @@ def split_conformal(predict: Callable, X_cal, y_cal, X_new, *, confidence_level:
                          'coverage': float(inside[groups == g].mean())}
                 for g in sorted(set(groups.tolist()), key=str)}
     rows = [{'row': i, 'low': float(a), 'high': float(b)} for i, (a, b) in enumerate(zip(low, high))]
-    return _result(status='ok', reason=None, interval_bounds=rows, extensions=ext, **common)
+    return _result(status='ok', reason=None, interval_bounds=rows, extensions=ext,
+                   warnings=warnings, **common)
 
 
 def require_exportable(capability: str) -> None:

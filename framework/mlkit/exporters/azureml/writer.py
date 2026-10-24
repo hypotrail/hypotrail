@@ -50,6 +50,12 @@ def target(out, study_dir: Path) -> Path:
     return path
 
 
+def _umask() -> int:
+    mask = os.umask(0o022)
+    os.umask(mask)
+    return mask
+
+
 def publish(files, directories: list[str], destination: Path,
             template: layout.Template) -> None:
     """Write ``files`` (``render.File``) and the empty ``directories``, check, publish."""
@@ -80,6 +86,9 @@ def publish(files, directories: list[str], destination: Path,
                                   'meanwhile; nothing was published.', path='out',
                                   remediation='Choose a new folder.')
             destination.rmdir()
+        # mkdtemp made the staging folder 0700 (private while it is written); the published
+        # root follows the umask, as every folder inside it does.
+        os.chmod(staging, 0o777 & ~_umask())
         os.rename(staging, destination)
     except BaseException:
         shutil.rmtree(staging, ignore_errors=True)

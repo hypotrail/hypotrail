@@ -220,6 +220,7 @@
  },
  "$id": "https://hypotrail.invalid/schemas/model_recipe-v1.schema.json",
  "additionalProperties": false,
+ "description": "A recipe. An integer given for a real-valued parameter of a registered family is read\nas a float before validation (``C=1`` and ``C=1.0`` give one recipe id).",
  "properties": {
   "extensions": {
    "patternProperties": {

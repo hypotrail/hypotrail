@@ -5,6 +5,13 @@ The same logical contract drives the engine's Pandera schema
 reading of it, used before every prediction. Nothing is coerced, dropped, imputed or added
 silently: a declared conversion (``inference_policy.conversions``) is applied to a copy and
 reported; the caller's frame and its row order are never changed.
+
+Every feature the recipe reads must be present, required by the contract or not: a feature
+outside ``required_columns`` that the input lacks is ``missing_columns``, never a raw
+``KeyError``. A string column is handed to the predictor as Python strings with ``NaN`` for
+a missing value, whatever pandas representation held it (``object`` with ``None`` or
+``NaN``, ``string[python]`` or ``string[pyarrow]`` with ``pd.NA``): the values are
+unchanged, only the missing marker is the one the preparation and the parity rows read.
 """
 from __future__ import annotations
 
@@ -59,6 +66,7 @@ def check_frame(contract: DataContract, frame: Any, *, features: list[str],
     declared = {c.name: c for c in contract.columns}
     policy = contract.inference_policy
     missing = [c for c in policy.required_columns if c not in names]
+    missing += [c for c in features if c not in names and c not in missing]
     if missing:
         issues.append({'code': 'contract_invalid', 'path': 'input/columns',
                        'kind': 'missing_columns', 'columns': missing})
@@ -88,6 +96,8 @@ def check_frame(contract: DataContract, frame: Any, *, features: list[str],
                                'found': found or str(series.dtype)})
                 continue
         na = series.isna()
+        if spec.physical_type == 'string':
+            series = series.astype(object).where(~na, np.nan)
         if na.any() and not spec.nullable:
             issues.append({'code': 'contract_invalid', 'path': f'input/{name}',
                            'kind': 'missing_values', 'n_rows': int(na.sum()),

@@ -35,6 +35,15 @@ RARE_GROUP = '(rare)'
 MISSING_SUFFIX = '=(missing)'
 
 
+def _nan_like(value: Any) -> bool:
+    """NaN, or pandas' NA/NaT, which the engine's test ``v != v`` reads as missing for NaN
+    but cannot evaluate for ``pd.NA`` (its comparison is not a boolean). ``None`` keeps the
+    engine's reading (``None != None`` is false), so the engine's fit is reproduced."""
+    if value is pd.NA or value is pd.NaT:
+        return True
+    return isinstance(value, float) and value != value
+
+
 def _matches(series: pd.Series, value: Any, reads_missing: bool) -> pd.Series:
     """The engine's ``activities.matches`` for a numeric column."""
     from pandas.api.types import is_numeric_dtype
@@ -67,7 +76,7 @@ class HypotrailPreparation(TransformerMixin, BaseEstimator):
     def _design(self, frame: pd.DataFrame) -> pd.DataFrame:
         X = frame[list(self.features)].copy()
         for name in self.text_columns:
-            X[name] = X[name].map(lambda v: None if v != v else str(v)).astype(object)
+            X[name] = X[name].map(lambda v: None if _nan_like(v) else str(v)).astype(object)
         for s in self.special_values:
             column = s['column']
             mask = _matches(frame[column], s['value'], bool(s.get('reads_missing')))
@@ -106,7 +115,7 @@ class HypotrailPreparation(TransformerMixin, BaseEstimator):
 
     @staticmethod
     def _fold(series: pd.Series, kept: set) -> pd.Series:
-        text = series.map(lambda v: v if v != v else str(v))
+        text = series.map(lambda v: np.nan if _nan_like(v) else str(v))
         return text.where(text.isna() | text.isin(kept), RARE_GROUP)
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:

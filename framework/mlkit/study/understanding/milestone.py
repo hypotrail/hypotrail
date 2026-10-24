@@ -12,8 +12,8 @@ export runs this protocol instead, so no direct call bypasses the review and no 
    (one revision);
 2. **render** the pack out of the lock, only from the study at the reserved revision
    (``cmd_export.build``) into a temporary sibling folder of the target;
-3. **revalidate** under the writer lock: the revision is still the reserved one and the
-   gate, recomputed again, has the same decision, policy, scope and context digests. Only
+3. **revalidate** under the writer lock: no revision since the reserved one other than
+   milestone reservations and records (concurrent handoffs), and the gate, recomputed again, has the same decision, policy, scope and context digests. Only
    then is the folder renamed onto the target (never a replacement). Any relevant change in
    between leaves the folder as a ``.candidate`` next to the target, records
    ``candidate_not_current`` and refuses with ``context_changed``: it is never a handoff;
@@ -63,6 +63,16 @@ def _record_locked(store, state, rid, outcome, files, request_id):
                                      cmd.handlers(cmd.Context(store, request_id)))
 
 
+def _only_bookkeeping_since(store, revision: int) -> bool:
+    """No revision after ``revision`` other than milestone reservations and records.
+
+    Concurrent handoffs reserve and record their own milestones; those revisions change
+    neither the pack nor the gate's identities (still compared by :func:`_same`), so they
+    must not turn every concurrent handoff into a candidate. Any other action does."""
+    allowed = {actions.P + 'milestone_reserve', actions.P + 'milestone_record'}
+    return all(r.get('action') in allowed for r in store.revisions(since=revision))
+
+
 # In-process test hooks run between the rendering and the revalidation (A25).
 BEFORE_FINALIZE: list = []
 
@@ -77,9 +87,19 @@ def export_handoff_gated(study_dir, *, out=None, expected_revision=None):
                      f'{expected_revision}; nothing was written.', 'Read the study again.',
                      expected_revision=expected_revision, current_revision=state['revision'])
     token = uuid.uuid4().hex[:12]
-    reserved = actions.apply(study_dir, 'milestone_reserve', {'milestone': 'handoff'},
-                             request_id=f'handoff-reserve-{token}',
-                             expected_revision=state['revision'])
+    # Without --expected-revision, a concurrent write between reading and reserving is not
+    # the user's concern: the reservation is retried on the new revision (bounded).
+    for attempt in range(3):
+        try:
+            reserved = actions.apply(study_dir, 'milestone_reserve', {'milestone': 'handoff'},
+                                     request_id=f'handoff-reserve-{token}-{attempt}',
+                                     expected_revision=state['revision'])
+            break
+        except Exception as exc:          # noqa: BLE001
+            if expected_revision is not None or getattr(exc, 'code', None) != 'stale_revision' \
+                    or attempt == 2:
+                raise
+            state = sv.load_state(study_dir)
     rid = reserved['result']['reservation_id']
     reserved_revision = reserved['revision']
     tmp = None
@@ -115,7 +135,7 @@ def export_handoff_gated(study_dir, *, out=None, expected_revision=None):
     with store.writing() as fresh:
         record = fresh['understanding']['milestones'][rid]
         current = sv.gate(store, fresh, 'handoff')
-        same = fresh['revision'] == reserved_revision and _same(current, record)
+        same = _only_bookkeeping_since(store, reserved_revision) and _same(current, record)
         if same:
             if target.exists() and target.is_dir() and not any(target.iterdir()):
                 target.rmdir()

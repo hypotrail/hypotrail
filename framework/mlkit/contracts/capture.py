@@ -13,7 +13,13 @@ final test would open) **before** the final test is opened:
 3. the bundle is written in a staging directory, reloaded and checked for parity, optionally
    packaged by an injected packager (workshop profile: packaging is required), then moved
    atomically to ``.hypotrail/predictors/<predictor_id>/`` (content-addressed: the same
-   capture again reuses the verified bundle).
+   capture again reuses the verified bundle). The packages are made from the native bundle
+   after its id exists, so they are not part of the id: a bundle that holds packages lives
+   at ``<predictor_id>+<format>[+<format>...]`` and a capture is reused only from the
+   bundle of the same id *and* the same package formats; the result always reports the
+   packages of the bundle it names (review A3, 2026-10-24). Before a bundle is added or
+   reused, every existing bundle of the same predictor id is verified; an altered one
+   refuses the capture. The staging folder is removed whatever the outcome.
 
 Its registry result names the predictor id, the digests and the parity. Once a study holds a
 capture, ``final_test.evaluation`` requires a *current* capture of the very configuration it
@@ -36,7 +42,7 @@ import importlib.util
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Mapping
 
 from hypotrail_runtime import RUNTIME_API_VERSION, __version__ as RUNTIME_VERSION
 from hypotrail_runtime.errors import ContractError
@@ -297,24 +303,19 @@ def _compute(store, plan_: Mapping) -> dict:
     staging = root / f'.staging-{plan_.get("execution_id") or os.getpid()}'
     if staging.exists():
         shutil.rmtree(staging)
-    packager = load_packager(params.get('packager'))
-    descriptor = capture_predictor(fitted, context, parity[features], staging, packager,
-                                   parity_origin='authorized_development',
-                                   tolerance=params['tolerance'],
-                                   extensions={'hypotrail.engine_parity':
-                                               engine_parity.model_dump(mode='json')})
-    final = root / descriptor.predictor_id
-    if final.exists():
-        from hypotrail_runtime import verify_bundle
-        verify_bundle(final)                 # a verified identical capture is reused
-        shutil.rmtree(staging)
-        reused = True
-    else:
-        os.replace(staging, final)
-        reused = False
+    try:
+        packager = load_packager(params.get('packager'))
+        descriptor = capture_predictor(fitted, context, parity[features], staging, packager,
+                                       parity_origin='authorized_development',
+                                       tolerance=params['tolerance'],
+                                       extensions={'hypotrail.engine_parity':
+                                                   engine_parity.model_dump(mode='json')})
+        final, reused, held = _place(root, staging, descriptor)
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
     values = {
-        'predictor_id': descriptor.predictor_id, 'bundle': f'{PREDICTORS_DIR}/'
-                                                          f'{descriptor.predictor_id}',
+        'predictor_id': descriptor.predictor_id,
+        'bundle': f'{PREDICTORS_DIR}/{final.name}',
         'reused': reused, 'profile': params['profile'],
         'model': params['model'], 'family': recipe.family, 'task': recipe.task,
         'configuration': dict(inputs['configuration']), 'features': features,
@@ -326,12 +327,49 @@ def _compute(store, plan_: Mapping) -> dict:
         'tuning': info.get('tuning') and {'value': info['tuning']['value']},
         'parity': descriptor.parity.model_dump(mode='json') if descriptor.parity else None,
         'engine_parity': engine_parity.model_dump(mode='json'),
-        'packages': [{'format': p.format, 'artifact_id': p.artifact_id}
-                     for p in descriptor.packages],
+        'packages': [{'format': p.format, 'artifact_id': p.artifact_id} for p in held],
         'runtime': dict(params['runtime']), 'computation_id': cx.computation_id(context),
         'limitations': list(LIMITATIONS), 'note': NOTE}
     return {'values': values, 'blobs': {}, 'partition': 'development',
             'n_rows': int(len(development))}
+
+
+def bundle_name(predictor_id: str, formats) -> str:
+    """The folder of a bundle under ``predictors/``: its predictor id, plus the formats of
+    its optional packages (sorted) when it holds any."""
+    formats = sorted(formats)
+    return '+'.join([predictor_id, *formats])
+
+
+def _place(root: Path, staging: Path, descriptor):
+    """Move the staged bundle into place, or reuse the verified bundle of the same id and
+    package formats. Return ``(folder, reused, packages held by that folder)``."""
+    from hypotrail_runtime import verify_bundle
+    pid = descriptor.predictor_id
+    formats = [p.format for p in descriptor.bundle.optional_packages]
+    final = root / bundle_name(pid, formats)
+    # Every bundle of this predictor already in the store is verified first: an altered one
+    # is reported, never silently shadowed by a new folder.
+    for sibling in sorted(root.iterdir()):
+        if sibling.name == pid or sibling.name.startswith(pid + '+'):
+            existing = verify_bundle(sibling)
+            if existing.predictor_id != pid:
+                raise ContractError('artifact_integrity_failed', f'{sibling.name} holds '
+                                    'another predictor.', path=sibling.name,
+                                    remediation='Remove or restore the altered bundle.')
+    if final.exists():
+        existing = verify_bundle(final)      # a verified identical capture is reused
+        held = list(existing.bundle.optional_packages)
+        if sorted(p.format for p in held) != sorted(formats):
+            raise ContractError('artifact_integrity_failed', f'{final.name} does not hold the '
+                                'packages its name declares (packages_differ).',
+                                path=final.name, remediation='Remove or restore the bundle.',
+                                details={'reason': 'packages_differ',
+                                         'held': sorted(p.format for p in held),
+                                         'requested': sorted(formats)})
+        return final, True, held
+    os.replace(staging, final)
+    return final, False, list(descriptor.bundle.optional_packages)
 
 
 def load_for_final(store, predictor: Mapping):

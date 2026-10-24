@@ -100,7 +100,10 @@ class Tree:
                 continue
             meta, path = rec.split(b'\t', 1)
             mode, kind, oid = meta.decode().split()
-            out[path.decode('utf-8', 'replace')] = (mode, oid)
+            p = path.decode('utf-8', 'replace')
+            if p in out:
+                self.problems.append(f'duplicate path {p}')    # a malformed tree
+            out[p] = (mode, oid)
         return out
 
     def still_coherent(self) -> bool:
@@ -112,7 +115,8 @@ class Tree:
             return None
         if self._entries is None:
             path = self.repo / rel
-            if path.is_symlink():
+            if any((self.repo / PurePosixPath(*PurePosixPath(rel).parts[:i])).is_symlink()
+                   for i in range(1, len(PurePosixPath(rel).parts) + 1)):
                 self.problems.append(f'symbolic link {rel}')
                 return None
             if not path.is_file():
@@ -140,19 +144,34 @@ class Tree:
         return git(self.repo, 'cat-file', 'blob', oid)
 
     def generations(self) -> list[str]:
+        """The generation folders (``rv-*``), the same rule for every target. A leftover
+        temporary folder (``.rv-*``), an ``rv-*`` entry that is not a folder of files, or a
+        link is a problem; other names (a README, examples) are not generations."""
         prefix = ex.EXPORT_DIR + '/'
+        names = set()
         if self._entries is None:
             base = self.repo / ex.EXPORT_DIR
             if not base.is_dir():
                 return []
-            return sorted(p.name for p in base.iterdir()
-                          if p.name.startswith('rv-'))
-        names = set()
+            for p in base.iterdir():
+                if p.name.startswith('.rv-'):
+                    self.problems.append(f'leftover temporary folder {p.name}')
+                elif p.name.startswith('rv-'):
+                    if p.is_symlink() or not p.is_dir():
+                        self.problems.append(f'{p.name} is not a generation folder')
+                    else:
+                        names.add(p.name)
+            return sorted(names)
         for path in self._entries:
             if path.startswith(prefix):
                 rest = path[len(prefix):].split('/')
-                if len(rest) == 2 and rest[0].startswith('rv-'):
-                    names.add(rest[0])
+                if rest[0].startswith('.rv-'):
+                    self.problems.append(f'leftover temporary folder {rest[0]}')
+                elif rest[0].startswith('rv-'):
+                    if len(rest) != 2:
+                        self.problems.append(f'{rest[0]} is not a generation folder')
+                    else:
+                        names.add(rest[0])
         return sorted(names)
 
     def files_in(self, rid: str) -> list[str]:
@@ -332,10 +351,16 @@ def _verify_one(tree: Tree, rid: str, policy_doc, local) -> dict:
     for a in doc['privacy_review']['approvals']:
         if a['content_digest'] != digest:
             problems.append('an approval covers other content')
-    if doc['privacy_review']['status'] == 'approved' and \
-            not set(doc['privacy_review']['required_contributors']) <= \
-            {a['approver_alias'] for a in doc['privacy_review']['approvals']}:
+    # The people who must approve are recomputed from the published content, never read
+    # from the list the export states about itself (spec §14, A29).
+    need = set(ex.required_contributors(ex.approval_projection(doc)))
+    if set(doc['privacy_review']['required_contributors']) != need:
+        problems.append('required contributors do not match the published content')
+    approvers = {a['approver_alias'] for a in doc['privacy_review']['approvals']}
+    if doc['privacy_review']['status'] == 'approved' and not need <= approvers:
         problems.append('approved without every contributor')
+    if doc['privacy_review']['status'] == 'pending' and need <= approvers:
+        problems.append('privacy review status contradicts its approvals')
     if problems:
         return axes
     axes['public_integrity'] = 'valid'
@@ -347,6 +372,10 @@ def _verify_one(tree: Tree, rid: str, policy_doc, local) -> dict:
         limitations.append('private_refs_not_resolvable_outside_the_study')
     if local is not None:
         axes.update(local(doc))
+        if axes.get('study_binding') == 'not_recorded':
+            problems.append('this generation was not exported by the given study')
+            axes['public_integrity'] = 'invalid'
+            return axes
     else:
         limitations.append('no_local_study: private context and answers not checked')
     try:
@@ -385,7 +414,8 @@ def git_plan(repo, files: Mapping[str, bytes], sources: list[Mapping]) -> dict:
         if ws != s['sha256'] or is_ != s['sha256']:
             conflicts.append({'path': s['path'], 'snapshot': s['sha256'], 'worktree': ws,
                               'index': is_})       # an untracked source is a conflict too
-    staged = git(repo, 'diff', '--cached', '--name-only', '-z').split(b'\0') if head else \
+    staged = git(repo, 'diff', '--cached', '--no-renames', '--name-only', '-z').split(b'\0') \
+        if head else \
         git(repo, 'ls-files', '-z').split(b'\0')
     staged = sorted(p.decode() for p in staged if p)
     allowed = set(files) | {s['path'] for s in sources if s['path']}
@@ -402,7 +432,7 @@ def _has_head(repo: Path) -> bool:
     return proc.returncode == 0
 
 
-def stage(repo, paths: list[str], expected_index: str) -> dict:
+def stage(repo, paths: list[str], expected_index: str, expected: Mapping | None = None) -> dict:
     """Stage exactly ``paths`` (artefacts of the plan), after checking the index has not
     changed since the plan; nothing already staged is removed."""
     repo = Path(repo)
@@ -420,6 +450,13 @@ def stage(repo, paths: list[str], expected_index: str) -> dict:
     changed = sorted(p for p in set(after._entries) | set(snapshot_before)
                      if after._entries.get(p) != snapshot_before.get(p))
     foreign = [p for p in changed if p not in paths]
+    differ = [p for p, sha in (expected or {}).items()
+              if hashlib.sha256(after.read(p) or b'').hexdigest() != sha]
+    if differ:
+        raise refuse('git_index_conflict', 'The staged bytes differ from the exported ones (a '
+                     'clean filter or a concurrent change?). The index was left as is.',
+                     'Check your Git filters, then stage the files again yourself.',
+                     paths=differ)
     return {'staged': sorted(paths), 'unexpected_index_changes': foreign,
             'index_identity': after.index_id}
 

@@ -15,7 +15,9 @@ row positions with Python's ``random.Random``. This adapter computes the same *m
   lower is better) is stated by the caller and recorded;
 * the undefined-replicate policy is the engine's: one required replicate whose objective is
   undefined invalidates the interval (``eligible: false``, bounds null, the count kept);
-  nothing is dropped silently.
+  nothing is dropped silently. An objective undefined on the full sample (a null point
+  estimate) is ``insufficient_data`` even when every replicate is defined: an interval is
+  never ``ok`` around an undefined point.
 
 Admissibility is decided before the call: rows must be independent observations. Temporal,
 grouped or batched dependence returns ``not_applicable``: a SciPy computation does not make a
@@ -67,7 +69,7 @@ def paired_bootstrap(y: Sequence, predictions: Mapping[str, Sequence],
     replicate) or ``failed`` (a backend exception, with its cause)."""
     import numpy as np
     from scipy import stats
-    if type(replicates) is not int or replicates < 1:
+    if isinstance(replicates, bool) or not isinstance(replicates, int) or replicates < 1:
         raise ValueError('replicates must be a positive integer')
     if not 0 < level < 1:
         raise ValueError('level must be between zero and one')
@@ -105,7 +107,6 @@ def paired_bootstrap(y: Sequence, predictions: Mapping[str, Sequence],
     points = {m: (None if np.isnan(v) else v) for m, v in point.items()}
     delta_point = (None if None in points.values()
                    else points[candidate] - points[reference])
-
     def statistic(yy, ref, cand):
         a, b = point_of(yy, ref), point_of(yy, cand)
         return np.array([a, b, b - a])
@@ -129,6 +130,13 @@ def paired_bootstrap(y: Sequence, predictions: Mapping[str, Sequence],
                                             'undefined objective', point=points,
                        delta={'point': delta_point, 'low': None, 'high': None},
                        undefined=undefined)
+    if None in points.values():
+        # An interval around an undefined point estimate is never 'ok' (review A,
+        # 2026-10-24), even when every resample happens to be defined.
+        return outcome('insufficient_data', 'the objective is undefined on the full sample '
+                                            'for ' + ', '.join(m for m in names
+                                                               if points[m] is None),
+                       point=points, undefined=0)
     low, high = np.asarray(res.confidence_interval.low), np.asarray(res.confidence_interval.high)
     intervals = {reference: {'low': float(low[0]), 'high': float(high[0])},
                  candidate: {'low': float(low[1]), 'high': float(high[1])}}

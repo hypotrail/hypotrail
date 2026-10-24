@@ -108,6 +108,46 @@ export through ungated (the switch is read before the lock); a crash between the
 commit of the handoff record, inside the same lock, leaves a published folder with a
 `reserved` record.
 
+## Review of 24 October 2026: fixes (areas C and D)
+
+Findings of [REVIEW-2026-10-24](../acceptance/REVIEW-2026-10-24.md), each reproduced by the
+review's own adversarial tests, now kept in the repository as regression tests
+(`framework/tests/study/understanding/test_adv_*.py`, helpers `advkit.py`; tests whose
+expectation changed with a fix say so in their docstring).
+
+* C-M1: assistance of a decision is `unaided` only when every cited attempt is unaided
+  (`evaluate.assistance_summary`); one coached attempt makes it coached, so help is not
+  laundered by citing a weak unaided attempt beside it.
+* C-M2: `transfer_decision_map` values take one id or a list of distinct ids, so
+  `team_coverage.minimum_people` of 3 or more can be met.
+* C-M3: an arbitration is checked against the union of the session's and the current
+  critical dimensions, and the gate re-checks every arbitration it relies on
+  (`arbitration_not_admissible`): toggling the policy no longer lets the author arbitrate.
+* C-M4: a mapped source unreadable at capture is kept with its role; `role:` dependency keys
+  match it, so the dimension is `unknown`, not `current`.
+* D-F1: the verifier recomputes the required contributors from the approval projection
+  (author included) and checks the declared status against them.
+* D-F2: local verification binds the artefact to a recorded export intent of the study (same
+  review id, projection digest and session); an unrecorded generation is a problem and makes
+  integrity invalid.
+* D-F3: duplicate paths in a commit tree are refused.
+* Minor: `start` and a full `export write` retry are replays; after a repository move,
+  `check --repo` says it is a preview and `understanding relocate` records the new place,
+  after which `check` and `export handoff` agree; completed (or abandoned) sessions refuse
+  handover, transfers and proposals; a negative transfer review opens a reservation that only
+  a later transfer review resolves; parties to a conflict cannot arbitrate it; an arbitration
+  that settles reservations alone needs evidence, and its references are allowlisted; a
+  session links only to the same person's; concurrent handoffs each publish (other handoffs'
+  bookkeeping is not a relevant change) and a lost race is retried; the gated pack revision
+  is documented (CLI-CONTRACT §16); a required policy requires at least one dimension; a
+  waiver approved by the author is ignored; `rectify` is refused when off; a reserved export
+  intent with the same hashes is reconciled; Markdown escapes `\r`, control and separator
+  characters and every Markdown punctuation; `git diff` without rename detection;
+  `git-stage` compares the staged blobs; foreign `rv-*` entries and leftovers are treated
+  alike for every target; a symlinked path component is refused in the worktree; duplicate
+  dimension ids are refused; zero mapped public sources read as `unknown`; the report
+  section shows freshness per session; `verify-export` on a missing repository refuses.
+
 ## Gate run
 
 Run in this container (Python 3.13, uv 0.11, the `dev`, `browser` and `azureml` groups and the

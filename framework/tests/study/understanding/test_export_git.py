@@ -53,9 +53,9 @@ def test_every_contributor_approves_the_same_content(done):
     for who in ('bob', 'carol'):
         u.m('export', 'approve', '--session', sid, '--contributor', who, '--content-digest',
             prev['content_digest'])
-    # A new handover text changes the projection: every approval is now stale.
-    u.m('handover', 'set', '--session', sid, '--file',
-        u.file('h3.json', dict(ukit.HANDOVER, purpose='Reworded purpose.')))
+    # A relevant source change changes the projection (freshness at export): every
+    # approval is now stale.
+    (u.repo / 'src/transforms.py').write_text('def fit_imputer(train):\n    return 2\n')
     again = u.call('export', 'preview', '--session', sid, '--repo', u.repo)
     assert again['content_digest'] != prev['content_digest']
     assert set(again['missing_approvals']) == {'alice', 'bob', 'carol'}

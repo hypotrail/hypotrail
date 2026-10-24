@@ -50,7 +50,8 @@ MD_FILE = 'understanding-review.md'
 MANIFEST_FILE = 'export-manifest.json'
 FILES = (JSON_FILE, MD_FILE, MANIFEST_FILE)
 LATEST = 'latest.json'
-APPROVAL_FIELDS = ('schema', 'study_public_id', 'session_ref', 'public_source_scope',
+APPROVAL_FIELDS = ('schema', 'study_public_id', 'session_ref', 'author_alias',
+                   'public_source_scope',
                    'policy', 'policy_digest', 'tasks', 'rubrics', 'source_manifest',
                    'source_scope_digest', 'handover_content', 'handover_digest',
                    'coverage_selection', 'dimensions', 'peer_coverage', 'decisions_summary',
@@ -114,7 +115,6 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
         for aid in attempts:
             t = ext['attempts'][aid]['task_ref']
             used_tasks[t['task_id']] = t
-        assist = [ev.attempt_assistance(ext, a) for a in attempts if a in ext['attempts']]
         evidence = _public_refs(d['evidence_refs'], scope) if d else []
         safe.update(evidence)
         status = view['status'] if d is not None or view['status'] != 'demonstrated' \
@@ -127,9 +127,7 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
                          for c in (d['criterion_results'] if d else [])],
             'task_refs': sorted({ext['attempts'][a]['task_ref']['task_id'] for a in attempts}),
             'attempt_refs': [_opaque(ext, 'attempt', a) for a in attempts],
-            'assistance_summary': ('none' if not assist else
-                                   'unaided' if any(not a['aided'] for a in assist)
-                                   else 'aided'),
+            'assistance_summary': ev.assistance_summary(ext, attempts),
             'reviewer_alias': d['reviewer_declared_id'] if d else None,
             'human_review_ref': d['decision_id'] if d else None,
             'rationale': d['rationale'] if d else None,
@@ -206,7 +204,7 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
     proj = {
         'schema': SCHEMA, 'study_public_id': study_public_id(ext),
         'session_ref': _opaque(ext, 'session', session['session_id']),
-        'public_source_scope': scope, 'policy': doc, 'policy_digest': pol.digest(doc),
+        'author_alias': session['actor_declared_id'], 'public_source_scope': scope, 'policy': doc, 'policy_digest': pol.digest(doc),
         'tasks': [_task_public(taskset, t) for _, t in sorted(used_tasks.items())],
         'rubrics': [{'dimension_id': r['dimension_id'], 'rubric_id': r['rubric_id'],
                      'version': r['version'], 'digest': canonical.digest(r),
@@ -267,8 +265,9 @@ def _next_step(status: str, freshness: str, reservations) -> str:
 
 def required_contributors(proj: Mapping) -> list:
     """Every declared person whose alias, rationale or contribution the projection
-    publishes; each approves the same complete projection."""
-    people = set()
+    publishes, the author included; each approves the same complete projection. The verifier
+    recomputes this list from the published content (it never trusts the stored one)."""
+    people = {proj['author_alias']} if proj.get('author_alias') else set()
     sel = proj.get('coverage_selection')
     if sel:
         people.add(sel['actor_alias'])
@@ -299,12 +298,12 @@ def review_id(proj: Mapping) -> str:
 def review(ext: Mapping, session: Mapping, proj: Mapping, *, created_at: str,
            base_commit: str | None) -> dict:
     digest = canonical.digest(proj)
-    approvals = sorted(({'approver_alias': a['approver_declared_id'],
-                         'approved_at': a['approved_at'], 'content_digest': a['content_digest']}
-                        for a in ext['approvals'].values()
-                        if a['session_id'] == session['session_id']
-                        and a['content_digest'] == digest),
-                       key=lambda a: a['approver_alias'])
+    first = {}
+    for a in sorted(ext['approvals'].values(), key=lambda a: a['recorded_revision']):
+        if a['session_id'] == session['session_id'] and a['content_digest'] == digest:
+            first.setdefault(a['approver_declared_id'], a)     # one approval per person
+    approvals = [{'approver_alias': who, 'approved_at': a['approved_at'],
+                  'content_digest': a['content_digest']} for who, a in sorted(first.items())]
     need = sorted(set(required_contributors(proj)) | {session['actor_declared_id']})
     done = {a['approver_alias'] for a in approvals}
     out = dict(proj)
@@ -330,10 +329,12 @@ def _md(text) -> str:
     """Plain text for Markdown: markup characters escaped, links never rendered."""
     if text is None:
         return '—'
-    out = str(text).replace('\\', '\\\\')
-    for ch in '`*_{}[]()#+-.!|<>':
+    out = ''.join(' ' if (ord(ch) < 0x20 or ch in '\x7f\x85\u2028\u2029') else ch
+                  for ch in str(text))          # no line break, carriage return or control
+    out = out.strip().replace('\\', '\\\\')
+    for ch in '`*_{}[]()#+-.!|<>=~:':
         out = out.replace(ch, '\\' + ch)
-    return out.replace('\n', ' ')
+    return out
 
 
 def markdown(doc: Mapping) -> str:
@@ -426,6 +427,9 @@ def validate_review(doc) -> list[str]:
         p.append('assurance')
     if not isinstance(doc['dimensions'], list):
         return p + ['dimensions']
+    ids = [d.get('id') for d in doc['dimensions'] if isinstance(d, dict)]
+    if len(ids) != len(set(ids)):
+        p.append('duplicate dimension ids')
     for d in doc['dimensions']:
         if not isinstance(d, dict) or set(d) != set(DIMENSION_FIELDS):
             p.append('dimension fields')

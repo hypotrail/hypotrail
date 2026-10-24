@@ -10,6 +10,21 @@
 * :func:`verify_bundle` checks paths, sizes, digests, ids, versions and the environment
   before anything is unpickled; :func:`load_predictor` loads only a verified bundle under
   an explicitly trusted root (a digest does not make a third-party pickle safe).
+
+What the predictor id binds (review A1, 2026-10-24). The id is the digest of the manifest
+(``predictor.json``), and every immutable byte of the bundle is reached from it: the
+payload, wheel and lock digests it records are compared with the files themselves; the
+recipe and the data contract by their content digests; the parity rows, their expected
+outputs, their origin and the tolerance through the manifest extension
+``hypotrail.parity`` (equal to the bundle document's ``parity``); the computation context
+through ``hypotrail.computation_context`` (its path and digest, or null when the capture
+had none). A listed file that none of these binds is refused, so the bundle document
+(``predictor_bundle.json``) holds nothing that could change a prediction or a parity
+verdict without changing the id. Outside the id, by design: the evidence binding
+(``evidence/``, mutable and versioned) and the optional packages, which are made from the
+verified native bundle after its id exists; each package is checked against its own
+descriptor (present, listed, digests, ``predictor_id``, ``artifact_id``), never trusted
+blindly.
 * :meth:`Predictor.predict` checks the raw features against the data contract and returns
   a :class:`PredictionBatch` in input order: the score of the named positive class, or a
   prediction in the target unit.
@@ -20,6 +35,7 @@ import json
 import os
 import pickle
 import platform
+import re
 import shutil
 import sys
 import tempfile
@@ -32,8 +48,9 @@ import pandas as pd
 
 from . import RUNTIME_API_VERSION, DISTRIBUTION, __version__, canonical, families, inference
 from .contracts import (ComputationContext, DataContract, ModelRecipe, PackageDescriptor,
-                        ParityResult, PredictorArtifact, PredictorBundle, TrainingScope,
-                        Tolerance, parse, validate_data_contract, validate_recipe)
+                        ParityResult, ParitySpec, PredictorArtifact, PredictorBundle,
+                        TrainingScope, Tolerance, parse, validate_data_contract,
+                        validate_recipe)
 from .errors import ContractError
 from .preprocess import build_pipeline
 
@@ -57,6 +74,14 @@ DEFAULT_TOLERANCE = {'rtol': 1e-10, 'atol': 1e-12}
 SEMANTIC_DISTRIBUTIONS = ('numpy', 'pandas', 'scikit-learn', 'scipy')
 TRUSTED_ROOTS_ENV = 'HYPOTRAIL_RUNTIME_TRUSTED_ROOTS'
 PARITY_FRAME = 'hypotrail.parity_frame/1'
+# Manifest extensions that bind the parity and the computation context to the predictor id
+# (and the ones the capture itself writes): a caller's extension never replaces them.
+BOUND_PARITY = 'hypotrail.parity'
+BOUND_CONTEXT = 'hypotrail.computation_context'
+RESERVED_EXTENSIONS = ('hypotrail.learnt_state', 'hypotrail.n_train', BOUND_PARITY,
+                       BOUND_CONTEXT)
+# A packager's format names a folder of the bundle (``packages/<format>``).
+PACKAGE_FORMAT = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$')
 
 
 # --- outputs ---------------------------------------------------------------------------------
@@ -341,8 +366,10 @@ def environment_lock() -> bytes:
     pins = runtime_closure()
     pins.pop(DISTRIBUTION, None)          # shipped as the bundle's own wheel
     lines = [f'{n}=={v}' for n, v in sorted(pins.items())]
+    # The header names the platform as the manifest does (system and machine), not the
+    # kernel build: the lock digest enters the predictor id.
     header = [f'# python {platform.python_version()} ({sys.implementation.name})',
-              f'# platform {platform.platform()}',
+              f'# platform {sys.platform}-{platform.machine()}',
               f'# closure of {DISTRIBUTION} {__version__} requirements']
     return ('\n'.join(header + lines) + '\n').encode('utf-8')
 
@@ -408,6 +435,11 @@ def capture_predictor(fitted: FittedPredictor, context: ComputationContext | Map
     if fingerprint is None:
         raise ContractError('contract_invalid', 'A capture names its code fingerprint.',
                             path='code_fingerprint', remediation='Pass the computation context.')
+    clash = sorted(set(extensions or {}) & set(RESERVED_EXTENSIONS))
+    if clash:
+        raise ContractError('contract_invalid', 'These manifest extensions are written by the '
+                            'capture itself.', path='extensions',
+                            remediation='Use another namespaced key.', details={'keys': clash})
     destination.parent.mkdir(parents=True, exist_ok=True)
     tmp = Path(tempfile.mkdtemp(prefix=f'.{destination.name}.tmp-', dir=destination.parent))
     try:
@@ -428,6 +460,15 @@ def capture_predictor(fitted: FittedPredictor, context: ComputationContext | Map
              'columns': list(recipe.output_contract.columns),
              'values': [float(v) for v in expected]}) + b'\n')
         payload = _file_entry(tmp, PAYLOAD)
+        parity_spec = {'features_path': PARITY_FEATURES, 'expected_outputs_path': PARITY_EXPECTED,
+                       'sha256s': {PARITY_FEATURES: canonical.file_sha256(tmp / PARITY_FEATURES),
+                                   PARITY_EXPECTED: canonical.file_sha256(tmp / PARITY_EXPECTED)},
+                       'origin': parity_origin,
+                       'tolerance': {'rtol': float(tol['rtol']), 'atol': float(tol['atol']),
+                                     'exact': list(tol['exact'])},
+                       'n_rows': int(len(parity_view))}
+        bound_context = None if ctx is None else {'relative_path': CONTEXT,
+                                                  'sha256': canonical.file_sha256(tmp / CONTEXT)}
         manifest_doc = {
             'schema_version': 'hypotrail.predictor_artifact/1', 'predictor_id': '0' * 64,
             'recipe_sha256': recipe_sha, 'data_contract_sha256': contract_sha,
@@ -444,19 +485,14 @@ def capture_predictor(fitted: FittedPredictor, context: ComputationContext | Map
                             'lock_sha256': canonical.file_sha256(tmp / LOCK)},
             'training_scope': fitted.training_scope.model_dump(mode='json'),
             'code_fingerprint': fingerprint,
-            'extensions': {'hypotrail.learnt_state': fitted.learnt_state(),
-                           'hypotrail.n_train': fitted.n_train, **dict(extensions or {})}}
+            'extensions': {**dict(extensions or {}),
+                           'hypotrail.learnt_state': fitted.learnt_state(),
+                           'hypotrail.n_train': fitted.n_train,
+                           BOUND_PARITY: parity_spec, BOUND_CONTEXT: bound_context}}
         manifest_doc['predictor_id'] = canonical.artifact_id(manifest_doc,
                                                              exclude=('predictor_id',))
         manifest = parse(PredictorArtifact, manifest_doc)
         canonical.write_json(_mk(tmp, MANIFEST), manifest)
-        parity_spec = {'features_path': PARITY_FEATURES, 'expected_outputs_path': PARITY_EXPECTED,
-                       'sha256s': {PARITY_FEATURES: canonical.file_sha256(tmp / PARITY_FEATURES),
-                                   PARITY_EXPECTED: canonical.file_sha256(tmp / PARITY_EXPECTED)},
-                       'origin': parity_origin,
-                       'tolerance': {'rtol': float(tol['rtol']), 'atol': float(tol['atol']),
-                                     'exact': list(tol['exact'])},
-                       'n_rows': int(len(parity_view))}
         _write_bundle(tmp, manifest.predictor_id, parity_spec, [])
         native = verify_bundle(tmp)
         reloaded = _load_verified(native)
@@ -525,9 +561,12 @@ def _package(root: Path, packager, native: BundleDescriptor, parity_spec: Mappin
     package (``packages/<format>.descriptor.json``), never inside it."""
     out = []
     fmt = getattr(packager, 'format', None)
-    if not isinstance(fmt, str) or not fmt:
-        raise ContractError('contract_invalid', 'A packager names its format.',
-                            path='packager.format', remediation='Set packager.format.')
+    if not isinstance(fmt, str) or not PACKAGE_FORMAT.match(fmt):
+        # Checked before the format becomes a path (``packages/<format>``).
+        raise ContractError('contract_invalid', 'A packager names its format: letters, digits, '
+                            '"_" or "-", 64 characters at most, no path separator or dot.',
+                            path='packager.format', remediation='Set packager.format.',
+                            details={'format': fmt if isinstance(fmt, str) else None})
     rel = f'{PACKAGES_DIR}/{fmt}'
     target = root / rel
     target.mkdir(parents=True)
@@ -600,8 +639,20 @@ def _read_json(root: Path, rel: str) -> dict:
     return json.loads(_inside(root, rel).read_bytes())
 
 
+def _refuse_integrity(message: str, *, path: str = '', **details) -> None:
+    raise ContractError('artifact_integrity_failed', message, path=path,
+                        remediation='Refuse this bundle; capture the predictor again.',
+                        details=details or None)
+
+
 def verify_bundle(bundle_dir: Path) -> BundleDescriptor:
-    """Check the bundle before anything is unpickled; return its descriptor."""
+    """Check the bundle before anything is unpickled; return its descriptor.
+
+    Every listed file is compared with its bytes; every digest the manifest records (the
+    payload, the runtime wheel, the environment lock, the parity files and the computation
+    context) is compared with the bytes too; the bundle document's parity block must be the
+    one the manifest binds; every listed file must be bound by the manifest or belong to a
+    declared optional package (checked against its descriptor)."""
     root = Path(bundle_dir)
     if not (root / BUNDLE).is_file():
         raise ContractError('model_not_captured', f'{root} holds no {BUNDLE}.',
@@ -612,13 +663,15 @@ def verify_bundle(bundle_dir: Path) -> BundleDescriptor:
             raise ContractError('artifact_integrity_failed', f'{path.name} links outside the '
                                 'bundle.', remediation='Refuse this bundle.')
     listed = {f.relative_path for f in bundle.files}
+    actual: dict[str, str] = {}
     for entry in bundle.files:
         path = _inside(root, entry.relative_path)
-        if path.stat().st_size != entry.size_bytes or \
-                canonical.file_sha256(path) != entry.sha256:
+        digest = canonical.file_sha256(path)
+        if path.stat().st_size != entry.size_bytes or digest != entry.sha256:
             raise ContractError('artifact_integrity_failed', f'{entry.relative_path} does not '
                                 'match its recorded size and digest.',
                                 path=entry.relative_path, remediation='Refuse this bundle.')
+        actual[entry.relative_path] = digest
     present = {p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file()}
     extra = sorted(p for p in present - listed - {BUNDLE}
                    if not p.startswith(EVIDENCE_DIR + '/'))
@@ -641,26 +694,121 @@ def verify_bundle(bundle_dir: Path) -> BundleDescriptor:
             or manifest.predictor_id != bundle.predictor_id:
         raise ContractError('artifact_integrity_failed', 'The predictor id does not match its '
                             'manifest.', remediation='Refuse this bundle.')
+    if manifest.runtime.api_version.split('.')[0] != RUNTIME_API_VERSION.split('.')[0]:
+        raise ContractError('schema_version_unsupported', 'The bundle needs another runtime '
+                            'API major version.', path='runtime/api_version',
+                            remediation=f'Install the runtime {manifest.runtime.version}.')
     recipe = validate_recipe(_inside(root, bundle.recipe_path).read_bytes())
     contract = validate_data_contract(_inside(root, bundle.data_contract_path).read_bytes())
     if recipe.digest() != manifest.recipe_sha256 or contract.digest() != \
             manifest.data_contract_sha256:
         raise ContractError('artifact_integrity_failed', 'The recipe or the data contract does '
                             'not match the manifest.', remediation='Refuse this bundle.')
-    for f in manifest.payload_files:
-        if f.relative_path not in listed:
-            raise ContractError('artifact_integrity_failed', 'A payload is not listed.',
-                                path=f.relative_path, remediation='Refuse this bundle.')
-    for rel, sha in bundle.parity.sha256s.items():
-        if canonical.file_sha256(_inside(root, rel)) != sha:
-            raise ContractError('artifact_integrity_failed', f'{rel} does not match its digest.',
-                                path=rel, remediation='Refuse this bundle.')
-    if manifest.runtime.api_version.split('.')[0] != RUNTIME_API_VERSION.split('.')[0]:
-        raise ContractError('schema_version_unsupported', 'The bundle needs another runtime '
-                            'API major version.', path='runtime/api_version',
-                            remediation=f'Install the runtime {manifest.runtime.version}.')
+    bound = _check_manifest_bindings(bundle, manifest, actual)
+    _check_packages(root, bundle, actual, bound)
     return BundleDescriptor(path=root, bundle=bundle, manifest=manifest, recipe=recipe,
                             data_contract=contract)
+
+
+def _bound_digest(actual: Mapping[str, str], rel: str | None, sha: str | None,
+                  what: str) -> str | None:
+    """The listed file ``rel`` whose bytes the manifest records as ``sha``."""
+    if rel is None and sha is None:
+        return None
+    if rel is None or sha is None:
+        _refuse_integrity(f'The manifest names the {what} without both its path and digest.',
+                          path=what)
+    if rel not in actual:
+        _refuse_integrity(f'The {what} the manifest binds is not in the bundle.', path=rel)
+    if actual[rel] != sha:
+        _refuse_integrity(f'The {what} does not match the digest the predictor id binds.',
+                          path=rel, recorded=sha, found=actual[rel])
+    return rel
+
+
+def _check_manifest_bindings(bundle: PredictorBundle, manifest: PredictorArtifact,
+                             actual: Mapping[str, str]) -> set[str]:
+    """Compare every digest the manifest records with the bytes; return the bound paths."""
+    bound = {bundle.predictor_manifest_path, bundle.recipe_path, bundle.data_contract_path}
+    for f in manifest.payload_files:
+        if f.relative_path not in actual:
+            _refuse_integrity('A payload the manifest binds is not in the bundle.',
+                              path=f.relative_path)
+        bound.add(_bound_digest(actual, f.relative_path, f.sha256, 'payload'))
+    for rel, sha, what in ((manifest.runtime.wheel_relative_path, manifest.runtime.wheel_sha256,
+                            'runtime wheel'),
+                           (manifest.environment.lock_relative_path,
+                            manifest.environment.lock_sha256, 'environment lock')):
+        found = _bound_digest(actual, rel, sha, what)
+        if found is not None:
+            bound.add(found)
+    ext = manifest.extensions
+    if BOUND_PARITY not in ext or BOUND_CONTEXT not in ext:
+        _refuse_integrity('The manifest does not bind the parity rows, the tolerance and the '
+                          'computation context (a bundle captured before this runtime '
+                          'version); its id does not cover them.', path='extensions',
+                          missing=[k for k in (BOUND_PARITY, BOUND_CONTEXT) if k not in ext])
+    try:
+        spec = ParitySpec.model_validate(ext[BOUND_PARITY], strict=True)
+    except Exception:
+        _refuse_integrity('The parity binding of the manifest is malformed.',
+                          path=f'extensions/{BOUND_PARITY}')
+    if canonical.dumps(spec) != canonical.dumps(bundle.parity):
+        _refuse_integrity('The parity rows, their outputs, their origin or the tolerance of '
+                          'the bundle document differ from the ones the predictor id binds.',
+                          path='parity')
+    if set(spec.sha256s) != {spec.features_path, spec.expected_outputs_path}:
+        _refuse_integrity('The parity digests name exactly the parity features and outputs.',
+                          path='parity/sha256s')
+    for rel, sha in spec.sha256s.items():
+        bound.add(_bound_digest(actual, rel, sha, 'parity file'))
+    context = ext[BOUND_CONTEXT]
+    if context is not None:
+        if not isinstance(context, Mapping) or set(context) != {'relative_path', 'sha256'} \
+                or not all(isinstance(v, str) for v in context.values()):
+            _refuse_integrity('The computation-context binding of the manifest is malformed.',
+                              path=f'extensions/{BOUND_CONTEXT}')
+        bound.add(_bound_digest(actual, context['relative_path'], context['sha256'],
+                                'computation context'))
+    return bound
+
+
+def _check_packages(root: Path, bundle: PredictorBundle, actual: Mapping[str, str],
+                    bound: set[str]) -> None:
+    """Each optional package against its descriptor; no listed file left unbound."""
+    owned: list[str] = []
+    formats = set()
+    for i, entry in enumerate(bundle.optional_packages):
+        where = f'optional_packages/{i}'
+        if not PACKAGE_FORMAT.match(entry.format) or entry.format in formats \
+                or entry.relative_path != f'{PACKAGES_DIR}/{entry.format}':
+            _refuse_integrity('An optional package is not declared as the capture writes it '
+                              '(packages/<format>, one per format).', path=where)
+        formats.add(entry.format)
+        descriptor_rel = f'{PACKAGES_DIR}/{entry.format}.descriptor.json'
+        if descriptor_rel not in actual or actual[descriptor_rel] != entry.manifest_sha256:
+            _refuse_integrity(f'The {entry.format} package descriptor is missing or altered.',
+                              path=descriptor_rel)
+        descriptor = parse(PackageDescriptor, _inside(root, descriptor_rel).read_bytes())
+        if (descriptor.format, descriptor.predictor_id, descriptor.artifact_id) != \
+                (entry.format, bundle.predictor_id, entry.artifact_id):
+            _refuse_integrity(f'The {entry.format} package descriptor names another format, '
+                              'predictor or artefact.', path=descriptor_rel)
+        if descriptor.parity_result.status != 'ok':
+            _refuse_integrity(f'The {entry.format} package does not reproduce the native '
+                              'predictor.', path=descriptor_rel)
+        for f in descriptor.files:
+            rel = f'{entry.relative_path}/{f.relative_path}'
+            if actual.get(rel) != f.sha256:
+                _refuse_integrity(f'A file of the {entry.format} package is missing or '
+                                  'altered.', path=rel)
+        owned += [descriptor_rel, entry.relative_path + '/']
+    unbound = sorted(rel for rel in actual if rel not in bound
+                     and not any(rel == o or (o.endswith('/') and rel.startswith(o))
+                                 for o in owned))
+    if unbound:
+        _refuse_integrity('The bundle lists files that neither the predictor id nor a '
+                          'declared package binds.', files=unbound)
 
 
 def environment_issues(manifest: PredictorArtifact) -> list[dict]:
@@ -680,8 +828,29 @@ def environment_issues(manifest: PredictorArtifact) -> list[dict]:
     return issues
 
 
+def _trusted_roots(trusted_roots) -> list[Path]:
+    """``trusted_roots`` is None or a collection of paths. A string or a single path is
+    refused: iterating it would trust each character (``'/'`` trusts every bundle)."""
+    if trusted_roots is None:
+        return []
+    if isinstance(trusted_roots, (str, bytes, os.PathLike)) or \
+            not hasattr(trusted_roots, '__iter__'):
+        raise ContractError('contract_invalid', 'trusted_roots is a list of directories, not '
+                            'one path or one string.', path='trusted_roots',
+                            remediation='Pass trusted_roots=[directory, ...].',
+                            details={'type': type(trusted_roots).__name__})
+    roots = list(trusted_roots)
+    for root in roots:
+        if not isinstance(root, (str, os.PathLike)) or isinstance(root, bytes):
+            raise ContractError('contract_invalid', 'Each trusted root is a path.',
+                                path='trusted_roots',
+                                remediation='Pass trusted_roots=[directory, ...].',
+                                details={'type': type(root).__name__})
+    return [Path(r) for r in roots]
+
+
 def _trusted(root: Path, trusted_roots: Sequence[Path] | None) -> bool:
-    roots = list(trusted_roots or [])
+    roots = _trusted_roots(trusted_roots)
     roots += [Path(p) for p in os.environ.get(TRUSTED_ROOTS_ENV, '').split(os.pathsep) if p]
     resolved = root.resolve()
     return any(resolved.is_relative_to(Path(r).resolve()) for r in roots)
@@ -706,6 +875,7 @@ def load_predictor(bundle_dir: Path, *, trusted_roots: Sequence[Path] | None = N
     explicitly (``trusted_roots`` or ``HYPOTRAIL_RUNTIME_TRUSTED_ROOTS``): verification
     proves integrity, not that a pickle is safe to load."""
     root = Path(bundle_dir)
+    _trusted_roots(trusted_roots)            # a malformed argument is refused first
     desc = verify_bundle(root)
     if not _trusted(root, trusted_roots):
         raise ContractError('artifact_integrity_failed', 'The bundle is not under a trusted '
@@ -718,6 +888,9 @@ def load_predictor(bundle_dir: Path, *, trusted_roots: Sequence[Path] | None = N
 def check_parity(predictor: Predictor) -> ParityResult:
     """The bundle's own parity rows through ``predictor``."""
     spec = predictor.bundle.parity
+    for rel, sha in spec.sha256s.items():      # the files the predictor id binds, re-read
+        if canonical.file_sha256(_inside(predictor.path, rel)) != sha:
+            _refuse_integrity(f'{rel} changed after the bundle was verified.', path=rel)
     features = frame_from_document(_read_json(predictor.path, spec.features_path))
     expected = _read_json(predictor.path, spec.expected_outputs_path)['values']
     return compare(np.asarray(expected, dtype=float), predictor.predict(features).values,
@@ -742,7 +915,9 @@ def write_evidence_binding(bundle_dir: Path, binding: Mapping) -> Path:
     rel = f'{EVIDENCE_DIR}/binding-{n}.json'
     canonical.write_json(root / rel, doc)
     bundle = desc.bundle.model_copy(update={'evidence_binding_path': rel})
-    tmp = root / f'.{BUNDLE}.tmp'
+    # The temporary document is written under evidence/ (outside the hashed content), so a
+    # crash before the rename leaves nothing that makes the bundle unverifiable.
+    tmp = folder / f'.{BUNDLE}.tmp'
     canonical.write_json(tmp, parse(PredictorBundle, bundle.model_dump(mode='json')))
     os.replace(tmp, root / BUNDLE)
     return root / rel

@@ -56,7 +56,7 @@ STUDY_OPTIONAL = ('verify-export',)
 MUTATIONS = ('policy set', 'start', 'submit', 'coach', 'rectify', 'propose-review', 'review',
              'arbitrate', 'select', 'waive', 'handover set', 'transfer start',
              'transfer submit', 'transfer review', 'close', 'export approve', 'export write',
-             'git-receipt')
+             'git-receipt', 'relocate')
 PLAN_SCHEMA = 'hypotrail.understanding-plan/1'
 ESTIMATE_MINUTES = {'explain': 4, 'predict_consequence': 5, 'diagnose': 6, 'transfer': 8}
 
@@ -177,6 +177,10 @@ def configure(parser: argparse.ArgumentParser) -> None:
     p.add_argument('--session', required=True)
     p.add_argument('--repo', required=True)
     p.add_argument('--commit', required=True)
+    _mut(p)
+    p = sub.add_parser('relocate', parents=[common])
+    p.add_argument('--session', required=True)
+    p.add_argument('--repo', required=True, help='the new place of the moved repository')
     _mut(p)
     p = sub.add_parser('verify-export', parents=[common])
     p.add_argument('--repo', required=True)
@@ -345,10 +349,8 @@ def _status(args) -> dict:
                                              lambda sha: sv.blob_ok(store, sha)) if d else None
             dims.append({**v, 'freshness': fresh['status'], 'changed': fresh['changed'],
                          'unknown': fresh['unknown'], 'evidence_availability': avail,
-                         'assistance': (None if not d else (
-                             'unaided' if any(not ev.attempt_assistance(ext, a)['aided']
-                                              for a in d['attempt_ids'] if a in ext['attempts'])
-                             else 'aided')),
+                         'assistance': (ev.assistance_summary(ext, d['attempt_ids'])
+                                        if d else None),
                          'assurance': pol.SUPPORTED_ASSURANCE})
         attempts = [a for a in ext['attempts'].values() if a['session_id'] == s['session_id']]
         sessions.append({
@@ -429,9 +431,14 @@ def _check(args) -> dict:
         source = 'file'
     result = sv.gate(store, state, args.milestone, policy_override=override,
                      policy_source=source, repo_override=args.repo)
+    extra = {}
+    if args.repo:
+        extra['repo_note'] = ('--repo is a preview: the protected action reads the sources '
+                              'from the repository recorded in each session. After a move, '
+                              'record the new place with `understanding relocate`.')
     return _ok('check', store.study_dir, revision=state['revision'], gate=result,
                note='Informative only: it authorises nothing and is never reused. The '
-                    'protected action recomputes it under the writer lock.')
+                    'protected action recomputes it under the writer lock.', **extra)
 
 
 def _preview(args) -> dict:
@@ -504,7 +511,7 @@ def _git_stage(args) -> dict:
                      'working tree and the index.', 'Regenerate or review the sources first.',
                      conflicts=plan['source_conflicts'])
     out = vf.stage(Path(args.repo).resolve(), [a['path'] for a in plan['artefacts']],
-                   args.index_identity)
+                   args.index_identity, {a['path']: a['sha256'] for a in plan['artefacts']})
     return _ok('git-stage', args.study, **out,
                note='Nothing else was staged or unstaged; commit with your usual git commit.')
 
@@ -551,8 +558,9 @@ def _start(args) -> dict:
                          repo=plan['repo'], sources=plan['sources'])
         snap_sha = sv.put_json(store, {'local': cap['local'], 'public': cap['public'],
                                        'refs': cap['refs'], 'meta': {
-                                           'capture_revision': state['revision'],
-                                           'captured_at': sv.now()}})
+                                           # the request's revision: a retry of the same
+                                           # request stores the same snapshot (a replay)
+                                           'capture_revision': args.expected_revision}})
         params = {'plan_sha': sv.put_json(store, plan), 'snapshot_sha': snap_sha,
                   'local_digest': cap['local_snapshot_digest'],
                   'scope_digest': cap['source_scope_digest'],
@@ -699,10 +707,17 @@ def _export_write(args, *, fault=None) -> dict:
                      missing=ex.missing_approvals(ext, s, proj))
     doc_files = ex.files_of(doc)
     hashes = {n: canonical.sha256_hex(d) for n, d in doc_files.items()}
-    intent = _apply(args, 'export_intent', {
-        'session_id': s['session_id'], 'review_id': rid, 'projection_digest': digest,
-        'destination': f'{ex.EXPORT_DIR}/{rid}', 'files': hashes, 'created_at': created_at,
-        'base_commit': base})
+    reserved = [x for x in prior if x['status'] == 'reserved']
+    if reserved and reserved[0]['files'] == hashes:
+        # A publication interrupted before its receipt: reconciled from the bytes the
+        # intent announced, never under a new intent (A13, A31).
+        intent = {'result': {'intent_id': reserved[0]['intent_id']},
+                  'revision': reserved[0]['recorded_revision'], 'replayed': True}
+    else:
+        intent = _apply(args, 'export_intent', {
+            'session_id': s['session_id'], 'review_id': rid, 'projection_digest': digest,
+            'destination': f'{ex.EXPORT_DIR}/{rid}', 'files': hashes,
+            'created_at': created_at, 'base_commit': base})
     outcome = ex.publish(repo, rid, doc_files, fault=fault)
     # Reconcile from the bytes announced by the intent, never from a new rendering.
     on_disk = {n: canonical.sha256_hex((repo / ex.EXPORT_DIR / rid / n).read_bytes())
@@ -711,10 +726,9 @@ def _export_write(args, *, fault=None) -> dict:
         raise refuse('export_stale', 'The published generation does not hold the announced '
                      'bytes.', 'Inspect docs/understanding before any new attempt.')
     # The receipt revalidates the context under the writer lock (actions._export_receipt).
-    receipt = actions.apply(args.study, 'export_receipt', {
-        'intent_id': intent['result']['intent_id'], 'verified_files': on_disk},
-        request_id=f'{args.request_id}:receipt',
-        expected_revision=sv.load_state(args.study)['revision'])
+    # Its request is derived from the intent, so a full retry replays it.
+    iid = intent['result']['intent_id']
+    receipt = _receipt(args.study, iid, on_disk)
     if args.latest:
         ex.write_latest(repo, rid)
     return _ok('export write', store.study_dir, review_id=rid, publication=outcome,
@@ -724,6 +738,28 @@ def _export_write(args, *, fault=None) -> dict:
                next_steps=['understanding git-plan', 'stage the listed paths only',
                            'verify-export --target index', 'git commit',
                            'verify-export --target HEAD'])
+
+
+def _receipt(study, intent_id, files) -> dict:
+    """The export receipt, idempotent per intent: replayed when already recorded."""
+    state = sv.load_state(study)
+    intent = model.of(state)['exports'][intent_id]
+    if intent['status'] != 'reserved':
+        return {'result': {'intent_id': intent_id, 'status': intent['status'], 'final': True},
+                'revision': state['revision'], 'replayed': True}
+    return actions.apply(study, 'export_receipt', {'intent_id': intent_id,
+                                                   'verified_files': files},
+                         request_id=f'receipt-{intent_id}', expected_revision=state['revision'])
+
+
+def _relocate(args) -> dict:
+    store = sv.open_store(args.study)
+    repo = Path(args.repo).resolve()
+    if not repo.is_dir():
+        raise refuse('path_outside_scope', '--repo is not a directory.', 'Name the repository.')
+    return _ok('relocate', store.study_dir, **_apply(args, 'relocate', {
+        'session_id': args.session, 'repo': str(repo)}),
+        note='Freshness is read from this repository from now on; the digests are unchanged.')
 
 
 def _git_receipt(args) -> dict:
@@ -739,6 +775,9 @@ def _git_receipt(args) -> dict:
 
 
 def _verify_export(args) -> dict:
+    if not Path(args.repo).is_dir():
+        raise refuse('path_outside_scope', '--repo is not a directory; nothing was verified.',
+                     'Name the repository to verify.')
     policy_doc = None
     if args.policy_file:
         policy_doc = pol.validate(model.read_json_input(args.policy_file, 'policy-file'))
@@ -764,7 +803,17 @@ def _local_checker(study, repo):
                         if ex._opaque(ext, 'session', s['session_id']) == doc['session_ref']),
                        None)
         if session is None:
-            return {'private_context_verification': 'unknown'}
+            return {'private_context_verification': 'unknown', 'study_binding': 'not_recorded'}
+        # The artefact must be one this study exported: same review id and same approved
+        # projection as a recorded export intent (a forged generation is not).
+        digest = canonical.digest(ex.approval_projection(doc))
+        recorded = any(x['review_id'] == doc['review_id'] and x['projection_digest'] == digest
+                       and x['session_id'] == session['session_id']
+                       and x['status'] in ('published', 'not_current')
+                       for x in ext['exports'].values())
+        if not recorded:
+            return {'private_context_verification': 'unknown', 'study_binding': 'not_recorded',
+                    'evidence_availability': 'unavailable'}
         # Private context only: the repository entries are public and checked against the
         # requested tree (index or commit), never the working tree here.
         def private(local):
@@ -777,7 +826,8 @@ def _local_checker(study, repo):
         avail = ev.evidence_availability(ext, attempts, lambda sha: sv.blob_ok(store, sha)) \
             if attempts else 'unavailable'
         return {'private_context_verification': 'verified' if same else 'unknown',
-                'private_context_changed': not same, 'evidence_availability': avail}
+                'private_context_changed': not same, 'evidence_availability': avail,
+                'study_binding': 'verified'}
     return run
 
 
@@ -793,7 +843,7 @@ HANDLERS = {
     'transfer submit': _transfer_submit, 'transfer review': _transfer_review,
     'close': _close, 'check': _check, 'export preview': _preview, 'export approve': _approve,
     'export write': _export_write, 'git-plan': _git_plan, 'git-stage': _git_stage,
-    'git-receipt': _git_receipt}
+    'git-receipt': _git_receipt, 'relocate': _relocate}
 
 
 def text(payload: dict) -> str:

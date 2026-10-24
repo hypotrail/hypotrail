@@ -14,7 +14,12 @@ confirm at merge in ``docs/handoff/AZUREML-EXPORT-V1.md``): ``study_id``, ``revi
 ``decisions`` (confirmed ones), ``results`` (references with ``current``), ``validity``,
 ``development_plan``, ``predictor`` (``bundle_dir`` or null), ``limitations``, and the
 optional ``case``, ``metrics``, ``conclusion``, ``development_data``. A Pydantic object is
-read through ``model_dump(mode='json')``.
+read through ``model_dump(mode='json')``. The predictor's ``status`` and ``evidence_status``
+and ``final_test.status`` decide what is exported: only a ``captured`` predictor (a current
+capture of the confirmed selection) is transported, with the evidence status the study
+records; a ``stale`` one is refused while the final test is sealed and left out (recipe
+only) after the opening. A ``hypotrail_runtime`` ``ContractError`` of the reader is
+answered as an export refusal (:func:`from_contract_error`).
 """
 from __future__ import annotations
 
@@ -24,7 +29,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from . import canonical as cj
-from .errors import ExportError
+from .errors import CODES, CONTRACT_ALIASES, ExportError
 
 SCHEMA = 'hypotrail.deployment_snapshot/1'
 PLAN_SCHEMA = 'hypotrail.development_plan/1'
@@ -79,7 +84,15 @@ def read_source(study, expected_revision: int, reader: Callable | None = None):
                               remediation='Use an engine version that ships '
                                           'read_export_source; nothing was read or written.'
                               ) from error
-    source = reader(Path(study), expected_revision)
+    try:
+        source = reader(Path(study), expected_revision)
+    except ExportError:
+        raise
+    except Exception as error:
+        refusal = from_contract_error(error)
+        if refusal is None:
+            raise
+        raise refusal from error
     revision = field(source, 'revision')
     if type(revision) is not int:
         raise ExportError('contract_invalid', 'The export source revision is not an integer.',
@@ -92,6 +105,32 @@ def read_source(study, expected_revision: int, reader: Callable | None = None):
                           details={'expected_revision': expected_revision,
                                    'current_revision': revision})
     return source
+
+
+def from_contract_error(error: BaseException) -> ExportError | None:
+    """The export refusal of a ``hypotrail_runtime`` ``ContractError`` raised while the
+    study is read (for example ``stale_revision``), or None for any other exception. The
+    contract code, path and remediation are kept; a contract code the export does not
+    answer with is reported as ``contract_invalid`` (``details.contract_code`` keeps it)."""
+    try:
+        from hypotrail_runtime.errors import ContractError
+    except ImportError:
+        return None
+    if not isinstance(error, ContractError):
+        return None
+    export_code = CONTRACT_ALIASES.get(error.code, error.code)
+    if export_code not in CODES:
+        export_code = 'contract_invalid'
+    details = {k: v for k, v in error.details.items()
+               if k not in ('path', 'remediation', 'contract_code')}
+    if error.issues:
+        details['issues'] = error.issues
+    out = ExportError(export_code, error.message, path=error.path or None,
+                      remediation=error.remediation
+                      or 'Read the study status again, then export; nothing was written.',
+                      details=details)
+    out.details['contract_code'] = error.code
+    return out
 
 
 def runtime(required_for: str):
@@ -176,6 +215,52 @@ class Snapshot:
     warnings: list
 
 
+def _final_status(source) -> str | None:
+    """The final test status of the source (``sealed``, ``opened``, ``absent``...)."""
+    final = field(source, 'final_test', None)
+    if not isinstance(final, Mapping):
+        plan = field(source, 'development_plan', None)
+        final = plan.get('final_test') if isinstance(plan, Mapping) else None
+    status = final.get('status') if isinstance(final, Mapping) else None
+    return status if isinstance(status, str) else None
+
+
+def _evidence_status(study: Any, binding: str) -> str:
+    """``evaluated`` only when the study's record and the bundle's binding both say so."""
+    if study == 'evaluated' and binding == 'evaluated':
+        return 'evaluated'
+    if 'stale' in (study, binding):
+        return 'stale'
+    return 'unassessed'
+
+
+def _refuse_without_recipe(source, predictor_status: str | None,
+                           final_status: str | None) -> None:
+    """Refuse an export whose source describes no recipe, with a remediation the junior can
+    follow (or the reason none exists)."""
+    limitations = [str(x) for x in (field(source, 'limitations', None) or [])]
+    if predictor_status == 'not_applicable':
+        remediation = ('This study was created before the final test and the model capture '
+                       'existed: it has no selected model to export. Start a new study with '
+                       'this engine to export a selected model to Azure ML.')
+    elif final_status == 'absent':
+        remediation = ('This study has no final test (it was created before the final test '
+                       'existed): confirm the model choice in the chat (a model, not the '
+                       'constant baseline), then export its recipe; no evaluated model can '
+                       'be exported for it.')
+    elif final_status == 'opened':
+        remediation = ('The final test is opened, so the model can no longer be captured: '
+                       'this selection has no exportable recipe (see details.limitations).')
+    else:
+        remediation = ('Confirm the model choice in the chat (a model, not the constant '
+                       'baseline); for a tuned model, run hypotrail run predictor.capture '
+                       'before opening the final test; then export.')
+    raise ExportError('capability_not_supported', 'The study describes no recipe of a selected '
+                      'model; nothing was written.', path='scientific_contracts.model_recipe',
+                      remediation=remediation,
+                      details={'reason': 'no_recipe', 'limitations': limitations})
+
+
 def _plan(source_plan: Any, contract: dict) -> dict:
     """The development plan with development row keys only; the final test is metadata
     (status and row count), never keys or labels."""
@@ -239,6 +324,17 @@ def _plan(source_plan: Any, contract: dict) -> dict:
                        'labels_included': False, 'row_keys_included': False},
         'keys_sha256_rule': 'sha256 of the canonical JSON of the sorted row keys',
     }
+    # How many records the engine read in the source file (development, final test and any
+    # excluded row): materialize refuses a file that splits into another number of records.
+    n_records = plan.get('n_source_records')
+    if n_records is not None:
+        if not isinstance(n_records, int) or isinstance(n_records, bool) or \
+                n_records < len(development):
+            raise ExportError('contract_invalid', 'The development plan counts fewer source '
+                              'records than development rows.',
+                              path='development_plan.n_source_records',
+                              remediation='Fix the engine.')
+        out['n_source_records'] = n_records
     out['keys_sha256'] = cj.canonical_sha256({p['id']: p['row_keys'] for p in partitions})
     return out
 
@@ -259,7 +355,24 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
     ``verify_predictor(bundle_dir, recipe, data_contract)`` returns the predictor record
     (see :mod:`mlkit.exporters.azureml.artifact`); it is called only when the source
     names a captured predictor."""
+    descriptor = field(source, 'predictor', None)
+    predictor_status = field(descriptor, 'status', 'captured') if descriptor else None
+    final_status = _final_status(source)
+    if predictor_status == 'stale' and final_status == 'sealed':
+        # Before the opening a capture of the confirmed selection is still possible: the
+        # export neither ships the superseded model nor drops it silently.
+        raise ExportError('model_not_captured', 'The captured predictor is not the current '
+                          'confirmed selection (another model, a later confirmation, or a '
+                          'change since the capture); the export does not substitute it and '
+                          'nothing was written.', path='predictor.status',
+                          remediation='Run hypotrail run predictor.capture again, so the '
+                                      'capture is the confirmed selection, then export.',
+                          details={'reason': 'capture_not_current_selection',
+                                   'capture_result_id': field(descriptor, 'capture_result_id',
+                                                              None)})
     contracts = field(source, 'scientific_contracts')
+    if not isinstance(contracts, Mapping) or contracts.get('model_recipe') is None:
+        _refuse_without_recipe(source, predictor_status, final_status)
     recipe = _require(field(contracts, 'model_recipe'), RECIPE_KEYS, RECIPE_SCHEMA,
                       'model_recipe')
     contract = _require(field(contracts, 'data_contract'), DATA_CONTRACT_KEYS,
@@ -298,6 +411,20 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
                           path='model_recipe.selection_reference.decision_id',
                           remediation='Confirm the model choice in the chat, then export.',
                           details={'reason': 'selection_not_confirmed'})
+    decision = confirmed[selection.get('decision_id')]
+    revision = decision.get('revision')
+    if not isinstance(revision, int) or isinstance(revision, bool) or \
+            revision != selection.get('revision'):
+        raise ExportError('contract_invalid', 'The recipe was selected by another confirmation '
+                          'than the one in force; the export does not substitute a model and '
+                          'nothing was written.',
+                          path='model_recipe.selection_reference.revision',
+                          remediation='Capture the confirmed model choice again (hypotrail run '
+                                      'predictor.capture) before the final test is opened, '
+                                      'then export.',
+                          details={'reason': 'selection_not_current_decision',
+                                   'selection_revision': selection.get('revision'),
+                                   'decision_revision': decision.get('revision')})
     checks.append({'id': 'selection_confirmed', 'status': 'passed'})
     results = [_plain(r) for r in field(source, 'results')]
     by_id = {r.get('result_id'): r for r in results if isinstance(r, Mapping)}
@@ -318,11 +445,9 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
     recipe_sha = cj.canonical_sha256(recipe)
     contract_sha = cj.canonical_sha256(contract)
     predictor = None
-    descriptor = field(source, 'predictor', None)
     # A's ExportSource always describes the predictor; only a bundle makes it captured
     # (a stale capture no longer describes the chosen configuration: it is not exported).
-    if descriptor and field(descriptor, 'bundle_dir', None) and \
-            field(descriptor, 'status', 'captured') == 'captured':
+    if descriptor and field(descriptor, 'bundle_dir', None) and predictor_status == 'captured':
         bundle_dir = field(descriptor, 'bundle_dir')
         if verify_predictor is None:
             raise ExportError('optional_dependency_missing', 'No predictor verifier.',
@@ -330,6 +455,13 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
         predictor = verify_predictor(Path(bundle_dir), recipe, contract)
         checks += predictor['checks']
         warnings += predictor['warnings']
+        # The study's own record decides the evidence status; the binding beside the bundle
+        # is an editable file and can only lower it.
+        evidence = _evidence_status(field(descriptor, 'evidence_status', None),
+                                    predictor['evidence_status'])
+        if evidence != predictor['evidence_status']:
+            warnings.append('evidence_binding_disagrees_with_study')
+        predictor = {**predictor, 'evidence_status': evidence}
     else:
         checks.append({'id': 'predictor_captured', 'status': 'missing',
                        'detail': 'No captured predictor: the recipe is exported, the evaluated '

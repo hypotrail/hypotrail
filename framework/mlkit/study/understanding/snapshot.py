@@ -237,7 +237,7 @@ def capture_context(state: Mapping, *, policy_digest: str | None, taskset_doc: M
         rel = safe_relative(s['path'])
         data = read_repo_file(repo, rel) if repo is not None else None
         if data is None:
-            missing.append(s['logical_key'])
+            missing.append({'logical_key': s['logical_key'], 'role': s['role']})
             continue
         sha = _sha(data)
         if frozen is not None:
@@ -250,7 +250,8 @@ def capture_context(state: Mapping, *, policy_digest: str | None, taskset_doc: M
                      'Give every mapped source its own logical_key.', field='sources')
     entries = canonical.sorted_set(entries, 'logical_key')
     local = {'schema': SCHEMA, 'study_id': str((state.get('case') or {}).get('id', '')),
-             'entries': entries, 'unreadable_sources': sorted(missing)}
+             'entries': entries,
+             'unreadable_sources': canonical.sorted_set(missing, 'logical_key')}
     public = public_scope(local, salt)
     return {'local': local, 'public': public, 'refs': refs,
             'local_snapshot_digest': canonical.digest(local),
@@ -272,7 +273,8 @@ def public_scope(local: Mapping, salt: str) -> dict:
                             'role': e['role']})
     return {'schema': PUBLIC_SCHEMA, 'entries': canonical.sorted_set(public, 'logical_key'),
             'omitted_private': canonical.sorted_set(omitted, 'opaque_private_ref'),
-            'unreadable_sources': list(local.get('unreadable_sources') or [])}
+            'unreadable_sources': [u['logical_key'] if isinstance(u, Mapping) else u
+                                   for u in local.get('unreadable_sources') or []]}
 
 
 def _matches(pattern: str, entry: Mapping) -> bool:
@@ -289,9 +291,10 @@ def freshness(captured: Mapping, current: Mapping, keys: Iterable[str]) -> dict:
     for pattern in sorted(set(keys)):
         names = {k for k, e in before.items() if _matches(pattern, e)} | \
                 {k for k, e in after.items() if _matches(pattern, e)}
-        unreadable = [k for k in list(captured.get('unreadable_sources') or [])
+        unreadable = [u for u in list(captured.get('unreadable_sources') or [])
                       + list(current.get('unreadable_sources') or [])
-                      if fnmatch.fnmatchcase(k, pattern)]
+                      if _matches(pattern, u if isinstance(u, Mapping) else
+                                  {'logical_key': u, 'role': None})]
         if not names or unreadable:
             unknown.append(pattern)
             continue
@@ -319,6 +322,8 @@ def public_freshness(scope: Mapping, read_path) -> dict:
             changed.append(e['path'])
     if scope.get('unreadable_sources'):
         missing += list(scope['unreadable_sources'])
+    if not any(e['path'] for e in scope['entries']):
+        missing.append('no public source was mapped')      # nothing checked: not current
     status = 'stale' if changed else ('unknown' if missing else 'current')
     return {'status': status, 'changed': changed, 'missing': missing}
 

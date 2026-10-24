@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import copy
 import hashlib
-import json
 import random
 from pathlib import Path
 
@@ -117,7 +116,8 @@ def plan() -> dict:
               'exposure_status': 'out_of_fold_evaluated'} for k in range(5)]
     return {'protocol_id': 'cv5-synthetic', 'partitions': folds + [
         {'id': 'final_test', 'role': 'final_test', 'row_keys': final}],
-        'final_test': {'status': 'opened_once', 'n_rows': N_FINAL}}
+        'final_test': {'status': 'opened_once', 'n_rows': N_FINAL},
+        'n_source_records': N_ROWS}
 
 
 def typed_development(source: Path, contract: dict):
@@ -177,14 +177,22 @@ def export_source(folder: Path, *, bundle_dir: Path | None, the_recipe: dict | N
         'study_id': 'study-synthetic-cars', 'revision': revision,
         'case': {'id': 'synthetic-cars-v1', 'title': 'Synthetic cars'},
         'scientific_contracts': {'model_recipe': the_recipe, 'data_contract': contract},
+        # As read_export_source states them: each confirmed decision with the revision of
+        # its confirmation (the recipe's selection_reference names the model choice's).
         'decisions': [{'decision_id': 'model_choice', 'status': 'confirmed' if confirmed
-                       else 'proposed', 'value': 'linear'},
-                      {'decision_id': 'split', 'status': 'confirmed', 'value': 'cv5'}],
+                       else 'proposed', 'value': 'linear',
+                       'revision': the_recipe['selection_reference']['revision']},
+                      {'decision_id': 'split', 'status': 'confirmed', 'value': 'cv5',
+                       'revision': 2}],
         'results': [{'result_id': 'r-cv-linear', 'activity': 'fit.linear', 'current': current},
                     {'result_id': 'r-final-1', 'activity': 'final.evaluate', 'current': True}],
         'validity': {'selected_result_current': current},
         'development_plan': plan(),
-        'predictor': None if bundle_dir is None else {'bundle_dir': str(bundle_dir)},
+        # The predictor as read_export_source describes a current capture of the selection
+        # that the final test evaluated (the binding beside the bundle can only lower it).
+        'predictor': None if bundle_dir is None else {
+            'status': 'captured', 'bundle_dir': str(bundle_dir), 'evidence_status': 'evaluated',
+            'capture_result_id': 'r-capture-1', 'final_result_id': 'r-final-1'},
         'limitations': ['Synthetic data: a test of the export, not of a model.'],
         'metrics': ['mae', 'rmse'],
         'conclusion': {'verdict': 'adopt_model', 'text': 'Synthetic conclusion for tests.'},
@@ -192,12 +200,17 @@ def export_source(folder: Path, *, bundle_dir: Path | None, the_recipe: dict | N
 
 
 def reader_of(source_doc: dict):
-    """A ``read_export_source`` test double that serves one revision."""
+    """A ``read_export_source`` test double that serves one revision and, for another one,
+    raises what the real reader raises: ``hypotrail_runtime``'s ``ContractError``."""
     def read(study_path, expected_revision):
         doc = copy.deepcopy(source_doc)
         if expected_revision != doc['revision']:
-            from mlkit.exporters.azureml.errors import ExportError
-            raise ExportError('stale_revision', 'stale', path='expected_revision')
+            from hypotrail_runtime.errors import ContractError
+            raise ContractError('stale_revision', f'The study is at revision {doc["revision"]}, '
+                                f'not {expected_revision}.', path='expected_revision',
+                                remediation='Read status again and export that revision.',
+                                details={'revision': doc['revision'],
+                                         'expected_revision': expected_revision})
         return doc
     return read
 

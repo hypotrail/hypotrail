@@ -112,6 +112,16 @@ def attempt_assistance(ext: Mapping, attempt_id: str) -> dict:
     return out
 
 
+def assistance_summary(ext: Mapping, attempt_ids) -> str:
+    """``unaided`` only when every attempt a decision rests on is unaided: an unaided weak
+    answer next to a coached one never makes the demonstration unaided (A04). ``none``
+    without attempts."""
+    assist = [attempt_assistance(ext, a) for a in attempt_ids if a in ext['attempts']]
+    if not assist:
+        return 'none'
+    return 'unaided' if all(not a['aided'] for a in assist) else 'aided'
+
+
 def dimension_view(ext: Mapping, actor: str, dimension: str) -> dict:
     """Status of ``actor`` on ``dimension`` from the history (not a gate)."""
     d = effective_decision(ext, actor, dimension)
@@ -231,6 +241,10 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
         lost = arbitrated_ids(ext).get(did)
         if lost is not None and lost['chosen_decision_id'] != did:
             problems.append('lost_arbitration')
+        for a in arbitrations_on(ext, actor, dim):
+            if not arbitration_admissible(a, actor, dim, policy_doc, ext):
+                problems.append('arbitration_not_admissible')
+                break
         if d.get('assistance_at_review') and any(
                 attempt_assistance(ext, a)['aided'] != aided
                 for a, aided in d['assistance_at_review'].items() if a in ext['attempts']):
@@ -243,11 +257,10 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
             limitations.add('simulated_human_decisions')
         if dim in critical and d['reviewer_declared_id'] == actor:
             reasons.append({'code': 'reviewer_not_distinct', 'dimension': dim})
-        assist = [attempt_assistance(ext, a) for a in d['attempt_ids'] if a in ext['attempts']]
-        unaided = any(not a['aided'] for a in assist)
+        summary = assistance_summary(ext, d['attempt_ids'])
         rule = policy_doc['assistance_rule']['critical' if dim in critical else 'other']
-        info['assistance'] = 'unaided' if unaided else 'aided'
-        if rule == 'unaided_required' and not unaided:
+        info['assistance'] = summary
+        if rule == 'unaided_required' and summary != 'unaided':
             reasons.append({'code': 'assistance_not_admissible', 'dimension': dim})
         avail = evidence_availability(ext, d['attempt_ids'], blob_ok)
         info['evidence_availability'] = avail
@@ -344,6 +357,33 @@ def selected_peer_coverage(ext, author, dim, selection, pdigest, taskset_for, ca
             'problems': problems, 'simulated': simulated}
 
 
+def arbitrations_on(ext: Mapping, actor: str, dim: str) -> list:
+    out = []
+    for a in ext['arbitrations'].values():
+        decisions = [ext['decisions'].get(x) for x in a['conflicting_decision_ids']]
+        reservations = [ext['reservations'].get(x) for x in a['reservation_ids']]
+        if any(d and d.get('reviewed_actor_id') == actor and d.get('dimension_id') == dim
+               for d in decisions) or any(r and r['actor'] == actor and r['dimension_id'] == dim
+                                          for r in reservations):
+            out.append(a)
+    return out
+
+
+def arbitration_admissible(a: Mapping, actor: str, dim: str, policy_doc: Mapping,
+                           ext: Mapping) -> bool:
+    """Checked again by the gate under the policy it applies (spec §09): the arbiter is a
+    declared person the policy allows, not the person reviewed on a critical dimension, and
+    not one of the reviewers whose decisions are in conflict."""
+    arbiters = policy_doc['role_policy']['arbiters']
+    if arbiters != 'any_declared' and a['arbiter_declared_id'] not in arbiters:
+        return False
+    if dim in policy_doc['critical_dimensions'] and a['arbiter_declared_id'] == actor:
+        return False
+    parties = {ext['decisions'][x]['reviewer_declared_id']
+               for x in a['conflicting_decision_ids'] if x in ext['decisions']}
+    return a['arbiter_declared_id'] not in parties
+
+
 def _last_rectification(ext: Mapping, attempt_ids) -> int:
     revs = [ev['revision'] for ev in ext['assistance_events']
             if ev['attempt_id'] in attempt_ids and ev['kind'] == 'rectification']
@@ -418,7 +458,13 @@ def peer_coverage(ext: Mapping, author: str, dim: str, selection: Mapping | None
 
 
 def current_handover(ext: Mapping, session_id: str) -> dict | None:
-    versions = [h for h in ext['handovers'].values() if h['session_id'] == session_id]
+    """The latest handover content of the author of ``session_id``, in any of their
+    sessions: a newer note in a linked session makes a transfer on the older one stale."""
+    s = ext['sessions'].get(session_id)
+    author = s['actor_declared_id'] if s else None
+    versions = [h for h in ext['handovers'].values()
+                if (ext['sessions'].get(h['session_id']) or {}).get('actor_declared_id')
+                == author] if author else []
     return max(versions, key=lambda h: h['recorded_revision']) if versions else None
 
 
@@ -442,6 +488,11 @@ def _finish(result, reasons, limitations, policy_doc, ext, milestone, today) -> 
         result['decision'] = 'allowed'
         return result
     waiver = _waiver(ext, milestone, policy_doc, today)
+    actor = (latest_selection(ext, milestone) or {}).get('actor_scope', {}).get(
+        'actor_declared_id')
+    if waiver is not None and waiver['approver_declared_id'] == actor:
+        reasons.append({'code': 'waiver_approved_by_the_author'})
+        waiver = None
     if waiver is not None and policy_doc['exemptions_policy']['waivers_allowed'] and \
             all(r.get('dimension') in waiver['dimensions'] for r in blocking):
         result['decision'] = 'allowed_by_waiver'
