@@ -26,6 +26,8 @@ from .config import write_frozen
 from .errors import ProjectError
 
 if TYPE_CHECKING:
+    from types import ModuleType
+
     import pandas as pd
 
 CANDIDATE_ROLE = "rebuilt_candidate"
@@ -301,6 +303,11 @@ def train(frozen: dict) -> dict:
 # --- 4. evaluation ---------------------------------------------------------------------
 
 
+def _load_bundle(rt: ModuleType, bundle_dir: Path) -> object:
+    """Load the predictor of a bundle, trusted by its absolute folder (a relative root is refused)."""
+    return rt.load_predictor(bundle_dir, trusted_roots=[bundle_dir.resolve()])
+
+
 def evaluate(frozen: dict) -> dict:
     """Technical checks of the run's candidate; never a generalisation claim."""
     from . import mlflow_packaging as mp
@@ -326,8 +333,7 @@ def evaluate(frozen: dict) -> dict:
     )
     spec = mp.ParitySpec.from_bundle(bundle)
     features = mp.read_table(mp.inside(bundle_dir, spec.features_path, "parity.features_path"))
-    native_predictor = rt.load_predictor(bundle_dir, trusted_roots=[bundle_dir.resolve()])
-    native = mp.batch_frame(native_predictor.predict(features.copy()))
+    native = mp.batch_frame(_load_bundle(rt, bundle_dir).predict(features.copy()))
     expected = mp.read_table(mp.inside(bundle_dir, spec.expected_outputs_path, "parity.expected_outputs_path"))
     reload = mp.compare(native, expected, spec.rtol, spec.atol)
     checks.append({"id": "candidate_reload_parity", "status": "passed" if reload["equal"] else "failed", **reload})
@@ -345,8 +351,7 @@ def evaluate(frozen: dict) -> dict:
         espec = mp.ParitySpec.from_bundle(evaluated)
         efeatures = mp.read_table(mp.inside(evaluated_dir, espec.features_path, "parity.features_path"))
         eexpected = mp.read_table(mp.inside(evaluated_dir, espec.expected_outputs_path, "parity.expected_outputs_path"))
-        candidate_predictor = rt.load_predictor(bundle_dir, trusted_roots=[bundle_dir.resolve()])
-        candidate = mp.batch_frame(candidate_predictor.predict(efeatures.copy()))
+        candidate = mp.batch_frame(_load_bundle(rt, bundle_dir).predict(efeatures.copy()))
         observed = mp.compare(candidate, eexpected, espec.rtol, espec.atol)
         deviation = {
             "rows": len(efeatures),
