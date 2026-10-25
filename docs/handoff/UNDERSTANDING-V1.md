@@ -194,12 +194,14 @@ humans, temporary directories; several are the reviewer's reproducing tests, por
   person and dimension in the selected decision's session. They must still be admissible
   under the current policy **and** the session's policy (C-M3 kept; `arbitrate` itself now
   also applies the session policy's arbiter list). An arbitration of a session the
-  selection does not use no longer blocks for ever.
+  selection does not use no longer blocks for ever. (Corrected by round 3, R3C-1: the gate
+  relies on any session's arbitration that closes a reservation or settles a conflict it
+  counts; such an arbitration is now re-checked too, and can be settled again.)
 * C2-3: the export projection computes `peer_coverage` with the gate's own function and
   loaders (`evaluate.selected_peer_coverage`, `service.gate_loaders`) from the latest
   selection of the session's author and profile; without one it is `missing`, never a search
-  for any demonstrated transfer. The `export-valid` fixture did not change. The HTML report
-  section (`render.py`) still shows the history-based coverage; it is informative only.
+  for any demonstrated transfer. The `export-valid` fixture did not change. (Round 3,
+  R3C-3: the HTML report section uses the same selection-based coverage and gap rule.)
 * C2-4: an arbitration refuses a reservation opened by a handover review.
 * C2-5: such a reservation is resolved only by another transfer started after the failed
   review and on the current handover content.
@@ -226,6 +228,51 @@ is now a dev dependency, so the GFM rendering checks of `test_adv2_d.py` run in 
 * A retry removes the temporary folder of a publication killed before its rename once it is
   older than a minute (a younger one may belong to a live concurrent publication).
 * A run of `@` is one code span, so the rendered text keeps its characters.
+
+## Review round 3: fixes (area C)
+
+Regression tests: `framework/tests/study/understanding/test_review_round3_c.py` (simulated
+humans, temporary directories; the reviewer's reproducing tests of round 3 are ported with
+the expected outcome of each fix).
+
+* R3C-1: the gate counts reservations and conflicts in every session of the person, so it
+  re-checks every arbitration it relies on in any session (`evaluate.arbitration_checker`:
+  admissible under the policy it applies and under the arbitration's own session policy).
+  A non-admissible one settles nothing: the reservation or conflict counts again, with
+  `arbitration_not_admissible`. An arbitration nothing relies on is never asked (C2-2's
+  property, in its corrected form). So that this never blocks for ever, such a reservation
+  can be settled again: `arbitrate` (now also on an `abandoned` session), `review`
+  (`resolves_reservation_ids` with a new variant) and `task`/`submit` treat it as open; the
+  replaced resolution stays in `previous_resolutions`. Expectation changed:
+  `test_review_round2_c.py::test_an_old_arbitration_of_an_unused_session_does_not_block_for_ever`
+  (round 2 allowed a session 1 arbitration by an arbiter v2 no longer names; the gate
+  relies on it, so it now blocks until the arbiter v2 names settles it again; its docstring
+  says so).
+* R3C-2: with a selection of the session's author and profile, the export projection's
+  dimensions and the report's rows are the decisions it maps (`evaluate.shown_decision`),
+  the ones the gate judges; without one, the history's latest decision of the session, and
+  `coverage_selection` is null (a selection of another profile was published before). The
+  verifier refuses a document whose dimension `human_review_ref` differs from
+  `coverage_selection.dimension_decision_map` for a mapped dimension: `public_integrity`
+  invalid, since the document contradicts itself and the engine never writes it (chosen
+  over `nonconforming`, which judges a coherent document against a policy). The check lives
+  in `export.validate_review`, the closed-schema check of the verifier. The `export-valid`
+  fixture did not change (its selection maps the latest decisions).
+* R3C-3: one peer gap rule (`evaluate.peer_gap`) for the gate, the export and the report:
+  fewer declared people than `team_coverage.minimum_people`, or not `current`.
+* R3C-4: a handover resolves a handover reservation on a dimension whose assistance rule
+  is `unaided_required` (in the policy in force or the session's) only when its peer
+  declared no AI assistance (`evidence_invalid` otherwise), the C2-7 rule. The gate applies
+  it again under the policy it uses (`peer_assistance_not_admissible`), so a resolution
+  recorded under a looser rule does not settle the reservation under a stricter one; a later
+  unaided handover resolves it again.
+* R3C-5: two `export handoff` without `--out`, rendered at the same revision, both publish:
+  the second one into `handoff/revision-N-<reservation>` (eight hex characters of its
+  reservation id). With `--out`, the folder given stays the only target, never replaced.
+* R3C-6: under `payloads_available`, a selected transfer whose peer answer blob is gone does
+  not count (`evidence_unavailable`); under `recorded_decisions` it counts with the
+  limitation `evidence_not_reauditable` (A28); local verification reports the evidence as
+  unavailable.
 
 ## Gate run
 

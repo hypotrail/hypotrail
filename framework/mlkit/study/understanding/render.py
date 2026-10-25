@@ -43,6 +43,10 @@ def section(study_dir, state: Mapping) -> str:
     sessions = sorted(ext['sessions'].values(), key=lambda s: s['created_revision'])
     current = sv.current_for(store, state, ext)
     loaders = sv.gate_loaders(store, state, ext)
+    try:
+        settles = sv.arbitration_checker(store, ext, doc)
+    except Exception:              # noqa: BLE001 - the report still renders
+        settles = None
     for s in sessions[-3:]:
         actor = s['actor_declared_id']
         try:
@@ -51,14 +55,30 @@ def section(study_dir, state: Mapping) -> str:
             taskset = sv.blob_json(store, s['taskset_blob'], 'taskset')
         except Exception:          # noqa: BLE001 - freshness unknown, the report renders
             captured = now_ = taskset = None
+        # The rule of the export projection (R3C-2): with the selection of this person and
+        # profile, a dimension shows the decision it maps (the one the gate judges); without
+        # one, the history's latest decision.
+        selection = ev.selection_for(ext, s['milestone'], actor, s['profile'])
         for dim in s['dimensions']:
-            v = ev.dimension_view(ext, actor, dim)
-            d = ext['decisions'].get(v['decision_id']) if v['decision_id'] else None
+            if selection is not None:
+                d = ev.shown_decision(ext, selection, actor, dim)
+                v = ev.dimension_view(ext, actor, dim, decision=d, settles=settles,
+                                      policy_doc=doc)
+            else:
+                v = ev.dimension_view(ext, actor, dim)
+                d = ext['decisions'].get(v['decision_id']) if v['decision_id'] else None
             assist = ev.assistance_summary(ext, d['attempt_ids']) if d else 'none'
             fresh = 'unknown'
             if d and captured is not None:
-                fresh = snap.freshness(captured, now_, ev.decision_dependency_keys(
-                    ext, d, taskset))['status']
+                try:
+                    owner = ext['sessions'][d['session_id']]
+                    same = owner['session_id'] == s['session_id']
+                    fresh = snap.freshness(
+                        captured if same else sv.session_snapshot(store, owner)['local'],
+                        now_ if same else current(owner),
+                        ev.decision_dependency_keys(ext, d, taskset))['status']
+                except Exception:  # noqa: BLE001 - freshness unknown, the report renders
+                    fresh = 'unknown'
             rows.append(
                 f'<tr><td>{_lit(dim)} {e(DIMENSION_TITLES[dim])}</td><td>{_lit(actor)}</td>'
                 f'<td>{e(v["status"].replace("_", " "))}</td><td>{e(fresh)}</td>'
@@ -69,20 +89,27 @@ def section(study_dir, state: Mapping) -> str:
                             f'{e(v["status"].replace("_", " "))}')
         # The gate's own selection-based coverage (round 2, C2-3), never a search for any
         # demonstrated transfer: without a selection for this person and profile, missing.
-        selection = ev.latest_selection(ext, s['milestone'])
-        if selection is None or selection['actor_scope'] != {'actor_declared_id': actor,
-                                                             'profile': s['profile']}:
-            selection = None
+        # The gap rule is the gate's and the export's (R3C-3): too few declared people is a
+        # gap even when every selected transfer is current.
         for dim in (doc or {}).get('peer_required_dimensions', []):
             if dim in s['dimensions']:
                 try:
                     cover = ev.selected_peer_coverage(
                         ext, actor, dim, selection, pol.digest(doc), loaders['taskset_for'],
-                        loaders['captured_for'], loaders['current_for'], policy_doc=doc)
+                        loaders['captured_for'], loaders['current_for'], policy_doc=doc,
+                        blob_ok=lambda sha: sv.blob_ok(store, sha))
+                    gap = ev.peer_gap(cover, doc)
                 except Exception:      # noqa: BLE001 - coverage unknown, the report renders
-                    cover = {'status': 'unknown'}
-                if cover['status'] != 'current':
-                    gaps.append(f'{_lit(dim)} handover by a colleague: {e(cover["status"])}')
+                    cover, gap = {'status': 'unknown'}, True
+                if not gap:
+                    continue
+                if cover['status'] == 'current':
+                    need = doc['team_coverage']['minimum_people']
+                    what = (f'{_word(cover["people"])} declared people, the policy asks for '
+                            f'{_word(need)}')
+                else:
+                    what = cover['status']
+                gaps.append(f'{_lit(dim)} handover by a colleague: {e(what)}')
     simulated = any(d.get('simulated') for d in ext['decisions'].values())
     head = (f'<p>Mode {_lit(mode)}. This section is about what the team can explain and take '
             'over; it is <strong>not the scientific verdict</strong> of the study, it '

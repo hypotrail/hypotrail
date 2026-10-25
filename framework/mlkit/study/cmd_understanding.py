@@ -385,19 +385,21 @@ def _status(args) -> dict:
 def _task(args) -> dict:
     store = sv.open_store(args.study)
     state = sv.load_state(args.study)
-    sv.require_mode(store, state)
+    doc = sv.require_mode(store, state)
     ext = model.of(state)
     s = ext['sessions'].get(args.session)
     if s is None:
         raise refuse('invalid_transition', 'Unknown session.', 'Check the session id.')
+    settles = sv.arbitration_checker(store, ext, doc)
     taskset = sv.blob_json(store, s['taskset_blob'], 'taskset')
     refs = sv.session_snapshot(store, s).get('refs') or {}
     answered = {a['task_ref']['task_id'] for a in ext['attempts'].values()
                 if a['session_id'] == s['session_id']}
     pending = [t for t in s['task_ids'] if t not in answered]
-    # A dimension with an open reservation asks a new variant (never the same question).
+    # A dimension with an open reservation asks a new variant (never the same question); a
+    # reservation resolved by an arbitration that is no longer admissible counts (R3C-1).
     for dim in s['dimensions']:
-        for r in ev.open_reservations(ext, s['actor_declared_id'], dim):
+        for r in ev.open_reservations(ext, s['actor_declared_id'], dim, settles=settles):
             used = {ext['attempts'][a]['task_ref']['variant_id'] for a in r['attempt_ids']
                     if a in ext['attempts']}
             family = {ext['attempts'][a]['task_ref']['variant_family'] for a in r['attempt_ids']
@@ -878,6 +880,14 @@ def _local_checker(study, repo):
         attempts = [a for i in ids for a in (ext['decisions'].get(i) or {}).get('attempt_ids', [])]
         avail = ev.evidence_availability(ext, attempts, lambda sha: sv.blob_ok(store, sha)) \
             if attempts else 'unavailable'
+        # The peers' answers the published coverage rests on follow the same rule (R3C-6).
+        sel = doc.get('coverage_selection') or {}
+        for value in (sel.get('transfer_decision_map') or {}).values():
+            for i in ([value] if isinstance(value, str) else list(value or [])):
+                t = ext['transfers'].get((ext['decisions'].get(i) or {}).get('transfer_id'))
+                if t is not None and not (t.get('response_ref')
+                                          and sv.blob_ok(store, t['response_ref'])):
+                    avail = 'unavailable'
         return {'private_context_verification': 'verified' if same else 'unknown',
                 'private_context_changed': not same, 'evidence_availability': avail,
                 'study_binding': 'verified'}

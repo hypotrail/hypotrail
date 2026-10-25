@@ -103,16 +103,33 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
     current = loaders['current_for'](session)
     actor = session['actor_declared_id']
     critical = set(doc['critical_dimensions'])
+    # The selection of this session's author and profile, the one the gate reads; the
+    # policy the gate applies (the study's, else the session's) and its view of the
+    # arbitrations (R3C-1).
+    scope_sel = ev.selection_for(ext, session['milestone'], actor, session['profile'])
+    gate_policy = sv.policy_doc(store, ext) or doc
+    settles = sv.arbitration_checker(store, ext, gate_policy)
     dims, gaps, safe, used_tasks = [], [], set(), {}
     for dim in session['dimensions']:
-        view = ev.dimension_view(ext, actor, dim)
-        d = ext['decisions'].get(view['decision_id']) if view['decision_id'] else None
-        if d is not None and d['session_id'] != session['session_id']:
-            d = None
+        # With a selection, a dimension shows the decision it maps (the one the gate
+        # judges, R3C-2); without one, the history's latest decision of this session.
+        d = ev.shown_decision(ext, scope_sel, actor, dim, session['session_id'])
+        if scope_sel is not None:
+            view = ev.dimension_view(ext, actor, dim, decision=d, settles=settles,
+                                     policy_doc=gate_policy)
+        else:
+            view = ev.dimension_view(ext, actor, dim)
         r = bk.rubric_for(taskset, dim)
-        fresh = snap.freshness(snapdoc['local'], current,
-                               ev.decision_dependency_keys(ext, d, taskset) if d else
-                               (r['dependency_keys'] if r else []))
+        if d is not None and d['session_id'] != session['session_id']:
+            # A selected decision of another session of the same person: its own
+            # snapshot and current context (as the gate reads it).
+            owner = ext['sessions'][d['session_id']]
+            fresh = snap.freshness(loaders['captured_for'](owner), loaders['current_for'](owner),
+                                   ev.decision_dependency_keys(ext, d, taskset))
+        else:
+            fresh = snap.freshness(snapdoc['local'], current,
+                                   ev.decision_dependency_keys(ext, d, taskset) if d else
+                                   (r['dependency_keys'] if r else []))
         attempts = d['attempt_ids'] if d else []
         for aid in attempts:
             t = ext['attempts'][aid]['task_ref']
@@ -153,17 +170,13 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
     # The same selection-based coverage as the gate (same function, same loaders), for this
     # session's author and profile; without such a selection it is missing, never a search
     # for any demonstrated transfer (round 2, C2-3).
-    selection = ev.latest_selection(ext, session['milestone'])
-    scope_sel = selection if selection is not None and \
-        selection['actor_scope'] == {'actor_declared_id': actor,
-                                     'profile': session['profile']} else None
-    gate_policy = sv.policy_doc(store, ext) or doc
     for dim in doc['peer_required_dimensions']:
         if dim not in session['dimensions']:
             continue
         cover = ev.selected_peer_coverage(ext, actor, dim, scope_sel, pol.digest(gate_policy),
                                           loaders['taskset_for'], loaders['captured_for'],
-                                          loaders['current_for'], policy_doc=gate_policy)
+                                          loaders['current_for'], policy_doc=gate_policy,
+                                          blob_ok=lambda sha: sv.blob_ok(store, sha))
         reviews = [x for x in ext['decisions'].values() if x['kind'] == 'transfer'
                    and dim in x['dimension_ids'] and x['session_id'] == session['session_id']]
         transfers = []
@@ -180,8 +193,7 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
                 'rationale': x['rationale'], 'human_review_ref': x['decision_id']})
         peers.append({'dimension_id': dim, 'people': cover['people'], 'status': cover['status'],
                       'transfers': transfers})
-        if cover['status'] != 'current' or \
-                cover['people'] < doc['team_coverage']['minimum_people']:
+        if ev.peer_gap(cover, doc):
             gaps.append({'kind': 'peer_coverage_missing', 'ref': dim})
     for key in snapdoc['local'].get('unreadable_sources') or []:
         gaps.append({'kind': 'source_unreadable',          # {logical_key, role} since round 1
@@ -228,7 +240,7 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
         'handover_content': sv.blob_json(store, handover['blob'], 'handover')
         if handover else None,
         'handover_digest': handover['digest'] if handover else None,
-        'coverage_selection': _selection_public(selection, session),
+        'coverage_selection': _selection_public(scope_sel, session),
         'dimensions': dims, 'peer_coverage': peers, 'decisions_summary': decisions,
         'reservation_resolutions': reservations, 'known_gaps': gaps,
         'limitations': sorted(limitations), 'safe_evidence': sorted(safe),
@@ -247,8 +259,9 @@ def _task_public(taskset, ref) -> dict:
 
 
 def _selection_public(selection, session) -> dict | None:
-    """The milestone selection about this session's author only (another person's
-    selection is not theirs to publish)."""
+    """The milestone selection about this session's author and profile only (another
+    person's selection is not theirs to publish, and a selection the dimensions were not
+    built from is never claimed, R3C-2)."""
     if selection is None or \
             selection['actor_scope']['actor_declared_id'] != session['actor_declared_id']:
         return None
@@ -498,6 +511,20 @@ def validate_review(doc) -> list[str]:
             p.append(f'dimension {d.get("id")} enum')
         if d['status'] == 'demonstrated' and not d['human_review_ref']:
             p.append(f'dimension {d.get("id")} demonstrated without a human review')
+    # A dimension the published selection maps shows the decision it maps (the engine builds
+    # it so, R3C-2): otherwise the document contradicts itself, showing one review while
+    # claiming the gate's selection names another, and no policy can be judged on it.
+    sel = doc['coverage_selection']
+    if sel is not None:
+        mapped = sel.get('dimension_decision_map') if isinstance(sel, dict) else None
+        if not isinstance(mapped, dict):
+            p.append('coverage_selection')
+        else:
+            for d in doc['dimensions']:
+                if isinstance(d, dict) and d.get('id') in mapped \
+                        and d.get('human_review_ref') != mapped[d['id']]:
+                    p.append(f'dimension {d["id"]} human_review_ref differs from the coverage '
+                             'selection')
     if not isinstance(doc['provenance'], dict) or set(doc['provenance']) != \
             set(PROVENANCE_FIELDS):
         p.append('provenance')

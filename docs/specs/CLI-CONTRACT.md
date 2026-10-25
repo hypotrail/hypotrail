@@ -1011,13 +1011,13 @@ Payloads: `hypotrail.understanding/1` (stdout of every verb except `verify-expor
 | `rectify --attempt ID --assistance-file F` | mutation | help found later; dependent reviews are re-opened |
 | `propose-review --session ID --file F` | mutation | stores a proposal (exact excerpts, allowlisted refs); never a human decision |
 | `review --session ID --file F` | mutation | the explicit human act (`declaration`, `simulated`); opens reservations |
-| `arbitrate --session ID --file F` | mutation | settles conflicts and reservations on identified evidence; never a reservation opened by a handover review (only a later handover task, started after that review, on the current handover content and reviewed `demonstrated`, resolves it) |
+| `arbitrate --session ID --file F` | mutation | settles conflicts and reservations on identified evidence; never a reservation opened by a handover review (only a later handover task, started after that review, on the current handover content and reviewed `demonstrated`, resolves it; under `unaided_required` for that dimension, in the policy in force or the session's, only one whose peer declared no AI assistance, else `evidence_invalid`). Accepted on an `abandoned` session too (its conflicts and reservations still count). A reservation resolved by an arbitration that is no longer admissible counts as open again: `arbitrate`, `review` (`resolves_reservation_ids`, a new variant) and `task` treat it so, and the replaced resolution is kept in the reservation's `previous_resolutions` |
 | `select --file F` | mutation | the coverage selection of a milestone (completed sessions only) |
 | `waive --file F` | mutation | a waiver (`waived`); accepted only by a policy that allows it (`allowed_by_waiver`) |
 | `handover set --session ID --file F` | mutation | `HandoverContent`; a change stales earlier transfers |
 | `transfer start/submit/review` | mutation | the peer's own task, references and human review |
 | `close --session ID --to STATUS --reason T` | mutation | `active`, `awaiting_review`, `completed`, `abandoned` |
-| `check --milestone M [--policy-file F] [--repo DIR]` | read | `hypotrail.understanding-gate/1`; informative, never an authorisation; `--repo` is a preview (`repo_note`): the protected action reads each session's recorded repository; `repositories` names, per session read, the repository its freshness was read from and its origin |
+| `check --milestone M [--policy-file F] [--repo DIR]` | read | `hypotrail.understanding-gate/1`; informative, never an authorisation; `--repo` is a preview (`repo_note`): the protected action reads each session's recorded repository; `repositories` names, per session read, the repository its freshness was read from and its origin. Gate rules added by review round 3 below |
 | `relocate --session ID --repo DIR --author ID --reason T` | mutation | records the new place of a **moved** repository for that session (digests unchanged); `check` and `export handoff` then read it. Refused (`invalid_transition`) while the recorded repository still exists (a move, never a second copy), when it is the same place or the session recorded none; refused (`path_outside_scope`) unless `--repo` is the top level of a Git work tree. The declared author and the reason are kept in the session's relocation history. It does not authenticate the new place's content: whoever controls the repository can still fake freshness (cooperative limit) |
 | `export preview --session ID --repo DIR` | read | the draft and its `content_digest`, the required contributors |
 | `export approve --session ID --contributor ID --content-digest D` | mutation | one declared approval of exactly that projection |
@@ -1035,6 +1035,36 @@ answer. Codes: `understanding_disabled`, `policy_invalid`, `unsupported_assuranc
 `git_index_conflict`, `export_stale`, `milestone_blocked`; the spec's `request_id_conflict`
 is the engine's `idempotency_conflict`.
 
+**Gate, export and report since review round 3 (area C).** The gate counts the person's
+open reservations and unsettled conflicts on a required dimension in **every** session.
+Every arbitration it relies on (one that closed such a reservation or settled such a
+conflict), in any session, must be admissible under the policy it applies and under the
+policy of the arbitration's own session; one that is not settles nothing: the reservation
+(`open_reservation`) or the conflict (`unarbitrated_conflict`) counts again, with
+`arbitration_not_admissible` for the dimension. An arbitration nothing relies on (its
+conflict is gone, its reservation was resolved again, another person or dimension) is never
+asked and never blocks. A handover reservation resolved by a transfer whose peer declared AI
+assistance (or nothing) counts as open on a dimension the applied policy makes
+`unaided_required` (`open_reservation` and `peer_assistance_not_admissible`, detail the
+reservation); `transfer review` may then resolve it again with a later unaided handover. Under `evidence_requirement: payloads_available`, a selected transfer whose
+peer answer blob is gone does not count as peer coverage (`peer_coverage_missing`, detail
+`evidence_unavailable`); under `recorded_decisions` it counts, its `peer.evidence_availability`
+is `unavailable` and the gate adds the limitation `evidence_not_reauditable` (A28). The
+gate's `dimensions[D].peer` holds `evidence_availability` (`available`, `unavailable`, or
+null without a counted peer). When a selection of the session's author and profile exists,
+the export projection's `dimensions` (and the report section's rows) are built from the
+decisions it maps, the ones the gate judges, in whatever session (a dimension it does not
+map shows no decision); without one, the latest decision of the session in the history, and
+`coverage_selection` is null (a selection of another profile is never claimed). A peer
+coverage gap is the gate's rule everywhere: fewer declared people than
+`team_coverage.minimum_people`, or a coverage that is not `current`. `verify-export`
+refuses a review whose dimension `human_review_ref`
+differs from `coverage_selection.dimension_decision_map` for a mapped dimension:
+`public_integrity: invalid`, problem `dimension D human_review_ref differs from the coverage
+selection` (the document contradicts itself; no conformity is judged on it). Local
+verification (`--study`) reports `evidence_availability: unavailable` when an answer of a
+selected transfer is gone.
+
 **`export handoff` under a required policy naming `handoff`** (the only change to §7/C7):
 the export computes the gate under the writer lock, reserves the milestone (one revision,
 `milestone_blocked` and nothing written when blocked), renders the deliverables and the
@@ -1044,7 +1074,11 @@ pack from that revision into a temporary folder, revalidates under the lock, ren
 payload. A relevant change in between refuses with `context_changed` and leaves the folder
 as `<out>.candidate-<id>`, never a handoff. Revisions made in between by other handoffs
 (their own reservations and records) are not relevant changes, so concurrent handoffs each
-publish. `--expected-revision` is checked against the study before the reservation; the
+publish. Without `--out`, the target is `handoff/revision-N` of the rendered revision; when
+that folder is already taken (concurrent handoffs rendered at the same revision), the pack
+is published to `handoff/revision-N-<first eight hex characters of the reservation id>` and
+the payload's `out` says so (review round 3). With `--out`, that folder is the only target:
+a handoff that finds it taken never publishes elsewhere. `--expected-revision` is checked against the study before the reservation; the
 pack is then rendered at the reservation's revision, one more than the one given (the
 ungated contract renders at the given revision), or at a later one when only other
 handoffs' reservations and records happened since (they are tolerated before the build as in

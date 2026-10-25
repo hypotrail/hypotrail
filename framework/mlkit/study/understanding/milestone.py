@@ -14,9 +14,11 @@ export runs this protocol instead, so no direct call bypasses the review and no 
    at a later one when only milestone bookkeeping of concurrent handoffs happened since
    (``cmd_export.build``), into a temporary sibling folder of the target;
 3. **revalidate** under the writer lock: no revision since the reserved one other than
-   milestone reservations and records (concurrent handoffs), and the gate, recomputed again, has the same decision, policy, scope and context digests. Only
-   then is the folder renamed onto the target (never a replacement). Any relevant change in
-   between leaves the folder as a ``.candidate`` next to the target, records
+   milestone reservations and records (concurrent handoffs), and the gate, recomputed again,
+   has the same decision, policy, scope and context digests. Only then is the folder renamed
+   onto the target (never a replacement; without ``--out``, when a concurrent handoff took
+   the default ``handoff/revision-N``, onto ``handoff/revision-N-<reservation>``). Any
+   relevant change in between leaves the folder as a ``.candidate`` next to the target, records
    ``candidate_not_current`` and refuses with ``context_changed``: it is never a handoff;
 4. **record** the publication (one revision) and re-render the deliverables.
 """
@@ -28,6 +30,7 @@ import uuid
 from pathlib import Path
 
 from mlkit.study import commands as cmd
+from mlkit.study.errors import StudyError
 
 from . import actions, export as ex, model, policy as pol, refuse, service as sv
 
@@ -114,7 +117,20 @@ def export_handoff_gated(study_dir, *, out=None, expected_revision=None):
                 not _only_bookkeeping_since(store, reserved_revision):
             raise refuse('context_changed', 'The study changed while the pack was built.',
                          'Run export handoff again.')
-        target = ce._target(study.study_dir, out, view['revision'])
+        # Without --out, the default folder of the revision; concurrent handoffs built at the
+        # same revision (only bookkeeping in between) each publish, so when that folder is
+        # already taken the pack goes to a folder named after this reservation (R3C-5).
+        # With --out the folder given is the only target (never a replacement).
+        fallback = None
+        if out is None:
+            fallback = study.study_dir / ce.DEFAULT_PARENT / \
+                f'revision-{view["revision"]}-{rid.split("-", 1)[-1][:8]}'
+        try:
+            target = ce._target(study.study_dir, out, view['revision'])
+        except StudyError as exc:
+            if fallback is None or exc.code != 'export_target_exists':
+                raise
+            target, fallback = ce._target(study.study_dir, fallback, view['revision']), None
         target.parent.mkdir(parents=True, exist_ok=True)
         tmp = target.parent / f'.{target.name}.tmp-{secrets.token_hex(4)}'
         tmp.mkdir()
@@ -148,6 +164,12 @@ def export_handoff_gated(study_dir, *, out=None, expected_revision=None):
                 ex.rename_noreplace(tmp, target)
             except FileExistsError:
                 same = False
+                if fallback is not None:      # another handoff took the default folder
+                    try:
+                        ex.rename_noreplace(tmp, fallback)
+                        target, same = fallback, True
+                    except FileExistsError:
+                        pass
         if same:
             # Published and recorded under the same lock: no published-but-unrecorded pack.
             _record_locked(store, fresh, rid, 'published',

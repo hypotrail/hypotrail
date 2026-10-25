@@ -153,8 +153,15 @@ def _conflict_on_d3(u, sid, plan):
 
 def test_an_old_arbitration_of_an_unused_session_does_not_block_for_ever(tmp_path):
     """Ported: session 1 (arbiters any_declared) has a conflict on D3 arbitrated by frank.
-    The team adopts v2 (arbiters: erin); alice redoes everything in session 2. The gate no
-    longer re-checks session 1's arbitration, which the selection does not use."""
+    The team adopts v2 (arbiters: erin); alice redoes everything in session 2.
+
+    Expectation changed in review round 3 (R3C-1): the gate counts the conflicts and
+    reservations of every session, so it does rely on frank's arbitration (it settles the
+    session 1 conflict and closes its reservation). Under v2 it is not admissible, settles
+    nothing, and the gate blocks (``arbitration_not_admissible``) where round 2 allowed. It
+    does not block for ever: erin, the arbiter v2 names, settles the conflict again in
+    session 1 (``arbitrate`` accepts an abandoned session since round 3), and frank's
+    arbitration, which nothing relies on any more, no longer blocks."""
     u = U(tmp_path)
     u.set_policy(REQ)
     plan, out = u.start()
@@ -165,6 +172,14 @@ def test_an_old_arbitration_of_an_unused_session_does_not_block_for_ever(tmp_pat
     u.m('close', '--session', s1, '--to', 'abandoned', '--reason', 'restart under v2')
     v2 = ukit.policy(mode='required', version=2, role_policy={'arbiters': ['erin']})
     custom_flow(u, v2)
+    g = gate(u)
+    assert g['decision'] == 'blocked', g['reasons']
+    assert {'code': 'arbitration_not_admissible', 'dimension': 'D3'} in g['reasons']
+    assert {'code': 'unarbitrated_conflict', 'dimension': 'D3',
+            'detail': f'{good},{bad}'} in g['reasons']
+    assert {'code': 'open_reservation', 'dimension': 'D3', 'detail': res[0]} in g['reasons']
+    again = _arb(u, s1, 'erin', [good, bad], res, good)
+    assert again['ok'], again
     g = gate(u)
     assert g['decision'] == 'allowed', g['reasons']
 

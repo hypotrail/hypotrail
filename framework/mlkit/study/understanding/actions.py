@@ -194,13 +194,16 @@ def _assistance(store, sha) -> dict:
     return dict(doc)
 
 
-def _reservation_variant(ext: Mapping, session: Mapping, task: Mapping | None) -> bool:
+def _reservation_variant(ext: Mapping, session: Mapping, task: Mapping | None,
+                         settles=None) -> bool:
     """True when ``task`` is a new variant (same family, another variant) of a task whose
-    attempt opened a reservation for the session author (SPEC §07 step 5)."""
+    attempt opened a reservation for the session author (SPEC §07 step 5) that still
+    counts (open, or resolved by an arbitration no longer admissible, R3C-1)."""
     if task is None:
         return False
     for r in ext['reservations'].values():
-        if r['status'] != 'open' or r['actor'] != session['actor_declared_id']:
+        if r['actor'] != session['actor_declared_id'] or \
+                ev.reservation_state(ext, r, settles) is None:
             continue
         for aid in r['attempt_ids']:
             ref = ext['attempts'].get(aid, {}).get('task_ref') or {}
@@ -224,14 +227,15 @@ def _coached(ext: Mapping, actor: str, task_id: str) -> list:
 
 def _submit(ctx) -> Handler:
     def run(state, params):
-        sv.require_mode(ctx.store, state)
+        doc_policy = sv.require_mode(ctx.store, state)
         ext = model.require_writable(state)
         s = _session(ext, params['session_id'])
         _need_status(s, 'active')
         tid = params['task_id']
         taskset = _session_taskset(ctx.store, s)
         task = bk.task(taskset, tid)
-        if tid not in s['task_ids'] and not _reservation_variant(ext, s, task):
+        if tid not in s['task_ids'] and not _reservation_variant(
+                ext, s, task, sv.arbitration_checker(ctx.store, ext, doc_policy)):
             raise refuse('invalid_transition', 'This task is neither in the session plan nor a '
                          'new variant for an open reservation.',
                          'Ask for the next task with `understanding task`.', task_id=tid)
@@ -467,6 +471,7 @@ def _review(ctx) -> Handler:
                          'Correct the review file.')
         taskset = _session_taskset(ctx.store, s)
         allowed = _allowed_refs(ctx.store, s)
+        settles = sv.arbitration_checker(ctx.store, ext, doc_policy)
         created = []
         for i, d in enumerate(doc['decisions']):
             if not isinstance(d, Mapping) or set(d) != set(DECISION_KEYS):
@@ -527,7 +532,10 @@ def _review(ctx) -> Handler:
             resolves = model.str_list(d['resolves_reservation_ids'], 'resolves_reservation_ids')
             for rid in resolves:
                 r = ext['reservations'].get(rid)
-                if r is None or r['status'] != 'open' or r['actor'] != actor \
+                # Open, or resolved by an arbitration that is no longer admissible (it
+                # settles nothing for the gate, so it can be resolved again; R3C-1).
+                if r is None or ev.reservation_state(ext, r, settles) is None \
+                        or r['actor'] != actor \
                         or r['dimension_id'] != dim or r.get('origin') == 'transfer':
                     raise refuse('evidence_invalid', 'resolves_reservation_ids names no open '
                                  'reservation of this person and dimension.',
@@ -571,8 +579,7 @@ def _review(ctx) -> Handler:
                 'assistance_at_review': {x: ev.attempt_assistance(ext, x)['aided']
                                          for x in attempts}}
             for rid in resolves:
-                r = ext['reservations'][rid]
-                r.update(status='resolved', resolved_by=did, resolved_revision=_rev(state))
+                _resolve(ext['reservations'][rid], did, _rev(state))
             if d['status'] in ('to_consolidate', 'needs_review'):
                 rid = model.new_id('ur', ctx.request_id, str(i))
                 ext['reservations'][rid] = {
@@ -587,6 +594,15 @@ def _review(ctx) -> Handler:
     return Handler(frozenset({'session_id', 'decisions_sha'}), run)
 
 
+def _resolve(r: dict, by: str, revision: int) -> None:
+    """Close a reservation; a resolution it replaces (an arbitration that is no longer
+    admissible) is kept in ``previous_resolutions``."""
+    if r['status'] != 'open':
+        r.setdefault('previous_resolutions', []).append(
+            {'resolved_by': r.get('resolved_by'), 'resolved_revision': r.get('resolved_revision')})
+    r.update(status='resolved', resolved_by=by, resolved_revision=revision)
+
+
 ARBITRATION_KEYS = ('arbiter_declared_id', 'declaration', 'simulated',
                     'conflicting_decision_ids', 'reservation_ids', 'chosen_decision_id',
                     'rationale', 'evidence_refs')
@@ -597,7 +613,9 @@ def _arbitrate(ctx) -> Handler:
         doc_policy = sv.require_mode(ctx.store, state)
         ext = model.require_writable(state)
         s = _session(ext, params['session_id'])
-        _need_status(s, 'active', 'awaiting_review', 'completed')
+        # An abandoned session's conflicts and reservations still count for its author (the
+        # gate reads every session), so they can be settled there too (R3C-1).
+        _need_status(s, 'active', 'awaiting_review', 'completed', 'abandoned')
         doc = sv.blob_json(ctx.store, params['arbitration_sha'], 'arbitration')
         if not isinstance(doc, Mapping) or set(doc) != set(ARBITRATION_KEYS):
             raise refuse('review_required', 'An arbitration has the keys '
@@ -617,9 +635,11 @@ def _arbitrate(ctx) -> Handler:
             raise refuse('evidence_invalid', 'The arbitration names decisions outside this '
                          'session.', 'Name the decisions in conflict.')
         reservations = model.str_list(doc['reservation_ids'], 'reservation_ids')
+        settles = sv.arbitration_checker(ctx.store, ext, doc_policy)
         for rid in reservations:
             r = ext['reservations'].get(rid)
-            if r is None or r['status'] != 'open':
+            # Open, or resolved by an arbitration no longer admissible (R3C-1).
+            if r is None or ev.reservation_state(ext, r, settles) is None:
                 raise refuse('evidence_invalid', 'A reservation is unknown or closed.',
                              'Name open reservations.')
             if r.get('origin') == 'transfer':
@@ -673,8 +693,7 @@ def _arbitrate(ctx) -> Handler:
             'declaration': declaration, 'simulated': doc['simulated'],
             'recorded_revision': _rev(state)}
         for rid in reservations:
-            ext['reservations'][rid].update(status='resolved', resolved_by=aid,
-                                            resolved_revision=_rev(state))
+            _resolve(ext['reservations'][rid], aid, _rev(state))
         return {'arbitration_id': aid}
     return Handler(frozenset({'session_id', 'arbitration_sha'}), run)
 
@@ -933,7 +952,10 @@ def _transfer_review(ctx) -> Handler:
         resolves = model.str_list(doc['resolves_reservation_ids'], 'resolves_reservation_ids')
         for rid in resolves:
             r = ext['reservations'].get(rid)
-            if r is None or r['status'] != 'open' or r.get('origin') != 'transfer' \
+            # Open, or resolved by a handover the assistance rule in force does not admit
+            # (it settles nothing for the gate, so it can be resolved again; R3C-4).
+            if r is None or ev.reservation_state(ext, r, None, doc_policy) is None \
+                    or r.get('origin') != 'transfer' \
                     or r['actor'] != t['author_declared_id'] or r['dimension_id'] not in dims \
                     or r.get('transfer_id') == t['transfer_id'] \
                     or doc['status'] != 'demonstrated' \
@@ -944,8 +966,25 @@ def _transfer_review(ctx) -> Handler:
                              'demonstrated review of another handover task, started after the '
                              'review that opened it, on the current handover content and the '
                              'same dimension.', 'Run a new handover task.')
-        did = model.new_id('udt', ctx.request_id)
         s = _session(ext, t['session_id'])
+        if resolves:
+            # The resolving handover must count as peer coverage of that dimension (the same
+            # rule as C2-7): under unaided_required, in the policy in force or the session's
+            # (the stricter wins), its peer declared no AI assistance (R3C-4).
+            session_policy = sv.blob_json(ctx.store, s['policy_blob'], 'policy')
+            for rid in resolves:
+                dim = ext['reservations'][rid]['dimension_id']
+                if not ev.transfer_unaided(t) and any(
+                        ev.peer_rule(p_, dim) == 'unaided_required'
+                        for p_ in (doc_policy, session_policy)):
+                    raise refuse('evidence_invalid', 'This handover reservation is on a '
+                                 'dimension whose assistance rule is unaided_required; the '
+                                 'peer of this handover declared AI assistance (or no '
+                                 'declaration), so it does not resolve the reservation.',
+                                 'Run a new handover task answered without AI help, or record '
+                                 'this review without naming the reservation.',
+                                 reservation_id=rid, dimension=dim)
+        did = model.new_id('udt', ctx.request_id)
         ext['decisions'][did] = {
             'kind': 'transfer', 'decision_id': did, 'transfer_id': t['transfer_id'],
             'session_id': t['session_id'], 'reviewer_declared_id': reviewer,
@@ -957,8 +996,7 @@ def _transfer_review(ctx) -> Handler:
             'recorded_revision': _rev(state), 'reviewed_at': sv.now()}
         t.update(human_review_ref=did, status='reviewed')
         for rid in resolves:
-            ext['reservations'][rid].update(status='resolved', resolved_by=did,
-                                            resolved_revision=_rev(state))
+            _resolve(ext['reservations'][rid], did, _rev(state))
         opened = []
         if doc['status'] != 'demonstrated':
             # A handover that did not succeed is a reservation on the author's dimension: a

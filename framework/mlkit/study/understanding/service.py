@@ -158,6 +158,19 @@ def gate_loaders(store: StudyStore, state: Mapping, ext: Mapping, *,
             'current_for': current_for(store, state, ext, repo_override=repo_override)}
 
 
+def session_policy_for(store: StudyStore):
+    """The loader of the policy a session started under."""
+    return lambda s: blob_json(store, s['policy_blob'], 'policy')
+
+
+def arbitration_checker(store: StudyStore, ext: Mapping, policy_doc: Mapping | None):
+    """:func:`evaluate.arbitration_checker` for ``policy_doc`` and the sessions' own
+    policies; without a policy every recorded arbitration settles (the history)."""
+    if not policy_doc:
+        return None
+    return ev.arbitration_checker(ext, policy_doc, session_policy_for(store))
+
+
 def gate(store: StudyStore, state: Mapping, milestone: str, *, policy_override=None,
          policy_source: str = 'study', repo_override=None, today=None) -> dict:
     ext = model.of(state) or model.empty('unset')
@@ -165,7 +178,7 @@ def gate(store: StudyStore, state: Mapping, milestone: str, *, policy_override=N
     return ev.gate(ext, milestone=milestone, policy_doc=doc, policy_source=policy_source,
                    **gate_loaders(store, state, ext, repo_override=repo_override),
                    blob_ok=lambda sha: blob_ok(store, sha), checked_at=now(), today=today,
-                   session_policy_for=lambda s: blob_json(store, s['policy_blob'], 'policy'),
+                   session_policy_for=session_policy_for(store),
                    repository_for=lambda s: repository_of(store, s,
                                                           repo_override=repo_override))
 
