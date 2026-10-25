@@ -408,12 +408,14 @@ def _same_bytes(tree: 'Tree', scope: Mapping | None, where: str | None,
                 verified: Path) -> bool:
     """Whether every public source ``scope`` maps has, in the verified tree, the bytes it has
     in the working tree of ``where`` (what the study's gate read for that session). False
-    when that repository or scope is unknown or gone, when nothing is mapped, or when a byte
-    differs."""
-    if scope is None or not where or not Path(where).is_dir():
+    when that repository or scope is unknown or gone, or when a byte
+    differs. A known scope that maps no public source holds nothing to compare: True."""
+    if scope is None:
         return False
     paths = [e['path'] for e in scope['entries'] if e['path']]
     if not paths:
+        return True
+    if not where or not Path(where).is_dir():
         return False
     if tree.target == 'worktree' and Path(where).resolve() == verified:
         return True

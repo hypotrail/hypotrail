@@ -542,7 +542,10 @@ def _git_plan(args) -> dict:
     intent = _published_intent(ext, s['session_id'])
     repo = Path(args.repo).resolve()
     files = _expected_files(repo, intent)
-    scope = sv.session_snapshot(store, s)['public']
+    # The sources the generation declares: since round 7 the union of the scopes of every
+    # session whose decisions it shows, not only the exported session's own scope.
+    doc = canonical.loads(files[f'{ex.EXPORT_DIR}/{intent["review_id"]}/{ex.JSON_FILE}'])
+    scope = doc['public_source_scope']
     plan = vf.git_plan(repo, files, [e for e in scope['entries'] if e['path']])
     return _ok('git-plan', store.study_dir, review_id=intent['review_id'], **plan,
                consistent=not plan['source_conflicts'],

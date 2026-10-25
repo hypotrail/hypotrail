@@ -525,6 +525,18 @@ No existing expectation changed and no assertion was weakened: the round-5 and r
 tests verify single-session exports or sessions sharing one repository and one scope, where
 the union and the per-session comparison give what they gave.
 
+## Review round 8: fixes
+
+Round 8 found nothing blocking or major. Regression tests:
+`framework/tests/study/understanding/test_review_round8_cd.py`.
+
+* `git-plan` checks the generation's whole declared public scope (since round 7 the union
+  of the scopes of every session whose decisions it shows), so a shown session's source
+  that differs between the snapshot, the working tree and the index is a conflict and
+  `git-stage` refuses, instead of staging what `verify-export --target index` then blocks.
+* A judged session whose scope maps no public source holds nothing to compare: it no longer
+  makes local verification block the very bytes `check` judged.
+
 ## Gate run
 
 Run in this container (Python 3.13, uv 0.11, the `dev`, `browser` and `azureml` groups and the
