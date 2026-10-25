@@ -5,6 +5,22 @@ evaluated model, relative to ``data/hypotrail``. The copies of the recipe and da
 in ``src/conf/hypotrail/contracts/`` (they travel with the code) must be byte-identical to
 the ones in the data asset: they are never a second authority. The recipe and data
 contract must also hash, canonically, to the identities frozen in the configuration.
+
+SHA256SUMS is written with the data folder, so it proves that nothing changed by accident,
+not where the files come from (review round 9, R9AB-1). Every contract a step reads is
+therefore bound to the configuration that travels with the code, and a mismatch is refused
+as ``artifact_integrity_failed`` before anything is read from it:
+
+* the development plan (:func:`check_plan`): its partition key digests, its ``keys_sha256``
+  and ``protocol_id`` recomputed and compared with ``components.data_splitting`` (part of
+  the scientific projection), its development key digest and row count recomputed, its
+  roles, final-test summary and excluded rows equal to the snapshot's evaluation plan;
+* the deployment snapshot (:func:`check_snapshot`): its canonical SHA-256 is
+  ``hypotrail.snapshot_id``, and its study, recipe, data contract and plan identities are
+  the configuration's; an override of an identity of ``hypotrail`` is refused;
+* the evaluated model (:func:`check_evaluated`): ``models/evaluated`` is present exactly
+  when the snapshot names a predictor, and its bundle is that predictor (the steps and
+  ``validate`` also compare the id ``hypotrail_runtime.verify_bundle`` recomputes).
 """
 
 from __future__ import annotations
@@ -104,6 +120,162 @@ def load_json(path: Path) -> dict:
     return data
 
 
+# --- the identities of the plan, the snapshot and the evaluated model (R9AB-1) -----------
+
+IDENTITY_OVERRIDES = ("hypotrail.snapshot_id", "hypotrail.study_id", "hypotrail.study_revision")
+EVALUATED = "models/evaluated"
+BUNDLE_DOCUMENT = "predictor_bundle.json"
+RESTORE = "Restore the exported data folder and configuration, or export the study again; never edit them."
+
+
+def key_order(key: str) -> tuple:
+    """Return the sort key of a row key (the engine's ``L<n>`` keys in numeric order)."""
+    digits = key[1:] if key[:1].isalpha() else key
+    return (0, int(digits), key) if digits.isdigit() else (1, 0, key)
+
+
+def development_keys(plan: dict) -> list[str]:
+    """Return every development row key of the plan, in key order."""
+    return sorted({k for part in plan["partitions"] for k in part["row_keys"]}, key=key_order)
+
+
+def _identity_refused(message: str, path: str, details: dict) -> ProjectError:
+    return ProjectError("artifact_integrity_failed", message, path=path, remediation=RESTORE, details=details)
+
+
+def _compare(found: object, expected: object, message: str, path: str) -> None:
+    if found != expected:
+        raise _identity_refused(message, path, {"expected": expected, "found": found})
+
+
+def check_plan(plan: dict, protocol_id: str, keys_sha256: str, snapshot: dict) -> None:
+    """Refuse a development plan that is not the one the configuration and snapshot name.
+
+    Every digest is recomputed from the row keys the steps will read: a partition's
+    ``keys_sha256``, the plan's ``keys_sha256`` (equal to ``keys_sha256``, the
+    configuration's), its development key digest and row count; ``protocol_id`` is the
+    configuration's, and the roles, final-test summary and excluded rows are the snapshot's.
+    """
+    where = FILES["plan"]
+    try:
+        partitions = plan["partitions"]
+        rows = {part["id"]: list(part["row_keys"]) for part in partitions}
+        if len(rows) != len(partitions):
+            raise ValueError("two partitions have the same id")
+        for part in partitions:
+            _compare(part["keys_sha256"], canonical.canonical_sha256(list(part["row_keys"])),
+                     "A partition of the development plan does not match its key hash.", f"{where}#{part['id']}")
+        development = development_keys(plan)
+    except (KeyError, TypeError, ValueError) as error:
+        raise _identity_refused("The development plan is malformed.", where, {"error": str(error)}) from error
+    recomputed = canonical.canonical_sha256(rows)
+    _compare(recomputed, keys_sha256, "The development plan is not the study's: its row keys do not hash to the "
+             "configuration's components.data_splitting.keys_sha256.", where)
+    _compare(plan.get("keys_sha256"), recomputed,
+             "The development plan's keys_sha256 is not its row keys' hash.", where)
+    _compare(plan.get("protocol_id"), protocol_id, "The development plan names another protocol than the "
+             "configuration's components.data_splitting.protocol_id.", where)
+    _compare(plan.get("development_keys_sha256"), canonical.canonical_sha256(development),
+             "The development plan's development_keys_sha256 is not its development rows' hash.", where)
+    _compare(plan.get("n_development_rows"), len(development),
+             "The development plan's n_development_rows is not its number of development rows.", where)
+    recorded = snapshot.get("evaluation_plan") or {}
+    found = {
+        "protocol_id": plan.get("protocol_id"),
+        "keys_sha256": recomputed,
+        "roles": [part.get("role") for part in partitions],
+        "n_development_rows": len(development),
+        "final_test": plan.get("final_test"),
+        "excluded_rows": plan.get("excluded_rows"),
+    }
+    expected = {key: recorded.get(key) for key in found}
+    differing = sorted(key for key in found if found[key] != expected[key])
+    if differing:
+        raise _identity_refused(
+            "The development plan differs from the snapshot's evaluation plan.", where, {"differing": differing},
+        )
+
+
+def check_snapshot(snapshot: dict, config: dict, overrides: list[str]) -> None:
+    """Refuse a deployment snapshot that is not the one the configuration names.
+
+    Its canonical SHA-256 is ``hypotrail.snapshot_id``; its study, recipe, data contract and
+    plan identities are the configuration's. An override of ``hypotrail.snapshot_id``,
+    ``study_id`` or ``study_revision`` (generated identities, never operational) is refused.
+    """
+    where = FILES["snapshot"]
+    for override in overrides:
+        key = override.split("=", 1)[0].lstrip("+~")
+        if key in IDENTITY_OVERRIDES:
+            raise ProjectError(
+                "scientific_config_changed",
+                "An identity of the export cannot be overridden.",
+                path=key,
+                remediation="Remove the override; the identities are generated with the export.",
+                details={"override": override},
+            )
+    hyp, split = config["hypotrail"], config["components"]["data_splitting"]
+    _compare(canonical.canonical_sha256(snapshot), hyp["snapshot_id"],
+             "The deployment snapshot does not match the configuration's hypotrail.snapshot_id.", where)
+    plan = snapshot.get("evaluation_plan") or {}
+    found = {
+        "study_id": snapshot.get("study_id"),
+        "study_revision": snapshot.get("study_revision"),
+        "recipe_sha256": snapshot.get("recipe_sha256"),
+        "data_contract_sha256": snapshot.get("data_contract_sha256"),
+        "protocol_id": plan.get("protocol_id"),
+        "keys_sha256": plan.get("keys_sha256"),
+    }
+    expected = {
+        "study_id": hyp["study_id"],
+        "study_revision": hyp["study_revision"],
+        "recipe_sha256": hyp["recipe_sha256"],
+        "data_contract_sha256": hyp["data_contract_sha256"],
+        "protocol_id": split["protocol_id"],
+        "keys_sha256": split["keys_sha256"],
+    }
+    differing = sorted(key for key in found if found[key] != expected[key])
+    if differing:
+        raise _identity_refused(
+            "The deployment snapshot names other identities than the configuration.", where, {"differing": differing},
+        )
+
+
+def evaluated_predictor_id(snapshot: dict) -> str | None:
+    """Return the predictor id of the evaluated model the snapshot names, or None."""
+    predictor = snapshot.get("predictor")
+    return predictor.get("predictor_id") if isinstance(predictor, dict) else None
+
+
+def check_evaluated(data_dir: Path, snapshot: dict, predictor_id: str | None = None) -> None:
+    """Refuse an evaluated model folder that is not the snapshot's predictor.
+
+    ``models/evaluated`` holds a bundle exactly when the snapshot names a predictor, and the
+    bundle document names that predictor. ``predictor_id``, when given, is the id that
+    ``hypotrail_runtime.verify_bundle`` recomputed from the bundle's content, compared too.
+    """
+    expected = evaluated_predictor_id(snapshot)
+    document = data_dir / EVALUATED / BUNDLE_DOCUMENT
+    if not document.is_file():
+        if expected is not None:
+            raise _identity_refused(
+                "The snapshot names an evaluated model that the export does not hold.",
+                f"{EVALUATED}/{BUNDLE_DOCUMENT}",
+                {"expected": expected},
+            )
+        return
+    if expected is None:
+        raise _identity_refused(
+            "The export holds an evaluated model that its snapshot does not name.",
+            EVALUATED,
+            {"expected": None},
+        )
+    _compare(load_json(document).get("predictor_id"), expected,
+             "The evaluated model is not the predictor the snapshot names.", EVALUATED)
+    if predictor_id is not None:
+        _compare(predictor_id, expected, "The evaluated model is not the predictor the snapshot names.", EVALUATED)
+
+
 @dataclass(frozen=True)
 class Contracts:
     """The verified contracts of the export."""
@@ -118,7 +290,7 @@ class Contracts:
 
 
 def load(frozen: dict) -> Contracts:
-    """Verify the data folder and the code copies, then return the contracts."""
+    """Verify the data folder, the code copies and every identity, then return the contracts."""
     config = frozen["config"]
     data_dir = Path(config["data_dir"])
     sums = verify_data_dir(data_dir)
@@ -147,6 +319,10 @@ def load(frozen: dict) -> Contracts:
             "The scientific projection does not match its identity.",
             path=FILES["projection"],
         )
+    split = config["components"]["data_splitting"]
+    check_snapshot(docs["snapshot"], config, frozen.get("overrides") or [])
+    check_plan(docs["plan"], split["protocol_id"], split["keys_sha256"], docs["snapshot"])
+    check_evaluated(data_dir, docs["snapshot"])
     return Contracts(
         data_dir,
         docs["recipe"],

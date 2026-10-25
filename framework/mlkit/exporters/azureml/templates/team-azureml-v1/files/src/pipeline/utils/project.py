@@ -96,16 +96,25 @@ def _check(checks: list, check_id: str, function: Callable[[], object]) -> None:
 # --- validate --------------------------------------------------------------------------
 
 
-def _hydra_config() -> tuple[str, str | None]:
-    if not (runtime_bridge.available("hydra") and runtime_bridge.available("omegaconf")):
-        return "not_run", "Hydra is not installed."
+def _has_hydra() -> bool:
+    return runtime_bridge.available("hydra") and runtime_bridge.available("omegaconf")
+
+
+def _frozen_config() -> dict:
+    """Compose and freeze the project's configuration, as every step does first."""
     from hydra import compose, initialize_config_dir
 
     from .hypotrail.config import freeze
 
     with initialize_config_dir(config_dir=str(CONF_DIR), version_base=None):
         cfg = compose(config_name="config")
-    frozen = freeze(cfg)
+    return freeze(cfg)
+
+
+def _hydra_config() -> tuple[str, str | None]:
+    if not _has_hydra():
+        return "not_run", "Hydra is not installed."
+    frozen = _frozen_config()
     # The configuration's own expected identity can be edited with it: the authority is the
     # checksummed projection of the data folder, which every step also verifies.
     reference = contracts.load_json(DATA_DIR / contracts.FILES["projection"])
@@ -121,6 +130,26 @@ def _hydra_config() -> tuple[str, str | None]:
             details={"differences": projection.differences(reference, actual)[:20]},
         )
     return "passed", frozen["scientific_sha256"]
+
+
+def _contract_identities() -> tuple[str, object]:
+    """Bind the plan, the snapshot and the evaluated model to the configuration (R9AB-1).
+
+    The checks every step makes first (``contracts.load``): SHA256SUMS is written with the
+    data folder, so it proves no accidental change, not that the plan, the snapshot or the
+    evaluated model are the ones the configuration names.
+    """
+    if not _has_hydra():
+        return "not_run", "Hydra is not installed."
+    frozen = _frozen_config()
+    # The data folder of this project, whatever the working directory (operational).
+    frozen["config"]["data_dir"] = str(DATA_DIR)
+    found = contracts.load(frozen)
+    return "passed", {
+        "snapshot_id": frozen["config"]["hypotrail"]["snapshot_id"],
+        "plan_keys_sha256": found.plan["keys_sha256"],
+        "evaluated_predictor_id": contracts.evaluated_predictor_id(found.snapshot),
+    }
 
 
 def _azure_yaml() -> tuple[str, object]:
@@ -186,7 +215,8 @@ def _evaluated() -> tuple[str, object]:
     if not runtime_bridge.available("hypotrail_runtime"):
         return "not_run", "hypotrail_runtime is not installed."
     rt = runtime_bridge.runtime()
-    rt.verify_bundle(folder)
+    snapshot = contracts.load_json(DATA_DIR / contracts.FILES["snapshot"])
+    contracts.check_evaluated(DATA_DIR, snapshot, rt.verify_bundle(folder).predictor_id)
     bundle = contracts.load_json(folder / "predictor_bundle.json")
     spec = mp.ParitySpec.from_bundle(bundle)
     features = mp.read_table(mp.inside(folder, spec.features_path, "parity.features_path"))
@@ -219,6 +249,7 @@ def _mlflow_package() -> tuple[str, object]:
     packages = [p for p in bundle.get("optional_packages") or [] if p.get("format") == mp.FORMAT]
     if not packages:
         return "missing", "The evaluated model has no MLflow package."
+    contracts.check_evaluated(DATA_DIR, contracts.load_json(DATA_DIR / contracts.FILES["snapshot"]))
     if not (runtime_bridge.available("hypotrail_runtime") and runtime_bridge.available("mlflow")):
         return "not_run", "hypotrail_runtime or MLflow is not installed."
     result = mp.ArtifactPackager(runtime_bridge.runtime()).verify(folder, folder / packages[0]["relative_path"])
@@ -244,6 +275,7 @@ def validate(_args: argparse.Namespace) -> int:
     _check(checks, "data_checksums", lambda: ("passed", len(contracts.verify_data_dir(DATA_DIR))))
     _check(checks, "code_contract_copies", _code_copies)
     _check(checks, "hydra_config_frozen", _hydra_config)
+    _check(checks, "contract_identities", _contract_identities)
     _check(checks, "azure_yaml_graph", _azure_yaml)
     _check(checks, "configuration_markers", _markers)
     _check(checks, "code_upload_content", _upload)
@@ -299,7 +331,12 @@ def predict(args: argparse.Namespace) -> int:
             remediation="The study exported its recipe only; run-local builds a new candidate.",
         )
     rt = runtime_bridge.runtime()
-    rt.verify_bundle(folder)
+    predictor_id = rt.verify_bundle(folder).predictor_id
+    if not args.model:
+        # The default model is the export's evaluated one: the predictor its snapshot names.
+        contracts.verify_data_dir(DATA_DIR)
+        snapshot = contracts.load_json(DATA_DIR / contracts.FILES["snapshot"])
+        contracts.check_evaluated(DATA_DIR, snapshot, predictor_id)
     bundle = contracts.load_json(folder / "predictor_bundle.json")
     manifest = contracts.load_json(folder / bundle["predictor_manifest_path"])
     if args.parity:
@@ -475,6 +512,12 @@ def materialize(args: argparse.Namespace) -> int:
     contracts.verify_data_dir(DATA_DIR)
     contract = contracts.load_json(DATA_DIR / "contracts" / "data-contract.json")
     plan = contracts.load_json(DATA_DIR / "contracts" / "development-plan.json")
+    # The rows extracted are the plan's development rows only if the plan is the study's
+    # (R9AB-1): the scientific projection, which every step and validate compare with the
+    # configuration, names its protocol and key digest; the snapshot its roles and final test.
+    reference = contracts.load_json(DATA_DIR / contracts.FILES["projection"])["plan"]
+    snapshot = contracts.load_json(DATA_DIR / contracts.FILES["snapshot"])
+    contracts.check_plan(plan, reference["protocol_id"], reference["keys_sha256"], snapshot)
     source = Path(args.source)
     if contracts.sha256_file(source) != contract["source_sha256"]:
         raise ProjectError(

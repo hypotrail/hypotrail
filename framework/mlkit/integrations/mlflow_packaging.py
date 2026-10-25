@@ -75,6 +75,11 @@ holds no evidence:
   never copies them, refuses them in a package (:func:`layout_issues`), and requires the
   embedded bundle to hold exactly its listed files and its bundle document.
 
+Round 9 (review AB, R9AB-3). MLflow 3.17 copies the working directory's uv project files
+(``pyproject.toml``, ``uv.lock``, ``.python-version``) into a package it saves, which the
+allowlist refuses: :meth:`ArtifactPackager.package` names an empty folder as the uv project
+(``uv_project_path``), so a package holds the same bytes whatever the working directory.
+
 The wrapper inside the package (``hypotrail_pyfunc.py``, MLflow "models from code") imports
 only the standard library, ``hypotrail_runtime``, ``mlflow`` and ``pandas``: it keeps the
 whole preprocessing of the native predictor and the meaning of its output
@@ -279,6 +284,24 @@ class HypotrailPredictor(mlflow.pyfunc.PythonModel):
 
 set_model(HypotrailPredictor())
 '''
+
+
+def _without_uv_project(mlflow, empty_folder: Path) -> dict:
+    """The ``save_model`` argument that keeps the working directory's uv project out of the
+    package (round 9, R9AB-3). MLflow 3.x copies ``pyproject.toml``, ``uv.lock`` and
+    ``.python-version`` from the current directory into the package when it finds a uv
+    project there (``MLFLOW_UV_AUTO_DETECT``, on by default), and the package's allowlist then
+    refuses them: packaging failed whenever it ran from a uv project (``framework/``, an
+    exported project after ``uv lock``). ``uv_project_path`` naming an empty folder replaces
+    that detection, so nothing is copied and the package holds the same bytes from any
+    working directory; the environment variables and the process's working directory are left
+    as they are. An MLflow without the parameter has no uv detection to turn off."""
+    import inspect
+    try:
+        parameters = inspect.signature(mlflow.pyfunc.save_model).parameters
+    except (TypeError, ValueError):
+        return {}
+    return {'uv_project_path': str(empty_folder)} if 'uv_project_path' in parameters else {}
 
 
 class PackagingError(RuntimeError):
@@ -795,11 +818,14 @@ class ArtifactPackager:
             shutil.copytree(bundle_dir, bundle_copy,
                             ignore=_skip(bundle_dir, bundle, out, staging))
             self._native_document(bundle_copy)
+            no_uv_project = staging / 'no-uv-project'
+            no_uv_project.mkdir()
             mlflow.pyfunc.save_model(
                 str(package_dir), python_model=str(wrapper),
                 artifacts={NATIVE_ARTIFACT: str(bundle_copy)},
                 signature=_mlflow_signature(signature),
-                pip_requirements=environment['pip_requirements'])
+                pip_requirements=environment['pip_requirements'],
+                **_without_uv_project(mlflow, no_uv_project))
             _write_mlmodel(package_dir, signature, environment)
             write_environment_files(package_dir, environment)
             refuse_layout(package_dir, with_descriptor=False)

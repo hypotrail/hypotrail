@@ -61,7 +61,8 @@ def test_validate_passes_offline_on_the_moved_folder(project):
     statuses = {c['id']: c['status'] for c in report['checks']}
     assert report['status'] == 'passed' and report['network_used'] is False
     assert statuses == {'data_checksums': 'passed', 'code_contract_copies': 'passed',
-                        'hydra_config_frozen': 'passed', 'azure_yaml_graph': 'passed',
+                        'hydra_config_frozen': 'passed', 'contract_identities': 'passed',
+                        'azure_yaml_graph': 'passed',
                         'configuration_markers': 'passed', 'code_upload_content': 'passed',
                         'no_credentials': 'passed', 'evaluated_model_parity': 'passed',
                         'evaluated_model_mlflow_package': 'passed', 'development_rows': 'passed'}

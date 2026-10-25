@@ -42,6 +42,12 @@ READINESS_SCHEMA = 'hypotrail.export_readiness/1'
 MARKER = re.compile(r'@@([a-z]+):([a-z0-9_]+)@@')
 MISSING = 'MISSING-'
 OMEGACONF_MISSING = '???'
+# Configuration keys the exported project refuses wherever they appear (its
+# ``projection.check_shape``): ``_target_`` would make the configuration an object to
+# instantiate. Hydra's other instantiation keys (``_args_``, ``_recursive_``, ``_convert_``,
+# ``_partial_``) mean nothing without ``_target_`` and compose and freeze as plain keys
+# (round 9, R9AB-6: checked by exporting a column of each name).
+HYDRA_RESERVED_KEYS = ('_target_',)
 KINDS = ('preserved', 'adapted', 'rendered', 'added', 'shared', 'generated', 'copied')
 MANIFEST_PATH = 'data/hypotrail/contracts/export-manifest.json'
 SUMS_PATH = 'data/hypotrail/SHA256SUMS'
@@ -491,19 +497,31 @@ def _config_preprocessing(preprocessing):
                           remediation='Report this recipe; it is not changed to export.') from error
 
 
+def _refuse_interpreted(path: str) -> None:
+    raise ExportError('contract_invalid', 'A recipe or plan value contains "${" or "@@", is '
+                      '"???", or is a configuration key named "_target_", which the project '
+                      'configuration would interpret.',
+                      path=path, remediation='Rename the value in the case of the study '
+                                             '(a name or a unit), then export.')
+
+
 def _no_interpolation(value, path: str) -> None:
     """A scientific value rendered into Hydra YAML may not look like an interpolation, nor
     be OmegaConf's mandatory-missing marker ``???`` (read back as a missing value). It is
     checked on the values as the configuration carries them: the literals of the recipe's
     preprocessing are encoded, every other value (a name, a unit the case states) is refused
-    with a remediation the junior can follow."""
+    with a remediation the junior can follow.
+
+    Round 9 (review AB, R9AB-6): a mapping key in :data:`HYDRA_RESERVED_KEYS` is refused the
+    same way. A column named ``_target_`` becomes a key of ``feature_types``, and the project
+    refuses any ``_target_`` key when it freezes its configuration (no object is built from
+    configuration), so the export would be one its own ``validate`` fails."""
     if isinstance(value, str) and ('${' in value or '@@' in value or value == OMEGACONF_MISSING):
-        raise ExportError('contract_invalid', 'A recipe or plan value contains "${" or "@@", '
-                          'or is "???", which the project configuration would interpret.',
-                          path=path, remediation='Rename the value in the case of the study '
-                                                 '(a name or a unit), then export.')
+        _refuse_interpreted(path)
     if isinstance(value, Mapping):
         for key, item in value.items():
+            if key in HYDRA_RESERVED_KEYS:
+                _refuse_interpreted(f'{path}.{key}')
             _no_interpolation(key, f'{path}.{key}')
             _no_interpolation(item, f'{path}.{key}')
     elif isinstance(value, list):

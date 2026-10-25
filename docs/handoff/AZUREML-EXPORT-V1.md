@@ -607,3 +607,55 @@ bundle's `evidence/` holds `evidence/binding-<n>.json` bindings of its predictor
 the package's embedded bundle no `evidence/` folder at all, so the export refuses either
 otherwise (`artifact_integrity_failed`). The generated project's bytes are unchanged apart
 from the copied `mlflow_packaging.py` and, through the captured bundle, the package files.
+
+**Round 9 fixes** (round-9 review R9AB-1, R9AB-3, R9AB-5 and R9AB-6 of the export; R9AB-2
+and R9AB-4 concern the library runtime and are described in `LIBRARIES-V1.md`, round 9;
+regression tests: `framework/tests/exporters/azureml/test_review_round9.py`, synthetic
+material and temporary folders only, and `framework/tests/study/libraries/test_review_round9_a.py`
+for the packager). *Contract identities (R9AB-1)*: `data/hypotrail/SHA256SUMS` is written
+with the data folder, so it shows that nothing changed by accident, not that a file is the
+study's: a development plan given the final-test rows (its digests recomputed and its
+checksum line rewritten) passed `validate`, `materialize` and `run-local`, which then fitted
+the candidate on final-test rows, and an evaluated model copied from another bundle passed
+`validate`, `evaluated_model_parity` included. The project now binds every contract it reads
+to the configuration that travels with the code (`contracts.load`, the first call of every
+step): the plan's partition digests, its `keys_sha256` and its development digest and row
+count are recomputed from its row keys, and `keys_sha256` and `protocol_id` must be the
+configuration's `components.data_splitting` values (part of the scientific projection); its
+roles, final-test summary and excluded rows must be the snapshot's evaluation plan; the
+snapshot must hash canonically to `hypotrail.snapshot_id` and name the configuration's study,
+recipe, data contract and plan; `models/evaluated` must hold a bundle exactly when the
+snapshot names a predictor, and that bundle must be it (the id `verify_bundle` recomputes
+from the content, in the training and evaluation steps, `validate` and the default
+`predict`). Every mismatch is `artifact_integrity_failed`, its `path` naming the contract
+(`contracts/development-plan.json`, `contracts/deployment-snapshot.json` or
+`models/evaluated`) and `details` the expected and found values; an override of
+`hypotrail.snapshot_id`, `hypotrail.study_id` or `hypotrail.study_revision` is
+`scientific_config_changed`. `validate` gains the check `contract_identities` (the same
+checks, `not_run` without Hydra), `evaluated_model_parity` and
+`evaluated_model_mlflow_package` compare the evaluated model with the snapshot, and
+`materialize` checks the plan against the checksummed scientific projection and the snapshot
+before it extracts a row. No refusal code was added. *Limit*: the anchor is the
+configuration in `src/conf` (code, under version control, uploaded with the job); a change
+of both the data folder and `src/conf` (the projection's expected digest, the plan digest,
+the snapshot id) is a different export, which only the study's export record (its
+`export_id` and `snapshot_id`) can tell apart. *Packaging from a uv project (R9AB-3)*: MLflow
+3.17 copies `pyproject.toml`, `uv.lock` and `.python-version` from the working directory into
+a package it saves when it finds a uv project there, and the package allowlist refused them,
+so the training step failed (`backend_failed`) once the project folder had a `uv.lock`. The
+copied `mlflow_packaging.py` passes an empty folder as `uv_project_path`, so nothing is
+copied and the package holds the same bytes from any working directory; the wrapper and
+`PACKAGER_VERSION` (`4`) are unchanged. *Step refusals (R9AB-5)*: the four steps' `main.py`
+caught `ProjectError` only, so a refusal of `hypotrail_runtime` (`ContractError`) or of the
+packager (`PackagingError`) stopped the step without a refusal line and `run-local` reported
+`step_failed`. Each step now prints `errors.from_exception(error)` as its JSON refusal (exit
+code 2), so `run-local` relays the runtime's code, path and remediation; an exception that is
+no refusal is still raised (exit code 1, `step_failed` with the output's tail). *Hydra keys
+(R9AB-6)*: a column named `_target_` exported, then the project's own `validate` refused its
+configuration (`hydra_config_frozen`, a `_target_` key of `feature_types`). The export refuses
+a configuration key named `_target_` as it refuses `${`, `@@` and `???` (`contract_invalid`,
+path `scientific_projection.feature_types._target_`). Hydra's other instantiation keys
+(`_args_`, `_recursive_`, `_convert_`, `_partial_`) and `_self_`, `defaults`, `hydra`,
+`override` were exported as column names and validated: they compose and freeze as plain
+keys and are not refused. Of the generated project's files, only `contracts.py`, `steps.py`,
+`project.py`, the four step `main.py` files and the copied `mlflow_packaging.py` changed.

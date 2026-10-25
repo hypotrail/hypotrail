@@ -3,10 +3,11 @@
 Two independent capabilities, two contracts, one calibration discipline.
 
 **Calibration (L-15).** A calibration partition is a role of its own: reserved before use,
-disjoint from training, tuning, selection and the final test, never explored. Its
-eligibility is checked *before* anything is computed (:func:`eligibility`): a study without
-such a partition (every study the engine creates today) gets ``not_applicable``; explored
-or overlapping rows never become a fresh calibration by renaming. Every use is recorded in a
+disjoint from every other partition (training, tuning, selection, the final test, and the
+engine's validation rows and folds), never explored. Its eligibility is checked *before*
+anything is computed (:func:`eligibility`): a study without such a partition (every study
+the engine creates today) gets ``not_applicable``; explored or overlapping rows never become
+a fresh calibration by renaming. Every use is recorded in a
 durable ledger (:class:`CalibrationLedger`): the first procedure that uses a partition binds
 it; repeating that exact procedure reproduces it; another procedure (another model, recipe,
 positive class, threshold family or objective) is refused as adaptive reuse
@@ -106,9 +107,15 @@ def eligibility(calibration: Mapping | None, *, other_partitions: Mapping[str, I
 
     ``calibration``: ``{id, role, keys, reserved_revision, frozen_revision}`` (the model and
     the rule family were frozen at ``frozen_revision``); ``other_partitions``: the row keys of
-    the train, tuning, selection and final-test memberships; ``exposures``: the exposure
-    records of the calibration rows (any purpose other than ``reserved`` means they were
-    looked at)."""
+    every other membership of the study, by name (``train``, ``tuning``, ``selection``,
+    ``final_test``, and the engine's own ``validation``, ``fold_<k>``, ``development``...);
+    ``exposures``: the exposure records of the calibration rows (any purpose other than
+    ``reserved`` means they were looked at).
+
+    The calibration rows must be disjoint from every partition given, whatever its name
+    (round 9, R9AB-4): a name outside :data:`FORBIDDEN_OVERLAP` was silently ignored before,
+    so a calibration overlapping the engine's ``validation`` or ``fold_1`` rows was eligible.
+    The reasons list the four named roles first, then the other names in sorted order."""
     if calibration is None:
         return {'eligible': False, 'calibration_ref': None, 'n_rows': 0,
                 'reasons': ['no_calibration_partition: the study reserved no calibration rows '
@@ -119,7 +126,9 @@ def eligibility(calibration: Mapping | None, *, other_partitions: Mapping[str, I
         reasons.append('role_not_calibration')
     if not keys:
         reasons.append('empty_calibration')
-    for name in FORBIDDEN_OVERLAP:
+    names = [n for n in FORBIDDEN_OVERLAP if n in other_partitions] + \
+        sorted((n for n in other_partitions if n not in FORBIDDEN_OVERLAP), key=str)
+    for name in names:
         if keys & set(other_partitions.get(name) or ()):
             reasons.append(f'overlaps_{name}')
     reserved, frozen = calibration.get('reserved_revision'), calibration.get('frozen_revision')

@@ -45,14 +45,8 @@ def _write_json(path: Path, document: dict) -> Path:
     return path
 
 
-def _key_order(key: str) -> tuple:
-    digits = key[1:] if key[:1].isalpha() else key
-    return (0, int(digits), key) if digits.isdigit() else (1, 0, key)
-
-
-def development_keys(plan: dict) -> list[str]:
-    """Every development row key of the plan, in key order."""
-    return sorted({k for part in plan["partitions"] for k in part["row_keys"]}, key=_key_order)
+_key_order = contracts.key_order
+development_keys = contracts.development_keys
 
 
 # --- 1. data preparation ---------------------------------------------------------------
@@ -192,7 +186,20 @@ def evaluated_bundle(found: contracts.Contracts) -> Path | None:
     return folder if (folder / "predictor_bundle.json").is_file() else None
 
 
-def parity_features(found: contracts.Contracts, rows: pd.DataFrame) -> tuple[pd.DataFrame, str]:
+def verified_evaluated(found: contracts.Contracts, rt: ModuleType) -> Path | None:
+    """Return the evaluated bundle folder once verified as the snapshot's predictor, or None.
+
+    ``hypotrail_runtime.verify_bundle`` recomputes the predictor id from the bundle's content
+    (its parity rows included), which must be the id the snapshot names (review round 9,
+    R9AB-1): a folder copied from another bundle, with its checksums rewritten, is refused.
+    """
+    folder = evaluated_bundle(found)
+    if folder is not None:
+        contracts.check_evaluated(found.data_dir, found.snapshot, rt.verify_bundle(folder).predictor_id)
+    return folder
+
+
+def parity_features(found: contracts.Contracts, rows: pd.DataFrame, rt: ModuleType) -> tuple[pd.DataFrame, str]:
     """Return the parity rows (features only, no target) and their origin.
 
     They are the evaluated bundle's (authorised development rows or synthetic cases), else
@@ -200,7 +207,7 @@ def parity_features(found: contracts.Contracts, rows: pd.DataFrame) -> tuple[pd.
     """
     from . import mlflow_packaging as mp
 
-    bundle_dir = evaluated_bundle(found)
+    bundle_dir = verified_evaluated(found, rt)
     if bundle_dir is not None:
         bundle = contracts.load_json(bundle_dir / "predictor_bundle.json")
         spec = mp.ParitySpec.from_bundle(bundle)
@@ -269,7 +276,7 @@ def train(frozen: dict) -> dict:
         "semantic_dependencies": [],
         "environment_lock_sha256": lock_sha,
     }
-    features, parity_origin = parity_features(found, rows)
+    features, parity_origin = parity_features(found, rows, rt)
     models = Path(config["models"]["path"])
     destination = models / BUNDLE_FOLDER
     rt.capture_predictor(fitted, context, features, destination, packager=packager)
@@ -345,7 +352,7 @@ def evaluate(frozen: dict) -> dict:
         status = "failed" if config["packaging"]["required"] else "not_run"
         checks.append({"id": "mlflow_package_parity", "status": status, "reason": "no_package"})
     deviation = None
-    evaluated_dir = evaluated_bundle(found)
+    evaluated_dir = verified_evaluated(found, rt)
     if evaluated_dir is not None:
         evaluated = contracts.load_json(evaluated_dir / "predictor_bundle.json")
         espec = mp.ParitySpec.from_bundle(evaluated)

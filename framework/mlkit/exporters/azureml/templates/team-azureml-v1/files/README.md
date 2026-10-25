@@ -119,6 +119,9 @@ The debugger configurations in `.vscode/launch.json` run the same modules.
 - `data/01_raw`: kept empty; the template's example tables were removed.
 - `data/hypotrail/contracts`: the recipe, data contract, development plan, snapshot, export
   manifest and readiness (JSON, with their SHA-256 in `data/hypotrail/SHA256SUMS`).
+  SHA256SUMS only shows that nothing changed by accident: every step and `validate`
+  (`contract_identities`) also check that the plan, the snapshot and the evaluated model are
+  the ones the identities in `src/conf` name.
 - `data/hypotrail/development`: the development rows, materialised from the original file
   by `project.py materialize` (not versioned).
 - `data/hypotrail/models/evaluated`: the evaluated model as captured by the study.

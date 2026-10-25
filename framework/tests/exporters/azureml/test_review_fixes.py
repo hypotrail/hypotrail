@@ -537,8 +537,21 @@ def test_materialize_checks_the_recorded_record_count(project_module, tmp_path, 
     contract = {**_contract(sep='whitespace', header=False, columns=['a', 'b', 'c']),
                 'source_sha256': contracts.sha256_file(source)}
     contract['columns'] = [{'name': c, 'physical_type': 'string'} for c in ('a', 'b', 'c')]
-    plan = {'partitions': [{'row_keys': ['L1', 'L2']}], 'n_source_records': 4}
-    documents = {'data-contract.json': contract, 'development-plan.json': plan}
+    # A plan bound to its projection and snapshot (review round 9, R9AB-1: materialize
+    # checks them before it reads the source).
+    digest = contracts.canonical.canonical_sha256
+    keys = ['L1', 'L2']
+    plan = {'partitions': [{'id': 'fold_1', 'role': 'fold_1', 'row_keys': keys,
+                            'keys_sha256': digest(keys)}],
+            'protocol_id': 'p', 'keys_sha256': digest({'fold_1': keys}),
+            'development_keys_sha256': digest(keys), 'n_development_rows': 2,
+            'final_test': {'status': 'sealed'}, 'n_source_records': 4}
+    projection = {'plan': {'protocol_id': 'p', 'keys_sha256': plan['keys_sha256']}}
+    snapshot = {'evaluation_plan': {'protocol_id': 'p', 'keys_sha256': plan['keys_sha256'],
+                                    'roles': ['fold_1'], 'n_development_rows': 2,
+                                    'final_test': {'status': 'sealed'}}}
+    documents = {'data-contract.json': contract, 'development-plan.json': plan,
+                 'scientific-projection.json': projection, 'deployment-snapshot.json': snapshot}
     monkeypatch.setattr(contracts, 'verify_data_dir', lambda _d: {})
     monkeypatch.setattr(contracts, 'load_json', lambda p: copy.deepcopy(documents[p.name]))
     monkeypatch.setattr(project_module, 'DATA_DIR', tmp_path / 'data')

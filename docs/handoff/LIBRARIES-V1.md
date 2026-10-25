@@ -905,6 +905,76 @@ inside every package (`mlflow_packaging.WRAPPER_SOURCE`) keeps comparing every f
 bytecode (changing it would change the bytes, hence the artifact id, of every package): a
 stray non-code file in the serving environment's runtime folder still refuses serving.
 
+## Review round 9 (area AB)
+
+Library runtime fixes of the review of 2026-10-25 (round 9, area AB), on top of `0065fcd`
+(`framework/tests/study/libraries/test_review_round9_a.py`, temporary bundles and runtime
+copies only; the reviewer's probes are ported there). The export's findings of the same round
+(R9AB-1, R9AB-5, R9AB-6) are described in `AZUREML-EXPORT-V1.md`, round 9.
+
+- R9AB-2 (medium): the installed-runtime check (`hypotrail_runtime.wheel.installed_files`, used
+  by `load_predictor` through `runtime_issues`) skipped every Python bytecode file, so code the
+  import system runs instead of a bound source was never compared: a sourceless
+  `hypotrail_runtime/predictor/__init__.pyc` (a package folder is tried before `predictor.py`,
+  which stays untouched) or an unchecked-hash pyc in `__pycache__` scored differently under
+  the evaluated predictor id, parity rows included when the change avoids them. The check now
+  counts, as unexpected files (`environment_unqualified`, `reason: runtime_not_bound`): any
+  `*.pyc` or `*.pyo` outside `__pycache__` (`wheel.sourceless_bytecode`), whatever its content;
+  and, for each source of the package, the cache file the import system would read for it
+  (`importlib.util.cache_from_source`: this interpreter's cache tag and optimisation level, in
+  `__pycache__` or under `sys.pycache_prefix`, named `<source> (bytecode cache <path>)` when
+  outside the folder) when this interpreter would run it without validating it against the
+  source (`wheel.unvalidated_bytecode`): a hash-based pyc of the current magic number that is
+  `unchecked-hash`, or any hash-based pyc under `--check-hash-based-pycs never`. A
+  timestamp-based pyc and a `checked-hash` pyc are not counted: the import system compares
+  them with the source and compiles the source when they differ (a test plants both, of
+  altered code, and the runtime still reproduces its parity rows). A file the import system
+  refuses as bytecode (another magic number, a short header, unknown flags) is ignored, as
+  before. *Residual limit*: a timestamp-based pyc is matched on the source's modification
+  time and size only (32 bits each), so a cache file forged with the time and size of the
+  bound source runs in its place; nothing in the runtime trusts bytecode beyond what the
+  interpreter checks, and an environment where others can write into the installed runtime's
+  folders is not a trusted serving environment. *The MLflow wrapper (not changed)*: its own
+  pre-import check (`mlflow_packaging.WRAPPER_SOURCE`, `installed_runtime`) still skips every
+  bytecode file. Its text is part of every package's bytes (the wrapper's digest is in the
+  package descriptor), so changing it needs a new `PACKAGER_VERSION`, which would refuse every
+  existing package and the panel's recaptured fixtures; it was not changed in this round.
+  After that check the wrapper imports the runtime and calls `load_predictor`, whose check
+  (the installed `wheel.py`, of a bundle captured with this runtime) refuses a sourceless
+  shadow or an unvalidated cache, so the reviewer's probe is refused when the package is
+  loaded (`test_the_mlflow_wrapper_refuses_a_sourceless_shadow_through_load_predictor`). What
+  the wrapper does not catch is bytecode that is imported by `import hypotrail_runtime` and
+  itself removes or bypasses that check (the pre-import check exists for that case); the fix
+  is a wrapper that counts bytecode as `wheel.py` does, with the next packager version.
+- R9AB-3 (medium): MLflow 3.17's `save_model` detects a uv project in the working directory
+  (`pyproject.toml` and `uv.lock`, `MLFLOW_UV_AUTO_DETECT` on by default) and copies them and
+  `.python-version` into the package; the package allowlist then refused them, so a capture
+  with a package failed (`backend_failed`) whenever it ran from a uv project (`framework/`, or
+  an exported project after `uv lock`). `ArtifactPackager.package` passes `uv_project_path`
+  naming an empty folder of its staging area (when the installed `save_model` has that
+  parameter; an MLflow without it has no uv detection), which replaces the detection: nothing
+  is copied, environment variables and the working directory are left alone, and a capture
+  from a uv project, from the directory the tests started in and from a neutral folder writes
+  byte-identical packages (`test_a_capture_from_a_uv_project_packages_the_same_bytes`). The
+  wrapper and `PACKAGER_VERSION` are unchanged.
+- R9AB-4 (low): `mapie_uncertainty.eligibility` checked overlap with the partitions named
+  `train`, `tuning`, `selection` and `final_test` only and ignored any other name, so a
+  calibration made of the engine's `validation`, `fold_<k>` or `development` rows was
+  eligible. A calibration must now be disjoint from every partition given, whatever its name;
+  the reasons list `overlaps_<name>` for the four named roles first, then the other names in
+  sorted order. There is no caller in the engine yet (calibration partitions are not created,
+  see Limits), so nothing else changes.
+
+Compatibility. `hypotrail_runtime/wheel.py` and `mlkit/integrations/mlflow_packaging.py` are
+in the code fingerprint of `predictor.capture` only (a capture is never attested): every
+capture recorded before this change reads `code_changed`, and its bundle no longer loads
+(the installed `wheel.py` differs from the one in its wheel), exactly as after round 5;
+before the opening `next_action` names `run predictor.capture` with the options of that
+capture, and after it the final evaluation is not recomputable (R5E-8). No attested
+activity's fingerprint changed (`mapie_uncertainty.py` is in none), so no attestation edge
+is added. Packages made from now on embed the new runtime wheel; their wrapper and packager
+version are the round-5 ones.
+
 ## Limits and what is not done
 
 - **Calibration partitions are not created by the engine.** The MAPIE adapters, the
