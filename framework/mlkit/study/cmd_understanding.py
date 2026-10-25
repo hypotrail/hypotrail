@@ -775,6 +775,7 @@ def _export_write(args, *, fault=None) -> dict:
     # The receipt revalidates the context under the writer lock (actions._export_receipt).
     # Its request is derived from the intent, so a full retry replays it.
     iid = intent['result']['intent_id']
+    _record_written(args.study, iid, repo)
     receipt = _receipt(args.study, iid, on_disk)
     _settle_interrupted(args.study, repo, s['session_id'], iid)
     attributes = ex.ensure_attributes(repo)
@@ -811,6 +812,19 @@ def _settle_interrupted(study, repo: Path, session_id: str, done: str) -> None:
             continue
         if held == x['files'] and not folder.is_symlink():
             _receipt(study, x['intent_id'], held)
+
+
+def _record_written(study, intent_id, repo: Path) -> None:
+    """Record ``repo`` among the places the intent's generation was written to (R7-3), when
+    it is not listed yet; a request derived from the intent and the place, so a retry
+    replays it."""
+    state = sv.load_state(study)
+    intent = model.of(state)['exports'][intent_id]
+    if str(repo) in written_repositories(intent):
+        return
+    key = canonical.sha256_hex(str(repo).encode())[:16]
+    actions.apply(study, 'export_written', {'intent_id': intent_id, 'repository': str(repo)},
+                  request_id=f'written-{intent_id}-{key}', expected_revision=state['revision'])
 
 
 def _receipt(study, intent_id, files) -> dict:
@@ -910,7 +924,11 @@ def _local_checker(study, repo, policy_file_doc=None):
     establishes on the verified tree (:func:`verify.tree_reasons`) and, from
     ``verified_repository`` given here, ``verified_repository_not_the_session_one`` when the
     verified repository is not the one the session's freshness is read from. A stored
-    payload the private context needs that is gone leaves it unknown (R6-3)."""
+    payload the private context needs that is gone leaves it unknown (R6-3).
+
+    Review round 7: ``judged_sessions`` gives every session whose decisions or context the
+    gate judged (R7-1), and ``written_to`` every repository the generation was written to
+    (R7-3)."""
     store = sv.open_store(study)
     state = sv.load_state(study)
     ext = model.of(state)
@@ -961,14 +979,20 @@ def _local_checker(study, repo, policy_file_doc=None):
         except StudyError as exc:
             where = None
             context_unavailable.append(exc.code)
-        written = next((x.get('repository') for x in sorted(
-            intents, key=lambda x: x['recorded_revision']) if x.get('repository')), None)
+        # Every repository the generation was written to (R7-3), in the order of writing;
+        # null for an intent recorded before round 6.
+        written = []
+        for x in sorted(intents, key=lambda x: x['recorded_revision']):
+            for w in written_repositories(x):
+                if w not in written:
+                    written.append(w)
         verified_repository = {
-            'path': str(verified), 'session_repository': where, 'written_to': written,
+            'path': str(verified), 'session_repository': where,
+            'written_to': written or None,
             'is_session_repository': None if where is None
             else Path(where).resolve() == verified,
-            'is_written_repository': None if written is None
-            else Path(written).resolve() == verified}
+            'is_written_repository': None if not written
+            else any(Path(w).resolve() == verified for w in written)}
         ids = [d['human_review_ref'] for d in doc['dimensions'] if d['human_review_ref']]
         attempts = [a for i in ids for a in (ext['decisions'].get(i) or {}).get('attempt_ids', [])]
         avail = ev.evidence_availability(ext, attempts, lambda sha: sv.blob_ok(store, sha)) \
@@ -1007,6 +1031,11 @@ def _local_checker(study, repo, policy_file_doc=None):
             out['exported_content_current'] = None
         out['gate_result'] = live
         out['declared_conformity'] = _conformity(declared)
+        # Review round 7 (R7-1): every session whose decisions or context the gate judged
+        # (the exported one, then the gate's ``repositories``), with its repository and its
+        # snapshot's public scope; :func:`verify.judged_sessions` compares the verified tree
+        # with each. Internal: ``_verify_one`` reports it without the scopes.
+        out['judged_sessions'] = _judged_sessions(store, ext, session, live, declared)
         if unavailable:
             # A stored payload the gate needs is gone: no study judgement, never a failure.
             out['study_gate_unavailable'] = sorted(set(unavailable + context_unavailable))
@@ -1014,6 +1043,44 @@ def _local_checker(study, repo, policy_file_doc=None):
             out['study_payload_unavailable'] = sorted(set(context_unavailable))
         return out
     return run
+
+
+def written_repositories(intent: dict) -> list:
+    """The local repositories an export intent's generation was written to (R7-3): the list
+    recorded since round 7, else the single place of round 6, else none."""
+    if intent.get('repositories'):
+        return list(intent['repositories'])
+    return [intent['repository']] if intent.get('repository') else []
+
+
+def _judged_sessions(store, ext, session, *results) -> list:
+    """``[{session_id, repository, scope}]`` of the exported session and of every session in
+    the ``repositories`` of the gate ``results`` (the sessions whose decisions or context the
+    gate read), each with the repository its freshness is read from and its snapshot's public
+    scope (``None`` when a stored payload is gone: those bytes are then never judged)."""
+    ids = [session['session_id']]
+    where = {}
+    for result in results:
+        for r in (result or {}).get('repositories') or []:
+            if r['session_id'] not in ids:
+                ids.append(r['session_id'])
+            where.setdefault(r['session_id'], r.get('repository'))
+    out = []
+    for sid in ids:
+        s = ext['sessions'].get(sid)
+        scope, repo = None, where.get(sid)
+        if s is not None:
+            try:
+                scope = sv.session_snapshot(store, s)['public']
+            except StudyError:
+                scope = None
+            if sid not in where:
+                try:
+                    repo = sv.repository_of(store, s)['repository']
+                except StudyError:
+                    repo = None
+        out.append({'session_id': sid, 'repository': repo, 'scope': scope})
+    return out
 
 
 HANDLERS = {

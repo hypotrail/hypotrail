@@ -1093,8 +1093,10 @@ def _export_intent(ctx) -> Handler:
         # The policy recorded is the one the projection embeds (the policy the gate applies,
         # review round 6, R6-1), never the one the session started under: the receipt
         # compares the applied policy with it. ``repository`` is the local place the
-        # generation was written to (private: it never enters a public artefact); local
-        # verification compares it with the repository it verifies (R6-2).
+        # generation was written to first (private: it never enters a public artefact);
+        # ``repositories`` lists every place it was written to (review round 7, R7-3,
+        # appended by ``export_written``); local verification compares them with the
+        # repository it verifies (R6-2).
         ext['exports'][iid] = {
             'intent_id': iid, 'session_id': s['session_id'], 'review_id': rid,
             'projection_digest': digest, 'destination': params['destination'],
@@ -1103,7 +1105,8 @@ def _export_intent(ctx) -> Handler:
             'source_scope_digest': s['source_scope_digest'],
             'policy_digest': projection['policy_digest'], 'recorded_revision': _rev(state),
             'created_at': params['created_at'], 'base_commit': params['base_commit'],
-            'repository': params['repository'], 'receipt': None}
+            'repository': params['repository'], 'repositories': [params['repository']],
+            'receipt': None}
         return {'intent_id': iid, 'review_id': rid}
     return Handler(frozenset({'session_id', 'review_id', 'projection_digest', 'destination',
                               'files', 'created_at', 'base_commit', 'repository'}), run)
@@ -1138,6 +1141,29 @@ def _export_receipt(ctx) -> Handler:
                              'recorded_revision': _rev(state), 'recorded_at': sv.now()}
         return {'intent_id': intent['intent_id'], 'status': outcome}
     return Handler(frozenset({'intent_id', 'verified_files'}), run)
+
+
+def _export_written(ctx) -> Handler:
+    """Record one more local repository an intent's generation was written to (review round
+    7, R7-3): the same generation written again elsewhere (another clone, ``--latest`` in a
+    second place) reuses its intent, which recorded only the first place. Local study state
+    only; it never enters a public artefact. Idempotent: a place already listed changes
+    nothing."""
+    def run(state, params):
+        ext = model.require_writable(state)
+        intent = ext['exports'].get(params['intent_id'])
+        if intent is None:
+            raise refuse('invalid_transition', 'Unknown export intent.', 'Check the id.')
+        where = str(params['repository'])
+        places = list(intent.get('repositories') or
+                      ([intent['repository']] if intent.get('repository') else []))
+        if where not in places:
+            places.append(where)
+        intent['repositories'] = places
+        if not intent.get('repository'):
+            intent['repository'] = places[0]
+        return {'intent_id': intent['intent_id'], 'repositories': list(places)}
+    return Handler(frozenset({'intent_id', 'repository'}), run)
 
 
 def _git_receipt(ctx) -> Handler:
@@ -1247,6 +1273,7 @@ FACTORIES = {
     'transfer_start': _transfer_start, 'transfer_submit': _transfer_submit,
     'transfer_review': _transfer_review, 'approve': _approve,
     'export_intent': _export_intent, 'export_receipt': _export_receipt,
+    'export_written': _export_written,
     'git_receipt': _git_receipt, 'milestone_reserve': _milestone_reserve,
     'relocate': _relocate,
     'milestone_record': _milestone_record}

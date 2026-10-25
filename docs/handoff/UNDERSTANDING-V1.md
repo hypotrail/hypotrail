@@ -469,6 +469,62 @@ verified there) and now also asserts that no target-tree reason is added and tha
 standalone reasons are the export's. No assertion was weakened; the schemas and the
 `export-valid` fixture did not change (the intent is study state, not an artefact).
 
+## Review round 7: fixes
+
+Root cause of the three findings: an export of session S2 may show decisions of another
+session S1 (the selection of its person and profile maps them), but local verification
+decided "judged bytes" from S2's scope and repository only, and the export's
+`public_source_scope` was S2's, which does not cover the sources S1's decisions depend on.
+The reviewer's probes q1, q1b and q4 are ported in
+`framework/tests/study/understanding/test_review_round7_cd.py` (q1 and q1b failed on round
+6; q4 passed and now also asserts `written_to`), with a scope-conflict case, a clone without
+a change and a single-session export whose scope must not change.
+`test_review_round5_cd.test_one_judgement_one_gap_list_cross_session` extends the round-5
+invariant to eight cross-session states (S1 selected, S2 exported; the same repository or a
+clone; S1's sources or a narrower scope; a later commit, a scope conflict, or nothing):
+local verification never relaxes `check`, its verdict is the verdict of `check` run on the
+verified bytes (put in every working tree the gate reads), on those bytes its reasons are
+`check`'s, and the standalone verifier never says `allowed`, `conforming` or `current`
+where `check` on those bytes blocks or finds a source stale or unknown.
+
+* **R7-1 (blocking), fixed.** `verify-export --study` compared the verified tree with the
+  exported session's scope and repository only: with S1's decisions selected, a commit
+  changing a source only S1 maps (q1, S2 with a narrower scope) or a clone where S2 was
+  started and exported (q1b) verified `allowed` although `check` blocks on those bytes. The
+  local checker now lists every session whose decisions or context the gate judged (the
+  exported one, then `gate_result.repositories`) with its repository and snapshot scope,
+  and the verifier compares the verified tree with each session's own working tree.
+  `public_sources_judged_by_study` is true only when every mapped public source of every
+  such session matches; otherwise each session's `public_sources_stale|unknown` on the
+  verified tree is added, and `verified_repository_not_the_session_one` per session read
+  from another repository (blocking when its scope or the export's is not current there).
+  `verified_repository.judged_sessions` reports the comparison. Reasons are only added.
+* **R7-2 (major), fixed.** The export's `public_source_scope` is now the union of the
+  public scopes of the exported session and of every session whose decisions are shown (or
+  whose context the export's gate read), entries and omitted private references
+  deduplicated by logical key. When a shown decision cannot be covered (an unreadable
+  snapshot, or one logical key with two digests), the export records
+  `scope_does_not_cover_shown_decision` for each dimension shown from that session, and
+  the verifier (standalone and local) reads the public sources `unknown`, never `current`.
+  Decision taken: a conflicting key keeps the exported session's entry and records the gap
+  rather than both entries (one set cannot hold one key twice, and a scope holding two
+  digests for one path would read stale whatever the tree). The gap is an export-only gap
+  (`verify.EXPORT_ONLY_GAPS`), not a gate code. The schemas did not change (`kind` is a
+  string; `schemas.main(['--check'])` passes) and neither did the `export-valid` fixture (a
+  single-session export keeps its own scope, asserted by a test).
+* **R7-3 (minor), fixed.** The intent recorded only the first repository the generation
+  was written to: the same generation written again elsewhere reused the intent, so local
+  verification of the second place said `is_written_repository: false`. The intent now
+  keeps `repository` (the first place) and lists `repositories`; a new study action
+  `export_written`, applied after a successful publication with a request id derived from
+  the intent and the place, adds a place not listed yet (idempotent; local state only, never
+  in an artefact). `written_to` is the list and `is_written_repository` considers all of
+  them.
+
+No existing expectation changed and no assertion was weakened: the round-5 and round-6
+tests verify single-session exports or sessions sharing one repository and one scope, where
+the union and the per-session comparison give what they gave.
+
 ## Gate run
 
 Run in this container (Python 3.13, uv 0.11, the `dev`, `browser` and `azureml` groups and the

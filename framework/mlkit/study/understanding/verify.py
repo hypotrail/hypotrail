@@ -14,7 +14,8 @@ unknown), ``private_context_verification`` (verified, unknown), ``evidence_avail
 ``gate_result`` for that explicit policy. With ``--study`` (local mode), ``gate_result`` and
 ``declared_conformity`` are the study's own gate for the exported session (review round 5:
 one judgement) plus the reasons the artefact establishes on the verified tree
-(:func:`tree_reasons`, review round 6); without it, :func:`_gate_on_export` applies the
+(:func:`tree_reasons`, review round 6), compared with every session whose decisions the gate
+judged (:func:`local_tree_reasons`, review round 7); without it, :func:`_gate_on_export` applies the
 gate's rules to the exported content only (CLI-CONTRACT §16 lists what it cannot judge). A
 clean clone establishes public integrity; it never concludes ``current`` on the private context nor resolves an opaque reference. Without
 ``--policy-file`` the result is a historical diagnostic, not an organisational
@@ -251,7 +252,9 @@ class Tree:
 # Gaps an export states that are not reasons of the gate: what only the export can say
 # (``source_unreadable``, ``external_unverified``) and the limitations the gate counted
 # (``private_context_unknown`` per dimension under ``public_only``).
-EXPORT_ONLY_GAPS = ('source_unreadable', 'external_unverified')
+# ``scope_does_not_cover_shown_decision`` (review round 7, R7-2) is one too: it is not a
+# reason of the gate, it makes the export's public sources ``unknown`` (:func:`_verify_one`).
+EXPORT_ONLY_GAPS = ('source_unreadable', 'external_unverified', ex.SCOPE_GAP)
 
 
 def _gate_on_export(doc: Mapping, policy_doc: Mapping, axes: Mapping,
@@ -401,17 +404,18 @@ def tree_reasons(doc: Mapping, axes: Mapping, *, judged_by_study: bool = False) 
     return out
 
 
-def _judged_by_study(tree: 'Tree', scope: Mapping, verified_repository: Mapping) -> bool:
-    """Whether every public source the exported scope maps has, in the verified tree, the
-    bytes it has in the working tree of the session's repository (what the study's gate
-    read). False when that repository is unknown or gone, or when a byte differs."""
-    where = verified_repository.get('session_repository')
-    if not where or not Path(where).is_dir():
+def _same_bytes(tree: 'Tree', scope: Mapping | None, where: str | None,
+                verified: Path) -> bool:
+    """Whether every public source ``scope`` maps has, in the verified tree, the bytes it has
+    in the working tree of ``where`` (what the study's gate read for that session). False
+    when that repository or scope is unknown or gone, when nothing is mapped, or when a byte
+    differs."""
+    if scope is None or not where or not Path(where).is_dir():
         return False
     paths = [e['path'] for e in scope['entries'] if e['path']]
     if not paths:
         return False
-    if tree.target == 'worktree' and verified_repository.get('is_session_repository'):
+    if tree.target == 'worktree' and Path(where).resolve() == verified:
         return True
     other = Tree(Path(where), 'worktree')
 
@@ -422,6 +426,60 @@ def _judged_by_study(tree: 'Tree', scope: Mapping, verified_repository: Mapping)
             and not other.problems
     except Exception:          # noqa: BLE001 - an unreadable place is not the same bytes
         return False
+
+
+def judged_sessions(tree: 'Tree', sessions: list[Mapping], verified: Path) -> list[dict]:
+    """One line per session whose decisions or context the study's gate judged (the
+    exported session first, then every session of the gate's ``repositories``; review round
+    7, R7-1): its repository, whether it is the verified one, whether the verified tree holds
+    the bytes the gate read there for every public source of that session's snapshot scope
+    (``same_bytes``), and the freshness of that scope on the verified tree
+    (``tree_freshness``, ``unknown`` when the scope is unreadable). Local paths: this output
+    is local, never public."""
+    out = []
+    for s in sessions:
+        scope, where = s.get('scope'), s.get('repository')
+        try:
+            fresh = snap.public_freshness(scope, tree.read)['status'] if scope else 'unknown'
+        except Exception:      # noqa: BLE001 - an unreadable tree is not current
+            fresh = 'unknown'
+        out.append({'session_id': s['session_id'], 'repository': where,
+                    'is_verified_repository': None if not where
+                    else Path(where).resolve() == verified,
+                    'same_bytes': _same_bytes(tree, scope, where, verified),
+                    'tree_freshness': fresh})
+    return out
+
+
+def local_tree_reasons(doc: Mapping, axes: Mapping, lines: list[Mapping]) -> tuple:
+    """``(judged, extra, limitations)`` of local mode on the verified tree (review rounds 6
+    and 7). ``judged``: the verified tree holds, for every session the study's gate judged,
+    the bytes the gate read (``lines`` from :func:`judged_sessions`, none missing). Otherwise
+    the export's own ``public_sources_stale|unknown`` is added (:func:`tree_reasons`), and
+    each judged session's scope that is not ``current`` on the verified tree adds its own.
+    A session read from another repository than the verified one adds
+    ``verified_repository_not_the_session_one``: blocking when its scope or the export's is
+    not ``current`` on the verified tree, a limitation otherwise. Nothing here relaxes the
+    gate: the reasons are only added."""
+    judged = bool(lines) and all(x['same_bytes'] for x in lines)
+    extra = tree_reasons(doc, axes, judged_by_study=judged)
+    lims: list = []
+
+    def add(code):
+        if {'code': code} not in extra:
+            extra.append({'code': code})
+    export_current = axes['public_source_freshness'] == 'current'
+    for x in lines:
+        if not judged and x['tree_freshness'] != 'current':
+            add(f'public_sources_{x["tree_freshness"]}')
+        if x['is_verified_repository'] is False:
+            if x['tree_freshness'] != 'current' or not export_current:
+                add(OTHER_REPOSITORY)
+            elif OTHER_REPOSITORY not in lims:
+                lims.append(OTHER_REPOSITORY)
+    if {'code': OTHER_REPOSITORY} in extra and OTHER_REPOSITORY in lims:
+        lims.remove(OTHER_REPOSITORY)
+    return judged, extra, lims
 
 
 def with_tree(result: Mapping | None, extra: list, limitations=()) -> dict | None:
@@ -475,8 +533,10 @@ def verify(repo, target: str, *, policy_doc: Mapping | None = None,
     review whose three files have ``file_hashes``, ``study_binding`` and, when bound, the
     axes the study settles: ``private_context_verification``, ``evidence_availability``,
     ``declared_conformity`` and ``gate_result`` from the study's own gate
-    (:func:`service.gate`), ``exported_content_current``, ``verified_repository`` and
-    ``judgement: 'study'``; :func:`with_tree` then adds the verified tree's reasons."""
+    (:func:`service.gate`), ``exported_content_current``, ``verified_repository``,
+    ``judged_sessions`` (internal: every session the gate judged with its repository and
+    snapshot scope, R7-1) and ``judgement: 'study'``; :func:`with_tree` then adds the
+    verified tree's reasons (:func:`local_tree_reasons`)."""
     tree = Tree(Path(repo), target)
     generations = tree.generations()
     if review_id is not None:
@@ -587,6 +647,12 @@ def _verify_one(tree: Tree, rid: str, policy_doc, local) -> dict:
         return axes
     axes['public_integrity'] = 'valid'
     fresh = snap.public_freshness(scope, tree.read)
+    if fresh['status'] == 'current' and any(
+            isinstance(g, dict) and g.get('kind') == ex.SCOPE_GAP for g in doc['known_gaps']):
+        # The scope does not cover a decision the export shows (R7-2): its sources were not
+        # all checked, so they are never ``current``.
+        fresh = {**fresh, 'status': 'unknown',
+                 'missing': fresh['missing'] + ['a shown decision outside the public scope']}
     axes['public_source_freshness'] = fresh['status']
     axes['public_source_changes'] = fresh
     axes['unresolved_private_refs'] = [o['opaque_private_ref'] for o in scope['omitted_private']]
@@ -606,15 +672,15 @@ def _verify_one(tree: Tree, rid: str, policy_doc, local) -> dict:
         # study's gate read (the session's working tree, whose changes the gate judged per
         # dimension, waivable), its privacy review, and a verified repository that is not
         # the session's.
+        # R7-1: every session whose decisions or context the gate judged is compared, each
+        # with its own snapshot scope and repository working tree, not the exported one only.
         vr = axes.get('verified_repository') or {}
-        judged = _judged_by_study(tree, scope, vr)
+        sessions = axes.pop('judged_sessions', None) or []
+        lines = judged_sessions(tree, sessions, tree.repo.resolve())
+        if vr:
+            vr['judged_sessions'] = lines
+        judged, extra, lims = local_tree_reasons(doc, axes, lines)
         axes['public_sources_judged_by_study'] = judged
-        extra, lims = tree_reasons(doc, axes, judged_by_study=judged), []
-        if vr.get('is_session_repository') is False:
-            if axes['public_source_freshness'] != 'current':
-                extra.append({'code': OTHER_REPOSITORY})
-            else:
-                lims.append(OTHER_REPOSITORY)
         limitations.extend(lims)
         axes['gate_result'] = with_tree(axes.get('gate_result'), extra, lims)
         if extra and axes.get('declared_conformity') == 'conforming':

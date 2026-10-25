@@ -749,3 +749,110 @@ def test_one_judgement_one_gap_list(tmp_path, scenario):
     assert standalone == _gap_pairs(doc['known_gaps']), (standalone, doc['known_gaps'])
     if exact and not policy_file:
         assert standalone == gate_pairs
+
+
+# --- the invariant on cross-session states (review round 7) -----------------------------------
+
+NARROW = [s for s in ukit.SOURCES if s['path'] == 'src/pipeline.py']
+OTHER_IMPUTER = 'def fit_imputer(train):\n    return 0\n'
+GIT_ID = ('-c', 'user.name=T', '-c', 'user.email=t@example.invalid')
+# (S2 in a clone of S1's repository, S2's mapped sources, what changes, verdict of HEAD):
+# ``commit``: a commit after the export changes the imputer and the working tree is
+# reverted (check reads the snapshot's bytes); ``conflict``: the imputer changes before S2
+# starts, so S1 and S2 map the same logical key with different bytes; ``None``: nothing.
+CROSS = {
+    'same_repository': (False, ukit.SOURCES, 'commit', 'blocked'),
+    'same_repository_narrow_scope': (False, NARROW, 'commit', 'blocked'),
+    'same_repository_unchanged': (False, NARROW, None, 'allowed'),
+    'clone': (True, ukit.SOURCES, 'commit', 'blocked'),
+    'clone_narrow_scope': (True, NARROW, 'commit', 'blocked'),
+    'clone_unchanged': (True, NARROW, None, 'allowed'),
+    'scope_conflict': (False, ukit.SOURCES, 'conflict', 'blocked'),
+    'clone_scope_conflict': (True, ukit.SOURCES, 'conflict', 'blocked'),
+}
+
+
+@pytest.mark.parametrize('scenario', sorted(CROSS))
+def test_one_judgement_one_gap_list_cross_session(tmp_path, scenario):
+    """S1 is selected (the selection maps its decisions); S2, of the same person and profile,
+    is exported, in S1's repository or in a clone, with S1's sources or a narrower scope.
+    Its export is committed and verified at HEAD.
+
+    * The export's public scope covers every source the shown decisions depend on, or
+      records ``scope_does_not_cover_shown_decision`` for the dimensions it cannot (R7-2).
+    * ``verify-export --study`` never relaxes ``check`` (its reasons hold check's), and its
+      verdict is the verdict of ``check`` run on the verified bytes (HEAD's bytes put in the
+      working tree of every repository the gate reads; R7-1). On those bytes its reasons are
+      check's, plus ``verified_repository_not_the_session_one`` when a judged session's
+      repository is not the verified one and its scope is not current there.
+    * The standalone verifier never says ``allowed`` or ``conforming`` where check on those
+      bytes blocks, nor ``current`` where check finds a source stale or unknown."""
+    clone, sources, change, verdict = CROSS[scenario]
+    u = U(tmp_path)
+    s1 = custom_flow(u, REQ)
+    repo = u.repo
+    if clone:
+        repo = tmp_path / 'clone'
+        ukit.git(tmp_path, 'clone', '-q', str(u.repo), str(repo))
+        u.repo = repo
+    if change == 'conflict':
+        (repo / 'src/transforms.py').write_text(OTHER_IMPUTER)
+        ukit.git(repo, *GIT_ID, 'commit', '-q', '-am', 'another imputer before S2')
+    _, out = u.start(sources=sources)
+    s2 = out['result']['session_id']
+    doc = _written(u, s2)
+    ext = u.ext()
+    owners = {}
+    for d in doc['dimensions']:
+        x = ext['decisions'].get(d['human_review_ref'])
+        if x is not None and x['session_id'] != s2:
+            owners.setdefault(x['session_id'], set()).add(d['id'])
+    assert set(owners) == {s1}
+    store = StudyStore(u.study)
+    from mlkit.study.understanding import canonical
+    s1_scope = canonical.loads(store.read_blob(ext['sessions'][s1]['snapshot_blob']))['public']
+    in_doc = {e['logical_key']: e for e in doc['public_source_scope']['entries']}
+    uncovered = {e['logical_key'] for e in s1_scope['entries']
+                 if in_doc.get(e['logical_key']) != e}
+    gap_refs = {g['ref'] for g in doc['known_gaps'] if g['kind'] == ex.SCOPE_GAP}
+    if uncovered:
+        assert change == 'conflict', uncovered
+        assert gap_refs == owners[s1]
+    else:
+        assert not gap_refs
+    ukit.git(repo, 'add', '--', 'docs')
+    ukit.git(repo, *GIT_ID, 'commit', '-q', '-m', 'export')
+    if change == 'commit':
+        (repo / 'src/transforms.py').write_text(OTHER_IMPUTER)
+        ukit.git(repo, *GIT_ID, 'commit', '-q', '-am', 'change the imputer')
+        ukit.git(repo, 'checkout', '-q', 'HEAD~1', '--', 'src/transforms.py')
+    head = ukit.git(repo, 'rev-parse', 'HEAD')
+    now = gate(u)
+    gen = _verify(u, target=head, repo=repo)['generations'][0]
+    assert gen['public_integrity'] == 'valid', gen['problems']
+    assert gen['gate_result']['decision'] == verdict, gen['gate_result']
+    assert _pairs(now['reasons']) <= _pairs(gen['gate_result']['reasons'])
+    sa = _verify(u, doc['policy'], study=False, target=head, repo=repo)['generations'][0]
+    # check on the verified bytes: HEAD's sources in every working tree the gate reads.
+    tree = vf.Tree(repo, head)
+    places = {line['repository'] for line in gen['verified_repository']['judged_sessions']}
+    assert None not in places and str(repo.resolve()) in places
+    for place in places:
+        for s in ukit.SOURCES:
+            (Path(place) / s['path']).write_bytes(tree.read(s['path']))
+    on_bytes = gate(u)
+    assert gen['gate_result']['decision'] == on_bytes['decision'], (
+        gen['gate_result']['reasons'], on_bytes['reasons'])
+    codes = {r['code'] for r in on_bytes['reasons']}
+    if on_bytes['decision'] not in ('allowed', 'allowed_by_waiver'):
+        assert sa['gate_result']['decision'] not in ('allowed', 'allowed_by_waiver')
+        assert sa['declared_conformity'] != 'conforming'
+    if codes & {'stale', 'freshness_unknown'}:
+        assert sa['public_source_freshness'] != 'current'
+    # On those bytes, local verification is check's result (the tree holds what it read).
+    again = _verify(u, target=head, repo=repo)['generations'][0]
+    assert again['public_sources_judged_by_study'] is True
+    assert set(again['gate_result']['target_tree_reasons']) <= {vf.OTHER_REPOSITORY}
+    assert again['gate_result']['decision'] == on_bytes['decision']
+    assert _pairs(again['gate_result']['reasons']) - {(vf.OTHER_REPOSITORY, 'handoff')} == \
+        _pairs(on_bytes['reasons'])

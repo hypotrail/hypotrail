@@ -40,6 +40,7 @@ from typing import Mapping
 
 from . import DIMENSIONS, DIMENSION_TITLES, taskset as bk, canonical, evaluate as ev, model, policy as pol
 from . import refuse, service as sv, snapshot as snap
+from mlkit.study.errors import StudyError
 
 SCHEMA = 'hypotrail.understanding-review/1'
 MANIFEST_SCHEMA = 'hypotrail.understanding-export-manifest/1'
@@ -68,6 +69,8 @@ PROVENANCE_FIELDS = ('engine', 'canonical', 'float_rule', 'taskset_id', 'taskset
                      'taskset_qualification', 'policy_id', 'policy_version', 'base_commit')
 STATUSES = model.DIMENSION_STATUSES
 FRESHNESS = ('current', 'stale', 'unknown')
+# The export's public scope does not cover a decision it shows (review round 7, R7-2).
+SCOPE_GAP = 'scope_does_not_cover_shown_decision'
 AVAILABILITY = ('available', 'unavailable', 'redacted', 'not_applicable')
 ASSISTANCE = ('unaided', 'aided', 'none')
 
@@ -106,7 +109,6 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
     ext = model.of(state)
     taskset = sv.blob_json(store, session['taskset_blob'], 'taskset')
     snapdoc = sv.session_snapshot(store, session)
-    scope = snapdoc['public']
     loaders = sv.gate_loaders(store, state, ext)
     current = loaders['current_for'](session)
     actor = session['actor_declared_id']
@@ -117,6 +119,20 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
     judged_dims = judged['dimensions']
     critical = set(doc['critical_dimensions'])
     scope_sel = ev.selection_for(ext, session['milestone'], actor, session['profile'])
+    # The public scope covers the sources every shown decision depends on (review round 7,
+    # R7-2): the session's own scope united with the scopes of the other sessions whose
+    # decisions are shown (a selection may map them) or whose context the gate read.
+    shown = {dim: ev.shown_decision(ext, scope_sel, actor, dim, session['session_id'])
+             for dim in session['dimensions']}
+    owners: dict = {}
+    for dim, d in shown.items():
+        if d is not None and d['session_id'] != session['session_id']:
+            owners.setdefault(d['session_id'], set()).add(dim)
+    for r in judged['repositories']:
+        if r['session_id'] != session['session_id']:
+            owners.setdefault(r['session_id'], set())
+    scope, scope_gaps = shown_scope(store, ext, snapdoc['public'], owners,
+                                    session['milestone'])
     settles = sv.arbitration_checker(store, ext, doc)
     session_policy_for = sv.session_policy_for(store)
     dims, safe, used_tasks = [], set(), {}
@@ -124,7 +140,7 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
         # With a selection, a dimension shows the decision it maps (the one the gate
         # judges, R3C-2); without one, the history's latest decision of this session (the
         # virtual selection the judgement used).
-        d = ev.shown_decision(ext, scope_sel, actor, dim, session['session_id'])
+        d = shown[dim]
         view = ev.dimension_view(ext, actor, dim, decision=d, settles=settles, policy_doc=doc,
                                  session_policy_for=session_policy_for)
         r = bk.rubric_for(taskset, dim)
@@ -203,6 +219,9 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
     for key in snapdoc['local'].get('unreadable_sources') or []:
         gaps.append({'kind': 'source_unreadable',          # {logical_key, role} since round 1
                      'ref': key['logical_key'] if isinstance(key, Mapping) else key})
+    for g in scope_gaps:
+        if g not in gaps:
+            gaps.append(g)
     if any(snap.is_external_source(e) for e in snapdoc['local']['entries']):
         gaps.append({'kind': 'external_unverified',
                      'ref': 'case contract, data identity and engine are local, not in Git'})
@@ -258,6 +277,51 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
                        'taskset_qualification': taskset['qualification']['status'],
                        'policy_id': doc['policy_id'], 'policy_version': doc['version']}}
     return {k: proj[k] for k in APPROVAL_FIELDS}
+
+
+def shown_scope(store, ext: Mapping, own: Mapping, owners: Mapping, milestone: str):
+    """``(scope, gaps)``: the public scope ``own`` of the exported session united with the
+    public scopes of the sessions ``owners`` (``{session_id: dimensions shown from it}``),
+    entries and omitted private references deduplicated by logical key (review round 7,
+    R7-2). An export may show decisions of another session (a selection maps them); its
+    scope then covers the sources they depend on, so a verified tree that changed one of them
+    is never read ``current``.
+
+    When the scope cannot cover a shown decision (its session's snapshot is unreadable, or it
+    maps a logical key the scope already holds with other bytes, which one set cannot hold
+    twice), the export records ``{kind: scope_does_not_cover_shown_decision, ref}`` for each
+    dimension shown from that session (the milestone when none is), and the verifier reads
+    its public sources as ``unknown``, never ``current``."""
+    entries = {e['logical_key']: e for e in own['entries']}
+    omitted = {o['opaque_private_ref']: o for o in own['omitted_private']}
+    unreadable = set(own['unreadable_sources'])
+    gaps: list = []
+    for sid in sorted(owners):
+        owner = ext['sessions'].get(sid)
+        try:
+            other = sv.session_snapshot(store, owner)['public'] if owner else None
+        except StudyError:
+            other = None
+        covered = other is not None
+        for e in (other or {}).get('entries') or []:
+            known = entries.get(e['logical_key'])
+            if known is not None and known != e:
+                covered = False
+                continue
+            entries[e['logical_key']] = e
+        for o in (other or {}).get('omitted_private') or []:
+            omitted.setdefault(o['opaque_private_ref'], o)
+        unreadable.update((other or {}).get('unreadable_sources') or [])
+        if not covered:
+            for ref in sorted(owners[sid]) or [milestone]:
+                g = {'kind': SCOPE_GAP, 'ref': ref}
+                if g not in gaps:
+                    gaps.append(g)
+    scope = {'schema': own['schema'],
+             'entries': canonical.sorted_set(entries.values(), 'logical_key'),
+             'omitted_private': canonical.sorted_set(omitted.values(), 'opaque_private_ref'),
+             'unreadable_sources': sorted(unreadable)}
+    return scope, gaps
 
 
 def _task_public(taskset, ref) -> dict:

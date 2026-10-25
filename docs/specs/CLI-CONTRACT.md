@@ -1231,7 +1231,8 @@ because they compute one judgement, the gate (`evaluate.gate`, `service.gate`):
   `public_sources_stale` or `public_sources_unknown` (the public sources of that tree,
   index or commit, against the exported scope) **unless** the verified tree holds, for
   every public source the scope maps, the very bytes of the session repository's working
-  tree (`public_sources_judged_by_study: true`), because `check` has then judged that change
+  tree (since round 7: of every judged session's, below)
+  (`public_sources_judged_by_study: true`), because `check` has then judged that change
   dimension by dimension (`stale` on the dimensions whose dependency keys changed, which a
   waiver may cover, R5-9); and `verified_repository_not_the_session_one`.
   `gate_result.target_tree_reasons` lists the codes added. `gate_result` may therefore
@@ -1245,7 +1246,8 @@ because they compute one judgement, the gate (`evaluate.gate`, `service.gate`):
   `not_applicable` stays. `declared_conformity` is likewise `nonconforming` when the study's
   assessed gate conforms but a target-tree reason exists. `verified_repository` gives `path`
   (the verified repository), `session_repository` (the one the session's freshness is read
-  from), `written_to` (from the export intent; null for an intent recorded before round 6),
+  from), `written_to` (from the export intent; null for an intent recorded before round 6;
+  a list of every place since round 7, below),
   `is_session_repository` and `is_written_repository` (null when unknown). When the verified
   repository is not the session's, `verified_repository_not_the_session_one` is a blocking
   reason if the verified tree's public sources are not the snapshot's
@@ -1273,6 +1275,44 @@ because they compute one judgement, the gate (`evaluate.gate`, `service.gate`):
   judged the decisions shown as a virtual selection). With the embedded policy, the
   standalone reasons other than the artefact's own are the export's recorded gate reasons on
   every state the tests build (`test_review_round5_cd.test_one_judgement_one_gap_list`).
+
+**Since review round 7 (areas C and D): exports showing another session's decisions.** An
+export of session S2 shows the decisions the selection of its person and profile maps,
+which may be decisions of another session S1.
+
+* **Every judged session's tree** (R7-1). Local mode compares the verified tree with every
+  session whose decisions or context the study's gate judged: the exported session, then
+  each session of `gate_result.repositories` (the selected decisions' sessions and the
+  peers' sessions the coverage reads), each with its own snapshot scope and the working
+  tree of its own repository. `public_sources_judged_by_study` is `true` only when, for
+  every such session, the verified tree holds that working tree's bytes for every public
+  source its scope maps. Otherwise the target-tree reasons are the export's own
+  `public_sources_stale|unknown` plus, for each judged session whose scope is not `current`
+  on the verified tree, `public_sources_stale|unknown`; a judged session read from another
+  repository than the verified one adds `verified_repository_not_the_session_one`, blocking
+  when its scope or the export's is not `current` on the verified tree and a limitation
+  otherwise. `verified_repository.judged_sessions` lists, per session, `session_id`,
+  `repository`, `is_verified_repository`, `same_bytes` and `tree_freshness` (local output,
+  never published). A tree check only adds reasons: it never relaxes the gate's verdict.
+* **The export's public scope** (R7-2). `public_source_scope` is the union of the public
+  scopes of the exported session and of every session whose decisions are shown (or whose
+  context the export's gate read): entries and omitted private references, deduplicated by
+  logical key, unreadable sources united. `source_manifest` and `source_scope_digest`
+  follow; an export showing only its own session's decisions is unchanged. When a shown
+  decision's sources cannot be covered (its session's snapshot is unreadable, or it maps a
+  logical key the scope already holds with other bytes, which one set cannot hold twice),
+  the export keeps the first entry and records the gap
+  `{kind: scope_does_not_cover_shown_decision, ref: <dimension>}` for every dimension shown
+  from that session. This gap is not a gate reason (the standalone verifier does not import
+  it as one); the verifier, standalone and local, then reads `public_source_freshness` as
+  `unknown`, never `current`, so the standalone result can never say `current` for sources
+  the export does not cover. The schemas are unchanged (`known_gaps.kind` is a string).
+* **Every written repository** (R7-3). The export intent keeps `repository` (the first
+  place) and lists in `repositories` every local repository the generation was written to:
+  the same generation written again elsewhere reuses its intent and records the new place
+  (study state only, never in an artefact). `verified_repository.written_to` is that list
+  (null for an intent recorded before round 6) and `is_written_repository` is `true` when
+  the verified repository is any of them.
 
 **`export handoff` under a required policy naming `handoff`** (the only change to §7/C7):
 the export computes the gate under the writer lock, reserves the milestone (one revision,
