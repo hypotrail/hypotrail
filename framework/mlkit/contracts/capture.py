@@ -379,8 +379,11 @@ def require_loadable(store, state: Mapping, predictor: Mapping) -> None:
 # --- computation ---------------------------------------------------------------------------------
 
 def _membership(inputs: Mapping, keys) -> str:
+    """The rows the predictor was fitted on: the development blob, or the digest of the
+    keys themselves when delayed-label rows were kept out of training (the blob then names
+    more rows than the fit used)."""
     development = inputs.get('development')
-    if development is not None:
+    if development is not None and not inputs.get('training_exclusions'):
         return development['row_keys']
     return hashlib.sha256('\n'.join(sorted(keys)).encode()).hexdigest()
 

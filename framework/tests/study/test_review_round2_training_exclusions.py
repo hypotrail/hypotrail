@@ -472,3 +472,16 @@ def test_byte_comparison_with_the_previous_engine(tmp_path):
                           capture_output=True, text=True, timeout=3600)
     assert proc.returncode == 0, proc.stdout[-4000:] + proc.stderr[-4000:]
     assert 'DIFFERENT' not in proc.stdout and proc.stdout.rstrip().endswith('MATCH')
+
+
+def test_the_capture_names_the_rows_it_was_fitted_on():
+    """The capture's training scope names the rows of its fit: the development blob without
+    exclusions, the digest of the eligible keys when delayed-label rows were left out."""
+    import hashlib
+    from mlkit.contracts import capture
+    keys = ['L1', 'L2', 'L3']
+    plain = {'development': {'row_keys': 'blob-of-every-development-row'}}
+    assert capture._membership(plain, keys) == 'blob-of-every-development-row'
+    excluded = {**plain, 'training_exclusions': {'row_keys': 'blob', 'n_rows': 2}}
+    assert capture._membership(excluded, keys) == hashlib.sha256(
+        '\n'.join(sorted(keys)).encode()).hexdigest()
