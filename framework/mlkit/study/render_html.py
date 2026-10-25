@@ -1005,6 +1005,19 @@ def value_words(decision_id: str, value: Any, task: str | None) -> str:
                     and 'seed' in value else '')
             return (f'Cross-validation on the development rows: {value.get("folds")} folds, '
                     f'{kind}{seed}; every row is predicted once by a model that did not see it')
+        if decision_id == 'split' and value.get('method') in texts.FORWARD_METHODS:
+            # Review round 4 (E4-5): a review-v1 plan that chains forward in time.
+            gap = value.get('gap')
+            gap_words = (f', a gap of {gap} on the clock between the rows fitted and the '
+                         f'window scored' if gap else '')
+            return (f'Forward-chaining cross-validation on the development rows: '
+                    f'{value.get("folds")} folds in the order of prediction time{gap_words}; '
+                    f'each later window is scored once by a model fitted on earlier rows only, '
+                    f'and the earliest rows (the warm-up) train but are never scored')
+        if decision_id == 'split' and value.get('method') == 'group_disjoint':
+            return (f'Cross-validation on the development rows: {value.get("folds")} folds that '
+                    f'never share a group; every row is predicted once by a model that did not '
+                    f'see its group')
         if decision_id == 'split':
             method = value.get('method')
             if method == 'ordinal_cutoff':
@@ -1364,27 +1377,37 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
         facts.append((ds['unit'], lit('case', unit['value'])))
     split_rid = citer.slot_rid('split')
     final = view.get('final_test') or {}
-    if split_rid and citer.has(split_rid, 'n_rows'):
+    language = view.get('language')
+    left_out = split_rid and citer.has(split_rid, 'training_exclusions.n_rows')
+    if split_rid and citer.has(split_rid, 'n_rows') and not left_out:
         dev = citer.num(split_rid, 'n_rows', 'int')
     elif final.get('development_rows') is not None:
-        dev = lit('structure', f'{final["development_rows"]:,}')
+        dev = lit('structure', cite.format_value(final['development_rows'], 'int', language))
     else:
-        dev = lit('structure', f'{view["dataset"].get("rows", ""):,}'
+        dev = lit('structure', cite.format_value(view['dataset']['rows'], 'int', language)
                   if isinstance(view['dataset'].get('rows'), int) else '')
     facts.append((ds['development'], dev))
+    if left_out:
+        # Review round 4 (E4-5): every development row, then the delayed-label rows left
+        # out, then the rows the split, the fits and the selection use, each shown apart.
+        facts.append((ds['development_left_out'],
+                      citer.num(split_rid, 'training_exclusions.n_rows', 'int')))
+        facts.append((ds['development_used'], citer.num(split_rid, 'n_rows', 'int')))
     if variables:
         facts.append((ds['columns'], lit('structure', len(variables))))
+    final_rows = (cite.format_value(final['rows'], 'int', language)
+                  if isinstance(final.get('rows'), int) else '')
     if final.get('status') == 'sealed':
-        sealed = f'{lit("structure", format(final["rows"], ","))} {e(ds["final_test_sealed"])}'
+        sealed = f'{lit("structure", final_rows)} {e(ds["final_test_sealed"])}'
     elif final.get('status') == 'opened':
         # B6c (H1): once opened, the final test is no longer sealed: say so, and say when
         # something changed after the opening.
-        sealed = f'{lit("structure", format(final["rows"], ","))} {e(ds["final_test_opened"])}'
+        sealed = f'{lit("structure", final_rows)} {e(ds["final_test_opened"])}'
         if final.get('post_final_test') or final.get('changed_after'):
             sealed += f' {e(ds["final_test_changed_after"])}'
     else:
         sealed = e(ds['final_test_absent'])
-    facts.append(('Final test', sealed))
+    facts.append((ds.get('final_test', 'Final test'), sealed))
     target = next((v for v in variables if v.get('role') == 'target'), None)
     if target:
         facts.append((ds['target'], f'{lit("identifier", target["name"], "code")}: '

@@ -276,8 +276,14 @@ def test_plan_and_next_action_follow_the_three_pauses(state):
     state['stale']['r_policy'] = {'reason': 'split changed', 'since': 9}
     assert _kinds(state)[8] == 'ready' and st.next_action(state)['activity'] == 'policy.evaluation'
     state['decisions']['policy'].update(status='reconfirm_required', reason='split changed')
+    # Review round 4 (E4-3): its confirmation needs a current evaluation, so that runs first
+    # (confirming it now would be refused), then the policy is asked again.
+    assert st.next_action(state) == {**st.next_action(state), 'kind': 'run',
+                                     'activity': 'policy.evaluation', 'reconfirm': 'policy'}
+    del state['stale']['r_policy']
     assert st.next_action(state) == {**st.next_action(state), 'kind': 'reconfirm',
-                                     'decision': 'policy'}
+                                     'decision': 'policy', 'default_value': 'capacity:100'}
+    state['stale']['r_policy'] = {'reason': 'split changed', 'since': 9}
     state['executions']['interrupted']['e1'] = {'status': 'interrupted_unknown'}
     assert st.next_action(state) == {**st.next_action(state), 'kind': 'acknowledge_interruption',
                                      'execution_id': 'e1'}

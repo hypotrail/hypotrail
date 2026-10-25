@@ -69,6 +69,16 @@ NUMBER = re.compile(r'(?<![\w.])([-\u2212](?=\d))?([1-9]\d{0,2}(?:,\d{3})+(?:\.\
                     r'\d+(?:[.,]\d+)?)'
                     r'(?![\w])(\s?%)?')
 SPACE_GROUPED = re.compile(rf'[1-9]\d{{0,2}}(?:{_SPACE}\d{{3}})+(?:,(\d+))?')
+# Review round 4 (E4-6): French text. A comma is always the decimal separator ("1,286" is
+# 1.286, "-2,467" is -2.467, as the French renderer writes three decimals) and thousands are
+# grouped only with a space (the renderer writes a narrow no-break space, U+202F: "3 842,8"),
+# never with a comma. English text keeps :data:`NUMBER`: a comma followed by groups of three
+# digits groups thousands ("3,164"), a dot is the decimal separator.
+NUMBER_FR = re.compile(r'(?<![\w.])([-\u2212](?=\d))?('
+                       rf'[1-9]\d{{0,2}}(?:{_SPACE}\d{{3}})+(?!\d|\.\d)(?:,\d+)?|'
+                       r'\d+(?:[.,]\d+)?)'
+                       r'(?![\w])(\s?%)?')
+LANGUAGES = ('en', 'fr')
 
 
 def untraceable(message: str, **details) -> StudyError:
@@ -193,14 +203,20 @@ def format_value(value: float | int | None, kind: str = 'auto', language: str = 
     else:
         text = fmt_number(value, kind)
     if language == 'fr':
+        # Review round 4 (E4-6): thousands grouped with a narrow no-break space, a decimal
+        # comma, whatever the format ("3 842,8", "1,286"), so a French reader
+        # (:func:`parse_numbers` with ``fr``) reads back exactly the value written.
         if kind in ('integer', 'int'):
             return text.replace(',', '\u202f')
         head, sep, tail = text.partition(' ')
-        head = head.replace('.', ',')
+        head = head.translate(FR_SEPARATORS)
         if head.endswith('%'):
             head = head[:-1] + '\u00a0%'
         return head + (sep + tail if sep else '')
     return text
+
+
+FR_SEPARATORS = str.maketrans({',': '\u202f', '.': ','})
 
 
 @dataclass(frozen=True)
@@ -215,11 +231,15 @@ class Token:
     end: int
 
 
-def parse_numbers(text: str) -> list[Token]:
+def parse_numbers(text: str, language: str | None = None) -> list[Token]:
+    """The numbers of ``text`` read with the conventions of ``language`` (``en`` when not
+    given; ``fr``: :data:`NUMBER_FR`, review round 4, E4-6)."""
     out = []
-    for m in NUMBER.finditer(text):
+    french = language == 'fr'
+    for m in (NUMBER_FR if french else NUMBER).finditer(text):
         sign, body, pct = (-1.0 if m.group(1) else 1.0), m.group(2), bool(m.group(3))
-        grouped = re.fullmatch(r"[1-9]\d{0,2}(?:,\d{3})+(?:\.(\d+))?", body)
+        grouped = None if french else re.fullmatch(r"[1-9]\d{0,2}(?:,\d{3})+(?:\.(\d+))?",
+                                                   body)
         spaced = SPACE_GROUPED.fullmatch(body)
         if grouped:
             value = float(body.replace(',', ''))

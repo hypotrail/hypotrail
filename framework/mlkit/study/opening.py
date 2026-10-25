@@ -108,3 +108,132 @@ def message(state: Mapping, items: list[dict]) -> str:
     return (f'The final test is opened on current results only, and these are not current: '
             f'{words}. Why: {"; ".join(why)}. Run them again first, then open the final test. '
             f'{NOT_READ["en"]}')
+
+
+def configuration_words(config, lang: str) -> str:
+    """A ``final_test`` value (``{model, rule}``) in words, in ``lang``."""
+    from . import audience
+    if not isinstance(config, Mapping):
+        return audience.model_words(config, lang) if config else ''
+    model = audience.model_words(config.get('model'), lang)
+    rule = config.get('rule')
+    if not rule:
+        return model
+    return (f'{model} avec la règle « {audience.rule_words(rule, lang)} »' if lang == 'fr'
+            else f'{model} with the rule "{audience.rule_words(rule, lang)}"')
+
+
+def reservation_message(state: Mapping, missing: list[dict]) -> str:
+    """Review round 4 (E4-1): the junior message of a refused opening of a confirmed final
+    test (:func:`mlkit.study.preconditions.opening_missing`), in the study language: what
+    changed since the confirmation, what to do first (confirm a decision again, run results
+    again), that the final test is then confirmed again in the junior's own words, and that
+    no final-test row was read."""
+    from . import audience
+    lang = st.language_of(state)
+    fr = lang == 'fr'
+    final = st.FINAL_TEST
+    again: list[str] = []
+    stale: list[str] = []
+    confirm_final = False
+    chosen = None
+    not_current_items = []
+    for m in missing:
+        need = m.get('requirement')
+        if need == 'decision_confirmed':
+            if m.get('decision') == final:
+                confirm_final = True
+            else:
+                again.append(m['decision'])
+        elif need == 'nothing_to_reconfirm':
+            again += [d for d in m.get('decisions') or [] if d != final]
+            if final in (m.get('decisions') or []):
+                confirm_final = True
+        elif need == 'chosen_configuration':
+            chosen = m
+            confirm_final = True
+        elif need == 'nothing_stale':
+            stale += list(m.get('slots') or [])
+        elif need in ('result_current', 'development_diagnostics_current') and m.get('slot'):
+            if 'reason' in m and 'code_changed' in m:
+                not_current_items.append(m)
+            else:
+                stale.append(m['slot'])
+        elif need == 'final_test_sealed':
+            return ("Cette étude n'a pas de test final à ouvrir." if fr else
+                    'This study has no final test to open.')
+    again = list(dict.fromkeys(again))
+    stale = [s for s in dict.fromkeys(stale) if s not in {m['slot'] for m in not_current_items}]
+    parts = []
+    if fr:
+        parts.append("Le test final ne peut pas s'ouvrir maintenant : ce sur quoi reposait sa "
+                     "confirmation n'est plus à jour.")
+        if chosen is not None:
+            before = configuration_words(chosen.get('value'), lang)
+            now = configuration_words(chosen.get('chosen'), lang)
+            parts.append(f"Vous l'avez confirmé pour {before}, et l'étude choisit maintenant "
+                         f'{now}.')
+        if stale:
+            words = audience.join([audience.activity_words(s, lang) for s in stale], lang)
+            parts.append(f"Relancez d'abord : {words}.")
+        if not_current_items:
+            parts.append(message(state, not_current_items).replace(' ' + NOT_READ['fr'], ''))
+        if again:
+            words = audience.join([audience.decision_words(d, lang) for d in again], lang)
+            parts.append(f'Confirmez ensuite à nouveau : {words}.')
+        parts.append('Ensuite, confirmez à nouveau le test final, avec vos propres mots, sur la '
+                     "configuration que l'étude choisit alors." if confirm_final or again
+                     else 'Ensuite, ouvrez le test final.')
+        parts.append(NOT_READ['fr'])
+        return ' '.join(parts)
+    parts.append('The final test cannot be opened now: what its confirmation rested on is no '
+                 'longer current.')
+    if chosen is not None:
+        before = configuration_words(chosen.get('value'), lang)
+        now = configuration_words(chosen.get('chosen'), lang)
+        parts.append(f'You confirmed it for {before}, and the study now chooses {now}.')
+    if stale:
+        words = audience.join([audience.activity_words(s) for s in stale])
+        parts.append(f'First run again: {words}.')
+    if not_current_items:
+        parts.append(message(state, not_current_items).replace(' ' + NOT_READ['en'], ''))
+    if again:
+        parts.append('Then confirm again: '
+                     f'{audience.join([audience.decision_words(d) for d in again])}.')
+    parts.append('Then confirm the final test again, in your own words, on the configuration '
+                 'the study then chooses.' if confirm_final or again
+                 else 'Then open the final test.')
+    parts.append(NOT_READ['en'])
+    return ' '.join(parts)
+
+
+BINARY_VERDICTS = ('adopt_policy', 'keep_baseline', 'inconclusive')
+REGRESSION_VERDICTS = ('adopt_model', 'keep_baseline', 'inconclusive')
+
+
+def conclusion_verdicts(state: Mapping) -> list[str]:
+    """Review round 4 (E4-2): the verdicts a conclusion proposed now would be accepted with,
+    read from state only (the rule of :func:`mlkit.study.preconditions.missing_for_decision`
+    for the conclusion, on the read side): an adopted policy for ``adopt_policy``, the model
+    choice confirmed as the candidate or a variant for ``adopt_model``, and under review-v1
+    only ``inconclusive`` while the final evaluation is recorded without current final-test
+    diagnostics."""
+    from . import assurance
+    task = st.task_of(state)
+    decisions = state['decisions']
+    if assurance.profile(state) == 'review-v1' and st.is_current(state, 'final_test.evaluation') \
+            and not st.is_current(state, 'diag.final_test'):
+        return ['inconclusive']
+    out = []
+    for verdict in (REGRESSION_VERDICTS if task == st.REGRESSION else BINARY_VERDICTS):
+        if verdict == 'adopt_policy' and (decisions.get('policy') or {}).get('status') \
+                != 'confirmed':
+            continue
+        if verdict == 'adopt_model':
+            choice = decisions.get('model_choice') or {}
+            if choice.get('status') != 'confirmed' or not (
+                    choice.get('value') == 'fit.linear'
+                    or trials.is_variant_slot(choice.get('value'))):
+                continue
+        out.append(verdict)
+    return out

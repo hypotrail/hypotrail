@@ -192,6 +192,9 @@ verdict_card:
 data_section:
   unit: One row
   development: Development rows
+  development_left_out: Development rows left out for delayed labels (their outcome was not known yet at the decision time)
+  development_used: Development rows the split, the models and the selection use
+  final_test: Final test
   columns: Columns
   final_test_sealed: rows are set aside as the final test and stay sealed; nothing in this report reads them.
   final_test_absent: This study has no final test. It was created before the final test existed, so every row is a development row.

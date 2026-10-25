@@ -43,7 +43,15 @@ _TASK = contextvars.ContextVar('hypotrail_texts_task', default=BINARY)
 # ``cross_validation`` mapping of the report labels, merged over the task's texts).
 VALIDATION, CROSS_VALIDATION = 'validation', 'cross_validation'
 _SCHEME = contextvars.ContextVar('hypotrail_texts_scheme', default=VALIDATION)
-CV_METHODS = ('kfold_stratified', 'kfold_quantile', 'temporal_folds')
+# Review round 4 (E4-5): the review-v1 explicit plans are cross-validations too (they were
+# read as a holdout split: "Stratified split", "Validation rows"). The temporal ones
+# (:data:`FORWARD_METHODS`) score each later window with models fitted on earlier rows only,
+# and their earliest window (warm-up) is never scored: their texts say so
+# (``forward_steps``, ``forward_activities``, merged over the cross-validation texts).
+FORWARD_METHODS = ('forward_chaining', 'ordered_retrospective')
+CV_METHODS = ('kfold_stratified', 'kfold_quantile', 'temporal_folds', 'group_disjoint') \
+    + FORWARD_METHODS
+_FORWARD = contextvars.ContextVar('hypotrail_texts_forward', default=False)
 
 
 @contextlib.contextmanager
@@ -101,9 +109,25 @@ def concept(term_id: str | None, task: str | None = None) -> tuple[str, str, str
 
 
 @contextlib.contextmanager
+def forward_context(forward: bool):
+    """Read texts for a forward-chaining plan (E4-5) inside the block."""
+    token = _FORWARD.set(bool(forward))
+    try:
+        yield
+    finally:
+        _FORWARD.reset(token)
+
+
+def is_forward() -> bool:
+    return is_cv() and _FORWARD.get()
+
+
+@contextlib.contextmanager
 def study_context(view):
-    """The task and the evaluation scheme of a view (or a state): both contexts at once."""
-    with task_context(view.get('task')), scheme_context(scheme_of(view)):
+    """The task and the evaluation scheme of a view (or a state): both contexts at once
+    (and whether its plan chains forward in time, E4-5)."""
+    with task_context(view.get('task')), scheme_context(scheme_of(view)), \
+            forward_context(split_method_of(view) in FORWARD_METHODS):
         yield
 
 
@@ -115,21 +139,31 @@ def is_cv(scheme: str | None = None) -> bool:
     return current_scheme(scheme) == CROSS_VALIDATION
 
 
-def scheme_of(view) -> str:
-    """``cross_validation`` when the study's split decision (confirmed or proposed) is a
-    cross-validation, or when a study with a final test has not decided it yet (its draft
-    is a cross-validation); ``validation`` otherwise."""
+def split_method_of(view) -> str | None:
+    """The method of the study's split decision (confirmed or proposed), else of its open
+    split proposal; None when neither names one."""
     decisions = (view or {}).get('decisions') or {}
     split = decisions.get('split') or {}
     value = split.get('value')
     if isinstance(value, dict) and value.get('method'):
-        return CROSS_VALIDATION if value.get('method') in CV_METHODS else VALIDATION
+        return value.get('method')
     proposals = (view or {}).get('open_proposals')
     if proposals is None and isinstance((view or {}).get('proposals'), dict):
         proposals = [p for p in view['proposals'].values() if p.get('status') == 'open']
     for p in proposals or []:
         if p.get('decision_id') == 'split' and isinstance(p.get('value'), dict):
-            return CROSS_VALIDATION if p['value'].get('method') in CV_METHODS else VALIDATION
+            return p['value'].get('method')
+    return None
+
+
+def scheme_of(view) -> str:
+    """``cross_validation`` when the study's split decision (confirmed or proposed) is a
+    cross-validation, or when a study with a final test has not decided it yet (its draft
+    is a cross-validation); ``validation`` otherwise."""
+    method = split_method_of(view)
+    if method:
+        return CROSS_VALIDATION if method in CV_METHODS else VALIDATION
+    decisions = (view or {}).get('decisions') or {}
     return CROSS_VALIDATION if 'final_test' in decisions else VALIDATION
 
 
@@ -222,6 +256,11 @@ def step(step_id: str, task: str | None = None) -> dict:
             or data.get('cv_steps', {}).get(step_id)
         if overlay:
             out = _merge(out, overlay)
+    if is_forward():
+        overlay = (data.get('regression_forward_steps', {}) if regression else {}).get(step_id) \
+            or data.get('forward_steps', {}).get(step_id)
+        if overlay:
+            out = _merge(out, overlay)
     return out
 
 
@@ -245,6 +284,13 @@ def activity(slot: str, task: str | None = None) -> dict:
             specs.update(data.get('regression_cv_activities', {}))
         labels = data.get('cv_labels', {})
         specs = {k: _relabel(v, labels) for k, v in specs.items()}
+    if is_forward():
+        specs.update(data.get('forward_activities', {}))
+        if current_task(task) == REGRESSION:
+            specs.update(data.get('regression_forward_activities', {}))
+    if _REPORT_LANGUAGE.get() == 'fr':
+        # E4-5: the labels the French report translates (``fr_labels``).
+        specs = {k: _relabel(v, data.get('fr_labels', {})) for k, v in specs.items()}
     if slot in specs:
         return specs[slot]
     base, sep, column = slot.partition(':')

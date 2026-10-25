@@ -1338,9 +1338,9 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'plan': plan,
         'current_step': next((s['id'] for s in plan if s['current']), None),
         # v0.2a (WP-A1): every message for a surface says who it is written for.
-        'next_action': _opening_not_current(
+        'next_action': _runnable(study, state, _opening_not_current(
             study, state, audience.next_action(_with_default_rule(st.next_action(state, suspected),
-                                                                  defaults), language)),
+                                                                  defaults), language))),
         'open_proposals': [_proposal_view(p, st.language_of(state))
                            for p in sorted(st.open_proposals(state),
                                            key=lambda p: (p['revision'], p['proposal_id']))],
@@ -1413,7 +1413,7 @@ def _opening_not_current(study: read.Study, state: Mapping, action: dict | None)
     first such result, upstream first, with ``not_current`` listing every one and a junior
     message in the study language. The state-derived plan is unchanged."""
     if not action or st.final_test_opened(state) or not (
-            (action.get('kind') in ('propose', 'await_user_words')
+            (action.get('kind') in ('propose', 'await_user_words', 'reconfirm')
              and action.get('decision') == st.FINAL_TEST)
             or (action.get('kind') == 'run'
                 and action.get('activity') == 'final_test.evaluation')):
@@ -1433,6 +1433,157 @@ def _opening_not_current(study: read.Study, state: Mapping, action: dict | None)
                         'rule of status they are not current (code changed, delayed-label rows, '
                         'or an upstream result not current). The final test stays sealed.'),
             'audience': audience.AGENT, 'junior_message': junior}
+
+
+POLICY_RUNS = ('policy.evaluation', 'policy.evaluate')
+
+
+def _runnable(study: read.Study, state: Mapping, action: dict | None) -> dict | None:
+    """Review round 4 (E4-2, E4-3): ``next_action`` never names an action the engine would
+    refuse as given.
+
+    * After the opening, the final evaluation is never run again, and the final-test
+      diagnostics cannot be computed from a final evaluation that is missing or not current
+      (``run diag.final_test`` refuses it, E3-4): the action then says so and names what
+      remains (:func:`_final_test_not_recomputable`).
+    * Before the opening, a confirmed final test whose opening the reservation would refuse
+      because the study now chooses another configuration (``chosen_configuration`` of
+      :func:`mlkit.study.preconditions.opening_missing`, read here from state: a study that
+      changed its choice before this rule existed) is proposed again on that configuration.
+    * A ``run`` of the policy evaluation carries the rules to pass (``rules``, each one a
+      ``--rule``) whenever the study knows them: the adopted or proposed rule, the
+      scenario's default, the rules of the evaluation it runs again."""
+    if not action:
+        return action
+    kind, activity = action.get('kind'), action.get('activity')
+    if kind == 'run' and st.final_test_opened(state) \
+            and activity in ('final_test.evaluation', 'diag.final_test'):
+        replaced = _final_test_not_recomputable(study, state, action)
+        if replaced is not None:
+            return replaced
+    if kind == 'run' and activity == 'final_test.evaluation' \
+            and not st.final_test_opened(state):
+        from . import opening
+        decision = state['decisions'].get(st.FINAL_TEST) or {}
+        chosen = st.choice_config(state)
+        if decision.get('status') == 'confirmed' and chosen is not None \
+                and decision.get('value') != chosen:
+            # The reservation's ``chosen_configuration`` (read side, state only).
+            missing = [{'requirement': 'chosen_configuration', 'value': decision.get('value'),
+                        'chosen': chosen}]
+            return {'kind': 'propose', 'step': action.get('step'), 'decision': st.FINAL_TEST,
+                    'default_value': chosen,
+                    'message': ('The final test was confirmed but not opened, and the study '
+                                'now chooses another configuration: propose the final test '
+                                'again on the chosen configuration and record the junior\'s own '
+                                'words; running final_test.evaluation would be refused. The '
+                                'final test stays sealed.'),
+                    'audience': audience.AGENT,
+                    'junior_message': opening.reservation_message(state, missing)}
+    if kind == 'run' and activity in POLICY_RUNS and not action.get('rules'):
+        rules = _known_rules(study, state, action)
+        if rules:
+            action = {**action, 'rules': rules}
+    return action
+
+
+def _known_rules(study: read.Study, state: Mapping, action: Mapping) -> list[str]:
+    """E4-3: the rules a policy evaluation runs on as the study knows them, in this order:
+    the policy decision's rule (confirmed, to confirm again, or proposed), the rules of the
+    open policy proposals, the action's default (the scenario's share), and the rules of the
+    current evaluation (run again on what it evaluated)."""
+    found: list[str] = []
+    decision = state['decisions'].get('policy') or {}
+    if decision.get('status') in ('confirmed', 'reconfirm_required', 'proposed'):
+        found.append(rec.policy_rule(decision.get('value')))
+    for p in sorted(st.open_proposals(state), key=lambda p: (p['revision'], p['proposal_id'])):
+        if p.get('decision_id') == 'policy':
+            found.append(rec.policy_rule(p.get('value')))
+    found.append(rec.canonical_rule(action.get('default_value')))
+    rid = state['current'].get('policy.evaluation')
+    if rid:
+        try:
+            params = study.result(rid).get('params') or {}
+        except StudyError:
+            params = {}
+        rules = params.get('rules') if isinstance(params.get('rules'), list) else (
+            [params['rule']] if params.get('rule') is not None else [])
+        found += [rec.canonical_rule(r) for r in rules]
+    return [r for r in dict.fromkeys(found) if r]
+
+
+def _final_test_not_recomputable(study: read.Study, state: Mapping, action: Mapping
+                                 ) -> dict | None:
+    """E4-2: after the opening, the ``run`` the plan names (the final evaluation, or the
+    final-test diagnostics on a final evaluation that is missing or not current) would be
+    refused: None when it would not (the diagnostics on a current final evaluation).
+    Otherwise the next action says that the final test cannot be recomputed and why, and
+    names what remains: the conclusion (with the verdicts its rule still allows), or nothing
+    when it is confirmed. Never a loop."""
+    from . import opening
+    final = state['current'].get('final_test.evaluation')
+    currency = study.currency(final) if final else None
+    if action.get('activity') == 'diag.final_test' and currency and currency['current']:
+        return None
+    reason = (currency or {}).get('reason') or {}
+    lang = st.language_of(state)
+    fr = lang == audience.FR
+    if final is None:
+        why = ("l'ouverture a été interrompue avant que son évaluation soit enregistrée" if fr
+               else 'the opening was interrupted before its evaluation was recorded')
+    elif reason.get('delayed_labels_included'):
+        why = ("elle a été calculée avec des lignes de développement dont l'étiquette "
+               "n'était pas encore connue au moment de la décision (des étiquettes tardives)"
+               if fr else
+               'it was computed with development rows whose label was not known yet at the '
+               'decision time (delayed labels)')
+    elif reason.get('code_changed'):
+        why = ("le code du moteur qui l'a calculée a changé depuis" if fr else
+               "the engine's code that computed it changed since")
+    elif currency is not None and currency['current']:
+        why = ("elle est enregistrée, et le test final ne s'ouvre qu'une fois" if fr else
+               'it is recorded, and the final test is opened only once')
+    else:
+        why = ("elle a été calculée à partir de résultats qui ne sont plus à jour" if fr else
+               'it was computed from results that are no longer current')
+    conclusion = state['decisions'].get('conclusion') or {}
+    verdicts = opening.conclusion_verdicts(state)
+    step = next((s for s in st.derive_plan(state) if s['id'] == st.FINAL_TEST), None) or {}
+    blocked = [a for a in ('final_test.evaluation', 'diag.final_test')
+               if a == action.get('activity') or a in (step.get('missing_results') or [])]
+    named = audience.join([audience.verdict_words(v, lang) for v in verdicts], lang)
+    if fr:
+        head = ("Le test final a été ouvert une fois, et son évaluation ne peut pas être "
+                f"recalculée : {why}. Ses diagnostics ne peuvent donc pas être calculés non "
+                "plus. Ses chiffres restent dans l'étude comme historique.")
+        rest = (f' Ce qui reste possible : conclure l\'étude à partir des preuves de '
+                f'développement ({named}), en disant pourquoi ; un nouveau test final, '
+                f'indépendant, demande une nouvelle étude.' if conclusion.get('status')
+                != 'confirmed' and verdicts else
+                " Votre conclusion est enregistrée ; un nouveau test final, indépendant, "
+                "demande une nouvelle étude.")
+    else:
+        head = (f'The final test was opened once, and its evaluation cannot be computed again: '
+                f'{why}. Its diagnostics cannot be computed either. Its figures stay in the '
+                f'study as history.')
+        rest = (f' What remains possible: conclude the study from the development evidence '
+                f'({named}), saying why; a new, independent final test needs a new study.'
+                if conclusion.get('status') != 'confirmed' and verdicts else
+                ' Your conclusion is recorded; a new, independent final test needs a new '
+                'study.')
+    out = {'not_recomputable': blocked,
+           'audience': audience.AGENT, 'junior_message': head + rest}
+    agent = (f'Do not run {", ".join(blocked)}: the final test was already opened and its '
+             'evaluation cannot be recomputed; the engine refuses it.')
+    if conclusion.get('status') != 'confirmed' and verdicts:
+        return {'kind': 'propose', 'step': 'conclusion', 'decision': 'conclusion',
+                'verdicts': verdicts, **out,
+                'message': agent + ' Propose the conclusion (verdicts the engine accepts: '
+                           + ', '.join(verdicts) + '), its text citing development evidence '
+                           'and saying that the final test cannot be recomputed.'}
+    return {'kind': 'done', **out,
+            'message': agent + ' Nothing else remains in the plan; a new final test needs a '
+                               'new study.'}
 
 
 def _case_or_none(state: dict):

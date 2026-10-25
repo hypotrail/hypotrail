@@ -277,8 +277,10 @@ def final_test_missing(state: Mapping, value: Any = None, *, store=None) -> list
         missing.append({'requirement': 'nothing_stale', 'slots': stale,
                         'detail': 'Some results are stale: run them again before opening the '
                                   'final test.'})
-    again = [d for d in st.decision_ids(state)
-             if state['decisions'][d]['status'] == 'reconfirm_required']
+    # Review round 4 (E4-1): the final test's own confirmation, asked again, is what this
+    # rule is checked for.
+    again = [d for d in st.decision_ids(state) if d != st.FINAL_TEST
+             and state['decisions'][d]['status'] == 'reconfirm_required']
     if again:
         missing.append({'requirement': 'nothing_to_reconfirm', 'decisions': again,
                         'detail': 'Confirm these decisions again before opening the final test.'})
@@ -316,6 +318,36 @@ def final_test_missing(state: Mapping, value: Any = None, *, store=None) -> list
                                                'rule': params.get('rule')},
                                 'detail': 'The current diagnostic describes a different '
                                           'model or action rule.'})
+    return missing
+
+
+def opening_missing(state: Mapping, store=None) -> list[dict]:
+    """Review round 4 (E4-1): what the reservation of ``final_test.evaluation`` (every path
+    that opens the final test: the opening right after the confirmation, and ``run
+    final_test.evaluation`` on a confirmed final test whose opening did not run) still needs
+    before anything is marked opened. It is the confirmation's own rule
+    (:func:`final_test_missing` on the confirmed value: the stale map, the full currency of
+    every result the opening rests on, the value equal to the configuration the study
+    chooses now, nothing awaiting reconfirmation), plus the decisions it requires confirmed
+    and the final test's own confirmation still holding (a change of what it rests on after
+    the confirmation makes it ``reconfirm_required``, :mod:`mlkit.study.dependencies`). The
+    capture's currency and loading are the plan's (E2-1, A F1). Every item carries the same
+    junior message (:func:`mlkit.study.opening.reservation_message`); empty when the final
+    test may open."""
+    decision = state['decisions'].get(st.FINAL_TEST) or {}
+    missing: list[dict] = []
+    if decision.get('status') != 'confirmed':
+        missing.append({**_need_decision(state, st.FINAL_TEST),
+                        'reason': decision.get('reason'),
+                        'detail': 'The final test opens only on its confirmation in the '
+                                  "junior's words; confirm it again."})
+    missing += [_need_decision(state, d) for d in decision_requires(state, st.FINAL_TEST)
+                if not _confirmed(state, d)]
+    missing += final_test_missing(state, decision.get('value'), store=store)
+    if missing:
+        from . import opening
+        junior = opening.reservation_message(state, missing)
+        missing = [{**m, 'junior_message': junior} for m in missing]
     return missing
 
 

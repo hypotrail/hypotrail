@@ -374,7 +374,9 @@ def _check_cited(view: Mapping, study: read.Study, rid: str, path: str, raw: str
     except (KeyError, StudyError):
         return [finding('value_mismatch', where, f'Result {rid} has no value at {path!r}.',
                         result_id=rid, path=path)]
-    toks = cite.parse_numbers(shown)
+    # Review round 4 (E4-6): the shown text is read as the renderer wrote it, in the study
+    # language (a French report writes 1.286 as "1,286").
+    toks = cite.parse_numbers(shown, view.get('language'))
     try:
         attr_ok = raw is not None and float(raw) == float(value)
         factor = 1.0 if scale is None else float(scale)

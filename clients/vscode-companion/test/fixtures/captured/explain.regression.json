@@ -442,6 +442,14 @@
     "steps": []
    },
    {
+    "id": "forward_chaining",
+    "term": "Forward-chaining cross-validation",
+    "definition": "Cross-validation that follows the order of prediction time. The development rows are cut into consecutive windows; each later window is predicted once by a model fitted only on earlier rows whose target was already known, and the first window, the warm-up, only trains and is never predicted. A choice made with it is still optimistic. For example, the cars of the third window are predicted by a model fitted on the cars of the first two windows, never on later ones.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
     "id": "random_split",
     "term": "Random split",
     "definition": "A random division of the rows between training and validation, with a recorded seed. It assumes the rows are exchangeable, which a time order or repeated entities can contradict.",

@@ -139,9 +139,14 @@ def _reserve(ctx: cmd.Context) -> Handler:
             # Review round 3 (E3-3): every result the opening rests on (the split, the fits,
             # the variants, the evaluation, the diagnostics under review-v1) is current by the
             # rule of ``status`` before anything is marked opened; the plan checks the capture
-            # (E2-1) and that it loads (A F1).
-            from . import preconditions
-            preconditions.refuse_missing(preconditions.selection_not_current(ctx.store, state),
+            # (E2-1) and that it loads (A F1). Review round 4 (E4-1): and the whole rule of the
+            # confirmation holds now (the stale map, the configuration the study chooses now,
+            # nothing to confirm again, the confirmation itself), so a confirmed final test
+            # whose opening did not run never opens on evidence or a choice that changed.
+            from . import assurance, preconditions
+            # The profile's refusals keep their place first (as in the plan).
+            assurance.require_activity(state, activity)
+            preconditions.refuse_missing(preconditions.opening_missing(state, ctx.store),
                                          'Opening the final test')
         if activity == act.DIAG_FINAL and st.final_test_opened(state):
             # Review round 3 (E3-4): the final evaluation the diagnostics read is never

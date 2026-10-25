@@ -368,11 +368,18 @@ def check_proposal_texts(store: StudyStore, texts, value: Any) -> None:
     from . import numtrace
 
     pool = None
+    texts = list(texts)
+    labels = {key.split('.', 1)[1]: text for key, text in texts if key.startswith('labels.')}
     for key, text in texts:
         if not literal_numbers(text, value) and not _has_number(text):
             continue
         pool = pool or numtrace.study_pool(store.study_dir, proposed=value)
-        findings = numtrace.number_findings(pool, text, key)
+        # Review round 4 (E4-6): a label is read in its language, the restatement in the
+        # language a label gives it (``--lang``), any other text in the study language.
+        language = (key.split('.', 1)[1] if key.startswith('labels.') else
+                    next((lang for lang, label in sorted(labels.items()) if label == text),
+                         None))
+        findings = numtrace.number_findings(pool, text, key, language=language)
         if findings:
             numbers = sorted({f['details']['number'] for f in findings})
             raise CommandRefused('literal_number_in_text',

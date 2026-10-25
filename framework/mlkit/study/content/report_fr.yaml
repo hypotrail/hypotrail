@@ -146,6 +146,9 @@ verdict_card:
 data_section:
   unit: Une ligne
   development: Lignes de développement
+  development_left_out: Lignes de développement écartées pour étiquettes tardives (leur résultat n'était pas encore connu au moment de la décision)
+  development_used: Lignes de développement utilisées par le découpage, les modèles et la sélection
+  final_test: Test final
   columns: Colonnes
   final_test_sealed: lignes sont mises de côté comme test final et restent scellées ; ce rapport ne les lit pas.
   final_test_absent: Cette étude ne possède pas de test final.

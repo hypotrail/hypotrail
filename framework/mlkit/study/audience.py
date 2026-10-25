@@ -288,6 +288,18 @@ def _junior_next(action: Mapping, lang: str = EN) -> tuple[str, str]:
         return AGENT, (f'{named} was interrupted and its outcome is unknown. It does not '
                        'restart by itself; you will be asked before it is recorded as '
                        'interrupted.')
+    if kind == 'reconfirm' and action.get('decision') == 'final_test':
+        # Review round 4 (E4-1): a final test confirmed but not opened, whose basis changed.
+        if fr:
+            return AGENT, ("Le test final est toujours scellé : aucune de ses lignes n'a été "
+                           "lue. Vous aviez confirmé son ouverture, mais ce sur quoi elle "
+                           "reposait a changé avant qu'il soit ouvert ; il ne s'ouvre donc "
+                           "qu'après une nouvelle confirmation, avec vos propres mots, sur la "
+                           "configuration que l'étude choisit maintenant.")
+        return AGENT, ('The final test is still sealed: none of its rows was read. You '
+                       'confirmed its opening, but what it rests on changed before it was '
+                       'opened, so it opens only once you confirm it again, in your own words, '
+                       'on the configuration the study now chooses.')
     if kind == 'reconfirm':
         if fr:
             return AGENT, (f'Votre réponse sur {decision_words(action.get("decision"), lang)} '

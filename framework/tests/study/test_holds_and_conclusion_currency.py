@@ -183,6 +183,8 @@ def test_a_policy_adopted_after_the_conclusion_outdates_it(evaluated):
         'kind': 'reconfirm', 'decision': 'conclusion',
         'message': f'Decision conclusion must be confirmed again: '
                    f'{state["decisions"]["conclusion"]["reason"]}',
+        # Review round 4 (E4-3): the value to propose again, so the action runs as given.
+        'default_value': state['decisions']['conclusion']['value'],
         # v0.2a (WP-A1): the message names an id, so it is the agent's; the junior's variant.
         'audience': 'agent',
         'junior_message': 'Your answer on the conclusion must be confirmed again: something '

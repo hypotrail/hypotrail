@@ -660,6 +660,61 @@ direction and exactness; its opt-in `test_byte_comparison_with_the_previous_engi
 the comparison when `HYPOTRAIL_COMPAT_OLD_PYTHON` and `HYPOTRAIL_COMPAT_OLD_ROOT` name an old
 engine.
 
+## Review round 4
+
+Engine fixes of the review of 2026-10-25 (round 4), on top of `9991de7`
+(`framework/tests/study/test_review_round4_engine.py`, temporary studies only; the reviewer's
+scripts are ported there):
+
+- E4-1 (blocking): a final test confirmed but not opened (an interrupted execution refuses the
+  opening that follows the confirmation, or the process stops between the confirmation's
+  commit and the reservation) could be opened by `run final_test.evaluation` on stale evidence
+  or on a model the study no longer chose: the reservation checked only the confirmation and
+  the currency of the results, and the dependency table never asked the final test again. The
+  reservation now applies the confirmation's whole rule (`preconditions.opening_missing`: the
+  stale map, full currency, the configuration chosen now, nothing awaiting reconfirmation, the
+  confirmation itself) before anything is opened, with a junior message in the study language
+  (`opening.reservation_message`). The safe option is implemented: a change of what the
+  unopened final test rests on (a decision it rests on, a hold, a result of the opening's basis
+  replaced or made stale) makes its confirmation `reconfirm_required`
+  (`dependencies._final_test_basis_changed`), so the junior confirms it again, in their own
+  words, on the configuration the study then chooses; confirming it again changes no result
+  (`final_test.reconfirmed`, a quiet mutation; it was the `unknown` row, which would have made
+  everything stale). Once opened, the final test is never asked again (WP-B1).
+- E4-2: after an opening made before the delayed-label fix (or an opening interrupted before
+  its evaluation was recorded), `next_action` no longer loops on `run diag.final_test` (or `run
+  final_test.evaluation`), both refused: it proposes the conclusion with the verdicts its rule
+  still accepts (`verdicts`, `not_recomputable`), then `done`, with a junior message saying the
+  final test cannot be recomputed and what remains (English and French).
+- E4-3: every `next_action` runs as given: a run of the policy evaluation carries its `rules`;
+  a reconfirmation its `default_value` (the policy's rule on the model chosen now, the final
+  test's configuration); a reconfirmation whose own preconditions need a result runs that
+  result first. A test follows every `next_action` of the round-3 and round-4 scenarios.
+- E4-4: clock values are written exactly in the limit text (`20170301`, never `2.01703e+07`)
+  and traced.
+- E4-5: the report's data section shows the development rows, the delayed-label rows left out
+  and the rows used apart; review-v1 explicit plans are read as cross-validations (they were
+  shown as a stratified holdout split), and forward-chaining plans say that each later window
+  is scored once by models fitted on earlier rows only and that the warm-up rows are never
+  scored (English and French labels of the split card).
+- E4-6: a French report failed its own `check` (`value_mismatch`): "1,286" was read as 1,286.
+  The French renderer writes a narrow no-break space between thousands and a decimal comma
+  whatever the format, and French text is read with a decimal comma (a comma never groups
+  thousands); the review-v1 binary reports pass `check` with no error in English and French,
+  with and without delayed labels.
+- Number tracing: "241k", "1.5M", "241e3" are traced as the number they scale to (or reported),
+  and an integer right after an ISO date is checked (the date's time of day must look like one).
+
+Compatibility. No module of any activity's code fingerprint changed (`activities.py`,
+`fit.py`, `families.py` and the other fingerprinted modules are byte-identical to `9991de7`):
+the changes are in `state`, `dependencies`, `preconditions`, `opening`, `executions`, `view`,
+`audience`, `numtrace`, `cite`, `cmd_check`, `commands`, `texts`, `render_html` and the content
+files, none of which a result's identity or currency reads. No attestation edge is added, and
+every result recorded by `9991de7` (or by an earlier engine the existing edges cover) stays
+current. A study whose final test was confirmed but not opened when a decision it rests on
+changed under an earlier engine keeps its `confirmed` status; its reservation is refused by the
+new rule and `next_action` proposes the final test again (no loop).
+
 ## Limits and what is not done
 
 - **Calibration partitions are not created by the engine.** The MAPIE adapters, the

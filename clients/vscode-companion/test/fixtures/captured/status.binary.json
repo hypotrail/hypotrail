@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"",
    "revision": 50,
-   "updated": "2026-10-25T03:26:17.473468+00:00",
+   "updated": "2026-10-25T05:18:54.752417+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -341,7 +341,7 @@
      "restatement": "Call the 100 clients with the highest scores.",
      "rationale": "The team can make 100 calls per wave.",
      "revision": 50,
-     "created": "2026-10-25T03:26:17.473397+00:00",
+     "created": "2026-10-25T05:18:54.752356+00:00",
      "labels": null,
      "label": "Call the 100 clients with the highest scores.",
      "origin": {
@@ -365,7 +365,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-25T03:25:43.816061+00:00",
+      "time": "2026-10-25T05:18:21.602647+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -412,7 +412,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-25T03:25:44.993735+00:00",
+      "time": "2026-10-25T05:18:22.666310+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -461,7 +461,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-25T03:25:46.492896+00:00",
+      "time": "2026-10-25T05:18:24.165710+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -492,7 +492,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-25T03:25:48.087463+00:00",
+      "time": "2026-10-25T05:18:25.716359+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -528,7 +528,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-25T03:25:49.850473+00:00",
+      "time": "2026-10-25T05:18:27.362346+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -559,7 +559,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 37,
-      "time": "2026-10-25T03:26:07.039329+00:00",
+      "time": "2026-10-25T05:18:44.401482+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -594,7 +594,7 @@
       "restatement": "You decide the model_choice as stated.",
       "proposal_id": "p_7",
       "revision": 43,
-      "time": "2026-10-25T03:26:11.306347+00:00",
+      "time": "2026-10-25T05:18:48.444275+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -629,7 +629,7 @@
       "restatement": "You decide the policy as stated.",
       "proposal_id": "p_8",
       "revision": 45,
-      "time": "2026-10-25T03:26:13.061456+00:00",
+      "time": "2026-10-25T05:18:50.229876+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -3371,7 +3371,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_6ed23e1b9a8128024e723b74",
-     "exposure_id": "x_41325b6bce264186acde25b9c37fcf14",
+     "exposure_id": "x_4a296f9bca2c4a9980e5335bea16b856",
      "started_revision": 46,
      "integrity": "ok"
     },
@@ -4517,7 +4517,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_dc60c4ca476066179e139318",
-     "exposure_id": "x_198f51d981c74393b5cf8fb37e23341a",
+     "exposure_id": "x_219cc7efcf284c399f00c85abe84df80",
      "started_revision": 30,
      "integrity": "ok"
     },
@@ -4667,7 +4667,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_17bb42fe2af6771b4815132d",
-     "exposure_id": "x_fa2156e8f94c43c48a22c8d282a36175",
+     "exposure_id": "x_fc4c0aeba3334698974b51157f2ff3b0",
      "started_revision": 24,
      "integrity": "ok"
     },
@@ -4807,7 +4807,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
-     "exposure_id": "x_99fbee004476472b989139bd88eb233e",
+     "exposure_id": "x_9468f88ca43149bf929c9e8755eb98f6",
      "started_revision": 26,
      "integrity": "ok"
     },
@@ -4979,7 +4979,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_9bfea10e1d03fc0af5aa162b",
-     "exposure_id": "x_c41a45d7c9774a30ac5b14db507fd8fb",
+     "exposure_id": "x_6ca3e0c7f82d447da4b501f464906635",
      "started_revision": 28,
      "integrity": "ok"
     },
@@ -5274,7 +5274,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_1cc8ff5e6aa02f9fae196751",
-     "exposure_id": "x_fed2ece8b9c6464b8b30b502828e554b",
+     "exposure_id": "x_7e2eac9961c1429cbcf0d6bab89dbdaa",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -5560,7 +5560,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_3b7e9da2df5de95232824246",
-     "exposure_id": "x_9549dfe1fd46463eb101372b69f2f3e5",
+     "exposure_id": "x_2449d6da94514f508ae3708307fcc58f",
      "started_revision": 22,
      "integrity": "ok"
     },
@@ -5799,7 +5799,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_40d674998c07527b12a31e29",
-     "exposure_id": "x_b36f3f04b35f42a383d55bad2c5e5bef",
+     "exposure_id": "x_02a2bbba5e9c4c4a9aff4b744f2a29cb",
      "started_revision": 20,
      "integrity": "ok"
     },
@@ -6109,7 +6109,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_76bdb563530c997e6fdf55cc",
-     "exposure_id": "x_3a916c45a0a34d11a0121908839681e0",
+     "exposure_id": "x_ab64a76174aa497b9604d48302c4f739",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -6168,7 +6168,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8651b2bcef1776e9ebffd170",
-     "exposure_id": "x_13956438fd2040f6939b5b99aff5f309",
+     "exposure_id": "x_79b4c5609dbc48afb62da33b56a39f7d",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -6240,7 +6240,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_056df3f4fa8f8aaf96fa6c38",
-     "exposure_id": "x_32749f28006344f79088e660c7a08623",
+     "exposure_id": "x_987a3fbc09254b26ab6e4546a320cf2b",
      "started_revision": 32,
      "integrity": "ok"
     },
@@ -6447,7 +6447,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_c4ffa7146bc75b1b1b3352d5",
-     "exposure_id": "x_e3f55469fc57439b9d064b42af92b4ca",
+     "exposure_id": "x_ce0638ad3c624f4aa42f90838093fea6",
      "started_revision": 34,
      "integrity": "ok"
     },
@@ -6666,7 +6666,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_fd2d4cab3d29a091ff558cfa",
-     "exposure_id": "x_069d7df6001245a3917b3cf73206e1fa",
+     "exposure_id": "x_48ccccec3f6e4fd48293150666a59cb0",
      "started_revision": 38,
      "integrity": "ok"
     },
@@ -7262,7 +7262,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_405ea565bcf4773f753be1e0",
-     "exposure_id": "x_eb9bd5e4b0194026b6a3246a0ff02480",
+     "exposure_id": "x_eb600a77bd454da2af33028626e3d350",
      "started_revision": 48,
      "integrity": "ok"
     },
@@ -7331,7 +7331,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8101d16893f3425fbb4ff727",
-     "exposure_id": "x_de130bfd6bc04cbb816e35e778a24356",
+     "exposure_id": "x_4d8985fa63bf4766a5ccba9a7c06b050",
      "started_revision": 12,
      "integrity": "ok"
     }

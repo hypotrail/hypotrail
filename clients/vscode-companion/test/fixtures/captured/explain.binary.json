@@ -650,6 +650,14 @@
     "example": null,
     "example_status": "none",
     "steps": []
+   },
+   {
+    "id": "forward_chaining",
+    "term": "Forward-chaining cross-validation",
+    "definition": "Cross-validation that follows the order of prediction time. The development rows are cut into consecutive windows; each later window is scored once by a model fitted only on earlier rows whose outcome was already known, and the first window, the warm-up, only trains and is never scored. A choice made with it is still optimistic. For example, the clients of the third window are scored by a model fitted on the clients of the first two windows, never on later ones.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
    }
   ],
   "steps": {

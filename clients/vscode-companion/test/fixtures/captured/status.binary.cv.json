@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-cv",
    "revision": 43,
-   "updated": "2026-10-25T03:27:08.580811+00:00",
+   "updated": "2026-10-25T05:19:46.444108+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -349,7 +349,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-25T03:26:29.365298+00:00",
+      "time": "2026-10-25T05:19:06.424990+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -396,7 +396,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-25T03:26:30.694275+00:00",
+      "time": "2026-10-25T05:19:07.553177+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -445,7 +445,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-25T03:26:32.330441+00:00",
+      "time": "2026-10-25T05:19:09.190549+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -476,7 +476,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-25T03:26:33.870447+00:00",
+      "time": "2026-10-25T05:19:10.856994+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -512,7 +512,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-25T03:26:35.491827+00:00",
+      "time": "2026-10-25T05:19:12.785345+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -543,7 +543,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 21,
-      "time": "2026-10-25T03:26:41.708861+00:00",
+      "time": "2026-10-25T05:19:18.800090+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -578,7 +578,7 @@
       "restatement": "You decide the model_choice as stated.",
       "proposal_id": "p_7",
       "revision": 27,
-      "time": "2026-10-25T03:26:50.203338+00:00",
+      "time": "2026-10-25T05:19:27.251799+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -613,7 +613,7 @@
       "restatement": "You decide the policy as stated.",
       "proposal_id": "p_10",
       "revision": 41,
-      "time": "2026-10-25T03:27:07.239580+00:00",
+      "time": "2026-10-25T05:19:45.176912+00:00",
       "authenticated": false,
       "basis": "endorsed",
       "delegation_scope": null,
@@ -653,7 +653,7 @@
       "restatement": "You open the sealed final test once, for the chosen configuration.",
       "proposal_id": "p_9",
       "revision": 33,
-      "time": "2026-10-25T03:26:55.681392+00:00",
+      "time": "2026-10-25T05:19:32.742479+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -3400,7 +3400,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8519f7987822bead348d47d9",
-     "exposure_id": "x_1435ffd501b74ad1b0f9be6ff876e207",
+     "exposure_id": "x_48a7fe59a36a4679860bc25cfc05c352",
      "started_revision": 42,
      "integrity": "ok"
     },
@@ -4281,7 +4281,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_f09116e554021da514197565",
-     "exposure_id": "x_2748a90370784c5eb18bfabb4854db97",
+     "exposure_id": "x_4492e8a1a2c34d26921f92eb71856c7b",
      "started_revision": 36,
      "integrity": "ok"
     },
@@ -4340,7 +4340,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_2ab8c63a63b208bd8731b8b3",
-     "exposure_id": "x_242d54b0c60c4b23b546098ced4f1687",
+     "exposure_id": "x_c728a83b01764278abf0029df0edd82e",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -4618,7 +4618,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_3d67a8043d915da83986fe90",
-     "exposure_id": "x_7015ee4046194eed98daf3eea10a71fb",
+     "exposure_id": "x_92f72c75b77747fb8e2abbd56053c77a",
      "started_revision": 34,
      "integrity": "ok"
     },
@@ -4753,7 +4753,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_9c2f7f2c69f91be9c07e4331",
-     "exposure_id": "x_b9e030e75e8443a09cf281a9dfa8f766",
+     "exposure_id": "x_1beef8376cd94b27952813e7424378ba",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -5023,7 +5023,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_c4434080afdaeb4edd1ce5b5",
-     "exposure_id": "x_a26fd40940fa4bff8f1c0bbd4181b49a",
+     "exposure_id": "x_71e5e7a2128e46b48e4f15a64307692e",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -5305,7 +5305,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8b6b767c3df161e7401893c1",
-     "exposure_id": "x_3d592695df4c4183a2e6857ed4d31a82",
+     "exposure_id": "x_39239e937c144be886098f39a4037249",
      "started_revision": 22,
      "integrity": "ok"
     },
@@ -6297,7 +6297,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ed89c3d6b5ceb43c540c9096",
-     "exposure_id": "x_2c557df47eb24004a073e54f1fba226e",
+     "exposure_id": "x_09cd4138122d47e1baf6e984ac8adcd7",
      "started_revision": 38,
      "integrity": "ok"
     },
@@ -6402,7 +6402,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_0eee3a0bb608847ca1ac05a7",
-     "exposure_id": "x_617371b713bf41a78e9f8777b26c52b4",
+     "exposure_id": "x_35260198af3248abadc28679ebe8f3fb",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -6460,7 +6460,7 @@
        "reason_given": true,
        "restatement": "You decide the policy as stated.",
        "revision": 29,
-       "time": "2026-10-25T03:26:52.077862+00:00",
+       "time": "2026-10-25T05:19:29.019762+00:00",
        "user_words": "Yes, I adopt calling the top tenth, because the team can make that many calls"
       },
       "proposal_id": "p_8",
@@ -6556,7 +6556,7 @@
       "last_ok_revision": 43,
       "path": "reports/study.html",
       "revision": 43,
-      "sha256": "835e22025f3d077aad98a8e2b8006ff9a62af69fa99a128bb8d3fecd84893b08",
+      "sha256": "90195235dc24feed99669698013da7a0437c8412095b2ea7c0b792122e4e7fbc",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -6750,7 +6750,7 @@
      "rule": "share:0.1",
      "result_id": "35afe58d1afe5e65086c24daa97603db484ce6afc265859f7a5c8c448bc95380",
      "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
-     "time": "2026-10-25T03:26:55.730776+00:00"
+     "time": "2026-10-25T05:19:32.794577+00:00"
     },
     "post_final_test": true,
     "changed_after": [

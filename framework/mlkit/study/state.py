@@ -1332,9 +1332,24 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
     for decision_id in decision_ids(state):
         decision = state['decisions'][decision_id]
         if decision['status'] == 'reconfirm_required':
-            return {'kind': 'reconfirm', 'decision': decision_id,
-                    'message': f'Decision {decision_id} must be confirmed again: '
-                               f'{decision["reason"]}'}
+            action = {'kind': 'reconfirm', 'decision': decision_id,
+                      'message': f'Decision {decision_id} must be confirmed again: '
+                                 f'{decision["reason"]}'}
+            # Review round 4 (E4-3): the value to propose again, so the action is runnable as
+            # given (E4-1: a final test on the configuration the study chooses now).
+            default = reconfirm_value(state, decision_id)
+            if default is not None:
+                action['default_value'] = default
+            # E4-3: a result the confirmation needs that is not current is run first (the
+            # confirmation would be refused): the plan's step question, as any run.
+            slot = _reconfirm_needs_run(state, decision_id, default)
+            if slot is not None:
+                step = next((s for s in derive_plan(state) if s['decision'] == decision_id),
+                            None) or {}
+                return {'kind': 'run', 'step': step.get('id'), 'activity': slot,
+                        'reconfirm': decision_id,
+                        'message': step.get('question') or action['message']}
+            return action
     pending = sorted(open_proposals(state), key=lambda p: (p['revision'], p['proposal_id']))
     from . import assurance
     if assurance.profile(state) == 'review-v1':
@@ -1474,6 +1489,47 @@ def choice_config(state: Mapping) -> dict | None:
     return {'model': value, 'rule': None} if isinstance(value, str) else None
 
 
+def _reconfirm_needs_run(state: Mapping, decision_id: str, value) -> str | None:
+    """E4-3: the first result a decision to confirm again needs and that is not current
+    (stale or missing), so the confirmation would be refused
+    (:func:`mlkit.study.preconditions.missing_for_decision` checks the same slots; this one
+    reads state only, on the read side): the policy evaluation for the policy, the fits (or
+    the regression comparison) for the model choice, every result the opening rests on
+    (:func:`mlkit.study.opening.selection_slots`) for the final test. None otherwise."""
+    from . import opening
+    task = task_of(state)
+    if decision_id == 'policy':
+        slots = ['policy.evaluation']
+    elif decision_id == 'model_choice':
+        slots = (['fit.logistic'] + ([value] if isinstance(value, str)
+                                     and trials.is_variant_slot(value) else [])
+                 if task == BINARY else ['evaluate.regression'])
+    elif decision_id == FINAL_TEST:
+        slots = opening.selection_slots(state)
+    else:
+        return None
+    return next((slot for slot in slots if not is_current(state, slot)), None)
+
+
+def reconfirm_value(state: Mapping, decision_id: str):
+    """Review round 4 (E4-3): the value a decision to confirm again is proposed with: its
+    recorded value, except the final test (the configuration the study chooses now,
+    :func:`choice_config`, E4-1) and a binary policy under an explicit model choice (its
+    rule, applied to the model chosen now). None when there is no such value."""
+    from . import records as rec
+    decision = state['decisions'].get(decision_id) or {}
+    if decision_id == FINAL_TEST:
+        return choice_config(state)
+    value = decision.get('value')
+    if decision_id == 'policy' and has_explicit_binary_model_choice(state):
+        rule = rec.policy_rule(value)
+        model = (state['decisions'].get('model_choice') or {}).get('value')
+        if rule is None or not isinstance(model, str):
+            return copy.deepcopy(value)
+        return rule if model == rec.POLICY_CANDIDATE else f'{rule}{rec.POLICY_MODEL_SEP}{model}'
+    return copy.deepcopy(value)
+
+
 def b1_default_value(state: Mapping, decision_id: str):
     """The engine's drafted value of a WP-B1 study's decision for ``next_action``: the
     cross-validation scheme of the split, the default variant, the configuration a final
@@ -1541,9 +1597,19 @@ def cited_stale_results(state: Mapping) -> list[dict]:
 
 
 def _clock_value(value) -> str:
-    if isinstance(value, float) and value.is_integer():
+    """A value of the study's clock written exactly (review round 4, E4-4): an integer in
+    full ("20170301", "1700000000", never "2.01703e+07"), a float that is a whole number as
+    that integer, any other float in its shortest exact decimal form, without an exponent
+    (``repr``: "20170301.5"), so the limit text names the true boundary and
+    :mod:`mlkit.study.numtrace` reads it back as the recorded value."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return str(value)
+    if isinstance(value, int):
+        return str(value)
+    if value.is_integer():
         return str(int(value))
-    return f'{value:g}' if isinstance(value, (int, float)) else str(value)
+    import decimal
+    return format(decimal.Decimal(repr(value)), 'f')
 
 
 def delayed_labels_limit(state: Mapping) -> dict | None:

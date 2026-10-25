@@ -66,7 +66,11 @@ PERCENTAGE_POINTS = re.compile(r'\s*(?:percentage[- ]points?|pp\b|p\.p\.|points?
 # difference times 100, or a value already registered in points (``Pool.trace``).
 BARE_POINTS = re.compile(r'\s*(?:points?|pts?)(?![\w])', re.IGNORECASE)
 LIST_MARKER = re.compile(r'^\s*\d+[.)]\s', re.MULTILINE)
-ISO_DATE = re.compile(r'\b\d{4}-\d{2}-\d{2}(?:[T ][\d:.]+(?:Z|[+-]\d{2}:?\d{2})?)?\b')
+# A date, with an optional time of day (review round 4: the time is ``hh:mm`` with optional
+# seconds, fraction and zone, so a number right after a date, "On 2026-10-25 241 clients", is
+# still a number to trace).
+ISO_DATE = re.compile(r'\b\d{4}-\d{2}-\d{2}'
+                      r'(?:[T ]\d{2}:\d{2}(?::\d{2}(?:[.,]\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?\b')
 HEADING_ORDINAL = re.compile(r'^(\s*#{1,6}\s+)\d+\.', re.MULTILINE)
 # D8: nouns that name the study's own structure, by the view count they refer to.
 STRUCTURE_NOUNS = {
@@ -111,20 +115,20 @@ def location(path: str | None, anchor: str | None = None, line: int | None = Non
 
 # --- number pools -----------------------------------------------------------------------
 
-def _walk_numbers(value: Any) -> Iterable[float]:
+def _walk_numbers(value: Any, language: str | None = None) -> Iterable[float]:
     if cite.is_number(value):
         yield float(value)
     elif isinstance(value, str):
-        for tok in cite.parse_numbers(value):
+        for tok in cite.parse_numbers(value, language):
             yield tok.value / 100 if tok.percent else tok.value
         for word in wordnum.parse(value):         # F3: "one in ten" written by the junior
             yield word.value / 100 if word.kind in ('percent', 'points') else word.value
     elif isinstance(value, Mapping):
         for v in value.values():
-            yield from _walk_numbers(v)
+            yield from _walk_numbers(v, language)
     elif isinstance(value, list):
         for v in value:
-            yield from _walk_numbers(v)
+            yield from _walk_numbers(v, language)
 
 
 # WP-A9 (H2): paths of a result that a free text never cites. They are a result's internals
@@ -550,6 +554,10 @@ def _fraction_forms(v: float) -> tuple:
     return (v,)
 
 
+# The literals written in the study language (review round 4, E4-6).
+STUDY_LANGUAGE_LITERALS = ('user_words', 'user_text', 'criterion_option')
+
+
 class Pool:
     """Numbers a text may cite: current results, then literals, then stale results.
 
@@ -569,6 +577,9 @@ class Pool:
                  data_card: Mapping | None = None, *, proposed: Any = None,
                  scope: Iterable[str] | None = None):
         self.current, self.stale, self.literal = [], [], []
+        # Review round 4 (E4-6): the study language reads the numbers of its texts (a French
+        # text writes "1,286" for 1.286, never for 1,286).
+        self.language = 'fr' if view.get('language') == 'fr' else 'en'
         # Withdrawn and superseded proposals (F3): never literals; only named in the
         # finding when an untraceable number repeats one of their figures.
         self.retired = []
@@ -767,7 +778,9 @@ class Pool:
             if isinstance(clock, str) and clock and cite.is_number(start):
                 self.partition_facts.append({
                     'id': 'partition.order.final_start', 'value': float(start),
-                    'before': re.compile(rf'(?<![\w.]){re.escape(clock)}\s*$'), 'after': None})
+                    # Review round 4: one space between the clock and the value, as the
+                    # limit writes it (a masked date in between is not the limit's context).
+                    'before': re.compile(rf'(?<![\w.]){re.escape(clock)}\s?$'), 'after': None})
             if isinstance(item.get('n_rows'), int) and not isinstance(item['n_rows'], bool):
                 self.partition_facts.append({
                     'id': 'partition.training_exclusions.n_rows', 'value': float(item['n_rows']),
@@ -778,7 +791,11 @@ class Pool:
         fraction may also be written as its complement, or as a whole number of percent
         ("70/30" for a validation fraction of 0.3), never another number of the value as a
         percentage ("capacity:100" does not allow "100%")."""
-        for v in _walk_numbers(_rule_spaced(value)):
+        # Review round 4 (E4-6): the junior's words and texts, and the engine's texts in the
+        # study language, are read in that language; recorded values and the case's own
+        # statements as written.
+        language = self.language if kind in STUDY_LANGUAGE_LITERALS else None
+        for v in _walk_numbers(_rule_spaced(value), language):
             for form in (_fraction_forms(v) if forms else (v,)):
                 self.literal.append({'source': kind, 'id': source, 'value': form})
 
@@ -979,6 +996,33 @@ GLUED_NUMBER = re.compile(r'(?<=[^\W\d_]{2})(\d+(?:[.,]\d+)?)(?![\w])(\s?%)?')
 HEX_IDENTIFIER = re.compile(r'\b(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)[0-9a-f]{8,}\b', re.I)
 
 
+# Review round 4: a number with a magnitude suffix or an exponent ("241k", "1.5M", "2bn",
+# "241e3") is the number it scales to, at the precision it shows ("241k" is 241,000 to the
+# nearest thousand: ``decimals`` is negative), so it is traced like any other number, and
+# reported when it matches nothing; it was neither before.
+SCALED_NUMBER = re.compile(r'(?<![\w.,])([-\u2212](?=\d))?(\d+(?:[.,]\d+)?)'
+                           r'(?:[eE]([-+]?\d{1,3})|(k|K|M|bn))(?![\w])(\s?%)?')
+MAGNITUDE = {'k': 3, 'K': 3, 'M': 6, 'bn': 9}
+
+
+def scaled_numbers(text: str) -> list[cite.Token]:
+    """The numbers of ``text`` written with a magnitude suffix or an exponent
+    (:data:`SCALED_NUMBER`), as tokens; a hexadecimal identifier is not one."""
+    import decimal
+    text = HEX_IDENTIFIER.sub(lambda m: ' ' * len(m.group(0)), text)
+    out = []
+    for m in SCALED_NUMBER.finditer(text):
+        body = m.group(2).replace(',', '.')
+        exponent = int(m.group(3)) if m.group(3) is not None else MAGNITUDE[m.group(4)]
+        decimals = (len(body.split('.')[1]) if '.' in body else 0) - exponent
+        value = float(decimal.Decimal(body).scaleb(exponent))
+        if m.group(1):
+            value = -value
+        out.append(cite.Token(m.group(0), value, decimals, bool(m.group(5)), m.start(),
+                              m.end()))
+    return out
+
+
 def glued_numbers(text: str) -> list[cite.Token]:
     """The numbers glued after a word (:data:`GLUED_NUMBER`), as tokens."""
     text = HEX_IDENTIFIER.sub(lambda m: ' ' * len(m.group(0)), text)
@@ -1041,14 +1085,23 @@ def _trace_words(pool: Pool, masked: str, word: wordnum.WordNumber, where: str,
                                 value=word.value, location=at, **extra))
 
 
-def trace_text(pool: Pool, text: str, where: str, locate=None) -> tuple[list[dict], list[dict]]:
+def trace_text(pool: Pool, text: str, where: str, locate=None, *,
+               language: str | None = None) -> tuple[list[dict], list[dict]]:
     """Trace every number of ``text``. ``locate`` (optional) maps an offset of ``text`` to
-    the ``location`` of a finding (C10)."""
+    the ``location`` of a finding (C10). ``language`` is the language the text is written in
+    (review round 4, E4-6: in French a comma is always the decimal separator,
+    :func:`mlkit.study.cite.parse_numbers`); by default the study language of the pool."""
+    language = language or getattr(pool, 'language', None)
     findings, traced = [], []
     masked = _masked(text)
     scopes: dict[tuple[int, int], tuple] = {}
     identifiers = {m.start(1) for m in RULE_IDENTIFIER.finditer(masked)}
-    items = sorted([(t.start, 0, t) for t in cite.parse_numbers(masked) + glued_numbers(masked)]
+    scaled = scaled_numbers(masked)
+    # Review round 4: "1.5M" is one number, not "1" followed by ".5M".
+    inside = [(t.start, t.end) for t in scaled]
+    plain = [t for t in cite.parse_numbers(masked, language) + glued_numbers(masked)
+             if not any(a <= t.start < b for a, b in inside)]
+    items = sorted([(t.start, 0, t) for t in plain + scaled]
                    + [(w.start, 1, w) for w in wordnum.parse(masked, pool.units)],
                    key=lambda x: x[:2])
     # v0.3 (WP-J): "333 of 459" (two counts of one group, its name in another language or
@@ -1174,9 +1227,10 @@ def study_pool(study, *, view: Mapping | None = None, user_texts: Iterable[str] 
                 proposed=proposed, scope=scope)
 
 
-def number_findings(pool: Pool, text: str, where: str) -> list[dict]:
+def number_findings(pool: Pool, text: str, where: str, *,
+                    language: str | None = None) -> list[dict]:
     """The findings of :func:`trace_text` that refuse a number (:data:`NUMBER_CODES`)."""
-    findings, _ = trace_text(pool, text, where)
+    findings, _ = trace_text(pool, text, where, language=language)
     return [f for f in findings if f['code'] in NUMBER_CODES]
 
 

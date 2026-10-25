@@ -297,10 +297,21 @@ terms:
     term: Sample
     term_fr: échantillon
     definition: A set of rows drawn from the population the study is about; a figure computed on it would move with another sample of the same size. For example, the development set is one sample of the clients, and the holdout another one.
+  # Review round 4 (E4-5): the explicit plans of review-v1 studies that follow time.
+  forward_chaining:
+    term: Forward-chaining cross-validation
+    term_fr: "validation croisée progressive (forward chaining)"
+    definition: Cross-validation that follows the order of prediction time. The development rows are cut into consecutive windows; each later window is scored once by a model fitted only on earlier rows whose outcome was already known, and the first window, the warm-up, only trains and is never scored. A choice made with it is still optimistic. For example, the clients of the third window are scored by a model fitted on the clients of the first two windows, never on later ones.
+    definition_fr: "Une validation croisée qui suit l'ordre du moment de la prédiction. Les lignes de développement sont découpées en fenêtres successives ; chaque fenêtre suivante est évaluée une fois par un modèle ajusté seulement sur des lignes plus anciennes dont le résultat était déjà connu, et la première fenêtre, la période d'amorçage, sert seulement à l'entraînement et n'est jamais évaluée. Un choix fait avec elle reste optimiste. Par exemple, les clients de la troisième fenêtre sont évalués par un modèle ajusté sur les clients des deux premières fenêtres, jamais sur des fenêtres plus récentes."
 # Regression study (M3). A regression study hides the binary-only terms below and reads
 # ``regression_terms`` where its definitions differ or are new (mlkit.study.texts).
 binary_only: [base_rate, class_imbalance, stratified_split, logistic_regression, score, policy, threshold, capacity, precision, recall, volume, tie_at_cut, auc, average_precision, lift, calibration, wilson_interval, confusion_matrix, gain_curve, roc_curve, brier_score]
 regression_terms:
+  forward_chaining:
+    term: Forward-chaining cross-validation
+    term_fr: "validation croisée progressive (forward chaining)"
+    definition: Cross-validation that follows the order of prediction time. The development rows are cut into consecutive windows; each later window is predicted once by a model fitted only on earlier rows whose target was already known, and the first window, the warm-up, only trains and is never predicted. A choice made with it is still optimistic. For example, the cars of the third window are predicted by a model fitted on the cars of the first two windows, never on later ones.
+    definition_fr: "Une validation croisée qui suit l'ordre du moment de la prédiction. Les lignes de développement sont découpées en fenêtres successives ; chaque fenêtre suivante est prédite une fois par un modèle ajusté seulement sur des lignes plus anciennes dont la cible était déjà connue, et la première fenêtre, la période d'amorçage, sert seulement à l'entraînement et n'est jamais prédite. Un choix fait avec elle reste optimiste. Par exemple, les voitures de la troisième fenêtre sont prédites par un modèle ajusté sur les voitures des deux premières fenêtres, jamais sur des fenêtres plus récentes."
   success_criterion:
     term: Success criterion
     term_fr: "critère de succès"

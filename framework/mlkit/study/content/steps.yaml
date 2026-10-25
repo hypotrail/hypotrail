@@ -190,3 +190,24 @@ regression_cv_steps:
     interpretation: "The linear model's MAE minus the baseline's is {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} out of fold, between {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} and {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} on resamples of those rows. Its mean residual (bias) is {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}}. These rows were used for the choice, so the figures are optimistic and are not a forecast."
   conclusion:
     interpretation: The conclusion rests on out-of-fold figures of rows used for the choice, and on the final test once it is opened.
+# Review round 4 (E4-5): a review-v1 plan that chains forward in time (``forward_chaining``,
+# ``ordered_retrospective``), merged over the cross-validation texts: each later window is
+# scored by models fitted on earlier rows only, and the warm-up window is never scored.
+forward_steps:
+  split:
+    concept: forward_chaining
+    context: The folds are fixed before any exploration of the outcome, in the order of prediction time. Each fold scores a later window of development rows with a model fitted only on earlier rows whose outcome was known before that window; the earliest window, the warm-up, trains the first fold and is never scored.
+    method: Windows of prediction time, with the recorded gap between the rows a model is fitted on and the window it scores; a training row whose outcome arrives inside the window is left out of that fold. The rows read are recorded as exposure.
+    interpretation: "{{slot:split:folds|int}} folds over {{slot:split:n_rows|int}} development rows: {{slot:split:n_scored|int}} rows are scored once, out of fold, and {{slot:split:n_warmup|int}} warm-up rows only train."
+  models:
+    context: A constant baseline and a logistic model are fitted fold by fold; each fold is scored by models fitted on earlier rows only.
+    method: The out-of-fold predictions of every scored row are stored (the warm-up rows have none), so a new policy never requires a refit.
+regression_forward_steps:
+  split:
+    concept: forward_chaining
+    context: The folds are fixed before any exploration of the target, in the order of prediction time. Each fold predicts a later window of development rows with a model fitted only on earlier rows whose target was known before that window; the earliest window, the warm-up, trains the first fold and is never predicted.
+    method: Windows of prediction time, with the recorded gap between the rows a model is fitted on and the window it predicts; a training row whose target arrives inside the window is left out of that fold. The rows read are recorded as exposure.
+    interpretation: "{{slot:split:folds|int}} folds over {{slot:split:n_rows|int}} development rows: {{slot:split:n_scored|int}} rows are predicted once, out of fold, and {{slot:split:n_warmup|int}} warm-up rows only train."
+  models:
+    context: A mean baseline and a linear model are fitted fold by fold; each fold is predicted by models fitted on earlier rows only.
+    method: The out-of-fold predictions of every predicted row are stored (the warm-up rows have none), so comparing and choosing a model never requires a refit.

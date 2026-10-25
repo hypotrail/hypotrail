@@ -293,8 +293,9 @@ cv_activities:
     label: Cross-validation folds
     glossary: cross_validation
     highlights:
-      - {path: n_rows, label: Development rows, fmt: int}
-      - {path: folds, label: Folds (each row predicted once, by a model fitted on the other folds), fmt: int}
+      - {path: n_rows, label: Development rows in the folds, fmt: int}
+      - {path: training_exclusions.n_rows, label: Development rows left out for delayed labels, fmt: int}
+      - {path: folds, label: "Folds (each row predicted once, by a model fitted on the other folds)", fmt: int}
       - {path: groups.n_groups, label: Distinct groups, fmt: int}
       - {path: duplicates.n_groups, label: Groups of identical records kept in one fold, fmt: int}
     tables:
@@ -309,14 +310,81 @@ regression_cv_activities:
     label: Cross-validation folds
     glossary: cross_validation
     highlights:
-      - {path: n_rows, label: Development rows, fmt: int}
-      - {path: folds, label: Folds (each row predicted once, by a model fitted on the other folds), fmt: int}
+      - {path: n_rows, label: Development rows in the folds, fmt: int}
+      - {path: training_exclusions.n_rows, label: Development rows left out for delayed labels, fmt: int}
+      - {path: folds, label: "Folds (each row predicted once, by a model fitted on the other folds)", fmt: int}
       - {path: groups.n_groups, label: Distinct groups, fmt: int}
     tables:
       - rows: fold_rows
         columns:
           - {key: fold, label: Fold, fmt: int}
           - {key: n_rows, label: Rows, fmt: int}
+# Review round 4 (E4-5): a plan that chains forward in time (``texts.FORWARD_METHODS``):
+# each later window is scored once by models fitted on earlier rows only; the warm-up rows
+# train and are never scored.
+forward_activities:
+  split:
+    label: Forward-chaining folds
+    glossary: forward_chaining
+    highlights:
+      - {path: n_rows, label: Development rows in the folds, fmt: int}
+      - {path: training_exclusions.n_rows, label: Development rows left out for delayed labels, fmt: int}
+      - {path: n_scored, label: "Rows scored out of fold (each once, by a model fitted on earlier rows only)", fmt: int}
+      - {path: n_warmup, label: Warm-up rows (they train the first fold and are never scored), fmt: int}
+      - {path: folds, label: Folds (each scores a later window of prediction time), fmt: int}
+      - {path: partitions.validation.n_positive, label: Positive rows among the rows scored, fmt: int}
+      - {path: partitions.validation.rate, label: Positive share among the rows scored, fmt: pct1}
+      - {path: groups.n_groups, label: Distinct groups, fmt: int}
+      - {path: duplicates.n_groups, label: Groups of identical records kept in one fold, fmt: int}
+    tables:
+      - rows: fold_rows
+        columns:
+          - {key: fold, label: Fold, fmt: int}
+          - {key: n_train, label: Rows fitted, fmt: int}
+          - {key: n_rows, label: Rows scored, fmt: int}
+          - {key: n_positive, label: Positive rows, fmt: int}
+          - {key: rate, label: Positive share, fmt: pct1}
+regression_forward_activities:
+  split:
+    label: Forward-chaining folds
+    glossary: forward_chaining
+    highlights:
+      - {path: n_rows, label: Development rows in the folds, fmt: int}
+      - {path: training_exclusions.n_rows, label: Development rows left out for delayed labels, fmt: int}
+      - {path: n_scored, label: "Rows predicted out of fold (each once, by a model fitted on earlier rows only)", fmt: int}
+      - {path: n_warmup, label: Warm-up rows (they train the first fold and are never predicted), fmt: int}
+      - {path: folds, label: Folds (each predicts a later window of prediction time), fmt: int}
+      - {path: groups.n_groups, label: Distinct groups, fmt: int}
+    tables:
+      - rows: fold_rows
+        columns:
+          - {key: fold, label: Fold, fmt: int}
+          - {key: n_train, label: Rows fitted, fmt: int}
+          - {key: n_rows, label: Rows predicted, fmt: int}
+# Review round 4 (E4-5): the labels of the split cards in a French report.
+fr_labels:
+  Cross-validation folds: Plis de validation croisée
+  Forward-chaining folds: Plis de validation croisée progressive
+  Development rows in the folds: Lignes de développement dans les plis
+  Development rows left out for delayed labels: Lignes de développement écartées (étiquettes tardives)
+  Folds (each row predicted once, by a model fitted on the other folds): Plis (chaque ligne prédite une fois, par un modèle ajusté sur les autres plis)
+  Rows scored out of fold (each once, by a model fitted on earlier rows only): Lignes évaluées hors pli (chacune une fois, par un modèle ajusté seulement sur des lignes plus anciennes)
+  Rows predicted out of fold (each once, by a model fitted on earlier rows only): Lignes prédites hors pli (chacune une fois, par un modèle ajusté seulement sur des lignes plus anciennes)
+  Warm-up rows (they train the first fold and are never scored): Lignes d'amorçage (elles entraînent le premier pli et ne sont jamais évaluées)
+  Warm-up rows (they train the first fold and are never predicted): Lignes d'amorçage (elles entraînent le premier pli et ne sont jamais prédites)
+  Folds (each scores a later window of prediction time): Plis (chacun évalue une fenêtre plus récente du moment de la prédiction)
+  Folds (each predicts a later window of prediction time): Plis (chacun prédit une fenêtre plus récente du moment de la prédiction)
+  Positive rows among the rows scored: Lignes positives parmi les lignes évaluées
+  Positive share among the rows scored: Part de positifs parmi les lignes évaluées
+  Distinct groups: Groupes distincts
+  Groups of identical records kept in one fold: Groupes d'enregistrements identiques gardés dans un même pli
+  Fold: Pli
+  Rows fitted: Lignes d'ajustement
+  Rows scored: Lignes évaluées
+  Rows predicted: Lignes prédites
+  Rows: Lignes
+  Positive rows: Lignes positives
+  Positive share: Part de positifs
 cv_labels:
   Target rate on training rows: Target rate on the development rows
   Special values on training rows: Special values on the development rows
