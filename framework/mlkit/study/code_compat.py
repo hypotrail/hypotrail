@@ -63,7 +63,8 @@ ATTESTATIONS: tuple[dict, ...] = (
                      'framework/tests/study/code_compat_evidence.py',
                      'docs/handoff/LIBRARIES-V1.md#source-compatibility-of-existing-studies: '
                      'the same 95 commands on four temporary studies (synthetic binary '
-                     'holdout, synthetic binary 5-fold, a public regression case holdout, '
+                     'holdout, synthetic binary 5-fold, the committed regression use case '
+                     'with the default holdout, '
                      'synthetic regression 5-fold, each to an opened final test with '
                      'diag.final_test) with the 506180a and 621d607 engines: 73 results with '
                      'byte-identical blobs and params; 53 with byte-identical values, the 20 '
@@ -87,6 +88,73 @@ ATTESTATIONS: tuple[dict, ...] = (
                      'docs/handoff/LIBRARIES-V1.md#source-compatibility-of-existing-studies: '
                      'the same comparison as the mlkit.study.activities edge of the same '
                      'commits.'],
+    },
+    # Review 2026-10-24 round 2 (delayed labels): activities.py leaves the development rows
+    # of ``partition.training_exclusions`` out of every activity but the structural
+    # inspections. With no exclusion (every study of these engines but a review-v1 study whose
+    # outcome clock leaves rows out) nothing it plans or computes changes; a study with
+    # exclusions is not current anyway (``partition.ignores_exclusions``). Attested only after
+    # the byte comparison of both engines matched. Not attested: predictor.capture (its
+    # predictor and computation ids hash the code fingerprint) and diagnostics.population
+    # (its Evidently statistics and snapshot are not reproducible bit for bit).
+    {
+        'module': 'mlkit.study.activities',
+        'from_sha256': 'd6806ce3ff8f40c90eec7342c4ea2693a87c39a387a660dc1633364edd5c1f10',
+        'to_sha256': 'b7c994d2e88edba8156c47756c0c43a496f0e04d4f7005bc1d9014ab639a48c1',
+        'activities': ['split', 'eda.target_rate', 'eda.special_values', 'eda.rate_by',
+                       'eda.target_summary', 'eda.mean_by', 'eda.distribution', 'eda.quality',
+                       'eda.single_feature_signal', 'eda.correlation', 'fit.baseline',
+                       'fit.logistic', 'fit.linear', 'fit.variant', 'policy.evaluation',
+                       'policy.inspect', 'evaluate.regression', 'diag.binary',
+                       'diag.regression', 'final_test.evaluation', 'diag.final_test'],
+        'reason': ('The delayed-label fix adds the training-exclusion identity key, row filter '
+                   'and refusal, each taken only when partition.training_exclusions names at '
+                   'least one row; a study without such rows plans and computes exactly as '
+                   'with the 818995c engine.'),
+        'evidence': ['framework/tests/study/test_review_round2_training_exclusions.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'docs/handoff/LIBRARIES-V1.md#delayed-labels-review-round-2: the same '
+                     'commands on six temporary studies (the four of E1 plus a review-v1 '
+                     'independent and a review-v1 future study without exclusions) with the '
+                     '818995c engine and the current one; every result byte-identical or '
+                     'identical up to upstream ids, every leaf recomputed in the 818995c '
+                     'studies byte-identical, every promoted result current.'],
+    },
+    {
+        'module': 'mlkit.study.activities',
+        'from_sha256': 'b04e5fad6c3ae1e9d563d086a879422cce372e79593bec2b31eaebb098d3f30e',
+        'to_sha256': 'b7c994d2e88edba8156c47756c0c43a496f0e04d4f7005bc1d9014ab639a48c1',
+        'activities': ['diag.final_test'],
+        'reason': ('The reviewed pre-WP-J edge (to the 818995c bytes) carried to the current '
+                   'bytes: the delayed-label fix changes nothing diag.final_test plans or '
+                   'computes in a study without training exclusions.'),
+        'evidence': ['framework/tests/study/test_v03_wp_j_engine.py',
+                     'framework/tests/study/test_reliability_j4_j7.py',
+                     'framework/tests/study/test_review_round2_training_exclusions.py',
+                     'docs/handoff/LIBRARIES-V1.md#delayed-labels-review-round-2: '
+                     'diag.final_test byte-identical between the 818995c and current '
+                     'engines.'],
+    },
+    {
+        'module': 'mlkit.study.activities',
+        'from_sha256': '3065f4d623f1ea2346c43ef27c0dd0f9a948c8eb007355c9cb625967b17cc9e1',
+        'to_sha256': 'b7c994d2e88edba8156c47756c0c43a496f0e04d4f7005bc1d9014ab639a48c1',
+        'activities': ['split', 'eda.target_rate', 'eda.special_values', 'eda.rate_by',
+                       'eda.target_summary', 'eda.mean_by', 'eda.distribution', 'eda.quality',
+                       'eda.single_feature_signal', 'eda.correlation', 'fit.baseline',
+                       'fit.logistic', 'fit.linear', 'fit.variant', 'policy.evaluation',
+                       'policy.inspect', 'evaluate.regression', 'diag.binary',
+                       'diag.regression', 'final_test.evaluation', 'diag.final_test'],
+        'reason': ('The library-v1 change (see the 506180a edges above) and the delayed-label '
+                   'fix, whose code paths are taken only when a predictor.capture result is '
+                   'current or partition.training_exclusions names at least one row; a study '
+                   'of the 506180a engine without such rows plans and computes exactly as '
+                   'before.'),
+        'evidence': ['framework/tests/study/test_review_round2_training_exclusions.py',
+                     'framework/tests/study/test_code_compat_library_v1.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'docs/handoff/LIBRARIES-V1.md#delayed-labels-review-round-2: the same '
+                     'comparison with the 506180a engine (the same six studies).'],
     },
     {
         'module': 'mlkit.study.diagnostics',

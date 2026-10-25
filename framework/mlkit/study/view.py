@@ -142,6 +142,8 @@ SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds',
                     'inconclusive_without_choice',
                     'delegated_decisions', 'unconfirmed_decisions',
                     'uncertain_features_included', 'high_cardinality_grouping',
+                    # Review 2026-10-24 round 2: rows left out for a delayed label.
+                    'delayed_labels_excluded',
                     'validation_is_not_independent', 'final_test_sealed')
 SUMMARY_TOP = 5
 

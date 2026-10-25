@@ -72,6 +72,10 @@ Unknown keys are refused at every level. Existing cases without it remain valid.
   `by` is a non-target numeric/integer column, or unambiguous `line`. Future
   prediction requires two documented clocks; file order alone is insufficient.
   Declaring clock semantics does not establish that the data actually meet them.
+  Under `review-v1`, a development row whose outcome clock is at or after the final
+  start has a delayed label: it is kept as a development row but never trained,
+  explored with the target, validated or refitted on (`partition.training_exclusions`,
+  `CLI-CONTRACT.md` § Review-v1 evaluation plan). A null outcome clock excludes nothing.
 - `dependencies`: `{kind, group_column, group_goal, status, source}`. Kind is
   `independent`, `grouped`, `temporal`, `grouped_temporal` or `unknown`. Grouped modes
   require a non-target column and `group_goal: unseen_groups`; other modes require

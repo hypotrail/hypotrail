@@ -46,6 +46,17 @@ the optional ``opening`` record (:data:`OPENING_KEYS`): the final test is opened
 ``final_test.evaluation`` sets the status to ``opened`` when it is reserved, before any
 final-test row is read, so a crash can never let it be scored twice. The other keys do not
 change.
+
+Delayed labels (review-v1 temporal profile with an outcome clock, J1). A development row
+whose outcome becomes available at or after the final boundary (``order.final_start``) has
+a label that is not known at the simulated decision time. :func:`assign` lists those rows
+in ``training_exclusions`` (:data:`TRAINING_EXCLUSIONS_KEYS`, their keys as a blob); they
+stay development rows (structural inspection that reads no target still sees them, since
+their predictors are known at decision time), but no split, training-partition
+exploration, fit, fold, validation score, final refit or predictor capture reads them
+(review 2026-10-24, round 2): :func:`training_exclusions` names them in the identity of
+every such activity (``inputs.training_exclusions``, only when there is at least one, so
+the identities of every other study are unchanged), and :func:`excluded_keys` reads them.
 """
 from __future__ import annotations
 
@@ -88,6 +99,13 @@ GROUPS_KEYS = ('policy', 'n_groups', 'n_rows', 'moved_rows')
 # rule would otherwise have sealed (temporal: the ones in the tail; stratified: every one,
 # since each could have been drawn), kept on the development side instead.
 PRIOR_EXPOSED_KEYS = ('path', 'sha256', 'declared_rows', 'excluded_rows')
+# Review-v1 (J1): the development rows kept out of training for a delayed label; ``row_keys``
+# is set by ``init`` (the blob of their keys), ``reasons`` counts them by reason.
+TRAINING_EXCLUSIONS_KEYS = ('n_rows', 'reasons', 'row_keys')
+DELAYED_LABEL_REASON = 'outcome_not_available_before_final'
+# The activities that still read those rows: the structural inspections, which read no target
+# and no split (``activities.STRUCTURAL_EDA``; kept here so readers need no activity module).
+EXCLUSION_EXEMPT_ACTIVITIES = ('eda.quality', 'eda.correlation')
 PART_KEYS = ('n_rows', 'row_keys')
 CHECK_KEYS = ('status', 'n_rows', 'checks', 'reveals')
 CHECK_ITEM_KEYS = ('check', 'column', 'failing_rows')
@@ -365,7 +383,7 @@ def _assign_review(case: Case, index, frame, *, fraction: float, seed: int) -> d
             delayed = [key for key in development if outcome[key] >= start]
             training_excluded.extend(delayed)
             if delayed:
-                exclusion_reasons['outcome_not_available_before_final'] = delayed
+                exclusion_reasons[DELAYED_LABEL_REASON] = delayed
         elif future:
             raise StudyError('unsupported_capability',
                              'A future final partition needs an outcome-availability clock.',
@@ -553,6 +571,58 @@ def development_keys(read_blob: Callable[[str], bytes], development: Mapping | N
                                             'recorded number of rows.',
                          details={'expected': development['n_rows'], 'actual': len(keys)})
     return keys
+
+
+def training_exclusions(state: Mapping) -> dict | None:
+    """``{n_rows, reasons, row_keys}``: the development rows no training, selection or
+    validation reads (a delayed label, review-v1), as an activity's identity records them;
+    None when the study has none (every legacy study, every study without an outcome
+    clock, and a study whose outcome clock leaves no row out), so their identities stay
+    exactly as before."""
+    part = of(state)
+    record = (part or {}).get('training_exclusions')
+    if not isinstance(record, Mapping) or not record.get('n_rows'):
+        return None
+    if not isinstance(record.get('row_keys'), str):
+        raise StudyError('integrity_error', 'The training exclusions name no row-key blob.',
+                         details={'n_rows': record.get('n_rows')})
+    return {'n_rows': int(record['n_rows']),
+            'reasons': [dict(r) for r in record.get('reasons') or []],
+            'row_keys': record['row_keys']}
+
+
+def ignores_exclusions(state: Mapping, entry: Mapping) -> bool:
+    """Whether registry ``entry`` was computed without the study's training exclusions
+    although its activity must leave them out (a result computed before the review 2026-10-24
+    round-2 fix, in a study whose outcome clock leaves rows out): such a result is not
+    current. Always False in a study without exclusions."""
+    exclusions = training_exclusions(state)
+    if exclusions is None or entry.get('activity') in EXCLUSION_EXEMPT_ACTIVITIES:
+        return False
+    return (entry.get('inputs') or {}).get('training_exclusions') != exclusions
+
+
+def excluded_keys(read_blob: Callable[[str], bytes], exclusions: Mapping | None) -> set[str]:
+    """The row keys named by ``exclusions`` (from :func:`training_exclusions`), verified
+    against their count; empty when there are none."""
+    if not exclusions:
+        return set()
+    keys = rec.parse_row_keys(read_blob(exclusions['row_keys']))
+    if len(set(keys)) != exclusions['n_rows']:
+        raise StudyError('integrity_error', 'The training-exclusions blob does not hold the '
+                                            'recorded number of rows.',
+                         details={'expected': exclusions['n_rows'], 'actual': len(set(keys))})
+    return set(keys)
+
+
+def delayed_label_rows(state: Mapping) -> int:
+    """How many development rows are kept out of training for a delayed label (0 when
+    none)."""
+    exclusions = training_exclusions(state)
+    if not exclusions:
+        return 0
+    return sum(int(r.get('count') or 0) for r in exclusions['reasons']
+               if r.get('reason') == DELAYED_LABEL_REASON)
 
 
 STATUS_VIEW_KEYS = ('status', 'rows', 'method', 'fraction', 'development_rows', 'schema_check',

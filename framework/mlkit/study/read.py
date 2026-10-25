@@ -287,6 +287,11 @@ class Study:
                 changed = self.code_changed(entry)
                 if changed:
                     reason['code_changed'] = changed
+                # Review 2026-10-24 round 2: computed with rows whose label is delayed.
+                from .partition import ignores_exclusions
+                delayed = ignores_exclusions(state, entry)
+                if delayed:
+                    reason['delayed_labels_included'] = True
                 parents = [p for p in rec.upstream(entry, history=False)
                            if not self.currency(p)['current']]
                 if parents:
@@ -296,6 +301,9 @@ class Study:
                     if changed:
                         text.append(f'the code of {entry["activity"]} changed since it was '
                                     'computed (§3.7 row 11)')
+                    if delayed:
+                        text.append('it was computed with development rows whose outcome is '
+                                    'known only after the final boundary')
                     if parents:
                         text.append('it was computed from a result that is no longer current')
                     reason = {'reason': '; '.join(text), 'since': None, **reason}

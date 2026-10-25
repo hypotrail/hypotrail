@@ -936,11 +936,15 @@ def make_regression_case(out_dir, seed: int = 20261018, n_rows: int = 600,
     return {'data': data_path, 'case': case_path, 'truth': truth_path}
 
 
-def make_review_case(out_dir, *, future: bool = False, n_rows: int = 300) -> dict[str, Path]:
+def make_review_case(out_dir, *, future: bool = False, n_rows: int = 300,
+                     outcome_delay: int = 2) -> dict[str, Path]:
     """J0 fixtures: independent comparison or explicitly documented synthetic clocks.
 
     The future case is a contract fixture for J1, not a claim that J0 implements its
-    final partition. Every clock is planted independently of the generated target.
+    final partition. Every clock is planted independently of the generated target: the
+    outcome of a row is known ``outcome_delay`` ticks after its prediction (2 by default, so
+    the two development rows just before the final boundary have a delayed label; 0 leaves
+    no row out).
     """
     import csv
     import io
@@ -953,7 +957,7 @@ def make_review_case(out_dir, *, future: bool = False, n_rows: int = 300) -> dic
                                delimiter=SEP))
         rows[0] += ['prediction_tick', 'outcome_tick']
         for tick, row in enumerate(rows[1:], start=1):
-            row += [str(tick), str(tick + 2)]
+            row += [str(tick), str(tick + outcome_delay)]
         buf = io.StringIO(newline='')
         csv.writer(buf, delimiter=SEP, lineterminator='\n').writerows(rows)
         paths['data'].write_text(buf.getvalue(), encoding='utf-8')
@@ -990,7 +994,8 @@ def make_review_case(out_dir, *, future: bool = False, n_rows: int = 300) -> dic
     if future:
         truth = json.loads(paths['truth'].read_text(encoding='utf-8'))
         truth['data'].update(sha256=document['dataset']['sha256'], columns=rows[0])
-        truth['review_clocks'] = {'prediction': 'row ordinal', 'outcome': 'row ordinal + 2'}
+        truth['review_clocks'] = {'prediction': 'row ordinal',
+                                  'outcome': f'row ordinal + {outcome_delay}'}
         paths['truth'].write_text(json.dumps(truth, indent=2) + '\n', encoding='utf-8')
     return paths
 

@@ -1,9 +1,16 @@
-"""Reproducible evidence of the library-v1 attestations of ``mlkit.study.code_compat`` (E1).
+"""Reproducible evidence of the attestations of ``mlkit.study.code_compat`` (E1, round 2).
 
-The same commands are run on the same temporary studies by two engines (the 506180a engine
-and the current one), then the registry results are compared slot by slot; finally the
-current engine recomputes the leaf activities inside copies of the old studies, where every
-upstream result keeps its old id, and those results are compared byte for byte.
+The same commands are run on the same temporary studies by two engines (an old engine, the
+506180a one for the library-v1 edges and also, since review round 2, the 818995c one, and
+the current one), then the registry results are compared slot by slot; finally the current
+engine recomputes the leaf activities inside copies of the old studies, where every upstream
+result keeps its old id, and those results are compared byte for byte.
+
+Review round 2 (delayed labels) adds two review-v1 studies without training exclusions (an
+independent synthetic case, and a future case whose outcome is known at prediction time, so
+the outcome clock leaves no row out), and ``diagnostics.population`` in every study when the
+old engine has it (818995c, not 506180a). Which of these an engine runs is decided once from
+the old engine's files (:func:`capabilities`), so both engines run the same commands.
 
 Run it from a checkout of the current engine (temporary folders only; nothing in the
 repository or in a real study is touched)::
@@ -47,6 +54,38 @@ STUDIES = {
     'reg-cv': ('regression', 'case-reg', {'method': 'kfold_quantile', 'folds': 5, 'seed': 7},
                [STRONG, EBM], 'floor_area', 'branch_type'),
 }
+# Review round 2: review-v1 studies without training exclusions (same tuple). A review-v1
+# variant declared after scores cites the current diagnostic; the tuned and family variants
+# are left out (their nested plan is not the subject here).
+REVIEW_STRONG = dict(STRONG, origin='planned', diagnostic_result_id=None)
+REVIEW_STUDIES = {
+    'rev-ind': ('binary', 'case-rev-ind', None, [REVIEW_STRONG], 'visit_band', 'home_branch'),
+    'rev-fut0': ('binary', 'case-rev-fut0', None, [REVIEW_STRONG], 'visit_band',
+                 'home_branch'),
+}
+REVIEW_CRITERION = {'metric': 'precision_gain', 'min_points': 5,
+                    'decision_rule': 'point_estimate',
+                    'selection': {'metric': 'precision', 'rule': 'share:0.2',
+                                  'scope': 'evaluation_window', 'batch_column': None,
+                                  'aggregation': 'pooled_counts'}}
+REV_POLICY = ('policy.evaluate', '--rule', 'share:0.2', '--rule', 'threshold:0.3')
+POPULATION = ('diagnostics.population',)
+# Run and reported, never attested: its Evidently statistics differ in the last bits between
+# two runs and its snapshot blob is not reproducible, so it is not byte-identical (round 2).
+UNATTESTED = ('diagnostics.population',)
+
+
+def capabilities(old_root: Path) -> dict:
+    """What both engines can run: review-v1 studies, and ``diagnostics.population``."""
+    study = Path(old_root) / 'framework' / 'mlkit' / 'study'
+    assurance = study / 'assurance.py'
+    return {'review': assurance.is_file() and 'review-v1' in assurance.read_text('utf-8'),
+            'population': (Path(old_root) / 'framework' / 'mlkit' / 'contracts'
+                           / 'population.py').is_file()}
+
+
+def studies(caps: dict) -> dict:
+    return {**STUDIES, **(REVIEW_STUDIES if caps.get('review') else {})}
 
 
 def canon(value) -> str:
@@ -62,13 +101,16 @@ def make_cases(out: Path) -> Path:
     fk.make_case(out / 'case-bin', n_rows=1500)
     fk.make_case(out / 'case-reg', task='regression', n_rows=900)
     shutil.copytree(REPO / 'use-cases' / 'auto-mpg', out / 'auto-mpg')
+    fk._module.make_review_case(out / 'case-rev-ind', n_rows=600)
+    fk._module.make_review_case(out / 'case-rev-fut0', future=True, n_rows=600,
+                                outcome_delay=0)
     return out
 
 
 # --- one engine runs the flows ---------------------------------------------------------------
 
-def drive(root: Path, cases: Path, out: Path) -> list:
-    """Run every study of :data:`STUDIES` with the engine of ``root`` (its own Python)."""
+def drive(root: Path, cases: Path, out: Path, caps: dict | None = None) -> list:
+    """Run every study of :func:`studies` with the engine of ``root`` (its own Python)."""
     import inspect
     sys.path[:0] = [str(root / 'framework'), str(root / 'framework' / 'tests' / 'study')]
     import mlkit
@@ -97,15 +139,31 @@ def drive(root: Path, cases: Path, out: Path) -> list:
         log.append([f.study.name, 'confirm ' + decision, c.get('ok'),
                     (c.get('error') or {}).get('code')])
 
+    caps = caps or {}
     out.mkdir(parents=True, exist_ok=True)
-    for name, (task, case, split, variants, column, by) in STUDIES.items():
+    for name, (task, case, split, variants, column, by) in studies(caps).items():
         binary = task == 'binary'
+        review = name in REVIEW_STUDIES
         f = Flow(out / name, cases / case, prefix=name[:3])
-        f.init()
-        decide(f, 'prediction_time', 'when the record is created, before the outcome')
+        if review:
+            f.call('init', '--case', cases / case / 'case.yaml', '--study', f.study,
+                   '--reliability-profile', 'review-v1')
+            import yaml
+            contract = yaml.safe_load((cases / case / 'case.yaml').read_text('utf-8'))[
+                'analysis_contract']
+            decide(f, 'prediction_time', contract['prediction_statement'])
+        else:
+            f.init()
+            decide(f, 'prediction_time', 'when the record is created, before the outcome')
         decide(f, 'feature_availability', fk.availability(cases / case))
-        decide(f, 'split', split or f.view()['next_action']['default_value'])
-        f.model_decisions()
+        decide(f, 'split', split or f.view()['next_action']['default_value']
+               or st.b1_default_value(f.state(), 'split'))
+        if review:
+            from mlkit.study import governance
+            decide(f, 'success_criterion', REVIEW_CRITERION)
+            decide(f, 'preprocessing', dict(governance.DEFAULT_PREPROCESSING))
+        else:
+            f.model_decisions()
         run(f, 'split')
         for a in ('eda.target_rate' if binary else 'eda.target_summary', 'eda.special_values',
                   'eda.quality', 'eda.correlation', 'eda.single_feature_signal'):
@@ -119,13 +177,15 @@ def drive(root: Path, cases: Path, out: Path) -> list:
         decide(f, 'model_variant', {'variants': variants})
         for slot in ('fit.variant', 'fit.variant:2', 'fit.variant:3')[:len(variants)]:
             run(f, slot)
+        if caps.get('population'):
+            run(f, *POPULATION)
         if binary:
             run(f, diag)
             run(f, *BIN_INSPECT)
-            run(f, *BIN_POLICY)
+            run(f, *(REV_POLICY if review else BIN_POLICY))
             decide(f, 'model_choice', 'fit.logistic',
                    words='Yes, I choose that model because it ranks the rows best for us')
-            decide(f, 'policy', 'capacity:40',
+            decide(f, 'policy', 'share:0.2' if review else 'capacity:40',
                    words='Yes, I adopt that rule because the desk can make that many calls')
         else:
             run(f, 'evaluate.regression')
@@ -159,7 +219,7 @@ def _changed_modules(a: dict, b: dict) -> list[str]:
     return sorted(m for m in set(ma) | set(mb) if ma.get(m) != mb.get(m))
 
 
-def compare_runs(old_run: Path, new_run: Path) -> list[dict]:
+def compare_runs(old_run: Path, new_run: Path, caps: dict | None = None) -> list[dict]:
     """Slot-by-slot comparison of two runs of the same flows.
 
     Result, execution and exposure ids hash the code fingerprint, so a value or input naming
@@ -167,7 +227,7 @@ def compare_runs(old_run: Path, new_run: Path) -> list[dict]:
     params, partition and row count are compared as they are.
     """
     rows = []
-    for name in STUDIES:
+    for name in studies(caps or {}):
         o, n = _entries(old_run / name), _entries(new_run / name)
         assert list(o) == list(n), (name, list(o), list(n))
         ids = {}
@@ -194,19 +254,21 @@ def compare_runs(old_run: Path, new_run: Path) -> list[dict]:
     return rows
 
 
-def leaves(name: str) -> list[tuple]:
+def leaves(name: str, caps: dict | None = None) -> list[tuple]:
     """Activities no other compared result is computed from (so recomputing them keeps every
     upstream id), with the options the flow used."""
-    task, _case, _split, _variants, column, by = STUDIES[name]
+    task, _case, _split, _variants, column, by = studies(caps or {})[name]
+    extra = [POPULATION] if (caps or {}).get('population') else []
     if task == 'binary':
         return [('eda.target_rate',), ('eda.special_values',), ('eda.quality',),
                 ('eda.correlation',), ('eda.single_feature_signal',),
                 ('eda.rate_by', '--column', by), ('eda.distribution', '--column', column),
-                BIN_INSPECT, ('diag.binary',), ('diag.final_test',), BIN_POLICY]
+                BIN_INSPECT, ('diag.binary',), ('diag.final_test',),
+                REV_POLICY if name in REVIEW_STUDIES else BIN_POLICY] + extra
     return [('eda.target_summary',), ('eda.special_values',), ('eda.quality',),
             ('eda.correlation',), ('eda.single_feature_signal',),
             ('eda.mean_by', '--column', by), ('eda.distribution', '--column', column),
-            ('evaluate.regression',), ('diag.regression',), ('diag.final_test',)]
+            ('evaluate.regression',), ('diag.regression',), ('diag.final_test',)] + extra
 
 
 def _slot(args: tuple) -> str:
@@ -215,7 +277,8 @@ def _slot(args: tuple) -> str:
     return f'{slot}:{args[2]}' if len(args) > 2 and args[1] == '--column' else slot
 
 
-def recompute_leaves(old_run: Path, work: Path, cli: str) -> tuple[list[dict], dict]:
+def recompute_leaves(old_run: Path, work: Path, cli: str,
+                     caps: dict | None = None) -> tuple[list[dict], dict]:
     """With the current engine (``cli``), check currency in copies of the old studies, then
     recompute their leaf activities and compare each with the old result byte for byte."""
     def h(study, *args):
@@ -228,7 +291,7 @@ def recompute_leaves(old_run: Path, work: Path, cli: str) -> tuple[list[dict], d
         return json.loads((study / '.hypotrail' / 'registry' / f'{rid}.json').read_text())
     shutil.rmtree(work, ignore_errors=True)
     rows, currency = [], {}
-    for name in STUDIES:
+    for name in studies(caps or {}):
         d = work / name
         shutil.copytree(old_run / name, d)
         promoted = set(json.loads((d / '.hypotrail' / 'state.json').read_text())['current']
@@ -238,7 +301,7 @@ def recompute_leaves(old_run: Path, work: Path, cli: str) -> tuple[list[dict], d
                           'not_current': sorted(r['slot'] for r in ev['results']
                                                 if r['result_id'] in promoted
                                                 and not r.get('current'))}
-        for n, args in enumerate(leaves(name), 1):
+        for n, args in enumerate(leaves(name, caps), 1):
             state = json.loads((d / '.hypotrail' / 'state.json').read_text())
             old_rid = state['current'][_slot(args)]
             out = h(d, 'run', *args, '--request-id', f'leaf-{n}', '--expected-revision',
@@ -261,31 +324,41 @@ def evidence(old_python: str, old_root: Path, work: Path) -> bool:
     shutil.rmtree(work, ignore_errors=True)
     cases = make_cases(work / 'cases')
     me = str(Path(__file__).resolve())
+    caps = capabilities(old_root)
+    print(f'old engine {old_root}: {json.dumps(caps, sort_keys=True)}')
     logs = {}
     for label, python, root in (('old', old_python, old_root), ('new', sys.executable, REPO)):
-        subprocess.run([python, me, 'drive', str(root), str(cases), str(work / label)],
-                       check=True, capture_output=True, text=True)
+        subprocess.run([python, me, 'drive', str(root), str(cases), str(work / label),
+                        json.dumps(caps)], check=True, capture_output=True, text=True)
         logs[label] = json.loads((work / label / 'log.json').read_text())
     ok = logs['old'] == logs['new'] and all(row[2] for row in logs['old'])
     print(f"flows: {len(logs['old'])} commands, identical outcomes: {logs['old'] == logs['new']}"
           f", all succeeded: {all(row[2] for row in logs['old'])}")
-    fresh = compare_runs(work / 'old', work / 'new')
+    fresh = compare_runs(work / 'old', work / 'new', caps)
+    def verdict(r, text):
+        return f'not attested ({text.lower()})' if r.get('activity') in UNATTESTED else text
     for r in fresh:
         print(f"  fresh  {r['study']:<7} {r['key']:<30} "
-              f"{'byte-identical' if r['exact'] else 'identical up to upstream ids' if r['same'] else 'DIFFERENT'}"
-              f"  changed modules: {','.join(r['modules'])}")
-    leaf, currency = recompute_leaves(work / 'old', work / 'leaves', head_cli)
+              + verdict(r, 'byte-identical' if r['exact'] else 'identical up to upstream ids'
+                        if r['same'] else 'DIFFERENT')
+              + f"  changed modules: {','.join(r['modules'])}")
+    leaf, currency = recompute_leaves(work / 'old', work / 'leaves', head_cli, caps)
     for name, info in currency.items():
         print(f"  current at HEAD in {name}: {info['promoted'] - len(info['not_current'])} of "
               f"{info['promoted']} promoted results; not current: {info['not_current']}")
     for r in leaf:
         print(f"  leaf   {r['study']:<7} {r['key']:<30} "
-              f"{'byte-identical' if r['same'] else 'DIFFERENT ' + r.get('refused', '')}")
+              + verdict(r, 'byte-identical' if r['same'] else 'DIFFERENT '
+                        + r.get('refused', '')))
+    skipped = sum(r.get('activity') in UNATTESTED for r in fresh + leaf)
+    fresh = [r for r in fresh if r.get('activity') not in UNATTESTED]
+    leaf = [r for r in leaf if r.get('activity') not in UNATTESTED]
     ok = ok and all(r['same'] for r in fresh) and all(r['same'] for r in leaf) \
-        and not any(info['not_current'] for info in currency.values())
+        and not any(set(info['not_current']) - set(UNATTESTED) for info in currency.values())
     print(f"fresh results: {len(fresh)} ({sum(r['exact'] for r in fresh)} byte-identical, "
           f"{sum(r['same'] and not r['exact'] for r in fresh)} up to upstream ids); leaf "
           f"recomputations: {sum(r['same'] for r in leaf)} of {len(leaf)} byte-identical; "
+          f"{skipped} results of unattested activities left out; "
           f"{'MATCH' if ok else 'MISMATCH'}")
     return ok
 
@@ -293,7 +366,7 @@ def evidence(old_python: str, old_root: Path, work: Path) -> bool:
 if __name__ == '__main__':
     command, *args = sys.argv[1:]
     if command == 'drive':
-        drive(*map(Path, args))
+        drive(*map(Path, args[:3]), json.loads(args[3]) if len(args) > 3 else None)
     elif command == 'evidence':
         sys.exit(0 if evidence(args[0], Path(args[1]), Path(args[2])) else 1)
     else:

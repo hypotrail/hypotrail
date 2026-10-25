@@ -288,6 +288,21 @@ def limit_fr(item: Mapping) -> str:
         return ('Le jeu de validation sert à comparer les modèles et à choisir la règle et son '
                 'seuil ou sa capacité : ses résultats ne sont donc pas une preuve indépendante '
                 'de la performance future.')
+    if kind == 'delayed_labels_excluded':
+        # Review 2026-10-24 round 2: the term first, then an example in the study's clock.
+        n = item.get('n_rows')
+        clock, start = item.get('clock'), item.get('final_start')
+        where = (f'{clock} {st._clock_value(start)}' if clock and start is not None
+                 else 'le début du test final')
+        rows = 'ligne' if n == 1 else 'lignes'
+        return (f"Une étiquette tardive est un résultat connu seulement un certain temps après "
+                f"la prédiction. Ici, {n} {rows} de développement avaient un résultat connu "
+                f"seulement au début du test final ou après ({where}), le moment simulé de la "
+                f"décision : leurs étiquettes n'étaient donc pas encore connues. Elles sont "
+                f"écartées du découpage, de l'exploration du résultat, de chaque ajustement et "
+                f"de ses scores de validation, du réajustement final et du prédicteur capturé. "
+                f"Par exemple, une ligne prédite juste avant {where} dont le résultat arrive "
+                f"après apprendrait au modèle une réponse que personne n'avait à ce moment-là.")
     if kind == 'public_data_already_explored':
         return ("Les données ont été explorées ou publiées avant cette étude : ses lignes ne "
                 "sont pas inédites.")
@@ -382,7 +397,8 @@ def limit_fr(item: Mapping) -> str:
 # The ids :func:`limit_fr` translates (the tests check that the engine emits no other).
 LIMIT_IDS_FR = ('unconfirmed_decisions', 'open_holds', 'conclusion_outdated',
                 'delegated_decisions', 'stale_results', 'adopted_rule_not_evaluated',
-                'validation_is_not_independent', 'public_data_already_explored',
+                'validation_is_not_independent', 'delayed_labels_excluded',
+                'public_data_already_explored',
                 'grouped_split_unsupported', 'no_time_or_entity_identifier',
                 'uncertain_features_included', 'inconclusive_without_choice',
                 'interrupted_executions', 'no_causality', 'workbench_not_tracked',

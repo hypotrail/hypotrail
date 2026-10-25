@@ -1540,6 +1540,41 @@ def cited_stale_results(state: Mapping) -> list[dict]:
     return unique
 
 
+def _clock_value(value) -> str:
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return f'{value:g}' if isinstance(value, (int, float)) else str(value)
+
+
+def delayed_labels_limit(state: Mapping) -> dict | None:
+    """The ``delayed_labels_excluded`` limit (review 2026-10-24 round 2): how many development
+    rows are left out of training, selection and validation because their outcome is known
+    only at or after the final boundary; None when there are none. The text introduces the
+    term, then gives an example in the study's own clock."""
+    from . import partition
+    n = partition.delayed_label_rows(state)
+    if not n:
+        return None
+    part = partition.of(state) or {}
+    order = part.get('order') or {}
+    clock, start = order.get('by'), order.get('final_start')
+    where = (f'{clock} {_clock_value(start)}' if clock and start is not None
+             else 'the start of the final test')
+    rows = 'row' if n == 1 else 'rows'
+    return {'id': 'delayed_labels_excluded', 'n_rows': n,
+            'development_rows': (part.get('development') or {}).get('n_rows'),
+            'clock': clock, 'final_start': start,
+            'text': (f'A delayed label is an outcome that becomes known only some time after '
+                     f'the prediction is made. Here {n} development {rows} had an outcome '
+                     f'known only at or after the start of the final test ({where}), the '
+                     f'moment the decision is simulated, so their labels were not known yet: '
+                     f'they are left out of the split, the exploration of the target, every '
+                     f'fit and its validation scores, the final refit and the captured '
+                     f'predictor. For example, a row predicted just before {where} whose '
+                     f'outcome arrives after it would teach the model an answer nobody had '
+                     f'at that moment.')}
+
+
 def not_yet_defensible(state: dict) -> list[dict]:
     """What the study cannot claim yet, from state only (plan §6)."""
     items = []
@@ -1568,6 +1603,9 @@ def not_yet_defensible(state: dict) -> list[dict]:
                       'text': 'Validation rows are used to compare models and to choose the '
                               'policy and its threshold or capacity, so validation results '
                               'are not independent evidence of future performance.'})
+    delayed = delayed_labels_limit(state)
+    if delayed is not None:
+        items.append(delayed)
     if state['prior_exposure']:
         items.append({'id': 'public_data_already_explored',
                       'text': 'The data were explored or published before this study; its rows '

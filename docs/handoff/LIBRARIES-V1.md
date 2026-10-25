@@ -365,11 +365,98 @@ With the reviewer's drivers, the `506180a` studies (an open binary study, the sa
 final test opened and `diag.final_test`, Auto MPG) are current again at HEAD (9 of 9, 11 of
 11, 8 of 8), including the opened final test, and `check`, `render` and `export handoff` pass.
 
-Any further edit of `activities.py` or `fit.py` (including the merge with `main`) makes these
-edges stop matching: the `506180a` studies lose their current results again unless the
+Any further edit of `activities.py` or `fit.py` (including the merge with `main`; review
+round 2 made one, see the next section) makes these edges stop matching: the `506180a` studies lose their current results again unless the
 comparison is re-run against the new bytes and, if it matches, new edges are added from the
 base digests (no transitivity). `test_the_library_v1_edges_target_the_current_bytes` fails
 then, with that instruction.
+
+## Delayed labels (review round 2)
+
+Pre-existing scientific defect, fixed on top of `818995c`. Under the `review-v1` temporal
+profile with an outcome clock (`analysis_contract.timing.outcome_available_order`),
+`partition.assign` listed the development rows whose outcome is available only at or after the
+final start (their labels were not known at the simulated decision time) and `init` stored
+them as `partition.training_exclusions.row_keys`, and the partition said they were "excluded
+before training", but nothing read them: the split, the exploration of the target, every fit,
+fold, inner tuning, validation score, the final refit and `predictor.capture` used them.
+
+Now (`partition.training_exclusions`, `activities.load`, `CLI-CONTRACT.md` § Review-v1
+evaluation plan):
+
+- every activity except the structural inspections `eda.quality` and `eda.correlation` (no
+  target, no split; the rows' predictors are known at decision time, only their labels are
+  not) records `inputs.training_exclusions` and reads the development rows less those. The
+  split holds none of them (blobs, folds, evaluation plan), so the training-partition
+  exploration, the fits, the folds, the policy and regression evaluations and the diagnostics
+  follow; `final_test.evaluation` refits and `predictor.capture` fits on the development rows
+  less them. The exposure these activities record leaves them out; what was recorded before
+  stays recorded. The AzureML export takes its development rows from the split, so it follows
+  too.
+- visibility: `values.training_exclusions` (`{n_rows, reasons, note}`) on the split and the
+  final evaluation, `values.refit.n_rows` and the capture's `n_train`, and the limit
+  `delayed_labels_excluded` in the status, the summary, the pause and the report: the term
+  first ("A delayed label is an outcome that becomes known only some time after the
+  prediction is made."), the count, then an example in the study's own prediction clock
+  (English and French).
+- a result computed with those rows (before the fix) is not current
+  (`stale_reason.delayed_labels_included`, `partition.ignores_exclusions`), and a plan that
+  would build on it is refused (`precondition_missing`, `computed_without_delayed_labels`)
+  until it is computed again. `final_test.evaluation` runs once: a study with exclusions whose
+  final test was opened before the fix keeps its recorded figures, shown as not current.
+
+Compatibility. The shipped cases declare no outcome clock (`n_rows` 0), so no study of them
+has an exclusion; for every such study nothing the engine plans or computes changes (no key,
+no filter, no refusal: the code paths are taken only when the list is not empty). The edit of
+`activities.py` (`d6806ce3…` → `b7c994d2…`) would still make every result of every existing
+study report `code_changed`, so `mlkit/study/code_compat.py` holds two new exact edges to
+`b7c994d2…`: from the `818995c` digest and from the `506180a` digest, each for the 21
+activities of the base engine (`split`, the nine `eda.*`, the four fits, `policy.evaluation`,
+`policy.inspect`, `evaluate.regression`, `diag.binary`, `diag.regression`,
+`final_test.evaluation`, `diag.final_test`). Not attested: `predictor.capture` (its predictor
+and computation ids hash the code fingerprint, never byte-identical across engines) and
+`diagnostics.population` (its Evidently statistics differ in the last bits between runs and
+its snapshot blob is not reproducible, so there is no byte equality to attest); such results
+computed at `818995c` report `code_changed` and are recomputed by running them again, with the
+consequence for a final evaluation that scored a capture described above. A study whose
+outcome clock leaves rows out is not current whatever the edges say
+(`partition.ignores_exclusions`), which is the intended consequence. The reviewed pre-WP-J
+edge (`b04e5fad…`, `diag.final_test` only) is carried to `b7c994d2…` by a third exact edge, on
+the evidence of that review and of the comparison below (`diag.final_test` byte-identical
+between the `818995c` and current engines); no engine of the `b04e5fad…` digest was run.
+
+Evidence (`framework/tests/study/code_compat_evidence.py`, extended: two review-v1 studies
+without exclusions, an independent synthetic case and a future case whose outcome is known
+at prediction time, and `diagnostics.population` in every study when the old engine has it,
+reported but left out of the verdict). Each engine was a `git archive` of its commit run with
+this checkout's environment (the lock of `818995c` is the current one; every package of the
+`506180a` lock has the same version in it). With the `818995c` engine: 153 commands on six
+studies (bin, bin-cv, reg, reg-cv as in E1, plus rev-ind and rev-fut0, each to an opened final
+test and `diag.final_test`), the same outcomes, all succeeded; of the 109 attested registry
+results, 77 are byte-identical (values, output digest, blobs, params, partition, row count)
+and the 32 others (`policy.*`, `evaluate.regression`, the diagnostics) differ only by the ids
+of their upstream results; in copies of the `818995c` studies the current engine finds every
+promoted result of an attested activity current (99 of the 105 promoted results; the 6
+others are the population profiles) and recomputes the 64 attested
+leaf results byte-identically. `diagnostics.population` (6 fresh results, 6 leaves) differs in
+the last bits of an Evidently p-value and in its snapshot blob in some studies and not in
+others, and is not current there (no edge). With the `506180a` engine: 147 commands on the
+same six studies (no population), the same outcomes; 109 results, 77 byte-identical and 32
+identical up to upstream ids; every promoted result current at HEAD (99 of 99); 64 of 64
+leaves byte-identical. Both comparisons print `MATCH`.
+`test_review_round2_training_exclusions.py` checks, without the old engines, that the edges
+target the current bytes and start at the recorded ones, their scope, and the behaviour
+(fitted row keys, exposure, visibility, currency, unchanged identities without exclusions);
+its opt-in `test_byte_comparison_with_the_previous_engine` repeats the comparison when
+`HYPOTRAIL_COMPAT_OLD_PYTHON` and `HYPOTRAIL_COMPAT_OLD_ROOT` name an old engine.
+
+Pre-existing defects seen while testing, not fixed here: a `tuned` or `family` variant under a
+review-v1 explicit plan fails with `NameError: np` (`families.choose` uses `np` without
+importing it), and the generated notebook of a review-v1 explicit-plan study fails in its
+cross-validation cell (the fold series holds the scored rows only, the development frame every
+development row). With exclusions the capture's `training_scope.membership_sha256` still names
+the development blob (`contracts/capture.py`, not edited here), while `n_train` and the
+result's `inputs.training_exclusions` give the rows actually used.
 
 ## Limits and what is not done
 

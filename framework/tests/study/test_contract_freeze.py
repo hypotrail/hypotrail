@@ -324,7 +324,10 @@ NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independen
                           'changed_after_final_test',
                           # B6c (H4): keeping the baseline against a criterion met on the
                           # final test.
-                          'verdict_keeps_baseline_against_criterion'}
+                          'verdict_keeps_baseline_against_criterion',
+                          # Review 2026-10-24 round 2: development rows left out of training
+                          # for a delayed label (review-v1 outcome clock).
+                          'delayed_labels_excluded'}
 INVALIDATION_KEYS = ('revision', 'decision_id', 'mutation', 'row', 'reason', 'stale_results',
                      'stale_slots', 'reconfirm_required', 'effects', 'previous')
 CONFIRM_INVALIDATION_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',
@@ -619,6 +622,7 @@ def test_next_action_kinds_and_not_yet_defensible_ids_in_source():
     source = (STUDY_PKG / 'state.py').read_text(encoding='utf-8')
     assert set(re.findall(r"'kind': '([a-z_]+)'", source)) == NEXT_ACTION_KINDS
     defensible = (inspect.getsource(st.not_yet_defensible) + inspect.getsource(view.build)
+                  + inspect.getsource(st.delayed_labels_limit)
                   + inspect.getsource(view._small_data)
                   + inspect.getsource(view.small_partition_warning)
                   + inspect.getsource(view.capacity_warning)
