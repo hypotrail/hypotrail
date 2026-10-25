@@ -1071,7 +1071,7 @@ Payloads: `hypotrail.understanding/1` (stdout of every verb except `verify-expor
 | `export preview --session ID --repo DIR` | read | the draft and its `content_digest`, the required contributors |
 | `export approve --session ID --contributor ID --content-digest D` | mutation | one declared approval of exactly that projection |
 | `export write --session ID --repo DIR [--latest]` | mutation | intent, immutable generation `docs/understanding/<review_id>/`, receipt; writes `docs/understanding/.gitattributes` (`rv-*/** binary -filter -ident -working-tree-encoding -eol`) when absent (`git_attributes`: `written`, `present` for exactly those bytes, `differs` otherwise, the file then left untouched) and names any `leftover_temporary_folders` of an interrupted export |
-| `git-plan`, `git-stage --index-identity H` | read / index only | exact paths and hashes; stages only the artefacts; never commits |
+| `git-plan`, `git-stage --index-identity H` | read / index only | exact paths and hashes; stages only the artefacts; never commits; `--repo` is the top level of its Git work tree; `exported_content_current`, `warnings` and conflict codes since review round 9 |
 | `git-receipt --session ID --repo DIR --commit OID` | mutation | a local receipt once the commit holds the bytes |
 | `verify-export --repo DIR --target worktree\|index\|COMMIT [--policy-file F] [--study DIR]` | read, no study needed | separate axes: public integrity, declared conformity, public source freshness, private context verification, evidence availability, assurance; with `--study`, `gate_result` and `declared_conformity` are the study's own gate plus the reasons established on the verified tree (`judgement: study`), without it the gate's rules on the exported content (`judgement: export`); see review rounds 5 and 6 below |
 
@@ -1332,6 +1332,57 @@ which may be decisions of another session S1.
   (study state only, never in an artefact). `verified_repository.written_to` is that list
   (null for an intent recorded before round 6) and `is_written_repository` is `true` when
   the verified repository is any of them.
+
+**Since review round 9 (areas C and D).** No refusal code is added (the list above is
+frozen); new codes are reasons, conflict codes and problems.
+
+* **A generation whose content is not current** (R9CD-1). Local verification adds the
+  target-tree reason `exported_content_not_current` when `exported_content_current` is
+  false (an allowed verdict then blocks, `declared_conformity` is `nonconforming`), and
+  `exported_content_unknown` when it is null (blocking; `declared_conformity` then reads
+  `unknown` rather than `nonconforming` when it is the only reason): the live gate judges
+  the study as it is now, the artefact says what it said (a generation exported while the
+  gate blocked keeps its `no_selection` gap). Unrelated study progress does not change the
+  projection, so it adds nothing (R5-1). `git-plan` gives `exported_content_current`
+  (`true`, `false`, or null when the projection cannot be computed) and `warnings`; it plans
+  the published generation whose projection is the current one, else the last one
+  published (by its receipt) with `exported_content_current: false`, `consistent: false`
+  and a warning naming what to do; it never falls back silently to older content.
+  `git-stage` then refuses with `export_stale` (`details.next_action` the warning), after the
+  source conflicts (`git_index_conflict`).
+* **Sources Git converts** (R9CD-2). Each `git-plan` conflict has a `code`:
+  `source_transformed_by_git` when the working tree holds the snapshot's bytes and the
+  path's Git conversion (read with `git check-attr` and `core.autocrlf`, never by running a
+  filter: `filter`, `working-tree-encoding`, `ident`, `eol`, `core.autocrlf` unless `-text`)
+  explains the index bytes (an end-of-line conversion alone is checked on the bytes), with
+  `git_conversion` (the list of causes) and `next_action` (disable the conversion for those
+  paths, for example a `.gitattributes` line `<path> -text`, or review the bytes Git
+  stores); otherwise `source_differs`. `git-stage` refuses with `git_index_conflict` and
+  `details.reason` the conflict code. The digests are unchanged: such sources still read
+  `public_sources_stale` at the index and at a commit (fail closed).
+* **Problems of the tree** (R9CD-3, R9CD-6). Every problem of the verified tree (`problems`
+  at the top level: a case variant of the export folder or of a generation, a leftover
+  temporary folder, a link, an unmerged or duplicate entry, a subdirectory `--repo`...)
+  makes every generation `public_integrity: invalid` with the problems listed, adds
+  `public_integrity_invalid` to its `gate_result` (blocking; a target-tree reason in local
+  mode) and makes a judged generation `nonconforming`. An entry of the tree spelt like a
+  mapped public source up to case or Unicode normalisation (NFC, case folded) but not as it
+  is the problem `case or Unicode variant of a mapped source: <path>`.
+* **The top level of the Git work tree** (R9CD-5). `plan --repo`, `start` (the plan's
+  `repo`), `git-plan`, `git-stage` and `git-receipt` refuse (`path_outside_scope`) a
+  repository that is a subdirectory of its Git work tree (`plan` and `start` accept a
+  directory outside any Git work tree). `verify-export` on the index or a commit of such a
+  subdirectory, or of a tree without any generation, says so in `problems` (`--repo is the
+  subdirectory ...`, `no generation found in docs/understanding of the target`).
+* **Revalidation** (R9CD-4). `export write` of a generation recorded `not_current` whose
+  projection and applied policy are the current ones again (a change undone) reserves its
+  intent again and the receipt revalidates it (`published` when it holds); the earlier
+  receipt is kept in the intent's `previous_receipts` (study state only).
+* **Sources unreadable after `start`** (R9CD-7). The capture of the current context records
+  a mapped source that became a link leaving the repository, a folder or a file over the
+  size limit in `unreadable_sources`: its dependency reads `unknown` (`check`, `status`,
+  the export, the report), never a `path_outside_scope` refusal. `plan` and `start` still
+  refuse such a source.
 
 **`export handoff` under a required policy naming `handoff`** (the only change to §7/C7):
 the export computes the gate under the writer lock, reserves the milestone (one revision,

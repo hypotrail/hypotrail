@@ -109,11 +109,12 @@ def session_snapshot(store: StudyStore, session: Mapping) -> dict:
 
 
 def capture(state: Mapping, ext: Mapping | None, *, policy_digest: str | None,
-            taskset_doc: Mapping | None, repo, sources, frozen: dict | None = None) -> dict:
+            taskset_doc: Mapping | None, repo, sources, frozen: dict | None = None,
+            strict: bool = True) -> dict:
     salt = ext['salt'] if ext else 'unset'
     return snap.capture_context(state, policy_digest=policy_digest, taskset_doc=taskset_doc,
                                 repo=Path(repo).resolve() if repo else None, sources=sources,
-                                salt=salt, frozen=frozen)
+                                salt=salt, frozen=frozen, strict=strict)
 
 
 def repository_of(store: StudyStore, session: Mapping, *, repo_override=None) -> dict:
@@ -134,7 +135,9 @@ def repository_of(store: StudyStore, session: Mapping, *, repo_override=None) ->
 
 def current_for(store: StudyStore, state: Mapping, ext: Mapping, *, repo_override=None):
     """A function giving the current local projection of a session (same source mapping,
-    the repository given now, the relocated one or the one recorded in the plan)."""
+    the repository given now, the relocated one or the one recorded in the plan). A mapped
+    source that can no longer be read as one (a link leaving the repository, a folder, a
+    file over the limit) is an unreadable source there, never a refusal (R9CD-7)."""
     cache = {}
 
     def run(session: Mapping) -> Mapping:
@@ -143,7 +146,8 @@ def current_for(store: StudyStore, state: Mapping, ext: Mapping, *, repo_overrid
             where = repository_of(store, session, repo_override=repo_override)
             repo = where['repository'] if where['exists'] else None
             doc = capture(state, ext, policy_digest=session['policy_digest'],
-                          taskset_doc=taskset_or_none(state), repo=repo, sources=plan['sources'])
+                          taskset_doc=taskset_or_none(state), repo=repo, sources=plan['sources'],
+                          strict=False)
             cache[session['session_id']] = doc['local']
         return cache[session['session_id']]
     return run

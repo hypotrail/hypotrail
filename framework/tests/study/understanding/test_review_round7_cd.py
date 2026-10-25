@@ -108,11 +108,16 @@ def test_q1_narrow_scope_second_session(tmp_path):
     ukit.git(u.repo, 'checkout', '-q', head, '--', 'src/transforms.py')
     g2 = gate(u)
     assert g2['decision'] == 'blocked' and ('stale', 'D5') in _pairs(g2['reasons'])
-    # On the very bytes check read, local verification is check's result again.
+    # On the very bytes check read, local verification is check's result again, plus
+    # (review round 9, R9CD-1) ``exported_content_not_current``: the generation shows D5
+    # current, which the study no longer exports. Round 7 asserted no target-tree reason
+    # at all; that is what R9CD-1 proved wrong (the old content was verified as is).
     gen = _verify(u, target=head)['generations'][0]
     assert gen['public_sources_judged_by_study'] is True
-    assert gen['gate_result']['target_tree_reasons'] == []
-    assert _pairs(gen['gate_result']['reasons']) == _pairs(g2['reasons'])
+    assert gen['exported_content_current'] is False
+    assert gen['gate_result']['target_tree_reasons'] == [vf.CONTENT_NOT_CURRENT]
+    assert _pairs(gen['gate_result']['reasons']) == \
+        _pairs(g2['reasons']) | {(vf.CONTENT_NOT_CURRENT, 'handoff')}
 
 
 def test_q1b_second_session_in_a_clone(tmp_path):

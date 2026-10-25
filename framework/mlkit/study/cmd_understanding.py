@@ -281,6 +281,8 @@ def _plan(args) -> dict:
     taskset = sv.current_taskset(state)
     sources = _sources(args.sources_file)
     repo = str(Path(args.repo).resolve()) if args.repo else None
+    if repo is not None:
+        _require_toplevel(Path(repo), inside_git_only=True)
     ext = model.of(state)
     cap = sv.capture(state, ext, policy_digest=pol.digest(doc), taskset_doc=taskset, repo=repo,
                      sources=sources)
@@ -504,13 +506,50 @@ def _preview(args) -> dict:
                     'content invalidates every approval.')
 
 
+def _published_at(intent) -> tuple:
+    """When an intent was published: its receipt's revision (a ``not_current`` intent
+    revalidated by a later ``export write`` counts from its new receipt, R9CD-4)."""
+    return ((intent.get('receipt') or {}).get('recorded_revision') or
+            intent['recorded_revision'], intent['recorded_revision'])
+
+
 def _published_intent(ext, session_id) -> dict:
     published = [x for x in (ext or {}).get('exports', {}).values()
                  if x['session_id'] == session_id and x['status'] == 'published']
     if not published:
         raise refuse('prerequisite_missing', 'No current export is published for this session.',
                      'Run export write first (a not_current export gets no Git plan).')
-    return max(published, key=lambda x: x['recorded_revision'])
+    return max(published, key=_published_at)
+
+
+def _intent_to_plan(store, state, ext, session) -> tuple[dict, bool | None, list]:
+    """``(intent, exported_content_current, warnings)`` for ``git-plan`` (review round 9,
+    R9CD-1 and R9CD-4): the published generation whose projection is the one the study
+    computes now, else the last one published, said not current (``git-stage`` then
+    refuses) with what to do, never a silent fall back to older content. ``None`` when the
+    projection cannot be computed now (a stored payload is gone)."""
+    intent = _published_intent(ext, session['session_id'])
+    try:
+        now = canonical.digest(ex.projection(store, state, session))
+    except StudyError:
+        return intent, None, [
+            'the content the study exports now cannot be computed (a stored payload is '
+            'gone): the generation planned is the last one published, not checked as current']
+    mine = [x for x in ext['exports'].values()
+            if x['session_id'] == session['session_id'] and x['projection_digest'] == now]
+    current = [x for x in mine if x['status'] == 'published']
+    if current:
+        return max(current, key=_published_at), True, []
+    if mine:
+        warning = (f'the current content is the generation {mine[0]["review_id"]}, recorded '
+                   f'{mine[0]["status"]}: run export write again to revalidate it, then '
+                   'git-plan')
+    else:
+        warning = ('no generation holds the content the study exports now: export preview, '
+                   'approve and export write a new generation (or restore what changed), '
+                   'then git-plan')
+    return intent, False, [f'{intent["review_id"]} is not the content the study exports '
+                           f'now; {warning}']
 
 
 def _expected_files(repo: Path, intent) -> dict:
@@ -539,16 +578,23 @@ def _git_plan(args) -> dict:
     s = (ext or {}).get('sessions', {}).get(args.session)
     if s is None:
         raise refuse('invalid_transition', 'Unknown session.', 'Check the session id.')
-    intent = _published_intent(ext, s['session_id'])
     repo = Path(args.repo).resolve()
+    _require_toplevel(repo)
+    intent, content_current, warnings = _intent_to_plan(store, state, ext, s)
     files = _expected_files(repo, intent)
     # The sources the generation declares: since round 7 the union of the scopes of every
     # session whose decisions it shows, not only the exported session's own scope.
     doc = canonical.loads(files[f'{ex.EXPORT_DIR}/{intent["review_id"]}/{ex.JSON_FILE}'])
     scope = doc['public_source_scope']
     plan = vf.git_plan(repo, files, [e for e in scope['entries'] if e['path']])
+    transformed = [c['path'] for c in plan['source_conflicts']
+                   if c['code'] == vf.SOURCE_TRANSFORMED]
+    if transformed:
+        warnings.append(f'Git converts {", ".join(transformed)} between the working tree and '
+                        f'the index: {vf.TRANSFORMED_NEXT_ACTION}')
     return _ok('git-plan', store.study_dir, review_id=intent['review_id'], **plan,
-               consistent=not plan['source_conflicts'],
+               exported_content_current=content_current, warnings=warnings,
+               consistent=not plan['source_conflicts'] and content_current is not False,
                next_steps=['stage exactly the artefacts (git add -- PATHS, or understanding '
                            'git-stage)', 'verify-export --target index',
                            'commit as usual', 'verify-export --target HEAD'])
@@ -557,9 +603,21 @@ def _git_plan(args) -> dict:
 def _git_stage(args) -> dict:
     plan = _git_plan(args)
     if plan['source_conflicts']:
+        transformed = [c for c in plan['source_conflicts']
+                       if c['code'] == vf.SOURCE_TRANSFORMED]
+        if transformed:
+            raise refuse('git_index_conflict', 'Git converts a mapped source between the '
+                         'working tree and the index (end of lines, a filter, an encoding): '
+                         'the reviewed bytes cannot be staged as they are.',
+                         vf.TRANSFORMED_NEXT_ACTION, reason=vf.SOURCE_TRANSFORMED,
+                         conflicts=plan['source_conflicts'])
         raise refuse('git_index_conflict', 'A mapped source differs between the snapshot, the '
                      'working tree and the index.', 'Regenerate or review the sources first.',
-                     conflicts=plan['source_conflicts'])
+                     reason=vf.SOURCE_DIFFERS, conflicts=plan['source_conflicts'])
+    if plan['exported_content_current'] is False:
+        raise refuse('export_stale', 'The generation planned is not the content the study '
+                     'exports now; nothing was staged.', '; '.join(plan['warnings']),
+                     review_id=plan['review_id'])
     out = vf.stage(Path(args.repo).resolve(), [a['path'] for a in plan['artefacts']],
                    args.index_identity, {a['path']: a['sha256'] for a in plan['artefacts']})
     return _ok('git-stage', args.study, **out,
@@ -594,6 +652,8 @@ def _start(args) -> dict:
         raise refuse('evidence_invalid', 'The plan file is the plan written by `understanding '
                      'plan`.', 'Make the plan again.')
     snap.validate_sources(plan['sources'])
+    if plan['repo'] is not None:          # a plan file edited by hand is checked again
+        _require_toplevel(Path(plan['repo']).resolve(), inside_git_only=True)
     last = None
     for _ in range(3):              # a source moving during the capture: bounded retry
         state = sv.load_state(args.study)
@@ -831,15 +891,18 @@ def _record_written(study, intent_id, repo: Path) -> None:
 
 
 def _receipt(study, intent_id, files) -> dict:
-    """The export receipt, idempotent per intent: replayed when already recorded."""
+    """The export receipt, idempotent per intent: replayed when already recorded. An intent
+    reserved again to be revalidated (R9CD-4) gets a request of its own per revalidation."""
     state = sv.load_state(study)
     intent = model.of(state)['exports'][intent_id]
     if intent['status'] != 'reserved':
         return {'result': {'intent_id': intent_id, 'status': intent['status'], 'final': True},
                 'revision': state['revision'], 'replayed': True}
+    again = len(intent.get('previous_receipts') or [])
+    request = f'receipt-{intent_id}' + (f'-{again}' if again else '')
     return actions.apply(study, 'export_receipt', {'intent_id': intent_id,
                                                    'verified_files': files},
-                         request_id=f'receipt-{intent_id}', expected_revision=state['revision'])
+                         request_id=request, expected_revision=state['revision'])
 
 
 def _git_toplevel(repo: Path) -> Path | None:
@@ -855,6 +918,23 @@ def _git_toplevel(repo: Path) -> Path | None:
         return None
     out = proc.stdout.decode(errors='replace').strip()
     return Path(out).resolve() if proc.returncode == 0 and out else None
+
+
+def _require_toplevel(repo: Path, *, inside_git_only: bool = False) -> None:
+    """Refuse a ``--repo`` that is not the top level of its Git work tree (review round 9,
+    R9CD-5): Git names paths from the top level, so a project inside a monorepo would plan,
+    export and stage, then never verify at a commit nor get its receipt. With
+    ``inside_git_only`` (``plan``, ``start``), a directory outside any Git work tree is
+    accepted (no Git step will run on it)."""
+    top = _git_toplevel(repo)
+    if top == repo or (top is None and inside_git_only):
+        return
+    where = f'its Git work tree starts at {top}' if top is not None else \
+        'it is not in a Git work tree'
+    raise refuse('path_outside_scope', f'--repo is not the top level of a Git work tree '
+                 f'({where}); nothing was done.',
+                 'Name the top level of the repository as --repo, and map the sources by '
+                 'their path from there.', repo=str(repo))
 
 
 def _relocate(args) -> dict:
@@ -880,6 +960,7 @@ def _git_receipt(args) -> dict:
     intent = _published_intent(ext, args.session)
     expected = {f'{ex.EXPORT_DIR}/{intent["review_id"]}/{n}': intent['files'][n]
                 for n in ex.FILES}
+    _require_toplevel(Path(args.repo).resolve())
     r = vf.commit_receipt(Path(args.repo).resolve(), args.commit, expected)
     return _ok('git-receipt', store.study_dir, **_apply(args, 'git_receipt', {
         'review_id': intent['review_id'], **r}), commit=r['commit'], tree=r['tree'])

@@ -33,7 +33,7 @@ import os
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterable, Mapping
 
-from . import canonical, refuse
+from . import StudyError, canonical, refuse
 
 SCHEMA = 'hypotrail.understanding-snapshot/1'
 PUBLIC_SCHEMA = 'hypotrail.public-source-scope/1'
@@ -205,12 +205,17 @@ def case_file_of(state: Mapping) -> Path | None:
 
 def capture_context(state: Mapping, *, policy_digest: str | None, taskset_doc: Mapping | None,
                     repo: Path | None, sources: Iterable[Mapping], salt: str,
-                    frozen: dict | None = None) -> dict:
+                    frozen: dict | None = None, strict: bool = True) -> dict:
     """The snapshot document of ``state`` (one revision) and the mapped sources.
 
     ``frozen`` receives ``{sha256: bytes}`` of every repository source read, so the
     caller stores them as immutable blobs. A mapped source that is absent or unreadable
-    gets no entry (its dependency is ``unknown``)."""
+    gets no entry (its dependency is ``unknown``). ``strict`` (``plan``, ``start``): a
+    source that is a link leaving the repository, not a regular file or over
+    :data:`MAX_SOURCE_BYTES` is refused (``path_outside_scope``); a capture of the current
+    context (``strict=False``) records it in ``unreadable_sources`` instead, so a source
+    that became one after ``start`` reads ``unknown``, never a refusal (review round 9,
+    R9CD-7)."""
     case_file = case_file_of(state)
     entries, refs = _study_entries(state, case_file)
     refs.update(_case_refs(case_file))
@@ -235,7 +240,12 @@ def capture_context(state: Mapping, *, policy_digest: str | None, taskset_doc: M
                      'Map fewer files.', field='sources')
     for s in sources:
         rel = safe_relative(s['path'])
-        data = read_repo_file(repo, rel) if repo is not None else None
+        try:
+            data = read_repo_file(repo, rel) if repo is not None else None
+        except StudyError as exc:
+            if strict or exc.code != 'path_outside_scope':
+                raise
+            data = None
         if data is None:
             missing.append({'logical_key': s['logical_key'], 'role': s['role']})
             continue

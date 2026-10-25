@@ -537,6 +537,70 @@ Round 8 found nothing blocking or major. Regression tests:
 * A judged session whose scope maps no public source holds nothing to compare: it no longer
   makes local verification block the very bytes `check` judged.
 
+## Review round 9: fixes
+
+Regression tests: `framework/tests/study/understanding/test_review_round9_cd.py` (the
+reviewer's probes p1 to p7 ported with the expected outcome of each fix, plus controls).
+No refusal code was added (`CODES` is frozen); the new codes are reasons, conflict codes
+and problems, listed in CLI-CONTRACT §16 "Since review round 9".
+
+* **R9CD-1 (medium), fixed.** Local verification computed `exported_content_current` but
+  never used it: a generation exported while the gate blocked (its content records
+  `no_selection`) verified `allowed` and conforming once the study passed. It now adds the
+  target-tree reason `exported_content_not_current` (blocking, nonconforming), and
+  `exported_content_unknown` when the projection cannot be computed (blocking,
+  `declared_conformity: unknown` when it is the only reason). R5-1 still holds: unrelated
+  study progress leaves the projection unchanged (asserted). `git-plan` reports
+  `exported_content_current` and `warnings` and is not `consistent` for such a generation;
+  decided: it **warns** rather than refuses (a refusal would hide the source conflicts
+  `test_export_git` A16 expects it to list, the contract makes `git-plan` a read), and
+  `git-stage` refuses it with `export_stale` and the next action.
+* **R9CD-2 (medium), fixed (diagnosis).** Under `core.autocrlf`, `eol`/`text` attributes,
+  LFS or another filter, the reviewed working-tree bytes are not the ones Git stores.
+  `git-plan` now gives every conflict a `code`: `source_transformed_by_git` (from `git
+  check-attr` and `core.autocrlf`, never by running a filter; an end-of-line conversion
+  alone is confirmed on the bytes), with `git_conversion` and a `next_action` (a
+  `.gitattributes` line `<path> -text`, or review the bytes Git stores), else
+  `source_differs`; `git-stage` refuses with `git_index_conflict` and `details.reason`.
+  Digest semantics unchanged: such sources still read `public_sources_stale` at the index
+  and at a commit (fail closed).
+* **R9CD-3 (low-medium), fixed.** A problem of the verified tree made only the top-level
+  `public_integrity` invalid. Every generation is now invalid with the tree's problems,
+  `public_integrity_invalid` in its gate result (blocking) and, when it was judged,
+  nonconforming.
+* **R9CD-4 (low), fixed.** A `not_current` intent was final, reused for the same content
+  after a revert, and `git-plan` fell back silently to an older published generation. An
+  `export write` of a `not_current` generation whose projection and applied policy are
+  current again reserves it again and the receipt revalidates it (`published`; the earlier
+  receipt kept in `previous_receipts`, a new receipt request per revalidation). Safe under
+  the state model: the bytes are immutable and announced, and only the receipt, under the
+  writer lock, declares a generation current. `git-plan` plans the published generation
+  whose projection is current, else warns (naming the generation to write again) and
+  `git-stage` refuses; the published intent of `git-receipt` is the one published last
+  (by its receipt).
+* **R9CD-5 (medium), fixed.** `plan --repo` (and `start`, `git-plan`, `git-stage`,
+  `git-receipt`) refuse a subdirectory of a Git work tree (`path_outside_scope`, the top
+  level named), with `relocate`'s `_git_toplevel`. `verify-export` on the index or a commit
+  says `--repo is the subdirectory ...` and `no generation found in docs/understanding of
+  the target` instead of an empty invalid result.
+* **R9CD-6 (low), fixed.** An entry spelt like a mapped public source up to case or Unicode
+  normalisation (NFC, case folded) is the tree problem `case or Unicode variant of a mapped
+  source: <path>` (worktree, index and commit), so it blocks through R9CD-3.
+* **R9CD-7 (low), fixed.** The capture of the current context (`strict=False`, used by
+  `service.current_for`) records a mapped source that became a folder, a link leaving the
+  repository or a file over 2 MB in `unreadable_sources` (freshness `unknown`); `plan` and
+  `start` still refuse it.
+
+Expectations changed by R9CD-1 (each test says so): `test_review_round5_cd.py::
+test_p12_public_only_private_stale_after_export` and
+`test_one_judgement_one_gap_list_cross_session` (scenarios whose verified bytes make the
+generation not current: their local reasons are `check`'s plus
+`exported_content_not_current`, exactly when `exported_content_current` is false, never in
+the `allowed` scenarios), and `test_review_round7_cd.py::test_q1_narrow_scope_second_session`
+(the same on the bytes `check` read). They asserted that a generation showing a dimension
+current was verified with no reason of its own once that dimension was stale, which is the
+defect R9CD-1 names. No assertion was weakened.
+
 ## Gate run
 
 Run in this container (Python 3.13, uv 0.11, the `dev`, `browser` and `azureml` groups and the

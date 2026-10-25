@@ -378,8 +378,13 @@ def test_p12_public_only_private_stale_after_export(tmp_path):
     assert ('stale', 'D5') in _pairs(g['reasons'])
     gen = _verify(u, pol_)['generations'][0]
     assert gen['gate_result']['decision'] == g['decision']
-    assert _pairs(gen['gate_result']['reasons']) == _pairs(g['reasons'])
     assert gen['exported_content_current'] is False
+    # Review round 9 (R9CD-1): a generation that is no longer the current content adds the
+    # target-tree reason ``exported_content_not_current`` to check's reasons (round 5
+    # asserted check's reasons exactly: R9CD-1 proved that an old content must say so).
+    assert gen['gate_result']['target_tree_reasons'] == [vf.CONTENT_NOT_CURRENT]
+    assert _pairs(gen['gate_result']['reasons']) == \
+        _pairs(g['reasons']) | {(vf.CONTENT_NOT_CURRENT, 'handoff')}
 
 
 # --- R5-10: the written attributes cancel every transforming attribute ------------------------
@@ -849,10 +854,19 @@ def test_one_judgement_one_gap_list_cross_session(tmp_path, scenario):
         assert sa['declared_conformity'] != 'conforming'
     if codes & {'stale', 'freshness_unknown'}:
         assert sa['public_source_freshness'] != 'current'
-    # On those bytes, local verification is check's result (the tree holds what it read).
+    # On those bytes, local verification is check's result (the tree holds what it read),
+    # plus, since review round 9 (R9CD-1), ``exported_content_not_current`` exactly when
+    # those bytes make the study export other content than the generation (a source the
+    # generation showed current is stale now).
     again = _verify(u, target=head, repo=repo)['generations'][0]
     assert again['public_sources_judged_by_study'] is True
-    assert set(again['gate_result']['target_tree_reasons']) <= {vf.OTHER_REPOSITORY}
+    not_current = again['exported_content_current'] is False
+    assert (vf.CONTENT_NOT_CURRENT in again['gate_result']['target_tree_reasons']) == not_current
+    if verdict == 'allowed':
+        assert not not_current
+    assert set(again['gate_result']['target_tree_reasons']) <= {vf.OTHER_REPOSITORY,
+                                                                vf.CONTENT_NOT_CURRENT}
     assert again['gate_result']['decision'] == on_bytes['decision']
-    assert _pairs(again['gate_result']['reasons']) - {(vf.OTHER_REPOSITORY, 'handoff')} == \
+    assert _pairs(again['gate_result']['reasons']) - {(vf.OTHER_REPOSITORY, 'handoff'),
+                                                      (vf.CONTENT_NOT_CURRENT, 'handoff')} == \
         _pairs(on_bytes['reasons'])

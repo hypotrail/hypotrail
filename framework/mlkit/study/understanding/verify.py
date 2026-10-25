@@ -27,6 +27,7 @@ from __future__ import annotations
 import hashlib
 import os
 import subprocess
+import unicodedata
 from pathlib import Path, PurePosixPath
 from typing import Callable, Mapping
 
@@ -91,6 +92,12 @@ def _case_variant(path: str) -> bool:
         and not path[len(exact):].startswith(('rv-', '.rv-')))
 
 
+def _fold(path: str) -> str:
+    """The spelling a case-insensitive or Unicode-normalising checkout (macOS, Windows)
+    does not tell apart: NFC, case folded."""
+    return unicodedata.normalize('NFC', unicodedata.normalize('NFC', path).casefold())
+
+
 def _safe(path: str) -> bool:
     try:
         snap.safe_relative(path)
@@ -116,6 +123,13 @@ class Tree:
                          'than 2.44) cannot be told not to fetch a missing object, which '
                          'would run the configured transport.',
                          'Use Git 2.44 or later, or a full clone (git clone without --filter).')
+        # Git names every path from the top level of the work tree: from a subdirectory
+        # (a project inside a monorepo) no generation or source would be found (R9CD-5).
+        prefix = git(self.repo, 'rev-parse', '--show-prefix').decode(errors='replace').strip()
+        if prefix:
+            self.problems.append(f'--repo is the subdirectory {prefix.rstrip("/")} of its Git '
+                                 'work tree, whose paths start at the top level: name the '
+                                 'top level')
         if target == 'index':
             self.index_id = self._index_identity()
             self._entries = self._ls_index()
@@ -240,6 +254,29 @@ class Tree:
                     else:
                         names.add(rest[0])
         return sorted(names)
+
+    def variants_of(self, paths) -> None:
+        """Report, as a problem, every entry of the tree spelt like one of ``paths`` up to
+        case or Unicode normalisation but not as it (review round 9, R9CD-6): a
+        case-insensitive checkout writes one of the two at the reviewed path, so a colleague
+        may read other bytes than the ones verified."""
+        wanted = {_fold(p): p for p in paths}
+        if self._entries is not None:
+            for entry in self._entries:
+                exact = wanted.get(_fold(entry))
+                if exact is not None and entry != exact:
+                    self.problems.append(f'case or Unicode variant of a mapped source: {entry}')
+            return
+        for exact in wanted.values():
+            parts = PurePosixPath(exact).parts
+            for i, part in enumerate(parts):
+                parent = self.repo.joinpath(*parts[:i])
+                if not parent.is_dir() or parent.is_symlink():
+                    break
+                for p in parent.iterdir():
+                    if p.name != part and _fold(p.name) == _fold(part):
+                        self.problems.append('case or Unicode variant of a mapped source: '
+                                             + p.relative_to(self.repo).as_posix())
 
     def files_in(self, rid: str) -> list[str]:
         prefix = f'{ex.EXPORT_DIR}/{rid}/'
@@ -461,8 +498,14 @@ def local_tree_reasons(doc: Mapping, axes: Mapping, lines: list[Mapping]) -> tup
     each judged session's scope that is not ``current`` on the verified tree adds its own.
     A session read from another repository than the verified one adds
     ``verified_repository_not_the_session_one``: blocking when its scope or the export's is
-    not ``current`` on the verified tree, a limitation otherwise. Nothing here relaxes the
-    gate: the reasons are only added."""
+    not ``current`` on the verified tree, a limitation otherwise. A generation whose
+    content is no longer what the study exports now (``exported_content_current`` false,
+    review round 9, R9CD-1) adds ``exported_content_not_current``, and
+    ``exported_content_unknown`` when that cannot be computed: the live gate judges the
+    study as it is now, the artefact says what it said, and an allowed verdict must not be
+    given to a document whose content says otherwise. Unrelated study progress leaves the
+    projection, hence this reason, unchanged (R5-1). Nothing here relaxes the gate: the
+    reasons are only added."""
     judged = bool(lines) and all(x['same_bytes'] for x in lines)
     extra = tree_reasons(doc, axes, judged_by_study=judged)
     lims: list = []
@@ -470,6 +513,10 @@ def local_tree_reasons(doc: Mapping, axes: Mapping, lines: list[Mapping]) -> tup
     def add(code):
         if {'code': code} not in extra:
             extra.append({'code': code})
+    if axes.get('exported_content_current') is False:
+        add(CONTENT_NOT_CURRENT)
+    elif axes.get('exported_content_current') is None:
+        add(CONTENT_UNKNOWN)
     export_current = axes['public_source_freshness'] == 'current'
     for x in lines:
         if not judged and x['tree_freshness'] != 'current':
@@ -524,6 +571,11 @@ UNKNOWABLE = ('private_context_unknown', 'evidence_unavailable')
 # it is a limitation (the study's gate read another place, whose public sources the verified
 # tree holds unchanged).
 OTHER_REPOSITORY = 'verified_repository_not_the_session_one'
+# Local mode (R9CD-1): the generation's projection is not the one the study computes now
+# (``exported_content_not_current``), or that cannot be computed (``exported_content_unknown``,
+# which makes ``declared_conformity`` unknown rather than nonconforming).
+CONTENT_NOT_CURRENT = 'exported_content_not_current'
+CONTENT_UNKNOWN = 'exported_content_unknown'
 
 
 def verify(repo, target: str, *, policy_doc: Mapping | None = None,
@@ -560,12 +612,43 @@ def verify(repo, target: str, *, policy_doc: Mapping | None = None,
     if not tree.still_coherent():
         raise refuse('git_index_conflict', 'The index changed during the verification; the '
                      'result is not usable.', 'Run verify-export again when nothing stages.')
+    if not generations:
+        tree.problems.append(f'no generation found in {ex.EXPORT_DIR} of the target')
+    if tree.problems:
+        # A problem of the tree (a case variant, a leftover folder, a link, an unmerged
+        # entry...) concerns what a colleague checks out next to every generation: each one
+        # is invalid with it, never valid, allowed and conforming (review round 9, R9CD-3).
+        for r in results:
+            _tree_invalid(r, sorted(set(tree.problems)))
     out = {'schema': SCHEMA, 'ok': True, 'target': target,
            'commit': getattr(tree, 'commit', None), 'tree': getattr(tree, 'tree', None),
            'generations': results, 'problems': sorted(set(tree.problems))}
     out['public_integrity'] = 'valid' if results and all(
         r['public_integrity'] == 'valid' for r in results) and not tree.problems else 'invalid'
     return out
+
+
+def _tree_invalid(result: dict, problems: list) -> None:
+    """``result`` (one generation) once the verified tree has ``problems`` (R9CD-3):
+    ``public_integrity`` invalid, the problems listed, ``public_integrity_invalid`` added to
+    its gate result (an allowed verdict then blocks, as :func:`with_tree` does) and, for a
+    generation that was judged (valid until then), ``declared_conformity`` nonconforming, as
+    :func:`_gate_on_export` judges ``public_integrity_invalid``."""
+    judged = result['public_integrity'] == 'valid'
+    result['public_integrity'] = 'invalid'
+    result['problems'] = list(result['problems']) + [p for p in problems
+                                                     if p not in result['problems']]
+    gate = result.get('gate_result')
+    if gate is not None:
+        merged = with_tree(gate, [{'code': 'public_integrity_invalid'}])
+        if 'target_tree_reasons' in gate:
+            merged['target_tree_reasons'] = list(gate['target_tree_reasons']) + [
+                c for c in merged['target_tree_reasons'] if c not in gate['target_tree_reasons']]
+        else:
+            merged.pop('target_tree_reasons')
+        result['gate_result'] = merged
+    if judged:
+        result['declared_conformity'] = 'nonconforming'
 
 
 def _verify_one(tree: Tree, rid: str, policy_doc, local) -> dict:
@@ -648,6 +731,9 @@ def _verify_one(tree: Tree, rid: str, policy_doc, local) -> dict:
     if problems:
         return axes
     axes['public_integrity'] = 'valid'
+    # A case or Unicode variant of a mapped public source is a problem of the tree
+    # (R9CD-6), which then invalidates every generation (R9CD-3, :func:`verify`).
+    tree.variants_of([e['path'] for e in scope['entries'] if e['path']])
     fresh = snap.public_freshness(scope, tree.read)
     if fresh['status'] == 'current' and any(
             isinstance(g, dict) and g.get('kind') == ex.SCOPE_GAP for g in doc['known_gaps']):
@@ -686,7 +772,8 @@ def _verify_one(tree: Tree, rid: str, policy_doc, local) -> dict:
         limitations.extend(lims)
         axes['gate_result'] = with_tree(axes.get('gate_result'), extra, lims)
         if extra and axes.get('declared_conformity') == 'conforming':
-            axes['declared_conformity'] = 'nonconforming'
+            axes['declared_conformity'] = 'unknown' if extra == [{'code': CONTENT_UNKNOWN}] \
+                else 'nonconforming'
         return axes
     limitations.append('no_local_study: private context and answers not checked')
     try:
@@ -705,16 +792,73 @@ def _verify_one(tree: Tree, rid: str, policy_doc, local) -> dict:
     return axes
 
 
+# Review round 9 (R9CD-2): a mapped source whose working tree holds the reviewed bytes while
+# Git stores other ones (end-of-line conversion, an LFS or other filter, an encoding, ident).
+SOURCE_TRANSFORMED = 'source_transformed_by_git'
+SOURCE_DIFFERS = 'source_differs'
+CONVERSION_ATTRIBUTES = ('text', 'eol', 'crlf', 'filter', 'ident', 'working-tree-encoding')
+TRANSFORMED_NEXT_ACTION = (
+    'Git converts this file between the working tree and the index, so the reviewed bytes '
+    '(the working tree\'s) can never be committed as they are. Disable the conversion for '
+    'these paths (a .gitattributes line "<path> -text -filter -ident '
+    '-working-tree-encoding", or core.autocrlf=false) and stage them again, or make the '
+    'working tree hold the bytes Git stores (git add --renormalize, a fresh checkout) and '
+    'review those in a new session.')
+
+
+def git_conversions(repo: Path, paths: list[str]) -> dict:
+    """``{path: [why]}``: what may make Git store other bytes than the working tree's for
+    each path, read from its attributes (``git check-attr``) and ``core.autocrlf``, never by
+    running a filter. Empty for a path Git stores as it is."""
+    if not paths:
+        return {}
+    raw = git(repo, 'check-attr', '-z', *CONVERSION_ATTRIBUTES, '--', *paths).split(b'\0')
+    attrs: dict = {}
+    for k in range(0, len(raw) - 2, 3):
+        path, name, value = (x.decode('utf-8', 'replace') for x in raw[k:k + 3])
+        attrs.setdefault(path, {})[name] = value
+    autocrlf = git(repo, 'config', '--default', 'false', '--get', 'core.autocrlf') \
+        .decode(errors='replace').strip().lower()
+    out = {}
+    for p in paths:
+        a = attrs.get(p, {})
+        why = [f'{n}={a[n]}' for n in ('filter', 'working-tree-encoding')
+               if a.get(n, 'unspecified') not in ('unspecified', 'unset')]
+        if a.get('ident') == 'set':
+            why.append('ident')
+        if a.get('text') != 'unset' and a.get('crlf') != 'unset':    # -text, binary: none
+            if a.get('eol', 'unspecified') not in ('unspecified', 'unset'):
+                why.append(f'eol={a["eol"]}')
+            elif autocrlf in ('true', 'input'):
+                why.append(f'core.autocrlf={autocrlf}')
+        out[p] = why
+    return out
+
+
+def _transformed(why: list[str], worktree: bytes | None, index: bytes | None) -> bool:
+    """Whether the difference between ``worktree`` and ``index`` is Git's conversion
+    (``why``, :func:`git_conversions`). An end-of-line conversion alone is checked on the
+    bytes; a filter, an encoding or ident cannot be without running it, so it is assumed."""
+    if not why or worktree is None or index is None:
+        return False
+    if all(w.startswith(('eol=', 'core.autocrlf=')) for w in why):
+        return worktree.replace(b'\r\n', b'\n') == index.replace(b'\r\n', b'\n')
+    return True
+
+
 def git_plan(repo, files: Mapping[str, bytes], sources: list[Mapping]) -> dict:
     """The exact artefact paths and hashes to stage, and the inconsistencies: a mapped
     source whose worktree and index bytes differ, or differ from the snapshot; staged
-    changes outside the plan (reported, never unstaged)."""
+    changes outside the plan (reported, never unstaged). A conflict's ``code`` is
+    ``source_transformed_by_git`` when the working tree holds the snapshot's bytes and Git
+    converts them on their way to the index (R9CD-2, with ``git_conversion`` and a
+    ``next_action``), else ``source_differs``."""
     repo = Path(repo)
     head = git(repo, 'rev-parse', '--verify', '-q', 'HEAD').decode().strip() \
         if _has_head(repo) else None
     index = Tree(repo, 'index')
     work = Tree(repo, 'worktree')
-    conflicts = []
+    conflicts, read = [], {}
     for s in sources:
         if s['path'] is None:
             continue
@@ -722,8 +866,17 @@ def git_plan(repo, files: Mapping[str, bytes], sources: list[Mapping]) -> dict:
         ws = hashlib.sha256(w).hexdigest() if w is not None else None
         is_ = hashlib.sha256(i).hexdigest() if i is not None else None
         if ws != s['sha256'] or is_ != s['sha256']:
-            conflicts.append({'path': s['path'], 'snapshot': s['sha256'], 'worktree': ws,
+            conflicts.append({'path': s['path'], 'code': SOURCE_DIFFERS,
+                              'snapshot': s['sha256'], 'worktree': ws,
                               'index': is_})       # an untracked source is a conflict too
+            read[s['path']] = (w, i)
+    suspects = [c['path'] for c in conflicts
+                if c['worktree'] == c['snapshot'] and c['index'] is not None]
+    why = git_conversions(repo, suspects)
+    for c in conflicts:
+        if c['path'] in suspects and _transformed(why[c['path']], *read[c['path']]):
+            c.update(code=SOURCE_TRANSFORMED, git_conversion=why[c['path']],
+                     next_action=TRANSFORMED_NEXT_ACTION)
     staged = git(repo, 'diff', '--cached', '--no-renames', '--ignore-submodules=none',
                  '--name-only', '-z').split(b'\0') if head else \
         git(repo, 'ls-files', '-z').split(b'\0')

@@ -95,6 +95,13 @@ optimiser); critical dimensions are always included, whatever the profile.
    hypotrail understanding verify-export --repo PROJECT --target HEAD --study STUDY
    ```
 
+   `PROJECT` is the top level of its Git work tree (a project inside a monorepo is
+   refused from `plan` on). `git-plan` says when the generation is no longer what the study
+   exports now (`exported_content_current: false`: export it again, `git-stage` refuses
+   it), and when Git converts a mapped source on its way to the index
+   (`source_transformed_by_git`, for example `core.autocrlf=true`: add a `.gitattributes`
+   line `<path> -text` for those sources, or review the bytes Git stores).
+
 A workshop session of 10 to 15 minutes covers a few dimensions and a short exchange with a
 peer; it is a pilot budget, not full coverage. The plan shows the estimate and what remains.
 Pause, resume and abandon lose no scientific work and produce no false result. No timer is

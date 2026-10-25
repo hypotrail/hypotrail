@@ -1088,6 +1088,18 @@ def _export_intent(ctx) -> Handler:
                                  'a generation is never replaced.', 'Export a new generation.')
                 # Same generation again (a retry after an unknown outcome): the existing
                 # intent is reused, no second one is reserved.
+                if intent['status'] == 'not_current' and \
+                        intent['projection_digest'] == digest and \
+                        intent['policy_digest'] == projection['policy_digest']:
+                    # Its content is the one the study exports now again (a change undone,
+                    # review round 9, R9CD-4): it is reserved again, so the receipt that
+                    # follows revalidates it under the writer lock (``published`` when it
+                    # holds). The earlier receipt is kept in ``previous_receipts``.
+                    intent.setdefault('previous_receipts', []).append(
+                        {**(intent.get('receipt') or {}), 'status': 'not_current'})
+                    intent['status'], intent['receipt'] = 'reserved', None
+                    return {'intent_id': intent['intent_id'], 'review_id': rid, 'reused': True,
+                            'revalidated': True}
                 return {'intent_id': intent['intent_id'], 'review_id': rid, 'reused': True}
         iid = model.new_id('ux', ctx.request_id)
         # The policy recorded is the one the projection embeds (the policy the gate applies,
