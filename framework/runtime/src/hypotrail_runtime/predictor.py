@@ -36,6 +36,11 @@ beside the package, canonically equal. A Python bytecode cache (``__pycache__``,
 ``*.pyo``) anywhere in a bundle is refused, listed or not: it is code that no digest binds
 (Python imports a cached module instead of its source), and loading a package in place
 writes one. Trusted roots are absolute paths.
+
+Round 4 (review A, 2026-10-25). An ``mlflow_pyfunc`` package holds exactly the files its
+packager writes (``MLmodel``, the wrapper, the three environment files, the descriptor copy,
+and the embedded native bundle under ``artifacts/native_bundle/``); any other file is
+refused even when its descriptor names it, since ``MLmodel`` could make MLflow load it.
 * :meth:`Predictor.predict` checks the raw features against the data contract and returns
   a :class:`PredictionBatch` in input order: the score of the named positive class, or a
   prediction in the target unit.
@@ -95,6 +100,16 @@ RESERVED_EXTENSIONS = ('hypotrail.learnt_state', 'hypotrail.n_train', BOUND_PARI
 PACKAGE_FORMAT = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$')
 # The descriptor extension naming the descriptor's own copy inside its package (round 3).
 DESCRIPTOR_COPY = 'hypotrail.descriptor_copy'
+# The files of an ``mlflow_pyfunc`` package (round 4, R4-A1): exactly these names at the
+# package root and the embedded native bundle under ``artifacts/native_bundle/``. MLflow's
+# loader follows keys of ``MLmodel`` to other files of the package (``data``, ``code``), so a
+# file the packager does not write is refused even when its descriptor names it. The same
+# list as ``mlkit.integrations.mlflow_packaging.PACKAGE_FILES`` (the runtime imports no
+# packager; a test keeps the two equal).
+MLFLOW_PYFUNC_FORMAT = 'mlflow_pyfunc'
+MLFLOW_PYFUNC_FILES = ('MLmodel', 'hypotrail_pyfunc.py', 'requirements.txt', 'conda.yaml',
+                       'python_env.yaml', 'hypotrail-package.json')
+MLFLOW_PYFUNC_BUNDLE = 'artifacts/native_bundle'
 # Python bytecode: never part of a bundle (round 3, R3-A1).
 BYTECODE_DIR = '__pycache__'
 BYTECODE_SUFFIXES = ('.pyc', '.pyo')
@@ -911,6 +926,37 @@ def _check_package_listing(root: Path, entry, descriptor: PackageDescriptor,
     if unnamed:
         _refuse_integrity(f'The {entry.format} package holds listed files its descriptor does '
                           'not name.', path=unnamed[0], files=unnamed)
+    if entry.format == MLFLOW_PYFUNC_FORMAT:
+        _check_mlflow_pyfunc_layout(entry, descriptor, named)
+
+
+def _check_mlflow_pyfunc_layout(entry, descriptor: PackageDescriptor, named: set) -> None:
+    """An ``mlflow_pyfunc`` package holds exactly the files its packager writes (round 4,
+    R4-A1): :data:`MLFLOW_PYFUNC_FILES` at its root, its descriptor copy being
+    ``hypotrail-package.json``, and the embedded native bundle under
+    :data:`MLFLOW_PYFUNC_BUNDLE`, which the descriptor names (checked against this bundle by
+    :func:`_check_embedded_bundles`). Any other file, at the root or in another folder, is
+    refused: no check reads it, and ``MLmodel`` could make MLflow load it."""
+    inner = MLFLOW_PYFUNC_BUNDLE + '/'
+    unexpected = sorted(rel for rel in named
+                        if rel not in MLFLOW_PYFUNC_FILES and not rel.startswith(inner))
+    missing = sorted(rel for rel in (*MLFLOW_PYFUNC_FILES, f'{inner}{BUNDLE}')
+                     if rel not in named)
+    declared = (descriptor.extensions.get(DESCRIPTOR_COPY),
+                descriptor.extensions.get('hypotrail.native_bundle'))
+    if unexpected or missing or declared != (MLFLOW_PYFUNC_FILES[-1], MLFLOW_PYFUNC_BUNDLE):
+        prefix = entry.relative_path + '/'
+        shown = [*unexpected, *missing]
+        _refuse_integrity(f'The {entry.format} package does not hold exactly the files its '
+                          f'packager writes ({", ".join(shown[:5]) or "descriptor extensions"}'
+                          f'): only {", ".join(MLFLOW_PYFUNC_FILES)} and the embedded native '
+                          f'bundle under {inner} are allowed, since MLflow could load any other '
+                          'file of the package.',
+                          path=prefix + shown[0] if shown else
+                          f'{entry.relative_path}.descriptor.json',
+                          unexpected=[prefix + r for r in unexpected],
+                          missing=[prefix + r for r in missing],
+                          allowed=[*MLFLOW_PYFUNC_FILES, inner])
 
 
 def _check_embedded_bundles(root: Path, bundle: PredictorBundle, entry, descriptor,

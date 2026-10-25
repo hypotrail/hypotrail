@@ -248,6 +248,9 @@ def predictor_of(entry: Mapping) -> dict:
 
 # ``details`` key of a refusal raised before any final-test row was read.
 FINAL_TEST_ROWS_READ = 'final_test_rows_read'
+# ``details.reason`` of a bundle whose packages are not the ones the capture recorded
+# (round 4, R4-A2).
+PACKAGE_NOT_RECORDED = 'package_not_recorded'
 NOT_READ = {'en': 'No final-test row was read: the final test is still sealed.',
             'fr': "Aucune ligne de l'échantillon de test final n'a été lue : il reste scellé."}
 
@@ -348,6 +351,18 @@ def loading_refusal(state: Mapping, predictor: Mapping, exc) -> dict:
                   f"Python dans le bundle enregistré ({folders}) : le bundle ne se vérifie "
                   "plus. Supprimez ce dossier, chargez désormais les packages depuis une "
                   "copie, puis ouvrez l'échantillon de test final.")
+    elif contract == 'artifact_integrity_failed' and details.get('reason') == \
+            PACKAGE_NOT_RECORDED:
+        formats = ', '.join(str(f) for key in ('missing', 'unrecorded', 'changed')
+                            for f in details.get(key) or [])
+        junior = ('The model package in the saved bundle of your captured model is not the one '
+                  f'recorded when it was captured ({formats}): it was replaced, re-made or '
+                  'removed since. Restore the bundle from a copy you trust, or run '
+                  'predictor.capture again, then open the final test.' if lang == 'en' else
+                  "Le package du modèle dans le bundle enregistré n'est pas celui enregistré "
+                  f"lors de la capture ({formats}) : il a été remplacé, refait ou supprimé "
+                  "depuis. Restaurez le bundle depuis une copie de confiance, ou relancez "
+                  "predictor.capture, puis ouvrez l'échantillon de test final.")
     elif contract == 'artifact_integrity_failed':
         junior = ('The saved bundle of your captured model does not verify: a file in its '
                   'folder was added, changed or removed (a .DS_Store or an editor backup, '
@@ -573,6 +588,31 @@ def load_for_final(store, predictor: Mapping):
         raise
 
 
+def recorded_packages(store, predictor: Mapping) -> list | None:
+    """The packages the capture of ``predictor`` recorded (``values.packages``:
+    ``[{format, artifact_id}]``), or None when the predictor names no capture result."""
+    from mlkit.study import registry
+    rid = predictor.get('result_id')
+    if rid is None:
+        return None
+    values = registry.get(store, rid)['output']['values']
+    return [{'format': p['format'], 'artifact_id': p['artifact_id']}
+            for p in values.get('packages') or []]
+
+
+def package_mismatch(bundle, recorded) -> dict | None:
+    """``{missing, unrecorded, changed}`` (package formats) when the bundle's optional
+    packages are not the ones the capture recorded (round 4, R4-A2), else None."""
+    if recorded is None:
+        return None
+    held = {p.format: p.artifact_id for p in bundle.optional_packages}
+    wanted = {p['format']: p['artifact_id'] for p in recorded}
+    found = {'missing': sorted(set(wanted) - set(held)),
+             'unrecorded': sorted(set(held) - set(wanted)),
+             'changed': sorted(f for f in set(wanted) & set(held) if wanted[f] != held[f])}
+    return found if any(found.values()) else None
+
+
 def _load_for_final(store, predictor: Mapping):
     from hypotrail_runtime import check_parity, load_predictor
     root = predictors_root(store)
@@ -581,6 +621,17 @@ def _load_for_final(store, predictor: Mapping):
         if loaded.predictor_id != predictor['predictor_id']:
             raise ContractError('artifact_integrity_failed', 'The bundle holds another '
                                 'predictor.', remediation='Capture again.')
+        # Round 4 (R4-A2): the verified bundle holds the packages the capture recorded, each
+        # with its recorded artifact id (a package is outside the predictor id).
+        mismatch = package_mismatch(loaded.bundle, recorded_packages(store, predictor))
+        if mismatch is not None:
+            raise ContractError('artifact_integrity_failed', 'The packages in the saved bundle '
+                                'are not the ones the capture recorded.',
+                                path=predictor['bundle'],
+                                remediation='Restore the captured bundle from a copy you trust, '
+                                            'or run predictor.capture again, then open the '
+                                            'final test; never re-package or edit a bundle.',
+                                details={'reason': PACKAGE_NOT_RECORDED, **mismatch})
         parity = check_parity(loaded)
         if parity.status != 'ok':
             raise ContractError('artifact_integrity_failed', 'The reloaded predictor does not '

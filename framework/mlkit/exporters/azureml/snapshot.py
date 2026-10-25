@@ -589,7 +589,10 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
         if verify_predictor is None:
             raise ExportError('optional_dependency_missing', 'No predictor verifier.',
                               path='predictor', remediation='Internal: pass verify_predictor.')
-        predictor = verify_predictor(Path(bundle_dir), recipe, contract)
+        from .artifact import recorded_packages
+        # Round 4 (R4-A2): the bundle must hold the packages the capture recorded.
+        predictor = verify_predictor(Path(bundle_dir), recipe, contract,
+                                     recorded_packages=recorded_packages(source))
         _same_predictor(descriptor, predictor)
         checks.append(_check_training_rows(plan, predictor))
         checks += predictor['checks']

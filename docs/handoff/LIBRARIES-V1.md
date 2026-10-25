@@ -264,6 +264,57 @@ Evidence: `framework/tests/study/libraries`,
 `framework/tests/exporters` and `framework/tests/study/test_review_round2_training_exclusions.py`
 together 500 passed, 7 skipped (507 collected: 243, 250 and 14; the round-3 file holds 36).
 
+**Round 4.** Regression tests: `framework/tests/study/libraries/test_review_round4_a.py`
+(the reviewer's probes ported, with variants; every bundle and study in `tmp_path`).
+**R4-A1 (blocking):** `ArtifactPackager._check_embedded` compared a few keys of `MLmodel`'s
+`python_function` block and nothing limited the files of a package, so `data: evil` in
+`MLmodel` made `mlflow.pyfunc.load_model` load `evil/MLmodel` and `evil/hypotrail_pyfunc.py`,
+which no check read; `verify_bundle` accepted, `ArtifactPackager.verify` returned `passed`
+(and ran the evil wrapper), and the export said `packaged`. Now (1) `MLmodel` is the
+packager's own document (`mlflow_packaging.mlmodel_document` / `mlmodel_bytes`: the
+`python_function` flavor with the code-model loader, the wrapper, the embedded bundle as the
+only artifact, the packager's environment files, the bundle's signature, the bundle's Python
+version and the package's MLflow version; indented JSON with sorted keys, ASCII, which MLflow
+reads as YAML; no clock, random model id, local path, `data`, `code`, `model_config` or other
+key), written in place of MLflow's after `save_model` (whose loading keys are checked first,
+so an MLflow version that would load the package otherwise is refused with
+`capability_not_supported`); `verify` regenerates it from the descriptor's signature and
+environment (both already checked against the bundle) and compares the bytes, and a refusal
+names the differing keys (`details.unexpected`, `missing`, `changed`, dotted, for example
+`flavors.python_function.data`); (2) the files of an `mlflow_pyfunc` package are an allowlist
+(`PACKAGE_FILES`: `MLmodel`, `hypotrail_pyfunc.py`, `requirements.txt`, `conda.yaml`,
+`python_env.yaml`, `hypotrail-package.json`, plus `artifacts/native_bundle/**`, the embedded
+bundle checked against the native one): `package` and `verify` refuse any other file or
+folder, an empty one included, and any missing file (`refuse_layout`,
+`artifact_integrity_failed`, `details.unexpected` / `missing` / `allowed`), and the runtime's
+`verify_bundle` refuses, for the `mlflow_pyfunc` format, a listed package file outside the
+same list (`hypotrail_runtime.predictor.MLFLOW_PYFUNC_FILES`, kept equal to the packager's by
+a test; the runtime still imports no packager) or a missing one, and a descriptor whose copy
+or embedded-bundle extensions are not `hypotrail-package.json` and `artifacts/native_bundle`;
+(3) `verify` still runs no package code before the layout, descriptor, environment, wrapper,
+`MLmodel` and embedded-bundle checks pass, and then loads a fresh temporary copy. Because
+`MLmodel` no longer carries MLflow's clock and random id, two captures of the same predictor
+now give the same package and the same `artifact_id`. This changes the package bytes:
+`PACKAGER_VERSION` is `3`; a version-2 package is refused by `verify`
+(`schema_version_unsupported`, capture again) and, inside a bundle, by the export. **R4-A2
+(minor):** `predictor.capture` records `values.packages[].artifact_id`, but nothing compared it
+with the package the bundle holds. Now `read_export_source` states the recorded packages in
+the extension `hypotrail.packages` (`[{format, artifact_id}]`, empty without a capture), and
+the export refuses a bundle whose packages are not those (a recorded package missing, one the
+capture did not record, or another artifact id) with `artifact_integrity_failed`,
+`details.reason: package_not_recorded`, path `predictor.packages`, before any package is
+verified or loaded (see the Azure ML handoff §11, round 4). The final-test opening's
+loadability check (`capture.load_for_final`, so `require_loadable` and `loading_problem`)
+compares the verified bundle's packages with the capture's recorded ones the same way
+(`capture.package_mismatch`) and refuses with the same reason; its junior message (English and
+French) says that the model package in the saved bundle is not the one recorded at capture
+(naming the format), and to restore the bundle from a trusted copy or run `predictor.capture`
+again, then open the final test; no final-test row is read. Captures made before this round
+read as `code_changed` (the runtime, packager and capture sources changed) and are captured
+again.
+Evidence: `framework/tests/study/libraries` and `framework/tests/exporters` together 747
+passed, 6 skipped (753 collected: 271 and 482; the round-4 file holds 28).
+
 ## Commands and test evidence
 
 Environment: Python 3.13, uv 0.11, the lock in `framework/uv.lock` (`uv sync --project

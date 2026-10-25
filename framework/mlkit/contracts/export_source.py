@@ -38,7 +38,10 @@ registry entries and the bundle manifests. Raw data and final-test labels never 
   kind; ``development_plan.excluded_rows`` (only when there are some) counts the
   delayed-label rows left out, with the engine's ``delayed_labels_excluded`` text, which is
   also a limitation;
-* ``limitations``: what the export cannot claim.
+* ``limitations``: what the export cannot claim;
+* ``extensions["hypotrail.packages"]``: the packages the capture recorded,
+  ``[{format, artifact_id}]`` (round 4, R4-A2; empty without a capture), so the exporter
+  refuses a bundle whose packages are not those (a package is outside the predictor id).
 """
 from __future__ import annotations
 
@@ -375,6 +378,7 @@ def read_export_source(study_path, expected_revision: int) -> ExportSource:
         predictor['status'] = 'not_applicable'
     capture_rid = state['current'].get(CAPTURE)
     relation, entry = None, None
+    recorded_packages = []
     if capture_rid is not None:
         entry = registry.get(store, capture_rid)
         values = entry['output']['values']
@@ -387,6 +391,8 @@ def read_export_source(study_path, expected_revision: int) -> ExportSource:
                          data_contract_sha256=values['data_contract_sha256'],
                          profile=values['profile'],
                          packages=[p['format'] for p in values.get('packages') or []])
+        recorded_packages = [{'format': p['format'], 'artifact_id': p['artifact_id']}
+                             for p in values.get('packages') or []]
         if final_rid is not None:
             final = registry.get(store, final_rid)
             used = (final['inputs'].get('predictor') or {}).get('predictor_id')
@@ -428,7 +434,8 @@ def read_export_source(study_path, expected_revision: int) -> ExportSource:
            'metrics': ['mae', 'rmse'] if st.task_of(state) == st.REGRESSION
            else ['precision', 'recall', 'roc_auc', 'average_precision'],
            'conclusion': _conclusion(state),
-           'extensions': {'hypotrail.capabilities': {
+           'extensions': {'hypotrail.packages': recorded_packages,
+                          'hypotrail.capabilities': {
                'native_predictor': predictor['status'],
                # The engine reserves no calibration partition (spec L-15): the MAPIE
                # capabilities are not applicable to any study it creates today.

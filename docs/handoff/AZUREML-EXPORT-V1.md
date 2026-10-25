@@ -519,3 +519,29 @@ rendered YAML of a project quotes its texts (bytes differ from round 2, same val
 evaluation plan) is fixed separately; the tests of the review-v1 regression studies use a
 marked workaround fixture until then. The native runtime's own input check does not test
 finiteness; the exported project refuses non-finite values before calling it.
+
+**Round 4 fixes** (round-4 review R4-A1 and R4-A2 of the library runtime; regression tests:
+`framework/tests/study/libraries/test_review_round4_a.py`). *MLflow package (R4-A1)*:
+`mlflow_packaging.py`, which the generated project copies byte for byte
+(`src/pipeline/utils/hypotrail/mlflow_packaging.py`, a `shared` file computed from the module
+at render time), now writes `MLmodel` itself (`mlmodel_bytes`: deterministic, no clock, random
+id or local path, no `data`, `code` or other loader key) and verifies it by regenerating and
+comparing the bytes, and admits exactly the files of `PACKAGE_FILES` plus
+`artifacts/native_bundle/**` in a package; the runtime's `verify_bundle` applies the same
+allowlist to an `mlflow_pyfunc` package. The export's `mlflow_package_verified` check therefore
+refuses a package carrying another loader path, an extra file or folder, or an `MLmodel` key
+the packager does not write, before any package code runs. `PACKAGER_VERSION` is `3`: a
+package of version 2 is refused (`schema_version_unsupported`); capture again. *Recorded
+package (R4-A2)*: `artifact.verify_predictor(..., recorded_packages=...)` compares the bundle's
+`optional_packages` with the packages the capture recorded, which `read_export_source` states
+in its extension `hypotrail.packages` (`artifact.recorded_packages(source)`; a source that
+states only `predictor.packages` gives the formats without ids, and a source that states
+neither, such as the synthetic test double, checks nothing). A recorded package missing, a
+package the capture did not record, or another `artifact_id` refuses the export with
+`artifact_integrity_failed`, `details.reason: package_not_recorded` (with `missing`,
+`unrecorded`, `changed`, `recorded` and `held`), path `predictor.packages`, remediation:
+restore the captured bundle from a trusted copy or capture again before the final test is
+opened; it is checked before the MLflow package is verified, so a re-made package is never
+loaded. The predictor record also lists `packages` (`[{format, artifact_id}]`). The generated
+project's bytes are unchanged apart from the copied `mlflow_packaging.py` and, through the
+captured bundle, the package files.
