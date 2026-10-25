@@ -342,16 +342,24 @@ def loading_refusal(state: Mapping, predictor: Mapping, exc) -> dict:
     contract = details.get('contract_code')
     lang = _lang(state)
     if contract == 'environment_unqualified' and details.get('reason') == RUNTIME_NOT_BOUND:
+        # Round 5 (review E, R5E-2): the engine's own runtime is never replaced by the wheel
+        # of a bundle (it is the engine's editable install); capturing again binds the
+        # runtime installed now, and ``run predictor.capture`` recomputes a capture that
+        # cannot be loaded.
         junior = ('The model runtime installed here (hypotrail_runtime) is not the one your '
                   'model was captured with: its code changed since, even if its version did '
-                  'not, so it cannot score your model for the final test. Install the runtime '
-                  'wheel kept inside the bundle, or run predictor.capture again, then open the '
-                  'final test.' if lang == 'en' else
+                  'not, so it cannot score your model for the final test. Run '
+                  'predictor.capture again (it captures the same choice with the runtime '
+                  'installed now), then open the final test.' if lang == 'en' else
                   "Le runtime du modèle installé ici (hypotrail_runtime) n'est pas celui de la "
                   "capture : son code a changé depuis, même si sa version est la même, il ne "
                   "peut donc pas évaluer votre modèle sur l'échantillon de test final. "
-                  "Installez le wheel du runtime conservé dans le bundle, ou relancez "
-                  "predictor.capture, puis ouvrez l'échantillon de test final.")
+                  "Relancez predictor.capture (il capture le même choix avec le runtime "
+                  "installé maintenant), puis ouvrez l'échantillon de test final.")
+        details['remediation'] = ('Run hypotrail run predictor.capture again: it captures the '
+                                  'chosen configuration with the runtime installed now. Never '
+                                  "install a bundle's runtime wheel over the engine's own "
+                                  'runtime.')
     elif contract == 'environment_unqualified':
         junior = ('This environment differs from the one your model was captured in (a '
                   'library version changed), so it cannot be loaded for the final test. '
@@ -455,7 +463,43 @@ def compute(store, plan_: Mapping) -> dict:
     try:
         return _compute(store, plan_)
     except ContractError as exc:
+        if exc.code == 'environment_unqualified' and exc.details.get('reason') == \
+                RUNTIME_NOT_BOUND:
+            raise runtime_refusal(store, exc) from None
         raise cerr.to_study_error(exc) from None
+
+
+def runtime_refusal(store, exc: ContractError):
+    """Round 5 (review E, R5E-1): the capture's own reload refused the runtime installed
+    here, because its folder holds code the wheel just built from it cannot carry (an
+    extension module), or changed while the capture ran. Capturing again with the same
+    folder fails the same way, so the refusal says what to remove (contract code
+    ``environment_unqualified``, ``details.reason: runtime_not_bound``) and carries a junior
+    message in the study language; nothing is captured and the final test stays sealed."""
+    details = dict(exc.details)
+    files = [str(f) for key in ('unexpected', 'changed', 'missing')
+             for f in details.get(key) or []]
+    location = details.get('location') or 'the hypotrail_runtime folder'
+    named = ', '.join(files[:5]) or 'its files'
+    lang = _lang(store.load_state())
+    if lang == 'fr':
+        junior = ("Le runtime du modèle installé ici (hypotrail_runtime) contient du code que "
+                  f"son propre wheel ne peut pas emporter ({named}) : une capture lie, octet "
+                  "par octet, le runtime qui l'a produite, elle ne peut donc pas être gardée. "
+                  "Retirez ces fichiers du dossier du runtime (ou réinstallez le moteur), puis "
+                  "relancez predictor.capture. Rien n'a été capturé ; l'échantillon de test "
+                  "final reste scellé.")
+    else:
+        junior = ('The model runtime installed here (hypotrail_runtime) holds code its own '
+                  f'wheel cannot carry ({named}): a capture binds the runtime that made it '
+                  'byte for byte, so it cannot be kept. Remove those files from the runtime '
+                  'folder (or reinstall the engine), then run predictor.capture again. Nothing '
+                  'was captured; the final test is still sealed.')
+    exc.remediation = (f'Remove {named} from {location} (no wheel of the runtime carries '
+                       'them), or reinstall hypotrail-runtime, then run predictor.capture '
+                       'again.')
+    exc.details = {**details, 'junior_message': junior}
+    return cerr.to_study_error(exc)
 
 
 def _compute(store, plan_: Mapping) -> dict:
@@ -642,9 +686,14 @@ def load_for_final(store, predictor: Mapping):
     try:
         return _load_for_final(store, predictor)
     except StudyError as exc:
-        problem = loading_refusal({}, predictor, exc)
+        try:
+            state = store.load_state()
+        except Exception:                 # noqa: BLE001 - the message falls back to English
+            state = {}
+        problem = loading_refusal(state, predictor, exc)
         exc.details = {**exc.details, FINAL_TEST_ROWS_READ: False,
-                       'junior_message': problem['junior_message']}
+                       'junior_message': problem['junior_message'],
+                       'remediation': problem['remediation']}
         raise
 
 
@@ -673,17 +722,36 @@ def package_mismatch(bundle, recorded) -> dict | None:
     return found if any(found.values()) else None
 
 
-def _load_for_final(store, predictor: Mapping):
-    from hypotrail_runtime import check_parity, load_predictor
-    root = predictors_root(store)
+def loading_problem_of(home, state: Mapping, entry: Mapping) -> dict | None:
+    """Round 5 (review E, R5E-2): :func:`loading_problem` from the study folder ``home``
+    (``.hypotrail``) and the capture's verified registry ``entry``, for the read side
+    (``next_action``), which opens no store. Reads the bundle only."""
+    from mlkit.study.errors import StudyError
+    predictor = predictor_of(entry)
+    recorded = [{'format': p['format'], 'artifact_id': p['artifact_id']}
+                for p in entry['output']['values'].get('packages') or []]
     try:
-        loaded = load_predictor(Path(store.home) / predictor['bundle'], trusted_roots=[root])
+        _load(Path(home), predictor, recorded)
+    except StudyError as exc:
+        return loading_refusal(state, predictor, exc)
+    return None
+
+
+def _load_for_final(store, predictor: Mapping):
+    return _load(Path(store.home), predictor, recorded_packages(store, predictor))
+
+
+def _load(home: Path, predictor: Mapping, recorded):
+    from hypotrail_runtime import check_parity, load_predictor
+    root = home / PREDICTORS_DIR
+    try:
+        loaded = load_predictor(home / predictor['bundle'], trusted_roots=[root])
         if loaded.predictor_id != predictor['predictor_id']:
             raise ContractError('artifact_integrity_failed', 'The bundle holds another '
                                 'predictor.', remediation='Capture again.')
         # Round 4 (R4-A2): the verified bundle holds the packages the capture recorded, each
         # with its recorded artifact id (a package is outside the predictor id).
-        mismatch = package_mismatch(loaded.bundle, recorded_packages(store, predictor))
+        mismatch = package_mismatch(loaded.bundle, recorded)
         if mismatch is not None:
             raise ContractError('artifact_integrity_failed', 'The packages in the saved bundle '
                                 'are not the ones the capture recorded.',

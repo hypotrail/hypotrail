@@ -351,6 +351,37 @@ def _candidates(task: str, reference: dict | None, share: float | None, lang: st
     return out
 
 
+# Round 5 (review E, R5E-6): the parts a review-v1 criterion adds to a legacy one
+# (``mlkit.study.objective.validate_criterion``). The decision rule compares the point
+# estimate with the minimum; the binary selection acts on the scenario's share of the scored
+# rows, or on the engine's default share (the share the development diagnostics use) when the
+# case assumes none, within each evaluation window, by pooled counts.
+REVIEW_DECISION_RULE = 'point_estimate'
+REVIEW_DEFAULT_RULE = 'share:0.1'
+SELECTION_METRIC = {'precision_gain': 'precision', 'recall_gain': 'recall'}
+
+
+def review_value(value: Mapping, task: str, share: float | None = None) -> dict:
+    """``value`` (a legacy criterion: metric and minimum) completed into a valid review-v1
+    criterion: ``decision_rule`` and ``selection``. A value that already has them is
+    returned unchanged (a copy)."""
+    from . import records as rec
+    out = copy.deepcopy(dict(value))
+    out.setdefault('decision_rule', REVIEW_DECISION_RULE)
+    if 'selection' in out:
+        return out
+    if task == REGRESSION:
+        out['selection'] = {'metric': 'mae', 'rule': None, 'scope': 'evaluation_window',
+                            'batch_column': None, 'aggregation': 'row_weighted'}
+        return out
+    rule = (rec.canonical_rule(f'share:{share}') if share is not None else None) \
+        or REVIEW_DEFAULT_RULE
+    out['selection'] = {'metric': SELECTION_METRIC.get(out.get('metric'), 'precision'),
+                        'rule': rule, 'scope': 'evaluation_window', 'batch_column': None,
+                        'aggregation': 'pooled_counts'}
+    return out
+
+
 def options(view: Mapping, lang: str = EN, unit: str | None = None) -> dict:
     """The ``criterion_options`` of ``next_action`` at the success criterion (R18, R19)."""
     from . import texts
@@ -377,6 +408,11 @@ def options(view: Mapping, lang: str = EN, unit: str | None = None) -> dict:
             'positifs, donc précision, rappel et lift classent les configurations de la même '
             'façon. Avec un seuil, le nombre d\'actions change et ils diffèrent.')
     candidates = _candidates(task, reference, share, lang, unit)
+    if (view.get('assurance') or {}).get('profile') == 'review-v1':
+        # Round 5 (review E, R5E-6): under review-v1 a criterion also states its decision
+        # rule and the selection it is measured at, so each option is a complete value.
+        for item in candidates:
+            item['value'] = review_value(item['value'], task, share)
     if task == BINARY:
         illustrative = _t(lang, 'Illustrative, per 1,000 actions, from the development rows; '
                                 'the real gain is measured later, out of fold, and on the '

@@ -387,13 +387,37 @@ class Study:
 
 
 def _module_path(name: str) -> Path | None:
-    """The source file of module ``name`` (located, not imported), or None."""
+    """The source file of module ``name`` (located, not imported), or None.
+
+    Round 5 (review E, R5E-2): a name with a slash, ``package/relative/path``, is a data file
+    inside the folder of a regular package (the runtime's JSON schemas, which its wheel holds
+    and the capture's fingerprint covers)."""
+    if '/' in name:
+        return _package_file(name)
     try:
         spec = importlib.util.find_spec(name)
     except (ImportError, ValueError):
         return None
     path = Path(spec.origin) if spec is not None and spec.origin else None
     return path if path is not None and path.is_file() else None
+
+
+def _package_file(name: str) -> Path | None:
+    """The file ``relative/path`` of ``package/relative/path`` inside the one folder of the
+    regular package ``package`` (located, not imported), or None."""
+    package, _, relative = name.partition('/')
+    parts = relative.split('/')
+    if not package or not relative or any(p in ('', '.', '..') for p in parts):
+        return None
+    try:
+        spec = importlib.util.find_spec(package)
+    except (ImportError, ValueError):
+        return None
+    locations = list(spec.submodule_search_locations or []) if spec is not None else []
+    if len(locations) != 1:
+        return None
+    path = Path(locations[0]).joinpath(*parts)
+    return path if path.is_file() else None
 
 
 def open(study_dir) -> Study:   # noqa: A001 - the documented name of the read API

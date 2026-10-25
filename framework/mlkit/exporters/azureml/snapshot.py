@@ -30,6 +30,7 @@ recipe and data contract digests); another bundle is ``artifact_integrity_failed
 from __future__ import annotations
 
 import importlib
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Mapping
@@ -332,6 +333,28 @@ def _refuse_without_recipe(source, predictor_status: str | None,
                       details={'reason': 'no_recipe', 'limitations': limitations})
 
 
+# Round 5 (review E, R5E-8): once the final test is opened the predictor can no longer be
+# captured again (a new fit would be a rebuilt candidate, not the evaluated model), so a
+# refusal of the captured bundle never tells the user to capture it again.
+AFTER_OPENING_REMEDIATION = (
+    'The final test is opened, so the predictor can no longer be captured again (a new fit '
+    'would be a rebuilt candidate, not the evaluated model). Restore the captured bundle from a '
+    'copy you trust and export again; never replace or edit a bundle. The recipe of the '
+    'selection stays in the study, and a new, independently evaluated model needs a new study.')
+
+
+def after_opening(error: ExportError, final_status: str | None) -> ExportError:
+    """``error`` with :data:`AFTER_OPENING_REMEDIATION` when the final test is opened and
+    its remediation names a new capture; unchanged otherwise."""
+    remediation = error.details.get('remediation') or ''
+    if final_status != 'opened' or not re.search(r'captur', remediation, re.IGNORECASE):
+        return error
+    details = {k: v for k, v in error.details.items() if k not in ('path', 'remediation')}
+    details.update(recapture_possible=False, original_remediation=remediation)
+    return ExportError(error.code, error.message, path=error.details.get('path'),
+                       remediation=AFTER_OPENING_REMEDIATION, details=details)
+
+
 def _plan(source_plan: Any, contract: dict) -> dict:
     """The development plan with development row keys only; the final test is metadata
     (status and row count), never keys or labels."""
@@ -591,9 +614,12 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
                               path='predictor', remediation='Internal: pass verify_predictor.')
         from .artifact import recorded_packages
         # Round 4 (R4-A2): the bundle must hold the packages the capture recorded.
-        predictor = verify_predictor(Path(bundle_dir), recipe, contract,
-                                     recorded_packages=recorded_packages(source))
-        _same_predictor(descriptor, predictor)
+        try:
+            predictor = verify_predictor(Path(bundle_dir), recipe, contract,
+                                         recorded_packages=recorded_packages(source))
+            _same_predictor(descriptor, predictor)
+        except ExportError as error:
+            raise after_opening(error, final_status) from error
         checks.append(_check_training_rows(plan, predictor))
         checks += predictor['checks']
         warnings += predictor['warnings']

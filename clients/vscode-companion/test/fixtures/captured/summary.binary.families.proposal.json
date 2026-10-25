@@ -371,31 +371,31 @@
   },
   "results": {
    "diag.binary": {
-    "result_id": "6529b5a865f2b6ecf0a945d9f539181f8eed5d3e49e8113a3e23735e89e98df1",
+    "result_id": "4cdbd71792e48517642c588b892165e0cc371e2ef72bf69c95e2fa598f5c257e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_rate": {
-    "result_id": "aac851d41e23d9464c9e1d6e08df4773ca66107e2d5c9328c9540316584cc152",
+    "result_id": "d88b93ed4c8841cab627e64ff39a481e1af7f51f08b5d179ff58e9f28570afe9",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "63ac3535c06393f42139aa8e6e92e31bb416fae134ceb625b08ef663091700de",
+    "result_id": "7c8801f9dc382cca6229aa86976a1bbb27036d01b0438bc190b718f456c034e5",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.logistic": {
-    "result_id": "0a4d07bf33cec8c05e17f94b30226183c69c3fd44d449a652c5dfbc5dc479feb",
+    "result_id": "96d756c1537b462384be51f04ec776123bda212dbe199974b408ed9617b0fc40",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "f141fdc0ce56cb4833953def21c769f9843943366f86716f0ad8b733bfa5cb26",
+    "result_id": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -520,8 +520,8 @@
   "eda_looks": {
    "target_looks": 2,
    "results": [
-    "aac851d41e23d9464c9e1d6e08df4773ca66107e2d5c9328c9540316584cc152",
-    "6529b5a865f2b6ecf0a945d9f539181f8eed5d3e49e8113a3e23735e89e98df1"
+    "d88b93ed4c8841cab627e64ff39a481e1af7f51f08b5d179ff58e9f28570afe9",
+    "4cdbd71792e48517642c588b892165e0cc371e2ef72bf69c95e2fa598f5c257e"
    ]
   },
   "recap": [
@@ -670,7 +670,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-25T05:19:48.597872+00:00",
+   "boundary_time": "2026-10-25T14:20:07.309480+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -679,7 +679,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-25T05:19:48.778164+00:00",
+     "time": "2026-10-25T14:20:07.428301+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -702,7 +702,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-25T05:19:49.425282+00:00",
+     "time": "2026-10-25T14:20:07.845808+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -732,7 +732,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-25T05:19:50.021817+00:00",
+     "time": "2026-10-25T14:20:08.301474+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -755,7 +755,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-25T05:19:50.641351+00:00",
+     "time": "2026-10-25T14:20:08.808833+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -785,7 +785,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-25T05:19:51.491236+00:00",
+     "time": "2026-10-25T14:20:09.580077+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -808,7 +808,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-25T05:19:52.293506+00:00",
+     "time": "2026-10-25T14:20:10.257914+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -838,7 +838,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-25T05:19:53.022918+00:00",
+     "time": "2026-10-25T14:20:10.962959+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -861,7 +861,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-25T05:19:53.798535+00:00",
+     "time": "2026-10-25T14:20:11.735692+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -891,7 +891,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-25T05:19:54.673656+00:00",
+     "time": "2026-10-25T14:20:12.529047+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -914,7 +914,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-25T05:19:55.432052+00:00",
+     "time": "2026-10-25T14:20:13.235145+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -944,7 +944,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-25T05:19:56.425277+00:00",
+     "time": "2026-10-25T14:20:14.154302+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -952,7 +952,7 @@
      "note_id": null,
      "activity": "split",
      "slot": "split",
-     "result_id": "f141fdc0ce56cb4833953def21c769f9843943366f86716f0ad8b733bfa5cb26",
+     "result_id": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
      "execution_id": "e_bb85e451e092b31aedb250d1",
      "rules": null,
      "column": null,
@@ -967,7 +967,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-25T05:19:57.398669+00:00",
+     "time": "2026-10-25T14:20:15.082843+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -975,7 +975,7 @@
      "note_id": null,
      "activity": "eda.target_rate",
      "slot": "eda.target_rate",
-     "result_id": "aac851d41e23d9464c9e1d6e08df4773ca66107e2d5c9328c9540316584cc152",
+     "result_id": "d88b93ed4c8841cab627e64ff39a481e1af7f51f08b5d179ff58e9f28570afe9",
      "execution_id": "e_a8274014a4c678f4a2a235d2",
      "rules": null,
      "column": null,
@@ -990,7 +990,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-25T05:19:58.385321+00:00",
+     "time": "2026-10-25T14:20:15.974218+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -998,7 +998,7 @@
      "note_id": null,
      "activity": "fit.baseline",
      "slot": "fit.baseline",
-     "result_id": "63ac3535c06393f42139aa8e6e92e31bb416fae134ceb625b08ef663091700de",
+     "result_id": "7c8801f9dc382cca6229aa86976a1bbb27036d01b0438bc190b718f456c034e5",
      "execution_id": "e_eff39ccb2204a33ff345cb41",
      "rules": null,
      "column": null,
@@ -1013,7 +1013,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-25T05:19:59.878225+00:00",
+     "time": "2026-10-25T14:20:18.322084+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1021,7 +1021,7 @@
      "note_id": null,
      "activity": "fit.logistic",
      "slot": "fit.logistic",
-     "result_id": "0a4d07bf33cec8c05e17f94b30226183c69c3fd44d449a652c5dfbc5dc479feb",
+     "result_id": "96d756c1537b462384be51f04ec776123bda212dbe199974b408ed9617b0fc40",
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
      "rules": null,
      "column": null,
@@ -1036,7 +1036,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-25T05:20:00.957496+00:00",
+     "time": "2026-10-25T14:20:19.683688+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1044,7 +1044,7 @@
      "note_id": null,
      "activity": "diag.binary",
      "slot": "diag.binary",
-     "result_id": "6529b5a865f2b6ecf0a945d9f539181f8eed5d3e49e8113a3e23735e89e98df1",
+     "result_id": "4cdbd71792e48517642c588b892165e0cc371e2ef72bf69c95e2fa598f5c257e",
      "execution_id": "e_e3011a6950ece5ea44c0419c",
      "rules": null,
      "column": null,
@@ -1059,7 +1059,7 @@
     },
     {
      "revision": 22,
-     "time": "2026-10-25T05:20:01.836071+00:00",
+     "time": "2026-10-25T14:20:20.510404+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1097,6 +1097,6 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "8ce79829a5791bde"
+  "currency": "8dd36b98136fbe9a"
  }
 }

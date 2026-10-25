@@ -705,8 +705,10 @@ def test_the_round3_edges_are_exact_directed_and_scoped(tmp_path):
         assert study.code_changed(_entry(activity, **BASE, **{
             acts: '3065f4d623f1ea2346c43ef27c0dd0f9a948c8eb007355c9cb625967b17cc9e1'})) == []
     assert study.code_changed(_entry(act.CAPTURE, **PREVIOUS)) == [FAMILIES, FIT]
-    assert study.code_changed(_entry(act.CAPTURE, **{acts: ce82, **PREVIOUS})) == [FAMILIES,
-                                                                                     FIT]
+    # Review round 5 (R5E-2) changed activities.py again; the capture is never attested, so
+    # the ce82ca9 activities digest is a change of the capture too.
+    assert study.code_changed(_entry(act.CAPTURE, **{acts: ce82, **PREVIOUS})) == [
+        acts, FAMILIES, FIT]
     for module in (FIT, FAMILIES):
         assert not code_compat.equivalent(module, CURRENT[module], PREVIOUS[module],
                                           'fit.variant')

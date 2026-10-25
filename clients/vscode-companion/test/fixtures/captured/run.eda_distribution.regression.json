@@ -22,7 +22,7 @@
   "activity": "eda.distribution",
   "execution_id": "e_622dd0c704d6af123eea761a",
   "status": "promoted",
-  "result_id": "ecaa05b8ed41cbca117c5f38f0c8450657442fbc2a7ffdee103e2f415e7061ce",
+  "result_id": "5facc7f820f915cdaf7b5ef89e7452a0ae93b71717832572fad274d943f8ad6f",
   "values": {
    "partition": "train",
    "column": "weight",
@@ -136,13 +136,13 @@
    "activity": "eda.distribution",
    "slot": "eda.distribution:weight",
    "status": "promoted",
-   "result_id": "ecaa05b8ed41cbca117c5f38f0c8450657442fbc2a7ffdee103e2f415e7061ce",
-   "input_key": "eac6551d7299da655b33f273f439eb793b7ba365b323f7941f61e958fcc6add6",
+   "result_id": "5facc7f820f915cdaf7b5ef89e7452a0ae93b71717832572fad274d943f8ad6f",
+   "input_key": "16fdbbb43a5bb8755ef4f849615a9022d00194a0cdcd6ff136c2c738f9a9566c",
    "reason": null,
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_e74cc12216da4aeb9a2872db4369c36d"
+    "x_e5958e87260142dc919afa1591675503"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -193,7 +193,7 @@
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: the baseline model, run without asking you. Which predictions do the training mean and a linear model give for the validation rows?",
+   "junior_digest": "Next: the baseline model, run without asking you. It answers this question: Which predictions do the training mean and a linear model give for the validation rows?",
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",

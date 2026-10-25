@@ -138,6 +138,23 @@ verdict_card:
   final_after_note: Quelque chose a changé après l'ouverture ; le test final ne mesure donc plus l'état actuel de l'étude.
   trials: Configurations comparées
   trials_note: configurations évaluées sur les mêmes lignes ; plus elles sont nombreuses, plus la meilleure peut devoir son rang au hasard.
+  rule_of_figures: Règle de ces chiffres
+  found_by_model: Lignes positives trouvées par le modèle
+  among_selected: '{tp} parmi {selected} lignes sélectionnées{precision}'
+  precision_of: ' (précision {value}{interval})'
+  interval_of: ', intervalle de {low} à {high}'
+  baseline_at_rule: Modèle de référence à la même règle
+  baseline_count: '{tp} en moyenne, sans classement{precision}'
+  precision_gain: Gain de précision sur le modèle de référence
+  points_value: '{point} points de pourcentage{interval}'
+  points_unit: ' points de pourcentage'
+  mae_of: 'Erreur absolue moyenne, {model}'
+  mae_interval: ' (intervalle de {low} à {high})'
+  difference_linear: Différence, modèle linéaire moins modèle de référence
+  difference_variant: Différence, variante moins modèle de référence
+  difference_value: '{point}{interval} ; une valeur négative signifie une erreur plus faible'
+  final_among: '{tp} parmi {selected} lignes sélectionnées{precision} ; {rule}'
+  final_precision: ' (précision {value})'
   status:
     met: Atteint
     uncertain: Incertain, l'intervalle contient zéro
@@ -180,6 +197,50 @@ looks:
   summary: Regards sur le résultat dans les lignes de développement
   note: Chaque exploration qui lit la cible compte comme un regard. Plus il y en a, plus un motif peut être dû au hasard.
   count: regards jusqu'ici
+value_words:
+  rule_capacity: 'Sélectionner les {k} lignes aux scores les plus élevés'
+  rule_threshold: 'Sélectionner chaque ligne de score {t} ou plus'
+  rule_share: 'Sélectionner les {share} des lignes aux scores les plus élevés'
+  with_model: '{words}, avec {model}'
+  model_choice:
+    fit.linear: Utiliser le modèle linéaire
+    fit.logistic: Utiliser le modèle logistique
+    fit.variant: Utiliser la variante du modèle linéaire
+    fit.baseline: "Continuer à prédire la moyenne d'entraînement (le modèle de référence)"
+  later_variant: 'Utiliser la {ordinal} variante'
+  ordinals:
+    second: deuxième
+    third: troisième
+  variants: 'Comparer le modèle avec : {words}'
+  variant: 'Comparer le modèle avec une variante : {words}'
+  final_test: 'Ouvrir le test final une fois pour : {model}'
+  final_test_rule: ', règle : {rule}'
+  cv_kinds:
+    kfold_stratified: stratifiés sur le résultat
+    kfold_quantile: stratifiés sur les quantiles de la cible
+    temporal_folds: "par blocs dans l'ordre du temps"
+  seed: ' (graine {seed})'
+  split_cv: "Validation croisée sur les lignes de développement : {folds} plis, {kind}{seed} ; chaque ligne est prédite une fois par un modèle qui ne l'a pas vue"
+  split_forward: "Validation croisée en avancée temporelle sur les lignes de développement : {folds} plis dans l'ordre du moment de prédiction{gap} ; chaque fenêtre plus tardive est notée une fois par un modèle ajusté sur des lignes antérieures seulement, et les premières lignes (la période de chauffe) servent à l'entraînement sans jamais être notées"
+  forward_gap: ", un écart de {gap} sur l'horloge entre les lignes ajustées et la fenêtre notée"
+  split_group: "Validation croisée sur les lignes de développement : {folds} plis qui ne partagent jamais un groupe ; chaque ligne est prédite une fois par un modèle qui n'a pas vu son groupe"
+  split_ordinal: "Les lignes dont {column} vaut {cutoff} ou plus sont les lignes de validation ; les lignes antérieures entraînent les modèles"
+  split_random: '{kind} : {share} des lignes de développement pour la validation{seed}'
+  split_kinds:
+    stratified_random: Tirage aléatoire stratifié
+    random: Tirage aléatoire
+  criterion_precision_gain: "N'adopter que si la précision dépasse celle du modèle de référence d'au moins {points} points de pourcentage à la règle adoptée"
+  criterion_recall_gain: "N'adopter que si le rappel dépasse celui du modèle de référence d'au moins {points} points de pourcentage à la règle adoptée"
+  criterion_mae_reduction: "N'adopter que si l'erreur absolue moyenne du modèle est inférieure d'au moins {share} à celle de la moyenne de référence"
+  missing_all: un indicateur de valeur manquante pour chaque variable qui a des cellules manquantes
+  missing_some: 'des indicateurs de valeur manquante pour {columns}'
+  rare: 'les catégories de moins de {k} {rows} regroupées'
+  rare_rows_cv: lignes sur lesquelles un modèle est ajusté
+  rare_rows: "lignes d'entraînement"
+  caps: 'des valeurs plafonnées pour {columns}'
+  log_transform: 'une transformation logarithmique de {columns}'
+  preparation_default: 'Préparation par défaut : rien d''ajouté, de regroupé, de plafonné ni de transformé'
+  preparation: 'Préparation : {parts}'
 model_names:
   fit.logistic: Modèle logistique
   fit.baseline: Modèle de référence (sans classement)

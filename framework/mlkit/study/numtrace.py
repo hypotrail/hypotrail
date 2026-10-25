@@ -1000,26 +1000,126 @@ HEX_IDENTIFIER = re.compile(r'\b(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)[0-9a-f]{8,}\b'
 # "241e3") is the number it scales to, at the precision it shows ("241k" is 241,000 to the
 # nearest thousand: ``decimals`` is negative), so it is traced like any other number, and
 # reported when it matches nothing; it was neither before.
-SCALED_NUMBER = re.compile(r'(?<![\w.,])([-\u2212](?=\d))?(\d+(?:[.,]\d+)?)'
-                           r'(?:[eE]([-+]?\d{1,3})|(k|K|M|bn))(?![\w])(\s?%)?')
-MAGNITUDE = {'k': 3, 'K': 3, 'M': 6, 'bn': 9}
+#
+# Round 5 (review E, R5E-5): a scale word or symbol after a number changes its value too,
+# glued, after a space or after a hyphen, in English and French, singular and plural ("241
+# k", "241-thousand", "1.5 millions", "1,5 milliard", "241 mille", "1.5 bn"); "1.5x10^6"
+# and "1.5×10⁶" are the exponent forms; "1.5‰" is a per mille (0.15 %); "1.5x" is a
+# multiple (1.5). A single-letter symbol after a space is not read before a hyphen and a
+# letter ("5 k-fold").
+_SCALE_SEPARATOR = '[ \u00a0\u202f\u2009-]'
+SCALE_WORDS = {'thousand': 3, 'thousands': 3, 'mille': 3, 'millier': 3, 'milliers': 3,
+               'million': 6, 'millions': 6, 'mio': 6, 'billion': 9, 'billions': 9,
+               'milliard': 9, 'milliards': 9, 'bn': 9, 'md': 9, 'mds': 9, 'mrd': 9}
+MAGNITUDE = {'k': 3, 'K': 3, 'M': 6, 'x': 0, '\u00d7': 0}
+_WORD_ALTERNATION = '|'.join(sorted(SCALE_WORDS, key=len, reverse=True))
+_BODY = r'([1-9]\d{0,2}(?:,\d{3})+(?:\.\d+)?|\d+(?:[.,]\d+)?)'
+SUPERSCRIPT = str.maketrans('\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079'
+                            '\u207b\u207a', '0123456789-+')
+_SUPERSCRIPTS = '\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079'
+SCALED_NUMBER = re.compile(
+    r'(?<![\w.,])([-\u2212](?=\d))?' + _BODY +
+    r'(?:[eE]([-+]?\d{1,3})'
+    r'|\s?[x\u00d7*\u00b7]\s?10(?:\^\(?([-+\u2212]?\d{1,3})\)?'
+    rf'|([\u207b\u207a]?[{_SUPERSCRIPTS}]{{1,3}}))'
+    rf'|{_SCALE_SEPARATOR}?(?i:({_WORD_ALTERNATION}))'
+    r'|(k|K|M|x|\u00d7)'
+    rf'|{_SCALE_SEPARATOR}(k|K|M)(?!-[^\W\d_]))'
+    r'(?![\w])(\s?%)?')
+PER_MILLE = re.compile(r'(?<![\w.,])([-\u2212](?=\d))?' + _BODY + r'\s?\u2030')
 
 
-def scaled_numbers(text: str) -> list[cite.Token]:
-    """The numbers of ``text`` written with a magnitude suffix or an exponent
-    (:data:`SCALED_NUMBER`), as tokens; a hexadecimal identifier is not one."""
+def _scaled_body(body: str, language: str | None) -> str:
+    """The digits of a scaled number as a decimal string: in English a comma followed by
+    groups of three digits groups thousands ("12,000 thousand"), otherwise a comma is the
+    decimal separator (always in French)."""
+    if language != 'fr' and re.fullmatch(r'[1-9]\d{0,2}(?:,\d{3})+(?:\.\d+)?', body):
+        return body.replace(',', '')
+    return body.replace(',', '.')
+
+
+def scaled_numbers(text: str, language: str | None = None) -> list[cite.Token]:
+    """The numbers of ``text`` written with a magnitude suffix, a scale word, an exponent or
+    a per mille sign (:data:`SCALED_NUMBER`, :data:`PER_MILLE`), as tokens; a hexadecimal
+    identifier is not one."""
     import decimal
     text = HEX_IDENTIFIER.sub(lambda m: ' ' * len(m.group(0)), text)
     out = []
     for m in SCALED_NUMBER.finditer(text):
-        body = m.group(2).replace(',', '.')
-        exponent = int(m.group(3)) if m.group(3) is not None else MAGNITUDE[m.group(4)]
+        body = _scaled_body(m.group(2), language)
+        if m.group(3) is not None:
+            exponent = int(m.group(3))
+        elif m.group(4) is not None:
+            exponent = int(m.group(4).replace('\u2212', '-'))
+        elif m.group(5) is not None:
+            exponent = int(m.group(5).translate(SUPERSCRIPT))
+        elif m.group(6) is not None:
+            exponent = SCALE_WORDS[m.group(6).lower()]
+        else:
+            exponent = MAGNITUDE[m.group(7) or m.group(8)]
         decimals = (len(body.split('.')[1]) if '.' in body else 0) - exponent
         value = float(decimal.Decimal(body).scaleb(exponent))
         if m.group(1):
             value = -value
-        out.append(cite.Token(m.group(0), value, decimals, bool(m.group(5)), m.start(),
+        out.append(cite.Token(m.group(0), value, decimals, bool(m.group(9)), m.start(),
                               m.end()))
+    for m in PER_MILLE.finditer(text):
+        # A per mille is a tenth of a percent: "1.5‰" is 0.15 %, at one more decimal.
+        body = _scaled_body(m.group(2), language)
+        decimals = (len(body.split('.')[1]) if '.' in body else 0) + 1
+        value = float(decimal.Decimal(body).scaleb(-1))
+        out.append(cite.Token(m.group(0), -value if m.group(1) else value, decimals, True,
+                              m.start(), m.end()))
+    return sorted(out, key=lambda t: t.start)
+
+
+# Round 5 (review E, R5E-5): numeric forms the engine cannot read as one number are
+# reported as untraceable, never left unchecked: digit groups joined by underscores
+# ("241_000"), a number with superscript digits ("10²"), a vulgar fraction ("½", "1½"), a
+# hexadecimal literal ("0x1F"), and any other number glued to letters ("241kEUR", "241kk",
+# "12ms"). An ordinal ("1st", "2nd", "1er", "2e", "3ème") is not a figure; a number glued to
+# "pp" or "pts" is read as percentage points.
+ODD_FORMS = (
+    ('hexadecimal literal', re.compile(r'(?<![\w.,])0[xX][0-9a-fA-F]+(?![\w])')),
+    ('digit groups joined by underscores', re.compile(r'(?<![\w.,])\d+(?:_\d+)+(?![\w])')),
+    ('superscript digits',
+     re.compile(rf'(?<![\w.,])\d+(?:[.,]\d+)?[{_SUPERSCRIPTS}\u207b\u207a]+')),
+    ('vulgar fraction', re.compile(r'(?<![\w.,])\d*[\u00bc-\u00be\u2150-\u215f\u2189]')),
+    ('number glued to letters', re.compile(r'(?<![\w.,])\d+(?:[.,]\d+)?[^\W\d_]\w*')),
+)
+ORDINAL_SUFFIX = re.compile(r'(?:st|nd|rd|th|er|re|ère|ere|e|ème|eme|nde?|de?)', re.I)
+GLUED_POINTS = re.compile(r'(?<![\w.,])(\d+(?:[.,]\d+)?)(?=(?:pp|pts?)(?![\w]))')
+
+
+def odd_numbers(text: str) -> list[tuple[str, int, int, str]]:
+    """The numeric forms of ``text`` that are neither read as a number nor an identifier
+    (:data:`ODD_FORMS`): ``[(text, start, end, form)]`` in text order, non-overlapping.
+    Ordinals and numbers glued to "pp" / "pts" are not listed; a hexadecimal identifier is
+    masked first."""
+    text = HEX_IDENTIFIER.sub(lambda m: ' ' * len(m.group(0)), text)
+    taken: list[tuple[int, int]] = []
+    out = []
+    for form, pattern in ODD_FORMS:
+        for m in pattern.finditer(text):
+            if any(a < m.end() and m.start() < b for a, b in taken):
+                continue
+            if form == 'number glued to letters':
+                letters = re.sub(r'^[\d.,]+', '', m.group(0))
+                if ORDINAL_SUFFIX.fullmatch(letters) or re.fullmatch(r'(?:pp|pts?)', letters):
+                    continue
+            taken.append(m.span())
+            out.append((m.group(0), m.start(), m.end(), form))
+    return sorted(out, key=lambda x: x[1])
+
+
+def glued_point_numbers(text: str) -> list[cite.Token]:
+    """The numbers glued to "pp" or "pts" ("2.8pp"), as tokens of the number alone, so the
+    percentage-point reading after them applies (:data:`PERCENTAGE_POINTS`)."""
+    out = []
+    for m in GLUED_POINTS.finditer(text):
+        body = m.group(1).replace(',', '.')
+        decimals = len(body.split('.')[1]) if '.' in body else 0
+        out.append(cite.Token(m.group(1), float(body), decimals, False, m.start(), m.end()))
     return out
 
 
@@ -1096,11 +1196,28 @@ def trace_text(pool: Pool, text: str, where: str, locate=None, *,
     masked = _masked(text)
     scopes: dict[tuple[int, int], tuple] = {}
     identifiers = {m.start(1) for m in RULE_IDENTIFIER.finditer(masked)}
-    scaled = scaled_numbers(masked)
-    # Review round 4: "1.5M" is one number, not "1" followed by ".5M".
-    inside = [(t.start, t.end) for t in scaled]
+    scaled = scaled_numbers(masked, language)
+    # Review round 4: "1.5M" is one number, not "1" followed by ".5M". Round 5 (R5E-5): a
+    # form read as no number ("241kEUR") is reported once, and no part of it is read.
+    odd = [o for o in odd_numbers(masked)
+           if not any(t.start <= o[1] < t.end for t in scaled)]
+    inside = [(t.start, t.end) for t in scaled] + [(o[1], o[2]) for o in odd]
     plain = [t for t in cite.parse_numbers(masked, language) + glued_numbers(masked)
+             + glued_point_numbers(masked)
              if not any(a <= t.start < b for a, b in inside)]
+    for shown, start, _end, form in odd:
+        probe = cite.Token(shown, 0.0, 0, False, start, _end)
+        if _exempt(masked, probe) or _result_id_prefix(pool, masked, probe) \
+                or (re.fullmatch(r'[0-9a-f]+', shown) and RESULT_ID_LEAD.search(
+                    masked[max(0, start - 24):start])):
+            continue
+        findings.append(finding('untraceable_number', where,
+                                f'{shown} is a number written in a form the engine does not '
+                                f'read ({form}), so it cannot be traced to a result. Write the '
+                                'figure with plain digits as the registry shows it, a unit or '
+                                'scale word after a space, and cite its result.',
+                                number=shown, form=form,
+                                location=locate(start) if locate else None))
     items = sorted([(t.start, 0, t) for t in plain + scaled]
                    + [(w.start, 1, w) for w in wordnum.parse(masked, pool.units)],
                    key=lambda x: x[:2])

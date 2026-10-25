@@ -370,10 +370,11 @@ wheel, remediation `pip install <bundle>/<wheel>` or capture again; nothing is u
 final-test opening reports it as `capture_loadable` with a junior message (English and
 French) saying the installed model runtime is not the one of the capture, even with the same
 version. `environment_issues` still compares the semantic dependencies by version and leaves
-the runtime to the code comparison. Every file of the installed package folder counts, an
-added module or extension module included, so a stray file in `framework/runtime/src/
-hypotrail_runtime/` (an editor backup) now refuses every load until it is removed; the wheel
-holds the folder's `*.py`, `*.json` and `*.typed` files. Not compared: Python bytecode
+the runtime to the code comparison. Since review round 5 (R5E-1, below) both sides follow the
+wheel's own selection rule (`wheel.wheel_member`: the folder's `*.py`, `*.json` and `*.typed`
+files outside `__pycache__`), plus any compiled extension module on the installed side
+(`wheel.extension_module`): a stray `.DS_Store`, swap file or `*.orig` is ignored as the wheel
+ignores it, a stray `*.py` or `.so` still counts. Not compared: Python bytecode
 caches of the installed runtime (Python's own invalidation applies) and the runtime's
 dependencies beyond the semantic versions. The regenerated environment files are still
 compared byte for byte by `verify`; `PACKAGER_VERSION` is `4` and a version-3 package is
@@ -807,6 +808,102 @@ every result recorded by `9991de7` (or by an earlier engine the existing edges c
 current. A study whose final test was confirmed but not opened when a decision it rests on
 changed under an earlier engine keeps its `confirmed` status; its reservation is refused by the
 new rule and `next_action` proposes the final test again (no loop).
+
+## Review round 5 (area E)
+
+Engine and runtime fixes of the review of 2026-10-25 (round 5, area E), on top of `b5f6dba`
+(`framework/tests/study/test_review_round5_engine.py`, temporary studies only; the reviewer's
+probes are ported there):
+
+- R5E-1 (major): the installed-runtime check compared every file of the package folder while
+  the wheel holds only its `*.py`, `*.json` and `*.typed` files, so a `.DS_Store`, a swap file
+  or a `predictor.py.orig` in an editable runtime refused every `predictor.capture`
+  (`runtime_not_bound`, reported as `unsupported_capability` without a junior message, with
+  "capture again" as remediation). Both sides now use the wheel's selection rule
+  (`hypotrail_runtime.wheel.wheel_member`); a stray `*.py` and a compiled extension module
+  still count. When the capture's own reload still refuses the folder (an extension module,
+  which no wheel of this pure runtime carries), the refusal keeps its contract code
+  (`environment_unqualified`, engine code `unsupported_capability`, `reason:
+  runtime_not_bound`) and gains a remediation naming the files and the folder and a
+  `junior_message` in the study language (`capture.runtime_refusal`).
+- R5E-2 (major): the capture's fingerprint omitted runtime files the wheel holds
+  (`errors.py`, `wheel.py`, `packaging.py`, the schemas), so a runtime differing only there
+  left the capture current but unloadable, `run predictor.capture` answered
+  `already_current`, and `next_action` looped on the opening. (a) `activities.MODULES
+  [predictor.capture]` holds every file of the wheel; the JSON schemas are named
+  `hypotrail_runtime/schemas/<name>-v1.schema.json` (`read._module_path` locates a package
+  data file; a test compares the set with the wheel's members). A capture recorded before
+  this change reads `code_changed` once more (as after every change of `activities.py`: the
+  capture is never attested, its predictor and computation ids hash the code fingerprint),
+  and its bundle no longer loads (`wheel.py` changed); see Compatibility below. (b) The
+  identical-request shortcut treats a capture that `capture.loading_problem` refuses as not
+  answering the request, so `run predictor.capture` computes it again. (c) `next_action`
+  checks the capture's loadability before proposing (or awaiting words on) the opening and
+  names the re-capture instead (`mlkit.study.capture_check.unloadable`, through
+  `capture.loading_problem_of`, which loads the bundle as the confirmation does; the view
+  then imports the runtime, never in a read-only process such as a notebook kernel, where
+  the confirmation still refuses an unloadable capture). (d) The junior message and the remediation of a runtime that is
+  not the bound one say to run predictor.capture again, never to install the bundle's wheel
+  over the engine's own runtime.
+- R5E-3 (major): the re-capture `next_action` dropped `--packager`/`--profile`, so capturing
+  again lost the MLflow package. A `run` of the capture carries `options` from the capture it
+  replaces, and `run predictor.capture` without options defaults to them
+  (`executions.capture_options`; `--profile base` captures without a package).
+- R5E-4 (major): with no policy proposal or evaluation yet, `next_action` was `run
+  policy.evaluation` without rules; the rules now start with the rule a review-v1 criterion
+  fixes (`view.criterion_rule`) and default to `view.RECOMMENDED_RULES` (the shares the
+  evaluation reports its gain at); the follow-up `propose policy` carries `default_value`
+  (the criterion's rule, the scenario's share, or `share:0.1`), with a `recommended.why` that
+  names its source; the run digest no longer says "run without asking you" before a bare
+  question.
+- R5E-5 (major): number tracing reads scale words and symbols ("241 k", "241-thousand",
+  "1,5 milliard", "1.5 bn", "1.5‰", "1.5×10⁶") as the value they scale to, and reports odd
+  forms (underscored digit groups, superscripts, vulgar fractions, hexadecimal literals, any
+  other number glued to letters) as untraceable; the reports of the six case kinds pass
+  `hypotrail check` in English and French.
+- R5E-6 (minor): the review-v1 recommended criterion and its candidates are complete
+  (`decision_rule`, `selection`; `criterion.review_value`).
+- R5E-7 (minor): a policy proposal whose rule no current evaluation covers is evaluated first
+  (`next_action` is the run of the evaluation with that rule; the proposal stays open):
+  `next_action` never awaits words on a proposal the confirmation would refuse. Proposing such
+  a rule is still accepted (a junior may name a capacity before it is evaluated).
+- R5E-8 (minor): after the opening, a proposal (the conclusion, a reconfirmation) made while
+  the final evaluation is not current carries the E4-2 notice (`not_recomputable`, junior
+  message and digest); the Azure ML export of a captured bundle after the opening never says
+  to capture again (`snapshot.after_opening`: restore the bundle, export the recipe, or start
+  a new study).
+- R5E-9 (minor): French reports write the rule words, the decision values, the figure lines
+  of the verdict card and the decision titles in French (`content/report_fr.yaml`,
+  `value_words` and `verdict_card`); the numbers stay traced.
+
+Compatibility. `activities.py` changed (the capture's module list only), so every result of
+the attested engines would read `code_changed`: exact edges from the `b5f6dba` bytes
+(`b7c994d2`, also those of `ce82ca9`), the `818995c` bytes (`d6806ce3`, also `621d607`) and the
+`506180a` bytes (`3065f4d6`) to the new digest (`9f5e8c3f`) cover the 21 activities other than
+`predictor.capture` and `diagnostics.population`, each added only after
+`code_compat_evidence.py` matched against the git-archived engine (run with this checkout's environment, the same
+locked versions of scikit-learn, NumPy, pandas, SciPy and interpret-core): for each of the
+three engines the same commands on the six temporary studies of round 2 (153 commands, 147 for
+`506180a`, which has no `diagnostics.population`), identical outcomes, 109 fresh results (77
+byte-identical, 32 identical up to upstream ids), 64 of 64 leaf recomputations byte-identical
+inside the old studies, every promoted result current at the new bytes but the never-attested
+`diagnostics.population`; MATCH. The pre-WP-J edge (`b04e5fad…`, `diag.final_test` only) is
+carried to the new bytes by a fourth exact edge, on the same evidence as in round 2
+(`diag.final_test` byte-identical between the `b5f6dba` and current engines, fresh and
+recomputed in the old studies; no engine of the `b04e5fad…` digest was run). What becomes not
+current: nothing that an attested engine recorded, except, as before, `diagnostics.population`
+(never attested) and the captures (below). Every
+capture recorded before this change reads `code_changed` (`mlkit.study.activities` is in its
+fingerprint, and a capture is not attestable) and no longer loads (`hypotrail_runtime/wheel.py`
+changed and the load check compares the installed runtime with the bundle's wheel byte for
+byte). Before the opening, `next_action` names `run predictor.capture` (with the options of
+that capture, R5E-3) and the run recomputes it. After the opening, the final evaluation, which
+read that capture, is not current and is never recomputed: `next_action` proposes the
+conclusion with the not-recomputable notice (R5E-8), and an export refusal of the old bundle
+no longer asks to capture again. Not changed: the MLflow wrapper's own installed-runtime check
+inside every package (`mlflow_packaging.WRAPPER_SOURCE`) keeps comparing every file but
+bytecode (changing it would change the bytes, hence the artifact id, of every package): a
+stray non-code file in the serving environment's runtime folder still refuses serving.
 
 ## Limits and what is not done
 

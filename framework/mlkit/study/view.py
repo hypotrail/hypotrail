@@ -10,13 +10,17 @@ The view is deterministic for a given study content: it contains no clock readin
 so two renders of one revision see the same view.
 
 Read-only (it uses :mod:`mlkit.study.read` only) and free of pandas, numpy, and
-scikit-learn at import and at build time.
+scikit-learn at import and at build time, with one exception (round 5, review E, R5E-2):
+outside a read-only process, when the study holds a current predictor capture and the next
+action would open the final test, the capture is loaded as the confirmation loads it
+(:mod:`mlkit.study.capture_check`), which imports the runtime; nothing is written.
 """
 from __future__ import annotations
 
 import copy
 import re
 from pathlib import Path
+from typing import Mapping
 
 from . import audience
 from . import currency
@@ -1423,16 +1427,70 @@ def _opening_not_current(study: read.Study, state: Mapping, action: dict | None)
         return action
     missing = opening.not_current(study, state, capture=True)
     if not missing:
-        return action
+        # Round 5 (review E, R5E-2): a capture current by its fingerprint that the final
+        # evaluation could not load (another runtime installed, an altered bundle, another
+        # environment) is captured again first; proposing the opening would be refused.
+        problem = _capture_unloadable(study, state)
+        if problem is None:
+            return action
+        out = {'kind': 'run', 'step': action.get('step'), 'activity': CAPTURE_SLOT,
+               'not_current': [CAPTURE_SLOT],
+               'message': ('Run predictor.capture again before opening the final test: the '
+                           'captured predictor cannot be loaded as the final evaluation loads it '
+                           f'({problem.get("message")}). Running it again recomputes the '
+                           'capture of the same choice with what is installed now. The final '
+                           'test stays sealed.'),
+               'audience': audience.AGENT, 'junior_message': problem['junior_message']}
+        return _with_capture_options(study, state, out)
     slots = [m['slot'] for m in missing]
     junior = ' '.join(dict.fromkeys(m['junior_message'] for m in missing
                                     if m.get('junior_message')))
-    return {'kind': 'run', 'step': action.get('step'), 'activity': slots[0],
-            'not_current': slots,
-            'message': (f'Run {", ".join(slots)} again before opening the final test: by the '
-                        'rule of status they are not current (code changed, delayed-label rows, '
-                        'or an upstream result not current). The final test stays sealed.'),
-            'audience': audience.AGENT, 'junior_message': junior}
+    out = {'kind': 'run', 'step': action.get('step'), 'activity': slots[0],
+           'not_current': slots,
+           'message': (f'Run {", ".join(slots)} again before opening the final test: by the '
+                       'rule of status they are not current (code changed, delayed-label rows, '
+                       'or an upstream result not current). The final test stays sealed.'),
+           'audience': audience.AGENT, 'junior_message': junior}
+    return _with_capture_options(study, state, out) if slots[0] == CAPTURE_SLOT else out
+
+
+CAPTURE_SLOT = 'predictor.capture'
+
+
+def capture_options(params: Mapping | None) -> dict:
+    """Round 5 (review E, R5E-3): the ``run`` options that reproduce a capture's params
+    (``profile`` when not the default, ``packager`` when the profile does not imply it), so a
+    re-capture keeps its MLflow package. ``{}`` for a base capture without packager."""
+    params = params or {}
+    out = {}
+    profile, packager = params.get('profile'), params.get('packager')
+    if isinstance(profile, str) and profile != 'base':
+        out['profile'] = profile
+    if isinstance(packager, str) and packager and not (
+            profile == 'workshop' and packager == 'mlflow_pyfunc'):
+        out['packager'] = packager
+    return out
+
+
+def _with_capture_options(study: read.Study, state: Mapping, action: dict) -> dict:
+    """R5E-3: a ``run`` of the capture carries ``options`` (each one a ``--<option>
+    <value>``) of the capture it replaces, when that capture had any."""
+    rid = state['current'].get(CAPTURE_SLOT)
+    if rid is None:
+        return action
+    try:
+        options = capture_options(study.result(rid).get('params'))
+    except StudyError:
+        return action
+    return {**action, 'options': options} if options else action
+
+
+def _capture_unloadable(study: read.Study, state: Mapping) -> dict | None:
+    """R5E-2: the ``capture_loadable`` item of the current capture when the final
+    evaluation could not load it (:func:`mlkit.study.capture_check.unloadable`, the check of
+    the confirmation and of the reservation; never in a read-only process), else None."""
+    from . import capture_check
+    return capture_check.unloadable(study, state)
 
 
 POLICY_RUNS = ('policy.evaluation', 'policy.evaluate')
@@ -1461,6 +1519,23 @@ def _runnable(study: read.Study, state: Mapping, action: dict | None) -> dict | 
         replaced = _final_test_not_recomputable(study, state, action)
         if replaced is not None:
             return replaced
+    if kind in ('propose', 'reconfirm', 'await_user_words', 'done') \
+            and st.final_test_opened(state):
+        # Round 5 (review E, R5E-8): after the opening, a decision proposed while the final
+        # evaluation is not current says so too (E4-2 for the runs).
+        action = _with_final_test_notice(study, state, action)
+    if kind == 'await_user_words' and action.get('decision') == 'policy':
+        # R5E-7: never await words on a policy proposal that the confirmation would refuse
+        # (its rule, or its model, not evaluated by a current policy evaluation): evaluate it
+        # first, the proposal stays open.
+        replaced = _unevaluated_policy_proposal(study, state, action)
+        if replaced is not None:
+            return replaced
+    if kind == 'propose' and action.get('decision') == 'policy':
+        # R5E-4: the policy proposal carries the rule to propose (``default_value``).
+        default = _policy_default(study, state, action)
+        if default is not None:
+            action = {**action, 'default_value': default}
     if kind == 'run' and activity == 'final_test.evaluation' \
             and not st.final_test_opened(state):
         from . import opening
@@ -1487,12 +1562,124 @@ def _runnable(study: read.Study, state: Mapping, action: dict | None) -> dict | 
     return action
 
 
+# Round 5 (review E, R5E-4): the rules the engine recommends evaluating when the study names
+# none (no proposal, no scenario share, no evaluation yet, no rule fixed by a review-v1
+# criterion): the top shares the policy evaluation reports its gain at
+# (``mlkit.study.policy.GAIN_SHARES``), and among them the one it proposes, the share the
+# development diagnostics apply by default (``mlkit.study.diagnostics.DEFAULT_RULE``). Both
+# equalities are tested; this module may not import those numerical modules.
+RECOMMENDED_RULES = ('share:0.05', 'share:0.1', 'share:0.2')
+RECOMMENDED_RULE = 'share:0.1'
+
+
+def criterion_rule(state: Mapping) -> str | None:
+    """R5E-4: under review-v1, the rule the confirmed success criterion fixes
+    (``selection.rule``): the policy must adopt it (``selection_rule_mismatch``). None
+    otherwise."""
+    if assurance.profile(state) != 'review-v1':
+        return None
+    decision = state['decisions'].get(st.SUCCESS_CRITERION) or {}
+    if decision.get('status') not in ('confirmed', 'reconfirm_required'):
+        return None
+    value = decision.get('value')
+    rule = ((value.get('selection') or {}).get('rule') if isinstance(value, Mapping)
+            else None)
+    return rec.canonical_rule(rule) if isinstance(rule, str) else None
+
+
+def _evaluation_params(study: read.Study, state: Mapping) -> dict | None:
+    """The params of the current policy evaluation (``rules``, ``models``), or None when
+    the slot holds none, it is not current by the state, or its entry cannot be read."""
+    rid = state['current'].get('policy.evaluation')
+    if rid is None or not st.is_current(state, 'policy.evaluation'):
+        return None
+    try:
+        params = study.result(rid).get('params') or {}
+    except StudyError:
+        return None
+    rules = params.get('rules') if isinstance(params.get('rules'), list) else (
+        [params['rule']] if params.get('rule') is not None else [])
+    return {'rules': [rec.canonical_rule(r) or str(r) for r in rules],
+            'models': [str(m) for m in params.get('models') or [rec.POLICY_CANDIDATE]]}
+
+
+def _with_chosen_model(state: Mapping, rule: str) -> str:
+    """``rule`` applied to the model the study chose (``rule@fit.variant``) when a binary
+    study's explicit model choice is a variant; the rule alone otherwise."""
+    if st.has_explicit_binary_model_choice(state):
+        model = (state['decisions'].get('model_choice') or {}).get('value')
+        if isinstance(model, str) and model != rec.POLICY_CANDIDATE \
+                and model in rec.POLICY_MODELS:
+            return f'{rule}{rec.POLICY_MODEL_SEP}{model}'
+    return rule
+
+
+def _policy_default(study: read.Study, state: Mapping, action: Mapping) -> str | None:
+    """R5E-4: the policy value a ``propose policy`` action carries: under review-v1 the
+    rule the success criterion fixes; else the scenario's share (the action's default);
+    else, among the rules of the current evaluation, :data:`RECOMMENDED_RULE` or the first.
+    Applied to the chosen model (:func:`_with_chosen_model`)."""
+    rule = criterion_rule(state) or rec.canonical_rule(action.get('default_value'))
+    if rule is None:
+        evaluated = (_evaluation_params(study, state) or {}).get('rules') or []
+        rule = RECOMMENDED_RULE if RECOMMENDED_RULE in evaluated else (
+            evaluated[0] if evaluated else None)
+    return _with_chosen_model(state, rule) if rule else None
+
+
+def _unevaluated_policy_proposal(study: read.Study, state: Mapping, action: Mapping
+                                 ) -> dict | None:
+    """R5E-7: the ``run`` that makes the open policy proposal confirmable, or None when the
+    confirmation would accept it: the policy evaluation on its rule (and the rules already
+    evaluated) when no current evaluation covers that rule or model, or the fit of its model
+    first when that fit is not current."""
+    proposal = state['proposals'].get(action.get('proposal_id')) or {}
+    value = proposal.get('value')
+    rule, model = rec.policy_rule(value), rec.policy_model(value)
+    if rule is None:
+        return None
+    evaluated = _evaluation_params(study, state)
+    if evaluated is not None and rule in evaluated['rules'] and model in evaluated['models']:
+        return None
+    lang = st.language_of(state)
+    fr = lang == audience.FR
+    words = audience.rule_words(rule, lang)
+    if model != rec.POLICY_CANDIDATE and not st.is_current(state, model):
+        activity = model
+        junior = (f"Votre proposition de règle (« {words} ») s'applique à "
+                  f'{audience.model_words(model, lang)}, dont l\'ajustement n\'est pas à jour : '
+                  "il est relancé d'abord, puis la règle est évaluée, avant de vous demander "
+                  'si vous l\'adoptez.' if fr else
+                  f'Your proposed rule ("{words}") applies to '
+                  f'{audience.model_words(model, lang)}, whose fit is not current: it is run '
+                  'first, then the rule is evaluated, before you are asked whether you adopt '
+                  'it.')
+        out = {'kind': 'run', 'step': 'policy', 'activity': activity,
+               'proposal_id': action.get('proposal_id')}
+    else:
+        rules = list(dict.fromkeys([rule] + _known_rules(study, state, action)))
+        junior = (f"Votre proposition de règle (« {words} ») n'a pas encore été évaluée sur "
+                  "les résultats à jour : l'évaluation de la règle est lancée d'abord, puis "
+                  'vous dites si vous l\'adoptez.' if fr else
+                  f'Your proposed rule ("{words}") has not been evaluated on the current '
+                  'results yet: the policy evaluation runs first, then you say whether you '
+                  'adopt it.')
+        out = {'kind': 'run', 'step': 'policy', 'activity': 'policy.evaluation',
+               'rules': rules, 'proposal_id': action.get('proposal_id')}
+    out.update(message=(f'Do not ask for words on proposal {action.get("proposal_id")} yet: '
+                        f'the confirmation would refuse it, since no current policy evaluation '
+                        f'covers {value}. Run {out["activity"]} first; the proposal stays open.'),
+               audience=audience.AGENT, junior_message=junior)
+    return out
+
+
 def _known_rules(study: read.Study, state: Mapping, action: Mapping) -> list[str]:
     """E4-3: the rules a policy evaluation runs on as the study knows them, in this order:
-    the policy decision's rule (confirmed, to confirm again, or proposed), the rules of the
-    open policy proposals, the action's default (the scenario's share), and the rules of the
-    current evaluation (run again on what it evaluated)."""
-    found: list[str] = []
+    the rule a review-v1 success criterion fixes (round 5, R5E-4), the policy decision's rule
+    (confirmed, to confirm again, or proposed), the rules of the open policy proposals, the
+    action's default (the scenario's share), and the rules of the current evaluation (run
+    again on what it evaluated); when the study names none, :data:`RECOMMENDED_RULES`."""
+    found: list[str] = [criterion_rule(state)]
     decision = state['decisions'].get('policy') or {}
     if decision.get('status') in ('confirmed', 'reconfirm_required', 'proposed'):
         found.append(rec.policy_rule(decision.get('value')))
@@ -1509,7 +1696,7 @@ def _known_rules(study: read.Study, state: Mapping, action: Mapping) -> list[str
         rules = params.get('rules') if isinstance(params.get('rules'), list) else (
             [params['rule']] if params.get('rule') is not None else [])
         found += [rec.canonical_rule(r) for r in rules]
-    return [r for r in dict.fromkeys(found) if r]
+    return [r for r in dict.fromkeys(found) if r] or list(RECOMMENDED_RULES)
 
 
 def _final_test_not_recomputable(study: read.Study, state: Mapping, action: Mapping
@@ -1584,6 +1771,30 @@ def _final_test_not_recomputable(study: read.Study, state: Mapping, action: Mapp
     return {'kind': 'done', **out,
             'message': agent + ' Nothing else remains in the plan; a new final test needs a '
                                'new study.'}
+
+
+def _with_final_test_notice(study: read.Study, state: Mapping, action: dict) -> dict:
+    """Round 5 (review E, R5E-8): after the opening, a ``propose``, ``reconfirm``,
+    ``await_user_words`` or ``done`` while the final evaluation is missing or not current
+    carries the E4-2 notice (:func:`_final_test_not_recomputable`): ``not_recomputable``
+    and, first in ``junior_message``, why the final test cannot be computed again and what
+    remains; a proposal of the conclusion also carries the verdicts its rule still allows."""
+    final = state['current'].get('final_test.evaluation')
+    if final is not None and study.currency(final)['current']:
+        return action
+    notice = _final_test_not_recomputable(study, state, {'activity': 'final_test.evaluation'})
+    if notice is None:
+        return action
+    out = {**action, 'not_recomputable': notice['not_recomputable'],
+           'junior_message': ' '.join(t for t in (notice['junior_message'],
+                                                   action.get('junior_message')) if t)}
+    if action.get('decision') == 'conclusion' and notice.get('verdicts') \
+            and 'verdicts' not in action:
+        out['verdicts'] = notice['verdicts']
+    out['message'] = (f'{action.get("message") or ""} The final test was already opened and '
+                      'its evaluation is not current and cannot be recomputed: say so, and cite '
+                      'development evidence.').strip()
+    return out
 
 
 def _case_or_none(state: dict):

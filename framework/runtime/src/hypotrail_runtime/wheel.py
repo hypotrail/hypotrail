@@ -9,16 +9,24 @@ sorted member list, so the same runtime source always gives the same bytes and t
 Round 5 (review A, R5-A1). The version number does not identify the code: two runtimes of
 version 1.0.0 may predict differently. What a bundle binds is its wheel (``runtime.
 wheel_sha256`` in the predictor manifest), so the installed runtime is compared with the
-wheel's members, file by file (:func:`installed_runtime_issues`): every file of the installed
-package folder but Python bytecode, against every ``hypotrail_runtime/`` member of the
-wheel, by SHA-256. :func:`code_digest` summarises one side as one digest (for messages and
-records). The comparison reads the installed files from the folder the import system
-resolves for ``hypotrail_runtime``, without importing anything from it.
+wheel's members, file by file (:func:`installed_runtime_issues`), by SHA-256.
+:func:`code_digest` summarises one side as one digest (for messages and records). The
+comparison reads the installed files from the folder the import system resolves for
+``hypotrail_runtime``, without importing anything from it.
+
+Round 5 (review E, R5E-1). Both sides are selected by one rule, :func:`wheel_member`: the
+files the wheel build takes (``*.py``, ``*.json``, ``*.typed``, outside ``__pycache__``), so
+a Finder ``.DS_Store``, an editor swap file or a ``predictor.py.orig`` beside the sources is
+ignored, as the wheel ignores it, while a stray ``*.py`` is code and counts. A compiled
+extension module (:data:`importlib.machinery.EXTENSION_SUFFIXES`, ``.so``, ``.pyd``) is code
+too: the import system loads it before a source of the same name, so it is counted on the
+installed side although no wheel can carry it (:func:`installed_code`).
 """
 from __future__ import annotations
 
 import base64
 import hashlib
+import importlib.machinery
 import importlib.util
 import io
 import zipfile
@@ -30,19 +38,37 @@ _EPOCH = (1980, 1, 1, 0, 0, 0)
 PACKAGE = 'hypotrail_runtime'
 BYTECODE_DIR = '__pycache__'
 BYTECODE_SUFFIXES = ('.pyc', '.pyo')
+# The files a wheel of this runtime holds (R5E-1: the one selection rule of both sides).
+MEMBER_SUFFIXES = ('.py', '.json', '.typed')
+# Compiled extension modules, on this platform and the usual ones elsewhere.
+EXTENSION_SUFFIXES = tuple(sorted(set(importlib.machinery.EXTENSION_SUFFIXES)
+                                  | {'.so', '.pyd'}))
 
 
 def wheel_name() -> str:
     return f'{PACKAGE}-{__version__}-py3-none-any.whl'
 
 
+def wheel_member(relative: Path | str) -> bool:
+    """Whether the file ``relative`` (a path inside the package folder) is one the wheel
+    build takes: a ``*.py``, ``*.json`` or ``*.typed`` file outside ``__pycache__``."""
+    rel = Path(relative)
+    return BYTECODE_DIR not in rel.parts and rel.suffix in MEMBER_SUFFIXES
+
+
+def extension_module(relative: Path | str) -> bool:
+    """Whether ``relative`` is a compiled extension module the import system would load
+    (``.so``, ``.pyd``, ...): code, although no wheel of this pure runtime carries one."""
+    rel = Path(relative)
+    return BYTECODE_DIR not in rel.parts and any(
+        rel.name.endswith(suffix) for suffix in EXTENSION_SUFFIXES)
+
+
 def _members() -> list[tuple[str, bytes]]:
     root = Path(__file__).resolve().parent
     out = []
     for path in sorted(root.rglob('*')):
-        if not path.is_file() or '__pycache__' in path.parts:
-            continue
-        if path.suffix not in ('.py', '.json', '.typed'):
+        if not path.is_file() or not wheel_member(path.relative_to(root)):
             continue
         out.append((f'{PACKAGE}/{path.relative_to(root).as_posix()}', path.read_bytes()))
     return out
@@ -96,18 +122,18 @@ def installed_location() -> Path | None:
 
 
 def installed_files(root: Path | None = None) -> dict[str, str]:
-    """``{hypotrail_runtime/<relative path>: sha256}`` of every file of the installed package
-    folder except Python bytecode (``__pycache__``, ``*.pyc``, ``*.pyo``): a stray file is
-    kept, since an extension module or a data file beside the sources changes what runs."""
+    """``{hypotrail_runtime/<relative path>: sha256}`` of the files of the installed package
+    folder that a wheel built from it would hold (:func:`wheel_member`), plus any compiled
+    extension module (:func:`extension_module`), which runs although no wheel carries it.
+    Every other file (``.DS_Store``, ``*.swp``, ``*.orig``, a README, Python bytecode) is
+    ignored, exactly as the wheel build ignores it (round 5, R5E-1)."""
     root = installed_location() if root is None else Path(root)
     if root is None:
         return {}
     out = {}
     for path in sorted(root.rglob('*')):
         rel = path.relative_to(root)
-        if BYTECODE_DIR in rel.parts or path.suffix.lower() in BYTECODE_SUFFIXES:
-            continue
-        if path.is_file():
+        if path.is_file() and (wheel_member(rel) or extension_module(rel)):
             out[f'{PACKAGE}/{rel.as_posix()}'] = _sha256(path.read_bytes())
     return out
 

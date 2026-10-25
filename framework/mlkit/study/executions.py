@@ -532,9 +532,14 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
     activity = act.canonical(activity)
     options = act.normalize_options(activity, options)
     eid = execution_id(request_id)
-    params = {'activity': activity, 'options': options, 'execution_id': eid,
-              **channel_param(channel)}
     with store.writing() as state:
+        if activity == act.CAPTURE and not options:
+            # Round 5 (review E, R5E-3): a capture run again without --profile or --packager
+            # keeps the options of the capture it replaces, so an MLflow package is never
+            # dropped by a re-capture; give --profile base to capture without one.
+            options = capture_options(store, state)
+        params = {'activity': activity, 'options': options, 'execution_id': eid,
+                  **channel_param(channel)}
         recover(store, state, hooks)
         if request_id in state['receipts']:
             _apply(store, state, request_id, RESERVE, params, expected_revision)
@@ -613,6 +618,21 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
     return _outcome(store, payload, render=render)
 
 
+def capture_options(store, state: Mapping) -> dict:
+    """Round 5 (review E, R5E-3): the options of the study's current capture (``profile``
+    other than the default, ``packager``), as ``run`` takes them; ``{}`` when the study holds
+    no capture or its entry cannot be read. A re-capture defaults to them."""
+    rid = state['current'].get(act.CAPTURE)
+    if rid is None:
+        return {}
+    try:
+        params = registry.get(store, rid).get('params') or {}
+    except StudyError:
+        return {}
+    from .view import capture_options as options_of      # the one rule, read side too
+    return act.normalize_options(act.CAPTURE, options_of(params))
+
+
 def plan_summary(plan: Mapping, eid: str) -> dict:
     return {'execution_id': eid, 'activity': plan['activity'], 'options': plan['options'],
             'input_key': plan['input_key'], 'started_revision': plan['started_revision']}
@@ -647,6 +667,13 @@ def _already_current(store, state, activity, options, request_id) -> dict | None
         return None
     if not _answers(snapshot, entry, now):
         return None
+    if activity == act.CAPTURE and not st.final_test_opened(state):
+        # Round 5 (review E, R5E-2): a capture the final evaluation could not load (another
+        # runtime installed, an altered bundle, another environment) does not answer the
+        # request, whatever its fingerprint says: it is computed again.
+        from mlkit.contracts import capture
+        if capture.loading_problem(store, state) is not None:
+            return None
     currency = snapshot.currency(rid)
     if not currency['current']:
         final = state['current'].get(act.FINAL)

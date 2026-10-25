@@ -362,9 +362,18 @@ def _availability_table(view: Mapping, variables: list[dict]) -> str:
             f'{"".join(rows)}</tbody></table></div>')
 
 
+def _step_titles(task: str | None) -> dict:
+    """``{decision: the title of its step}`` in the report's language (round 5, R5E-9: a
+    French report named its decisions by their English step titles)."""
+    from .junior import step_text
+    lang = 'fr' if _french() else 'en'
+    return {s['decision']: step_text(s['title'], lang) for s in st.steps(task)
+            if s['decision']}
+
+
 def _decisions(view: Mapping, variables: list[dict]) -> str:
     labels = _labels()
-    titles = {s['decision']: s['title'] for s in st.steps(view.get('task')) if s['decision']}
+    titles = _step_titles(view.get('task'))
     cards = []
     for did, d in view['decisions'].items():
         status = d['status']
@@ -847,7 +856,7 @@ def _not_yet_defensible(view: Mapping) -> str:
             # recompute, not a limit of the study.
             continue
         details = []
-        titles = {s['decision']: s['title'] for s in st.steps(view.get('task')) if s['decision']}
+        titles = _step_titles(view.get('task'))
         if item.get('decisions'):
             details.append(', '.join(e(titles.get(x, x)) for x in item['decisions']))
         if item.get('rules'):
@@ -945,118 +954,126 @@ def _history(view: Mapping) -> str:
 
 # --- v0.2a (WP-A6): words for recorded values ------------------------------------------------
 
+def _words() -> dict:
+    """The decision-value templates of the report's language (round 5, R5E-9:
+    ``value_words`` of ``content/report.yaml`` and ``content/report_fr.yaml``)."""
+    return _labels()['value_words']
+
+
+def _french() -> bool:
+    return texts.report_language() == 'fr'
+
+
 def rule_words(rule: Any) -> str:
     """A policy rule in business words (``capacity:100`` -> "Select the 100 highest-scored
-    rows"). The number is the recorded decision value."""
+    rows"), in the report's language. The number is the recorded decision value."""
     text = str(rule)
     kind, _, param = text.partition(':')
+    words = _words()
     if kind == 'capacity' and param:
-        return f'Select the {param} highest-scored rows'
+        return words['rule_capacity'].format(k=param)
     if kind == 'threshold' and param:
-        return f'Select every row scored {param} or more'
+        return words['rule_threshold'].format(t=param.replace('.', ',') if _french()
+                                              else param)
     if kind == 'share' and param:
         from .audience import share_percent
-        return f'Select the {share_percent(param)} highest-scored rows'
+        return words['rule_share'].format(share=share_percent(param,
+                                                              'fr' if _french() else 'en'))
     return text
 
 
 def _share_words(share: Any) -> str:
     if isinstance(share, (int, float)) and not isinstance(share, bool):
         pct = 100 * share
-        return f'{pct:.0f}%' if abs(pct - round(pct)) < 1e-9 else f'{pct:g}%'
+        text = f'{pct:.0f}' if abs(pct - round(pct)) < 1e-9 else f'{pct:g}'
+        return f'{text.replace(".", ",")}\u00a0%' if _french() else f'{text}%'
     return str(share)
 
 
 def value_words(decision_id: str, value: Any, task: str | None) -> str:
-    """A decision value as the junior reads it; the raw value stays in ``data-value``."""
+    """A decision value as the junior reads it, in the report's language; the raw value
+    stays in ``data-value``."""
     if value is None:
         return ''
+    words = _words()
+    lang = 'fr' if _french() else 'en'
     if decision_id == 'policy':
         # WP-B1: a rule applied to the variant says so.
         rule, sep, model = str(value).partition('@')
-        words = rule_words(rule)
+        text = rule_words(rule)
         # v0.3 (WP-F1): the second and third variants are named as such.
-        return f'{words}, with {audience.model_words(model)}' if sep and model else words
+        return (words['with_model'].format(words=text, model=audience.model_words(model, lang))
+                if sep and model else text)
     if decision_id == 'model_choice':
-        return {'fit.linear': 'Use the linear model',
-                'fit.variant': 'Use the variant of the linear model',
-                'fit.variant:2': 'Use the second variant',
-                'fit.variant:3': 'Use the third variant',
-                'fit.baseline': 'Keep predicting the training mean (the baseline)'}.get(
-                    value, str(value))
+        ordinal = {'fit.variant:2': 'second', 'fit.variant:3': 'third'}.get(value)
+        if ordinal:
+            return words['later_variant'].format(ordinal=words['ordinals'][ordinal])
+        return words['model_choice'].get(value, str(value))
     if isinstance(value, Mapping):
         if decision_id == 'model_variant':
             from .audience import variant_words
             from . import trials
-            if trials.is_list_value(value):
-                return 'Compare the model with: ' + variant_words(value)
-            return 'Compare the model with a variant: ' + variant_words(value)
+            key = 'variants' if trials.is_list_value(value) else 'variant'
+            return words[key].format(words=variant_words(value, lang))
         if decision_id == 'final_test':
             model = _model_name(str(value.get('model')))
             rule = value.get('rule')
-            return (f'Open the final test once for {model}'
-                    + (f', rule: {rule_words(rule)}' if rule else ''))
+            return (words['final_test'].format(model=model)
+                    + (words['final_test_rule'].format(rule=rule_words(rule)) if rule else ''))
         if decision_id == 'split' and value.get('method') in ('kfold_stratified', 'kfold_quantile',
                                                                'temporal_folds'):
-            kind = {'kfold_stratified': 'stratified on the outcome',
-                    'kfold_quantile': 'stratified on target quantiles',
-                    'temporal_folds': 'blocks in time order'}[value['method']]
-            seed = (f' (seed {value["seed"]})' if value['method'] != 'temporal_folds'
-                    and 'seed' in value else '')
-            return (f'Cross-validation on the development rows: {value.get("folds")} folds, '
-                    f'{kind}{seed}; every row is predicted once by a model that did not see it')
+            kind = words['cv_kinds'][value['method']]
+            seed = (words['seed'].format(seed=value['seed'])
+                    if value['method'] != 'temporal_folds' and 'seed' in value else '')
+            return words['split_cv'].format(folds=value.get('folds'), kind=kind, seed=seed)
         if decision_id == 'split' and value.get('method') in texts.FORWARD_METHODS:
             # Review round 4 (E4-5): a review-v1 plan that chains forward in time.
             gap = value.get('gap')
-            gap_words = (f', a gap of {gap} on the clock between the rows fitted and the '
-                         f'window scored' if gap else '')
-            return (f'Forward-chaining cross-validation on the development rows: '
-                    f'{value.get("folds")} folds in the order of prediction time{gap_words}; '
-                    f'each later window is scored once by a model fitted on earlier rows only, '
-                    f'and the earliest rows (the warm-up) train but are never scored')
+            gap_words = words['forward_gap'].format(gap=gap) if gap else ''
+            return words['split_forward'].format(folds=value.get('folds'), gap=gap_words)
         if decision_id == 'split' and value.get('method') == 'group_disjoint':
-            return (f'Cross-validation on the development rows: {value.get("folds")} folds that '
-                    f'never share a group; every row is predicted once by a model that did not '
-                    f'see its group')
+            return words['split_group'].format(folds=value.get('folds'))
         if decision_id == 'split':
             method = value.get('method')
             if method == 'ordinal_cutoff':
-                return (f'Rows with {value.get("column")} at {value.get("cutoff")} or later are '
-                        f'validation rows; earlier rows train the models')
+                return words['split_ordinal'].format(column=value.get('column'),
+                                                     cutoff=value.get('cutoff'))
             share = _share_words(value.get('validation_fraction'))
-            kind = 'Stratified random split' if method == 'stratified_random' else 'Random split'
-            seed = f' (seed {value["seed"]})' if 'seed' in value else ''
-            return f'{kind}: {share} of the development rows for validation{seed}'
+            kind = words['split_kinds']['stratified_random' if method == 'stratified_random'
+                                        else 'random']
+            seed = words['seed'].format(seed=value['seed']) if 'seed' in value else ''
+            return words['split_random'].format(kind=kind, share=share, seed=seed)
         if decision_id == 'success_criterion':
-            if value.get('metric') == 'precision_gain':
-                return (f'Adopt only if the precision beats the baseline by at least '
-                        f'{value.get("min_points")} percentage points at the adopted rule')
-            if value.get('metric') == 'recall_gain':
+            metric = value.get('metric')
+            if metric in ('precision_gain', 'recall_gain'):
                 # v0.3 (WP-C, R18): the junior may fix the criterion on recall.
-                return (f'Adopt only if the recall beats the baseline by at least '
-                        f'{value.get("min_points")} percentage points at the adopted rule')
-            if value.get('metric') == 'mae_reduction':
-                return (f'Adopt only if the model\'s mean absolute error is at least '
-                        f'{_share_words(value.get("min_share"))} below the mean baseline\'s')
+                points = value.get('min_points')
+                if _french() and isinstance(points, float):
+                    points = str(points).replace('.', ',')
+                return words[f'criterion_{metric}'].format(points=points)
+            if metric == 'mae_reduction':
+                return words['criterion_mae_reduction'].format(
+                    share=_share_words(value.get('min_share')))
         if decision_id == 'preprocessing':
             parts = []
             missing = value.get('missing')
             if missing == 'indicator':
-                parts.append('a missing-value indicator for every feature with missing cells')
+                parts.append(words['missing_all'])
             elif isinstance(missing, Mapping) and missing:
-                parts.append('missing-value indicators for ' + ', '.join(sorted(missing)))
+                parts.append(words['missing_some'].format(columns=', '.join(sorted(missing))))
             k = value.get('rare_category_min_rows')
             if isinstance(k, int) and k > 0:
                 # B6c (M3): under cross-validation, the rows each fold's model is fitted on.
-                rows = ('rows a model is fitted on' if texts.is_cv() else 'training rows')
-                parts.append(f'categories with fewer than {k} {rows} grouped')
+                rows = words['rare_rows_cv'] if texts.is_cv() else words['rare_rows']
+                parts.append(words['rare'].format(k=k, rows=rows))
             if value.get('caps'):
-                parts.append('values capped for ' + ', '.join(sorted(value['caps'])))
+                parts.append(words['caps'].format(columns=', '.join(sorted(value['caps']))))
             if value.get('log_transform'):
-                parts.append('log transform of ' + ', '.join(value['log_transform']))
+                parts.append(words['log_transform'].format(
+                    columns=', '.join(value['log_transform'])))
             if not parts:
-                return 'Default preparation: nothing added, grouped, capped, or transformed'
-            return 'Preparation: ' + '; '.join(parts)
+                return words['preparation_default']
+            return words['preparation'].format(parts=(' ; ' if _french() else '; ').join(parts))
     return _value_text(value)
 
 
@@ -1086,40 +1103,38 @@ def _binary_figures(view: Mapping, citer: cite.Citer, rule: str | None,
     rid = citer.slot_rid('policy.evaluation')
     if rid is None or rule is None:
         return []
+    card = _labels()['verdict_card']
     m = cite.format_path(['rules', rule, 'models', model])
     b = cite.format_path(['rules', rule, 'models', 'fit.baseline'])
     d = cite.format_path(['rules', rule, 'deltas', model, 'precision'])
     iv = cite.format_path(['rules', rule, 'intervals', model, 'precision'])
     rows = []
 
-    def opt(path: str, fmt: str, before: str = '', after: str = '') -> str:
-        # an undefined value (no row selected: no precision) is left out, never cited
-        return f'{before}{citer.num(rid, path, fmt)}{after}' if citer.has(rid, path) else ''
-
     def interval(base: str, fmt: str) -> str:
         if citer.has(rid, base + '.low') and citer.has(rid, base + '.high'):
-            return (f', interval {citer.num(rid, base + ".low", fmt)} to '
-                    f'{citer.num(rid, base + ".high", fmt)}')
+            return card['interval_of'].format(low=citer.num(rid, base + '.low', fmt),
+                                              high=citer.num(rid, base + '.high', fmt))
         return ''
+
+    def precision_of(path: str, after: str = '') -> str:
+        # an undefined value (no row selected: no precision) is left out, never cited
+        if not citer.has(rid, path):
+            return ''
+        return card['precision_of'].format(value=citer.num(rid, path, 'pct1'), interval=after)
 
     if not (citer.has(rid, f'{m}.true_positives') and citer.has(rid, f'{m}.selected')):
         return []
-    precision = opt(m + '.precision', 'pct1', ' (precision ', interval(iv, 'pct1') + ')') \
-        if citer.has(rid, m + '.precision') else ''
-    rows.append(('Positive rows found by the model',
-                 f'{citer.num(rid, m + ".true_positives", "auto")} among '
-                 f'{citer.num(rid, m + ".selected", "auto")} selected rows{precision}'))
+    rows.append((card['found_by_model'], card['among_selected'].format(
+        tp=citer.num(rid, m + '.true_positives', 'auto'),
+        selected=citer.num(rid, m + '.selected', 'auto'),
+        precision=precision_of(m + '.precision', interval(iv, 'pct1')))))
     if citer.has(rid, f'{b}.true_positives'):
-        rows.append(('Baseline at the same rule',
-                     f'{citer.num(rid, b + ".true_positives", "auto")} on average without '
-                     f'ranking{opt(b + ".precision", "pct1", " (precision ", ")")}'))
+        rows.append((card['baseline_at_rule'], card['baseline_count'].format(
+            tp=citer.num(rid, b + '.true_positives', 'auto'),
+            precision=precision_of(b + '.precision'))))
     if citer.has(rid, f'{d}.point'):
-        interval = ''
-        if citer.has(rid, f'{d}.low') and citer.has(rid, f'{d}.high'):
-            interval = (f', interval {citer.num(rid, d + ".low", "pts1")} to '
-                        f'{citer.num(rid, d + ".high", "pts1")}')
-        rows.append(('Precision gain over the baseline',
-                     f'{citer.num(rid, d + ".point", "pts1")} percentage points{interval}'))
+        rows.append((card['precision_gain'], card['points_value'].format(
+            point=citer.num(rid, d + '.point', 'pts1'), interval=interval(d, 'pts1'))))
     return rows
 
 
@@ -1127,26 +1142,27 @@ def _regression_figures(citer: cite.Citer, chosen: str = 'fit.linear') -> list[t
     rid = citer.slot_rid('evaluate.regression')
     if rid is None:
         return []
+    card = _labels()['verdict_card']
     rows = []
     for model in ('fit.linear', 'fit.variant', 'fit.variant:2', 'fit.variant:3', 'fit.baseline'):
         path = cite.format_path(['models', model, 'mae'])
         if not citer.has(rid, path):
             continue
         iv = cite.format_path(['intervals', model, 'mae'])
-        interval = (f' (interval {citer.num(rid, iv + ".low", "f2")} to '
-                    f'{citer.num(rid, iv + ".high", "f2")})' if citer.has(rid, iv + '.low')
-                    else '')
-        rows.append((f'Mean absolute error, {_model_name(model).lower()}',
+        interval = (card['mae_interval'].format(low=citer.num(rid, iv + '.low', 'f2'),
+                                                high=citer.num(rid, iv + '.high', 'f2'))
+                    if citer.has(rid, iv + '.low') else '')
+        rows.append((card['mae_of'].format(model=_model_name(model).lower()),
                      f'{citer.num(rid, path, "f2")}{interval}'))
     d = cite.format_path(['deltas', chosen, 'mae'])
     if citer.has(rid, d + '.point'):
-        interval = (f' (interval {citer.num(rid, d + ".low", "f2")} to '
-                    f'{citer.num(rid, d + ".high", "f2")})' if citer.has(rid, d + '.low')
-                    else '')
-        rows.append(('Difference, linear minus baseline' if chosen == 'fit.linear' else
-                     'Difference, variant minus baseline',
-                     f'{citer.num(rid, d + ".point", "f2")}{interval}; negative means a '
-                     f'smaller error'))
+        interval = (card['mae_interval'].format(low=citer.num(rid, d + '.low', 'f2'),
+                                                high=citer.num(rid, d + '.high', 'f2'))
+                    if citer.has(rid, d + '.low') else '')
+        rows.append((card['difference_linear'] if chosen == 'fit.linear' else
+                     card['difference_variant'],
+                     card['difference_value'].format(point=citer.num(rid, d + '.point', 'f2'),
+                                                     interval=interval)))
     return rows
 
 
@@ -1214,7 +1230,7 @@ def _verdict(view: Mapping, citer: cite.Citer) -> str:
         figures = _binary_figures(view, citer, rule, model)
         if figures and rule and not (adopted.get('status') == 'confirmed'
                                      and str(adopted.get('value')).partition('@')[0] == rule):
-            figures.insert(0, ('Rule of these figures', lit('decision_value', rule_words(rule))))
+            figures.insert(0, (card['rule_of_figures'], lit('decision_value', rule_words(rule))))
     b1 = 'final_test' in view['decisions']
     if figures and b1:
         # WP-B1: the figures above are development evidence; the final test is apart.
@@ -1285,12 +1301,13 @@ def _final_rows(view: Mapping, citer: cite.Citer, task: str) -> list[tuple[str, 
             rule = values.get('rule_final')
             m = cite.format_path(['models', model])
             if rule and citer.has(rid, f'{m}.true_positives') and citer.has(rid, f'{m}.selected'):
-                precision = (f' (precision {citer.num(rid, m + ".precision", "pct1")})'
-                             if citer.has(rid, m + '.precision') else '')
-                rows.append((card['final_found'],
-                             f'{citer.num(rid, m + ".true_positives", "auto")} among '
-                             f'{citer.num(rid, m + ".selected", "auto")} selected rows'
-                             f'{precision}; {lit("decision_value", _lower_first(rule_words(rule)))}'))
+                precision = (card['final_precision'].format(
+                    value=citer.num(rid, m + '.precision', 'pct1'))
+                    if citer.has(rid, m + '.precision') else '')
+                rows.append((card['final_found'], card['final_among'].format(
+                    tp=citer.num(rid, m + '.true_positives', 'auto'),
+                    selected=citer.num(rid, m + '.selected', 'auto'), precision=precision,
+                    rule=lit('decision_value', _lower_first(rule_words(rule))))))
         crit = values.get('criterion') if isinstance(values.get('criterion'), Mapping) else {}
         # B6c (B1): the binary final criterion is stored in percentage points already
         # (``fit.final_evaluation``); the regression one is a share shown as a percentage.
@@ -1298,9 +1315,9 @@ def _final_rows(view: Mapping, citer: cite.Citer, task: str) -> list[tuple[str, 
         if crit.get('gain') is not None and citer.has(rid, 'criterion.gain'):
             interval = ''
             if citer.has(rid, 'criterion.low') and citer.has(rid, 'criterion.high'):
-                interval = (f', interval {citer.num(rid, "criterion.low", fmt)} to '
-                            f'{citer.num(rid, "criterion.high", fmt)}')
-            unit = ' percentage points' if task != 'regression' else ''
+                interval = card['interval_of'].format(low=citer.num(rid, 'criterion.low', fmt),
+                                                      high=citer.num(rid, 'criterion.high', fmt))
+            unit = card['points_unit'] if task != 'regression' else ''
             state = crit.get('status') or 'not_assessed'
             judged_here = (view.get('criterion') or {}).get('judged_on') == 'final_test'
             # B6c (H4): the badge is shown once, on the success-criterion row, when the

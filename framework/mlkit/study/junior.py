@@ -507,7 +507,8 @@ def _context(view: Mapping, state: Mapping, case) -> dict:
         default = st.b1_default_value(state, 'split') if isinstance(state, Mapping) else None
         folds = (default or {}).get('folds')
     return {'dev': dev, 'holdout': holdout, 'target': target, 'positive': positive,
-            'unit': unit, 'folds': folds, 'cv': st.uses_cross_validation(state)}
+            'unit': unit, 'folds': folds, 'cv': st.uses_cross_validation(state),
+            'state': state}
 
 
 def _fact(view: Mapping, fact_id: str):
@@ -537,6 +538,9 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
         return _recommended_criterion(action, lang)
     if value is None:
         return None
+    if decision == 'policy':
+        return {'value': copy.deepcopy(value),
+                'why': POLICY_WHY[_policy_source(value, view, state)][lang == FR]}
     why = {
         'feature_availability': _t(
             lang, 'The case\'s statement for each column, with every doubtful or undocumented '
@@ -564,11 +568,6 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
             'La pénalité choisie par validation croisée imbriquée est le contrôle le plus '
             'simple que le candidat n\'apprend pas du bruit ; elle compte comme un essai du '
             'budget de trois.'),
-        'policy': _t(
-            lang, 'The teaching scenario assumes this share of the scored rows; a real team '
-                  'would give its own capacity.',
-            'Le scénario pédagogique suppose cette part des lignes notées ; une vraie équipe '
-            'donnerait sa propre capacité.'),
         'final_test': _t(
             lang, 'This is the configuration you chose; the holdout (final test) measures it '
                   'once.',
@@ -578,6 +577,45 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
     if why is None:
         return None
     return {'value': copy.deepcopy(value), 'why': why}
+
+
+# Round 5 (review E, R5E-4): why the policy proposal carries its rule, by where the rule
+# comes from (:func:`_policy_source`), as (English, French).
+POLICY_WHY = {
+    'criterion': ('The success criterion you confirmed fixes this rule: the policy adopts '
+                  'the rule the criterion is measured at.',
+                  'Le critère de succès que vous avez confirmé fixe cette règle : la règle '
+                  'adoptée est celle à laquelle le critère est mesuré.'),
+    'scenario': ('The teaching scenario assumes this share of the scored rows; a real team '
+                 'would give its own capacity.',
+                 'Le scénario pédagogique suppose cette part des lignes notées ; une vraie '
+                 'équipe donnerait sa propre capacité.'),
+    'engine': ('The engine evaluated a few shares of the scored rows because no capacity was '
+               'given; this one is its default, the share its development diagnostics use, not '
+               'a figure from a team. Name your team\'s own capacity if you know it.',
+               "Le moteur a évalué quelques parts des lignes notées, faute de capacité "
+               "donnée ; celle-ci est son choix par défaut, la part qu'utilisent ses "
+               "diagnostics de développement, et non un chiffre fourni par une équipe. "
+               "Indiquez la capacité de votre équipe si vous la connaissez."),
+}
+
+
+def _policy_source(value, view: Mapping, state: Mapping) -> str:
+    """Where a proposed policy rule comes from: ``criterion`` (the rule a review-v1 success
+    criterion fixes), ``scenario`` (the case's assumed share), or ``engine``."""
+    from . import assurance
+    from . import records as rec
+    rule = rec.policy_rule(value)
+    if assurance.profile(state) == 'review-v1':
+        crit = ((state['decisions'].get(st.SUCCESS_CRITERION) or {}).get('value') or {})
+        fixed = (crit.get('selection') or {}).get('rule') if isinstance(crit, Mapping) else None
+        if isinstance(fixed, str) and rec.canonical_rule(fixed) == rule:
+            return 'criterion'
+    share = (((view.get('scenario_defaults') or {}).get('capacity_share') or {})
+             .get('value'))
+    if share is not None and rec.canonical_rule(f'share:{share}') == rule:
+        return 'scenario'
+    return 'engine'
 
 
 def _recommended_criterion(action: Mapping, lang: str) -> dict | None:
@@ -602,6 +640,11 @@ def _recommended_criterion(action: Mapping, lang: str) -> dict | None:
     default = options.get('default_metric')
     if isinstance(default, str) and default != value.get('metric'):
         value['metric'] = default
+        if isinstance(value.get('selection'), Mapping):
+            # R5E-6: a review-v1 value measures the selection on the metric it names.
+            from .criterion import SELECTION_METRIC
+            value['selection'] = {**value['selection'],
+                                  'metric': SELECTION_METRIC.get(default, 'precision')}
     points = value.get('min_points')
     per = middle.get('per_1000')
     extra = (_t(lang, f' On {SCALE_1000} actions, about {per["extra"]} more positives than the '
@@ -610,6 +653,11 @@ def _recommended_criterion(action: Mapping, lang: str) -> dict | None:
                 'modèle de référence.')
              if isinstance(per, Mapping) and isinstance(per.get('extra'), int) else '')
     metric = audience_metric(value['metric'], lang)
+    rule = (value.get('selection') or {}).get('rule')
+    if isinstance(rule, str):
+        # R5E-6: a review-v1 criterion names the rule it is measured at.
+        extra += _t(lang, f' It is measured at the rule: {audience.rule_words(rule)}.',
+                    f' Il est mesuré à la règle : {audience.rule_words(rule, FR)}.')
     why = _t(lang, f'The middle option, +{points} points of {metric} over the baseline: a '
                    'moderate bar chosen by convention, not from the costs of this case.'
                    f'{extra} Keep it, or name the minimum your team needs.',
@@ -847,8 +895,14 @@ def _digest_propose(decision: str, view: Mapping, ctx: dict, lang: str,
                   'un seuil sur le score, une capacité fixe, ou une part des lignes notées. La '
                   'précision et le rappel à cette règle disent ce qu\'elle rapporte.')]
         if isinstance(share, str):
-            out.append(_t(lang, f'The scenario assumes: {audience.policy_words(share)}.',
-                          f'Le scénario suppose : {audience.policy_words(share, FR)}.'))
+            words, words_fr = audience.policy_words(share), audience.policy_words(share, FR)
+            source = _policy_source(share, view, ctx.get('state') or {'decisions': {}})
+            out.append({'criterion': _t(lang, f'Your success criterion fixes the rule: {words}.',
+                                        f'Votre critère de succès fixe la règle : {words_fr}.'),
+                        'scenario': _t(lang, f'The scenario assumes: {words}.',
+                                       f'Le scénario suppose : {words_fr}.'),
+                        'engine': _t(lang, f'The engine proposes: {words}.',
+                                     f'Le moteur propose : {words_fr}.')}[source])
         return out
     if decision == 'model_choice':
         if view.get('task') == st.BINARY:
@@ -930,6 +984,10 @@ def _digest(action: Mapping, view: Mapping, state: Mapping, ctx: dict, lang: str
         if rec:
             parts.insert(1 if len(parts) > 1 else len(parts),
                          _t(lang, f'Recommended: {rec["why"]}', f'Recommandé : {rec["why"]}'))
+        if action.get('not_recomputable') and junior_message:
+            # Round 5 (review E, R5E-8): after the opening, why the final test cannot be
+            # computed again comes first.
+            parts.insert(0, junior_message)
         return _fit(parts or [junior_message])
     if kind == 'await_user_words':
         proposal = next((p for p in view.get('open_proposals') or []
@@ -951,10 +1009,16 @@ def _digest(action: Mapping, view: Mapping, state: Mapping, ctx: dict, lang: str
         return _fit([head, tail])
     if kind == 'run':
         activity = action.get('activity')
-        return _fit([_t(lang, f'Next: {audience.activity_words(activity)}, run without asking '
-                              f'you.',
-                        f'Ensuite : {audience.activity_words(activity, FR)}, lancé sans vous '
-                        f'demander.'), junior_message])
+        rules = [audience.rule_words(r, lang) for r in action.get('rules') or []]
+        on = (_t(lang, ', on the rules: ' + '; '.join(rules),
+                 ', sur les règles : ' + ' ; '.join(rules)) if len(rules) > 1 else
+              _t(lang, f', on the rule: {rules[0]}', f', sur la règle : {rules[0]}')
+              if rules else '')
+        lead = _t(lang, f'Next: {audience.activity_words(activity)}, run without asking '
+                        f'you{on}.',
+                  f'Ensuite : {audience.activity_words(activity, FR)}, lancé sans vous '
+                  f'demander{on}.')
+        return _fit([lead, _run_follow_up(action, view, junior_message, lang)])
     if kind == 'done':
         return _fit([junior_message, _criterion_status_words(view, lang) or ''])
     if kind == 'reconfirm':
@@ -964,6 +1028,22 @@ def _digest(action: Mapping, view: Mapping, state: Mapping, ctx: dict, lang: str
         return _fit([junior_message, (words[:1].upper() + words[1:]).rstrip('.') + '.'
                      if words else ''])
     return _fit([junior_message])
+
+
+def _run_follow_up(action: Mapping, view: Mapping, junior_message: str, lang: str) -> str:
+    """Round 5 (review E, R5E-4): what follows a run in the digest. A run asks nothing, so
+    the step's question (the junior message of a plain run) is introduced for what it is:
+    the decision the junior takes once the result is there, or, at a step without a
+    decision, the question the result answers. Any other junior message (why the run comes
+    first) is kept as it is."""
+    if not junior_message.rstrip().endswith('?'):
+        return junior_message
+    step = next((s for s in view.get('plan') or [] if s.get('id') == action.get('step')), {})
+    if step.get('decision'):
+        return _t(lang, f'Once it is done, you decide: {junior_message}',
+                  f'Une fois fait, c\'est vous qui décidez : {junior_message}')
+    return _t(lang, f'It answers this question: {junior_message}',
+              f'Il répond à cette question : {junior_message}')
 
 
 def enrich(view: dict, state: Mapping, case=None) -> dict:

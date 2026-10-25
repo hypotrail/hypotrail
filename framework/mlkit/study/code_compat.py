@@ -216,6 +216,84 @@ ATTESTATIONS: tuple[dict, ...] = (
                      'byte-identical between the ce82ca9 (and 506180a) engines and the current '
                      'one.'],
     },
+    # Review 2026-10-25 round 5 (area E, R5E-2): activities.py adds the runtime files the
+    # wheel holds (errors, packaging, wheel, the schemas) to the predictor.capture fingerprint
+    # only; nothing any other activity plans or computes changes. Attested from the b5f6dba
+    # bytes (unchanged since ce82ca9), the 818995c bytes (unchanged since 621d607) and the
+    # 506180a bytes, each only after the byte comparison of that engine matched. Not attested:
+    # predictor.capture (its fingerprint now holds more modules: a new capture) and
+    # diagnostics.population (not reproducible bit for bit).
+    {
+        'module': 'mlkit.study.activities',
+        'from_sha256': 'b7c994d2e88edba8156c47756c0c43a496f0e04d4f7005bc1d9014ab639a48c1',
+        'to_sha256': '9f5e8c3fa79d7ebbfdb146bc2c556733998377fc023d4309e99964feac48175b',
+        'activities': ['split', 'eda.target_rate', 'eda.special_values', 'eda.rate_by',
+                       'eda.target_summary', 'eda.mean_by', 'eda.distribution', 'eda.quality',
+                       'eda.single_feature_signal', 'eda.correlation', 'fit.baseline',
+                       'fit.logistic', 'fit.linear', 'fit.variant', 'policy.evaluation',
+                       'policy.inspect', 'evaluate.regression', 'diag.binary',
+                       'diag.regression', 'final_test.evaluation', 'diag.final_test'],
+        'reason': ('Round 5 (R5E-2) changes only the module list of predictor.capture; every '
+                   'other activity plans and computes exactly as with the b5f6dba engine.'),
+        'evidence': ['framework/tests/study/test_review_round5_engine.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'docs/handoff/LIBRARIES-V1.md#review-round-5-area-e: the same commands on '
+                     'the six temporary studies of round 2 with the b5f6dba engine and the '
+                     'current one; every result byte-identical or identical up to upstream '
+                     'ids, every leaf recomputed in the b5f6dba studies byte-identical, every '
+                     'promoted result current.'],
+    },
+    {
+        'module': 'mlkit.study.activities',
+        'from_sha256': 'd6806ce3ff8f40c90eec7342c4ea2693a87c39a387a660dc1633364edd5c1f10',
+        'to_sha256': '9f5e8c3fa79d7ebbfdb146bc2c556733998377fc023d4309e99964feac48175b',
+        'activities': ['split', 'eda.target_rate', 'eda.special_values', 'eda.rate_by',
+                       'eda.target_summary', 'eda.mean_by', 'eda.distribution', 'eda.quality',
+                       'eda.single_feature_signal', 'eda.correlation', 'fit.baseline',
+                       'fit.logistic', 'fit.linear', 'fit.variant', 'policy.evaluation',
+                       'policy.inspect', 'evaluate.regression', 'diag.binary',
+                       'diag.regression', 'final_test.evaluation', 'diag.final_test'],
+        'reason': ('The delayed-label fix (see the 818995c edge above) and the round-5 change '
+                   'of the predictor.capture module list; a study of the 818995c engine without '
+                   'training exclusions plans and computes exactly as before.'),
+        'evidence': ['framework/tests/study/test_review_round5_engine.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'docs/handoff/LIBRARIES-V1.md#review-round-5-area-e: the same comparison '
+                     'with the 818995c engine.'],
+    },
+    {
+        'module': 'mlkit.study.activities',
+        'from_sha256': '3065f4d623f1ea2346c43ef27c0dd0f9a948c8eb007355c9cb625967b17cc9e1',
+        'to_sha256': '9f5e8c3fa79d7ebbfdb146bc2c556733998377fc023d4309e99964feac48175b',
+        'activities': ['split', 'eda.target_rate', 'eda.special_values', 'eda.rate_by',
+                       'eda.target_summary', 'eda.mean_by', 'eda.distribution', 'eda.quality',
+                       'eda.single_feature_signal', 'eda.correlation', 'fit.baseline',
+                       'fit.logistic', 'fit.linear', 'fit.variant', 'policy.evaluation',
+                       'policy.inspect', 'evaluate.regression', 'diag.binary',
+                       'diag.regression', 'final_test.evaluation', 'diag.final_test'],
+        'reason': ('The library-v1 change, the delayed-label fix (see the 506180a edges above) '
+                   'and the round-5 change of the predictor.capture module list; a study of the '
+                   '506180a engine without training exclusions plans and computes exactly as '
+                   'before.'),
+        'evidence': ['framework/tests/study/test_review_round5_engine.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'docs/handoff/LIBRARIES-V1.md#review-round-5-area-e: the same comparison '
+                     'with the 506180a engine.'],
+    },
+    {
+        'module': 'mlkit.study.activities',
+        'from_sha256': 'b04e5fad6c3ae1e9d563d086a879422cce372e79593bec2b31eaebb098d3f30e',
+        'to_sha256': '9f5e8c3fa79d7ebbfdb146bc2c556733998377fc023d4309e99964feac48175b',
+        'activities': ['diag.final_test'],
+        'reason': ('The reviewed pre-WP-J edge (to the b5f6dba bytes) carried to the current '
+                   'bytes: round 5 changes only the predictor.capture module list, nothing '
+                   'diag.final_test plans or computes.'),
+        'evidence': ['framework/tests/study/test_v03_wp_j_engine.py',
+                     'framework/tests/study/test_reliability_j4_j7.py',
+                     'framework/tests/study/test_review_round5_engine.py',
+                     'docs/handoff/LIBRARIES-V1.md#review-round-5-area-e: diag.final_test '
+                     'byte-identical between the b5f6dba and current engines.'],
+    },
     {
         'module': 'mlkit.study.diagnostics',
         'from_sha256': '3d3244edc2b3bc7a7b5cb6e5519e18751ed2ad8eb7d3066ef5585242ac52059d',

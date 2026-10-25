@@ -119,14 +119,14 @@ def source_md(study: read.Study, rid: str) -> str:
     entry = study.result(rid)
     blocks = []
     for name, sha in sorted(entry['code']['modules'].items()):
-        spec = importlib.util.find_spec(name)
-        path = Path(spec.origin) if spec is not None and spec.origin else None
+        path = read._module_path(name)        # R5E-2: a package data file too
         if path is None or not path.is_file():
             blocks.append(f'`{name}`: source not found.')
             continue
         raw = path.read_bytes()
         note = '' if hashlib.sha256(raw).hexdigest() == sha else f'\n\n{labels["source_changed"]}'
-        blocks.append(f'`{name}`{note}\n\n```python\n{raw.decode("utf-8")}\n```')
+        fence = 'json' if path.suffix == '.json' else 'python'
+        blocks.append(f'`{name}`{note}\n\n```{fence}\n{raw.decode("utf-8")}\n```')
     return '\n\n'.join(blocks)
 
 

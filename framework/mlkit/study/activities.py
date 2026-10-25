@@ -227,6 +227,9 @@ MODULES = {
                  'mlkit.study.regression'),
     # Library integration v1: the engine fit it is compared with, the recipe translation and
     # the runtime that fits, captures and reloads it (and the libraries that compute it).
+    # Round 5 (review E, R5E-2): every file of the runtime's wheel, which the bundle binds
+    # byte for byte, so a runtime that differs anywhere is a new capture (a data file is
+    # named ``package/relative path``, :func:`mlkit.study.read._module_path`).
     CAPTURE: (_BASE, 'mlkit.study.fit', 'mlkit.classical', 'mlkit.study.governance',
               'mlkit.study.families', 'mlkit.study.trials', 'mlkit.contracts.capture',
               'mlkit.contracts.recipe', 'mlkit.contracts.context',
@@ -234,7 +237,14 @@ MODULES = {
               'hypotrail_runtime.contracts', 'hypotrail_runtime.preprocess',
               'hypotrail_runtime.predictor', 'hypotrail_runtime.families',
               'hypotrail_runtime.inference', 'hypotrail_runtime.canonical', 'sklearn',
-              'mlkit.integrations.mlflow_packaging'),
+              'mlkit.integrations.mlflow_packaging', 'hypotrail_runtime.errors',
+              'hypotrail_runtime.packaging', 'hypotrail_runtime.wheel',
+              'hypotrail_runtime.schemas', 'hypotrail_runtime.schemas.__main__',
+              *(f'hypotrail_runtime/schemas/{name}-v1.schema.json' for name in (
+                  'computation_context', 'data_contract', 'diagnostic_result',
+                  'evidence_binding', 'export_source', 'model_recipe', 'package_descriptor',
+                  'parity_result', 'predictor_artifact', 'predictor_bundle',
+                  'uncertainty_result'))),
     # The Evidently versions it calls are in its params (semantic dependencies).
     POPULATION: (_BASE, 'mlkit.contracts.population', 'mlkit.contracts.context',
                  'mlkit.integrations.evidently_diagnostics', 'hypotrail_runtime.contracts',

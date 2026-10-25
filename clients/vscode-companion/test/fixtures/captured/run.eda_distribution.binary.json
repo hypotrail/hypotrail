@@ -22,7 +22,7 @@
   "activity": "eda.distribution",
   "execution_id": "e_17bb42fe2af6771b4815132d",
   "status": "promoted",
-  "result_id": "a95543d5d3cd0552f7e5f68622a4be16eb254d6594e518fc3130664487a0e617",
+  "result_id": "674ac6a65496760919e713927d7cb3d98797e307224c2c56b35284a94995aef9",
   "values": {
    "partition": "train",
    "column": "age",
@@ -136,13 +136,13 @@
    "activity": "eda.distribution",
    "slot": "eda.distribution:age",
    "status": "promoted",
-   "result_id": "a95543d5d3cd0552f7e5f68622a4be16eb254d6594e518fc3130664487a0e617",
-   "input_key": "f229e345afc4554c6046ab1f0cb935920ea29250e11efb4708ed81c41e0793fc",
+   "result_id": "674ac6a65496760919e713927d7cb3d98797e307224c2c56b35284a94995aef9",
+   "input_key": "e201040c1c235bd744bcf1f80ed4d25de1847ee4b560e6073d53d84f75a36630",
    "reason": null,
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_fc4c0aeba3334698974b51157f2ff3b0"
+    "x_d676c5c2a1a14741a3c427d9881b85b4"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -193,7 +193,7 @@
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: the baseline model, run without asking you. How much does a simple model improve on a constant baseline on validation?",
+   "junior_digest": "Next: the baseline model, run without asking you. It answers this question: How much does a simple model improve on a constant baseline on validation?",
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",

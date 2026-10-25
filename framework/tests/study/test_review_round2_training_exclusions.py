@@ -401,8 +401,17 @@ def _edges(source: str) -> list[dict]:
 
 def test_the_round2_edges_target_the_current_bytes():
     now = hashlib.sha256((REPO / ACTIVITIES_FILE).read_bytes()).hexdigest()
-    assert now == CURRENT, ('activities.py changed again: re-run code_compat_evidence.py '
-                            'against the new bytes and, only if it matches, add new edges.')
+    if now != CURRENT:
+        # Review round 5 (R5E-2) changed activities.py again: exact edges from the bytes of
+        # this round (and from the 818995c ones) to the current bytes must cover every
+        # activity these edges cover (test_review_round5_engine.py checks their evidence).
+        for source in (CURRENT, PREVIOUS):
+            covered = {a for r in code_compat.ATTESTATIONS if r['module'] == ACTS
+                       and r['from_sha256'] == source and r['to_sha256'] == now
+                       for a in r['activities']}
+            assert covered == set(BASE_ATTESTED), (
+                'activities.py changed again: re-run code_compat_evidence.py against the new '
+                'bytes and, only if it matches, add new edges.')
     assert read._module_path(ACTS).read_bytes() == (REPO / ACTIVITIES_FILE).read_bytes()
     assert code_compat.integrity()
     [base] = _edges(BASE)

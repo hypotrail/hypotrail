@@ -22,7 +22,7 @@
   "activity": "eda.rate_by",
   "execution_id": "e_3b7e9da2df5de95232824246",
   "status": "promoted",
-  "result_id": "660c0578e8fe89707e095b7a183fca7fcc70605bef44881584ed0834b47deefc",
+  "result_id": "dfea61dcc82b454e926d2a8e6033eac1a2c81fad31a0ea0f76cbb226cb774500",
   "values": {
    "partition": "train",
    "column": "job",
@@ -263,13 +263,13 @@
    "activity": "eda.rate_by",
    "slot": "eda.rate_by:job",
    "status": "promoted",
-   "result_id": "660c0578e8fe89707e095b7a183fca7fcc70605bef44881584ed0834b47deefc",
-   "input_key": "15bfbd5c5f2f37cd8c609da511327753ecf08c96db905c2ca4495a025c4b2b65",
+   "result_id": "dfea61dcc82b454e926d2a8e6033eac1a2c81fad31a0ea0f76cbb226cb774500",
+   "input_key": "813163cf6f50fe414b73051cb32f69c4b7a1f7d56cef3bcc0ae985c4944f9d9f",
    "reason": null,
    "started_revision": 22,
    "invalidation": null,
    "exposure_ids": [
-    "x_2449d6da94514f508ae3708307fcc58f"
+    "x_19393ea151f34d29806fe36b466ec835"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -320,7 +320,7 @@
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: the baseline model, run without asking you. How much does a simple model improve on a constant baseline on validation?",
+   "junior_digest": "Next: the baseline model, run without asking you. It answers this question: How much does a simple model improve on a constant baseline on validation?",
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",

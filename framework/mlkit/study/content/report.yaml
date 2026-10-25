@@ -184,6 +184,23 @@ verdict_card:
   final_after_note: Something changed after the final test was opened, so it no longer measures what the study now holds.
   trials: Configurations compared
   trials_note: model configurations evaluated on the same rows so far (a disclosure; the more there are, the more the best one may owe to chance).
+  rule_of_figures: Rule of these figures
+  found_by_model: Positive rows found by the model
+  among_selected: '{tp} among {selected} selected rows{precision}'
+  precision_of: ' (precision {value}{interval})'
+  interval_of: ', interval {low} to {high}'
+  baseline_at_rule: Baseline at the same rule
+  baseline_count: '{tp} on average without ranking{precision}'
+  precision_gain: Precision gain over the baseline
+  points_value: '{point} percentage points{interval}'
+  points_unit: ' percentage points'
+  mae_of: 'Mean absolute error, {model}'
+  mae_interval: ' (interval {low} to {high})'
+  difference_linear: Difference, linear minus baseline
+  difference_variant: Difference, variant minus baseline
+  difference_value: '{point}{interval}; negative means a smaller error'
+  final_among: '{tp} among {selected} selected rows{precision}; {rule}'
+  final_precision: ' (precision {value})'
   status:
     met: Met
     uncertain: Uncertain, the interval includes zero
@@ -284,6 +301,52 @@ diagnostics:
   by_feature_heading: Residuals by variable
   largest_heading: The largest errors
   smearing: Target transform
+# Round 5 (review E, R5E-9): recorded decision values in words; a French report reads the
+# same keys in report_fr.yaml. The numbers are the value's own (literals, not traced).
+value_words:
+  rule_capacity: 'Select the {k} highest-scored rows'
+  rule_threshold: 'Select every row scored {t} or more'
+  rule_share: 'Select the {share} highest-scored rows'
+  with_model: '{words}, with {model}'
+  model_choice:
+    fit.linear: Use the linear model
+    fit.logistic: Use the logistic model
+    fit.variant: Use the variant of the linear model
+    fit.baseline: Keep predicting the training mean (the baseline)
+  later_variant: 'Use the {ordinal} variant'
+  ordinals:
+    second: second
+    third: third
+  variants: 'Compare the model with: {words}'
+  variant: 'Compare the model with a variant: {words}'
+  final_test: 'Open the final test once for {model}'
+  final_test_rule: ', rule: {rule}'
+  cv_kinds:
+    kfold_stratified: stratified on the outcome
+    kfold_quantile: stratified on target quantiles
+    temporal_folds: blocks in time order
+  seed: ' (seed {seed})'
+  split_cv: 'Cross-validation on the development rows: {folds} folds, {kind}{seed}; every row is predicted once by a model that did not see it'
+  split_forward: 'Forward-chaining cross-validation on the development rows: {folds} folds in the order of prediction time{gap}; each later window is scored once by a model fitted on earlier rows only, and the earliest rows (the warm-up) train but are never scored'
+  forward_gap: ', a gap of {gap} on the clock between the rows fitted and the window scored'
+  split_group: 'Cross-validation on the development rows: {folds} folds that never share a group; every row is predicted once by a model that did not see its group'
+  split_ordinal: 'Rows with {column} at {cutoff} or later are validation rows; earlier rows train the models'
+  split_random: '{kind}: {share} of the development rows for validation{seed}'
+  split_kinds:
+    stratified_random: Stratified random split
+    random: Random split
+  criterion_precision_gain: 'Adopt only if the precision beats the baseline by at least {points} percentage points at the adopted rule'
+  criterion_recall_gain: 'Adopt only if the recall beats the baseline by at least {points} percentage points at the adopted rule'
+  criterion_mae_reduction: "Adopt only if the model's mean absolute error is at least {share} below the mean baseline's"
+  missing_all: a missing-value indicator for every feature with missing cells
+  missing_some: 'missing-value indicators for {columns}'
+  rare: 'categories with fewer than {k} {rows} grouped'
+  rare_rows_cv: rows a model is fitted on
+  rare_rows: training rows
+  caps: 'values capped for {columns}'
+  log_transform: 'log transform of {columns}'
+  preparation_default: 'Default preparation: nothing added, grouped, capped, or transformed'
+  preparation: 'Preparation: {parts}'
 model_names:
   fit.logistic: Model (logistic regression)
   fit.baseline: Baseline (no ranking)
