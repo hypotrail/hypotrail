@@ -315,6 +315,99 @@ again.
 Evidence: `framework/tests/study/libraries` and `framework/tests/exporters` together 747
 passed, 6 skipped (753 collected: 271 and 482; the round-4 file holds 28).
 
+**Round 5.** Regression tests: `framework/tests/study/libraries/test_review_round5_a.py` (the
+reviewer's probes ported, with variants, and an end-to-end serving test; every bundle, study
+and environment in `tmp_path`) and `framework/tests/exporters/azureml/test_review_round5.py`
+(the exported project). **R5-A1 (major):** the MLflow package's `requirements.txt` and
+`conda.yaml` pinned `hypotrail-runtime==1.0.0` from an index while the bundle lock leaves the
+runtime out ("shipped as the bundle's own wheel"); the version stayed `1.0.0` while the code
+changed, and neither the wrapper nor `load_predictor` compared the installed runtime with the
+wheel the predictor id binds (`runtime.wheel_sha256`), so a runtime of the same version with
+other code (the reviewer's inverted score) served other predictions under the evaluated
+predictor id. Now (1) the package's environment installs the bundle's own wheel, embedded at
+`artifacts/native_bundle/runtime/hypotrail_runtime-<version>-py3-none-any.whl`, by the line
+`./artifacts/native_bundle/runtime/hypotrail_runtime-<version>-py3-none-any.whl` in
+`requirements.txt` and in the `pip` section of `conda.yaml` (`mlflow_packaging.
+runtime_requirement`: the manifest must name `hypotrail-runtime` with a wheel of exactly that
+name and version and its digest, otherwise `contract_invalid`); the runtime is never named
+from an index. What MLflow does with it, checked against MLflow 3.17.2's sources and run:
+its environment restoration for `env_manager` `virtualenv` and `uv`
+(`mlflow.utils.virtualenv._create_virtualenv`, behind `mlflow models predict` and `serve`)
+links the model folder's entries into a temporary folder and runs `pip install -r` (or `uv
+pip install -r`) on `python_env.yaml`'s dependencies (`-r requirements.txt`) with that folder
+as working directory, so the relative path resolves to the embedded wheel; run here, `mlflow
+models predict --env-manager uv` on a package builds a fresh environment, installs that wheel
+and serves the bundle's parity outputs
+(`test_mlflow_restores_the_package_environment_from_the_embedded_wheel`, about 25 s with a
+warm uv cache). Loading in the current environment (`mlflow.pyfunc.load_model`) installs
+nothing; MLflow's requirement-mismatch warning skips a path line. MLflow's own
+`add_libraries_to_model` references wheels inside a model the same way (`wheels/<name>.whl`
+in `requirements.txt` and `conda.yaml`). Not run here: conda restoration (no conda in this
+environment), where `conda env create` installs the `pip` section from the folder of
+`conda.yaml`, the package root, when that folder is writable (otherwise from the current
+folder, where the path does not resolve), and `mlflow models
+build-docker`, which copies the model folder into the image before restoring it. What a local path cannot
+do: a deployment that builds its image from `conda.yaml` alone without the model folder as
+build context (Azure ML's no-code deployment of an MLflow model, for example) cannot resolve
+it; such a target needs an environment that installs the wheel itself (the exported project's
+`aml-environment.yml` does), or the wheel published to a private index; the export does not
+deploy the package. A hash pin (`--hash`) is not used: pip's hash-checking mode would then
+require a hash for every requirement. Whatever installs the runtime, (2) the wrapper's
+`load_context` refuses to serve unless the installed `hypotrail_runtime` is the bound one:
+before anything of the runtime is imported, it finds the package folder with
+`importlib.util.find_spec` and compares every file there (Python bytecode left out) with the
+`hypotrail_runtime/` members of the bundle's wheel, whose bytes it checks against the
+manifest's `wheel_sha256`, by SHA-256; a difference raises `RuntimeNotBound` naming the
+installed folder, the differing files and the wheel to install; it then loads the predictor
+and runs `check_parity` on the bundle's parity rows (`ParityNotReproduced` otherwise). The
+runtime makes the same comparison itself (`hypotrail_runtime.wheel.installed_runtime_issues`,
+`predictor.runtime_issues`) in every `load_predictor` (the capture's reload, the final test,
+the export, the exported project's `predict` and `validate`, the wrapper): a runtime other
+than the bound one is `environment_unqualified` with `details.reason: runtime_not_bound`,
+`missing`, `unexpected`, `changed` (paths in the package), `installed_digest` and
+`bound_digest` (`wheel.code_digest`: SHA-256 of the sorted `<path> <sha256>` lines), path the
+wheel, remediation `pip install <bundle>/<wheel>` or capture again; nothing is unpickled. The
+final-test opening reports it as `capture_loadable` with a junior message (English and
+French) saying the installed model runtime is not the one of the capture, even with the same
+version. `environment_issues` still compares the semantic dependencies by version and leaves
+the runtime to the code comparison. Every file of the installed package folder counts, an
+added module or extension module included, so a stray file in `framework/runtime/src/
+hypotrail_runtime/` (an editor backup) now refuses every load until it is removed; the wheel
+holds the folder's `*.py`, `*.json` and `*.typed` files. Not compared: Python bytecode
+caches of the installed runtime (Python's own invalidation applies) and the runtime's
+dependencies beyond the semantic versions. The regenerated environment files are still
+compared byte for byte by `verify`; `PACKAGER_VERSION` is `4` and a version-3 package is
+refused (`schema_version_unsupported`, capture again). **R5-A2 (minor):** the exact file
+allowlist admitted any unlisted file under `artifacts/native_bundle/evidence/**` (the
+packager's `layout_issues` skipped the embedded bundle, the runtime's `verify_bundle` exempted
+`evidence/` from its unlisted-file check). Now the embedded bundle carries no `evidence/`
+(nor `packages/`) folder at all: the packager never copies them (`_skip`; when it packages a
+bundle that already holds a binding or packages, the embedded bundle document is rewritten
+without them), `layout_issues` refuses either folder and anything in it, and the packager and
+the runtime require the embedded bundle to hold exactly its listed files and its bundle
+document, with no evidence binding path and no `evidence/` folder (even empty). In a bundle,
+`evidence/` admits only `evidence/binding-<n>.json` (`n` a positive integer without leading
+zeros), each a `hypotrail.evidence_binding/1` of this predictor, and no sub-folder; any other
+file is `artifact_integrity_failed` naming it. `write_evidence_binding` now writes the binding
+and the bundle document atomically from temporary files beside the bundle folder (the round-1
+temporary file under `evidence/` is gone; a leftover from a crash there is now refused).
+**R5-A3 (minor):** when `capture._place` reused an existing `predictors/<pid>+mlflow_pyfunc`
+folder, `_compute` recorded the held folder's packages, which only `verify_bundle` had
+checked. Now the reuse compares the held packages with the ones just built in staging
+(`capture.packages_differ`: same formats, artifact ids and relative paths, and the same bytes
+of every file of each package folder and of its descriptor; packages are deterministic since
+round 4) and refuses with `artifact_integrity_failed`, `details.reason: packages_differ`,
+`changed`, remediation to remove or restore the folder and capture again; the recorded
+packages are then always the ones the capture built. Two earlier tests changed expectation
+with the new rules, not weakened: the round-1 evidence test now requires a leftover file
+under `evidence/` to be refused (it required it to be accepted), and the round-3 environment
+probe on `conda.yaml` replaces the embedded wheel path instead of the index pin it no longer
+holds. Captures made before this round read as `code_changed` (the runtime, packager and
+capture sources changed) and their bundles bind the previous runtime code, which
+`load_predictor` now refuses: capture again.
+Evidence: `framework/tests/study/libraries` and `framework/tests/exporters` together 822
+passed, 6 skipped (828 collected: 304 and 524; the round-5 files hold 33 and 1).
+
 ## Commands and test evidence
 
 Environment: Python 3.13, uv 0.11, the lock in `framework/uv.lock` (`uv sync --project

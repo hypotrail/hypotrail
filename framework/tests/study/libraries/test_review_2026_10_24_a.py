@@ -271,11 +271,14 @@ def test_evidence_binding_stays_mutable_outside_the_id(bundle):
     write_evidence_binding(b, {**binding, 'status': 'stale'})
     assert read_evidence_binding(b).status == 'stale'
     assert verify_bundle(b).predictor_id == pid
-    # The temporary document is written under evidence/: nothing is left beside the bundle
-    # document, and a leftover from a crash there does not make the bundle unverifiable.
-    assert not list(b.glob('.*'))
+    # Round 5 (R5-A2): the temporary documents are written beside the bundle folder, so
+    # nothing is left inside the bundle or beside it; the evidence folder holds the bindings
+    # only, and any other file there (a leftover, a note) makes the bundle unverifiable.
+    assert not list(b.glob('.*')) and not list(b.parent.glob('.*'))
+    assert sorted(p.name for p in (b / 'evidence').iterdir()) == ['binding-1.json',
+                                                                   'binding-2.json']
     (b / 'evidence' / '.predictor_bundle.json.tmp').write_bytes(b'{}')
-    assert verify_bundle(b).predictor_id == pid
+    _refused(verify_bundle, b)
 
 
 # --- optional packages ---------------------------------------------------------------------

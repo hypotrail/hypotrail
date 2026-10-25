@@ -342,8 +342,11 @@ def test_environment_files_pointing_elsewhere_are_refused(tmp_path, name):
     if name == 'requirements.txt':
         text = 'hypotrail-runtime @ https://example.invalid/evil-1.0.0-py3-none-any.whl\n' + text
     else:
-        assert 'hypotrail-runtime==' in text or name == 'python_env.yaml'
-        text = text.replace('hypotrail-runtime==', 'hypotrail-runtime-evil==') \
+        # Round 5 (R5-A1): conda.yaml installs the embedded runtime wheel by its path; the
+        # probe makes it install a runtime of the same version from an index instead.
+        wheel = ('./artifacts/native_bundle/runtime/hypotrail_runtime-1.0.0-py3-none-any.whl')
+        assert wheel in text or name == 'python_env.yaml'
+        text = text.replace(wheel, 'hypotrail-runtime==1.0.0') \
             .replace('- -r requirements.txt', '- -r other.txt')
     path.write_text(text)
     r2._redescribe_mlflow_package(dest)

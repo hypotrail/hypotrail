@@ -41,9 +41,25 @@ Round 4 (review A, 2026-10-25). An ``mlflow_pyfunc`` package holds exactly the f
 packager writes (``MLmodel``, the wrapper, the three environment files, the descriptor copy,
 and the embedded native bundle under ``artifacts/native_bundle/``); any other file is
 refused even when its descriptor names it, since ``MLmodel`` could make MLflow load it.
+
 * :meth:`Predictor.predict` checks the raw features against the data contract and returns
   a :class:`PredictionBatch` in input order: the score of the named positive class, or a
   prediction in the target unit.
+
+Round 5 (review A, 2026-10-25).
+
+* R5-A1: a predictor is scored only by the runtime its bundle binds. The version number
+  does not identify the code, so :func:`_load_verified` (every :func:`load_predictor`: the
+  final test, the export, the exported project, the MLflow wrapper) compares the installed
+  ``hypotrail_runtime`` with the bundle's own wheel, file by file
+  (:func:`hypotrail_runtime.wheel.installed_runtime_issues`), and refuses with
+  ``environment_unqualified`` (``details.reason`` ``runtime_not_bound``) when they differ.
+* R5-A2: the evidence folder of a bundle holds evidence bindings only
+  (``evidence/binding-<n>.json``, each a binding of this predictor); any other file or
+  folder there is refused. A native bundle embedded in a package holds exactly its listed
+  files and its bundle document: no ``evidence/`` folder, no evidence binding, no package.
+  The evidence binding and the bundle document are replaced atomically from a temporary file
+  beside the bundle folder, never inside it.
 """
 from __future__ import annotations
 
@@ -63,10 +79,10 @@ import numpy as np
 import pandas as pd
 
 from . import RUNTIME_API_VERSION, DISTRIBUTION, __version__, canonical, families, inference
-from .contracts import (ComputationContext, DataContract, ModelRecipe, PackageDescriptor,
-                        ParityResult, ParitySpec, PredictorArtifact, PredictorBundle,
-                        TrainingScope, Tolerance, parse, validate_data_contract,
-                        validate_recipe)
+from .contracts import (ComputationContext, DataContract, EvidenceBinding, ModelRecipe,
+                        PackageDescriptor, ParityResult, ParitySpec, PredictorArtifact,
+                        PredictorBundle, TrainingScope, Tolerance, parse,
+                        validate_data_contract, validate_recipe)
 from .errors import ContractError
 from .preprocess import build_pipeline
 
@@ -83,6 +99,8 @@ PARITY_EXPECTED = 'parity/expected_outputs.json'
 # Evidence bindings are versioned beside the hashed content: ``evidence/binding-<n>.json``;
 # the bundle document's ``evidence_binding_path`` names the current one (CONTRAT §5).
 EVIDENCE_DIR = 'evidence'
+# The only files the evidence folder may hold (round 5, R5-A2).
+EVIDENCE_FILE = re.compile(r'^evidence/binding-[1-9][0-9]{0,8}\.json$')
 PACKAGES_DIR = 'packages'
 # Spec L-10: proposed float64 tolerances; classes and selections must match exactly. They
 # are never relaxed automatically.
@@ -711,9 +729,11 @@ def verify_bundle(bundle_dir: Path) -> BundleDescriptor:
     if extra:
         raise ContractError('artifact_integrity_failed', 'The bundle holds unlisted files.',
                             remediation='Refuse this bundle.', details={'files': extra})
+    evidence = sorted(p for p in present - listed if p.startswith(EVIDENCE_DIR + '/'))
+    _check_evidence_folder(root, bundle, evidence)
     if bundle.evidence_binding_path is not None and (
-            not bundle.evidence_binding_path.startswith(EVIDENCE_DIR + '/')
-            or not (root / bundle.evidence_binding_path).is_file()):
+            not EVIDENCE_FILE.match(bundle.evidence_binding_path)
+            or bundle.evidence_binding_path not in evidence):
         raise ContractError('artifact_integrity_failed', 'The evidence binding path is not a '
                             'recorded binding.', path='evidence_binding_path',
                             remediation='Refuse this bundle.')
@@ -741,6 +761,32 @@ def verify_bundle(bundle_dir: Path) -> BundleDescriptor:
     _check_packages(root, bundle, actual, bound)
     return BundleDescriptor(path=root, bundle=bundle, manifest=manifest, recipe=recipe,
                             data_contract=contract)
+
+
+def _check_evidence_folder(root: Path, bundle: PredictorBundle, evidence: list[str]) -> None:
+    """The evidence folder holds evidence bindings only (round 5, R5-A2): files named
+    ``evidence/binding-<n>.json``, each a ``hypotrail.evidence_binding/1`` of this predictor,
+    and no sub-folder. The folder is outside the predictor id, so anything else there (a
+    module, a library, a note) would travel with the bundle without any check reading it."""
+    folder = root / EVIDENCE_DIR
+    folders = sorted(p.relative_to(root).as_posix() + '/' for p in folder.rglob('*')
+                     if p.is_dir()) if folder.is_dir() else []
+    stray = [rel for rel in evidence if not EVIDENCE_FILE.match(rel)]
+    if stray or folders:
+        named = stray + folders
+        _refuse_integrity('The evidence folder of the bundle holds something other than '
+                          f'evidence bindings ({", ".join(named[:5])}): only '
+                          f'{EVIDENCE_DIR}/binding-<n>.json files are allowed there.',
+                          path=named[0], files=stray, folders=folders)
+    for rel in evidence:
+        try:
+            binding = parse(EvidenceBinding, _inside(root, rel).read_bytes())
+        except ContractError as exc:
+            _refuse_integrity(f'{rel} is not an evidence binding: {exc.message}', path=rel,
+                              inner_code=exc.code)
+        if binding.predictor_id != bundle.predictor_id:
+            _refuse_integrity(f'{rel} binds another predictor.', path=rel,
+                              recorded=bundle.predictor_id, found=binding.predictor_id)
 
 
 def bytecode_in(root: Path) -> tuple[list[str], list[str]]:
@@ -938,8 +984,11 @@ def _check_mlflow_pyfunc_layout(entry, descriptor: PackageDescriptor, named: set
     :func:`_check_embedded_bundles`). Any other file, at the root or in another folder, is
     refused: no check reads it, and ``MLmodel`` could make MLflow load it."""
     inner = MLFLOW_PYFUNC_BUNDLE + '/'
+    # Round 5 (R5-A2): the embedded bundle carries no evidence folder and no package.
     unexpected = sorted(rel for rel in named
-                        if rel not in MLFLOW_PYFUNC_FILES and not rel.startswith(inner))
+                        if (rel not in MLFLOW_PYFUNC_FILES and not rel.startswith(inner))
+                        or rel.startswith(f'{inner}{EVIDENCE_DIR}/')
+                        or rel.startswith(f'{inner}{PACKAGES_DIR}/'))
     missing = sorted(rel for rel in (*MLFLOW_PYFUNC_FILES, f'{inner}{BUNDLE}')
                      if rel not in named)
     declared = (descriptor.extensions.get(DESCRIPTOR_COPY),
@@ -968,7 +1017,8 @@ def _check_embedded_bundles(root: Path, bundle: PredictorBundle, entry, descript
     and the folder the descriptor names (extension ``hypotrail.native_bundle``), is verified
     as a bundle of its own and must name the same predictor, recipe, data contract and payload,
     and list exactly the files the outer predictor id binds, with the same digests. It holds
-    no package of its own."""
+    no package of its own, and (round 5, R5-A2) no evidence: no ``evidence/`` folder, no
+    evidence binding, and no file but its listed files and its bundle document."""
     prefix = entry.relative_path + '/'
     # Every listed file of the package, described or not (an unlisted one is refused before).
     inside_package = [rel[len(prefix):] for rel in actual if rel.startswith(prefix)]
@@ -996,6 +1046,19 @@ def _check_embedded_bundles(root: Path, bundle: PredictorBundle, entry, descript
         if inner.bundle.optional_packages:
             _refuse_integrity(f'The native bundle embedded in the {entry.format} package holds '
                               'packages of its own.', path=rel)
+        inner_root = _inside(root, rel)
+        if inner.bundle.evidence_binding_path is not None or \
+                (inner_root / EVIDENCE_DIR).exists():
+            _refuse_integrity(f'The native bundle embedded in the {entry.format} package '
+                              'carries an evidence folder: evidence belongs to the bundle on '
+                              'disk, never to a package.', path=f'{rel}/{EVIDENCE_DIR}')
+        held = {p.relative_to(inner_root).as_posix() for p in inner_root.rglob('*')
+                if p.is_file()}
+        if held != {f.relative_path for f in inner.bundle.files} | {BUNDLE}:
+            _refuse_integrity(f'The native bundle embedded in the {entry.format} package holds '
+                              'files it does not list.', path=rel,
+                              files=sorted(held - {f.relative_path for f in inner.bundle.files}
+                                           - {BUNDLE}))
         found = {f.relative_path: f.sha256 for f in inner.bundle.files}
         for what, path in (('predictor manifest', bundle.predictor_manifest_path),
                            ('recipe', bundle.recipe_path),
@@ -1019,6 +1082,7 @@ def environment_issues(manifest: PredictorArtifact) -> list[dict]:
     issues = []
     for dep in manifest.environment.semantic_dependencies:
         if dep.distribution == DISTRIBUTION:
+            # The runtime is compared by its code, not its version (:func:`runtime_issues`).
             continue
         try:
             found = version(dep.distribution)
@@ -1069,6 +1133,28 @@ def _trusted(root: Path, trusted_roots: Sequence[Path] | None) -> bool:
     return any(resolved.is_relative_to(Path(r).resolve()) for r in roots)
 
 
+RUNTIME_NOT_BOUND = 'runtime_not_bound'
+
+
+def runtime_issues(desc: BundleDescriptor) -> dict | None:
+    """None when the installed ``hypotrail_runtime`` is the runtime the bundle binds: the
+    same files with the same bytes as the members of its wheel (``runtime.
+    wheel_relative_path``, whose digest the predictor id binds). Otherwise the differences
+    (round 5, R5-A1): the version number alone does not identify the code."""
+    from . import wheel
+    runtime = desc.manifest.runtime
+    rel, sha = runtime.wheel_relative_path, runtime.wheel_sha256
+    if rel is None or sha is None:
+        return {'wheel_relative_path': rel, 'missing': [], 'unexpected': [], 'changed': [],
+                'detail': 'the bundle binds no runtime wheel'}
+    data = _inside(desc.path, rel).read_bytes()
+    if canonical.sha256_hex(data) != sha:
+        _refuse_integrity('The runtime wheel changed after the bundle was verified.', path=rel)
+    issues = wheel.installed_runtime_issues(data)
+    return None if issues is None else {'wheel_relative_path': rel, 'wheel_sha256': sha,
+                                        **issues}
+
+
 def _load_verified(desc: BundleDescriptor) -> Predictor:
     issues = environment_issues(desc.manifest)
     if issues:
@@ -1077,6 +1163,21 @@ def _load_verified(desc: BundleDescriptor) -> Predictor:
                             remediation='Install the captured versions (environment lock in '
                                         'the bundle) before loading.',
                             details={'differences': issues})
+    runtime = runtime_issues(desc)
+    if runtime is not None:
+        rel = runtime['wheel_relative_path']
+        differing = runtime['changed'] + runtime['missing'] + runtime['unexpected']
+        raise ContractError(
+            'environment_unqualified',
+            f'The installed hypotrail_runtime is not the runtime this bundle binds '
+            f'({len(differing)} file(s) differ from its wheel {rel}: '
+            f'{", ".join(differing[:5]) or runtime.get("detail")}). A runtime of the same '
+            f'version with other code may predict otherwise, so this predictor is not '
+            f'scored with it.', path=rel or 'runtime',
+            remediation=f'Install the bundle\'s own runtime wheel in this environment '
+                        f'(pip install <bundle>/{rel}) and load again, or capture the '
+                        f'predictor again with the installed runtime.',
+            details={'reason': RUNTIME_NOT_BOUND, **runtime})
     with open(_inside(desc.path, desc.manifest.payload_files[0].relative_path), 'rb') as fh:
         pipeline = pickle.load(fh)
     return Predictor(recipe=desc.recipe, data_contract=desc.data_contract, pipeline=pipeline,
@@ -1126,14 +1227,26 @@ def write_evidence_binding(bundle_dir: Path, binding: Mapping) -> Path:
     n = 1 + max([int(p.stem.split('-')[1]) for p in folder.glob('binding-*.json')
                  if p.stem.split('-')[1].isdigit()] or [0])
     rel = f'{EVIDENCE_DIR}/binding-{n}.json'
-    canonical.write_json(root / rel, doc)
+    _replace_from_beside(root, root / rel, canonical.dumps(doc) + b'\n')
     bundle = desc.bundle.model_copy(update={'evidence_binding_path': rel})
-    # The temporary document is written under evidence/ (outside the hashed content), so a
-    # crash before the rename leaves nothing that makes the bundle unverifiable.
-    tmp = folder / f'.{BUNDLE}.tmp'
-    canonical.write_json(tmp, parse(PredictorBundle, bundle.model_dump(mode='json')))
-    os.replace(tmp, root / BUNDLE)
+    _replace_from_beside(root, root / BUNDLE, canonical.dumps(
+        parse(PredictorBundle, bundle.model_dump(mode='json'))) + b'\n')
     return root / rel
+
+
+def _replace_from_beside(root: Path, target: Path, data: bytes) -> None:
+    """Write ``data`` to ``target`` atomically, from a temporary file beside the bundle folder
+    (round 5, R5-A2): a crash leaves no stray file inside the bundle, whose evidence folder
+    admits evidence bindings only, and never a torn binding or bundle document."""
+    fd, tmp = tempfile.mkstemp(prefix=f'.{root.name}.', suffix='.tmp', dir=root.parent)
+    try:
+        with os.fdopen(fd, 'wb') as handle:
+            handle.write(data)
+        os.replace(tmp, target)
+    except BaseException:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+        raise
 
 
 def read_evidence_binding(bundle_dir: Path):

@@ -24,7 +24,11 @@ final test would open) **before** the final test is opened:
    bundle of the same id *and* the same package formats; the result always reports the
    packages of the bundle it names (review A3, 2026-10-24). Before a bundle is added or
    reused, every existing bundle of the same predictor id is verified; an altered one
-   refuses the capture. The staging folder is removed whatever the outcome.
+   refuses the capture. A reused bundle's packages must be, byte for byte, the ones this
+   capture has just built in staging (packages are deterministic): a package re-made
+   consistently in the held folder verifies, but is refused here (round 5, R5-A3), so the
+   capture never records the artifact id of a package it did not build. The staging folder
+   is removed whatever the outcome.
 
 Its registry result names the predictor id, the digests and the parity. Once a study holds a
 capture, ``final_test.evaluation`` requires a *current* capture of the very configuration it
@@ -251,6 +255,11 @@ FINAL_TEST_ROWS_READ = 'final_test_rows_read'
 # ``details.reason`` of a bundle whose packages are not the ones the capture recorded
 # (round 4, R4-A2).
 PACKAGE_NOT_RECORDED = 'package_not_recorded'
+# ``details.reason`` of a runtime that is not the one the bundle binds (round 5, R5-A1);
+# the value ``hypotrail_runtime.predictor.RUNTIME_NOT_BOUND`` sets.
+RUNTIME_NOT_BOUND = 'runtime_not_bound'
+# ``details.reason`` of a reused bundle whose packages are not the ones just built (R5-A3).
+PACKAGES_DIFFER = 'packages_differ'
 NOT_READ = {'en': 'No final-test row was read: the final test is still sealed.',
             'fr': "Aucune ligne de l'échantillon de test final n'a été lue : il reste scellé."}
 
@@ -332,7 +341,18 @@ def loading_refusal(state: Mapping, predictor: Mapping, exc) -> dict:
     details = dict(getattr(exc, 'details', None) or {})
     contract = details.get('contract_code')
     lang = _lang(state)
-    if contract == 'environment_unqualified':
+    if contract == 'environment_unqualified' and details.get('reason') == RUNTIME_NOT_BOUND:
+        junior = ('The model runtime installed here (hypotrail_runtime) is not the one your '
+                  'model was captured with: its code changed since, even if its version did '
+                  'not, so it cannot score your model for the final test. Install the runtime '
+                  'wheel kept inside the bundle, or run predictor.capture again, then open the '
+                  'final test.' if lang == 'en' else
+                  "Le runtime du modèle installé ici (hypotrail_runtime) n'est pas celui de la "
+                  "capture : son code a changé depuis, même si sa version est la même, il ne "
+                  "peut donc pas évaluer votre modèle sur l'échantillon de test final. "
+                  "Installez le wheel du runtime conservé dans le bundle, ou relancez "
+                  "predictor.capture, puis ouvrez l'échantillon de test final.")
+    elif contract == 'environment_unqualified':
         junior = ('This environment differs from the one your model was captured in (a '
                   'library version changed), so it cannot be loaded for the final test. '
                   'Install the captured versions again (the environment lock inside the '
@@ -541,7 +561,8 @@ def bundle_name(predictor_id: str, formats) -> str:
 
 def _place(root: Path, staging: Path, descriptor):
     """Move the staged bundle into place, or reuse the verified bundle of the same id and
-    package formats. Return ``(folder, reused, packages held by that folder)``."""
+    package formats whose packages are, byte for byte, the ones just built in ``staging``
+    (round 5, R5-A3). Return ``(folder, reused, packages held by that folder)``."""
     from hypotrail_runtime import verify_bundle
     pid = descriptor.predictor_id
     formats = [p.format for p in descriptor.bundle.optional_packages]
@@ -562,12 +583,51 @@ def _place(root: Path, staging: Path, descriptor):
             raise ContractError('artifact_integrity_failed', f'{final.name} does not hold the '
                                 'packages its name declares (packages_differ).',
                                 path=final.name, remediation='Remove or restore the bundle.',
-                                details={'reason': 'packages_differ',
+                                details={'reason': PACKAGES_DIFFER,
                                          'held': sorted(p.format for p in held),
                                          'requested': sorted(formats)})
+        changed = packages_differ(final, staging, held, descriptor.bundle.optional_packages)
+        if changed:
+            raise ContractError('artifact_integrity_failed', f'{final.name} holds packages that '
+                                'are not the ones this capture has just built from the same '
+                                f'predictor ({", ".join(changed)}): they were re-made or '
+                                'replaced after the capture, so their artifact id is not '
+                                'recorded.', path=final.name,
+                                remediation=f'Remove the folder {final.name} or restore it from '
+                                            'a copy you trust, then run predictor.capture '
+                                            'again; never re-package or edit a bundle.',
+                                details={'reason': PACKAGES_DIFFER, 'changed': changed})
         return final, True, held
     os.replace(staging, final)
     return final, False, list(descriptor.bundle.optional_packages)
+
+
+def _package_files(bundle: Path, entry) -> dict:
+    """``{relative path: sha256}`` of a package folder of ``bundle`` and its descriptor."""
+    from hypotrail_runtime import canonical
+    folder = bundle / entry.relative_path
+    out = {p.relative_to(bundle).as_posix(): canonical.file_sha256(p)
+           for p in sorted(folder.rglob('*')) if p.is_file()} if folder.is_dir() else {}
+    descriptor = bundle / f'{entry.relative_path}.descriptor.json'
+    if descriptor.is_file():
+        out[descriptor.relative_to(bundle).as_posix()] = canonical.file_sha256(descriptor)
+    return out
+
+
+def packages_differ(held_dir: Path, built_dir: Path, held, built) -> list[str]:
+    """The formats whose package in ``held_dir`` (the reused bundle) is not the one just
+    built in ``built_dir``: another artifact id, or any other byte in the package folder or
+    its descriptor (round 5, R5-A3). Sorted, empty when they are identical."""
+    held_by = {p.format: p for p in held}
+    built_by = {p.format: p for p in built}
+    out = []
+    for fmt in sorted(set(held_by) | set(built_by)):
+        a, b = held_by.get(fmt), built_by.get(fmt)
+        if a is None or b is None or a.artifact_id != b.artifact_id \
+                or a.relative_path != b.relative_path \
+                or _package_files(held_dir, a) != _package_files(built_dir, b):
+            out.append(fmt)
+    return out
 
 
 def load_for_final(store, predictor: Mapping):

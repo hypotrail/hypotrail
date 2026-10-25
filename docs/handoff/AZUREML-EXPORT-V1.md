@@ -581,3 +581,29 @@ folder whose path holds `${` (a `--run-dir`, or the project folder of the defaul
 refused before any step runs (`invalid_arguments`). `pyproject.toml` (TOML, not YAML)
 still receives the project name (a slug of the case id) and the description (with the
 study id, 16 hexadecimal digits) raw inside its quotes.
+
+**Round 5 fixes** (round-5 review R5-A1 to R5-A3 of the library runtime, described in the
+library handoff, `LIBRARIES-V1.md`, round 5; regression tests:
+`framework/tests/study/libraries/test_review_round5_a.py` and, for the generated project,
+`framework/tests/exporters/azureml/test_review_round5.py`). *MLflow package (R5-A1)*: the
+copied `mlflow_packaging.py` now writes package environments that install the bundle's own
+runtime wheel by its path inside the package
+(`./artifacts/native_bundle/runtime/hypotrail_runtime-<version>-py3-none-any.whl`, never
+`hypotrail-runtime==<version>` from an index), a wrapper that refuses to serve unless the
+installed `hypotrail_runtime` holds exactly the files of that wheel and reproduces the
+bundle's parity rows, and `PACKAGER_VERSION` `4`: the export's `mlflow_package_verified`
+check refuses a version-3 package (`schema_version_unsupported`, capture again). *Installed
+runtime*: `hypotrail_runtime.load_predictor` compares the installed runtime with the
+bundle's wheel, so the generated project's `predict` and `validate` (`evaluated_model_parity`)
+refuse another runtime of the same version on the project's path with
+`environment_unqualified`, `details.reason: runtime_not_bound`, the differing files and the
+remediation `pip install <bundle>/runtime/<wheel>`, and predict nothing; the project's own
+environment (`aml-environment.yml`) already installs that wheel, so a project run as
+generated is unaffected. The export does not deploy the MLflow package; a deployment target
+that builds its image from the package's `conda.yaml` without the model folder (Azure ML's
+no-code MLflow deployment, for example) cannot resolve the local wheel path and needs an
+environment that installs the wheel (not verified against Azure here). *Evidence (R5-A2)*: a
+bundle's `evidence/` holds `evidence/binding-<n>.json` bindings of its predictor only, and
+the package's embedded bundle no `evidence/` folder at all, so the export refuses either
+otherwise (`artifact_integrity_failed`). The generated project's bytes are unchanged apart
+from the copied `mlflow_packaging.py` and, through the captured bundle, the package files.
