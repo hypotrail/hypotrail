@@ -274,6 +274,25 @@ the expected outcome of each fix).
   limitation `evidence_not_reauditable` (A28); local verification reports the evidence as
   unavailable.
 
+## Review round 4: fixes (area D)
+
+Regression tests: `framework/tests/study/understanding/test_review_round4_d.py`.
+
+* Every Git call runs without the caller's `GIT_*` variables (`GIT_DIR`, `GIT_INDEX_FILE`,
+  `GIT_WORK_TREE`, `GIT_CONFIG_*`...), so a hook or a linked worktree cannot make the
+  verifier or `git-stage` read or write another repository than `--repo`.
+* A partial clone is accepted with Git 2.44 or later (`GIT_NO_LAZY_FETCH` makes a missing
+  object an error, never a fetch); older Git is refused with that advice.
+* `export write` writes `docs/understanding/.gitattributes` (`rv-*/** binary -filter
+  -ident`) when absent, and `git-plan` stages it with the generation: no autocrlf, eol
+  conversion, LFS or other filter transforms a generation's bytes. A different file is left
+  untouched and reported.
+* Temporary folders of interrupted publications (any review id) are removed after a
+  minute; a younger one is named in the `export write` output with what to do, and the
+  verifier's problem says it is an interrupted export to delete.
+* With a coverage selection, a dimension it does not map shows no review (the verifier
+  refuses one that does).
+
 ## Gate run
 
 Run in this container (Python 3.13, uv 0.11, the `dev`, `browser` and `azureml` groups and the

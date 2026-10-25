@@ -437,7 +437,9 @@ def test_processes_export_concurrently(done):
     gens = [p for p in base.iterdir()]
     print('DIRS', [p.name for p in gens])
     assert len([p for p in gens if p.name.startswith('rv-')]) == 1
-    assert not [p for p in gens if p.name.startswith('.')]
+    # No temporary folder is left; the export's .gitattributes (round 4, D4-4) is expected.
+    assert not [p for p in gens if p.name.startswith('.') and p.name != ex.ATTRIBUTES_FILE]
+    assert (base / ex.ATTRIBUTES_FILE).read_bytes() == ex.ATTRIBUTES
     ok = [r for r in res if r[1] == 0]
     assert ok
     intents = list(u.ext()['exports'].values())

@@ -35,11 +35,30 @@ MAX_FILE = 4 * 1024 * 1024
 # names (a mirror clone or a refs/* fetch brings such refs).
 GIT_ENV = {'GIT_TERMINAL_PROMPT': '0', 'GIT_OPTIONAL_LOCKS': '0', 'LC_ALL': 'C',
            'GIT_NO_LAZY_FETCH': '1', 'GIT_NO_REPLACE_OBJECTS': '1'}
+NO_LAZY_FETCH_SINCE = (2, 44)
+
+
+def git_env() -> dict:
+    """The environment of every Git call: the caller's, without any inherited ``GIT_*``
+    variable (``GIT_DIR``, ``GIT_INDEX_FILE``, ``GIT_WORK_TREE``, ``GIT_CONFIG_*``... set by
+    a hook or a linked worktree would make Git read another repository than ``--repo``),
+    plus :data:`GIT_ENV`."""
+    env = {k: v for k, v in os.environ.items() if not k.startswith('GIT_')}
+    env.update(GIT_ENV)
+    return env
+
+
+def git_version() -> tuple[int, int]:
+    proc = subprocess.run(['git', '--version'], capture_output=True, env=git_env(),
+                          check=False)
+    import re
+    m = re.search(rb'(\d+)\.(\d+)', proc.stdout)
+    return (int(m.group(1)), int(m.group(2))) if m else (0, 0)
 
 
 def git(repo: Path, *args: str, input_: bytes | None = None) -> bytes:
     """Run one Git plumbing command (no shell, no hook, no pager); bytes of stdout."""
-    env = {**os.environ, **GIT_ENV}
+    env = git_env()
     proc = subprocess.run(['git', '-C', str(repo), '-c', 'core.hooksPath=/dev/null',
                            '-c', 'core.fsmonitor=false', '--no-pager', *args], input=input_, capture_output=True, env=env,
                           timeout=120, check=False)
@@ -54,7 +73,7 @@ def _partial_clone(repo: Path) -> bool:
     """A promisor remote is configured (the repository may fetch objects on demand)."""
     proc = subprocess.run(['git', '-C', str(repo), 'config', '--get-regexp',
                            r'^(extensions\.partialclone|remote\..*\.promisor)$'],
-                          capture_output=True, env={**os.environ, **GIT_ENV}, check=False)
+                          capture_output=True, env=git_env(), check=False)
     return proc.returncode == 0 and bool(proc.stdout.strip())
 
 
@@ -85,11 +104,13 @@ class Tree:
         self._entries: dict[str, tuple[str, str]] | None = None    # path -> (mode, oid)
         if target == 'worktree':
             return
-        if _partial_clone(self.repo):
-            raise refuse('git_index_conflict', 'This is a partial clone: reading a missing '
-                         'object would fetch it and run the configured transport.',
-                         'Verify in a full clone (git fetch --refetch, or clone without '
-                         '--filter).')
+        if _partial_clone(self.repo) and git_version() < NO_LAZY_FETCH_SINCE:
+            # Git 2.44 and later honour GIT_NO_LAZY_FETCH: a missing object is then an error,
+            # never a fetch, and the local index and commit blobs read as usual.
+            raise refuse('git_index_conflict', 'This is a partial clone and this Git (older '
+                         'than 2.44) cannot be told not to fetch a missing object, which '
+                         'would run the configured transport.',
+                         'Use Git 2.44 or later, or a full clone (git clone without --filter).')
         if target == 'index':
             self.index_id = self._index_identity()
             self._entries = self._ls_index()
@@ -192,7 +213,8 @@ class Tree:
                 if _case_variant(f'{ex.EXPORT_DIR}/{p.name}'):
                     self.problems.append(f'case variant of a generation: {p.name}')
                 if p.name.startswith('.rv-'):
-                    self.problems.append(f'leftover temporary folder {p.name}')
+                    self.problems.append(f'leftover temporary folder {p.name} (an '
+                                         'interrupted export: delete it)')
                 elif p.name.startswith('rv-'):
                     if p.is_symlink() or not p.is_dir():
                         self.problems.append(f'{p.name} is not a generation folder')
@@ -205,7 +227,8 @@ class Tree:
             if path.startswith(prefix):
                 rest = path[len(prefix):].split('/')
                 if rest[0].startswith('.rv-'):
-                    self.problems.append(f'leftover temporary folder {rest[0]}')
+                    self.problems.append(f'leftover temporary folder {rest[0]} (an '
+                                         'interrupted export: remove it from the tree)')
                 elif rest[0].startswith('rv-'):
                     if len(rest) != 2:
                         self.problems.append(f'{rest[0]} is not a generation folder')
@@ -476,7 +499,7 @@ def git_plan(repo, files: Mapping[str, bytes], sources: list[Mapping]) -> dict:
 
 def _has_head(repo: Path) -> bool:
     proc = subprocess.run(['git', '-C', str(repo), 'rev-parse', '--verify', '-q', 'HEAD'],
-                          capture_output=True, env={**os.environ, **GIT_ENV}, check=False)
+                          capture_output=True, env=git_env(), check=False)
     return proc.returncode == 0
 
 

@@ -493,6 +493,11 @@ def _expected_files(repo: Path, intent) -> dict:
             raise refuse('export_stale', f'{n} of the generation differs from the exported '
                          'bytes.', 'Restore the generation or export a new one.', file=n)
         files[f'{ex.EXPORT_DIR}/{intent["review_id"]}/{n}'] = data
+    # The attributes that keep Git from transforming the generation's bytes travel with it.
+    attributes = repo / ex.EXPORT_DIR / ex.ATTRIBUTES_FILE
+    if attributes.is_file() and not attributes.is_symlink() \
+            and attributes.read_bytes() == ex.ATTRIBUTES:
+        files[f'{ex.EXPORT_DIR}/{ex.ATTRIBUTES_FILE}'] = ex.ATTRIBUTES
     return files
 
 
@@ -741,15 +746,23 @@ def _export_write(args, *, fault=None) -> dict:
     iid = intent['result']['intent_id']
     receipt = _receipt(args.study, iid, on_disk)
     _settle_interrupted(args.study, repo, s['session_id'], iid)
+    attributes = ex.ensure_attributes(repo)
+    left = ex.leftovers(repo)
     if args.latest:
         ex.write_latest(repo, rid)
     return _ok('export write', store.study_dir, review_id=rid, publication=outcome,
                destination=f'{ex.EXPORT_DIR}/{rid}', files=hashes,
                receipt=receipt['result'], revision=receipt['revision'],
-               replayed=intent['replayed'],
-               next_steps=['understanding git-plan', 'stage the listed paths only',
-                           'verify-export --target index', 'git commit',
-                           'verify-export --target HEAD'])
+               replayed=intent['replayed'], git_attributes=attributes,
+               leftover_temporary_folders=left,
+               next_steps=([f'delete the temporary folders of an interrupted export: '
+                            f'{", ".join(f"{ex.EXPORT_DIR}/{x}" for x in left)}'] if left
+                           else []) +
+               ([f'{ex.EXPORT_DIR}/{ex.ATTRIBUTES_FILE} differs from the one the export '
+                 'needs (no transformation of the generations): check it'] if
+                attributes == 'differs' else []) +
+               ['understanding git-plan', 'stage the listed paths only',
+                'verify-export --target index', 'git commit', 'verify-export --target HEAD'])
 
 
 def _settle_interrupted(study, repo: Path, session_id: str, done: str) -> None:
@@ -785,7 +798,7 @@ def _git_toplevel(repo: Path) -> Path | None:
     """The top level of the Git work tree holding ``repo`` (None outside one)."""
     import os
     import subprocess
-    env = {**os.environ, **vf.GIT_ENV}
+    env = vf.git_env()
     try:
         proc = subprocess.run(['git', '-C', str(repo), '-c', 'core.hooksPath=/dev/null',
                                '-c', 'core.fsmonitor=false', 'rev-parse', '--show-toplevel'],

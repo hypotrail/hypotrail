@@ -525,6 +525,10 @@ def validate_review(doc) -> list[str]:
                         and d.get('human_review_ref') != mapped[d['id']]:
                     p.append(f'dimension {d["id"]} human_review_ref differs from the coverage '
                              'selection')
+                elif isinstance(d, dict) and d.get('id') not in mapped \
+                        and d.get('human_review_ref') is not None:
+                    p.append(f'dimension {d["id"]} shows a review the coverage selection does '
+                             'not map')
     if not isinstance(doc['provenance'], dict) or set(doc['provenance']) != \
             set(PROVENANCE_FIELDS):
         p.append('provenance')
@@ -612,12 +616,38 @@ def _same(dest: Path, files: Mapping[str, bytes]) -> bool:
 LEFTOVER_AGE_SECONDS = 60
 
 
+# Git must never transform a generation's bytes (core.autocrlf, eol, clean/smudge filters such
+# as LFS, ident): the verifier compares them with the digests the export announced.
+ATTRIBUTES_FILE = '.gitattributes'
+ATTRIBUTES = b'rv-*/** binary -filter -ident\n'
+
+
+def ensure_attributes(repo: Path) -> str:
+    """Write ``docs/understanding/.gitattributes`` when absent; ``'written'``,
+    ``'present'`` (same bytes) or ``'differs'`` (left untouched, reported)."""
+    path = Path(repo) / EXPORT_DIR / ATTRIBUTES_FILE
+    if path.is_symlink():
+        return 'differs'
+    if path.exists():
+        return 'present' if path.read_bytes() == ATTRIBUTES else 'differs'
+    with open(path, 'xb') as handle:
+        handle.write(ATTRIBUTES)
+    return 'written'
+
+
+def leftovers(repo: Path) -> list[str]:
+    """The temporary folders of interrupted publications under the export folder."""
+    parent = Path(repo) / EXPORT_DIR
+    return sorted(p.name for p in parent.glob('.rv-*.tmp-*')) if parent.is_dir() else []
+
+
 def _clear_leftovers(parent: Path, review_id_: str) -> None:
-    """Remove the temporary folders of this review id left by a publication that was killed
-    before its rename (older than a minute, so a concurrent publication's live folder is
-    kept). Only the generation's own file names are removed; anything else stays."""
+    """Remove the temporary folders left by publications killed before their rename (any
+    review id), once older than a minute, so a concurrent publication's live folder is kept.
+    Only the generation's own file names are removed; anything else stays. Younger ones are
+    reported by ``export write`` (:func:`leftovers`)."""
     import time
-    for p in parent.glob(f'.{review_id_}.tmp-*'):
+    for p in parent.glob('.rv-*.tmp-*'):
         try:
             if p.is_symlink() or not p.is_dir() or \
                     time.time() - p.stat().st_mtime < LEFTOVER_AGE_SECONDS:
