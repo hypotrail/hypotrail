@@ -1090,18 +1090,23 @@ def _export_intent(ctx) -> Handler:
                 # intent is reused, no second one is reserved.
                 return {'intent_id': intent['intent_id'], 'review_id': rid, 'reused': True}
         iid = model.new_id('ux', ctx.request_id)
+        # The policy recorded is the one the projection embeds (the policy the gate applies,
+        # review round 6, R6-1), never the one the session started under: the receipt
+        # compares the applied policy with it. ``repository`` is the local place the
+        # generation was written to (private: it never enters a public artefact); local
+        # verification compares it with the repository it verifies (R6-2).
         ext['exports'][iid] = {
             'intent_id': iid, 'session_id': s['session_id'], 'review_id': rid,
             'projection_digest': digest, 'destination': params['destination'],
             'files': dict(params['files']), 'status': 'reserved',
             'snapshot_digest': s['local_snapshot_digest'],
             'source_scope_digest': s['source_scope_digest'],
-            'policy_digest': s['policy_digest'], 'recorded_revision': _rev(state),
+            'policy_digest': projection['policy_digest'], 'recorded_revision': _rev(state),
             'created_at': params['created_at'], 'base_commit': params['base_commit'],
-            'receipt': None}
+            'repository': params['repository'], 'receipt': None}
         return {'intent_id': iid, 'review_id': rid}
     return Handler(frozenset({'session_id', 'review_id', 'projection_digest', 'destination',
-                              'files', 'created_at', 'base_commit'}), run)
+                              'files', 'created_at', 'base_commit', 'repository'}), run)
 
 
 def _export_receipt(ctx) -> Handler:
@@ -1117,12 +1122,15 @@ def _export_receipt(ctx) -> Handler:
             raise refuse('export_stale', 'The published files are not the bytes the intent '
                          'announced.', 'Inspect docs/understanding before any new attempt.')
         # Revalidated here, under the writer lock: a new policy or context means the
-        # generation exists as history but is not declared current.
+        # generation exists as history but is not declared current. The policy compared is
+        # the one the gate applies now (the study's, else the session's) with the one the
+        # generation embeds (R6-1): a session started under an earlier policy is current
+        # when its export embeds the policy in force.
         from . import export as ex
         s = _session(ext, intent['session_id'])
         current = canonical.digest(ex.projection(ctx.store, state, s))
-        doc_policy = sv.policy_doc(ctx.store, ext)
-        same_policy = doc_policy is not None and pol.digest(doc_policy) == intent['policy_digest']
+        same_policy = pol.digest(sv.applied_policy(ctx.store, ext, s)) == \
+            intent['policy_digest']
         outcome = 'published' if current == intent['projection_digest'] and same_policy \
             else 'not_current'
         intent['status'] = outcome

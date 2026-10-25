@@ -36,6 +36,10 @@ REQ = ukit.policy(mode='required')
 AIDED = dict(ukit.ASSIST, ai_assistance_declared=True, independence_claim=None,
              resources_used=['chat assistant'])
 NON_GATE_GAPS = set(vf.EXPORT_ONLY_GAPS) | set(ev.LIMITATION_GAPS)
+# What the standalone verifier adds from the artefact itself (not a reason of the gate).
+STANDALONE_ARTEFACT_ONLY = {'privacy_review_pending', 'public_integrity_invalid',
+                            'public_sources_stale', 'public_sources_unknown',
+                            'private_context_unknown'}
 
 
 def _verify(u, policy_doc=None, study=True, target='worktree', repo=None):
@@ -676,7 +680,13 @@ def test_one_judgement_one_gap_list(tmp_path, scenario):
     the export preview, the report section and ``verify-export [--policy-file F] --study``
     reach the same verdict, and the gate's reason codes are the export's and the report's
     gap codes (both ways for the dimension gaps, when a selection of the session's person
-    exists and the policy requires the milestone)."""
+    exists and the policy requires the milestone).
+
+    Review round 6: the local ``gate_result`` may differ from ``check`` only by reasons
+    established on a verified tree whose bytes ``check`` did not read (R6-2; none here, the
+    session's own working tree is verified); the standalone verifier's reasons under the
+    embedded policy are compared with the export's recorded gate reasons on every state
+    (R6-4)."""
     u = U(tmp_path, pauses=scenario != 'private_reference_unknown')
     sid, policy_file = SCENARIOS[scenario](u)
     study_gate = gate(u)
@@ -713,6 +723,15 @@ def test_one_judgement_one_gap_list(tmp_path, scenario):
     gen = _verify(u, policy_file)['generations'][0]
     assert gen['public_integrity'] == 'valid', gen['problems']
     assert gen['judgement'] == 'study'
+    # Review round 6 (R6-2): the local gate_result is check's plus the reasons established
+    # on the verified tree that check did not judge. Here the verified tree is the working
+    # tree of the session's repository, the very bytes check read (a public source changed
+    # since the snapshot is check's ``stale`` on the dimensions it concerns, which a waiver
+    # may cover), so nothing is added and the result is exactly check's.
+    assert gen['gate_result']['target_tree_reasons'] == []
+    assert gen['public_sources_judged_by_study'] is True
+    if scenario in ('stale_source', 'waiver'):        # a public source changed in the tree
+        assert gen['public_source_freshness'] == 'stale'
     assert gen['gate_result']['decision'] == g['decision'], (g['reasons'], gen['gate_result'])
     assert _pairs(gen['gate_result']['reasons']) == _pairs(g['reasons'])
     assert gen['gate_result']['waiver_ref'] == g['waiver_ref']
@@ -720,3 +739,13 @@ def test_one_judgement_one_gap_list(tmp_path, scenario):
     if policy_file:
         plain = _verify(u)['generations'][0]['gate_result']
         assert plain['decision'] == study_gate['decision']
+    # Review round 6 (R6-4): with the embedded policy, the standalone verifier's reasons
+    # (other than what only the artefact establishes) are the reasons the export's gate
+    # recorded, and check's when the export is about the selection check judges.
+    out = _verify(u, doc['policy'], study=False)['generations'][0]
+    standalone = {p for p in _pairs(out['gate_result']['reasons'])
+                  if p[0] not in STANDALONE_ARTEFACT_ONLY
+                  and p != ('evidence_unavailable', 'handoff')}
+    assert standalone == _gap_pairs(doc['known_gaps']), (standalone, doc['known_gaps'])
+    if exact and not policy_file:
+        assert standalone == gate_pairs

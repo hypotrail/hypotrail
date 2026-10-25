@@ -413,6 +413,62 @@ study policy is the relaxed one), `test_review_round4_c.py` (two tests:
 did not change (regenerated to a scratch folder and compared: only the run's salts, times
 and digests differ) and the schemas did not change (`schemas.main(['--check'])`).
 
+## Review round 6: fixes
+
+Regression tests: `framework/tests/study/understanding/test_review_round6_cd.py` (simulated
+humans, temporary directories). The reviewer's probes p1 to p8 are ported with the expected
+outcome of each fix; p5 was exploratory and crashed on its own last print (it read the
+dimensions from an empty slice of the Markdown), so its question (does a second active
+session of the same person export what `check` and the verifier judge?) is asserted instead.
+`test_review_round5_cd.test_one_judgement_one_gap_list` now also compares, on its twenty
+study states, the standalone verifier's reasons under the embedded policy with the export's
+recorded gate reasons (and with `check`'s when the export is about the selection `check`
+judges).
+
+* **R6-1 (major), fixed.** The export intent recorded the session's policy digest and the
+  receipt compared the study's policy with it, so an export of a session started before a
+  policy change was always `not_current` (no `git-plan`, no `git-receipt`, absent from the
+  report), even in coaching, although round 5 embeds the applied policy. The intent now
+  records the projection's `policy_digest` (the policy the gate applies) and the receipt
+  compares the policy the gate applies at receipt time with it; the projection digest check
+  stays, and a policy applied between the intent and the receipt still gives `not_current`.
+* **R6-2 (major), fixed.** Local `verify-export --study` judged only the study's live gate
+  on the session's recorded working tree: a commit or index whose sources differ from the
+  snapshot, or a generation exported into another repository, verified `allowed` and
+  conforming. `gate_result` is now the study's gate (its reasons unchanged, still `check`'s)
+  plus the reasons established on the verified tree that `check` did not judge
+  (`privacy_review_pending`; `public_sources_stale|unknown` unless the verified tree holds
+  the session working tree's very bytes for every mapped public source, which `check`
+  judged per dimension), listed in `target_tree_reasons`; an allowed or waived verdict then
+  blocks (`waiver_not_accepted` for a waiver). `declared_conformity` follows. The export
+  intent records the local repository it was written to (state only, never in an
+  artefact); local verification reports `verified_repository` and gives
+  `verified_repository_not_the_session_one`, blocking when the verified tree's public
+  sources are not the snapshot's and a limitation otherwise (a clean clone of the reviewed
+  repository is still allowed). Decision taken: the verified tree's freshness is not added
+  when its bytes are the ones `check` read, so the round-5 invariant (`check` and local
+  verification of the session's tree agree, waivers included, R5-9) still holds and
+  `gate_result` differs from `check` only for bytes `check` never read. CLI-CONTRACT §16
+  says precisely what local mode judges.
+* **R6-3 (minor), fixed.** The private-context comparison read the session's plan and
+  snapshot outside the error handling: a missing payload gave `malformed artefact
+  (StudyError)` and an invalid generation. It now leaves the private context unknown and,
+  as §16 promised, `gate_result` null, `declared_conformity: unknown` and
+  `study_gate_unavailable`.
+* **R6-4 (minor), fixed.** (a) The standalone verifier added `dimension_not_demonstrated`
+  for a dimension shown `needs_review` or `to_consolidate` because of a reason that is not
+  about the decision (help rule, distinct reviewer, evidence, open reservation, conflict);
+  it now applies the gate's rule from the recorded status of the selected decision
+  (`decisions_summary`, or the status shown when no other reason of the export's gate
+  explains it). (b) Without `coverage_selection`, the export's gaps were not imported (the
+  import sat in the selection branch); they now are, under the embedded policy.
+
+No existing expectation changed: `test_one_judgement_one_gap_list` keeps its exact
+equality between the local `gate_result` and `check` (the session's own working tree is
+verified there) and now also asserts that no target-tree reason is added and that the
+standalone reasons are the export's. No assertion was weakened; the schemas and the
+`export-valid` fixture did not change (the intent is study state, not an artefact).
+
 ## Gate run
 
 Run in this container (Python 3.13, uv 0.11, the `dev`, `browser` and `azureml` groups and the

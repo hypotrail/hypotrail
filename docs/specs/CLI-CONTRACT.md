@@ -1054,7 +1054,7 @@ Payloads: `hypotrail.understanding/1` (stdout of every verb except `verify-expor
 | `export write --session ID --repo DIR [--latest]` | mutation | intent, immutable generation `docs/understanding/<review_id>/`, receipt; writes `docs/understanding/.gitattributes` (`rv-*/** binary -filter -ident -working-tree-encoding -eol`) when absent (`git_attributes`: `written`, `present` for exactly those bytes, `differs` otherwise, the file then left untouched) and names any `leftover_temporary_folders` of an interrupted export |
 | `git-plan`, `git-stage --index-identity H` | read / index only | exact paths and hashes; stages only the artefacts; never commits |
 | `git-receipt --session ID --repo DIR --commit OID` | mutation | a local receipt once the commit holds the bytes |
-| `verify-export --repo DIR --target worktree\|index\|COMMIT [--policy-file F] [--study DIR]` | read, no study needed | separate axes: public integrity, declared conformity, public source freshness, private context verification, evidence availability, assurance; with `--study`, `gate_result` and `declared_conformity` are the study's own gate (`judgement: study`), without it the gate's rules on the exported content (`judgement: export`); see review round 5 below |
+| `verify-export --repo DIR --target worktree\|index\|COMMIT [--policy-file F] [--study DIR]` | read, no study needed | separate axes: public integrity, declared conformity, public source freshness, private context verification, evidence availability, assurance; with `--study`, `gate_result` and `declared_conformity` are the study's own gate plus the reasons established on the verified tree (`judgement: study`), without it the gate's rules on the exported content (`judgement: export`); see review rounds 5 and 6 below |
 
 Mutations take `--request-id` and `--expected-revision` (replay, `idempotency_conflict`,
 `stale_revision` as in §3). Refusals exit 2 with `details.next_action` and never echo an
@@ -1169,9 +1169,10 @@ because they compute one judgement, the gate (`evaluate.gate`, `service.gate`):
   `allowed_by_waiver`). `exported_content_current` (null when a stored payload is gone)
   compares the generation's projection digest with the projection recomputed now;
   `judgement: study`. `public_source_freshness` (the target tree against the exported scope)
-  and `private_context_verification` stay separate axes and are not reasons of the live
-  gate. When a stored payload the gate needs is gone, `gate_result` is null,
-  `declared_conformity` `unknown` and `study_gate_unavailable` lists the refusal codes.
+  and `private_context_verification` stay separate axes; since review round 6 the target
+  tree's reasons are added to the live gate (see below). When a stored payload the gate
+  needs is gone, `gate_result` is null, `declared_conformity` `unknown` and
+  `study_gate_unavailable` lists the refusal codes.
 * **Standalone `verify-export`** (no `--study`, `judgement: export`) can only judge the
   declared content. It applies the gate's rules wherever the content has the information,
   with the gate's codes: no `coverage_selection` gives `no_selection`; a policy whose digest
@@ -1210,6 +1211,68 @@ because they compute one judgement, the gate (`evaluate.gate`, `service.gate`):
      case's task set as it is now;
   6. a public source change unrelated to every dimension's dependency keys blocks
      (`public_sources_stale`) where the gate, which reads dependency keys, allows.
+
+**Since review round 6 (areas C and D).**
+
+* **Export receipt** (R6-1). The export intent records the digest of the policy the
+  projection embeds (the policy the gate applies: the study's, else the session's), no
+  longer the policy the session started under, and the receipt compares the policy the gate
+  applies at receipt time with it (with the projection digest, unchanged). An export of a
+  session started before a policy change is therefore `published` when it embeds the policy
+  in force (it was always `not_current`, so `git-plan` and `git-receipt` refused it and the
+  report omitted it, even in coaching); a policy applied between the intent and the receipt
+  still makes it `not_current`. The intent also records `repository`, the resolved local
+  path the generation was written to: study state only, never in a public artefact.
+* **What local mode judges** (`verify-export --study`, R6-2): the live study gate **and**
+  the verified tree. `gate_result` is the study's gate exactly as above (its reasons are
+  `check [--policy-file F]`'s for the exported session's scope, reading each session's
+  recorded or relocated working tree) plus the reasons the artefact establishes on the
+  tree `--repo`/`--target` names that `check` did not judge: `privacy_review_pending`;
+  `public_sources_stale` or `public_sources_unknown` (the public sources of that tree,
+  index or commit, against the exported scope) **unless** the verified tree holds, for
+  every public source the scope maps, the very bytes of the session repository's working
+  tree (`public_sources_judged_by_study: true`), because `check` has then judged that change
+  dimension by dimension (`stale` on the dimensions whose dependency keys changed, which a
+  waiver may cover, R5-9); and `verified_repository_not_the_session_one`.
+  `gate_result.target_tree_reasons` lists the codes added. `gate_result` may therefore
+  differ from `check` **only by these target-tree reasons**, because `check` reads the
+  session's working tree while verification judges the tree being verified (a commit, the
+  index, or another clone, whose sources may not be the ones `check` read): verifying the
+  session's own working tree, or a commit or index with its bytes, gives exactly `check`'s
+  result. When a reason is added, an `allowed` verdict becomes `blocked`; an
+  `allowed_by_waiver` verdict becomes `blocked` with `waiver_not_accepted` and no
+  `waiver_ref`, since the waiver covered what `check` judged, not bytes it never read;
+  `not_applicable` stays. `declared_conformity` is likewise `nonconforming` when the study's
+  assessed gate conforms but a target-tree reason exists. `verified_repository` gives `path`
+  (the verified repository), `session_repository` (the one the session's freshness is read
+  from), `written_to` (from the export intent; null for an intent recorded before round 6),
+  `is_session_repository` and `is_written_repository` (null when unknown). When the verified
+  repository is not the session's, `verified_repository_not_the_session_one` is a blocking
+  reason if the verified tree's public sources are not the snapshot's
+  (`public_source_freshness` other than `current`), and otherwise a limitation (in
+  `limitations` and `gate_result.limitations`): the study's gate read another place, and
+  the verified tree holds the reviewed public sources unchanged, as a fresh clone of the
+  repository does. These paths are local output, never published. The standalone
+  verifier's difference 6 above (an unrelated public change blocks) does not apply to the
+  session's own tree in local mode, since the gate reads dependency keys there.
+* **Missing payloads in local mode** (R6-3). The private-context comparison and the
+  repository lookup no longer run outside the error handling: a session's snapshot or plan
+  payload that is gone gives `public_integrity: valid` (the binding holds),
+  `private_context_verification: unknown` (`private_context_changed` null), `gate_result`
+  null, `declared_conformity: unknown` and `study_gate_unavailable` with the refusal codes,
+  never `malformed artefact`. When only the context lookup fails while the gate still
+  judges, `study_payload_unavailable` lists the codes.
+* **Standalone reasons** (R6-4). `dimension_not_demonstrated` follows the gate's rule: the
+  selected decision is not recorded `demonstrated` (the status `decisions_summary` records
+  for it; for a decision of another session, the status shown unless another reason of the
+  export's gate on that dimension explains it), or the policy differs, or the task set is
+  not qualified. A dimension shown `needs_review` or `to_consolidate` only because of
+  `assistance_not_admissible`, `reviewer_not_distinct`, `evidence_unavailable`, an open
+  reservation or an unarbitrated conflict no longer adds it. The export's gaps are imported
+  under the embedded policy also when `coverage_selection` is null (the export's gate then
+  judged the decisions shown as a virtual selection). With the embedded policy, the
+  standalone reasons other than the artefact's own are the export's recorded gate reasons on
+  every state the tests build (`test_review_round5_cd.test_one_judgement_one_gap_list`).
 
 **`export handoff` under a required policy naming `handoff`** (the only change to §7/C7):
 the export computes the gate under the writer lock, reserves the milestone (one revision,

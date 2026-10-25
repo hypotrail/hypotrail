@@ -764,7 +764,7 @@ def _export_write(args, *, fault=None) -> dict:
         intent = _apply(args, 'export_intent', {
             'session_id': s['session_id'], 'review_id': rid, 'projection_digest': digest,
             'destination': f'{ex.EXPORT_DIR}/{rid}', 'files': hashes,
-            'created_at': created_at, 'base_commit': base})
+            'created_at': created_at, 'base_commit': base, 'repository': str(repo)})
     outcome = ex.publish(repo, rid, doc_files, fault=fault)
     # Reconcile from the bytes announced by the intent, never from a new rendering.
     on_disk = {n: canonical.sha256_hex((repo / ex.EXPORT_DIR / rid / n).read_bytes())
@@ -904,7 +904,13 @@ def _local_checker(study, repo, policy_file_doc=None):
     ``check`` computes when the latest selection is about that person; ``declared_conformity``
     is the same gate under the study's policy, every reason computed (``assess``).
     ``exported_content_current`` compares the generation's projection with the projection
-    recomputed now (the export says what it said; the live gate says what holds now)."""
+    recomputed now (the export says what it said; the live gate says what holds now).
+
+    Review round 6 (R6-2): :func:`verify._verify_one` then adds to both what the artefact
+    establishes on the verified tree (:func:`verify.tree_reasons`) and, from
+    ``verified_repository`` given here, ``verified_repository_not_the_session_one`` when the
+    verified repository is not the one the session's freshness is read from. A stored
+    payload the private context needs that is gone leaves it unknown (R6-3)."""
     store = sv.open_store(study)
     state = sv.load_state(study)
     ext = model.of(state)
@@ -924,21 +930,45 @@ def _local_checker(study, repo, policy_file_doc=None):
         # edited generation is not). A reserved intent counts when its bytes are there: its
         # publication was interrupted before the receipt.
         digest = canonical.digest(ex.approval_projection(doc))
-        recorded = any(x['review_id'] == doc['review_id'] and x['projection_digest'] == digest
-                       and x['session_id'] == session['session_id']
-                       and x['status'] in ('published', 'not_current', 'reserved')
-                       and file_hashes is not None and x['files'] == file_hashes
-                       for x in ext['exports'].values())
-        if not recorded:
+        intents = [x for x in ext['exports'].values()
+                   if x['review_id'] == doc['review_id'] and x['projection_digest'] == digest
+                   and x['session_id'] == session['session_id']
+                   and x['status'] in ('published', 'not_current', 'reserved')
+                   and file_hashes is not None and x['files'] == file_hashes]
+        if not intents:
             return {'private_context_verification': 'unknown', 'study_binding': 'not_recorded',
                     'evidence_availability': 'unavailable'}
+        unavailable, context_unavailable = [], []
         # Private context only: the repository entries are public and checked against the
-        # requested tree (index or commit), never the working tree here.
+        # requested tree (index or commit), never the working tree here. A stored payload
+        # it needs that is gone (the plan, the snapshot) leaves it unknown and the study's
+        # gate unavailable, never an invalid generation (R6-3).
         def private(local):
             return [e for e in local['entries'] if e['origin'] != 'repo']
-        current = sv.current_for(store, state, ext, repo_override=repo)(session)
-        captured = sv.session_snapshot(store, session)['local']
-        same = canonical.digest(private(current)) == canonical.digest(private(captured))
+        try:
+            current = sv.current_for(store, state, ext, repo_override=repo)(session)
+            captured = sv.session_snapshot(store, session)['local']
+            same = canonical.digest(private(current)) == canonical.digest(private(captured))
+        except StudyError as exc:
+            same = None
+            context_unavailable.append(exc.code)
+        # The repository verified, the one the session's freshness is read from and the one
+        # the generation was written to (local paths: this output is local, never public;
+        # R6-2). An intent recorded before round 6 has no repository.
+        verified = Path(repo).resolve()
+        try:
+            where = sv.repository_of(store, session)['repository']
+        except StudyError as exc:
+            where = None
+            context_unavailable.append(exc.code)
+        written = next((x.get('repository') for x in sorted(
+            intents, key=lambda x: x['recorded_revision']) if x.get('repository')), None)
+        verified_repository = {
+            'path': str(verified), 'session_repository': where, 'written_to': written,
+            'is_session_repository': None if where is None
+            else Path(where).resolve() == verified,
+            'is_written_repository': None if written is None
+            else Path(written).resolve() == verified}
         ids = [d['human_review_ref'] for d in doc['dimensions'] if d['human_review_ref']]
         attempts = [a for i in ids for a in (ext['decisions'].get(i) or {}).get('attempt_ids', [])]
         avail = ev.evidence_availability(ext, attempts, lambda sha: sv.blob_ok(store, sha)) \
@@ -952,10 +982,11 @@ def _local_checker(study, repo, policy_file_doc=None):
                                           and sv.blob_ok(store, t['response_ref'])):
                     avail = 'unavailable'
         out = {'private_context_verification': 'verified' if same else 'unknown',
-               'private_context_changed': not same, 'evidence_availability': avail,
-               'study_binding': 'verified', 'judgement': 'study'}
+               'private_context_changed': None if same is None else not same,
+               'evidence_availability': avail,
+               'study_binding': 'verified', 'judgement': 'study',
+               'verified_repository': verified_repository}
         scope = sv.scope_of(session)
-        unavailable = []
         try:
             live = sv.gate(store, state, session['milestone'], policy_override=policy_file_doc,
                            policy_source='file' if policy_file_doc is not None else 'study',
@@ -978,7 +1009,9 @@ def _local_checker(study, repo, policy_file_doc=None):
         out['declared_conformity'] = _conformity(declared)
         if unavailable:
             # A stored payload the gate needs is gone: no study judgement, never a failure.
-            out['study_gate_unavailable'] = sorted(set(unavailable))
+            out['study_gate_unavailable'] = sorted(set(unavailable + context_unavailable))
+        elif context_unavailable:
+            out['study_payload_unavailable'] = sorted(set(context_unavailable))
         return out
     return run
 

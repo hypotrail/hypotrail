@@ -13,9 +13,10 @@ unknown), ``private_context_verification`` (verified, unknown), ``evidence_avail
 ``assurance``, ``unresolved_private_refs`` and ``limitations``; with ``--policy-file``, a
 ``gate_result`` for that explicit policy. With ``--study`` (local mode), ``gate_result`` and
 ``declared_conformity`` are the study's own gate for the exported session (review round 5:
-one judgement); without it, :func:`_gate_on_export` applies the gate's rules to the exported
-content only (CLI-CONTRACT §16 lists what it cannot judge). A clean clone establishes public integrity; it
-never concludes ``current`` on the private context nor resolves an opaque reference. Without
+one judgement) plus the reasons the artefact establishes on the verified tree
+(:func:`tree_reasons`, review round 6); without it, :func:`_gate_on_export` applies the
+gate's rules to the exported content only (CLI-CONTRACT §16 lists what it cannot judge). A
+clean clone establishes public integrity; it never concludes ``current`` on the private context nor resolves an opaque reference. Without
 ``--policy-file`` the result is a historical diagnostic, not an organisational
 authorisation, and a policy relaxed only inside the candidate change is never read as an
 authority (the embedded policy only gives ``declared_conformity``).
@@ -279,6 +280,12 @@ def _gate_on_export(doc: Mapping, policy_doc: Mapping, axes: Mapping,
     same = pol.digest(policy_doc) == doc['policy_digest']
     sel = doc['coverage_selection']
     gaps = [g for g in doc['known_gaps'] if isinstance(g, dict)]
+    # The recorded status of each decision the export lists (its own session's); a decision
+    # of another session is known only by the status shown (review round 6, R6-4).
+    recorded = {x['decision_ref']: x['status'] for x in doc['decisions_summary']}
+    status_reasons = {g.get('ref') for g in gaps
+                      if g.get('kind') not in ev.STATUS_NEUTRAL_CODES + EXPORT_ONLY_GAPS
+                      + ev.LIMITATION_GAPS + ('no_required_check',)}
     milestone = (sel or {}).get('milestone')
     applicable = policy_doc['mode'] == 'required' and (
         milestone is None or milestone in policy_doc['milestones'])
@@ -312,7 +319,17 @@ def _gate_on_export(doc: Mapping, policy_doc: Mapping, axes: Mapping,
                     add('decision_policy_changed', dim)
                 if not qualified:
                     add('taskset_not_qualified', dim)
-                if d['status'] != 'demonstrated' or not same or not qualified:
+                # The gate's rule: the selected decision is not recorded ``demonstrated``, or
+                # it has a problem (another policy, a taskset not qualified). A dimension shown
+                # ``needs_review`` or ``to_consolidate`` because of a reason that is not about
+                # the decision (an open reservation, a conflict, a help or reviewer rule) is
+                # not that (R6-4): the status shown counts only when no other reason of the
+                # export's gate on the dimension explains it.
+                status = recorded.get(d['human_review_ref'])
+                if status is None:
+                    explained = same and dim in status_reasons
+                    status = 'demonstrated' if explained else d['status']
+                if status != 'demonstrated' or not same or not qualified:
                     add('dimension_not_demonstrated', dim)
                 if dim in critical and d['reviewer_alias'] == actor:
                     add('reviewer_not_distinct', dim)
@@ -340,21 +357,19 @@ def _gate_on_export(doc: Mapping, policy_doc: Mapping, axes: Mapping,
                 p = peers.get(dim)
                 if p is None or not same or ev.peer_gap(p, policy_doc):
                     add('peer_coverage_missing', dim)
-        if same:
-            # The reasons of the export's own gate under this very policy.
-            for g in gaps:
-                kind = g.get('kind')
-                if kind in EXPORT_ONLY_GAPS or kind in ev.LIMITATION_GAPS \
-                        or kind == 'no_required_check':
-                    continue
-                add(kind, g.get('ref') if g.get('ref') in DIMENSIONS else None)
-    # What the artefact itself establishes, or cannot without the study.
-    if doc['privacy_review']['status'] != 'approved':
-        add('privacy_review_pending')
-    if axes['public_integrity'] != 'valid':
-        add('public_integrity_invalid')
-    if axes['public_source_freshness'] != 'current':
-        add(f'public_sources_{axes["public_source_freshness"]}')
+    if same:
+        # The reasons of the export's own gate under this very policy, with or without a
+        # selection (an export without one records the reasons of the decisions it shows,
+        # judged as a virtual selection; R6-4).
+        for g in gaps:
+            kind = g.get('kind')
+            if kind in EXPORT_ONLY_GAPS or kind in ev.LIMITATION_GAPS \
+                    or kind == 'no_required_check':
+                continue
+            add(kind, g.get('ref') if g.get('ref') in DIMENSIONS else None)
+    # What the artefact itself establishes on the verified tree, or cannot without the study.
+    for r in tree_reasons(doc, axes):
+        add(r['code'])
     if policy_doc['context_requirement'] == 'complete' and \
             axes['private_context_verification'] != 'verified':
         add('private_context_unknown')
@@ -368,9 +383,87 @@ def _gate_on_export(doc: Mapping, policy_doc: Mapping, axes: Mapping,
             'limitations': sorted(limitations), 'judgement': 'export'}
 
 
+def tree_reasons(doc: Mapping, axes: Mapping, *, judged_by_study: bool = False) -> list[dict]:
+    """The reasons the artefact itself establishes on the verified tree: its privacy review
+    is not approved, its public integrity is not valid, or the public sources of the
+    verified tree (``--target``) are not the snapshot's (``public_sources_stale``,
+    ``public_sources_unknown``). The standalone verifier applies them all; local mode too
+    (review round 6, R6-2), except the public sources when ``judged_by_study``: the verified
+    tree holds the very bytes the study's gate read, which it judged dimension by dimension
+    (``stale`` on the dimensions whose dependency keys changed, which a waiver may cover)."""
+    out = []
+    if doc['privacy_review']['status'] != 'approved':
+        out.append({'code': 'privacy_review_pending'})
+    if axes['public_integrity'] != 'valid':
+        out.append({'code': 'public_integrity_invalid'})
+    if axes['public_source_freshness'] != 'current' and not judged_by_study:
+        out.append({'code': f'public_sources_{axes["public_source_freshness"]}'})
+    return out
+
+
+def _judged_by_study(tree: 'Tree', scope: Mapping, verified_repository: Mapping) -> bool:
+    """Whether every public source the exported scope maps has, in the verified tree, the
+    bytes it has in the working tree of the session's repository (what the study's gate
+    read). False when that repository is unknown or gone, or when a byte differs."""
+    where = verified_repository.get('session_repository')
+    if not where or not Path(where).is_dir():
+        return False
+    paths = [e['path'] for e in scope['entries'] if e['path']]
+    if not paths:
+        return False
+    if tree.target == 'worktree' and verified_repository.get('is_session_repository'):
+        return True
+    other = Tree(Path(where), 'worktree')
+
+    def digest(data):
+        return None if data is None else hashlib.sha256(data).hexdigest()
+    try:
+        return all(digest(tree.read(p)) == digest(other.read(p)) for p in paths) \
+            and not other.problems
+    except Exception:          # noqa: BLE001 - an unreadable place is not the same bytes
+        return False
+
+
+def with_tree(result: Mapping | None, extra: list, limitations=()) -> dict | None:
+    """The study's gate ``result`` (local mode) plus the reasons ``extra`` established on the
+    verified tree: the gate's reasons are kept as they are (still ``check``'s), ``extra`` is
+    appended, and an ``allowed`` or ``allowed_by_waiver`` decision becomes ``blocked`` when
+    ``extra`` is not empty. A waiver covers what the study's gate judged, never bytes of the
+    verified tree it did not read, so it is then not accepted (``waiver_not_accepted``, as the
+    gate says of a waiver that does not cover every blocking reason). ``not_applicable`` stays
+    (coaching: the reasons say what a required check would find)."""
+    if result is None:
+        return None
+    out = dict(result)
+    reasons = [dict(r) for r in result['reasons']]
+    added = []
+    for r in extra:
+        if r not in reasons:
+            reasons.append(dict(r))
+            added.append(r['code'])
+    lims = set(result['limitations']) | set(limitations)
+    if added and result['decision'] in ('allowed', 'allowed_by_waiver'):
+        if result['decision'] == 'allowed_by_waiver':
+            reasons.append({'code': 'waiver_not_accepted',
+                            'detail': 'the waiver covers what the study\'s gate judged, '
+                                      'not the verified tree\'s reasons'})
+            out['waiver_ref'] = None
+            lims.discard('waived_requirements')
+        out['decision'] = 'blocked'
+    out['reasons'] = reasons
+    out['limitations'] = sorted(lims)
+    out['target_tree_reasons'] = added
+    return out
+
+
 # Reasons the standalone verifier cannot settle without the study (``unknown``, not a
 # failure, for ``declared_conformity``).
 UNKNOWABLE = ('private_context_unknown', 'evidence_unavailable')
+# Local mode (R6-2): the verified repository is not the one the session's freshness is read
+# from. It blocks when the verified tree's public sources are not the snapshot's; otherwise
+# it is a limitation (the study's gate read another place, whose public sources the verified
+# tree holds unchanged).
+OTHER_REPOSITORY = 'verified_repository_not_the_session_one'
 
 
 def verify(repo, target: str, *, policy_doc: Mapping | None = None,
@@ -382,7 +475,8 @@ def verify(repo, target: str, *, policy_doc: Mapping | None = None,
     review whose three files have ``file_hashes``, ``study_binding`` and, when bound, the
     axes the study settles: ``private_context_verification``, ``evidence_availability``,
     ``declared_conformity`` and ``gate_result`` from the study's own gate
-    (:func:`service.gate`), ``exported_content_current`` and ``judgement: 'study'``."""
+    (:func:`service.gate`), ``exported_content_current``, ``verified_repository`` and
+    ``judgement: 'study'``; :func:`with_tree` then adds the verified tree's reasons."""
     tree = Tree(Path(repo), target)
     generations = tree.generations()
     if review_id is not None:
@@ -507,6 +601,24 @@ def _verify_one(tree: Tree, rid: str, policy_doc, local) -> dict:
             axes['public_integrity'] = 'invalid'
             axes['gate_result'] = None
             return axes
+        # The study's gate (unchanged: ``check``'s) plus what the artefact establishes on
+        # the verified tree (R6-2): its public sources there when they are not the bytes the
+        # study's gate read (the session's working tree, whose changes the gate judged per
+        # dimension, waivable), its privacy review, and a verified repository that is not
+        # the session's.
+        vr = axes.get('verified_repository') or {}
+        judged = _judged_by_study(tree, scope, vr)
+        axes['public_sources_judged_by_study'] = judged
+        extra, lims = tree_reasons(doc, axes, judged_by_study=judged), []
+        if vr.get('is_session_repository') is False:
+            if axes['public_source_freshness'] != 'current':
+                extra.append({'code': OTHER_REPOSITORY})
+            else:
+                lims.append(OTHER_REPOSITORY)
+        limitations.extend(lims)
+        axes['gate_result'] = with_tree(axes.get('gate_result'), extra, lims)
+        if extra and axes.get('declared_conformity') == 'conforming':
+            axes['declared_conformity'] = 'nonconforming'
         return axes
     limitations.append('no_local_study: private context and answers not checked')
     try:
