@@ -81,6 +81,10 @@ _STRUCTURE_NOUN = '|'.join(re.escape(n) for nouns in STRUCTURE_NOUNS.values()
                            for n in sorted(nouns, key=len, reverse=True))
 STRUCTURE_AFTER = re.compile(rf"\s+(?:[^\W\d_][\w'’-]*\s+)?(?P<noun>{_STRUCTURE_NOUN})(?![\w])",
                              re.IGNORECASE)
+# Review round 3 (E3-2): "2 development rows", "2 lignes de développement" (the count of
+# the delayed-label limit, :meth:`Pool.partition_match`).
+DEVELOPMENT_ROWS_AFTER = re.compile(r'\s+(?:development\s+rows?|lignes?\s+de\s+d[ée]veloppement)'
+                                    r'(?![\w])', re.IGNORECASE)
 USABLE_STATUSES = ('available_at_prediction', 'uncertain_included')
 EXCLUDED_STATUSES = ('not_available', 'uncertain_excluded')
 
@@ -750,6 +754,24 @@ class Pool:
         for items in view['facts']['by_status'].values():
             for f in items:
                 self._literal('case', f['id'], f['value'])
+        # Review round 3 (E3-2): the state values the engine's own delayed-label limit cites
+        # (``state.delayed_labels_limit``: the partition's final boundary on its clock and the
+        # number of development rows left out). Each is traced only in the context the limit
+        # writes it ("prediction_tick 241", "2 development rows"), never as a bare literal, so
+        # an untraceable number elsewhere stays untraceable.
+        self.partition_facts: list[dict] = []
+        for item in view.get('not_yet_defensible') or []:
+            if not isinstance(item, Mapping) or item.get('id') != 'delayed_labels_excluded':
+                continue
+            clock, start = item.get('clock'), item.get('final_start')
+            if isinstance(clock, str) and clock and cite.is_number(start):
+                self.partition_facts.append({
+                    'id': 'partition.order.final_start', 'value': float(start),
+                    'before': re.compile(rf'(?<![\w.]){re.escape(clock)}\s*$'), 'after': None})
+            if isinstance(item.get('n_rows'), int) and not isinstance(item['n_rows'], bool):
+                self.partition_facts.append({
+                    'id': 'partition.training_exclusions.n_rows', 'value': float(item['n_rows']),
+                    'before': None, 'after': DEVELOPMENT_ROWS_AFTER})
 
     def _literal(self, kind: str, source: str, value: Any, *, forms: bool = False) -> None:
         """Record the numbers of ``value``. ``forms`` (a decision or proposal value): a
@@ -803,6 +825,22 @@ class Pool:
         kind = next(k for k, nouns in STRUCTURE_NOUNS.items() if noun in nouns)
         return next((item for item in self.structure
                      if item['kind'] == kind and item['value'] == int(value)), None)
+
+    def partition_match(self, text: str, tok: cite.Token) -> dict | None:
+        """Review round 3 (E3-2): the partition fact (:attr:`partition_facts`) a number
+        repeats in the context the engine's delayed-label limit writes it; None otherwise."""
+        if tok.percent:
+            return None
+        for fact in getattr(self, 'partition_facts', ()):
+            if abs(fact['value'] - tok.value) > 1e-9:
+                continue
+            if fact['before'] is not None \
+                    and not fact['before'].search(text[max(0, tok.start - 80):tok.start]):
+                continue
+            if fact['after'] is not None and not fact['after'].match(text, tok.end):
+                continue
+            return fact
+        return None
 
     def threshold_match(self, tok: cite.Token) -> dict | None:
         """v0.3 (WP-J): the stated engine threshold a number after a threshold word repeats."""
@@ -1071,6 +1109,12 @@ def trace_text(pool: Pool, text: str, where: str, locate=None) -> tuple[list[dic
         if structure is not None:
             traced.append({'text': tok.text.strip(), 'source': 'structure',
                            'id': structure['id'], 'value': structure['value']})
+            continue
+        fact = (pool.partition_match(masked, tok)
+                if label in ('none', 'stale') and not difference else None)
+        if fact is not None:
+            traced.append({'text': tok.text.strip(), 'source': 'partition', 'id': fact['id'],
+                           'value': fact['value']})
             continue
         if label in ('none', 'stale') and _result_id_prefix(pool, masked, tok):
             traced.append({'text': tok.text.strip(), 'source': 'identifier', 'id': 'result_id',

@@ -20,7 +20,9 @@ activities call :func:`require_activity` before reserving an execution, and agai
 when promoting a result.
 
 Pure: only state is read, plus, when ``store`` is given, the registry entry of the
-current policy evaluation (to check that it evaluated the proposed rule).
+current policy evaluation (to check that it evaluated the proposed rule) and (review round
+3, E3-3) the currency of the results the final-test opening rests on, by the rule of
+``status`` (:mod:`mlkit.study.opening`).
 """
 from __future__ import annotations
 
@@ -287,6 +289,10 @@ def final_test_missing(state: Mapping, value: Any = None, *, store=None) -> list
         if not st.is_current(state, slot):
             missing.append({'requirement': 'result_current', 'slot': slot,
                             'detail': 'The final test is opened on current results only.'})
+    if store is not None:
+        # Review round 3 (E3-3): current by the rule ``status`` and ``evidence`` use, not by
+        # the stale map alone (the capture is checked by ``missing_for_decision``).
+        missing += selection_not_current(store, state)
     from . import assurance
     if assurance.profile(state) == 'review-v1':
         diag_slot = st.DIAG_SLOT[task]
@@ -311,6 +317,14 @@ def final_test_missing(state: Mapping, value: Any = None, *, store=None) -> list
                                 'detail': 'The current diagnostic describes a different '
                                           'model or action rule.'})
     return missing
+
+
+def selection_not_current(store, state: Mapping, *, capture: bool = False) -> list[dict]:
+    """Review round 3 (E3-3): :func:`mlkit.study.opening.not_current` on ``state`` (the
+    writer's state, through :meth:`mlkit.study.read.Study.at_state`)."""
+    from . import opening, read
+    return opening.not_current(read.Study.at_state(store.study_dir, state), state,
+                               capture=capture)
 
 
 ACTIVITY_DECISIONS = ('prediction_time', 'feature_availability', 'split')
@@ -387,6 +401,11 @@ def missing_for_activity(state: Mapping, activity: str) -> list[dict]:
                         missing.append({'requirement': 'result_current', 'slot': slot})
     return missing
 
+
+
+def refuse_missing(missing: list[dict], subject: str) -> None:
+    """Raise ``precondition_missing`` for ``missing`` (with its junior message), if any."""
+    _refuse(missing, subject)
 
 
 def _refuse(missing: list[dict], subject: str) -> None:

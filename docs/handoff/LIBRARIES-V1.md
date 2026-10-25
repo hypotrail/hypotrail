@@ -521,13 +521,93 @@ target the current bytes and start at the recorded ones, their scope, and the be
 its opt-in `test_byte_comparison_with_the_previous_engine` repeats the comparison when
 `HYPOTRAIL_COMPAT_OLD_PYTHON` and `HYPOTRAIL_COMPAT_OLD_ROOT` name an old engine.
 
-Pre-existing defects seen while testing, not fixed here: a `tuned` or `family` variant under a
-review-v1 explicit plan fails with `NameError: np` (`families.choose` uses `np` without
-importing it), and the generated notebook of a review-v1 explicit-plan study fails in its
-cross-validation cell (the fold series holds the scored rows only, the development frame every
-development row). With exclusions the capture's `training_scope.membership_sha256` still names
-the development blob (`contracts/capture.py`, not edited here), while `n_train` and the
-result's `inputs.training_exclusions` give the rows actually used.
+Pre-existing defects seen while testing, fixed in review round 3 (below): a `tuned` or
+`family` variant under a review-v1 explicit plan failed with `NameError: np`
+(`families.choose` used `np` without importing it), and the generated notebook of a review-v1
+explicit-plan study failed in its cross-validation cell (the fold series holds the scored rows
+only, the development frame every development row). The capture's
+`training_scope.membership_sha256` names the rows the capture was fitted on (since `ce82ca9`:
+with exclusions, a digest of the eligible keys rather than the development blob; the digest
+scheme belongs to `contracts/capture.py` and may change again), and `n_train` and the result's
+`inputs.training_exclusions` give the same rows.
+
+## Review round 3
+
+Engine fixes of the review of 2026-10-25 (round 3), on top of `ce82ca9`
+(`framework/tests/study/test_review_round3_engine.py`, temporary studies only; the reviewer's
+scripts are ported there):
+
+- E3-1, the notebooks with delayed labels: `notebook_view.development_frame` marks the rows the
+  split was computed without `delayed_label` (it gave them partition `None` and the
+  cross-validation cell used every development row, so its `assert` failed, 240 against 238,
+  and the target and special-value cells after it); the split cell's `train` holds the
+  split's rows only and counts the delayed-label rows apart; every cell that reads the target
+  or fits reads `train`; the rows cell explains the term first, then prints this study's
+  example (the engine's limit, in the study language), and the split step shows it.
+- E3-2: the limit `delayed_labels_excluded` cites the final boundary ("prediction_tick 241")
+  and the number of rows left out, which the number check rejected (`export handoff` refused
+  every study with exclusions, `untraceable_number`; `check --text` flagged the engine's own
+  text). Those two state values are now traced only in the context the limit writes them
+  (source `partition`): the same numbers anywhere else stay untraceable, so the guarantee is
+  not weakened for other text.
+- E3-3 (completing E2-1): confirming `final_test`, and the reservation of
+  `final_test.evaluation`, require every result the confirmation rests on (split, fits,
+  variants, evaluation, review-v1 diagnostics, capture) to be current by the rule of `status`
+  (`code_changed` under the attestations, `delayed_labels_included`, upstream), not the stale
+  map alone (`mlkit.study.opening`); otherwise `precondition_missing` names them, with a junior
+  message (run them again first; no final-test row was read). `next_action` then recommends
+  running the first of them (`not_current` lists all), never the opening.
+- E3-4: after an opening made before the delayed-label fix, `run diag.final_test` says the
+  final test cannot be recomputed (junior message, study language), not "run it again".
+- B3-0: `fit.compute_explicit_cv` read the regression target (an array) by row key, so every
+  regression fit under a review-v1 explicit plan raised `AttributeError`; it is now indexed
+  like the frame. Regression under review-v1 explicit plans is covered (fits, cross-validation,
+  tuned variant, comparison, capture, final test, diagnostics, notebook).
+- Known bugs: (a) `families.choose` imports numpy; (b) the explicit plan's notebook cells follow
+  the registered memberships (each fold fitted on its `train_keys`, scoring its
+  `validation_keys`; the regression baseline the median of each fold's training rows); (c) a
+  glossary example whose value the result does not hold (the explicit baseline's single
+  `train_rate`) is not shown, as `explain` does; (d) the study panel shows
+  `delayed_labels_excluded` as a caveat (English and French; ADR 0004 constraints unchanged).
+
+Compatibility. `fit.py` (`d39f3f5b…` → `9ca62f79…`) and `families.py` (`2d874879…` →
+`4e207920…`) changed; both are in code fingerprints. The changed paths raised an exception with
+every earlier engine (no earlier result was computed on them), and every other path is
+unchanged, so `mlkit/study/code_compat.py` holds three new exact edges: `fit.py` from the
+`ce82ca9` digest (unchanged since `621d607`, so also the `818995c` one) and from the `506180a`
+digest (`28c00840…`), each for the eight activities whose fingerprint holds `fit.py` but the
+capture (`fit.baseline`, `fit.logistic`, `fit.linear`, `fit.variant`,
+`eda.single_feature_signal`, `diag.binary`, `diag.regression`, `final_test.evaluation`), and
+`families.py` from its digest (unchanged since `506180a`) for `fit.variant` and
+`final_test.evaluation`. Not attested, as before: `predictor.capture`, whose predictor and
+computation ids hash the code fingerprint; a capture computed before reports `code_changed`
+and is captured again (E2-1 and E3-3 refuse the opening on it until then). `activities.py` is
+unchanged (`b7c994d2…`), so its round-2 edges still apply. The existing edge tests are kept;
+`test_code_compat_library_v1.py::test_the_library_v1_edges_target_the_current_bytes` now
+expects, for `fit.py`, the fit activities its edges covered (it compared every module with the
+21 activities, which holds for `activities.py` only).
+
+Evidence (`code_compat_evidence.py`, unchanged; each old engine a `git archive` of its commit
+run with this checkout's environment, its own `hypotrail_runtime` first on the path when it
+has one). With the `ce82ca9` engine: 153 commands on the six studies of round 2, the same
+outcomes, all succeeded; 109 attested results, 77 byte-identical and 32 identical up to
+upstream ids; every promoted result current at HEAD in copies of the `ce82ca9` studies (105 of
+105, the population profiles included: their modules are unchanged); 64 of 64 leaves
+byte-identical; `MATCH`. With the `818995c` engine (both its `activities.py` edge of round 2
+and the new `fit.py` edge apply): the same 153 commands and figures, 99 of 105 promoted
+results current (the 6 others are the population profiles, not attested since round 2), 64 of
+64 leaves byte-identical; `MATCH`. With the `506180a` engine (its
+`activities.py` edge of round 2, the new `fit.py` edge from `28c00840…` and the `families.py`
+edge apply together): 147 commands on the same six studies (no population), the same
+outcomes; 109 results, 77 byte-identical and 32 identical up to upstream ids; every promoted
+result current at HEAD (99 of 99); 64 of 64 leaves byte-identical; `MATCH`. The paths fixed
+here (regression and tuned or family variants under a review-v1 explicit plan) cannot be
+compared: they raised an exception with every old engine.
+`test_review_round3_engine.py` checks, without the old engines, that the edges target the
+current bytes and start at the recorded ones (`ce82ca9`, `818995c`, `506180a`), their scope,
+direction and exactness; its opt-in `test_byte_comparison_with_the_previous_engine` repeats
+the comparison when `HYPOTRAIL_COMPAT_OLD_PYTHON` and `HYPOTRAIL_COMPAT_OLD_ROOT` name an old
+engine.
 
 ## Limits and what is not done
 

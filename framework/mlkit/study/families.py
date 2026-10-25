@@ -117,6 +117,7 @@ def inner_plan(case, train, inputs: Mapping, *, k: int = trials.INNER_FOLDS) -> 
 def choose(case, train, inputs: Mapping, params: Mapping, binary: bool) -> dict:
     """The grid value of ``params['tuning']`` an inner cross-validation of ``train`` picks:
     ``{value, scores: [{value, mean, per_fold}], metric}``."""
+    import numpy as np          # review round 3: the explicit inner plan's positions
     from . import fit
     from .activities import positive
     tuning = params['tuning']

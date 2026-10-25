@@ -79,7 +79,11 @@ ACTIVITY_WORDS = {'split': 'the split', 'eda.target_rate': 'the outcome rate',
                   'evaluate.regression': 'the model comparison',
                   # v0.2b (WP-B1)
                   'fit.variant': 'the variant model',
-                  'final_test.evaluation': 'the final test evaluation'}
+                  'final_test.evaluation': 'the final test evaluation',
+                  # Review round 3 (E3-3): named when they must be run again.
+                  'diag.binary': 'the development diagnostics',
+                  'diag.regression': 'the development diagnostics',
+                  'predictor.capture': 'the captured model'}
 
 
 ACTIVITY_WORDS_FR = {'split': 'le découpage', 'eda.target_rate': 'le taux de résultat positif',
@@ -96,7 +100,10 @@ ACTIVITY_WORDS_FR = {'split': 'le découpage', 'eda.target_rate': 'le taux de r�
                      'policy.evaluation': "l'évaluation de la règle",
                      'evaluate.regression': 'la comparaison des modèles',
                      'fit.variant': 'le modèle variante',
-                     'final_test.evaluation': "l'évaluation sur l'échantillon de test final"}
+                     'final_test.evaluation': "l'évaluation sur l'échantillon de test final",
+                     'diag.binary': 'les diagnostics de développement',
+                     'diag.regression': 'les diagnostics de développement',
+                     'predictor.capture': 'le modèle capturé'}
 
 
 def activity_words(activity, lang: str = EN) -> str:

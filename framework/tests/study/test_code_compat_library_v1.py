@@ -84,13 +84,18 @@ def test_the_library_v1_edges_target_the_current_bytes():
         assert read._module_path(module).read_bytes() == (REPO / path).read_bytes()
         if now == LIBRARY[module]:
             continue
-        # Review round 2 (delayed labels) changed activities.py again: an exact edge from the
-        # base digest to the current bytes must cover every base activity, as these edges
-        # did (test_review_round2_training_exclusions.py checks its evidence and its scope).
+        # Review round 2 (delayed labels) changed activities.py again, and review round 3
+        # (B3-0) fit.py: an exact edge from the base digest to the current bytes must cover
+        # every base activity the module's edges covered (every base activity for
+        # activities.py, with the diag.final_test edge; the fit activities for fit.py).
+        # test_review_round2_training_exclusions.py and test_review_round3_engine.py check
+        # their evidence and their scope.
         covered = {a for r in code_compat.ATTESTATIONS if r['module'] == module
                    and r['from_sha256'] == BASE[module] and r['to_sha256'] == now
                    for a in r['activities']}
-        assert covered == set(BASE_ACTIVITIES), STALE_EDGE.format(module=module)
+        expected = (set(BASE_ACTIVITIES) if module == 'mlkit.study.activities'
+                    else set(ATTESTED[module]))
+        assert covered == expected, STALE_EDGE.format(module=module)
 
 
 def test_the_library_v1_edges_start_at_the_506180a_bytes():

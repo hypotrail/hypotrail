@@ -156,6 +156,66 @@ ATTESTATIONS: tuple[dict, ...] = (
                      'docs/handoff/LIBRARIES-V1.md#delayed-labels-review-round-2: the same '
                      'comparison with the 506180a engine (the same six studies).'],
     },
+    # Review 2026-10-25 round 3: fit.py reads the regression target by row key in the
+    # explicit (review-v1) cross-validation, which raised AttributeError on every regression
+    # fit of a review-v1 explicit plan (B3-0), and families.py imports numpy where the
+    # explicit inner plan of a tuned or family variant used it, which raised NameError. Both
+    # paths crashed with every earlier engine, so no earlier result was computed on them;
+    # every other path is unchanged. Attested from the ce82ca9 digests (fit.py unchanged since
+    # 621d607, families.py since 506180a) and from the 506180a fit.py digest, only after the
+    # byte comparison of each engine matched. Not attested: predictor.capture (its predictor
+    # and computation ids hash the code fingerprint).
+    {
+        'module': 'mlkit.study.fit',
+        'from_sha256': 'd39f3f5bfbc0927c79af7371b8358b9b4d72892b869c2ed726498a798a744579',
+        'to_sha256': '9ca62f79a0cb335374beb1c8047cd34047bd4456a192f300282e269f1979c8f7',
+        'activities': ['fit.baseline', 'fit.logistic', 'fit.linear', 'fit.variant',
+                       'eda.single_feature_signal', 'diag.binary', 'diag.regression',
+                       'final_test.evaluation'],
+        'reason': ('Review round 3 (B3-0) indexes the regression target of the explicit '
+                   'review-v1 cross-validation by row key; that path raised AttributeError '
+                   'before, and every other path (binary, legacy folds, holdout, final '
+                   'evaluation) is unchanged.'),
+        'evidence': ['framework/tests/study/test_review_round3_engine.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'docs/handoff/LIBRARIES-V1.md#review-round-3: the same commands on the six '
+                     'temporary studies of round 2 with the ce82ca9 engine and the current '
+                     'one; every result byte-identical or identical up to upstream ids, every '
+                     'leaf recomputed in the ce82ca9 studies byte-identical, every promoted '
+                     'result current.'],
+    },
+    {
+        'module': 'mlkit.study.fit',
+        'from_sha256': '28c00840fe9f9a5c17d0e9a0d483cd7dbdc9ed2cc4d715a8f65073399d989161',
+        'to_sha256': '9ca62f79a0cb335374beb1c8047cd34047bd4456a192f300282e269f1979c8f7',
+        'activities': ['fit.baseline', 'fit.logistic', 'fit.linear', 'fit.variant',
+                       'eda.single_feature_signal', 'diag.binary', 'diag.regression',
+                       'final_test.evaluation'],
+        'reason': ('The library-v1 change (see the 506180a fit edge above) and the review '
+                   'round 3 fix (B3-0), whose code paths are taken only when a '
+                   'predictor.capture result is current or a regression study fits a '
+                   'review-v1 explicit plan (which raised AttributeError before); a study of '
+                   'the 506180a engine fits and evaluates exactly as before.'),
+        'evidence': ['framework/tests/study/test_review_round3_engine.py',
+                     'framework/tests/study/test_code_compat_library_v1.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'docs/handoff/LIBRARIES-V1.md#review-round-3: the same comparison with '
+                     'the 506180a engine.'],
+    },
+    {
+        'module': 'mlkit.study.families',
+        'from_sha256': '2d8748798498388525c94ef85f8d73779b2a0c5d3145270e32d67cbbfc860e85',
+        'to_sha256': '4e207920618b1a59da54d1a66066a22c771a276795012931a4aa74f9a78a3f00',
+        'activities': ['fit.variant', 'final_test.evaluation'],
+        'reason': ('Review round 3 imports numpy in families.choose, which the explicit inner '
+                   'plan of a tuned or family variant under a review-v1 plan used without it '
+                   '(NameError before); the legacy inner folds and the fits are unchanged.'),
+        'evidence': ['framework/tests/study/test_review_round3_engine.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'docs/handoff/LIBRARIES-V1.md#review-round-3: tuned and family variants '
+                     'byte-identical between the ce82ca9 (and 506180a) engines and the current '
+                     'one.'],
+    },
     {
         'module': 'mlkit.study.diagnostics',
         'from_sha256': '3d3244edc2b3bc7a7b5cb6e5519e18751ed2ad8eb7d3066ef5585242ac52059d',

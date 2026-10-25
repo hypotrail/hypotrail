@@ -677,8 +677,13 @@ def compute_explicit_cv(activity: str, case: c.Case, frame, plan: Mapping,
                                      details={'reason': 'batch_cut_across_windows',
                                               'batch_column': column, 'batch': value,
                                               'folds': [previous, fold['id']]})
-    y_all = (positive(frame, case).astype(int) if binary else
-             _target(case, frame, 'development'))
+    if binary:
+        y_all = positive(frame, case).astype(int)
+    else:
+        # Review round 3 (B3-0): the folds read the target by row key, so the regression
+        # target (an array from ``_target``) is indexed like the frame.
+        import pandas as pd
+        y_all = pd.Series(_target(case, frame, 'development'), index=frame.index)
     predictions, observed, keys_out = [], [], []
     per_fold, choices, importances = [], [], []
     for fold in plan['folds']:

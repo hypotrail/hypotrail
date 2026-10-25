@@ -271,6 +271,7 @@
     high_cardinality_grouping: "Certaines valeurs rares ont été regroupées dans un graphique.",
     grouped_split_unsupported: "Des lignes liées peuvent tomber des deux côtés du découpage.",
     validation_is_not_independent: "Les lignes de validation ont servi à choisir : leurs chiffres ne sont pas une preuve indépendante.",
+    delayed_labels_excluded: "Une étiquette tardive est un résultat connu seulement un certain temps après la prédiction. Certaines lignes de développement n'ont eu leur résultat qu'après le début du test final : elles sont écartées du découpage, des regards sur le résultat et de chaque ajustement.",
     public_data_already_explored: "Les données ont été publiées et explorées auparavant ; leurs lignes ne sont pas inédites.",
     no_time_or_entity_identifier: "Les données n'ont ni date ni identifiant d'entité : la dérive et les entités répétées ne peuvent pas être vérifiées.",
     no_causality: "L'étude montre des associations ; elle ne mesure pas l'effet d'une action.",

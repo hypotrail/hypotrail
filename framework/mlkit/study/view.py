@@ -1338,8 +1338,9 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'plan': plan,
         'current_step': next((s['id'] for s in plan if s['current']), None),
         # v0.2a (WP-A1): every message for a surface says who it is written for.
-        'next_action': audience.next_action(_with_default_rule(st.next_action(state, suspected),
-                                                               defaults), language),
+        'next_action': _opening_not_current(
+            study, state, audience.next_action(_with_default_rule(st.next_action(state, suspected),
+                                                                  defaults), language)),
         'open_proposals': [_proposal_view(p, st.language_of(state))
                            for p in sorted(st.open_proposals(state),
                                            key=lambda p: (p['revision'], p['proposal_id']))],
@@ -1401,6 +1402,37 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     from . import presentation
     out['presentation'] = presentation.build(out)
     return out
+
+
+def _opening_not_current(study: read.Study, state: Mapping, action: dict | None) -> dict | None:
+    """Review round 3 (E3-3): ``next_action`` never recommends opening the final test (a
+    ``propose`` of ``final_test``, the junior's words awaited on its proposal, or the ``run``
+    of its evaluation before the opening) while a
+    result the opening rests on is not current by the rule of ``status``
+    (:func:`mlkit.study.opening.not_current`); it is then a ``run`` of the
+    first such result, upstream first, with ``not_current`` listing every one and a junior
+    message in the study language. The state-derived plan is unchanged."""
+    if not action or st.final_test_opened(state) or not (
+            (action.get('kind') in ('propose', 'await_user_words')
+             and action.get('decision') == st.FINAL_TEST)
+            or (action.get('kind') == 'run'
+                and action.get('activity') == 'final_test.evaluation')):
+        return action
+    from . import opening
+    if study.source_changes():
+        return action
+    missing = opening.not_current(study, state, capture=True)
+    if not missing:
+        return action
+    slots = [m['slot'] for m in missing]
+    junior = ' '.join(dict.fromkeys(m['junior_message'] for m in missing
+                                    if m.get('junior_message')))
+    return {'kind': 'run', 'step': action.get('step'), 'activity': slots[0],
+            'not_current': slots,
+            'message': (f'Run {", ".join(slots)} again before opening the final test: by the '
+                        'rule of status they are not current (code changed, delayed-label rows, '
+                        'or an upstream result not current). The final test stays sealed.'),
+            'audience': audience.AGENT, 'junior_message': junior}
 
 
 def _case_or_none(state: dict):

@@ -42,7 +42,7 @@
     "row": 6,
     "reason": "policy changed (§3.7 row 6: policy.rule_type)",
     "stale_results": [
-     "141c7a9e61e8bebc92cdc5a39d8ce6587c0eb025433d21e0456834045d877f75"
+     "3c360b3a9bbcda1cc0ce42014265efd91f2e138e6dd8ef05ae2837dc1bba5ea6"
     ],
     "stale_slots": [
      "diag.binary"
@@ -105,7 +105,7 @@
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: an analysis, run without asking you. Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
+   "junior_digest": "Next: the development diagnostics, run without asking you. Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",

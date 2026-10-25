@@ -135,6 +135,25 @@ def _reserve(ctx: cmd.Context) -> Handler:
             # Before planning: once opened, the plan's own refusals (a capture no longer
             # current) would name a remedy that no longer exists.
             raise cmd.final_test_opened_refusal(state)
+        if activity == act.FINAL:
+            # Review round 3 (E3-3): every result the opening rests on (the split, the fits,
+            # the variants, the evaluation, the diagnostics under review-v1) is current by the
+            # rule of ``status`` before anything is marked opened; the plan checks the capture
+            # (E2-1) and that it loads (A F1).
+            from . import preconditions
+            preconditions.refuse_missing(preconditions.selection_not_current(ctx.store, state),
+                                         'Opening the final test')
+        if activity == act.DIAG_FINAL and st.final_test_opened(state):
+            # Review round 3 (E3-4): the final evaluation the diagnostics read is never
+            # recomputed; when it is not current, say so before the plan names a remedy (run
+            # it again) that no longer exists.
+            final = state['current'].get(act.FINAL)
+            if final is not None:
+                from . import read
+                currency = read.Study.at_state(ctx.store.study_dir, state).currency(final)
+                if not currency['current']:
+                    raise _not_recomputable(state, activity, state['current'].get(activity),
+                                            currency, final_currency=True)
         plan = act.plan(ctx.store, state, activity, params['options'], with_exposure=True)
         eid = params['execution_id']
         for other, running in sorted(state['executions']['active'].items()):
@@ -654,25 +673,54 @@ def _answers(snapshot, entry: Mapping, now: Mapping) -> bool:
 
 
 def _not_recomputable(state: Mapping, activity: str, rid: str | None,
-                      currency: Mapping | None) -> CommandRefused:
+                      currency: Mapping | None, *, final_currency: bool = False
+                      ) -> CommandRefused:
     """E2-2: a final-test result that is not current, after the opening: it cannot be
-    recomputed, so the request is refused with the reason instead of ``already_current``."""
+    recomputed, so the request is refused with the reason instead of ``already_current``.
+
+    Review round 3 (E3-4): with ``final_currency``, ``currency`` is that of the final
+    evaluation ``diag.final_test`` would read (``rid`` is the diagnostics result, None when
+    there is none yet); the junior message is in the study language."""
     reason = (currency or {}).get('reason') or {}
     why = reason.get('reason') or 'not current'
     opening = (state.get('partition') or {}).get('opening') or {}
+    fr = st.language_of(state) == 'fr'
     if activity == act.FINAL:
         message = (f'The final evaluation is not current ({why}) and cannot be recomputed: the '
                    'final test was already opened, and it is opened once. Its recorded figures '
                    'stay as history, shown as not current.')
-        junior = ('Your final-test result is no longer current and cannot be computed again: '
+        junior = ("Votre résultat sur l'échantillon de test final n'est plus à jour et ne peut "
+                  "pas être recalculé : le test final ne s'ouvre qu'une fois. Ses chiffres "
+                  "restent dans l'étude comme historique, marqués comme n'étant plus à jour."
+                  if fr else
+                  'Your final-test result is no longer current and cannot be computed again: '
                   'the final test is opened only once. Its figures stay in the study as '
                   'history, marked not current.')
         code = 'final_test_already_opened'
+    elif final_currency:
+        message = (f'{activity} cannot be computed: the final evaluation it reads is not '
+                   f'current ({why}) and cannot be recomputed, since the final test was already '
+                   'opened and it is opened once. Its recorded figures stay as history, shown '
+                   'as not current.')
+        junior = ("Les diagnostics du test final ne peuvent pas être calculés : le résultat "
+                  "sur l'échantillon de test final qu'ils lisent n'est plus à jour, et il ne "
+                  "peut pas être recalculé, car le test final ne s'ouvre qu'une fois. Ses "
+                  "chiffres restent dans l'étude comme historique, marqués comme n'étant plus "
+                  "à jour." if fr else
+                  'The final-test diagnostics cannot be computed: the final-test result they '
+                  'read is no longer current, and it cannot be computed again, since the final '
+                  'test is opened only once. Its figures stay in the study as history, marked '
+                  'not current.')
+        code = 'precondition_missing'
     else:
         message = (f'{activity} is not current ({why}) and recomputing it cannot make it '
                    'current: the final evaluation it reads is not current and is never '
                    'recomputed (the final test is opened once).')
-        junior = ('The final-test diagnostics are not current because the final-test result '
+        junior = ("Les diagnostics du test final ne sont plus à jour, car le résultat sur "
+                  "l'échantillon de test final qu'ils lisent ne l'est plus ; ce résultat ne "
+                  "peut pas être recalculé, car le test final ne s'ouvre qu'une fois."
+                  if fr else
+                  'The final-test diagnostics are not current because the final-test result '
                   'they read is no longer current; that result cannot be computed again, since '
                   'the final test is opened only once.')
         code = 'precondition_missing'
@@ -682,6 +730,10 @@ def _not_recomputable(state: Mapping, activity: str, rid: str | None,
                'opening': {k: opening.get(k) for k in ('revision', 'model', 'rule',
                                                        'result_id')},
                'junior_message': junior}
+    if final_currency:
+        # The reason is the final evaluation's (the diagnostics may not exist yet).
+        details['final_result_id'] = state['current'].get(act.FINAL)
+        details['delayed_labels_included'] = bool(reason.get('delayed_labels_included'))
     if code == 'precondition_missing':
         details['missing'] = [{'requirement': 'result_current', 'slot': act.FINAL,
                                'detail': 'The final evaluation is not current and is never '

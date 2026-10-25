@@ -21,7 +21,7 @@
   "activity": "diag.regression",
   "execution_id": "e_bad9a6f0e28076da5c45d47f",
   "status": "promoted",
-  "result_id": "74a2b20d0fe36a3994085c2628c1e966e47bb2c893b62df0fd7ec781ed0677f9",
+  "result_id": "80bc2a620c2328d67872a653ceb891d5904034b9cc804cfad3741c9b8118066f",
   "values": {
    "question": "Where are the predictions off, by how much, and does the error grow with the prediction or differ across groups?",
    "evidence": "development",
@@ -1259,7 +1259,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "6c5edebf385d0f90967eedb40e07575b13b9b18471f8928dcc83ce9dfb476e93"
+     "predictions": "7b48d48629f9d0f33bd261fda93414d1a99f6203444e77467192d3eac02b0567"
     },
     "fit.variant": {
      "errors": {
@@ -2473,7 +2473,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "004185cee65589c9d8f1f69db33979c1f781cf40aa81edf7476608f60846074b"
+     "predictions": "147a30d7da42f214c060aedaa191edaf5424e6c960cf59a6bc1f42725ccc0a00"
     }
    },
    "coefficient_rows": 222,
@@ -2688,14 +2688,14 @@
    "activity": "diag.regression",
    "slot": "diag.regression",
    "status": "promoted",
-   "result_id": "74a2b20d0fe36a3994085c2628c1e966e47bb2c893b62df0fd7ec781ed0677f9",
-   "input_key": "1f41381f781bd6e999d7f0be2e1d79e47a36b500e486d6864785948bd199866c",
+   "result_id": "80bc2a620c2328d67872a653ceb891d5904034b9cc804cfad3741c9b8118066f",
+   "input_key": "800f4db72987406cde89da6bf0471b9fc77dacf5280c8d298d498a02d2a9f6c9",
    "reason": null,
    "started_revision": 39,
    "invalidation": null,
    "exposure_ids": [
-    "x_8ce7a881943b4b59988a14105060606a",
-    "x_cf940f1828f8495cb0531e67c17e0934"
+    "x_da85e58ed00c4b10a8af64743ac6ce42",
+    "x_84092bdfeaa14df3afd4eef1246de3e5"
    ],
    "registry_created": true,
    "nondeterministic": false

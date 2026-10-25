@@ -332,6 +332,9 @@
     uncertain_features_included: 'caveat', delegated_decisions: 'caveat', small_validation_partition: 'caveat',
     capacity_exceeds_validation: 'caveat', high_cardinality_grouping: 'caveat', grouped_split_unsupported: 'caveat',
     validation_is_not_independent: 'sealed',
+    // Review round 3: development rows left out because their label arrives after the
+    // decision moment (a caveat on every development figure, not a mere context).
+    delayed_labels_excluded: 'caveat',
     // WP-B5: the final test (ADR 0006 and its WP-B1 amendment), the scenario's capacity.
     final_test_sealed: 'sealed', changed_after_final_test: 'caveat', final_test_opening_interrupted: 'blocking',
     capacity_assumed_for_exercise: 'caveat', verdict_contradicts_criterion: 'blocking',
@@ -363,6 +366,7 @@
     high_cardinality_grouping: 'Some rare values were grouped together in a chart.',
     grouped_split_unsupported: 'Related rows may fall on both sides of the split.',
     validation_is_not_independent: 'The validation rows were used to choose, so their figures are not independent evidence.',
+    delayed_labels_excluded: 'A delayed label is an outcome known only some time after the prediction. Some development rows had their outcome only after the start of the final test, so they are left out of the split, the looks at the outcome and every fit.',
     public_data_already_explored: 'The data were published and explored before; its rows are not unseen.',
     no_time_or_entity_identifier: 'The data have no date or entity identifier, so drift and repeated entities cannot be checked.',
     no_causality: 'The study shows associations; it does not measure the effect of an action.',

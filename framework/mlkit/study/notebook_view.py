@@ -170,13 +170,42 @@ def _split_keys(study: read.Study, rid: str) -> dict[str, list[str]]:
     return {part: rec.parse_row_keys(study.blob(blobs[part])) for part in ('train', 'validation')}
 
 
+# Review round 3 (E3-1): the ``partition`` of a development row whose label is delayed (its
+# outcome is known only at or after the start of the final test): no split, look at the
+# target or fit reads it.
+DELAYED_LABEL = 'delayed_label'
+
+
+def _exclusions(study: read.Study, rid: str | None):
+    """The training exclusions the split result ``rid`` was computed without (its
+    ``inputs.training_exclusions``), else, before any split, the study's; None when none."""
+    from . import partition
+    if rid:
+        return study.result(rid)['inputs'].get('training_exclusions')
+    return partition.training_exclusions(study.state)
+
+
+def delayed_label_keys(study: read.Study, split_rid: str | None = None) -> list[str]:
+    """Review round 3 (E3-1): the development rows the split ``split_rid`` (the current one
+    when omitted) leaves out for a delayed label, in file order; empty when none."""
+    from . import partition
+    rid = split_rid or study.state['current'].get('split')
+    keys = partition.excluded_keys(study.blob, _exclusions(study, rid))
+    return sorted(keys, key=lambda k: int(k[1:]))
+
+
 def development_frame(study: read.Study, split_rid: str | None = None):
     """The development rows (pandas DataFrame indexed by row key, in file order), with a
     ``partition`` column: ``train`` or ``validation`` from the split result ``split_rid``
     (the current split when omitted), or None before any split. Never the final test.
 
-    WP-B1: under cross-validation every development row is explored and fitted on, so its
-    ``partition`` is ``train``; :func:`folds` gives the fold of each row."""
+    WP-B1: under cross-validation every row the split holds is explored and fitted on, so
+    its ``partition`` is ``train``; :func:`folds` gives the fold of each scored row.
+
+    Review round 3 (E3-1): a row the split left out for a delayed label (review-v1,
+    ``partition.training_exclusions``) has the partition :data:`DELAYED_LABEL`: it is a
+    development row, which the structural checks read, but no look at the target and no fit
+    reads it, exactly as the engine leaves it out."""
     _, frame = _development(study)
     frame = frame.copy()
     rid = split_rid or study.state['current'].get('split')
@@ -185,10 +214,51 @@ def development_frame(study: read.Study, split_rid: str | None = None):
         keys = _split_keys(study, rid)
         if _fold_blob(study, rid) is not None:
             frame.loc[[k for k in keys['train'] if k in frame.index], 'partition'] = 'train'
-            return frame
-        for part, rows in keys.items():
-            frame.loc[[k for k in rows if k in frame.index], 'partition'] = part
+        else:
+            for part, rows in keys.items():
+                frame.loc[[k for k in rows if k in frame.index], 'partition'] = part
+    delayed = [k for k in delayed_label_keys(study, rid) if k in frame.index]
+    if delayed:
+        frame.loc[delayed, 'partition'] = DELAYED_LABEL
     return frame
+
+
+def delayed_labels_text(study: read.Study) -> str:
+    """Review round 3 (E3-1): the engine's ``delayed_labels_excluded`` limit in the study
+    language (the term first, then this study's example), or '' when no row is left out."""
+    from . import junior, state as st
+    item = st.delayed_labels_limit(study.state)
+    if item is None:
+        return ''
+    return junior.limit_fr(item) if st.language_of(study.state) == junior.FR else item['text']
+
+
+def delayed_labels_html(study: read.Study) -> str:
+    """:func:`delayed_labels_text` as a paragraph of the notebook (empty when none)."""
+    text = delayed_labels_text(study)
+    return f'<p data-limit="delayed_labels_excluded">{e(text)}</p>' if text else ''
+
+
+def evaluation_plan(study: read.Study, split_rid: str | None = None):
+    """The explicit row-membership plan of a review-v1 split (``{folds: [{id, train_keys,
+    validation_keys, ...}], unscored_keys, ...}``, verified against its digest), or None for
+    a split without one. Each fold is fitted on its ``train_keys`` and scores its
+    ``validation_keys``, as the engine does (:func:`mlkit.study.fit.compute_explicit_cv`)."""
+    import json
+    from . import evaluation_plan as ep
+    rid = split_rid or study.state['current'].get('split')
+    if not rid:
+        return None
+    entry = study.result(rid)
+    sha = (entry.get('blobs') or {}).get('evaluation_plan')
+    if sha is None:
+        return None
+    plan = json.loads(study.blob(sha))
+    recorded = (entry['output']['values'].get('evaluation_plan') or {}).get('digest')
+    if plan.get('schema') != ep.SCHEMA or ep.digest(plan) != recorded:
+        raise StudyError('integrity_error', 'The evaluation plan does not match its digest.',
+                         details={'result_id': rid})
+    return plan
 
 
 def _fold_blob(study: read.Study, rid: str):
@@ -274,7 +344,17 @@ def example_html(cited: cite.Citer, term_id: str | None, task: str | None = None
         example = (entry or {}).get('cited_example')
         if not example or not cited.ready(example):
             return ''
-        return f'<p><em>In this study.</em> {cited.expand(example)}</p>'
+        try:
+            expanded = cited.expand(example)
+        except StudyError as exc:
+            # Review round 3: a result that does not hold the value the example cites (the
+            # baseline of a review-v1 plan scores each window with the base rate of its own
+            # training rows: there is no single training rate) shows no example, as
+            # ``hypotrail explain`` does; the term and its definition stay.
+            if exc.code == 'untraceable_number':
+                return ''
+            raise
+        return f'<p><em>In this study.</em> {expanded}</p>'
 
 
 # --- workbench --------------------------------------------------------------------------

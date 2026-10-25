@@ -56,7 +56,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "ae127b385abdb9c62ae1f016df8ade6783976f6f216c6f8be66e081e83c023d9",
+       "result_id": "9c38010a2bc86ccb80ef4f8180445980af39097f98c29b25731c81b8a9a59602",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -66,7 +66,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "ae127b385abdb9c62ae1f016df8ade6783976f6f216c6f8be66e081e83c023d9",
+       "result_id": "9c38010a2bc86ccb80ef4f8180445980af39097f98c29b25731c81b8a9a59602",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -90,7 +90,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "ae127b385abdb9c62ae1f016df8ade6783976f6f216c6f8be66e081e83c023d9",
+       "result_id": "9c38010a2bc86ccb80ef4f8180445980af39097f98c29b25731c81b8a9a59602",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -100,7 +100,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "ae127b385abdb9c62ae1f016df8ade6783976f6f216c6f8be66e081e83c023d9",
+       "result_id": "9c38010a2bc86ccb80ef4f8180445980af39097f98c29b25731c81b8a9a59602",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -150,7 +150,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "3733bf690d37396585dd1d18b3347f1a1b95ce9fb16ab1a72645f1e75182683a",
+       "result_id": "acde8b6002e9667820787609e81c3719dc2e35e4358422d1eeadbdfb5894c8f1",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -184,7 +184,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "fdce45ce2a1af25c20d76b8e3ff05858c4ade001d36eb73f27fb282d330bd073",
+       "result_id": "80138fa803b7855afa4c739bb9500cfb08e7c5424602b67998edeb819b713f8f",
        "path": "train_rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -252,7 +252,7 @@
       },
       {
        "text": "38.1%",
-       "result_id": "97dd9c63fe5f2af78cd69db362849cf2a7803d241a944b124bab96c7890a2dd0",
+       "result_id": "40bbcf603d1f163c960064891ff199782dc9e3e54d63c287420926b9ee1db962",
        "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
        "value": 0.38144329896907214,
        "format": "pct1"
@@ -276,7 +276,7 @@
       },
       {
        "text": "29.6%",
-       "result_id": "97dd9c63fe5f2af78cd69db362849cf2a7803d241a944b124bab96c7890a2dd0",
+       "result_id": "40bbcf603d1f163c960064891ff199782dc9e3e54d63c287420926b9ee1db962",
        "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
        "value": 0.296,
        "format": "pct1"
@@ -332,7 +332,7 @@
       },
       {
        "text": "28.3%",
-       "result_id": "97dd9c63fe5f2af78cd69db362849cf2a7803d241a944b124bab96c7890a2dd0",
+       "result_id": "40bbcf603d1f163c960064891ff199782dc9e3e54d63c287420926b9ee1db962",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.low",
        "value": 0.2828227931488801,
        "format": "pct1"
@@ -342,7 +342,7 @@
       },
       {
        "text": "47.8%",
-       "result_id": "97dd9c63fe5f2af78cd69db362849cf2a7803d241a944b124bab96c7890a2dd0",
+       "result_id": "40bbcf603d1f163c960064891ff199782dc9e3e54d63c287420926b9ee1db962",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.high",
        "value": 0.4783043478260867,
        "format": "pct1"
@@ -796,7 +796,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "ae127b385abdb9c62ae1f016df8ade6783976f6f216c6f8be66e081e83c023d9",
+       "result_id": "9c38010a2bc86ccb80ef4f8180445980af39097f98c29b25731c81b8a9a59602",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -806,7 +806,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "ae127b385abdb9c62ae1f016df8ade6783976f6f216c6f8be66e081e83c023d9",
+       "result_id": "9c38010a2bc86ccb80ef4f8180445980af39097f98c29b25731c81b8a9a59602",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -816,7 +816,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "ae127b385abdb9c62ae1f016df8ade6783976f6f216c6f8be66e081e83c023d9",
+       "result_id": "9c38010a2bc86ccb80ef4f8180445980af39097f98c29b25731c81b8a9a59602",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -826,7 +826,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "ae127b385abdb9c62ae1f016df8ade6783976f6f216c6f8be66e081e83c023d9",
+       "result_id": "9c38010a2bc86ccb80ef4f8180445980af39097f98c29b25731c81b8a9a59602",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -912,7 +912,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "3733bf690d37396585dd1d18b3347f1a1b95ce9fb16ab1a72645f1e75182683a",
+       "result_id": "acde8b6002e9667820787609e81c3719dc2e35e4358422d1eeadbdfb5894c8f1",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -1134,7 +1134,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "3733bf690d37396585dd1d18b3347f1a1b95ce9fb16ab1a72645f1e75182683a",
+       "result_id": "acde8b6002e9667820787609e81c3719dc2e35e4358422d1eeadbdfb5894c8f1",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"

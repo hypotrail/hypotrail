@@ -211,6 +211,10 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
                  f'mo.Html(nv.step_html(cited, RESULT_IDS, {slots!r}, '
                  f'{content.get("context", "")!r}, {content.get("interpretation", "")!r}'
                  f'{task_arg}))']
+        if step['id'] == 'split' and code_cells.delayed_labels(view) is not None:
+            # Review round 3 (E3-1): the rows the split leaves out for a delayed label, the
+            # term first, then this study's example (the engine's limit, study language).
+            items.append('mo.Html(nv.delayed_labels_html(study))')
         if step['decision']:
             items.append(f'mo.Html(nv.decision_html(study, {step["decision"]!r}))')
         if content.get('consequence'):
