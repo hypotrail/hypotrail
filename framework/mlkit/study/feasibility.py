@@ -221,13 +221,19 @@ def remedy(study, state: Mapping, action: Mapping, refusal: Mapping,
 def _first_requirement(study, state: Mapping, action: Mapping, missing: list,
                        goal: Mapping) -> dict | None:
     """The remedy of the most upstream unmet requirement: a decision first (in the study's
-    order), then the configuration the final test opens, then a result (in the plan's order,
-    the capture last)."""
+    order), then the configuration the final test opens, then the opening of a confirmed
+    final test an adopting conclusion rests on, then a result (in the plan's order, the
+    capture last); last, an adopting conclusion whose final evidence can never be computed
+    again is proposed again with the verdicts that remain (review round 9, R9E-4)."""
     order = list(st.decision_ids(state))
-    decisions, runs, choice = [], [], None
+    decisions, runs, choice, opening, evidence = [], [], None, None, None
     for item in missing:
         need = item.get('requirement')
-        if need == 'decision_confirmed':
+        if need == 'final_test_opened':
+            opening = item
+        elif need == 'final_evidence_required':
+            evidence = item
+        elif need == 'decision_confirmed':
             decisions.append(item.get('decision'))
         elif need == 'nothing_to_reconfirm':
             decisions += list(item.get('decisions') or [])
@@ -244,6 +250,8 @@ def _first_requirement(study, state: Mapping, action: Mapping, missing: list,
             return _for_decision(state, found, d, goal)
     if choice is not None:
         return _final_test_on_choice(state, action, choice)
+    if opening is not None:
+        return _open_final_test(state, goal, opening)
     slots = _slot_order(state)
     runs = [(s, i) for s, i in runs if s != FINAL_EVALUATION]
     runs.sort(key=lambda r: (r[0] == CAPTURE, slots.get(r[0].split(':', 1)[0], len(slots))))
@@ -256,7 +264,52 @@ def _first_requirement(study, state: Mapping, action: Mapping, missing: list,
             if found is not None:
                 return found
         return _run(study, state, slot, goal, item)
+    if evidence is not None:
+        return _conclude_without_adoption(state, action, evidence)
     return None
+
+
+def _open_final_test(state: Mapping, goal: Mapping, item: Mapping) -> dict:
+    """R9E-4: the opening of the final test the junior confirmed (the ``run`` of its
+    evaluation, as the plan names it), before an adopting conclusion that rests on it; the
+    view completes and checks it like the plan's own (the results it rests on, the
+    configuration it opens, the capture)."""
+    lang = st.language_of(state)
+    step = next((s['id'] for s in st.derive_plan(dict(state))
+                 if s['decision'] == st.FINAL_TEST), st.FINAL_TEST)
+    return {'kind': 'run', 'step': step, 'activity': FINAL_EVALUATION,
+            'message': (f'Open the final test first: {_describe(goal)} would be refused as '
+                        f'given ({item.get("requirement")}: {item.get("detail")}). The junior '
+                        'already confirmed the final test; then read next_action again.'),
+            'audience': audience.AGENT,
+            'junior_message': item.get('junior_message') or (
+                "Le test final s'ouvre d'abord." if lang == audience.FR
+                else 'The final test opens first.')}
+
+
+def _conclude_without_adoption(state: Mapping, action: Mapping, item: Mapping) -> dict | None:
+    """R9E-4: once the final test is opened, an adopting conclusion whose final evaluation is
+    missing or not current can never be accepted (the final test is opened only once): the
+    conclusion is proposed again with the verdicts that remain (``verdicts``, without a
+    value), replacing the open proposal when there is one."""
+    from . import opening
+    verdicts = opening.conclusion_verdicts(state)
+    if not verdicts:
+        return None
+    lang = st.language_of(state)
+    step = next((s['id'] for s in st.derive_plan(dict(state))
+                 if s['decision'] == 'conclusion'), 'conclusion')
+    out = {'kind': 'propose', 'step': step, 'decision': 'conclusion', 'verdicts': verdicts,
+           'message': (f'{_describe(action)} would be refused as given ({item.get("requirement")}'
+                       f': {item.get("detail")}). Propose the conclusion again with a verdict '
+                       f'the engine accepts ({", ".join(verdicts)}), its text saying why the '
+                       'final evidence is missing, and ask the junior again.'),
+           'audience': audience.AGENT,
+           'junior_message': item.get('junior_message') or ''}
+    pid = action.get('proposal_id')
+    if pid and (state['proposals'].get(pid) or {}).get('status') == 'open':
+        out['replaces'] = pid
+    return out
 
 
 def _slot_order(state: Mapping) -> dict[str, int]:

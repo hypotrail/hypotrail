@@ -389,6 +389,9 @@ def test_an_adopting_verdict_below_the_criterion_is_a_check_warning(tmp_path, ba
                     'Yes, I want 60 points over the baseline', '--request-id', flow.rid(),
                     '--expected-revision', flow.rev(), '--study', flow.study)
     assert out['result']['invalidation']['mutation'] == 'success_criterion'
+    # Review round 9 (R9E-4): adopting rests on the final test, so it is opened first.
+    flow.decide('final_test', st.choice_config(flow.state()),
+                'Yes, I open the final test now, because the model and the rule are fixed')
     _conclude(flow, 'adopt_policy')
     view = flow.view()
     assert view['criterion']['status'] == 'not_met' and view['criterion']['contradicts_verdict']

@@ -63,10 +63,17 @@ _SEGMENT = re.compile(r'\[([^\]]+)\]|([^.\[\]]+)')
 # The minus may be the hyphen-minus or the Unicode minus sign U+2212 ("−0.99").
 # WP-H3: French groups thousands with a space, a no-break space or a narrow no-break space
 # ("37 062", "37 062,5"); such a group is one number, its decimals after a comma.
+# Review round 9 (R9E-7): an en dash U+2013 glued to the digits is a minus too ("–2.5"), except
+# after a number, where it joins a range ("2 –5", "2–5" are two positive numbers;
+# :func:`sign_applies`). R9E-1: in English a decimal written without its leading zero (".99",
+# ".5%", "-.3") is a number; the dot must not follow a word or another dot ("in 2024.", "3.2",
+# "v.2" are unchanged). French text does not read it: :mod:`mlkit.study.numtrace` reports it.
 _SPACE = '[ \u00a0\u202f\u2009]'
-NUMBER = re.compile(r'(?<![\w.])([-\u2212](?=\d))?([1-9]\d{0,2}(?:,\d{3})+(?:\.\d+)?|'
+SIGNS = '-\u2212\u2013'
+EN_DASH = '\u2013'
+NUMBER = re.compile(rf'(?<![\w.])([{SIGNS}](?=\.?\d))?([1-9]\d{{0,2}}(?:,\d{{3}})+(?:\.\d+)?|'
                     rf'[1-9]\d{{0,2}}(?:{_SPACE}\d{{3}})+(?!\d|\.\d|,\d{{3}})(?:,\d+)?|'
-                    r'\d+(?:[.,]\d+)?)'
+                    r'\d+(?:[.,]\d+)?|\.\d+)'
                     r'(?![\w])(\s?%)?')
 SPACE_GROUPED = re.compile(rf'[1-9]\d{{0,2}}(?:{_SPACE}\d{{3}})+(?:,(\d+))?')
 # Review round 4 (E4-6): French text. A comma is always the decimal separator ("1,286" is
@@ -74,11 +81,27 @@ SPACE_GROUPED = re.compile(rf'[1-9]\d{{0,2}}(?:{_SPACE}\d{{3}})+(?:,(\d+))?')
 # grouped only with a space (the renderer writes a narrow no-break space, U+202F: "3 842,8"),
 # never with a comma. English text keeps :data:`NUMBER`: a comma followed by groups of three
 # digits groups thousands ("3,164"), a dot is the decimal separator.
-NUMBER_FR = re.compile(r'(?<![\w.])([-\u2212](?=\d))?('
+NUMBER_FR = re.compile(rf'(?<![\w.])([{SIGNS}](?=\d))?('
                        rf'[1-9]\d{{0,2}}(?:{_SPACE}\d{{3}})+(?!\d|\.\d)(?:,\d+)?|'
                        r'\d+(?:[.,]\d+)?)'
                        r'(?![\w])(\s?%)?')
 LANGUAGES = ('en', 'fr')
+# Review round 9 (R9E-6): a number whose precision goes beyond 10^±300 cannot be compared with
+# a registered value (its rounding tolerance overflows or underflows a float): it matches
+# nothing (:func:`shown_matches`), and :mod:`mlkit.study.numtrace` reports such an exponent.
+MAX_DECIMALS = 300
+_RANGE_BEFORE = re.compile(rf'\d{_SPACE}*$')
+
+
+def sign_applies(text: str, start: int, sign: str | None) -> bool:
+    """Whether the sign character at ``start`` of ``text`` makes the number negative: a
+    hyphen-minus or a minus sign always does; an en dash only when no number ends right
+    before it, spaces apart (R9E-7: "–2.5" is negative, "2 –5" is a range)."""
+    if not sign:
+        return False
+    if sign != EN_DASH:
+        return True
+    return not _RANGE_BEFORE.search(text[max(0, start - 16):start])
 
 
 def untraceable(message: str, **details) -> StudyError:
@@ -237,7 +260,9 @@ def parse_numbers(text: str, language: str | None = None) -> list[Token]:
     out = []
     french = language == 'fr'
     for m in (NUMBER_FR if french else NUMBER).finditer(text):
-        sign, body, pct = (-1.0 if m.group(1) else 1.0), m.group(2), bool(m.group(3))
+        negative = sign_applies(text, m.start(), m.group(1))
+        sign, body, pct = (-1.0 if negative else 1.0), m.group(2), bool(m.group(3))
+        start = m.start() if negative or not m.group(1) else m.start(2)
         grouped = None if french else re.fullmatch(r"[1-9]\d{0,2}(?:,\d{3})+(?:\.(\d+))?",
                                                    body)
         spaced = SPACE_GROUPED.fullmatch(body)
@@ -252,13 +277,14 @@ def parse_numbers(text: str, language: str | None = None) -> list[Token]:
             value = float(norm)
             decimals = len(norm.split('.')[1]) if '.' in norm else 0
         value *= sign
-        out.append(Token(m.group(0), value, decimals, pct, m.start(), m.end()))
+        out.append(Token(text[start:m.end()], value, decimals, pct, start, m.end()))
     return out
 
 
 def shown_matches(token: Token, value: float, scale: float = 1) -> bool:
     """True when ``token`` is ``value`` (times ``scale``) written at the token's precision."""
-    if not is_number(value):
+    if not is_number(value) or not is_number(token.value) \
+            or abs(token.decimals) > MAX_DECIMALS:
         return False
     value = value * scale
     scaled = 100 * value if token.percent else value

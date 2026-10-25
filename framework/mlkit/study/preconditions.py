@@ -11,7 +11,9 @@
   the third decision is ``model_choice``: confirming it needs a current
   ``evaluate.regression`` result that compared the chosen model; the conclusion
   ``adopt_model`` needs the candidate model chosen, and ``keep_baseline`` and
-  ``inconclusive`` need no model choice.
+  ``inconclusive`` need no model choice. In a study with a final test (WP-B1) an adopting
+  verdict also needs the final test opened with a current final evaluation (review round 9,
+  R9E-4, :func:`adoption_missing`).
 
 ``missing_for_decision`` and ``missing_for_activity`` return the unmet requirements
 (empty when met); the ``require_*`` functions raise
@@ -42,6 +44,8 @@ CONCLUSION_VERDICTS = ('adopt_policy', 'keep_baseline', 'inconclusive')
 REGRESSION_CONCLUSION_VERDICTS = ('adopt_model', 'keep_baseline', 'inconclusive')
 CONCLUSION_VERDICTS_BY_TASK = {st.BINARY: CONCLUSION_VERDICTS,
                                st.REGRESSION: REGRESSION_CONCLUSION_VERDICTS}
+# Review round 9 (R9E-4): the verdicts that adopt something rest on the final test.
+ADOPT_VERDICTS = ('adopt_policy', 'adopt_model')
 # Model slots of a regression study: the reference (training mean) and the candidate.
 REGRESSION_BASELINE, REGRESSION_CANDIDATE = 'fit.baseline', 'fit.linear'
 BINARY_BASELINE, BINARY_CANDIDATE = 'fit.baseline', 'fit.logistic'
@@ -244,6 +248,8 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
             missing.append({**_need_decision(state, 'policy'),
                             'detail': 'Adopt a policy first, or conclude keep_baseline or '
                                       'inconclusive.'})
+        if verdict in ADOPT_VERDICTS:
+            missing += adoption_missing(state)
         if assurance.profile(state) == 'review-v1' and verdict != 'inconclusive' \
                 and st.is_current(state, FINAL_TEST_EVALUATION) \
                 and not st.is_current(state, FINAL_DIAGNOSTICS):
@@ -252,6 +258,75 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
                             'detail': 'Compute the final diagnostic summary from the stored '
                                       'final predictions before drawing an empirical conclusion.'})
     return missing
+
+
+def adoption_missing(state: Mapping) -> list[dict]:
+    """Review round 9 (R9E-4): what an adopting conclusion (``adopt_policy``, ``adopt_model``)
+    still needs in a study with a final test (WP-B1): the final test confirmed, then opened,
+    with a current final evaluation (under review-v1 also current final diagnostics, the rule
+    of :func:`missing_for_decision`). Empty when met, and in a study without a final test (a
+    study created before WP-B1, which has none to open).
+
+    ``keep_baseline`` and ``inconclusive`` need none of it: a study that keeps the baseline
+    opens nothing (the final-test step is optional, CLI-CONTRACT §12), and "keep_baseline is
+    allowed when the work stops without enough evidence" (J2.3).
+
+    The first unmet item only, with a junior message in the study language: the final test to
+    confirm (``decision_confirmed``, so ``next_action`` proposes it), the confirmed final test
+    to open (``final_test_opened``), or, once opened, the final evaluation that is missing or
+    not current (``final_evidence_required``), which is never computed again: only
+    ``keep_baseline`` or ``inconclusive`` remain."""
+    if not st.has_wp_b1_decisions(state) or state.get('partition') is None:
+        return []
+    fr = st.language_of(state) == 'fr'
+    if not st.final_test_opened(state):
+        if state['decisions'][st.FINAL_TEST]['status'] != 'confirmed':
+            return [{**_need_decision(state, st.FINAL_TEST),
+                     'detail': 'An adopting conclusion rests on the final test: confirm and '
+                               'open the final test first, or conclude keep_baseline or '
+                               'inconclusive.',
+                     'junior_message': ADOPTION_MESSAGES['confirm']['fr' if fr else 'en']}]
+        return [{'requirement': 'final_test_opened', 'decision': st.FINAL_TEST,
+                 'detail': 'An adopting conclusion rests on the final test: it is confirmed '
+                           'but not opened yet; open it first, or conclude keep_baseline or '
+                           'inconclusive.',
+                 'junior_message': ADOPTION_MESSAGES['open']['fr' if fr else 'en']}]
+    if not st.is_current(state, FINAL_TEST_EVALUATION):
+        return [{'requirement': 'final_evidence_required', 'slot': FINAL_TEST_EVALUATION,
+                 'detail': 'An adopting conclusion rests on a current final evaluation of the '
+                           'chosen configuration; it is missing or not current and the final '
+                           'test is opened only once, so conclude keep_baseline or '
+                           'inconclusive.',
+                 'junior_message': ADOPTION_MESSAGES['evidence']['fr' if fr else 'en']}]
+    return []
+
+
+ADOPTION_MESSAGES = {
+    'confirm': {
+        'en': 'Adopting rests on the final test: it measures the chosen configuration once, on '
+              'rows nobody has looked at. Open the final test first, then conclude; you can '
+              'also keep the baseline or conclude inconclusive now.',
+        'fr': "Adopter repose sur le test final : il mesure une seule fois la configuration "
+              "choisie, sur des lignes que personne n'a regardées. Ouvrez d'abord le test "
+              "final, puis concluez ; vous pouvez aussi garder le modèle de référence ou "
+              "conclure que l'étude n'est pas concluante dès maintenant."},
+    'open': {
+        'en': 'You confirmed the final test, but it is not opened yet, and adopting rests on '
+              'its evaluation. It opens first, then you conclude; you can also keep the '
+              'baseline or conclude inconclusive now.',
+        'fr': "Vous avez confirmé le test final, mais il n'est pas encore ouvert, et adopter "
+              "repose sur son évaluation. Il s'ouvre d'abord, puis vous concluez ; vous pouvez "
+              "aussi garder le modèle de référence ou conclure que l'étude n'est pas concluante "
+              "dès maintenant."},
+    'evidence': {
+        'en': "Adopting rests on the final test's evaluation of the chosen configuration, which "
+              'is missing or no longer current, and the final test is opened only once. What '
+              'remains: keep the baseline or conclude inconclusive, saying why.',
+        'fr': "Adopter repose sur l'évaluation, par le test final, de la configuration choisie, "
+              "qui manque ou n'est plus à jour, et le test final ne s'ouvre qu'une fois. Ce qui "
+              "reste possible : garder le modèle de référence ou conclure que l'étude n'est pas "
+              "concluante, en disant pourquoi."},
+}
 
 
 def other_configuration_message(state: Mapping, captured: Any, value: Any) -> str:

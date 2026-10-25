@@ -417,7 +417,8 @@ def test_an_interrupted_opening_never_asks_to_run_the_final_test_again(tmp_path,
     assert nxt['kind'] == 'propose' and nxt['decision'] == 'conclusion'
     assert nxt['not_recomputable'] == ['final_test.evaluation', 'diag.final_test']
     _verdicts_agree(state)
-    assert nxt['verdicts'] == ['adopt_policy', 'keep_baseline', 'inconclusive']
+    # Review round 9 (R9E-4): adopting needs a current final evaluation, never recomputed.
+    assert nxt['verdicts'] == ['keep_baseline', 'inconclusive']
     assert 'the opening was interrupted before its evaluation was recorded' in \
         nxt['junior_message']
     assert f.run(act.FINAL, expect=2)['error']['code'] == 'final_test_already_opened'

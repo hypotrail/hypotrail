@@ -431,6 +431,9 @@ def test_a_regression_study_chooses_a_tuned_ridge(tmp_path):
     _run_next(flow, 'diag.regression')
     flow.decide('model_choice', 'fit.variant',
                 words='Yes, I choose that model because its error is smaller')
+    # Review round 9 (R9E-4): adopting rests on the final test, so it is opened first.
+    flow.decide('final_test', st.choice_config(flow.state()),
+                words='Yes, I open the final test now, because the model is fixed')
     flow.decide('conclusion', {'verdict': 'adopt_model', 'text': 'The tuned ridge is kept.'},
                 words='Yes, I conclude that, because the tuned model is the one I chose')
     assert flow.state()['decisions']['conclusion']['status'] == 'confirmed'

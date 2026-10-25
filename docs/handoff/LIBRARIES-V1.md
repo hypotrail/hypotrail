@@ -975,6 +975,59 @@ activity's fingerprint changed (`mapie_uncertainty.py` is in none), so no attest
 is added. Packages made from now on embed the new runtime wheel; their wrapper and packager
 version are the round-5 ones.
 
+## Review round 9 (area E)
+
+Engine fixes of the review of 2026-10-25 (round 9, area E), on top of `0065fcd`
+(`framework/tests/study/test_review_round9_e.py`, temporary studies only; the reviewer's
+probes are ported there):
+
+- R9E-1 (medium): a decimal without its leading zero (".99", ".5%", "-.3") was neither traced
+  nor reported, so `decide propose --restatement "its AUC is .99."` passed while "0.99" was
+  refused. English reads it as the number (`cite.NUMBER`, and the scaled, per mille and
+  percent-in-words forms); French reports it as an odd form ("decimal without its leading
+  zero", `numtrace.FRENCH_ODD_FORMS`), never reads it. "in 2024.", "section 3.2" are unchanged.
+- R9E-2 (medium): "two thousand clients", "deux mille clients", "trois cents lignes" were read
+  as the bare cardinal (2, 2, 3) and traced. A cardinal in words followed by a scale word is
+  never read, nor in part (`wordnum.SCALED_PHRASE`); used quantitatively it is reported
+  (`wordnum.unread`, form "cardinal in words with a scale word", `in_words: true`), and
+  `decide propose` refuses it. "a hundred", "one hundred", "cent" are still 100.
+- R9E-3 (medium): the exempting words matched inside other words ("grow 3", "narrow 12",
+  "tomorrow 5", "borrow 2", "intersection 4" exempted their number). They are whole words now
+  (`numtrace.EXEMPT_BEFORE`); "row 12", "step 3", "section 4", "exit 2" stay exempt.
+- R9E-4 (medium): an adopting conclusion (`adopt_policy`, `adopt_model`) could be confirmed
+  while the final test was sealed, in every profile; under review-v1 the final-evidence rule
+  applied only once a final evaluation existed. In a study with a final test an adopting
+  verdict now needs the final test confirmed, opened, and a current final evaluation (and,
+  under review-v1, current final diagnostics, as before): `precondition_missing` with
+  requirement `decision_confirmed` (decision `final_test`), `final_test_opened` or
+  `final_evidence_required`, each with a junior message in the study language
+  (`preconditions.adoption_missing`). `keep_baseline` and `inconclusive` stay allowed at any
+  time, as documented (a study that keeps the baseline opens nothing; J2.3: "keep_baseline is
+  allowed when the work stops without enough evidence"): the reviewer's suggestion to refuse
+  every verdict but `inconclusive` was not applied for `keep_baseline`. `next_action` follows
+  the rule (`feasibility`): before an adopting conclusion it proposes the final test, runs the
+  opening the junior confirmed, or, once the final evaluation can never be computed again,
+  proposes the conclusion with `verdicts` `keep_baseline`, `inconclusive` (also the E4-2
+  notice's verdicts, `opening.conclusion_verdicts`). A study without a final test (before
+  WP-B1) is unchanged.
+- R9E-5 (low): the opening run's request id was `<request id>:final_test.evaluation`, over the
+  200-character limit for a request id of 179 to 200 characters, so the confirmation committed
+  and the opening was refused. It is `executions.derived_request_id('final_test.evaluation',
+  <request id>)` (54 characters). A replayed confirmation reads the recorded opening from the
+  state, so an opening recorded under the old key by an earlier engine is still reported.
+- R9E-6 (low): "1e999" raised `internal_error` (the rounding tolerance overflowed) and
+  "1e-999" traced to 0.0. An exponent beyond ±300 is reported as an odd form ("exponent beyond
+  ±300"), and `cite.shown_matches` matches nothing beyond that precision.
+- R9E-7 (low): an en dash used as a minus ("–2.5") was read as +2.5. It is a minus unless a
+  number ends right before it ("2–5", "2 –5" are ranges; `cite.sign_applies`).
+
+Compatibility. No module of any activity's code fingerprint changed (`cite`, `numtrace`,
+`wordnum`, `preconditions`, `opening`, `feasibility`, `commands` and `cmd_check` are not
+fingerprinted): every result stays current and no attestation edge is added. A study whose
+adopting conclusion was confirmed before its final test was opened keeps that confirmation
+(nothing is reset); a new confirmation, or one asked again, follows the new rule. A text that
+`check` accepted may now be refused when it holds one of the forms above.
+
 ## Limits and what is not done
 
 - **Calibration partitions are not created by the engine.** The MAPIE adapters, the

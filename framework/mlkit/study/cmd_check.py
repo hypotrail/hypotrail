@@ -48,12 +48,15 @@ what a number stands for. A number may also repeat a recorded literal: a decisio
 proposal value, a rule of the current policy evaluation, the junior's recorded words, a
 setting, a case statement, or text the junior wrote, passed with ``--allow-user-text``.
 Numbers following "revision" (with the comparison that follows it: "revision 26 instead
-of 24"), "step", "pause", "proposal", or "exit", list markers, and ISO dates are exempt.
+of 24"), "step", "pause", "proposal", "row", "section", or "exit" (whole words, review round 9:
+"grow 3" and "intersection 4" are figures), list markers, and ISO dates are exempt.
 A rule identifier (``capacity:100``) is never reported. Nor is a result id prefix made only
 of digits (R3): a run of 6 or more digits that follows "result", "result_id", "rid",
 "id", or "execution" ("(result 52659681)"), or that begins a ``result_id`` of the
 registry; a number that traces to a figure is still traced as that figure. A minus sign
-may be ``-`` or the Unicode minus U+2212.
+may be ``-``, the Unicode minus U+2212, or (review round 9) an en dash U+2013 that follows no
+number ("–2.5"; "2–5" and "2 –5" are ranges). In English a decimal may omit its leading zero
+(".99"); French text reports that form.
 
 v0.3 (WP-A): the tracing core lives in :mod:`mlkit.study.numtrace`, shared with ``decide
 propose`` (a text one accepts, the other accepts). A bare "points" is percentage points too;
@@ -215,7 +218,7 @@ def wording(text: str, where: str, locate=None) -> list[dict]:
                                location=at(m)))
         m = FORECAST.search(sentence)
         has_number = bool(cite.parse_numbers(_masked(sentence))) or '\x00num' in sentence \
-            or bool(wordnum.parse(sentence))
+            or bool(wordnum.parse(sentence)) or bool(wordnum.unread(sentence))
         if m and has_number and not NEGATION.search(sentence[:m.start()]) \
                 and not NEGATED_AFTER.match(sentence[m.end():]):
             out.append(finding('forecast_wording', where,

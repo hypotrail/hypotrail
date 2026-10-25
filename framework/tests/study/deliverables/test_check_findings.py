@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from mlkit.reliability import CommandRefused
-from mlkit.study import cmd_check, commands as cmd, manifest as mf, read, view
+from mlkit.study import cmd_check, commands as cmd, manifest as mf, preconditions, read, view
 from mlkit.study.store import StudyStore
 
 import phase3_study as fx
@@ -360,8 +360,10 @@ def test_conclusion_text_is_checked(tmp_path, synthetic_case_dir, monkeypatch):
         b.decide('conclusion', {'verdict': 'adopt_policy', 'text': text},
                  'You adopt the policy.', 'I adopt the capacity rule as written.')
     assert refused.value.code == 'literal_number_in_text'
-    # ... and check still reports one recorded by a study written before that fix.
+    # ... and check still reports one recorded by a study written before that fix (and before
+    # review round 9, R9E-4, which made an adopting conclusion wait for the final test).
     monkeypatch.setattr(cmd, 'check_conclusion', lambda *a, **k: None)
+    monkeypatch.setattr(preconditions, 'adoption_missing', lambda state: [])
     b.decide('conclusion', {'verdict': 'adopt_policy', 'text': text},
              'You adopt the policy.',
              'I adopt the capacity rule as written, because it ranks better.')

@@ -40,8 +40,15 @@ How a word number matches a registered value (:meth:`WordNumber.matches`):
 * a fraction ``p / q`` matches a value within 0.02 of it (``FRACTION_TOLERANCE``: "half"
   is 0.48 to 0.52, not "about half" of 0.45).
 
-Limits (documented in ``docs/specs/CLI-CONTRACT.md``): cardinals above 100 ("two hundred")
-are not read; "a few", "several", "most", "dozens", and "a majority" are vague and not
+A cardinal followed by a scale word ("two hundred", "two thousand", "five million", "deux
+mille", "trois cents", "one hundred and five"; :data:`SCALE_WORDS`) is never read as the bare
+cardinal (review round 9, R9E-2): :func:`unread` lists it, when it is used quantitatively (a
+count noun or a unit after it, or a ratio before it), so ``check`` reports it as a number it
+cannot trace; no part of it is read. "a hundred", "one hundred" and "cent" are 100.
+
+Limits (documented in ``docs/specs/CLI-CONTRACT.md``): cardinals above 100 are not read
+(reported as above); a scale word alone ("mille clients", "thousands of rows") is not read;
+"a few", "several", "most", "dozens", and "a majority" are vague and not
 read; a word number not followed by a listed count noun is not read (for example "nine
 models"); compound forms beyond the ones listed are not read. Like digits, a word number
 traces to the first registered value it matches at its precision.
@@ -155,6 +162,22 @@ COUNT = re.compile(
     re.IGNORECASE)
 MULTIPLE_DOZEN = re.compile(rf"{_B}(?P<k>{_CARD})\s+(?P<d>dozen|douzaines?){_E}", re.IGNORECASE)
 
+# Review round 9 (R9E-2): scale words. A run of cardinals and scale words ("two thousand five
+# hundred", "deux cents", "a thousand") in which a scale word follows another word is a number
+# the module does not read; it is reported, never read in part. "a" / "an" open a run only
+# before an English scale word (the French "il y a cent clients" is 100).
+SCALE_WORDS = ('hundred', 'hundreds', 'thousand', 'thousands', 'million', 'millions', 'billion',
+               'billions', 'trillion', 'trillions', 'cent', 'cents', 'mille', 'milliers',
+               'milliard', 'milliards')
+_ENGLISH_SCALE = r'(?:hundred|thousand|million|billion|trillion)s?(?![\w])'
+SCALED_FORM = 'cardinal in words with a scale word'
+_ELEMENT = rf"(?:{_alt(set(CARDINALS) | set(SCALE_WORDS))})(?![\w])"
+SCALED_PHRASE = re.compile(
+    rf"{_B}(?:an?\s+(?={_ENGLISH_SCALE}))?{_ELEMENT}"
+    rf"(?:(?:[\s-]+(?:and|et)\s+|[\s-]+){_ELEMENT})*", re.IGNORECASE)
+_RATIO_BEFORE = re.compile(rf"{_B}(?:{_CARD})(?:\s+{_WORD})?\s+(?:in|out of|sur)\s+$",
+                           re.IGNORECASE)
+
 
 @dataclass(frozen=True)
 class WordNumber:
@@ -209,6 +232,28 @@ def unit_nouns(units) -> tuple[str, ...]:
     return tuple(out)
 
 
+def _scaled_phrases(text: str) -> list[re.Match]:
+    """The runs of cardinals and scale words of ``text`` in which a scale word follows another
+    word, except a run that is itself a cardinal ("one hundred", "a hundred")."""
+    out = []
+    for m in SCALED_PHRASE.finditer(text):
+        words = [w for w in re.split(r'[\s-]+', m.group(0).lower()) if w not in ('and', 'et')]
+        if _value(m.group(0)) is None and any(w in SCALE_WORDS for w in words[1:]):
+            out.append(m)
+    return out
+
+
+def unread(text: str, units=()) -> list[tuple[str, int, int, str]]:
+    """R9E-2: the numbers written in words with a scale word ("two thousand clients", "trois
+    cents lignes", "one in five hundred") used quantitatively: followed, at most one word
+    between, by a count noun or a unit, or after a ratio link. ``[(text, start, end, form)]``
+    in text order; ``form`` is :data:`SCALED_FORM`."""
+    nouns = _alt(COUNT_NOUNS + unit_nouns(units))
+    after = re.compile(rf"(?:\s+{_WORD})?(?:\s+|\s*d['’])(?:{nouns})(?![\w])", re.IGNORECASE)
+    return [(m.group(0), m.start(), m.end(), SCALED_FORM) for m in _scaled_phrases(text)
+            if after.match(text, m.end()) or _RATIO_BEFORE.search(text[:m.start()])]
+
+
 def _count_pattern(units: tuple[str, ...]) -> re.Pattern:
     if not units:
         return COUNT
@@ -225,13 +270,16 @@ def parse(text: str, units=()) -> list[WordNumber]:
     that "about six litres" is read as the count 6 (an error in the target unit)."""
     count_re = _count_pattern(unit_nouns(units))
     out: list[WordNumber] = []
-    taken: list[tuple[int, int]] = []
+    # R9E-2: no part of a number with a scale word is read (:func:`unread` reports it).
+    taken: list[tuple[int, int]] = [m.span() for m in _scaled_phrases(text)]
 
     def add(item: WordNumber) -> None:
         out.append(item)
         taken.append((item.start, item.end))
 
     for m in RATIO.finditer(text):
+        if _overlaps(m.span(), taken):
+            continue
         k, n = _value(m.group('k')), _value(m.group('n'))
         if k is None or n is None or n == 0 or k > n:
             continue

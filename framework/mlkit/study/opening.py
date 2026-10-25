@@ -217,15 +217,20 @@ def conclusion_verdicts(state: Mapping) -> list[str]:
     for the conclusion, on the read side): an adopted policy for ``adopt_policy``, the model
     choice confirmed as the candidate or a variant for ``adopt_model``, and under review-v1
     only ``inconclusive`` while the final evaluation is recorded without current final-test
-    diagnostics."""
-    from . import assurance
+    diagnostics. Review round 9 (R9E-4): in a study with a final test an adopting verdict
+    also needs it opened with a current final evaluation
+    (:func:`mlkit.study.preconditions.adoption_missing`)."""
+    from . import assurance, preconditions
     task = st.task_of(state)
     decisions = state['decisions']
     if assurance.profile(state) == 'review-v1' and st.is_current(state, 'final_test.evaluation') \
             and not st.is_current(state, 'diag.final_test'):
         return ['inconclusive']
     out = []
+    adoptable = not preconditions.adoption_missing(state)
     for verdict in (REGRESSION_VERDICTS if task == st.REGRESSION else BINARY_VERDICTS):
+        if verdict in preconditions.ADOPT_VERDICTS and not adoptable:
+            continue
         if verdict == 'adopt_policy' and (decisions.get('policy') or {}).get('status') \
                 != 'confirmed':
             continue

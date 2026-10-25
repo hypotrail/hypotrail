@@ -37,9 +37,13 @@ SEVERITY = {'number_outside_result': 'error', 'unknown_result_id': 'error',
 SEVERITY['validity_requirement_missing'] = 'error'
 FINDING_CODES = tuple(SEVERITY)
 
-EXEMPT_BEFORE = re.compile(r'(?:revision|revisions|rev\.?|step|steps|pause|pauses|proposal|p_|'
-                           r'request|req-|expected-revision|section|§|row|'
+# Review round 9 (R9E-3): the word starts at a word boundary, so "grow 3", "narrow 12",
+# "tomorrow 5", "borrow 2" and "intersection 4" are figures, while "row 12", "step 3",
+# "section 4" and "exit 2" stay exempt; "p_" and "§" must not follow a word character.
+EXEMPT_BEFORE = re.compile(r'(?:\b(?:revision|revisions|rev\.?|step|steps|pause|pauses|proposal|'
+                           r'request|req-|expected-revision|section|row|'
                            r'exit|exit code|exit status|exited with|exited with code)'
+                           r'|(?<!\w)(?:p_|§))'
                            r'\s*[#:=]?\s*$', re.IGNORECASE)
 # "revision 26 instead of 24", "revision 24 to 26", "revisions 24 and 26": every number of
 # the comparison that follows "revision" is a revision too (D4). "and" and "or" continue
@@ -1023,12 +1027,13 @@ FRENCH_SCALE_WORDS = {**SCALE_WORDS, 'billion': 12, 'billions': 12, 'billiard': 
                       'billiards': 15, 'trillion': 18, 'trillions': 18}
 MAGNITUDE = {'k': 3, 'K': 3, 'M': 6, 'x': 0, '\u00d7': 0}
 _WORD_ALTERNATION = '|'.join(sorted(FRENCH_SCALE_WORDS, key=len, reverse=True))
-_BODY = r'([1-9]\d{0,2}(?:,\d{3})+(?:\.\d+)?|\d+(?:[.,]\d+)?)'
+_BODY = r'([1-9]\d{0,2}(?:,\d{3})+(?:\.\d+)?|\d+(?:[.,]\d+)?|\.\d+)'
+_SIGN = rf'([{cite.SIGNS}](?=\.?\d))?'
 SUPERSCRIPT = str.maketrans('\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079'
                             '\u207b\u207a', '0123456789-+')
 _SUPERSCRIPTS = '\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079'
 SCALED_NUMBER = re.compile(
-    r'(?<![\w.,])([-\u2212](?=\d))?' + _BODY +
+    r'(?<![\w.,])' + _SIGN + _BODY +
     r'(?:[eE]([-+]?\d{1,3})'
     r'|\s?[x\u00d7*\u00b7]\s?10(?:\^\(?([-+\u2212]?\d{1,3})\)?'
     rf'|([\u207b\u207a]?[{_SUPERSCRIPTS}]{{1,3}}))'
@@ -1036,11 +1041,11 @@ SCALED_NUMBER = re.compile(
     r'|(k|K|M|x|\u00d7)'
     rf'|{_SCALE_SEPARATOR}(k|K|M)(?!-[^\W\d_]))'
     r'(?![\w])(\s?%)?')
-PER_MILLE = re.compile(r'(?<![\w.,])([-\u2212](?=\d))?' + _BODY + r'\s?\u2030')
+PER_MILLE = re.compile(r'(?<![\w.,])' + _SIGN + _BODY + r'\s?\u2030')
 _WORD_GAP = '[ \u00a0\u202f\u2009-]+'
-PERCENT_WORDS = re.compile(r'(?<![\w.,])([-\u2212](?=\d))?' + _BODY + _WORD_GAP
+PERCENT_WORDS = re.compile(r'(?<![\w.,])' + _SIGN + _BODY + _WORD_GAP
                            + r'(?i:(?:per|pour)' + _WORD_GAP + r'cent|percent|pourcent)(?![\w])')
-PER_MILLE_WORDS = re.compile(r'(?<![\w.,])([-\u2212](?=\d))?' + _BODY + _WORD_GAP
+PER_MILLE_WORDS = re.compile(r'(?<![\w.,])' + _SIGN + _BODY + _WORD_GAP
                              + r'(?i:(?:per|pour)' + _WORD_GAP + r'(?:mille|mil)|permille)'
                              r'(?![\w])')
 
@@ -1054,47 +1059,86 @@ def _scaled_body(body: str, language: str | None) -> str:
     return body.replace(',', '.')
 
 
+# Review round 9 (R9E-6): an exponent beyond ±300 ("1e999", "1e-999", "1×10^999") is no
+# number the engine can compare (its value overflows or underflows a float): it is reported as
+# an odd form (:func:`odd_numbers`), never read as infinity or as 0.
+MAX_EXPONENT = cite.MAX_DECIMALS
+
+
+def _exponent(m: re.Match, language: str | None) -> int | None:
+    """The power of ten of a :data:`SCALED_NUMBER` match; None for a French-only scale word
+    ("billiard") in a text that is not French."""
+    if m.group(3) is not None:
+        return int(m.group(3))
+    if m.group(4) is not None:
+        return int(m.group(4).replace('\u2212', '-'))
+    if m.group(5) is not None:
+        return int(m.group(5).translate(SUPERSCRIPT))
+    if m.group(6) is not None:
+        return (FRENCH_SCALE_WORDS if language == 'fr' else SCALE_WORDS).get(m.group(6).lower())
+    return MAGNITUDE[m.group(7) or m.group(8)]
+
+
+def _signed_token(text: str, m: re.Match, value: float, decimals: int,
+                  percent: bool) -> cite.Token:
+    """The token of a match whose group 1 is an optional sign and group 2 the digits: the
+    sign makes it negative when it applies (an en dash after a number is a range, R9E-7), and
+    is left out of the token otherwise."""
+    negative = cite.sign_applies(text, m.start(), m.group(1))
+    start = m.start() if negative or not m.group(1) else m.start(2)
+    return cite.Token(text[start:m.end()], -value if negative else value, decimals, percent,
+                      start, m.end())
+
+
+def _leading_dot(body: str, language: str | None) -> bool:
+    """R9E-1: a decimal without its leading zero (".99"), which only English text reads."""
+    return body.startswith('.') and language == 'fr'
+
+
 def scaled_numbers(text: str, language: str | None = None) -> list[cite.Token]:
     """The numbers of ``text`` written with a magnitude suffix, a scale word, an exponent or
     a per mille sign (:data:`SCALED_NUMBER`, :data:`PER_MILLE`), as tokens; a hexadecimal
-    identifier is not one."""
+    identifier is not one, nor an exponent beyond ±300 (:data:`MAX_EXPONENT`, reported by
+    :func:`odd_numbers`)."""
     import decimal
     text = HEX_IDENTIFIER.sub(lambda m: ' ' * len(m.group(0)), text)
     out = []
     for m in SCALED_NUMBER.finditer(text):
+        if _leading_dot(m.group(2), language):
+            continue
         body = _scaled_body(m.group(2), language)
-        if m.group(3) is not None:
-            exponent = int(m.group(3))
-        elif m.group(4) is not None:
-            exponent = int(m.group(4).replace('\u2212', '-'))
-        elif m.group(5) is not None:
-            exponent = int(m.group(5).translate(SUPERSCRIPT))
-        elif m.group(6) is not None:
-            exponent = (FRENCH_SCALE_WORDS if language == 'fr'
-                        else SCALE_WORDS).get(m.group(6).lower())
-            if exponent is None:     # a French-only word ("billiard") in English text
-                continue
-        else:
-            exponent = MAGNITUDE[m.group(7) or m.group(8)]
+        exponent = _exponent(m, language)
+        if exponent is None or abs(exponent) > MAX_EXPONENT:
+            continue
         decimals = (len(body.split('.')[1]) if '.' in body else 0) - exponent
         value = float(decimal.Decimal(body).scaleb(exponent))
-        if m.group(1):
-            value = -value
-        out.append(cite.Token(m.group(0), value, decimals, bool(m.group(9)), m.start(),
-                              m.end()))
+        out.append(_signed_token(text, m, value, decimals, bool(m.group(9))))
     taken = [(t.start, t.end) for t in out]
     for pattern, shift in ((PER_MILLE, 1), (PER_MILLE_WORDS, 1), (PERCENT_WORDS, 0)):
         for m in pattern.finditer(text):
-            if any(a < m.end() and m.start() < b for a, b in taken):
+            if any(a < m.end() and m.start() < b for a, b in taken) \
+                    or _leading_dot(m.group(2), language):
                 continue
             # A per mille is a tenth of a percent: "1.5‰" is 0.15 %, at one more decimal.
             body = _scaled_body(m.group(2), language)
             decimals = (len(body.split('.')[1]) if '.' in body else 0) + shift
             value = float(decimal.Decimal(body).scaleb(-shift))
-            out.append(cite.Token(m.group(0), -value if m.group(1) else value, decimals, True,
-                                  m.start(), m.end()))
+            out.append(_signed_token(text, m, value, decimals, True))
             taken.append(m.span())
     return sorted(out, key=lambda t: t.start)
+
+
+def extreme_exponents(text: str, language: str | None = None
+                      ) -> list[tuple[str, int, int, str]]:
+    """R9E-6: the numbers of ``text`` written with an exponent beyond ±300 (:data:`MAX_EXPONENT`),
+    as odd forms ``(text, start, end, form)``."""
+    text = HEX_IDENTIFIER.sub(lambda m: ' ' * len(m.group(0)), text)
+    out = []
+    for m in SCALED_NUMBER.finditer(text):
+        exponent = _exponent(m, language)
+        if exponent is not None and abs(exponent) > MAX_EXPONENT:
+            out.append((m.group(0), m.start(), m.end(), 'exponent beyond ±300'))
+    return out
 
 
 # Round 5 (review E, R5E-5): numeric forms the engine cannot read as one number are
@@ -1104,26 +1148,38 @@ def scaled_numbers(text: str, language: str | None = None) -> list[cite.Token]:
 # "12ms"). An ordinal ("1st", "2nd", "1er", "2e", "3ème") is not a figure; a number glued to
 # "pp" or "pts" is read as percentage points.
 ODD_FORMS = (
+    # Review round 9 (R9E-6): an exponent of four digits or more ("1e9999", "1e-9999"); one of
+    # 301 to 999 is found by :func:`extreme_exponents`.
+    ('exponent beyond ±300',
+     re.compile(r'(?<![\w.,])[-\u2212\u2013]?(?:\d+(?:[.,]\d+)?|\.\d+)[eE][-+]?\d{4,}(?![\w])')),
     ('hexadecimal literal', re.compile(r'(?<![\w.,])0[xX][0-9a-fA-F]+(?![\w])')),
     ('digit groups joined by underscores', re.compile(r'(?<![\w.,])\d+(?:_\d+)+(?![\w])')),
     ('superscript digits',
      re.compile(rf'(?<![\w.,])\d+(?:[.,]\d+)?[{_SUPERSCRIPTS}\u207b\u207a]+')),
     ('vulgar fraction', re.compile(r'(?<![\w.,])\d*[\u00bc-\u00be\u2150-\u215f\u2189]')),
-    ('number glued to letters', re.compile(r'(?<![\w.,])\d+(?:[.,]\d+)?[^\W\d_]\w*')),
+    ('number glued to letters',
+     re.compile(r'(?<![\w.,])(?:\d+(?:[.,]\d+)?|\.\d+)[^\W\d_]\w*')),
+)
+# Review round 9 (R9E-1): French text writes a decimal with a comma and its leading zero; a
+# decimal without it (".99", "-.3", ",5" is not one) is reported, never read or left unchecked.
+FRENCH_ODD_FORMS = (
+    ('decimal without its leading zero', re.compile(r'(?<![\w.,])[-\u2212\u2013]?\.\d+')),
 )
 ORDINAL_SUFFIX = re.compile(r'(?:st|nd|rd|th|er|re|ère|ere|e|ème|eme|nde?|de?)', re.I)
 GLUED_POINTS = re.compile(r'(?<![\w.,])(\d+(?:[.,]\d+)?)(?=(?:pp|pts?)(?![\w]))')
 
 
-def odd_numbers(text: str) -> list[tuple[str, int, int, str]]:
+def odd_numbers(text: str, language: str | None = None) -> list[tuple[str, int, int, str]]:
     """The numeric forms of ``text`` that are neither read as a number nor an identifier
-    (:data:`ODD_FORMS`): ``[(text, start, end, form)]`` in text order, non-overlapping.
-    Ordinals and numbers glued to "pp" / "pts" are not listed; a hexadecimal identifier is
-    masked first."""
+    (:data:`ODD_FORMS`; in French also :data:`FRENCH_ODD_FORMS`; an exponent beyond ±300,
+    :func:`extreme_exponents`): ``[(text, start, end, form)]`` in text order,
+    non-overlapping. Ordinals and numbers glued to "pp" / "pts" are not listed; a
+    hexadecimal identifier is masked first."""
+    out = extreme_exponents(text, language)
+    taken: list[tuple[int, int]] = [(o[1], o[2]) for o in out]
     text = HEX_IDENTIFIER.sub(lambda m: ' ' * len(m.group(0)), text)
-    taken: list[tuple[int, int]] = []
-    out = []
-    for form, pattern in ODD_FORMS:
+    forms = (FRENCH_ODD_FORMS if language == 'fr' else ()) + ODD_FORMS
+    for form, pattern in forms:
         for m in pattern.finditer(text):
             if any(a < m.end() and m.start() < b for a, b in taken):
                 continue
@@ -1223,8 +1279,13 @@ def trace_text(pool: Pool, text: str, where: str, locate=None, *,
     scaled = scaled_numbers(masked, language)
     # Review round 4: "1.5M" is one number, not "1" followed by ".5M". Round 5 (R5E-5): a
     # form read as no number ("241kEUR") is reported once, and no part of it is read.
-    odd = [o for o in odd_numbers(masked)
+    odd = [o for o in odd_numbers(masked, language)
            if not any(t.start <= o[1] < t.end for t in scaled)]
+    # Review round 9 (R9E-2): a cardinal in words followed by a scale word ("two thousand
+    # clients", "trois cents lignes") is reported, never read as the bare cardinal.
+    odd += [w for w in wordnum.unread(masked, pool.units)
+            if not any(a < w[2] and w[1] < b for _, a, b, _ in odd)]
+    odd.sort(key=lambda o: o[1])
     inside = [(t.start, t.end) for t in scaled] + [(o[1], o[2]) for o in odd]
     plain = [t for t in cite.parse_numbers(masked, language) + glued_numbers(masked)
              + glued_point_numbers(masked)
@@ -1241,7 +1302,8 @@ def trace_text(pool: Pool, text: str, where: str, locate=None, *,
                                 'figure with plain digits as the registry shows it, a unit or '
                                 'scale word after a space, and cite its result.',
                                 number=shown, form=form,
-                                location=locate(start) if locate else None))
+                                location=locate(start) if locate else None,
+                                **({'in_words': True} if form == wordnum.SCALED_FORM else {})))
     items = sorted([(t.start, 0, t) for t in plain + scaled]
                    + [(w.start, 1, w) for w in wordnum.parse(masked, pool.units)],
                    key=lambda x: x[:2])

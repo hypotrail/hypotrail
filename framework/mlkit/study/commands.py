@@ -391,9 +391,10 @@ def check_proposal_texts(store: StudyStore, texts, value: Any) -> None:
 
 
 def _has_number(text: str) -> bool:
-    """A number in digits or in words (``check`` traces both)."""
+    """A number in digits or in words (``check`` traces both), a number in words with a scale
+    word included (review round 9, R9E-2: ``check`` reports it)."""
     from . import cite, wordnum
-    return bool(cite.parse_numbers(text) or wordnum.parse(text))
+    return bool(cite.parse_numbers(text) or wordnum.parse(text) or wordnum.unread(text))
 
 
 def check_conclusion(store: StudyStore, state: Mapping, value: Mapping, restatement: str,
@@ -2219,9 +2220,15 @@ def _opening(store: StudyStore, payload: dict, request_id: str) -> dict | None:
                 'execution_id': opening.get('execution_id'),
                 'result_id': opening.get('result_id'), 'revision': state['revision'],
                 'error': None}
+    # Review round 9 (R9E-5): the opening's own request id is derived at a fixed length (it
+    # was ``<request_id>:final_test.evaluation``, over the 200-character limit for a long
+    # request id, so the confirmation committed and the opening was refused). Only this first
+    # run uses it: a replayed confirmation reads the recorded opening from the state (above),
+    # whatever key an earlier engine reserved it under.
     try:
         outcome = executions.run(store.study_dir, 'final_test.evaluation', {},
-                                 request_id=f'{request_id}:final_test.evaluation',
+                                 request_id=executions.derived_request_id(
+                                     'final_test.evaluation', request_id),
                                  expected_revision=payload['revision'], render=False)
     except Exception as exc:
         # Refused before its reservation (nothing opened), or failed after it (the final test

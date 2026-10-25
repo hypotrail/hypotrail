@@ -60,7 +60,9 @@ def _bank(study: Path) -> Path:
     f.variant()           # WP-B1: the variant the policy compares
     f.run('policy.evaluate', '--rule', 'capacity:100')
     f.decide('policy', 'capacity:100', 'Yes, call the top 100 because the desk has 100 slots')
-    f.decide('conclusion', {'verdict': 'adopt_policy',
+    # Review round 9 (R9E-4): the final test stays sealed in this study, so the conclusion
+    # cannot adopt (adopting rests on the opened final test).
+    f.decide('conclusion', {'verdict': 'inconclusive',
                             'text': 'The ranking beats the baseline on validation rows chosen '
                                     'to compare them; a pilot should confirm it.'},
              'I conclude as stated because the interval excludes zero')
