@@ -195,7 +195,14 @@ def test_verifier_reads_the_tree_and_runs_nothing(done, tmp_path):
 def test_clean_clone_public_integrity_and_honest_limits(done, tmp_path):
     """A26: a clean clone recomputes the public digests, cannot verify the private context
     nor read the answers; complete/payloads_available block, public_only/recorded_decisions
-    allow with their limits; a Git change of a source is stale."""
+    allow with their limits; a Git change of a source is stale.
+
+    Expectation changed in review round 5: the standalone verifier applies the gate's policy
+    digest rule, so a relaxed policy file that is not the policy the reviews were made under
+    blocks (``decision_policy_changed``, as ``check --policy-file`` does) instead of
+    allowing; the allowing half of A26 is
+    ``test_clean_clone_allows_a_public_only_export_with_its_limits``, where the study's own
+    policy is the relaxed one."""
     u, sid = done
     ukit.approve_all(u, sid)
     u.m('export', 'write', '--session', sid, '--repo', u.repo)
@@ -213,7 +220,32 @@ def test_clean_clone_public_integrity_and_honest_limits(done, tmp_path):
     relaxed = u.file('relaxed.json', ukit.policy(mode='required', context_requirement='public_only',
                                                  evidence_requirement='recorded_decisions'))
     g = verify(clone, 'HEAD', '--policy-file', relaxed)['generations'][0]
-    assert g['gate_result']['decision'] == 'allowed'
+    assert g['gate_result']['decision'] == 'blocked'
+    assert {'selection_policy_changed', 'decision_policy_changed'} <= {
+        r['code'] for r in g['gate_result']['reasons']}
+    assert u.call('check', '--milestone', 'handoff', '--policy-file', relaxed)['gate'][
+        'decision'] == 'blocked'
+
+
+def test_clean_clone_allows_a_public_only_export_with_its_limits(tmp_path):
+    """A26, allowing half: the reviews were made under a public_only/recorded_decisions
+    policy; a clean clone verified with that very policy allows with its limits, and a Git
+    change of a source blocks (stale)."""
+    import advkit
+    relaxed_doc = ukit.policy(mode='required', context_requirement='public_only',
+                              evidence_requirement='recorded_decisions')
+    u = ukit.U(tmp_path)
+    sid = advkit.custom_flow(u, relaxed_doc)
+    ukit.approve_all(u, sid)
+    u.m('export', 'write', '--session', sid, '--repo', u.repo)
+    ukit.git(u.repo, 'add', '--', ex.EXPORT_DIR)
+    ukit.git(u.repo, 'commit', '-q', '-m', 'review')
+    clone = tmp_path / 'clean'
+    subprocess.run(['git', 'clone', '-q', str(u.repo), str(clone)], check=True)
+    relaxed = u.file('relaxed.json', relaxed_doc)
+    g = verify(clone, 'HEAD', '--policy-file', relaxed)['generations'][0]
+    assert (g['public_integrity'], g['private_context_verification']) == ('valid', 'unknown')
+    assert g['gate_result']['decision'] == 'allowed', g['gate_result']
     assert {'public_only_context', 'recorded_decisions_accepted',
             'simulated_human_decisions'} <= set(g['gate_result']['limitations'])
     (clone / 'src/transforms.py').write_text('changed\n')

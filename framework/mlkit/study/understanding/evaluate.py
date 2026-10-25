@@ -28,8 +28,10 @@ decision's session policy does not admit stays open (review round 4, C4-1).
 
 A selected decision's own problems (superseded, rubric or taskset changed, another policy,
 a lost arbitration, help rectified after the review...) are computed by one function,
-:func:`selected_decision_problems`, for the gate, the export projection and the report
-(review round 4, C4-2).
+:func:`selected_decision_problems` (review round 4, C4-2). Since review round 5 the export
+projection and the report take their whole judgement from :func:`gate` itself
+(:func:`gaps_of`, :func:`judged_status`), and so does ``verify-export --study``: one
+judgement, one gap list.
 """
 from __future__ import annotations
 
@@ -284,14 +286,26 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
          current_for: Callable[[Mapping], Mapping],
          blob_ok: Callable[[str], bool], checked_at: str, today: str | None = None,
          session_policy_for: Callable[[Mapping], Mapping | None] | None = None,
-         repository_for: Callable[[Mapping], Mapping] | None = None) -> dict:
+         repository_for: Callable[[Mapping], Mapping] | None = None,
+         actor_scope: Mapping | None = None, selection=None, assess: bool = False) -> dict:
     """The ``GateResult`` of ``milestone`` (SPEC §10). ``captured_for(session)`` is the
     local projection frozen when the session started; ``current_for(session)`` captures the
     current one with the same source mapping; ``taskset_for(session)`` loads the session's
     taskset as it is on disk now (``None`` when absent); ``session_policy_for(session)``
     loads the policy the session started under (arbitrations are re-checked against it and
     the current one); ``repository_for(session)`` says which repository the session's
-    freshness is read from (reported in ``repositories``)."""
+    freshness is read from (reported in ``repositories``).
+
+    The one judgement of the review (review round 5): ``check``, ``export handoff``, the
+    export projection, the report section and ``verify-export --study`` all call it.
+    ``actor_scope`` (``{actor_declared_id, profile}``) judges that person and profile only:
+    the latest selection of the milestone counts when it is about them, else
+    ``no_selection``. ``selection`` replaces the latest selection by an explicit one; a
+    ``virtual`` one (the decisions an export without a selection shows) is judged by the
+    same rules and adds ``no_selection``. ``assess`` computes every reason even when the
+    policy does not require the milestone (coaching): the decision stays
+    ``not_applicable`` and ``no_required_check`` comes first; the export and the report
+    take their gaps from these reasons."""
     seen_repos: dict = {}
     read_current = current_for
 
@@ -309,8 +323,9 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
               'stale_dimensions': [], 'missing_peer_dimensions': [],
               'assurance': pol.SUPPORTED_ASSURANCE, 'waiver_ref': None, 'limitations': [],
               'dimensions': {}, 'repositories': []}
-    if not policy_doc or policy_doc['mode'] != 'required' \
-            or milestone not in policy_doc['milestones']:
+    applicable = bool(policy_doc) and policy_doc['mode'] == 'required' \
+        and milestone in policy_doc['milestones']
+    if not applicable and not (assess and policy_doc):
         reasons.append({'code': 'no_required_check',
                         'detail': 'off or coaching mode, or a milestone the policy does not '
                                   'name: no understanding check applies; this is not a pass'})
@@ -321,12 +336,25 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
     pdigest = pol.digest(policy_doc)
     result['policy_digest'] = pdigest
     limitations.update(pol.limitations(policy_doc))
-    selection = latest_selection(ext, milestone)
+    if selection is None:
+        selection = latest_selection(ext, milestone)
+        if selection is not None and actor_scope is not None \
+                and selection['actor_scope'] != dict(actor_scope):
+            reasons.append({'code': 'no_selection', 'detail': 'the latest coverage selection '
+                            'of this milestone is about another person or profile'})
+            return _finish(result, reasons, limitations, policy_doc, ext, milestone, today,
+                           None, applicable)
     if selection is None:
         reasons.append({'code': 'no_selection', 'detail': 'no coverage selection for this '
                         'milestone; the engine never searches for an old pass'})
-        return _finish(result, reasons, limitations, policy_doc, ext, milestone, today)
-    result['scope_digest'] = selection['scope_digest']
+        return _finish(result, reasons, limitations, policy_doc, ext, milestone, today,
+                       None, applicable)
+    if selection.get('virtual'):
+        reasons.append({'code': 'no_selection', 'detail': 'no coverage selection for this '
+                        'person and profile: the decisions shown are judged, nothing is '
+                        'selected'})
+    else:
+        result['scope_digest'] = selection['scope_digest']
     if selection['policy_digest'] != pdigest:
         reasons.append({'code': 'selection_policy_changed',
                         'detail': 'the selection was made under another policy'})
@@ -336,7 +364,8 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
         required = pol.author_dimensions(policy_doc, profile)
     except Exception:           # noqa: BLE001 - the profile left the policy
         reasons.append({'code': 'profile_unknown', 'detail': profile})
-        return _finish(result, reasons, limitations, policy_doc, ext, milestone, today)
+        return _finish(result, reasons, limitations, policy_doc, ext, milestone, today,
+                       selection, applicable)
     critical = set(policy_doc['critical_dimensions'])
     contexts = {}
     context_digests = set()
@@ -386,7 +415,11 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
         for p in problems:
             reasons.append({'code': p, 'dimension': dim})
         if d['status'] != 'demonstrated' or problems:
+            # Not demonstrated now: a selected decision recorded with another status (its
+            # reservation may be resolved by another one) or with a problem (round 5: the
+            # reason is always given, so a missing dimension never passes silently).
             result['missing_dimensions'].append(dim)
+            reasons.append({'code': 'dimension_not_demonstrated', 'dimension': dim})
         if d.get('simulated'):
             limitations.add('simulated_human_decisions')
         if dim in critical and d['reviewer_declared_id'] == actor:
@@ -422,6 +455,7 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
             private = all(_private_key(k) for k in fresh['unknown'])
             if policy_doc['context_requirement'] == 'public_only' and private:
                 limitations.add('private_context_unknown')
+                info['freshness_limitation'] = 'private_context_unknown'
             else:
                 reasons.append({'code': 'freshness_unknown', 'dimension': dim,
                                 'detail': ','.join(fresh['unknown'])})
@@ -442,7 +476,46 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
             limitations.add('evidence_not_reauditable')
     result['checked_context_digest'] = canonical.digest(sorted(context_digests))
     result['repositories'] = [{'session_id': k, **v} for k, v in sorted(seen_repos.items())]
-    return _finish(result, reasons, limitations, policy_doc, ext, milestone, today)
+    return _finish(result, reasons, limitations, policy_doc, ext, milestone, today, selection,
+                   applicable)
+
+
+# Reasons of a dimension that do not change its status: freshness and peer coverage are
+# their own axes (``freshness_at_export``, ``peer_coverage``).
+FRESHNESS_CODES = ('stale', 'freshness_unknown')
+STATUS_NEUTRAL_CODES = FRESHNESS_CODES + ('peer_coverage_missing',)
+# Gaps that say what the gate counted as a limitation, not a blocking reason.
+LIMITATION_GAPS = ('private_context_unknown',)
+
+
+def judged_status(status: str, result: Mapping, dim: str) -> str:
+    """The status an export or the report shows for ``dim``: a ``demonstrated`` dimension
+    with a blocking reason of the gate ``result`` (other than freshness and peer coverage) is
+    ``needs_review`` (review round 5: one judgement, C4-2 generalised)."""
+    codes = {r['code'] for r in result['reasons'] if r.get('dimension') == dim}
+    if status == 'demonstrated' and codes - set(STATUS_NEUTRAL_CODES):
+        return 'needs_review'
+    return status
+
+
+def gaps_of(result: Mapping, milestone: str) -> list[dict]:
+    """The gaps of a gate ``result``: one ``{kind, ref}`` per reason (``kind`` the gate's
+    code, ``ref`` its dimension, else the milestone), in the gate's order and without
+    duplicates, then one ``private_context_unknown`` per dimension whose unknown freshness
+    the gate counted as that limitation (``public_only``)."""
+    out: list[dict] = []
+    for r in result['reasons']:
+        if r['code'] == 'no_required_check':
+            continue
+        g = {'kind': r['code'], 'ref': r.get('dimension') or milestone}
+        if g not in out:
+            out.append(g)
+    for dim, info in sorted(result['dimensions'].items()):
+        if info.get('freshness_limitation') in LIMITATION_GAPS:
+            g = {'kind': info['freshness_limitation'], 'ref': dim}
+            if g not in out:
+                out.append(g)
+    return out
 
 
 def peer_gap(cover: Mapping, policy_doc: Mapping) -> bool:
@@ -724,18 +797,25 @@ def latest_selection(ext: Mapping, milestone: str) -> dict | None:
     return max(picks, key=lambda s: s['recorded_revision']) if picks else None
 
 
-def _finish(result, reasons, limitations, policy_doc, ext, milestone, today) -> dict:
+def _finish(result, reasons, limitations, policy_doc, ext, milestone, today, selection,
+            applicable=True) -> dict:
     result['limitations'] = sorted(limitations)
     result['missing_dimensions'] = sorted(set(result['missing_dimensions']))
     result['stale_dimensions'] = sorted(set(result['stale_dimensions']))
     result['missing_peer_dimensions'] = sorted(set(result['missing_peer_dimensions']))
+    if not applicable:                 # ``assess``: every reason, but this is not a pass
+        reasons.insert(0, {'code': 'no_required_check',
+                           'detail': 'off or coaching mode, or a milestone the policy does '
+                                     'not name: the reasons say what a required check would '
+                                     'find; this is not a pass'})
+        result['decision'] = 'not_applicable'
+        return result
     blocking = [r for r in reasons if r['code'] != 'no_required_check']
     if not blocking:
         result['decision'] = 'allowed'
         return result
     waiver = _waiver(ext, milestone, policy_doc, today)
-    actor = (latest_selection(ext, milestone) or {}).get('actor_scope', {}).get(
-        'actor_declared_id')
+    actor = (selection or {}).get('actor_scope', {}).get('actor_declared_id')
     if waiver is not None and waiver['approver_declared_id'] == actor:
         reasons.append({'code': 'waiver_approved_by_the_author'})
         waiver = None

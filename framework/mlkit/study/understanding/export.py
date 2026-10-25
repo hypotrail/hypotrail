@@ -93,46 +93,46 @@ def _session_decisions(ext, session) -> list:
 
 
 def projection(store, state: Mapping, session: Mapping) -> dict:
-    """The approval projection of ``session`` (see the module docstring)."""
+    """The approval projection of ``session`` (see the module docstring).
+
+    Its judgement is the gate's (review round 5): :func:`service.session_judgement` computes
+    the gate of the session's milestone for its author and profile under the policy the gate
+    applies (the study's, else the session's), and that policy is the one embedded. Every
+    reason of that gate becomes a ``known_gaps`` entry with the gate's code (its dimension,
+    else the milestone, as ``ref``); a dimension's freshness is the gate's, and a dimension
+    recorded ``demonstrated`` with a blocking reason (other than freshness or peer coverage)
+    is shown ``needs_review``. The export stays producible when the gate blocks: it documents
+    the gaps, and every approval covers exactly what is shown."""
     ext = model.of(state)
-    doc = sv.blob_json(store, session['policy_blob'], 'policy')
     taskset = sv.blob_json(store, session['taskset_blob'], 'taskset')
     snapdoc = sv.session_snapshot(store, session)
     scope = snapdoc['public']
     loaders = sv.gate_loaders(store, state, ext)
     current = loaders['current_for'](session)
     actor = session['actor_declared_id']
+    # The policy the gate applies (the study's, else the session's) is the one embedded and
+    # the one every judgement below uses (C4-1, C4-2, C4-5, round 5).
+    doc = sv.applied_policy(store, ext, session)
+    judged = sv.session_judgement(store, state, session, policy_override=doc)
+    judged_dims = judged['dimensions']
     critical = set(doc['critical_dimensions'])
-    # The selection of this session's author and profile, the one the gate reads; the
-    # policy the gate applies (the study's, else the session's) and its view of the
-    # arbitrations (R3C-1). That one policy judges the dimensions' problems (C4-2), the
-    # reservations (C4-1) and the peer coverage and its gap (C4-5).
     scope_sel = ev.selection_for(ext, session['milestone'], actor, session['profile'])
-    gate_policy = sv.policy_doc(store, ext) or doc
-    gate_digest = pol.digest(gate_policy)
-    settles = sv.arbitration_checker(store, ext, gate_policy)
+    settles = sv.arbitration_checker(store, ext, doc)
     session_policy_for = sv.session_policy_for(store)
-    dims, gaps, safe, used_tasks = [], [], set(), {}
+    dims, safe, used_tasks = [], set(), {}
     for dim in session['dimensions']:
         # With a selection, a dimension shows the decision it maps (the one the gate
-        # judges, R3C-2); without one, the history's latest decision of this session.
+        # judges, R3C-2); without one, the history's latest decision of this session (the
+        # virtual selection the judgement used).
         d = ev.shown_decision(ext, scope_sel, actor, dim, session['session_id'])
-        problems = []
-        if scope_sel is not None:
-            view = ev.dimension_view(ext, actor, dim, decision=d, settles=settles,
-                                     policy_doc=gate_policy,
-                                     session_policy_for=session_policy_for)
-            if d is not None:
-                # The gate's own problems of the selected decision (C4-2): such a decision
-                # is not demonstrated now, whatever status it was recorded with.
-                problems = ev.selected_decision_problems(
-                    ext, d, actor, dim, gate_digest, loaders['taskset_for'], settles)
-        else:
-            view = ev.dimension_view(ext, actor, dim)
+        view = ev.dimension_view(ext, actor, dim, decision=d, settles=settles, policy_doc=doc,
+                                 session_policy_for=session_policy_for)
         r = bk.rubric_for(taskset, dim)
-        if d is not None and d['session_id'] != session['session_id']:
-            # A selected decision of another session of the same person: its own
-            # snapshot and current context (as the gate reads it).
+        info = judged_dims.get(dim) or {}
+        if d is not None and info.get('decision_id') == d['decision_id']:
+            fresh = {'status': info['freshness']}     # the gate's (expiration included)
+        elif d is not None and d['session_id'] != session['session_id']:
+            # A dimension the applied policy no longer requires: its own context.
             owner = ext['sessions'][d['session_id']]
             fresh = snap.freshness(loaders['captured_for'](owner), loaders['current_for'](owner),
                                    ev.decision_dependency_keys(ext, d, taskset))
@@ -148,8 +148,7 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
         safe.update(evidence)
         status = view['status'] if d is not None or view['status'] != 'demonstrated' \
             else 'not_evaluated'
-        if problems and status == 'demonstrated':
-            status = 'needs_review'
+        status = ev.judged_status(status, judged, dim)
         entry = {
             'id': dim, 'title': DIMENSION_TITLES[dim], 'required': True,
             'critical': dim in critical, 'status': status,
@@ -171,14 +170,8 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
             'next_step': _next_step(status, fresh['status'] if d else 'unknown',
                                     view['open_reservations'])}
         dims.append(entry)
-        if entry['status'] != 'demonstrated':
-            gaps.append({'kind': 'dimension_not_demonstrated', 'ref': dim})
-        elif entry['freshness_at_export'] != 'current':
-            gaps.append({'kind': f'dimension_{entry["freshness_at_export"]}', 'ref': dim})
-        for code in problems:             # one gap per problem, with the gate's code
-            gaps.append({'kind': code, 'ref': dim})
-        for rid in view['open_reservations']:
-            gaps.append({'kind': 'open_reservation', 'ref': rid})
+    # One gap list: the gate's reasons (round 5), then what only the export can say.
+    gaps = ev.gaps_of(judged, session['milestone'])
     peers = []
     handover = ev.current_handover(ext, session['session_id'])
     # The same selection-based coverage as the gate (same function, same loaders), for this
@@ -187,10 +180,10 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
     for dim in doc['peer_required_dimensions']:
         if dim not in session['dimensions']:
             continue
-        cover = ev.selected_peer_coverage(ext, actor, dim, scope_sel, gate_digest,
-                                          loaders['taskset_for'], loaders['captured_for'],
-                                          loaders['current_for'], policy_doc=gate_policy,
-                                          blob_ok=lambda sha: sv.blob_ok(store, sha))
+        cover = (judged_dims.get(dim) or {}).get('peer') or ev.selected_peer_coverage(
+            ext, actor, dim, scope_sel, pol.digest(doc), loaders['taskset_for'],
+            loaders['captured_for'], loaders['current_for'], policy_doc=doc,
+            blob_ok=lambda sha: sv.blob_ok(store, sha))
         reviews = [x for x in ext['decisions'].values() if x['kind'] == 'transfer'
                    and dim in x['dimension_ids'] and x['session_id'] == session['session_id']]
         transfers = []
@@ -207,8 +200,6 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
                 'rationale': x['rationale'], 'human_review_ref': x['decision_id']})
         peers.append({'dimension_id': dim, 'people': cover['people'], 'status': cover['status'],
                       'transfers': transfers})
-        if ev.peer_gap(cover, gate_policy):     # the gate's policy, as the coverage (C4-5)
-            gaps.append({'kind': 'peer_coverage_missing', 'ref': dim})
     for key in snapdoc['local'].get('unreadable_sources') or []:
         gaps.append({'kind': 'source_unreadable',          # {logical_key, role} since round 1
                      'ref': key['logical_key'] if isinstance(key, Mapping) else key})
@@ -230,7 +221,9 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
                     for r in sorted(ext['reservations'].values(),
                                     key=lambda r: r['opened_revision'])
                     if r['actor'] == actor and r['dimension_id'] in session['dimensions']]
-    limitations = set(pol.limitations(doc))
+    # The gate's limitations (simulated decisions, private_context_unknown,
+    # evidence_not_reauditable, waived_requirements...) and the export's own.
+    limitations = set(pol.limitations(doc)) | set(judged['limitations'])
     if any(x['simulated'] for x in decisions):
         limitations.add('simulated_human_decisions')
     if not session['taskset_qualified']:
@@ -630,10 +623,13 @@ def _same(dest: Path, files: Mapping[str, bytes]) -> bool:
 LEFTOVER_AGE_SECONDS = 60
 
 
-# Git must never transform a generation's bytes (core.autocrlf, eol, clean/smudge filters such
-# as LFS, ident): the verifier compares them with the digests the export announced.
+# Git must never transform a generation's bytes (core.autocrlf and ``text``/``eol``,
+# clean/smudge filters such as LFS, ``ident``, ``working-tree-encoding``): the verifier
+# compares them with the digests the export announced. ``binary`` is ``-diff -merge -text``;
+# the other transforming attributes are unset explicitly, so an attribute set higher up (a
+# root ``*.md working-tree-encoding=UTF-16LE`` or ``eol=crlf``) never applies (review round 5).
 ATTRIBUTES_FILE = '.gitattributes'
-ATTRIBUTES = b'rv-*/** binary -filter -ident\n'
+ATTRIBUTES = b'rv-*/** binary -filter -ident -working-tree-encoding -eol\n'
 
 
 def ensure_attributes(repo: Path) -> str:

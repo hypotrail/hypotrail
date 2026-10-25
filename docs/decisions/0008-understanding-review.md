@@ -50,7 +50,13 @@ person, or a claim about competence, security or scientific validity.
    from that revision, revalidates under the lock, and publishes only when nothing relevant
    changed; otherwise the written folder stays a `.candidate`. This is the one change to the
    C7 contract: in a required policy the export records a reservation and its outcome (two
-   revisions) and re-renders the deliverables.
+   revisions) and re-renders the deliverables. There is one judgement (review round 5):
+   `check`, `export handoff`, the export projection's gaps and dimension states, the report
+   section and `verify-export --study` all compute this same gate (for the exported
+   session's author and profile), so for one study state they reach the same verdict and
+   the same gaps. Without the study, `verify-export` applies the gate's rules to the
+   exported content only; what it cannot judge there (waivers, the private context after
+   export, judgements under another policy) is listed in CLI-CONTRACT §16.
 6. **Freshness by dependency, without circularity.** A capture freezes the mapped repository
    sources (their bytes are stored) and digests two projections: the local snapshot (private
    entries included) and the public source scope (Git entries only, private ones as opaque

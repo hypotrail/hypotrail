@@ -11,7 +11,10 @@ It answers on separate axes: ``public_integrity`` (valid, invalid), ``declared_c
 (conforming, nonconforming, unknown), ``public_source_freshness`` (current, stale,
 unknown), ``private_context_verification`` (verified, unknown), ``evidence_availability``,
 ``assurance``, ``unresolved_private_refs`` and ``limitations``; with ``--policy-file``, a
-``gate_result`` for that explicit policy. A clean clone establishes public integrity; it
+``gate_result`` for that explicit policy. With ``--study`` (local mode), ``gate_result`` and
+``declared_conformity`` are the study's own gate for the exported session (review round 5:
+one judgement); without it, :func:`_gate_on_export` applies the gate's rules to the exported
+content only (CLI-CONTRACT §16 lists what it cannot judge). A clean clone establishes public integrity; it
 never concludes ``current`` on the private context nor resolves an opaque reference. Without
 ``--policy-file`` the result is a historical diagnostic, not an organisational
 authorisation, and a policy relaxed only inside the candidate change is never read as an
@@ -244,83 +247,130 @@ class Tree:
         return sorted(p[len(prefix):] for p in self._entries if p.startswith(prefix))
 
 
-# The terms that decide what a review had to establish. The other fields (mode, milestones,
-# what the verification requires of context and evidence, expiry, waivers, export, ids) are
-# applied by the verifier itself, so a policy may differ on them.
-REVIEW_TERMS = ('required_dimensions', 'responsibility_profiles', 'critical_dimensions',
-                'peer_required_dimensions', 'minimum_assurance', 'assistance_rule',
-                'team_coverage', 'role_policy')
-
-
-def _review_terms(policy_doc: Mapping) -> str:
-    return canonical.digest({k: policy_doc[k] for k in REVIEW_TERMS})
+# Gaps an export states that are not reasons of the gate: what only the export can say
+# (``source_unreadable``, ``external_unverified``) and the limitations the gate counted
+# (``private_context_unknown`` per dimension under ``public_only``).
+EXPORT_ONLY_GAPS = ('source_unreadable', 'external_unverified')
 
 
 def _gate_on_export(doc: Mapping, policy_doc: Mapping, axes: Mapping,
                     today: str | None = None) -> dict:
+    """The standalone judgement (no study): the gate's rules (:func:`evaluate.gate`) applied
+    to what the exported content states, for ``policy_doc`` (``--policy-file`` or the
+    embedded policy). Review round 5: the same codes as the gate wherever the content has
+    the information. A policy whose digest differs from the embedded one (the policy the
+    export's gate applied) gives what the gate gives for decisions made under another
+    policy: ``selection_policy_changed``, ``decision_policy_changed`` on every selected
+    dimension and ``peer_coverage_missing`` on every peer dimension (the export does not
+    record a policy per decision, so a decision made under that very policy is not told
+    apart). With the same policy, every reason of the export's own gate (its ``known_gaps``)
+    is a reason here too. What needs the study is listed in CLI-CONTRACT §16 (waivers,
+    reservations, conflicts and arbitrations under another policy, the private context, the
+    current taskset and the answers)."""
     import datetime as _dt
-    reasons = []
-    if _review_terms(policy_doc) != _review_terms(doc['policy']):
-        # The reviews were made under another policy (perhaps relaxed in the candidate):
-        # they are not evidence for this one.
-        reasons.append({'code': 'policy_differs'})
-    rule = policy_doc['expiration_rule']
-    today = today or _dt.datetime.now(_dt.timezone.utc).date().isoformat()
-    if rule['kind'] == 'until' and today > rule['date']:
-        reasons.append({'code': 'policy_expired'})
-    # The gate's taskset rule (C4-3): reviews made on a bank that is not qualified satisfy no
-    # required milestone. The export states it in its provenance and its limitations.
-    from . import taskset as bk
-    if not bk.qualified({'qualification': {'status': doc['provenance'].get(
-            'taskset_qualification')}}) or 'taskset_not_qualified' in doc['limitations']:
-        reasons.append({'code': 'taskset_not_qualified'})
-    critical = set(policy_doc['critical_dimensions'])
-    actor = (doc['coverage_selection'] or {}).get('actor_alias')
-    for d in doc['dimensions']:
-        rule_ = policy_doc['assistance_rule']['critical' if d['id'] in critical else 'other']
-        if rule_ == 'unaided_required' and d['assistance_summary'] != 'unaided':
-            reasons.append({'code': 'assistance_not_admissible', 'dimension': d['id']})
-        if d['id'] in critical and d['reviewer_alias'] and d['reviewer_alias'] == actor:
-            reasons.append({'code': 'reviewer_not_distinct', 'dimension': d['id']})
-    try:
-        required = pol.author_dimensions(policy_doc, doc['coverage_selection']['profile']) \
-            if doc['coverage_selection'] else []
-    except Exception:          # noqa: BLE001
-        required = []
-        reasons.append({'code': 'profile_unknown'})
-    if not doc['coverage_selection']:
-        reasons.append({'code': 'no_selection'})
-    dims = {d['id']: d for d in doc['dimensions']}
-    for dim in required:
-        d = dims.get(dim)
-        if d is None or d['status'] != 'demonstrated':
-            reasons.append({'code': 'dimension_not_demonstrated', 'dimension': dim})
-        elif d['freshness_at_export'] != 'current':
-            reasons.append({'code': 'dimension_not_current', 'dimension': dim})
-    peers = {p['dimension_id']: p for p in doc['peer_coverage']}
-    for dim in policy_doc['peer_required_dimensions']:
-        if dim in required:
-            p = peers.get(dim)
-            if p is None or p['status'] != 'current' or \
-                    p['people'] < policy_doc['team_coverage']['minimum_people']:
-                reasons.append({'code': 'peer_coverage_missing', 'dimension': dim})
+    from . import DIMENSIONS, evaluate as ev, taskset as bk
+    reasons: list[dict] = []
+
+    def add(code: str, dim: str | None = None) -> None:
+        r = {'code': code, 'dimension': dim} if dim else {'code': code}
+        if r not in reasons:
+            reasons.append(r)
+    limitations = set(pol.limitations(policy_doc)) | set(doc['limitations'])
+    same = pol.digest(policy_doc) == doc['policy_digest']
+    sel = doc['coverage_selection']
+    gaps = [g for g in doc['known_gaps'] if isinstance(g, dict)]
+    milestone = (sel or {}).get('milestone')
+    applicable = policy_doc['mode'] == 'required' and (
+        milestone is None or milestone in policy_doc['milestones'])
+    if not sel:
+        add('no_selection')
+    else:
+        if not same:
+            add('selection_policy_changed')
+        try:
+            required = pol.author_dimensions(policy_doc, sel['profile'])
+        except Exception:          # noqa: BLE001 - the profile is not in this policy
+            required = None
+            add('profile_unknown')
+        if required is not None:
+            critical = set(policy_doc['critical_dimensions'])
+            actor = sel.get('actor_alias')
+            rule = policy_doc['expiration_rule']
+            now_ = today or _dt.datetime.now(_dt.timezone.utc).date().isoformat()
+            expired = rule['kind'] == 'until' and now_ > rule['date']
+            qualified = bk.qualified({'qualification': {'status': doc['provenance'].get(
+                'taskset_qualification')}}) and 'taskset_not_qualified' not in doc['limitations']
+            private_unknown = {g.get('ref') for g in gaps
+                               if g.get('kind') in ev.LIMITATION_GAPS}
+            dims = {d['id']: d for d in doc['dimensions']}
+            for dim in required:
+                d = dims.get(dim)
+                if d is None or not d['human_review_ref']:
+                    add('dimension_not_selected', dim)
+                    continue
+                if not same:
+                    add('decision_policy_changed', dim)
+                if not qualified:
+                    add('taskset_not_qualified', dim)
+                if d['status'] != 'demonstrated' or not same or not qualified:
+                    add('dimension_not_demonstrated', dim)
+                if dim in critical and d['reviewer_alias'] == actor:
+                    add('reviewer_not_distinct', dim)
+                if ev.peer_rule(policy_doc, dim) == 'unaided_required' and \
+                        d['assistance_summary'] != 'unaided':
+                    add('assistance_not_admissible', dim)
+                if d['evidence_availability'] != 'available':
+                    if policy_doc['evidence_requirement'] == 'payloads_available':
+                        add('evidence_unavailable', dim)
+                    else:
+                        limitations.add('evidence_not_reauditable')
+                fresh = 'stale' if expired else d['freshness_at_export']
+                if fresh == 'stale':
+                    add('stale', dim)
+                elif fresh == 'unknown':
+                    if policy_doc['context_requirement'] == 'public_only' \
+                            and dim in private_unknown:
+                        limitations.add('private_context_unknown')
+                    else:
+                        add('freshness_unknown', dim)
+            peers = {p['dimension_id']: p for p in doc['peer_coverage']}
+            for dim in policy_doc['peer_required_dimensions']:
+                if dim not in required:
+                    continue
+                p = peers.get(dim)
+                if p is None or not same or ev.peer_gap(p, policy_doc):
+                    add('peer_coverage_missing', dim)
+        if same:
+            # The reasons of the export's own gate under this very policy.
+            for g in gaps:
+                kind = g.get('kind')
+                if kind in EXPORT_ONLY_GAPS or kind in ev.LIMITATION_GAPS \
+                        or kind == 'no_required_check':
+                    continue
+                add(kind, g.get('ref') if g.get('ref') in DIMENSIONS else None)
+    # What the artefact itself establishes, or cannot without the study.
     if doc['privacy_review']['status'] != 'approved':
-        reasons.append({'code': 'privacy_review_pending'})
+        add('privacy_review_pending')
     if axes['public_integrity'] != 'valid':
-        reasons.append({'code': 'public_integrity_invalid'})
+        add('public_integrity_invalid')
     if axes['public_source_freshness'] != 'current':
-        reasons.append({'code': f'public_sources_{axes["public_source_freshness"]}'})
+        add(f'public_sources_{axes["public_source_freshness"]}')
     if policy_doc['context_requirement'] == 'complete' and \
             axes['private_context_verification'] != 'verified':
-        reasons.append({'code': 'private_context_unknown'})
+        add('private_context_unknown')
     if policy_doc['evidence_requirement'] == 'payloads_available' and \
             axes['evidence_availability'] != 'available':
-        reasons.append({'code': 'evidence_unavailable'})
-    limitations = sorted(set(pol.limitations(policy_doc)) | set(doc['limitations']))
-    if policy_doc['mode'] != 'required':
-        return {'decision': 'not_applicable', 'reasons': reasons, 'limitations': limitations}
+        add('evidence_unavailable')
+    if not applicable:
+        return {'decision': 'not_applicable', 'reasons': reasons,
+                'limitations': sorted(limitations), 'judgement': 'export'}
     return {'decision': 'blocked' if reasons else 'allowed', 'reasons': reasons,
-            'limitations': limitations}
+            'limitations': sorted(limitations), 'judgement': 'export'}
+
+
+# Reasons the standalone verifier cannot settle without the study (``unknown``, not a
+# failure, for ``declared_conformity``).
+UNKNOWABLE = ('private_context_unknown', 'evidence_unavailable')
 
 
 def verify(repo, target: str, *, policy_doc: Mapping | None = None,
@@ -328,9 +378,11 @@ def verify(repo, target: str, *, policy_doc: Mapping | None = None,
            review_id: str | None = None) -> dict:
     """Verify every generation (or ``review_id``) in ``target`` of ``repo``.
 
-    ``local(review, file_hashes)`` (local mode, the study is accessible) returns
-    ``{'private_context_verification', 'evidence_availability', 'study_binding'}`` for a
-    review whose three files have ``file_hashes``."""
+    ``local(review, file_hashes)`` (local mode, the study is accessible) returns, for a
+    review whose three files have ``file_hashes``, ``study_binding`` and, when bound, the
+    axes the study settles: ``private_context_verification``, ``evidence_availability``,
+    ``declared_conformity`` and ``gate_result`` from the study's own gate
+    (:func:`service.gate`), ``exported_content_current`` and ``judgement: 'study'``."""
     tree = Tree(Path(repo), target)
     generations = tree.generations()
     if review_id is not None:
@@ -447,20 +499,22 @@ def _verify_one(tree: Tree, rid: str, policy_doc, local) -> dict:
     if axes['unresolved_private_refs']:
         limitations.append('private_refs_not_resolvable_outside_the_study')
     if local is not None:
+        # Local mode: the study's own gate is the judgement (review round 5), never a second
+        # implementation; ``local`` gives it with the binding to a recorded export intent.
         axes.update(local(doc, {n: canonical.sha256_hex(raw[n]) for n in ex.FILES}))
         if axes.get('study_binding') == 'not_recorded':
             problems.append('this generation was not exported by the given study')
             axes['public_integrity'] = 'invalid'
+            axes['gate_result'] = None
             return axes
-    else:
-        limitations.append('no_local_study: private context and answers not checked')
+        return axes
+    limitations.append('no_local_study: private context and answers not checked')
     try:
         embedded = pol.validate(doc['policy'])
         conf = _gate_on_export(doc, embedded, axes)
-        unknowable = {'private_context_unknown', 'evidence_unavailable'}
         if not conf['reasons']:
             axes['declared_conformity'] = 'conforming'
-        elif local is None and {r['code'] for r in conf['reasons']} <= unknowable:
+        elif {r['code'] for r in conf['reasons']} <= set(UNKNOWABLE):
             axes['declared_conformity'] = 'unknown'      # needs the study, not a failure
         else:
             axes['declared_conformity'] = 'nonconforming'

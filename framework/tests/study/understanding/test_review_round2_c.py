@@ -248,7 +248,11 @@ def _verify(u, policy_doc):
 def test_export_peer_coverage_follows_the_selection(tmp_path):
     """Ported: the selection names no transfer for D2, so the gate blocks
     (peer_coverage_missing). The export projection no longer searches for any demonstrated
-    transfer: it reports the same gap, and verify-export under the same policy blocks."""
+    transfer: it reports the same gap, and verify-export under the same policy blocks.
+
+    Expectation changed in review round 5: local verification returns the study's own gate,
+    whose reason also carries the coverage status as ``detail``; the assertion compares code
+    and dimension, and requires the very reason ``check`` gives."""
     u = U(tmp_path)
     sid = custom_flow(u, REQ, transfer_map=lambda u, sid, cur: {})
     g = gate(u)
@@ -258,7 +262,10 @@ def test_export_peer_coverage_follows_the_selection(tmp_path):
     u.m('export', 'write', '--session', sid, '--repo', u.repo)
     gr = _verify(u, REQ)
     assert gr['decision'] != 'allowed'
-    assert {'code': 'peer_coverage_missing', 'dimension': 'D2'} in gr['reasons']
+    assert ('peer_coverage_missing', 'D2') in {(r['code'], r.get('dimension'))
+                                               for r in gr['reasons']}
+    assert [r for r in gr['reasons'] if r['code'] == 'peer_coverage_missing'] == \
+        [r for r in g['reasons'] if r['code'] == 'peer_coverage_missing']
 
 
 def test_export_peer_coverage_without_a_selection_is_missing(tmp_path):

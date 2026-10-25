@@ -124,7 +124,12 @@ def test_coaching_carries_over_to_a_linked_session(u):
 
 
 def test_explicit_policy_rejects_reviews_made_under_another_policy(tmp_path):
-    """Finding 5: a candidate reviewed under a looser policy does not pass a stricter one."""
+    """Finding 5: a candidate reviewed under a looser policy does not pass a stricter one.
+
+    Expectation changed in review round 5: the standalone verifier mirrors the gate's policy
+    digest rule instead of its own ``policy_differs`` (a comparison of review terms): a
+    policy whose digest differs from the embedded one gives the gate's codes for decisions
+    made under another policy."""
     u = ukit.U(tmp_path)
     sid = ukit.full_flow(u)
     ukit.approve_all(u, sid)
@@ -136,7 +141,9 @@ def test_explicit_policy_rejects_reviews_made_under_another_policy(tmp_path):
     out = cli.run(['understanding', 'verify-export', '--repo', str(u.repo), '--target',
                    'worktree', '--policy-file', str(u.file('strict.json', strict))]).payload
     reasons = {r['code'] for r in out['generations'][0]['gate_result']['reasons']}
-    assert 'policy_differs' in reasons
+    assert {'selection_policy_changed', 'decision_policy_changed',
+            'peer_coverage_missing'} <= reasons
+    assert out['generations'][0]['gate_result']['decision'] == 'blocked'
 
 
 def test_receipt_checks_the_announced_bytes(tmp_path):

@@ -267,7 +267,12 @@ def test_rubric_edited_after_review_public_only(tmp_path):
 # --- C4-3: verify-export applies the taskset qualification rule ------------------------------
 
 def test_unqualified_taskset_export_does_not_verify_as_conforming(tmp_path):
-    """Ported (reviewer: "unqualified taskset export verifies as conforming")."""
+    """Ported (reviewer: "unqualified taskset export verifies as conforming").
+
+    Expectation changed in review round 5: local verification gives the study's own gate,
+    whose reason is ``taskset_not_qualified`` per selected dimension (it used to be one
+    reason without a dimension from the verifier's own rule); the assertion now requires it
+    on every selected dimension, exactly as ``check`` gives it."""
     u = U(tmp_path)
     f = u.case_dir / 'understanding.yaml'
     f.write_text(f.read_text().replace('  status: reviewed', '  status: to_qualify', 1))
@@ -279,7 +284,11 @@ def test_unqualified_taskset_export_does_not_verify_as_conforming(tmp_path):
     assert doc['provenance']['taskset_qualification'] == 'to_qualify'
     gen = _verify(u, REQ)['generations'][0]
     assert gen['gate_result']['decision'] == 'blocked'
-    assert {'code': 'taskset_not_qualified'} in gen['gate_result']['reasons']
+    tq = {(r['code'], r.get('dimension')) for r in gen['gate_result']['reasons']
+          if r['code'] == 'taskset_not_qualified'}
+    assert tq and tq == {(r['code'], r.get('dimension')) for r in g['reasons']
+                         if r['code'] == 'taskset_not_qualified'}
+    assert all(dim for _, dim in tq)
     assert _verify(u, None)['generations'][0]['declared_conformity'] == 'nonconforming'
 
 
@@ -293,17 +302,25 @@ AXES = {'public_integrity': 'valid', 'public_source_freshness': 'current',
 
 def test_gate_on_export_reads_the_qualification_and_its_limitation():
     """On the committed export: no taskset reason as published; one when the provenance
-    says to_qualify, and one when only the limitation says it."""
+    says to_qualify, and one when only the limitation says it.
+
+    Expectation changed in review round 5: the standalone rule mirrors the gate, which gives
+    ``taskset_not_qualified`` on each selected required dimension (it was one reason without
+    a dimension); the assertions now require it on every selected dimension."""
     doc = _fixture_doc()
     policy = doc['policy']
-    assert {'code': 'taskset_not_qualified'} not in vf._gate_on_export(doc, policy, AXES)[
-        'reasons']
+    selected = sorted(doc['coverage_selection']['dimension_decision_map'])
+
+    def tq(d):
+        return sorted(r.get('dimension') for r in vf._gate_on_export(d, policy, AXES)['reasons']
+                      if r['code'] == 'taskset_not_qualified')
+    assert tq(doc) == []
     d = copy.deepcopy(doc)
     d['provenance']['taskset_qualification'] = 'to_qualify'
-    assert {'code': 'taskset_not_qualified'} in vf._gate_on_export(d, policy, AXES)['reasons']
+    assert tq(d) == selected
     d = copy.deepcopy(doc)
     d['limitations'] = sorted(d['limitations'] + ['taskset_not_qualified'])
-    assert {'code': 'taskset_not_qualified'} in vf._gate_on_export(d, policy, AXES)['reasons']
+    assert tq(d) == selected
 
 
 # --- C4-4: superseding uses the gate's view of the conflicts ----------------------------------

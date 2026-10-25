@@ -1051,10 +1051,10 @@ Payloads: `hypotrail.understanding/1` (stdout of every verb except `verify-expor
 | `relocate --session ID --repo DIR --author ID --reason T` | mutation | records the new place of a **moved** repository for that session (digests unchanged); `check` and `export handoff` then read it. Refused (`invalid_transition`) while the recorded repository still exists (a move, never a second copy), when it is the same place or the session recorded none; refused (`path_outside_scope`) unless `--repo` is the top level of a Git work tree. The declared author and the reason are kept in the session's relocation history. It does not authenticate the new place's content: whoever controls the repository can still fake freshness (cooperative limit) |
 | `export preview --session ID --repo DIR` | read | the draft and its `content_digest`, the required contributors |
 | `export approve --session ID --contributor ID --content-digest D` | mutation | one declared approval of exactly that projection |
-| `export write --session ID --repo DIR [--latest]` | mutation | intent, immutable generation `docs/understanding/<review_id>/`, receipt; writes `docs/understanding/.gitattributes` when absent (`git_attributes`: `written`, `present`, `differs`) and names any `leftover_temporary_folders` of an interrupted export |
+| `export write --session ID --repo DIR [--latest]` | mutation | intent, immutable generation `docs/understanding/<review_id>/`, receipt; writes `docs/understanding/.gitattributes` (`rv-*/** binary -filter -ident -working-tree-encoding -eol`) when absent (`git_attributes`: `written`, `present` for exactly those bytes, `differs` otherwise, the file then left untouched) and names any `leftover_temporary_folders` of an interrupted export |
 | `git-plan`, `git-stage --index-identity H` | read / index only | exact paths and hashes; stages only the artefacts; never commits |
 | `git-receipt --session ID --repo DIR --commit OID` | mutation | a local receipt once the commit holds the bytes |
-| `verify-export --repo DIR --target worktree\|index\|COMMIT [--policy-file F] [--study DIR]` | read, no study needed | separate axes: public integrity, declared conformity, public source freshness, private context verification, evidence availability, assurance |
+| `verify-export --repo DIR --target worktree\|index\|COMMIT [--policy-file F] [--study DIR]` | read, no study needed | separate axes: public integrity, declared conformity, public source freshness, private context verification, evidence availability, assurance; with `--study`, `gate_result` and `declared_conformity` are the study's own gate (`judgement: study`), without it the gate's rules on the exported content (`judgement: export`); see review round 5 below |
 
 Mutations take `--request-id` and `--expected-revision` (replay, `idempotency_conflict`,
 `stale_revision` as in §3). Refusals exit 2 with `details.next_action` and never echo an
@@ -1121,6 +1121,95 @@ other than `reviewed`, or the limitation `taskset_not_qualified`, adds the reaso
 gate blocks). The export schema did not change. When the policy's stored payload cannot be
 read, `export handoff` follows the mode the state recorded with it: `off` and `coaching` keep
 the ungated contract; `required` takes the gated protocol, which refuses and writes nothing.
+
+**Since review round 5 (areas C and D): one judgement, one gap list.** For one study state,
+`understanding check`, the export projection (and `export preview`), the report section and
+`verify-export --policy-file <same policy> --study` reach the same verdict and the same gaps,
+because they compute one judgement, the gate (`evaluate.gate`, `service.gate`):
+
+* The gate gives `dimension_not_demonstrated` for every selected decision that is not
+  `demonstrated` or has a problem (a selected `to_consolidate` decision whose reservation
+  another decision resolved was missing without a reason, and passed). Its
+  `dimensions[D].freshness_limitation` is `private_context_unknown` when it counted that
+  dimension's unknown freshness as that limitation (`public_only`).
+* **Export projection** (`service.session_judgement`): the gate of the session's milestone
+  for its author and profile, under the policy the gate applies (the study's, else the
+  session's), computed in every mode (in `coaching` the decision is `not_applicable` but
+  every reason is computed). That policy is now the embedded `policy` (it was the policy the
+  session started under). Without a selection of that person and profile, the decisions
+  shown (the session's latest in the history) are judged by the same rules as a virtual
+  selection, plus `no_selection`. `known_gaps` is one entry per reason, `kind` the gate's
+  code and `ref` its dimension (else the milestone), in the gate's order without duplicates;
+  then `private_context_unknown` per dimension the gate counted as that limitation, and the
+  export's own `source_unreadable` (ref the logical key) and `external_unverified`. The ad
+  hoc kinds `dimension_stale` and `dimension_unknown` are gone (the gate's `stale` and
+  `freshness_unknown`); `open_reservation`'s `ref` is the dimension (it was the reservation
+  id, still listed in `reservation_resolutions`). A dimension's `freshness_at_export` is the
+  gate's (the expiration rule makes it `stale`); a dimension recorded `demonstrated` with any
+  blocking reason of the gate other than `stale`, `freshness_unknown` and
+  `peer_coverage_missing` is shown `needs_review` (`assistance_not_admissible`,
+  `reviewer_not_distinct`, `evidence_unavailable`, `decision_policy_changed`, the problems of
+  round 4...). The gate's limitations join the export's. The export stays producible when
+  the gate blocks; approvals cover exactly what is shown.
+* **Report section**: the same judgement per session; one gap line per dimension (or the
+  milestone) naming the gate's codes, the peer line keeping its text. When the policy's
+  stored payload cannot be read, the section shows the mode the state recorded and the gap
+  `policy_unavailable` (nothing is judged).
+* **`verify-export --study` (local mode)**. After the binding to a recorded export intent
+  (unchanged; a generation not bound is `invalid` and has no `gate_result`), `gate_result` is
+  the study's own gate (`service.gate`) for the exported session's milestone, author and
+  profile, with `--policy-file` as the policy override (`policy_source: file`), else the
+  study's policy (`study`; with the study a `gate_result` is given without `--policy-file`
+  too). It is what `check [--policy-file F]` computes when the latest selection is about
+  that person (otherwise `no_selection`: `check` judges the other person), and it reads each
+  session's recorded or relocated repository as `check` does, not `--repo`.
+  `declared_conformity` is the same gate under the study's policy with every reason
+  computed: `conforming` without a blocking reason, else `nonconforming` (a waiver allows a
+  milestone, it does not make the review conform; `gate_result` then says
+  `allowed_by_waiver`). `exported_content_current` (null when a stored payload is gone)
+  compares the generation's projection digest with the projection recomputed now;
+  `judgement: study`. `public_source_freshness` (the target tree against the exported scope)
+  and `private_context_verification` stay separate axes and are not reasons of the live
+  gate. When a stored payload the gate needs is gone, `gate_result` is null,
+  `declared_conformity` `unknown` and `study_gate_unavailable` lists the refusal codes.
+* **Standalone `verify-export`** (no `--study`, `judgement: export`) can only judge the
+  declared content. It applies the gate's rules wherever the content has the information,
+  with the gate's codes: no `coverage_selection` gives `no_selection`; a policy whose digest
+  differs from the embedded one gives `selection_policy_changed`, and on every selected
+  required dimension `decision_policy_changed` and `dimension_not_demonstrated`, and
+  `peer_coverage_missing` on every peer dimension (this replaces `policy_differs`, a
+  comparison of review terms); `profile_unknown`; per required dimension
+  `dimension_not_selected`, `dimension_not_demonstrated`, `taskset_not_qualified` (now per
+  dimension, from the provenance or the limitation), `reviewer_not_distinct`,
+  `assistance_not_admissible`, `evidence_unavailable` (the dimension's availability at
+  export, under `payloads_available`; `evidence_not_reauditable` under
+  `recorded_decisions`), `stale` (the freshness at export, or the expiration rule today) and
+  `freshness_unknown` (a `private_context_unknown` gap under `public_only` is the limitation
+  instead); the peer gap rule. With the embedded policy's digest, every reason the export's
+  gate recorded (`known_gaps` other than `source_unreadable`, `external_unverified` and
+  `private_context_unknown`) is a reason too. Then the artefact's own reasons:
+  `privacy_review_pending`, `public_integrity_invalid`, `public_sources_stale|unknown`,
+  `private_context_unknown` (`complete`) and `evidence_unavailable` (`payloads_available`),
+  the last two read `unknown` for `declared_conformity`, never a failure. Remaining
+  differences with the gate, each because the content does not carry what the gate reads:
+  1. **waivers** are not exported: a milestone the gate allows by waiver reads `blocked`;
+  2. under **another policy**, the export's gaps (reservations, conflicts, arbitrations and
+     their admissibility under that policy's arbiters, assistance of resolutions, peer
+     problems) are not imported, since they were judged under the embedded policy; the
+     policy change itself blocks every selected dimension, so the verdict is the gate's but
+     the reasons are fewer;
+  3. the export records one policy, not one per decision: a decision recorded under the
+     policy file while the export's applied policy was another reads `decision_policy_changed`
+     where the gate would not complain (stricter, never looser);
+  4. **freshness** is the one at export plus the public sources of the target tree: a
+     private change after the export (a study decision, the case contract, the engine), a
+     rubric or task set edited later, a help rectified later, a decision superseded later or
+     a later selection are not seen; `context_requirement: complete` therefore always gives
+     `private_context_unknown` and `payloads_available` always `evidence_unavailable`;
+  5. the task set qualification is the export's provenance (the session's task set), not the
+     case's task set as it is now;
+  6. a public source change unrelated to every dimension's dependency keys blocks
+     (`public_sources_stale`) where the gate, which reads dependency keys, allows.
 
 **`export handoff` under a required policy naming `handoff`** (the only change to §7/C7):
 the export computes the gate under the writer lock, reserves the milestone (one revision,

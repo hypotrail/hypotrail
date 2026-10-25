@@ -877,15 +877,34 @@ def _verify_export(args) -> dict:
         policy_doc = pol.validate(model.read_json_input(args.policy_file, 'policy-file'))
     local = None
     if getattr(args, 'study', None):
-        local = _local_checker(args.study, args.repo)
+        local = _local_checker(args.study, args.repo, policy_doc)
     out = vf.verify(Path(args.repo).resolve(), args.target, policy_doc=policy_doc, local=local,
                     review_id=args.review_id)
     out['command'] = 'understanding verify-export'
-    out['policy_source'] = 'file' if policy_doc else 'embedded (diagnostic only)'
+    out['policy_source'] = 'file' if policy_doc else (
+        'study' if local is not None else 'embedded (diagnostic only)')
     return out
 
 
-def _local_checker(study, repo):
+def _conformity(result: dict | None) -> str:
+    """``declared_conformity`` from a gate result: ``conforming`` without a blocking reason
+    (a waiver allows a milestone, it does not make the review conform), ``unknown`` without
+    a result."""
+    if result is None:
+        return 'unknown'
+    blocking = [r for r in result['reasons'] if r['code'] != 'no_required_check']
+    return 'nonconforming' if blocking else 'conforming'
+
+
+def _local_checker(study, repo, policy_file_doc=None):
+    """Local verification (``--study``): the binding of a generation to a recorded export
+    intent, then the study's own gate for the exported session's milestone, author and
+    profile (review round 5: one judgement). ``gate_result`` is :func:`service.gate` with
+    ``--policy-file`` as the policy override (else the study's policy), exactly what
+    ``check`` computes when the latest selection is about that person; ``declared_conformity``
+    is the same gate under the study's policy, every reason computed (``assess``).
+    ``exported_content_current`` compares the generation's projection with the projection
+    recomputed now (the export says what it said; the live gate says what holds now)."""
     store = sv.open_store(study)
     state = sv.load_state(study)
     ext = model.of(state)
@@ -932,9 +951,35 @@ def _local_checker(study, repo):
                 if t is not None and not (t.get('response_ref')
                                           and sv.blob_ok(store, t['response_ref'])):
                     avail = 'unavailable'
-        return {'private_context_verification': 'verified' if same else 'unknown',
-                'private_context_changed': not same, 'evidence_availability': avail,
-                'study_binding': 'verified'}
+        out = {'private_context_verification': 'verified' if same else 'unknown',
+               'private_context_changed': not same, 'evidence_availability': avail,
+               'study_binding': 'verified', 'judgement': 'study'}
+        scope = sv.scope_of(session)
+        unavailable = []
+        try:
+            live = sv.gate(store, state, session['milestone'], policy_override=policy_file_doc,
+                           policy_source='file' if policy_file_doc is not None else 'study',
+                           actor_scope=scope)
+        except StudyError as exc:
+            live = None
+            unavailable.append(exc.code)
+        try:
+            declared = sv.gate(store, state, session['milestone'], actor_scope=scope,
+                               assess=True)
+        except StudyError as exc:
+            declared = None
+            unavailable.append(exc.code)
+        try:
+            now_digest = canonical.digest(ex.projection(store, state, session))
+            out['exported_content_current'] = now_digest == digest
+        except StudyError:
+            out['exported_content_current'] = None
+        out['gate_result'] = live
+        out['declared_conformity'] = _conformity(declared)
+        if unavailable:
+            # A stored payload the gate needs is gone: no study judgement, never a failure.
+            out['study_gate_unavailable'] = sorted(set(unavailable))
+        return out
     return run
 
 

@@ -13,7 +13,7 @@ import html
 from typing import Mapping
 
 from . import DIMENSION_TITLES, DIMENSIONS, STATE_SCHEMA, evaluate as ev, model, policy as pol
-from . import service as sv, snapshot as snap
+from . import service as sv
 
 e = html.escape
 WORDS = {1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven',
@@ -28,102 +28,100 @@ def _word(n: int) -> str:
     return WORDS.get(n, 'many')
 
 
+def _peer_gap_text(cover: Mapping | None, doc: Mapping | None) -> str:
+    if not cover:
+        return 'missing'
+    if cover.get('status') == 'current' and doc:
+        need = doc['team_coverage']['minimum_people']
+        return (f'{_word(cover["people"])} declared people, the policy asks for '
+                f'{_word(need)}')
+    return str(cover.get('status'))
+
+
 def section(study_dir, state: Mapping) -> str:
-    """The HTML of the section, or ``''`` when the study never enabled the review."""
+    """The HTML of the section, or ``''`` when the study never enabled the review.
+
+    Rows and gaps are the gate's judgement of each session (review round 5,
+    :func:`service.session_judgement`), the one the export projection publishes: a gap per
+    reason with the gate's code. When the policy's stored payload cannot be read, the mode is
+    the one the state recorded and the section says the policy is unavailable (no
+    judgement)."""
     ext = model.of(state)
     if not ext or ext.get('schema') != STATE_SCHEMA:
         return ''
     store = sv.open_store(study_dir)
+    recorded = ext.get('policy') or {}
+    policy_available = True
     try:
         doc = sv.policy_doc(store, ext)
     except Exception:          # noqa: BLE001 - the report still renders
-        doc = None
-    mode = pol.mode(doc)
+        doc, policy_available = None, False
+    mode = pol.mode(doc) if policy_available else recorded.get('mode', 'off')
     rows, gaps = [], []
     sessions = sorted(ext['sessions'].values(), key=lambda s: s['created_revision'])
-    current = sv.current_for(store, state, ext)
-    loaders = sv.gate_loaders(store, state, ext)
     try:
         settles = sv.arbitration_checker(store, ext, doc)
     except Exception:              # noqa: BLE001 - the report still renders
         settles = None
+
+    def gap(text: str) -> None:
+        if text not in gaps:
+            gaps.append(text)
+    if not policy_available:
+        gap(f'{_lit("policy_unavailable")}: the stored policy cannot be read, so nothing is '
+            'judged; the mode shown is the one the state recorded')
     for s in sessions[-3:]:
         actor = s['actor_declared_id']
-        try:
-            captured = sv.session_snapshot(store, s)['local']
-            now_ = current(s)
-            taskset = sv.blob_json(store, s['taskset_blob'], 'taskset')
-        except Exception:          # noqa: BLE001 - freshness unknown, the report renders
-            captured = now_ = taskset = None
-        # The rule of the export projection (R3C-2): with the selection of this person and
-        # profile, a dimension shows the decision it maps (the one the gate judges); without
-        # one, the history's latest decision.
+        judged = None
+        if policy_available:
+            try:
+                judged = sv.session_judgement(store, state, s)
+            except Exception:      # noqa: BLE001 - the report still renders
+                judged = None
+                gap(f'{_lit("judgement_unavailable")} for {_lit(actor)}: a stored payload of '
+                    'this session cannot be read')
         selection = ev.selection_for(ext, s['milestone'], actor, s['profile'])
         for dim in s['dimensions']:
-            problems = []
-            if selection is not None:
-                d = ev.shown_decision(ext, selection, actor, dim)
+            # The rule of the export projection (R3C-2): with the selection of this person
+            # and profile, a dimension shows the decision it maps; without one, the
+            # history's latest decision of the session.
+            d = ev.shown_decision(ext, selection, actor, dim, s['session_id'])
+            try:
                 v = ev.dimension_view(ext, actor, dim, decision=d, settles=settles,
                                       policy_doc=doc,
                                       session_policy_for=sv.session_policy_for(store))
-                if d is not None and doc is not None:
-                    # The gate's problems of the selected decision (C4-2): not demonstrated
-                    # now, whatever status it was recorded with.
-                    try:
-                        problems = ev.selected_decision_problems(
-                            ext, d, actor, dim, pol.digest(doc), loaders['taskset_for'],
-                            settles)
-                    except Exception:  # noqa: BLE001 - the report still renders
-                        problems = ['decision_unreadable']
-                    if problems and v['status'] == 'demonstrated':
-                        v = {**v, 'status': 'needs_review'}
-            else:
-                v = ev.dimension_view(ext, actor, dim)
-                d = ext['decisions'].get(v['decision_id']) if v['decision_id'] else None
-            assist = ev.assistance_summary(ext, d['attempt_ids']) if d else 'none'
+            except Exception:      # noqa: BLE001 - the report still renders
+                v = ev.dimension_view(ext, actor, dim, decision=d)
+            status = v['status'] if d is not None or v['status'] != 'demonstrated' \
+                else 'not_evaluated'
             fresh = 'unknown'
-            if d and captured is not None:
-                try:
-                    owner = ext['sessions'][d['session_id']]
-                    same = owner['session_id'] == s['session_id']
-                    fresh = snap.freshness(
-                        captured if same else sv.session_snapshot(store, owner)['local'],
-                        now_ if same else current(owner),
-                        ev.decision_dependency_keys(ext, d, taskset))['status']
-                except Exception:  # noqa: BLE001 - freshness unknown, the report renders
-                    fresh = 'unknown'
+            if judged is not None:
+                status = ev.judged_status(status, judged, dim)
+                info = judged['dimensions'].get(dim) or {}
+                if d is not None and info.get('decision_id') == d['decision_id']:
+                    fresh = info['freshness']
+            assist = ev.assistance_summary(ext, d['attempt_ids']) if d else 'none'
             rows.append(
                 f'<tr><td>{_lit(dim)} {e(DIMENSION_TITLES[dim])}</td><td>{_lit(actor)}</td>'
-                f'<td>{e(v["status"].replace("_", " "))}</td><td>{e(fresh)}</td>'
+                f'<td>{e(status.replace("_", " "))}</td><td>{e(fresh)}</td>'
                 f'<td>{e(assist)}</td>'
                 f'<td>{_lit(d["reviewer_declared_id"]) if d else "—"}</td></tr>')
-            if v['status'] != 'demonstrated':
-                why = (' (' + ', '.join(_lit(p) for p in problems) + ')') if problems else ''
-                gaps.append(f'{_lit(dim)} {e(DIMENSION_TITLES[dim])} for {_lit(actor)}: '
-                            f'{e(v["status"].replace("_", " "))}{why}')
-        # The gate's own selection-based coverage (round 2, C2-3), never a search for any
-        # demonstrated transfer: without a selection for this person and profile, missing.
-        # The gap rule is the gate's and the export's (R3C-3): too few declared people is a
-        # gap even when every selected transfer is current.
-        for dim in (doc or {}).get('peer_required_dimensions', []):
-            if dim in s['dimensions']:
-                try:
-                    cover = ev.selected_peer_coverage(
-                        ext, actor, dim, selection, pol.digest(doc), loaders['taskset_for'],
-                        loaders['captured_for'], loaders['current_for'], policy_doc=doc,
-                        blob_ok=lambda sha: sv.blob_ok(store, sha))
-                    gap = ev.peer_gap(cover, doc)
-                except Exception:      # noqa: BLE001 - coverage unknown, the report renders
-                    cover, gap = {'status': 'unknown'}, True
-                if not gap:
-                    continue
-                if cover['status'] == 'current':
-                    need = doc['team_coverage']['minimum_people']
-                    what = (f'{_word(cover["people"])} declared people, the policy asks for '
-                            f'{_word(need)}')
-                else:
-                    what = cover['status']
-                gaps.append(f'{_lit(dim)} handover by a colleague: {e(what)}')
+        if judged is None:
+            continue
+        # One gap per reason of the gate, grouped by dimension, with the gate's codes.
+        by_dim: dict = {}
+        for g in ev.gaps_of(judged, s['milestone']):
+            by_dim.setdefault(g['ref'], []).append(g['kind'])
+        for ref, codes in by_dim.items():
+            what = ', '.join(_lit(c) for c in codes)
+            if ref in DIMENSION_TITLES:
+                extra = ''
+                if 'peer_coverage_missing' in codes:
+                    cover = (judged['dimensions'].get(ref) or {}).get('peer')
+                    extra = f'; handover by a colleague: {e(_peer_gap_text(cover, doc))}'
+                gap(f'{_lit(ref)} {e(DIMENSION_TITLES[ref])} for {_lit(actor)}: {what}{extra}')
+            else:
+                gap(f'{_lit(ref)} for {_lit(actor)}: {what}')
     simulated = any(d.get('simulated') for d in ext['decisions'].values())
     head = (f'<p>Mode {_lit(mode)}. This section is about what the team can explain and take '
             'over; it is <strong>not the scientific verdict</strong> of the study, it '

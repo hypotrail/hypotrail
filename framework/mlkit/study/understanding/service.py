@@ -172,7 +172,10 @@ def arbitration_checker(store: StudyStore, ext: Mapping, policy_doc: Mapping | N
 
 
 def gate(store: StudyStore, state: Mapping, milestone: str, *, policy_override=None,
-         policy_source: str = 'study', repo_override=None, today=None) -> dict:
+         policy_source: str = 'study', repo_override=None, today=None, actor_scope=None,
+         selection=None, assess: bool = False) -> dict:
+    """The engine's one gate (:func:`evaluate.gate`) on this study: ``check``, ``export
+    handoff``, the export projection, the report and ``verify-export --study`` call it."""
     ext = model.of(state) or model.empty('unset')
     doc = policy_override if policy_override is not None else policy_doc(store, ext)
     return ev.gate(ext, milestone=milestone, policy_doc=doc, policy_source=policy_source,
@@ -180,7 +183,45 @@ def gate(store: StudyStore, state: Mapping, milestone: str, *, policy_override=N
                    blob_ok=lambda sha: blob_ok(store, sha), checked_at=now(), today=today,
                    session_policy_for=session_policy_for(store),
                    repository_for=lambda s: repository_of(store, s,
-                                                          repo_override=repo_override))
+                                                          repo_override=repo_override),
+                   actor_scope=actor_scope, selection=selection, assess=assess)
+
+
+def applied_policy(store: StudyStore, ext: Mapping, session: Mapping) -> dict:
+    """The policy the gate applies to ``session``: the study's, else (a study whose policy
+    was never set) the session's."""
+    return policy_doc(store, ext) or blob_json(store, session['policy_blob'], 'policy')
+
+
+def scope_of(session: Mapping) -> dict:
+    return {'actor_declared_id': session['actor_declared_id'], 'profile': session['profile']}
+
+
+def session_judgement(store: StudyStore, state: Mapping, session: Mapping, *,
+                      policy_override=None, today=None) -> dict:
+    """The gate's judgement of what ``session``'s export and the report show: the gate of
+    its milestone for its author and profile under the applied policy, computed in every
+    mode (``assess``). With the selection of that person and profile it is ``check``'s
+    result; without one, the decisions shown (the session's latest in the history) are
+    judged by the same rules as a ``virtual`` selection, with ``no_selection`` (review round
+    5: one judgement, one gap list)."""
+    ext = model.of(state)
+    doc = policy_override if policy_override is not None else \
+        applied_policy(store, ext, session)
+    scope = scope_of(session)
+    sel = ev.selection_for(ext, session['milestone'], scope['actor_declared_id'],
+                           scope['profile'])
+    if sel is None:
+        shown = {dim: ev.shown_decision(ext, None, scope['actor_declared_id'], dim,
+                                        session['session_id'])
+                 for dim in session['dimensions']}
+        sel = {'milestone': session['milestone'], 'actor_scope': scope,
+               'dimension_decision_map': {k: v['decision_id'] for k, v in shown.items() if v},
+               'transfer_decision_map': {}, 'policy_digest': pol.digest(doc),
+               'scope_digest': None, 'virtual': True}
+    return gate(store, state, session['milestone'], policy_override=doc,
+                policy_source='study' if policy_override is None else 'file', today=today,
+                actor_scope=scope, selection=sel, assess=True)
 
 
 def require_mode(store: StudyStore, state: Mapping, *, allowed=('coaching', 'required')) -> dict:

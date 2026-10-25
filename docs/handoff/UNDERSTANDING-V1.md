@@ -90,7 +90,8 @@ arbitration choice limited to the conflicting decisions and binding for the gate
 (`lost_arbitration`); peer coverage only from selected, completed, current and fresh
 transfers (no search for an old pass); coaching carried over to linked sessions; an explicit
 `--policy-file` checking assistance, reviewer distinctness, expiry and the review terms of
-the embedded policy (`policy_differs`); the export receipt revalidated under the lock and
+the embedded policy (`policy_differs`, replaced in round 5 by the gate's own policy digest
+rule); the export receipt revalidated under the lock and
 checked against the announced bytes; the required handoff recorded inside the lock that
 publishes it, compared with the reserved digests, and released on failure; export possible
 without a selection; Git plan and receipt checked against the announced bytes; the verifier
@@ -284,7 +285,7 @@ Regression tests: `framework/tests/study/understanding/test_review_round4_d.py`.
 * A partial clone is accepted with Git 2.44 or later (`GIT_NO_LAZY_FETCH` makes a missing
   object an error, never a fetch); older Git is refused with that advice.
 * `export write` writes `docs/understanding/.gitattributes` (`rv-*/** binary -filter
-  -ident`) when absent, and `git-plan` stages it with the generation: no autocrlf, eol
+  -ident`; round 5 adds `-working-tree-encoding -eol`) when absent, and `git-plan` stages it with the generation: no autocrlf, eol
   conversion, LFS or other filter transforms a generation's bytes. A different file is left
   untouched and reported.
 * Temporary folders of interrupted publications (any review id) are removed after a
@@ -340,6 +341,77 @@ the expected outcome of each fix).
   payloads (exposure row keys) included, and the core export then refuses with
   `integrity_error`, a rule of the study engine outside the review; the port removes the
   payloads the review's state names.
+
+## Review round 5: fixes (areas C and D)
+
+Regression tests: `framework/tests/study/understanding/test_review_round5_cd.py` (simulated
+humans, temporary directories). The reviewer's probes p1 to p12 are ported with the expected
+outcome of each fix; p11 (no scientific record changes) failed only because its assertion
+was too strict: `receipts` (the store's idempotency receipts) and `updated` (the time of the
+last write) change with any recorded request, so the port excludes them and checks instead
+that every new receipt is one of the review's requests and that no earlier one changed.
+`test_one_judgement_one_gap_list` checks the invariant on twenty study states (reviews,
+aided and rectified help, conflicts, arbitrations no longer admissible, reservations in
+another session, missing peers, policy re-issued or switched around a selection, expiry,
+rubric change, private decisions changed or unknown under `public_only`, waivers, a removed
+answer, coaching, no selection, an explicit policy file): `check`, the export preview, the
+report and `verify-export [--policy-file F] --study` give the same verdict, and the gate's
+reason codes are the export's and the report's gap codes (both ways when a selection of the
+person exists and the policy requires the milestone).
+
+The invariant of ADR 0008 did not hold because the judgement had two implementations (the
+gate, and the verifier's and the export's own rules). Decided design, implemented:
+
+* **One judgement** (R5-1 to R5-5, R5-9). `verify-export --study`, once the generation is
+  bound to a recorded export intent, returns as `gate_result` the study's own gate
+  (`service.gate`, new `actor_scope`) for the exported session's milestone, author and
+  profile, with `--policy-file` as the override or the study's policy, and as
+  `declared_conformity` the same gate under the study's policy. It adds
+  `exported_content_current` (projection digest now against the generation's) and
+  `judgement: study`. So: unrelated study progress after a review no longer blocks it
+  (R5-1, `private_context_unknown` was the verifier's own rule); an unknown private
+  dependency under `public_only` is the gate's limitation (R5-2); a private decision
+  changed after the export blocks (R5-3); the same re-issued policy file blocks in both
+  (R5-4); a selection made under another policy blocks in both (R5-5); waivers are the
+  gate's (R5-9).
+* **One gap list** (R5-6, R5-7). `service.session_judgement` gives the export projection and
+  the report the gate of the session's scope (every reason computed even in coaching;
+  without a selection, the decisions shown judged as a virtual selection, plus
+  `no_selection`); `evaluate.gaps_of` turns each reason into a `known_gaps` entry with the
+  gate's code and `evaluate.judged_status` shows a demonstrated dimension with a blocking
+  reason as `needs_review`. An aided demonstration on an `unaided_required` dimension
+  (R5-6) and an expired policy (R5-7, every dimension `stale`) now appear in the export and
+  the report. The ad hoc `dimension_stale`/`dimension_unknown` gaps are gone; the embedded
+  policy is the one the gate applies. The gate itself now gives `dimension_not_demonstrated`
+  for a selected decision that is not demonstrated (a selected `to_consolidate` decision
+  whose reservation was resolved by another passed silently) or has a problem.
+* **Standalone verifier**. `_gate_on_export` mirrors the gate's rules on the content, with
+  the gate's codes (policy digest strictness, replacing `policy_differs`; expiry;
+  assistance; distinctness; qualification per dimension; required, selected and
+  demonstrated dimensions; freshness and the `private_context_unknown` limitation; peers;
+  and, under the same policy, every gap of the export). The differences that remain
+  (waivers, judgements under another policy, a single policy per export, freshness after
+  the export, the current task set, unrelated public sources) are listed in CLI-CONTRACT §16.
+* **R5-8**. With the policy payload unreadable, the report shows the recorded mode and the
+  gap `policy_unavailable`, as `status` does.
+* **R5-10**. The written `docs/understanding/.gitattributes` is `rv-*/** binary -filter
+  -ident -working-tree-encoding -eol`: a root `*.md working-tree-encoding=UTF-16LE` or
+  `eol=crlf` no longer transforms a generation (staging, commit and a fresh clone keep the
+  exported bytes). The exact-bytes rule stays: the round-4 line reads `differs` and is left
+  untouched.
+
+Expectations changed by the unification (each test's docstring says so):
+`test_review_findings.py::test_explicit_policy_rejects_reviews_made_under_another_policy`
+(`policy_differs` is now the gate's `selection_policy_changed`/`decision_policy_changed`),
+`test_export_git.py::test_clean_clone_public_integrity_and_honest_limits` (a relaxed policy
+file that is not the reviews' policy now blocks, as `check --policy-file` does; the allowing
+half of A26 moved to `test_clean_clone_allows_a_public_only_export_with_its_limits`, whose
+study policy is the relaxed one), `test_review_round4_c.py` (two tests:
+`taskset_not_qualified` is now given per dimension, as the gate gives it) and
+`test_review_round2_c.py::test_export_peer_coverage_follows_the_selection` (the local
+`gate_result` is the gate's, whose reason carries a `detail`). The `export-valid` fixture
+did not change (regenerated to a scratch folder and compared: only the run's salts, times
+and digests differ) and the schemas did not change (`schemas.main(['--check'])`).
 
 ## Gate run
 
