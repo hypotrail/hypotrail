@@ -193,6 +193,77 @@ current (`python -m hypotrail_runtime.schemas --check`). Evidence:
 `framework/tests/study/libraries` 202 passed, 5 skipped (the opt-in extras matrix and one integer beyond the JSON
 reader's digit limit); the four Azure ML exporter files above 139 passed, 1 skipped.
 
+**Round 3.** Regression tests: `framework/tests/study/libraries/test_review_round3_a.py`
+(ported from the reviewer's probes). **R3-A1:** a planted
+`packages/mlflow_pyfunc/__pycache__/hypotrail_pyfunc.cpython-*.pyc` used to replace the MLflow
+wrapper (MLflow imports it instead of the source the digests bind) while `verify_bundle`,
+`ArtifactPackager.verify` (which even ran it) and the export passed. Now a `__pycache__`
+folder or a `*.pyc`/`*.pyo` file anywhere in a bundle (`verify_bundle`, listed or not, also
+under `evidence/` and in an embedded bundle) or in a package (`ArtifactPackager.verify` and
+`_inventory`, which refuse it instead of skipping it) is `artifact_integrity_failed`; every
+listed file under `packages/<format>/` must be named by that package's descriptor; and
+`ArtifactPackager.verify` runs no package code before the bytecode, file-list, descriptor,
+environment, `MLmodel` and embedded-bundle checks pass, then loads the package for parity
+from a fresh temporary copy (checked against the descriptor) with `sys.pycache_prefix` on an
+empty temporary folder and `sys.dont_write_bytecode` set, restored afterwards; `package`
+does the same. **R3-A4:** loading `<bundle>/packages/mlflow_pyfunc` in place with
+`mlflow.pyfunc.load_model` writes a bytecode cache into the bundle, which is still refused;
+the runtime's message says that a Python bytecode cache was written into the bundle by
+loading its package in place, names the folder, and its remediation says to delete it and to
+load packages from a copy. The engine's own loads (packager verify, export verification) no
+longer write anything into the bundle. The study's junior text for this refusal is the
+generic `artifact_integrity_failed` one of `capture.loading_refusal` (a stray file); its
+`detail` carries the runtime message. **R3-A2:** a package's `artifact_id` is the content id
+of its descriptor (`canonical.artifact_id` of the contract document without `artifact_id`:
+files with digests, signature, environment, parity, extensions), recomputed by
+`verify_bundle` and by `ArtifactPackager.verify`; the descriptor inside the package
+(`hypotrail-package.json`, named by the extension `hypotrail.descriptor_copy`) is now the
+contract document itself, byte-identical to `packages/<format>.descriptor.json`, and the
+runtime requires the two to be canonically equal; the MLflow packager writes
+`requirements.txt`, `conda.yaml` and `python_env.yaml` itself from the bundle's pinned
+environment (semantic dependencies, runtime, and the MLflow version recorded in the
+descriptor; every pin a name and a version) instead of keeping MLflow's (which add the local
+pip and setuptools versions), and `verify` regenerates and compares them byte for byte, the
+descriptor's `environment` and `signature` too. This changes the package bytes of new
+captures: `PACKAGER_VERSION` is `2`, and a package written by version 1 (inner descriptor in
+the old format, MLflow's environment files, the old artifact id) is refused by the runtime
+(artifact id) and by `verify` (`schema_version_unsupported`); capture it again. The round-2
+test helper `_redescribe_mlflow_package` now models an attacker who also recomputes the
+artifact id and writes the same descriptor inside and beside the package, so the round-2
+refusals are still the embedded-bundle checks. **R3-A3:** `_check_embedded` also requires
+`MLmodel` to have only the `python_function` flavor, the environment files `conda.yaml` and
+`python_env.yaml`, and the signature of the bundle; `ArtifactPackager.verify` converts every
+exception into a `PackagingError` (a runtime `ContractError` keeps its code, with
+`details.contract_code`; anything else, an `MlflowException` included, is
+`artifact_integrity_failed`) or a `failed` result. **R3-A5:** an empty or relative trusted
+root (`trusted_roots=['']`, `['.']`, `[Path('rel')]`) is `contract_invalid`; empty and relative
+entries of `HYPOTRAIL_RUNTIME_TRUSTED_ROOTS` are dropped. The MLflow wrapper and the packager
+pass resolved paths. **R3-A6:** the calibration ledger is read strictly. A torn last line
+(no final newline, not a JSON document) is ignored for reading; the next claim removes it
+under the lock by an atomic rewrite that keeps every complete line byte for byte, reports it
+(`LedgerRepaired` warning, `CalibrationLedger.repairs`) and appends after it; a complete last
+use without its newline is kept. Any other corruption (an unreadable middle line, a complete
+last line that is not a use, a malformed field) is `contract_invalid` with a remediation, from
+`uses()` and `claim()`, and nothing is claimed past it. **R3-A7:**
+`test_workshop_capture_tampered_package_refuses_the_final_test` asserted an opening recorded
+as failed; since `2b6c806` the opening is refused before it is recorded, and the test now
+asserts that stronger behaviour (`precondition_missing`, requirement `capture_loadable`,
+contract code `artifact_integrity_failed`, no result, nothing opened, no final-test exposure,
+no evidence binding). The round-2 concurrency test patches `CalibrationLedger._read`, the
+strict reader a claim now uses. **Observation:** `capture._membership` uses one digest scheme
+for the training scope: under training exclusions it is the blob id the study store would
+give the fitted keys (SHA-256 of `records.row_keys_bytes`, newline-terminated lines), the
+scheme of the development blob id, no longer `'\n'.join(sorted(keys))`;
+`test_the_capture_names_the_rows_it_was_fitted_on` checks it against `put_blob`. **Non-finite features (from area B):** `inference.check_frame` (every fit,
+parity check and prediction) refuses `inf`/`-inf` in a `float64` feature with
+`contract_invalid`, issue `{path: input/<col>, kind: non_finite_values, n_rows, rows}` (the
+shape the exported project uses), instead of a raw scikit-learn `ValueError`; `NaN` keeps its
+handling. Captures
+made before this round read as `code_changed` (the runtime and packager sources changed).
+Evidence: `framework/tests/study/libraries`,
+`framework/tests/exporters` and `framework/tests/study/test_review_round2_training_exclusions.py`
+together 500 passed, 7 skipped (507 collected: 243, 250 and 14; the round-3 file holds 36).
+
 ## Commands and test evidence
 
 Environment: Python 3.13, uv 0.11, the lock in `framework/uv.lock` (`uv sync --project

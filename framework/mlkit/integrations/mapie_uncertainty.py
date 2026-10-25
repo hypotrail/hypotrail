@@ -16,7 +16,11 @@ the partition's name: the membership digest of ``calibration_ref`` (the same row
 another id are the same calibration) and the per-row digests of the row keys, which every
 claim must pass (a superset or any overlap of rows already used is refused unless it is
 the very same membership and procedure). A claim is atomic: it reads, checks and appends
-under a file lock, so two concurrent claims never both bind.
+under a file lock, so two concurrent claims never both bind. A ledger is read strictly
+(review A, round 3): only a torn last line (an append cut by a crash, no final newline) is
+ignored, and the next claim rewrites the ledger atomically without it, under the lock, and
+says so (:class:`LedgerRepaired`); any other unreadable line is ``contract_invalid``, never
+a raw exception, and nothing is claimed past it.
 
 **Risk control (L-16).** Binary classification, scores of a *fixed* model, a threshold grid
 fixed in advance, the per-row rule ``threshold:t``. The target is a minimum precision with a
@@ -66,6 +70,8 @@ import contextlib
 import json
 import math
 import os
+import tempfile
+import warnings
 from pathlib import Path
 from typing import Callable, Iterable, Mapping, Sequence
 
@@ -129,6 +135,27 @@ def eligibility(calibration: Mapping | None, *, other_partitions: Mapping[str, I
             'calibration_ref': (f'{calibration.get("id")}@{membership}' if membership else None)}
 
 
+class LedgerRepaired(UserWarning):
+    """A claim removed a torn last line from the calibration ledger before appending (round
+    3, R3-A6). ``details`` names the ledger, the line number and the digest of the dropped
+    bytes."""
+
+    def __init__(self, message: str, details: Mapping):
+        super().__init__(message)
+        self.details = dict(details)
+
+
+def _ledger_refusal(path: Path, line: int, problem: str) -> ContractError:
+    return ContractError('contract_invalid', f'The calibration ledger {path.name} is unreadable '
+                         f'at line {line} ({problem}); no claim is recorded past it.',
+                         path=f'ledger/{line}',
+                         remediation='Restore the ledger from its backup or inspect that line; '
+                                     'never delete recorded uses (exposure is never undone). '
+                                     'Only a torn last line without a final newline is '
+                                     'repaired automatically.',
+                         details={'ledger': path.name, 'line': line, 'problem': problem})
+
+
 class CalibrationLedger:
     """Durable record of the procedures that used a calibration partition (append-only,
     one JSON line per use, fsync'd). Exposure is never undone by an invalidation.
@@ -141,11 +168,92 @@ class CalibrationLedger:
 
     def __init__(self, path: Path):
         self.path = Path(path)
+        self.repairs: list[dict] = []
+
+    def _read(self) -> tuple[list[dict], dict | None, bool]:
+        """``(uses, torn, terminated)``: the recorded uses; when the last line is torn (no
+        final newline and not a complete use), what a repair drops; whether the file ends
+        with a newline (or is empty). Any other unreadable line is ``contract_invalid``."""
+        if not self.path.exists():
+            return [], None, True
+        data = self.path.read_bytes()
+        lines = data.split(b'\n')
+        complete, tail = lines[:-1], lines[-1]      # tail: bytes after the last newline
+        uses = []
+        for number, raw in enumerate(complete, start=1):
+            if raw.strip():
+                uses.append(self._parse_line(raw, number))
+        torn = None
+        if tail.strip():
+            number = len(complete) + 1
+            try:
+                json.loads(tail.decode('utf-8'))
+            except (UnicodeDecodeError, ValueError):
+                # An append cut short: a prefix of a record is never a JSON document.
+                torn = {'ledger': self.path.name, 'line': number, 'size_bytes': len(tail),
+                        'sha256': canonical.sha256_hex(tail)}
+            else:
+                uses.append(self._parse_line(tail, number))      # complete, newline missing
+        return uses, torn, not tail
+
+    def _parse_line(self, raw: bytes, number: int) -> dict:
+        try:
+            use = json.loads(raw.decode('utf-8'))
+        except (UnicodeDecodeError, ValueError) as exc:
+            raise _ledger_refusal(self.path, number, f'not JSON: {exc}'[:160]) from None
+        if not isinstance(use, dict) or use.get('schema') != LEDGER_SCHEMA:
+            raise _ledger_refusal(self.path, number, f'not a {LEDGER_SCHEMA} record')
+        if not isinstance(use.get('procedure_id'), str) or \
+                not isinstance(use.get('calibration_ref'), str):
+            raise _ledger_refusal(self.path, number, 'no procedure_id or calibration_ref')
+        membership = use.get('membership_sha256')
+        if membership is not None and not isinstance(membership, str):
+            raise _ledger_refusal(self.path, number, 'membership_sha256 is not a digest')
+        try:
+            if membership is None:
+                self.membership(use['calibration_ref'])
+        except ContractError:
+            raise _ledger_refusal(self.path, number, 'calibration_ref is not <id>@<sha256>') \
+                from None
+        digests = use.get('row_digests')
+        if digests is not None and (not isinstance(digests, list)
+                                    or not all(isinstance(d, str) for d in digests)):
+            raise _ledger_refusal(self.path, number, 'row_digests is not a list of digests')
+        return use
 
     def uses(self) -> list[dict]:
-        if not self.path.exists():
-            return []
-        return [json.loads(line) for line in self.path.read_text().splitlines() if line]
+        """The recorded uses; a torn last line is ignored (the next claim repairs it)."""
+        return self._read()[0]
+
+    def _repair(self, torn: Mapping) -> None:
+        """Rewrite the ledger atomically without its torn last line (under the lock): every
+        complete line is kept byte for byte."""
+        current = self.path.read_bytes()
+        data = current[:len(current) - int(torn['size_bytes'])]
+        if canonical.sha256_hex(current[len(data):]) != torn['sha256'] or \
+                (data and not data.endswith(b'\n')):
+            raise _ledger_refusal(self.path, int(torn['line']), 'changed while it was repaired')
+        fd, tmp = tempfile.mkstemp(prefix=f'.{self.path.name}.', dir=self.path.parent)
+        try:
+            with os.fdopen(fd, 'wb') as fh:
+                fh.write(data)
+                fh.flush()
+                os.fsync(fh.fileno())
+            os.replace(tmp, self.path)
+        except BaseException:
+            with contextlib.suppress(FileNotFoundError):
+                os.unlink(tmp)
+            raise
+        dirfd = os.open(self.path.parent, os.O_RDONLY)
+        try:
+            os.fsync(dirfd)
+        finally:
+            os.close(dirfd)
+        self.repairs.append(dict(torn))
+        warnings.warn(LedgerRepaired(
+            f'The calibration ledger {self.path.name} ended with a torn line {torn["line"]} '
+            f'({torn["size_bytes"]} bytes, an interrupted append); it was removed before this '
+            'claim. The recorded uses are unchanged.', torn), stacklevel=3)
 
     @staticmethod
     def procedure_id(procedure: Mapping) -> str:
@@ -209,7 +317,11 @@ class CalibrationLedger:
                                             'on.')
         digests = self.row_digests(keys)
         with self._locked():
-            for use in self.uses():
+            uses, torn, terminated = self._read()
+            if torn is not None:
+                self._repair(torn)
+                terminated = True
+            for use in uses:
                 used = use.get('membership_sha256') or self.membership(use['calibration_ref'])
                 same_rows = used == membership
                 recorded = use.get('row_digests')
@@ -235,7 +347,8 @@ class CalibrationLedger:
                    'membership_sha256': membership, 'procedure_id': pid,
                    'procedure': dict(procedure), 'row_digests': digests}
             with open(self.path, 'a', encoding='utf-8') as fh:
-                fh.write(canonical.dumps(use).decode() + '\n')
+                # A complete last use written without its newline is kept, and closed first.
+                fh.write(('' if terminated else '\n') + canonical.dumps(use).decode() + '\n')
                 fh.flush()
                 os.fsync(fh.fileno())
             return use

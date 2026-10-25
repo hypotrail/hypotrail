@@ -26,6 +26,16 @@ verified native bundle after its id exists; each package is checked against its 
 descriptor (present, listed, digests, ``predictor_id``, ``artifact_id``), never trusted
 blindly, and a native bundle embedded in a package must be the predictor itself, byte for
 byte (review A1, round 2).
+
+Round 3 (review A, 2026-10-25). A package's ``artifact_id`` is the content id of its
+descriptor (:func:`canonical.artifact_id` without ``artifact_id``: its files with their
+digests, signature, environment and parity) and is recomputed; every listed file under
+``packages/<format>/`` must be named by the descriptor, apart from the descriptor's own copy
+inside the package (extension ``hypotrail.descriptor_copy``), which must be the descriptor
+beside the package, canonically equal. A Python bytecode cache (``__pycache__``, ``*.pyc``,
+``*.pyo``) anywhere in a bundle is refused, listed or not: it is code that no digest binds
+(Python imports a cached module instead of its source), and loading a package in place
+writes one. Trusted roots are absolute paths.
 * :meth:`Predictor.predict` checks the raw features against the data contract and returns
   a :class:`PredictionBatch` in input order: the score of the named positive class, or a
   prediction in the target unit.
@@ -83,6 +93,11 @@ RESERVED_EXTENSIONS = ('hypotrail.learnt_state', 'hypotrail.n_train', BOUND_PARI
                        BOUND_CONTEXT)
 # A packager's format names a folder of the bundle (``packages/<format>``).
 PACKAGE_FORMAT = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$')
+# The descriptor extension naming the descriptor's own copy inside its package (round 3).
+DESCRIPTOR_COPY = 'hypotrail.descriptor_copy'
+# Python bytecode: never part of a bundle (round 3, R3-A1).
+BYTECODE_DIR = '__pycache__'
+BYTECODE_SUFFIXES = ('.pyc', '.pyo')
 
 
 # --- outputs ---------------------------------------------------------------------------------
@@ -659,6 +674,7 @@ def verify_bundle(bundle_dir: Path) -> BundleDescriptor:
     if not (root / BUNDLE).is_file():
         raise ContractError('model_not_captured', f'{root} holds no {BUNDLE}.',
                             remediation='Capture the predictor first.')
+    refuse_bytecode(root, what='bundle')
     bundle = parse(PredictorBundle, _inside(root, BUNDLE).read_bytes())
     for path in root.rglob('*'):
         if path.is_symlink() and not path.resolve().is_relative_to(root.resolve()):
@@ -710,6 +726,44 @@ def verify_bundle(bundle_dir: Path) -> BundleDescriptor:
     _check_packages(root, bundle, actual, bound)
     return BundleDescriptor(path=root, bundle=bundle, manifest=manifest, recipe=recipe,
                             data_contract=contract)
+
+
+def bytecode_in(root: Path) -> tuple[list[str], list[str]]:
+    """``(folders, files)``: the ``__pycache__`` folders and the stray ``*.pyc``/``*.pyo``
+    files under ``root`` (relative POSIX paths, sorted; files inside a listed folder are not
+    repeated)."""
+    root = Path(root)
+    folders, files = set(), set()
+    for path in root.rglob('*'):
+        parts = path.relative_to(root).parts
+        if BYTECODE_DIR in parts:
+            folders.add('/'.join(parts[:parts.index(BYTECODE_DIR) + 1]))
+        elif path.suffix.lower() in BYTECODE_SUFFIXES:
+            files.add('/'.join(parts))
+    return sorted(folders), sorted(files)
+
+
+def refuse_bytecode(root: Path, *, what: str = 'bundle') -> None:
+    """Refuse a bundle (or a package) holding Python bytecode (round 3, R3-A1/A4). A
+    ``__pycache__`` folder is what loading a package in place leaves behind (``mlflow.pyfunc.
+    load_model`` on ``packages/<format>`` compiles its wrapper there), and a planted one
+    replaces the wrapper the digests bind: it is refused whether it is listed or not, and
+    the message says how to recover."""
+    folders, files = bytecode_in(root)
+    if not folders and not files:
+        return
+    named = folders + files
+    shown = ', '.join(named[:5]) + (f' and {len(named) - 5} more' if len(named) > 5 else '')
+    raise ContractError(
+        'artifact_integrity_failed',
+        f'A Python bytecode cache was written into the {what} ({shown}), typically by loading '
+        f'its package in place (for example mlflow.pyfunc.load_model on '
+        f'{PACKAGES_DIR}/<format> inside the bundle). Bytecode is code that no digest binds '
+        f'(Python runs a cached module instead of its source), so the {what} is refused.',
+        path=named[0],
+        remediation=f'Delete {shown} (Python bytecode only; nothing the {what} needs), then '
+                    f'load a package from a copy of its folder, never from inside the {what}.',
+        details={'bytecode_folders': folders, 'bytecode_files': files})
 
 
 def _bound_digest(actual: Mapping[str, str], rel: str | None, sha: str | None,
@@ -796,6 +850,12 @@ def _check_packages(root: Path, bundle: PredictorBundle, actual: Mapping[str, st
                 (entry.format, bundle.predictor_id, entry.artifact_id):
             _refuse_integrity(f'The {entry.format} package descriptor names another format, '
                               'predictor or artefact.', path=descriptor_rel)
+        if package_artifact_id(descriptor) != descriptor.artifact_id:
+            _refuse_integrity(f'The artifact id of the {entry.format} package is not the '
+                              'content id of its descriptor (its files, signature, '
+                              'environment and parity).', path=descriptor_rel,
+                              recorded=descriptor.artifact_id,
+                              found=package_artifact_id(descriptor))
         if descriptor.parity_result.status != 'ok':
             _refuse_integrity(f'The {entry.format} package does not reproduce the native '
                               'predictor.', path=descriptor_rel)
@@ -804,6 +864,7 @@ def _check_packages(root: Path, bundle: PredictorBundle, actual: Mapping[str, st
             if actual.get(rel) != f.sha256:
                 _refuse_integrity(f'A file of the {entry.format} package is missing or '
                                   'altered.', path=rel)
+        _check_package_listing(root, entry, descriptor, actual)
         _check_embedded_bundles(root, bundle, entry, descriptor, actual, bound)
         owned += [descriptor_rel, entry.relative_path + '/']
     unbound = sorted(rel for rel in actual if rel not in bound
@@ -812,6 +873,44 @@ def _check_packages(root: Path, bundle: PredictorBundle, actual: Mapping[str, st
     if unbound:
         _refuse_integrity('The bundle lists files that neither the predictor id nor a '
                           'declared package binds.', files=unbound)
+
+
+def package_artifact_id(descriptor: PackageDescriptor) -> str:
+    """The content id of a package (round 3, R3-A2): the canonical digest of its descriptor
+    without ``artifact_id``. The descriptor lists every file of the package with its
+    SHA-256, so the id changes with any byte of the package."""
+    return canonical.artifact_id(descriptor, exclude=('artifact_id',))
+
+
+def _check_package_listing(root: Path, entry, descriptor: PackageDescriptor,
+                           actual: Mapping[str, str]) -> None:
+    """Every listed file under ``packages/<format>/`` is named by the package descriptor;
+    the only other one allowed is the descriptor's own copy (``hypotrail.descriptor_copy``),
+    which must be the descriptor beside the package (round 3, R3-A1/A2)."""
+    prefix = entry.relative_path + '/'
+    named = {f.relative_path for f in descriptor.files}
+    copy = descriptor.extensions.get(DESCRIPTOR_COPY)
+    if copy is not None:
+        copy_rel = f'{prefix}{copy}' if isinstance(copy, str) else None
+        if copy_rel is None or copy in named or copy_rel not in actual:
+            _refuse_integrity(f'The {entry.format} package descriptor names a copy of itself '
+                              'that the package does not hold as an unlisted file.',
+                              path=copy_rel or f'{entry.relative_path}.descriptor.json')
+        try:
+            inner = parse(PackageDescriptor, _inside(root, copy_rel).read_bytes())
+        except ContractError as exc:
+            _refuse_integrity(f'The descriptor inside the {entry.format} package is not a '
+                              f'package descriptor: {exc.message}', path=copy_rel,
+                              inner_code=exc.code)
+        if canonical.dumps(inner) != canonical.dumps(descriptor):
+            _refuse_integrity(f'The descriptor inside the {entry.format} package differs from '
+                              'the one beside it.', path=copy_rel)
+        named.add(copy)
+    unnamed = sorted(rel for rel in actual
+                     if rel.startswith(prefix) and rel[len(prefix):] not in named)
+    if unnamed:
+        _refuse_integrity(f'The {entry.format} package holds listed files its descriptor does '
+                          'not name.', path=unnamed[0], files=unnamed)
 
 
 def _check_embedded_bundles(root: Path, bundle: PredictorBundle, entry, descriptor,
@@ -903,12 +1002,23 @@ def _trusted_roots(trusted_roots) -> list[Path]:
                                 path='trusted_roots',
                                 remediation='Pass trusted_roots=[directory, ...].',
                                 details={'type': type(root).__name__})
+        # An empty or relative root would trust the working directory, whatever it is when
+        # the call runs (round 3, R3-A5): ``Path('')`` is ``.``.
+        if not os.fspath(root) or not Path(root).is_absolute():
+            raise ContractError('contract_invalid', 'Each trusted root is an absolute '
+                                'directory path; an empty or relative one would trust the '
+                                'current working directory.', path='trusted_roots',
+                                remediation='Pass absolute directories, for example '
+                                            'trusted_roots=[Path(folder).resolve()].',
+                                details={'root': os.fspath(root)})
     return [Path(r) for r in roots]
 
 
 def _trusted(root: Path, trusted_roots: Sequence[Path] | None) -> bool:
     roots = _trusted_roots(trusted_roots)
-    roots += [Path(p) for p in os.environ.get(TRUSTED_ROOTS_ENV, '').split(os.pathsep) if p]
+    # Empty and relative entries of the variable are dropped (never the working directory).
+    roots += [Path(p) for p in os.environ.get(TRUSTED_ROOTS_ENV, '').split(os.pathsep)
+              if p and Path(p).is_absolute()]
     resolved = root.resolve()
     return any(resolved.is_relative_to(Path(r).resolve()) for r in roots)
 

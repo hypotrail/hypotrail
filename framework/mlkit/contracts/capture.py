@@ -379,13 +379,17 @@ def require_loadable(store, state: Mapping, predictor: Mapping) -> None:
 # --- computation ---------------------------------------------------------------------------------
 
 def _membership(inputs: Mapping, keys) -> str:
-    """The rows the predictor was fitted on: the development blob, or the digest of the
-    keys themselves when delayed-label rows were kept out of training (the blob then names
-    more rows than the fit used)."""
+    """The rows the predictor was fitted on: the development blob, or, when delayed-label
+    rows were kept out of training (the blob then names more rows than the fit used), the
+    blob id the study would give the fitted keys. One digest scheme in this field (review A,
+    round 3): the SHA-256 of the canonical row-keys blob (``records.row_keys_bytes``: sorted,
+    unique, one key per line, each line ending with a newline), as ``store.put_blob``
+    computes it for the development blob."""
+    from mlkit.study import records as rec
     development = inputs.get('development')
     if development is not None and not inputs.get('training_exclusions'):
         return development['row_keys']
-    return hashlib.sha256('\n'.join(sorted(keys)).encode()).hexdigest()
+    return hashlib.sha256(rec.row_keys_bytes(keys)).hexdigest()
 
 
 def _study_id(store) -> str:

@@ -96,20 +96,28 @@ def _inventory(root: Path, prefix: str = '') -> list[dict]:
     return out
 
 
+def _redescribe_package_folder(package: Path) -> bytes:
+    """Re-describe an edited MLflow package folder as an attacker who knows every rule
+    would: its file list, and its artifact id recomputed as the content id of the descriptor
+    (round 3). Return the descriptor's bytes."""
+    from mlkit.integrations import mlflow_packaging as mp
+    doc = json.loads((package / mp.DESCRIPTOR_FILE).read_bytes())
+    doc['files'] = [e for e in mp._inventory(package) if e['relative_path'] != mp.DESCRIPTOR_FILE]
+    doc['artifact_id'] = canonical.artifact_id(doc, exclude=('artifact_id',))
+    data = canonical.dumps(doc) + b'\n'
+    (package / mp.DESCRIPTOR_FILE).write_bytes(data)
+    return data
+
+
 def _redescribe_mlflow_package(dest: Path) -> None:
     """Re-describe an edited MLflow package consistently everywhere an attacker can write:
-    the descriptor inside the package, the one beside it and the bundle document."""
+    the descriptor inside the package (with a recomputed artifact id), the identical one
+    beside it and the bundle document."""
     from mlkit.integrations import mlflow_packaging as mp
     pkg = dest / PKG
-    files = [e for e in mp._inventory(pkg) if e['relative_path'] != mp.DESCRIPTOR_FILE]
-    inner_doc = json.loads((pkg / mp.DESCRIPTOR_FILE).read_bytes())
-    inner_doc['files'] = files
-    (pkg / mp.DESCRIPTOR_FILE).write_bytes(json.dumps(inner_doc, indent=2, sort_keys=True)
-                                           .encode() + b'\n')
+    data = _redescribe_package_folder(pkg)
     desc_path = dest / f'{PKG}.descriptor.json'
-    desc = json.loads(desc_path.read_bytes())
-    desc['files'] = files
-    desc_path.write_bytes(canonical.dumps(desc) + b'\n')
+    desc_path.write_bytes(data)
     doc = json.loads((dest / 'predictor_bundle.json').read_bytes())
     kept = [e for e in doc['files'] if not e['relative_path'].startswith(PKG + '/')
             and e['relative_path'] != f'{PKG}.descriptor.json']
@@ -119,6 +127,7 @@ def _redescribe_mlflow_package(dest: Path) -> None:
                 'sha256': canonical.file_sha256(desc_path)})
     doc['files'] = sorted(kept + new, key=lambda e: e['relative_path'])
     doc['optional_packages'][0]['manifest_sha256'] = canonical.file_sha256(desc_path)
+    doc['optional_packages'][0]['artifact_id'] = json.loads(data)['artifact_id']
     (dest / 'predictor_bundle.json').write_bytes(canonical.dumps(doc) + b'\n')
 
 
@@ -177,9 +186,7 @@ def test_mlflow_verify_refuses_a_package_whose_embedded_bundle_is_another_model(
     mp.ArtifactPackager().package(native, package)
     assert mp.ArtifactPackager().verify(native, package).status == 'passed'
     _swap_embedded_bundle(package, tmp_path, f)
-    doc = json.loads((package / mp.DESCRIPTOR_FILE).read_bytes())
-    doc['files'] = [e for e in mp._inventory(package) if e['relative_path'] != mp.DESCRIPTOR_FILE]
-    (package / mp.DESCRIPTOR_FILE).write_bytes(json.dumps(doc).encode())
+    _redescribe_package_folder(package)
     with pytest.raises(mp.PackagingError) as e:
         mp.ArtifactPackager().verify(native, package)
     assert e.value.code == 'artifact_integrity_failed'
@@ -205,12 +212,12 @@ def test_mlflow_verify_refuses_a_package_that_would_serve_something_else(tmp_pat
         (package / 'MLmodel').write_text(yaml.safe_dump(model))
     else:
         (package / 'artifacts' / 'native_bundle' / 'notes.txt').write_text('extra')
-    doc = json.loads((package / mp.DESCRIPTOR_FILE).read_bytes())
-    doc['files'] = [e for e in mp._inventory(package) if e['relative_path'] != mp.DESCRIPTOR_FILE]
-    (package / mp.DESCRIPTOR_FILE).write_bytes(json.dumps(doc).encode())
+    _redescribe_package_folder(package)
     with pytest.raises(mp.PackagingError) as e:
         mp.ArtifactPackager().verify(native, package)
     assert e.value.code == 'artifact_integrity_failed'
+    # The refusal is the check of what the package serves, not of its re-described identity.
+    assert 'artifact id' not in e.value.message
 
 
 class _EmbeddingPackager:
@@ -284,11 +291,18 @@ def test_the_runtime_refuses_a_declared_embedded_bundle_that_is_absent(tmp_path)
 def test_workshop_capture_tampered_package_refuses_the_final_test(tmp_path):
     """Reviewer probe, engine path: the workshop capture's package re-captured with another
     model (cap bounds on a column, parity rows unchanged) and re-described. Before the fix
-    the final test was promoted and the export said ``packaged``; now the bundle is refused
-    and the opening fails without a final result."""
+    the final test was promoted and the export said ``packaged``; now the bundle is refused.
+
+    Updated in round 3 (R3-A7): since commit 2b6c806 (A F1) the bundle is checked before the
+    opening is recorded, so the confirmation is refused outright instead of being recorded as
+    a failed opening: ``precondition_missing`` with the requirement ``capture_loadable`` and
+    the contract code ``artifact_integrity_failed``; no result, nothing marked opened, no
+    final-test exposure, the final test still sealed, and no evidence binding written. This
+    is stronger than the earlier expectation (the opening never happens)."""
     pytest.importorskip('mlflow')
     import test_capture_final as tcf
-    from mlkit.study import activities as act, read
+    from mlkit.contracts import capture as cap
+    from mlkit.study import activities as act, read, state as st
     flow = tcf._chosen(tmp_path, 'regression')
     v = flow.run('predictor.capture', '--profile', 'workshop')['values']
     bundle = tcf._home(flow) / v['bundle']
@@ -314,12 +328,26 @@ def test_workshop_capture_tampered_package_refuses_the_final_test(tmp_path):
     shutil.rmtree(native)
     shutil.copytree(inner, native)
     _redescribe_mlflow_package(bundle)
-    _refused(verify_bundle, bundle)
-    out = tcf._open(flow, expect=None)
-    opening = out['result']['opening']
-    assert opening['status'] == 'failed'
-    assert opening['error']['details']['contract_code'] == 'artifact_integrity_failed'
-    assert act.FINAL not in read.open(flow.study).state['current']
+    e = _refused(verify_bundle, bundle)
+    assert e.path == f'{PKG}/artifacts/native_bundle'
+    out = tcf._open(flow, expect=2)
+    assert 'result' not in out
+    error = out['error']
+    assert error['code'] == 'precondition_missing'
+    item = next(x for x in error['details']['missing'] if x['requirement'] == 'capture_loadable')
+    assert item['slot'] == cap.CAPTURE
+    assert item['contract_code'] == 'artifact_integrity_failed'
+    assert 'No final-test row was read' in error['details']['junior_message']
+    state = read.open(flow.study).state
+    assert not st.final_test_opened(state)
+    assert (state.get('partition') or {}).get('opening') is None
+    assert act.FINAL not in state['current']
+    import flowkit as fk
+    assert [x for x in fk.exposure_records(flow.study) if x['partition'] == 'final_test'
+            and x['activity'] == act.FINAL] == []
+    doc = json.loads((bundle / 'predictor_bundle.json').read_bytes())
+    assert doc['evidence_binding_path'] is None
+    assert not (bundle / 'evidence').exists()
 
 
 # --- A4-R2: claims name their rows and are atomic ----------------------------------------------
@@ -387,19 +415,23 @@ def test_a_recorded_use_without_row_digests_blocks_every_other_membership(tmp_pa
 @needs_mapie
 def test_two_concurrent_claims_never_both_bind(tmp_path, monkeypatch):
     """Two claims of different procedures on the same rows, interleaved: the second reads
-    the ledger only after the first has appended (file lock), so exactly one binds."""
+    the ledger only after the first has appended (file lock), so exactly one binds. (Round
+    3: a claim reads the ledger through ``_read``, the strict reader behind ``uses``.)"""
     from mlkit.integrations import mapie_uncertainty as mu
     path = tmp_path / 'ledger.jsonl'
     rows = [f'r{i}' for i in range(20)]
-    original = mu.CalibrationLedger.uses
+    original_read = mu.CalibrationLedger._read
     reading = threading.Event()
 
-    def slow_uses(self):
-        out = original(self)
+    def original(ledger):
+        return original_read(ledger)[0]
+
+    def slow_read(self):
+        out = original_read(self)
         reading.set()
         time.sleep(0.3)               # the window in which an unlocked claim interleaves
         return out
-    monkeypatch.setattr(mu.CalibrationLedger, 'uses', slow_uses)
+    monkeypatch.setattr(mu.CalibrationLedger, '_read', slow_read)
     outcomes = {}
 
     def claim(name, procedure):

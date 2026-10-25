@@ -474,14 +474,27 @@ def test_byte_comparison_with_the_previous_engine(tmp_path):
     assert 'DIFFERENT' not in proc.stdout and proc.stdout.rstrip().endswith('MATCH')
 
 
-def test_the_capture_names_the_rows_it_was_fitted_on():
+def test_the_capture_names_the_rows_it_was_fitted_on(tmp_path):
     """The capture's training scope names the rows of its fit: the development blob without
-    exclusions, the digest of the eligible keys when delayed-label rows were left out."""
+    exclusions, the blob id of the eligible keys when delayed-label rows were left out.
+    Round 3 (review A): both are the same digest scheme, the SHA-256 of the canonical row-keys
+    blob (sorted, unique, one key per newline-terminated line), the id ``store.put_blob``
+    gives the development blob; the excluded case no longer joins the keys without a final
+    newline."""
     import hashlib
     from mlkit.contracts import capture
-    keys = ['L1', 'L2', 'L3']
+    from mlkit.study import records as rec
+    keys = ['L3', 'L1', 'L2', 'L1']
     plain = {'development': {'row_keys': 'blob-of-every-development-row'}}
     assert capture._membership(plain, keys) == 'blob-of-every-development-row'
     excluded = {**plain, 'training_exclusions': {'row_keys': 'blob', 'n_rows': 2}}
-    assert capture._membership(excluded, keys) == hashlib.sha256(
-        '\n'.join(sorted(keys)).encode()).hexdigest()
+    blob = b'L1\nL2\nL3\n'
+    assert rec.row_keys_bytes(keys) == blob
+    assert capture._membership(excluded, keys) == hashlib.sha256(blob).hexdigest()
+    assert capture._membership(excluded, keys) != hashlib.sha256(
+        '\n'.join(sorted(set(keys))).encode()).hexdigest()
+    # The id the study's blob store gives the same keys.
+    from mlkit.study.store import StudyStore
+    store = StudyStore(tmp_path / 'study')
+    (store.home / 'blobs').mkdir(parents=True, exist_ok=True)
+    assert store.put_blob(rec.row_keys_bytes(keys)) == capture._membership(excluded, keys)
