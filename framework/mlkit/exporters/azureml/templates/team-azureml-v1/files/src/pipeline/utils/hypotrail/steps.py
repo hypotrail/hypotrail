@@ -352,6 +352,19 @@ def evaluate(frozen: dict) -> dict:
             "within_evaluated_tolerance": observed["equal"],
             "meaning": "Observed difference on a few parity rows; it does not transfer the evaluated model's verdict.",
         }
+        # The same recipe fitted on the same rows reproduces the evaluated model within its
+        # declared tolerance; a rebuild outside it is not a faithful replay and never passes.
+        checks.append(
+            {
+                "id": "candidate_within_evaluated_tolerance",
+                "status": "passed" if observed["equal"] else "failed",
+                "max_abs_diff": observed["max_abs_diff"],
+            },
+        )
+    else:
+        checks.append(
+            {"id": "candidate_within_evaluated_tolerance", "status": "not_run", "reason": "no_evaluated_model"},
+        )
     status = "passed" if all(c["status"] in ("passed", "not_run") for c in checks) else "failed"
     report = {
         "schema_version": REPORT_SCHEMA,

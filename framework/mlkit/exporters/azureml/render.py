@@ -46,7 +46,7 @@ MANIFEST_PATH = 'data/hypotrail/contracts/export-manifest.json'
 SUMS_PATH = 'data/hypotrail/SHA256SUMS'
 EVALUATED = 'data/hypotrail/models/evaluated/'
 RUNTIME_DIR = 'aml/pipelines/training/runtime/'
-LOCK_REQUIREMENT = re.compile(r'^([A-Za-z0-9][A-Za-z0-9._-]*)==([^\s;#]+)\s*$')
+LOCK_REQUIREMENT = re.compile(r'([A-Za-z0-9][A-Za-z0-9._-]*)==([^\s;#]+)\s*')
 
 
 @dataclass(frozen=True)
@@ -69,8 +69,55 @@ def _value(profile_value, field: str):
     return profile_value if profile_value is not None else f'{MISSING}{field.replace(".", "-")}'
 
 
+# Review round 3 (B3-4): every text written into a YAML file of the project is a
+# double-quoted scalar whose characters outside YAML's printable set, and its line breaks
+# (NEL, U+2028, U+2029), are escapes. A quoted scalar is never re-typed by a YAML resolver
+# (OmegaConf's reads an unquoted ``1e9`` as a float) and never folded, so it reads back as
+# the exact text; the texts OmegaConf interprets even when quoted (``???``, ``${``) are
+# encoded or refused before rendering (:func:`_config_preprocessing`, :func:`_no_interpolation`).
+YAML_BREAKS = '\x85\u2028\u2029\ufeff'
+
+
+def _yaml_printable(ch: str) -> bool:
+    o = ord(ch)
+    return ch not in YAML_BREAKS and (0x20 <= o <= 0x7E or 0xA0 <= o <= 0xD7FF
+                                      or 0xE000 <= o <= 0xFFFD or 0x10000 <= o <= 0x10FFFF)
+
+
+def yaml_quoted(text: str) -> str:
+    """``text`` as a YAML double-quoted scalar that every YAML loader reads back exactly."""
+    out = ['"']
+    for ch in text:
+        if ch == '"':
+            out.append('\\"')
+        elif ch == '\\':
+            out.append('\\\\')
+        elif _yaml_printable(ch):
+            out.append(ch)
+        elif ord(ch) <= 0xFF:
+            out.append(f'\\x{ord(ch):02x}')
+        elif ord(ch) <= 0xFFFF:
+            out.append(f'\\u{ord(ch):04x}')
+        else:
+            out.append(f'\\U{ord(ch):08x}')
+    out.append('"')
+    return ''.join(out)
+
+
+def _yaml_flow(value) -> str:
+    if isinstance(value, dict):
+        return '{' + ', '.join(f'{yaml_quoted(str(k))}: {_yaml_flow(value[k])}'
+                               for k in sorted(value)) + '}'
+    if isinstance(value, list):
+        return '[' + ', '.join(_yaml_flow(v) for v in value) + ']'
+    if isinstance(value, str):
+        return yaml_quoted(value)
+    return json.dumps(value)
+
+
 def _yaml(value) -> str:
-    return json.dumps(cj.normalise(value), ensure_ascii=False, sort_keys=True)
+    """A YAML flow value (a JSON-like scalar, list or mapping) whose texts are quoted."""
+    return _yaml_flow(cj.normalise(value))
 
 
 def _py(value, indent: int = 0) -> str:
@@ -95,14 +142,33 @@ def _py(value, indent: int = 0) -> str:
     return repr(value)
 
 
-FILTERS = {'text': lambda v: str(v), 'yaml': _yaml, 'json': _yaml, 'py': _py}
+def _json(value) -> str:
+    return json.dumps(cj.normalise(value), ensure_ascii=False, sort_keys=True)
+
+
+FILTERS = {'text': lambda v: str(v), 'yaml': _yaml, 'json': _json, 'py': _py}
+
+
+def _quoted_dumper():
+    """A PyYAML safe dumper that writes every text (mapping keys included) double-quoted."""
+    import yaml
+
+    class QuotedDumper(yaml.SafeDumper):
+        pass
+
+    def text(dumper, data):
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='"')
+    QuotedDumper.add_representer(str, text)
+    return QuotedDumper
 
 
 def _yaml_block(value, indent: int) -> str:
-    """A non-empty mapping or list as block YAML under its key, indented by ``indent``."""
+    """A non-empty mapping or list as block YAML under its key, indented by ``indent``; its
+    texts are double-quoted scalars (PyYAML escapes NEL, U+2028, U+2029 and the characters
+    outside YAML's printable set in that style)."""
     import yaml
-    dumped = yaml.safe_dump(cj.normalise(value), sort_keys=True, default_flow_style=False,
-                            allow_unicode=True, width=1000)
+    dumped = yaml.dump(cj.normalise(value), Dumper=_quoted_dumper(), sort_keys=True,
+                       default_flow_style=False, allow_unicode=True, width=10 ** 9)
     pad = ' ' * (indent + 2)
     return '\n' + '\n'.join(pad + line for line in dumped.rstrip('\n').split('\n'))
 
@@ -140,7 +206,7 @@ def lock_bytes(template: layout.Template, snapshot: Snapshot) -> tuple[bytes, st
             stripped = line.strip()
             if not stripped or stripped.startswith('#'):
                 continue
-            match = LOCK_REQUIREMENT.match(stripped)
+            match = LOCK_REQUIREMENT.fullmatch(stripped)
             if not match:
                 raise ExportError('environment_unqualified',
                                   f'The {origin} lock has a line this template cannot pin.',
@@ -502,18 +568,38 @@ def render(snapshot: Snapshot, normal: Mapping, missing: list,
     return ordered, summary
 
 
+def load_config(data: bytes):
+    """One configuration file as the project reads it: through OmegaConf's YAML loader and
+    resolution (which re-types some unquoted texts, reads ``???`` as missing and ``${`` as
+    an interpolation) when OmegaConf is installed, else through PyYAML's safe loader."""
+    text = data.decode('utf-8')
+    try:
+        from omegaconf import OmegaConf
+    except ImportError:
+        import yaml
+        return yaml.safe_load(text)
+    return OmegaConf.to_container(OmegaConf.create(text), resolve=True, throw_on_missing=True)
+
+
 def _self_check(files: list[File], ids: Mapping, missing: list) -> None:
-    """The rendered configuration projects to the expected identity, and a configured
-    export holds no missing-value marker in an executable file."""
-    import yaml
+    """The rendered configuration projects to the expected identity, read as the project
+    reads it (:func:`load_config`), and a configured export holds no missing-value marker in
+    an executable file."""
     by_path = {f.path: f for f in files}
-    container = {'hypotrail': yaml.safe_load(by_path['src/conf/hypotrail/replay.yaml'].data),
-                 'components': {}}
-    for step in ('data_preparation', 'data_splitting', 'training', 'evaluation'):
-        container['components'][step] = yaml.safe_load(
-            by_path[f'src/conf/components/{step}/default.yaml'].data)
-    actual = projection.from_config(container)
-    if cj.canonical_sha256(actual) != ids['scientific_sha256']:
+    try:
+        container = {'hypotrail': load_config(by_path['src/conf/hypotrail/replay.yaml'].data),
+                     'components': {}}
+        for step in ('data_preparation', 'data_splitting', 'training', 'evaluation'):
+            container['components'][step] = load_config(
+                by_path[f'src/conf/components/{step}/default.yaml'].data)
+        actual = projection.from_config(container)
+        sha = cj.canonical_sha256(actual)
+    except Exception as error:   # an OmegaConf, YAML or re-typed value of the rendered files
+        raise ExportError('scientific_config_changed', 'The rendered configuration cannot be '
+                          'read back as written; nothing was written.', path='src/conf',
+                          remediation='Report this generator defect.',
+                          details={'error': f'{type(error).__name__}: {error}'[:300]}) from error
+    if sha != ids['scientific_sha256']:
         raise ExportError('scientific_config_changed', 'The rendered configuration does not '
                           'project to the selected recipe; nothing was written.',
                           path='src/conf', remediation='Report this generator defect.',

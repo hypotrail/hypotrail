@@ -41,12 +41,12 @@ SHAPE = {'schema_version': None, 'subscription_id': None, 'resource_group': None
          'identity': {'mode': None}, 'devops': {'service_connection': None},
          'ci': {'cloud_enabled': None}}
 IDENTITY_MODES = ('user_identity', 'managed_identity', 'compute_default')
-GUID = re.compile(r'^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$')
+GUID = re.compile(r'[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}')
 # Azure ML resource and asset names: letters, digits, '-', '_' (and '.' for assets).
-NAME = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,254}$')
-ASSET_NAME = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.-]{0,254}$')
-VERSION = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.-]{0,29}$')
-IMAGE = re.compile(r'^[a-z0-9.-]+(:[0-9]+)?/[a-z0-9._/-]+(:[A-Za-z0-9._-]+|@sha256:[0-9a-f]{64})$')
+NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9_-]{0,254}')
+ASSET_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,254}')
+VERSION = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,29}')
+IMAGE = re.compile(r'[a-z0-9.-]+(:[0-9]+)?/[a-z0-9._/-]+(:[A-Za-z0-9._-]+|@sha256:[0-9a-f]{64})')
 SECRET_WORDS = ('password', 'passwd', 'secret', 'token', 'credential', 'account_key',
                 'accountkey', 'sas', 'connection_string', 'connectionstring', 'private_key',
                 'client_secret', 'api_key', 'apikey')
@@ -90,7 +90,8 @@ def _walk(document: Mapping, shape: Mapping, path: str = '') -> None:
 def _check(dotted: str, value, pattern: re.Pattern, words: str) -> None:
     if value is None:
         return
-    if not isinstance(value, str) or not pattern.match(value):
+    # fullmatch: '$' would also accept a value followed by a newline.
+    if not isinstance(value, str) or not pattern.fullmatch(value):
         raise ExportError('contract_invalid', f'{dotted} is not {words}.', path=dotted,
                           remediation=f'Write {dotted} as {words}.')
 

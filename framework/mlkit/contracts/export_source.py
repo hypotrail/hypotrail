@@ -33,6 +33,11 @@ registry entries and the bundle manifests. Raw data and final-test labels never 
 * ``development_plan.n_source_records``: the number of records the engine read in the
   source file (development, final test and excluded rows), so a reader of the file can
   check it splits records as the engine did;
+* ``development_plan.partitions``: together exactly the rows the engine's final refit and
+  capture train on (every development row less the delayed-label rows), whatever the split
+  kind; ``development_plan.excluded_rows`` (only when there are some) counts the
+  delayed-label rows left out, with the engine's ``delayed_labels_excluded`` text, which is
+  also a limitation;
 * ``limitations``: what the export cannot claim.
 """
 from __future__ import annotations
@@ -97,39 +102,68 @@ def _membership(keys: list) -> str:
     return hashlib.sha256('\n'.join(sorted(keys)).encode()).hexdigest()
 
 
+def _part(pid: str, role: str, keys: list) -> dict:
+    return {'id': pid, 'role': role, 'row_keys': list(keys),
+            'membership_sha256': _membership(list(keys)), 'exposure_status': 'exposed'}
+
+
+def _split_partitions(store, split_rid: str) -> list:
+    """The partitions the split result records. The explicit evaluation plan (review-v1)
+    is read first: it names every row of the split, the validation rows of each fold and
+    the rows no fold scores (the warm-up of a forward-chaining split). A forward-chaining
+    split also writes a ``folds`` blob, which names its validation rows only."""
+    from mlkit.study import activities as act
+    plan = act.evaluation_membership(store, split_rid)
+    if plan is not None:
+        out = [_part(f'fold_{i}', f'fold_{i}', fold['validation_keys'])
+               for i, fold in enumerate(plan.get('folds') or [], start=1)]
+        warmup = list(plan.get('unscored_keys') or [])
+        if warmup:
+            out.append(_part('warmup', 'train', warmup))
+        return out
+    folds = act.fold_assignment(store, split_rid)
+    if folds:
+        return [_part(f'fold_{fold}', f'fold_{fold}',
+                      [k for k, f in folds.items() if f == fold])
+                for fold in sorted(set(folds.values()))]
+    keys = act.split_keys(store, split_rid)
+    return [_part(role, role, keys[role]) for role in ('train', 'validation')]
+
+
 def _partitions(store, state, results: list) -> list:
     """The development partitions of the current split, by row key (development rows only;
-    the final test is named by its status and size, never by its keys)."""
-    from mlkit.study import activities as act
+    the final test is named by its status and size, never by its keys).
+
+    Together they name exactly the rows the engine's final refit and capture train on: every
+    development row less the delayed-label rows (``partition.training_exclusions``), for
+    every split kind. A development row that no partition of the split names (none today:
+    the split covers its rows) is listed in an ``unscored`` partition (role
+    ``development``) rather than dropped; a partition that names a delayed-label row or a row
+    outside the development rows is ``contract_invalid``."""
+    from mlkit.study import partition
     split_rid = state['current'].get('split')
     if split_rid is None or not any(r['slot'] == 'split' and r['current'] for r in results):
         return []
-    out = []
-    folds = act.fold_assignment(store, split_rid)
-    if folds:
-        for fold in sorted(set(folds.values())):
-            keys = [k for k, f in folds.items() if f == fold]
-            out.append({'id': f'fold_{fold}', 'role': f'fold_{fold}', 'row_keys': keys,
-                        'membership_sha256': _membership(keys),
-                        'exposure_status': 'exposed'})
+    out = _split_partitions(store, split_rid)
+    development = partition.development_keys(store.read_blob, partition.inputs(state))
+    held = partition.excluded_keys(store.read_blob, partition.training_exclusions(state))
+    named = {k for p in out for k in p['row_keys']}
+    if held & named:
+        raise ContractError('contract_invalid', 'The current split names rows whose label is '
+                            'delayed (kept out of every fit).', path='development_plan',
+                            remediation='Run the split again; it leaves delayed-label rows out.',
+                            details={'rows': len(held & named)})
+    if development is None:              # a legacy study: every row of the split
         return out
-    plan = act.evaluation_membership(store, split_rid)
-    if plan is not None:
-        for i, fold in enumerate(plan.get('folds') or [], start=1):
-            keys = list(fold['validation_keys'])
-            out.append({'id': f'fold_{i}', 'role': f'fold_{i}', 'row_keys': keys,
-                        'membership_sha256': _membership(keys), 'exposure_status': 'exposed'})
-        warmup = list(plan.get('unscored_keys') or [])
-        if warmup:
-            out.append({'id': 'warmup', 'role': 'train', 'row_keys': warmup,
-                        'membership_sha256': _membership(warmup),
-                        'exposure_status': 'exposed'})
-        return out
-    keys = act.split_keys(store, split_rid)
-    for role in ('train', 'validation'):
-        out.append({'id': role, 'role': role, 'row_keys': list(keys[role]),
-                    'membership_sha256': _membership(list(keys[role])),
-                    'exposure_status': 'exposed'})
+    eligible = [k for k in development if k not in held]
+    if named - set(eligible):
+        raise ContractError('contract_invalid', 'The current split names rows that are not '
+                            'development rows.', path='development_plan',
+                            remediation='Run the split again.',
+                            details={'rows': len(named - set(eligible))})
+    rest = [k for k in eligible if k not in named]
+    if rest:
+        out.append(_part('unscored', 'development', rest))
     return out
 
 
@@ -154,7 +188,7 @@ def _contracts(store, state, predictor: dict, limitations: list) -> dict:
         return {'source': 'none'}
     from mlkit.study import case as c, data as dt, fit, partition
     from . import capture
-    from .recipe import data_contract_from_case, recipe_from_fit
+    from .recipe import data_contract_from_case, delayed_label_exclusions, recipe_from_fit
     from hypotrail_runtime.errors import ContractError
     case = c.case_of(state)
     try:
@@ -169,6 +203,9 @@ def _contracts(store, state, predictor: dict, limitations: list) -> dict:
     keys = partition.development_keys(store.read_blob, partition.inputs(state))
     if keys is None:
         keys = dt.row_index(case).keys
+    # The rows a capture would read: the development rows less the delayed-label rows.
+    held = partition.excluded_keys(store.read_blob, partition.training_exclusions(state))
+    keys = [k for k in keys if k not in held]
     frame = fit._ordered(dt.load_development(case, keys).frame)
     choice = st.choice_decision(state)
     decision = state['decisions'][choice]
@@ -180,9 +217,10 @@ def _contracts(store, state, predictor: dict, limitations: list) -> dict:
                                         'revision': int(decision['revision']),
                                         'evidence_ids': [state['current'][slot]]
                                         if slot in state['current'] else []})
-        contract = data_contract_from_case(case, frame,
-                                           dataset_sha256=state['dataset']['sha256'],
-                                           features=list(recipe.features))
+        contract = data_contract_from_case(
+            case, frame, dataset_sha256=state['dataset']['sha256'],
+            features=list(recipe.features),
+            exclusions=delayed_label_exclusions(st.delayed_labels_limit(state)))
     except ContractError as exc:
         limitations.append(f'No recipe: {exc.message}')
         return {'source': 'none'}
@@ -303,7 +341,7 @@ def _selection_block(state, capture_rid, entry, relation) -> dict:
 
 
 def read_export_source(study_path, expected_revision: int) -> ExportSource:
-    from mlkit.study import read, registry, state as st
+    from mlkit.study import partition, read, registry, state as st
     from mlkit.study.store import StudyStore
     study = read.open(study_path)
     state = study.state
@@ -368,7 +406,14 @@ def read_export_source(study_path, expected_revision: int) -> ExportSource:
             'partitions': _partitions(store, state, results),
             'final_test': {'status': final_test['status'], 'n_rows': final_test['n_rows']},
             'n_source_records': part.get('n_rows')}
+    delayed = st.delayed_labels_limit(state)
+    if delayed is not None:
+        plan['excluded_rows'] = [{'reason': partition.DELAYED_LABEL_REASON,
+                                  'n_rows': int(delayed['n_rows']),
+                                  'text': delayed['text']}]
     limitations = _limitations(predictor, opened, relation)
+    if delayed is not None:
+        limitations.append(delayed['text'])
     contracts = _contracts(store, state, predictor, limitations)
     contracts['selection'] = _selection_block(state, capture_rid, entry, relation)
     doc = {'schema_version': 'hypotrail.export_source/1',

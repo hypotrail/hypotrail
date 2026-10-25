@@ -467,3 +467,55 @@ preprocessing that OmegaConf would interpret (`???`, `${`) is carried in the Hyd
 configuration as `{hypotrail_literal_utf8_hex: ...}` and decoded by the projection, so the
 project reads the exact token; a name or unit of the case equal to `???` is still refused
 with a remediation the junior can follow.
+
+**Round 3 fixes** (round-3 review B3-1 to B3-6; regression tests:
+`framework/tests/exporters/azureml/test_review_round3.py`, temporary studies only). They
+supersede the earlier sentences that say otherwise. *Development plan (B3-1)*: the exported
+plan names exactly the rows the engine's final refit and capture train on, every
+development row less the delayed-label rows, for every split kind (holdout, k-fold,
+forward chaining, explicit review-v1 plan). `read_export_source` reads the explicit
+evaluation plan before the `folds` blob (a forward-chaining split writes both, and its
+`folds` blob names the validation rows only, so the warm-up partition was dropped: 195
+rows rebuilt against 235 captured, 200 against 240 without delayed labels); a development
+row no partition names is listed in an `unscored` partition (role `development`), and a
+partition that names a delayed-label row or a row outside the development rows is
+`contract_invalid`. `n_development_rows` and `development_keys_sha256` describe those rows.
+When a captured predictor is exported, the plan's rows must be the capture's
+`training_scope.membership_sha256` (the SHA-256 of the sorted row keys, one per line, or
+joined by newlines): otherwise `contract_invalid`, `details.reason:
+plan_rows_not_training_rows` (check `plan_rows_are_training_rows`). The technical report of
+`run-local` adds the check `candidate_within_evaluated_tolerance`: a rebuilt candidate
+outside the evaluated model's declared tolerance fails the report (status `failed`, the
+evaluation step refuses), it never reports `passed`. *Predict input (B3-2)*: a non-finite
+feature value (`inf`, `Infinity`, read as pandas reads them) is refused before any
+prediction with `contract_invalid` (exit code 2) and an issue in the shape of the runtime's
+input check (`path: input/<column>`, `kind: non_finite_values`, `n_rows`, `rows`); round 2
+let it reach scikit-learn (`internal_error`). *Auxiliary columns (B3-3)*: an auxiliary
+column whose pandas type the contract v1 cannot declare (an integer above the int64 range
+read as `uint64`, booleans with a missing token read as an `object` column) is declared
+`string` and listed under the data contract extension `hypotrail.auxiliary_as_text` with
+the type the engine read; `materialize` reads every auxiliary `string` column as its text
+(`dtype=str`, no numeric conversion), so the export and the project describe the same
+values. *Configuration texts (B3-4)*: every text written into a YAML file of the project
+is a double-quoted scalar whose characters outside YAML's printable set and whose line
+breaks (NEL, U+2028, U+2029, a BOM) are escapes, so no YAML or OmegaConf resolver re-types
+it (`1e9`, `1E-3`, `+1e5`, `yes`, `null`, a date) or folds it; the texts OmegaConf
+interprets even when quoted (`???`, `${`) stay encoded literals in the preprocessing and
+refused elsewhere (round 2). The generator's self-check reads the rendered configuration
+through OmegaConf when it is installed. *Delayed labels (B3-5)*: the rows left out for a
+delayed label are counted and explained (the term first, then the study's example in its
+own clock, the engine's `delayed_labels_excluded` text) in the snapshot limitations (so the
+README), the snapshot `evaluation_plan.excluded_rows` and the development plan
+`excluded_rows`, and the data contract's `exclusions` (rule
+`outcome_not_available_before_final`, a shorter justification with the count; a new
+capture records it, a study without delayed labels keeps its contract unchanged).
+*Validation patterns (B3-6)*: the profile's patterns, the Azure YAML expression and asset
+patterns, the upload allowlist, the template metadata pattern, the `.amlignore` rules and
+the lock lines are matched whole (`fullmatch` or `\Z`), so a value followed by a newline is
+refused. *Expectation changes*: the synthetic material's capture now records the engine's
+digest of its training rows (it recorded a placeholder), which the new check requires; the
+rendered YAML of a project quotes its texts (bytes differ from round 2, same values).
+*Not covered*: the B3-0 engine defect (a regression under review-v1 with an explicit
+evaluation plan) is fixed separately; the tests of the review-v1 regression studies use a
+marked workaround fixture until then. The native runtime's own input check does not test
+finiteness; the exported project refuses non-finite values before calling it.

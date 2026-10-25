@@ -406,8 +406,55 @@ def _plan(source_plan: Any, contract: dict) -> dict:
                               path='development_plan.n_source_records',
                               remediation='Fix the engine.')
         out['n_source_records'] = n_records
+    excluded = plan.get('excluded_rows')
+    if excluded is not None:
+        out['excluded_rows'] = _excluded_rows(excluded)
     out['keys_sha256'] = cj.canonical_sha256({p['id']: p['row_keys'] for p in partitions})
     return out
+
+
+def _excluded_rows(excluded: Any) -> list:
+    """``development_plan.excluded_rows``: the development rows the engine leaves out of
+    every fit (delayed labels), counted and explained, never listed by key."""
+    where = 'development_plan.excluded_rows'
+    if not isinstance(excluded, list) or not all(
+            isinstance(e, Mapping) and isinstance(e.get('reason'), str)
+            and isinstance(e.get('text'), str) and isinstance(e.get('n_rows'), int)
+            and not isinstance(e['n_rows'], bool) and e['n_rows'] > 0 for e in excluded):
+        raise ExportError('contract_invalid', 'The excluded development rows are not a list of '
+                          '{reason, n_rows, text}.', path=where, remediation='Fix the engine.')
+    return [{'reason': e['reason'], 'n_rows': e['n_rows'], 'text': e['text']} for e in excluded]
+
+
+def membership_digests(keys) -> set[str]:
+    """The SHA-256 digests under which the engine names a set of row keys in a capture's
+    ``training_scope.membership_sha256``: of the sorted keys one per line (the study's
+    row-key blob), or joined by newlines (the rows of a fit that left delayed-label rows
+    out). Either digest identifies the same set of keys."""
+    ordered = sorted(set(keys))
+    return {cj.sha256_hex(''.join(k + '\n' for k in ordered).encode('utf-8')),
+            cj.sha256_hex('\n'.join(ordered).encode('utf-8'))}
+
+
+def _check_training_rows(plan: dict, predictor: Mapping) -> dict:
+    """The exported plan names exactly the rows the captured predictor was fitted on: its
+    development rows' digest is the capture's ``training_scope.membership_sha256``; another
+    set is ``contract_invalid`` (a rebuild would fit other rows than the evaluated model)."""
+    scope = (predictor.get('manifest') or {}).get('training_scope') or {}
+    recorded = scope.get('membership_sha256')
+    keys = {k for p in plan['partitions'] for k in p['row_keys']}
+    if not isinstance(recorded, str) or recorded not in membership_digests(keys):
+        raise ExportError('contract_invalid', 'The exported development plan does not name '
+                          'the rows the captured predictor was fitted on; a rebuild would fit '
+                          'other rows. Nothing was written.',
+                          path='development_plan.partitions',
+                          remediation='Fix the engine: read_export_source lists every row of '
+                                      'the final refit (development rows less delayed-label '
+                                      'rows); never edit the plan.',
+                          details={'reason': 'plan_rows_not_training_rows',
+                                   'n_development_rows': len(keys),
+                                   'training_membership_sha256': recorded})
+    return {'id': 'plan_rows_are_training_rows', 'status': 'passed'}
 
 
 def _key_order(key: str):
@@ -544,6 +591,7 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
                               path='predictor', remediation='Internal: pass verify_predictor.')
         predictor = verify_predictor(Path(bundle_dir), recipe, contract)
         _same_predictor(descriptor, predictor)
+        checks.append(_check_training_rows(plan, predictor))
         checks += predictor['checks']
         warnings += predictor['warnings']
         # The study's own record decides the evidence status; the binding beside the bundle
@@ -586,7 +634,9 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
                             'keys_sha256': plan['keys_sha256'],
                             'roles': [p['role'] for p in plan['partitions']],
                             'n_development_rows': plan['n_development_rows'],
-                            'final_test': plan['final_test']},
+                            'final_test': plan['final_test'],
+                            **({'excluded_rows': plan['excluded_rows']}
+                               if 'excluded_rows' in plan else {})},
         'evidence_state': validity,
         'conclusion': conclusion,
         'limitations': limitations,

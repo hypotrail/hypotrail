@@ -31,9 +31,9 @@ KNOWN = ('team-azureml-v1',)
 LAYOUT_SHA256 = 'a184c33b3a1f2d457092b47cdce49633011c28b8bee0c4e599ba3cc938aaad56'
 TRANSPORT_SHA256 = '81bcb664a2eacfa442b06f3695a3bd49e13b61e1ace654e9fc632a7aeca1d710'
 EXAMPLE_CODE = re.compile(r'shuttle|companies|reviews|space ?shuttle', re.IGNORECASE)
-UPLOAD_ALLOWED = re.compile(r'^(src/.+|\.amlignore|\.gitignore|\.pre-commit-config\.yaml|'
-                            r'README\.md|environment\.yml|pyproject\.toml)$')
-METADATA = re.compile(r'(^|/)(\.git|__MACOSX)(/|$)|(^|/)\.DS_Store$|(^|/)\._[^/]*$')
+UPLOAD_ALLOWED = re.compile(r'(src/.+|\.amlignore|\.gitignore|\.pre-commit-config\.yaml|'
+                            r'README\.md|environment\.yml|pyproject\.toml)')
+METADATA = re.compile(r'(^|/)(\.git|__MACOSX)(/|\Z)|(^|/)\.DS_Store\Z|(^|/)\._[^/]*\Z')
 
 
 def _sha(data: bytes) -> str:
@@ -179,6 +179,6 @@ def check_tree(root, template: Template) -> list[str]:
     yaml_problems, _ = azure_yaml.check(root)
     problems += yaml_problems
     for path in transfer.transferable(root):
-        if not UPLOAD_ALLOWED.match(path):
+        if not UPLOAD_ALLOWED.fullmatch(path):
             problems.append(f'code upload would include {path}')
     return problems

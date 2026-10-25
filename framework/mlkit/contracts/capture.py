@@ -417,9 +417,9 @@ def _compute(store, plan_: Mapping) -> dict:
     import numpy as np
     from hypotrail_runtime import capture_predictor, fit_predictor
     from hypotrail_runtime.predictor import compare
-    from mlkit.study import activities as act, fit
+    from mlkit.study import activities as act, fit, state as st
     from . import context as cx
-    from .recipe import data_contract_from_case, recipe_from_fit
+    from .recipe import data_contract_from_case, delayed_label_exclusions, recipe_from_fit
     inputs, params = plan_['inputs'], plan_['params']
     case, dataset = act.load(plan_, store)
     development = fit._ordered(dataset.frame)
@@ -430,8 +430,12 @@ def _compute(store, plan_: Mapping) -> dict:
     if 'tuning' in info:
         model_params['tuned_value'] = info['tuning']['value']
     features = list(recipe.features)
+    # Review round 3 (B3-5): the delayed-label rows the fit leaves out are named in the
+    # contract's exclusions (none, and the contract unchanged, in a study without them).
+    exclusions = delayed_label_exclusions(st.delayed_labels_limit(store.load_state())) \
+        if inputs.get('training_exclusions') else []
     contract = data_contract_from_case(case, development, dataset_sha256=plan_['dataset_sha256'],
-                                       features=features)
+                                       features=features, exclusions=exclusions)
     from mlkit.integrations import pandera_validation
     validation = pandera_validation.validate(contract, development[[
         col.name for col in contract.columns if col.role in ('feature', 'target')]],

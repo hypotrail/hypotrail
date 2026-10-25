@@ -143,11 +143,19 @@ def typed_development(source: Path, contract: dict):
     return frame
 
 
+def training_membership(keys) -> str:
+    """The engine's ``training_scope.membership_sha256`` of the rows a predictor is fitted
+    on: the SHA-256 of the sorted row keys, one per line (the study's row-key blob). The
+    export checks it against its development plan (review round 3, B3-1)."""
+    return _sha(''.join(k + '\n' for k in sorted(set(keys))).encode('utf-8'))
+
+
 def capture(runtime, folder: Path, source: Path, contract: dict, the_recipe: dict, *,
             packager=None, role: str = 'final_development_refit') -> Path:
     frame = typed_development(source, contract)
     scope = {'role': role, 'dataset_id': contract['dataset_id'],
-             'membership_sha256': _sha(b'dev-membership'), 'protocol_id': 'cv5-synthetic'}
+             'membership_sha256': training_membership(list(frame.index)),
+             'protocol_id': 'cv5-synthetic'}
     fitted = runtime.fit_predictor(the_recipe, contract, frame, scope)
     destination = folder / 'bundle'
     runtime.capture_predictor(fitted, None, frame[FEATURES].head(8), destination,

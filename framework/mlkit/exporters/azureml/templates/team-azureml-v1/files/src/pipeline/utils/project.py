@@ -45,7 +45,7 @@ TARGET = CONF_DIR / "azure" / "target.yaml"
 MISSING = "MISSING-"
 STEPS = ("data_preparation", "data_splitting", "training", "evaluation")
 UPLOAD_ALLOWED = re.compile(
-    r"^(src/.+|\.amlignore|\.gitignore|\.pre-commit-config\.yaml|README\.md|environment\.yml|pyproject\.toml)$",
+    r"(src/.+|\.amlignore|\.gitignore|\.pre-commit-config\.yaml|README\.md|environment\.yml|pyproject\.toml)",
 )
 # Credential shapes, written in pieces so that this file does not match itself.
 SECRET = re.compile(
@@ -149,7 +149,7 @@ def _markers() -> tuple[str, object]:
 
 def _upload() -> tuple[str, object]:
     files = transfer.transferable(ROOT)
-    outside = [f for f in files if not UPLOAD_ALLOWED.match(f)]
+    outside = [f for f in files if not UPLOAD_ALLOWED.fullmatch(f)]
     if outside:
         raise ProjectError(
             "contract_invalid",
@@ -318,6 +318,7 @@ def predict(args: argparse.Namespace) -> int:
         features = _parity_frame(source)
     else:
         features = contracts.typed_features(source, bundle_contract(folder))
+    contracts.refuse_non_finite(features, bundle_contract(folder))
     predictor = rt.load_predictor(folder, trusted_roots=[folder])
     frame = mp.batch_frame(predictor.predict(features))
     document = {

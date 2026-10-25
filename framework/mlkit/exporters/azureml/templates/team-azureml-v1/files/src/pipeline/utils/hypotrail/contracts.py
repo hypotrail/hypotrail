@@ -200,6 +200,20 @@ def read_kwargs(contract: dict) -> dict:
     return kwargs
 
 
+def _text_auxiliary(contract: dict) -> list[str]:
+    """Return the auxiliary columns the contract declares as text.
+
+    The predictor never reads an auxiliary column. One whose pandas type the contract cannot
+    declare (an integer above the int64 range read as ``uint64``, booleans with a missing
+    token read as an ``object`` column; listed under the extension
+    ``hypotrail.auxiliary_as_text``) is declared ``string``: its cells are read as their text,
+    never converted, so the export and this project describe the same values.
+    """
+    return [
+        c["name"] for c in _columns(contract) if c.get("role") == "auxiliary" and c.get("physical_type") == "string"
+    ]
+
+
 def read_source(path: Path, contract: dict, keys: list[str]) -> pd.DataFrame:
     """Read every record of the study's dataset file as the engine does, indexed by its keys.
 
@@ -208,7 +222,9 @@ def read_source(path: Path, contract: dict, keys: list[str]) -> pd.DataFrame:
     """
     import pandas as pd
 
-    frame = pd.read_csv(path, **read_kwargs(contract))
+    kwargs = read_kwargs(contract)
+    kwargs["dtype"] = dict.fromkeys(_text_auxiliary(contract), str)
+    frame = pd.read_csv(path, **kwargs)
     names = [c["name"] for c in _columns(contract)]
     if list(frame.columns) != names or len(frame) != len(keys):
         raise ProjectError(
@@ -265,9 +281,10 @@ def engine_values(frame: pd.DataFrame, contract: dict, where: str) -> pd.DataFra
     out = frame.copy()
     keys = [str(k) for k in out.index]
     problems: list = []
+    as_text = set(_text_auxiliary(contract))
     for column in _columns(contract):
         name = column["name"]
-        if column.get("semantic_type") == NUMERIC:
+        if column.get("semantic_type") == NUMERIC and name not in as_text:
             out[name], bad = _numbers(out[name])
             problems += [{"row_key": keys[i], "column": name, "problem": "not_convertible"} for i in bad]
         found = _physical_type(out[name])
@@ -338,6 +355,49 @@ def typed_features(path: Path, contract: dict) -> pd.DataFrame:
     problems += _contract_problems(frame, contract, keys)
     _refuse(problems, str(path))
     return frame
+
+
+def refuse_non_finite(frame: pd.DataFrame, contract: dict) -> None:
+    """Refuse a feature value that is not a finite number before any prediction.
+
+    pandas reads ``inf`` and ``Infinity`` as numbers (the input is read as the engine reads
+    its dataset), but no fitted model takes them: the refusal is ``contract_invalid`` with
+    one issue per column, in the shape of the runtime's input check (``code``, ``path``
+    ``input/<column>``, ``kind``, ``n_rows`` and the positions of a few rows).
+    """
+    import numpy as np
+    from pandas.api.types import is_bool_dtype, is_numeric_dtype
+
+    issues = []
+    for column in _columns(contract):
+        name = column["name"]
+        if column.get("role", "feature") != "feature" or name not in frame.columns:
+            continue
+        series = frame[name]
+        if not is_numeric_dtype(series.dtype) or is_bool_dtype(series.dtype):
+            continue
+        values = series.to_numpy(dtype="float64", na_value=np.nan)
+        bad = np.isinf(values)
+        if bad.any():
+            issues.append(
+                {
+                    "code": "contract_invalid",
+                    "path": f"input/{name}",
+                    "kind": "non_finite_values",
+                    "n_rows": int(bad.sum()),
+                    "rows": [int(i) for i in np.flatnonzero(bad)[:MAX_EXAMPLES]],
+                },
+            )
+    if issues:
+        first = issues[0]
+        more = f" (and {len(issues) - 1} more)" if len(issues) > 1 else ""
+        raise ProjectError(
+            "contract_invalid",
+            f"The inference rows do not satisfy the data contract: {first['kind']} at {first['path']}{more}",
+            path=first["path"],
+            remediation="Send finite numbers (or an empty cell for a missing value); an infinity is never predicted.",
+            details={"issues": issues},
+        )
 
 
 def _as_declared(series: pd.Series, column: dict) -> tuple[pd.Series, list]:
