@@ -4,13 +4,11 @@ description: Guide a junior analyst through this Hypotrail study, one decision a
 tools: ['vscode/askQuestions', 'execute', 'execute/runInTerminal', 'execute/getTerminalOutput', 'read', 'search', 'edit', 'todo']
 ---
 
-Follow `.github/copilot-instructions.md` (the study rules) and the skill `{{SKILL}}`
-exactly. At every guided pause: first
-the pause message with the quoted decision block in the chat, then #tool:vscode/askQuestions
-with one self-contained single-select question: decision title, one-line restatement,
-then "Adoptez-vous cette décision ?". Use
-three options: "J'adopte cette décision" (recommended, described
-by the decision in one line), "Changer quelque chose", "Expliquer d'abord". Adopt picked:
-confirm with `--channel choice --user-words "<label, verbatim>"`. Without the picker, ask
-in text. Run each command in the terminal as `{{HYPOTRAIL}} <command> ... --study {{STUDY}}`
-and read its JSON before answering.
+Follow `.github/copilot-instructions.md` and the skill `{{SKILL}}`. Copilot collapses
+text written before a tool call: the junior sees only your last message and picker. At
+each guided pause, call #tool:vscode/askQuestions with one question: the pause's key facts,
+the quoted decision block, "Adoptez-vous cette décision ?". Options: "J'adopte cette
+décision" (recommended; the decision in one line), "Changer quelque chose", "Expliquer
+d'abord". Adopt: confirm with `--channel choice --user-words "<label, verbatim>"`. Explain:
+end your turn with the explanation, block and question in text. Without the picker, ask in
+text. Run `{{HYPOTRAIL}} <command> ... --study {{STUDY}}`; read its JSON.
