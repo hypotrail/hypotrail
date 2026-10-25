@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-families",
    "revision": 22,
-   "updated": "2026-10-25T14:20:20.510404+00:00",
+   "updated": "2026-10-25T15:43:20.519782+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -366,7 +366,7 @@
      "restatement": "You compare three variants of the candidate, each with its question.",
      "rationale": "One penalty change and two model families, inside the budget of three.",
      "revision": 22,
-     "created": "2026-10-25T14:20:20.509082+00:00",
+     "created": "2026-10-25T15:43:20.518695+00:00",
      "labels": null,
      "label": "You compare three variants of the candidate, each with its question.",
      "origin": {
@@ -390,7 +390,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-25T14:20:07.845748+00:00",
+      "time": "2026-10-25T15:43:08.170963+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -437,7 +437,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-25T14:20:08.808747+00:00",
+      "time": "2026-10-25T15:43:09.277708+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -486,7 +486,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-25T14:20:10.257849+00:00",
+      "time": "2026-10-25T15:43:10.770331+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -517,7 +517,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-25T14:20:11.735624+00:00",
+      "time": "2026-10-25T15:43:12.438512+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -553,7 +553,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-25T14:20:13.235051+00:00",
+      "time": "2026-10-25T15:43:14.148496+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -2233,7 +2233,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_e3011a6950ece5ea44c0419c",
-     "exposure_id": "x_2c030bf8d33f4ada802e23334fccfd71",
+     "exposure_id": "x_abcb5fa31e164ccbb309c953ff3e194f",
      "started_revision": 20,
      "integrity": "ok"
     },
@@ -2292,7 +2292,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_a8274014a4c678f4a2a235d2",
-     "exposure_id": "x_9ff9d9413243407ba074ed3b35ccc4cf",
+     "exposure_id": "x_6d81381937a54292a504d9057ced43f2",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -2427,7 +2427,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_eff39ccb2204a33ff345cb41",
-     "exposure_id": "x_af6da6b26f3d49c5baa351f289b0be5c",
+     "exposure_id": "x_cb26010e20c24fa6bac69bfb834943d5",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -2697,7 +2697,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
-     "exposure_id": "x_6989149830704d1dbfe594875cbbd0dc",
+     "exposure_id": "x_5eec6feb1b774a38adfa3913471503f4",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -2802,7 +2802,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_bb85e451e092b31aedb250d1",
-     "exposure_id": "x_f759c50b77364441b64df01dedb0ac09",
+     "exposure_id": "x_aae9dfb218fa40d8a6fd8afab27d2b3f",
      "started_revision": 12,
      "integrity": "ok"
     }
