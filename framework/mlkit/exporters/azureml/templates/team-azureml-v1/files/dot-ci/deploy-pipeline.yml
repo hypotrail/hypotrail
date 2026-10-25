@@ -2,7 +2,7 @@
 # (trigger: none, pr: none) until the team enables it deliberately. It checks the export,
 # runs the read-only preflight, then creates the assets and submits the training pipeline
 # and waits for its terminal state. It never deploys an endpoint and registers no model.
-# Cloud CI enabled in the export profile: @@text:cloud_ci_enabled@@
+# Cloud CI enabled in the export profile: @@yaml:cloud_ci_enabled@@
 trigger: none
 pr: none
 
@@ -13,7 +13,7 @@ steps:
   - task: AzureCLI@2
     displayName: "install Azure ML CLI"
     inputs:
-      azureSubscription: '@@text:service_connection@@'
+      azureSubscription: @@yaml:service_connection@@
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: "az extension add -n ml -y"
@@ -21,7 +21,7 @@ steps:
   - task: AzureCLI@2
     displayName: "validate the export and run the read-only preflight"
     inputs:
-      azureSubscription: '@@text:service_connection@@'
+      azureSubscription: @@yaml:service_connection@@
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: |
@@ -31,7 +31,7 @@ steps:
   - task: AzureCLI@2
     displayName: "register data asset and environment, run pipeline job, wait"
     inputs:
-      azureSubscription: '@@text:service_connection@@'
+      azureSubscription: @@yaml:service_connection@@
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: 'python -m src.pipeline.utils.project submit --execute --wait'

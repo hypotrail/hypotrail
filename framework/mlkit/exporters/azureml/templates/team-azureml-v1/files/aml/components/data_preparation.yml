@@ -1,7 +1,7 @@
 # <component>
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: @@text:component_prefix@@_prep_data
-display_name: PrepData@@text:display_suffix@@
+name: @@yaml:component_prep_data@@
+display_name: @@yaml:display_prep_data@@
 version: @@yaml:component_version@@
 type: command
 inputs:
@@ -11,9 +11,9 @@ outputs:
   preprocessed_data_path:
     type: uri_folder
 code: ./../../
-environment: azureml:@@text:environment_name@@:@@text:environment_version@@
+environment: @@yaml:environment_ref@@
 command: >-
-  python -m src.pipeline.data_preparation.main mlflow_tracking=@@text:mlflow_tracking_cloud@@ data_dir=${{inputs.hypotrail_data_path}} preprocessed_data.path=${{outputs.preprocessed_data_path}}
+  python -m src.pipeline.data_preparation.main mlflow_tracking=false data_dir=${{inputs.hypotrail_data_path}} preprocessed_data.path=${{outputs.preprocessed_data_path}}
 
 
 # </component>

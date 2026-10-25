@@ -545,3 +545,39 @@ opened; it is checked before the MLflow package is verified, so a re-made packag
 loaded. The predictor record also lists `packages` (`[{format, artifact_id}]`). The generated
 project's bytes are unchanged apart from the copied `mlflow_packaging.py` and, through the
 captured bundle, the package files.
+
+**Round 4 fixes** (round-4 review R4-B1 to R4-B3; regression tests:
+`framework/tests/exporters/azureml/test_review_round4.py`, synthetic material and temporary
+folders only). They supersede the earlier sentences that say otherwise. *YAML values
+(R4-B1)*: round 3 quoted the texts of `src/conf` only; the Azure YAML still received
+`experiment_name`, `data_asset.name`, `environment.name`, the compute, the asset
+references and the service connection raw, so a loader re-typed `2026`, `True`, `null` or
+`1.10` (the job input still named the text) and an environment named `null` failed the
+export with `template_layout_mismatch`. Every value the generator writes into a YAML file
+of the project (Azure YAML, `.ci/`, `environment.yml`, `src/conf`, comments included) is
+now one whole double-quoted scalar: a reference such as `azureml:<name>:<version>` or a
+component name is composed by the generator and quoted as one value, and the command lines
+carry the fixed `mlflow_tracking=false`. A YAML template may no longer use the raw
+`@@text:` marker (the generator refuses it, `template_layout_mismatch`), and
+`src/conf/azure/target.yaml` is written with every text quoted (`safe_dump` left `1e9`
+plain, which OmegaConf reads as a float). A profile name that is not an Azure name (`~`,
+an empty text) is still refused on its field with `contract_invalid`. *Example code
+(R4-B2)*: the check for code of the template's example (shuttles, companies, reviews)
+reads the template's own files, before their markers are replaced, and the shared
+generator modules (`Template.example_code`, run when the template is loaded and by
+`check_tree`); it never reads a rendered value, so a case id, title or name with those
+words exports. Generated documents (contracts, notebook, lock) and the copied model are the
+study's, not the template's, and are not matched. *Run-local paths (R4-B3)*: each run path
+is passed to the steps as one single-quoted Hydra value (`hydra_quoted`: a quote is `\'`,
+the backslashes before a quote or the closing quote are doubled, `${` is escaped for
+OmegaConf), so a folder named with `(`, `)`, `,`, `=`, quotes, `$`, brackets, braces,
+spaces or non-ASCII letters runs; a relative `--run-dir` is read from the caller's folder
+once. A failed step's refusal is relayed in the document (`error`: code, path, message,
+remediation, details, beside `failed_step`, exit code 2); a step that stops without a
+refusal is `step_failed` with its exit code and the tail of its output. *Not covered*:
+Hydra creates its run folder from `hydra.run.dir` resolved once and resolves the absolute
+copy `hydra.runtime.output_dir` again, so no escape keeps a `${` literal in both: a run
+folder whose path holds `${` (a `--run-dir`, or the project folder of the default one) is
+refused before any step runs (`invalid_arguments`). `pyproject.toml` (TOML, not YAML)
+still receives the project name (a slug of the case id) and the description (with the
+study id, 16 hexadecimal digits) raw inside its quotes.

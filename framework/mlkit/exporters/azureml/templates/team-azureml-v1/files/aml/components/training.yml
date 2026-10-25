@@ -1,7 +1,7 @@
 # <component>
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: @@text:component_prefix@@_train_model
-display_name: TrainModel@@text:display_suffix@@
+name: @@yaml:component_train_model@@
+display_name: @@yaml:display_train_model@@
 version: @@yaml:component_version@@
 type: command
 inputs:
@@ -13,9 +13,9 @@ outputs:
   model_path:
     type: uri_folder
 code: ./../../
-environment: azureml:@@text:environment_name@@:@@text:environment_version@@
+environment: @@yaml:environment_ref@@
 command: >-
-  python -m src.pipeline.training.main mlflow_tracking=@@text:mlflow_tracking_cloud@@ data_dir=${{inputs.hypotrail_data_path}} train_data.path=${{inputs.partitions_path}} models.path=${{outputs.model_path}}
+  python -m src.pipeline.training.main mlflow_tracking=false data_dir=${{inputs.hypotrail_data_path}} train_data.path=${{inputs.partitions_path}} models.path=${{outputs.model_path}}
 
 
 # </component>

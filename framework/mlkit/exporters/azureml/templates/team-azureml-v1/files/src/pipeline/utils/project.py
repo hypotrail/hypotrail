@@ -529,13 +529,72 @@ def materialize(args: argparse.Namespace) -> int:
 # --- run-local -------------------------------------------------------------------------
 
 
+_HYDRA_QUOTE = re.compile(r"(\\*)'")
+_OMEGACONF_INTERPOLATION = re.compile(r"(\\*)\$\{")
+REFUSAL_LINES = 40
+
+
+def hydra_quoted(text: str) -> str:
+    r"""Return ``text`` as one single-quoted value of Hydra's override grammar.
+
+    Hydra reads every character of a quoted value literally (``(``, ``,``, ``=``, ``[``,
+    spaces, non-ASCII), except a quote, escaped as ``\'``, and the backslashes before a
+    quote or the closing quote, doubled. OmegaConf then resolves ``${`` in the value: it is
+    escaped as ``\${`` (and the backslashes before it doubled), so the step reads ``text``.
+    """
+    text = _OMEGACONF_INTERPOLATION.sub(lambda m: "\\" * (2 * len(m.group(1))) + "\\${", text)
+    text = _HYDRA_QUOTE.sub(lambda m: "\\" * (2 * len(m.group(1))) + "\\'", text)
+    trailing = len(text) - len(text.rstrip("\\"))
+    return "'" + text + "\\" * trailing + "'"
+
+
+def _step_refusal(step: str, returncode: int, stdout: str, stderr: str) -> dict:
+    """Return the refusal a failed step printed (its last JSON refusal line), or a step failure."""
+    for line in reversed(stdout.splitlines() + stderr.splitlines()):
+        start = line.find("{")
+        if start < 0:
+            continue
+        try:
+            document = json.loads(line[start:])
+        except ValueError:
+            continue
+        if isinstance(document, dict) and isinstance(document.get("error"), dict) and "code" in document["error"]:
+            return document["error"]
+    return {
+        "code": "step_failed",
+        "path": f"src/pipeline/{step}/main.py",
+        "message": f"The step {step} stopped with exit code {returncode} without a refusal.",
+        "remediation": "Read the step's output in details (or on stderr) and report it if it is not a refusal.",
+        "details": {"exit_code": returncode, "output_tail": (stdout + stderr).splitlines()[-REFUSAL_LINES:]},
+    }
+
+
+def _hydra_run_dir(base: Path) -> str:
+    """Return Hydra's own run folder (``<run dir>/hydra``), refused when its path holds ``${``.
+
+    Hydra creates the folder from ``hydra.run.dir`` resolved once, then stores its absolute
+    path in ``hydra.runtime.output_dir`` and resolves that text again: no escape keeps a
+    ``${`` of the path literal in both, so such a folder is refused before any step runs.
+    """
+    folder = str(base / "hydra")
+    if "${" in folder:
+        raise ProjectError(
+            "invalid_arguments",
+            "The run folder's path holds '${', which Hydra cannot use for its own run folder.",
+            path=str(base),
+            remediation="Run from a project folder, and pass a --run-dir, whose path holds no '${'.",
+        )
+    return folder
+
+
 def run_local(args: argparse.Namespace) -> int:
     """Run the four steps in order as separate processes, as Azure ML would."""
     if args.mode != "rebuild_final_candidate":
         raise ProjectError(
             "capability_not_supported", f"Mode {args.mode!r} is not available in this version.", path="mode",
         )
-    base = Path(args.run_dir) if args.run_dir else OUTPUTS / "local-run"
+    # The steps run in the project folder: a relative --run-dir is read from here, once.
+    base = Path(args.run_dir).absolute() if args.run_dir else OUTPUTS / "local-run"
     if base.exists() and any(base.iterdir()):
         raise ProjectError(
             "destination_not_empty",
@@ -543,13 +602,18 @@ def run_local(args: argparse.Namespace) -> int:
             path=str(base),
             remediation="Pass a new --run-dir; runs never overwrite each other.",
         )
+    # Each path is one quoted Hydra value: a folder named "My Project (2)" or "Smith, Jane"
+    # is read as written, never as Hydra's grammar (a sweep, a function, a list).
     overrides = [
-        f"preprocessed_data.path={base / '02_processed'}",
-        f"train_data.path={base / '03_partitions'}",
-        f"models.path={base / '04_model'}",
-        f"reports.path={base / '05_reports'}",
-        f"hydra.run.dir={base / 'hydra'}",
+        f"{key}={hydra_quoted(str(base / folder))}"
+        for key, folder in (
+            ("preprocessed_data.path", "02_processed"),
+            ("train_data.path", "03_partitions"),
+            ("models.path", "04_model"),
+            ("reports.path", "05_reports"),
+        )
     ]
+    overrides.append(f"hydra.run.dir={hydra_quoted(_hydra_run_dir(base))}")
     for step in STEPS:
         # The steps' logs go to stderr, so this command still prints one JSON document.
         # This interpreter and this project's own modules only.
@@ -557,10 +621,15 @@ def run_local(args: argparse.Namespace) -> int:
             [sys.executable, "-m", f"src.pipeline.{step}.main", *overrides],  # noqa: S603
             cwd=ROOT,
             check=False,
-            stdout=sys.stderr,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
         )
+        sys.stderr.write(result.stdout + result.stderr)
         if result.returncode != 0:
-            return _emit({"ok": False, "failed_step": step, "run_dir": str(base)}, 2)
+            error = _step_refusal(step, result.returncode, result.stdout, result.stderr)
+            return _emit({"ok": False, "failed_step": step, "run_dir": str(base), "error": error}, 2)
     report = contracts.load_json(base / "05_reports" / "technical-report.json")
     return _emit(
         {

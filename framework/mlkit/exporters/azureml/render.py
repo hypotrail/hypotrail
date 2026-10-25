@@ -13,8 +13,9 @@ File kinds:
 * ``adapted``: same path as in the team template, fixed new content (for example an inert
   ``cli-aliases.sh`` or steps that call the runtime);
 * ``rendered``: a template file whose ``@@filter:name@@`` markers are replaced from the
-  snapshot (``text``: raw, ``yaml``: a JSON scalar or flow value, valid YAML, ``py``: a
-  Python literal, ``json``); an unknown marker refuses the export;
+  snapshot (``text``: raw, never in a YAML file; ``yaml``: a quoted scalar or a flow or
+  block value whose texts are quoted; ``py``: a Python literal; ``json``); an unknown
+  marker refuses the export;
 * ``added``: a new path from the layout allowlist, fixed content;
 * ``shared``: a byte copy of a standalone generator module, so the project computes what
   the generator computed (``canonical``, ``projection``, ``transfer``, ``azure_yaml``,
@@ -47,6 +48,10 @@ SUMS_PATH = 'data/hypotrail/SHA256SUMS'
 EVALUATED = 'data/hypotrail/models/evaluated/'
 RUNTIME_DIR = 'aml/pipelines/training/runtime/'
 LOCK_REQUIREMENT = re.compile(r'([A-Za-z0-9][A-Za-z0-9._-]*)==([^\s;#]+)\s*')
+# The four command components of aml/components/ and their display names.
+COMPONENTS = {'prep_data': 'PrepData', 'split_data': 'SplitData', 'train_model': 'TrainModel',
+              'evaluate_model': 'EvaluateModel'}
+YAML_SUFFIXES = ('.yml', '.yaml')
 
 
 @dataclass(frozen=True)
@@ -179,6 +184,12 @@ def substitute(text: str, context: Mapping, where: str) -> str:
         if kind not in FILTERS or name not in context:
             raise ExportError('template_layout_mismatch', f'Unknown template marker {match.group(0)}.',
                               path=where, remediation='The template and the generator disagree.')
+        if kind == 'text' and where.endswith(YAML_SUFFIXES):
+            # Review round 4 (R4-B1): a raw text in YAML is re-typed by the loader ("2026",
+            # "True", "null", "1.10"); a YAML file takes the quoted ``yaml`` filter only.
+            raise ExportError('template_layout_mismatch', f'The YAML template uses the raw '
+                              f'marker {match.group(0)}.', path=where,
+                              remediation='Use @@yaml:...@@ for a value of a YAML file.')
         value = context[name]
         if kind == 'yaml' and isinstance(value, (dict, list)) and value:
             line = text[text.rfind('\n', 0, match.start()) + 1:match.start()]
@@ -271,13 +282,22 @@ def context(snapshot: Snapshot, normal: Mapping, missing: list, template: layout
     limitations.append('Azure ML execution is not qualified by this export: it needs an '
                        'authorised recipe run in a workspace.')
     final = plan['final_test']
+    display = ''.join(p.capitalize() for p in _slug(case_id).split('_'))
+    environment = (_value(normal['environment']['name'], 'environment.name'),
+                   _value(normal['environment']['version'], 'environment.version'))
+    data_asset = (_value(normal['data_asset']['name'], 'data_asset.name'),
+                  _value(normal['data_asset']['version'], 'data_asset.version'))
+    compute = _value(normal['compute'], 'compute')
     return {
         'project_title': f'{doc.get("case", {}).get("title") or case_id} (Hypotrail export)',
         'project_name': project,
         'project_version': '0.1.0',
         'project_description': f'Azure ML project of Hypotrail study {doc["study_id"]}',
-        'component_prefix': project,
-        'display_suffix': ''.join(p.capitalize() for p in _slug(case_id).split('_')),
+        # Review round 4 (R4-B1): every value of an Azure YAML file is one whole quoted
+        # scalar, references (azureml:<name>:<version>) and composed names included.
+        **{f'component_{step}': f'{project}_{step}' for step in COMPONENTS},
+        **{f'display_{step}': COMPONENTS[step] + display for step in COMPONENTS},
+        'component_pipeline': f'{project}_pipeline',
         'component_version': identities['export_id'][:16],
         'template_id': template.id, 'template_version': template.version,
         'template_source_sha256': template.layout['source_sha256'],
@@ -338,15 +358,16 @@ def context(snapshot: Snapshot, normal: Mapping, missing: list, template: layout
                for c in columns]),
         'limitations_list': '\n'.join(f'- {x}' for x in limitations),
         'python_version': template.document['python'],
+        'python_dependency': f'python={template.document["python"]}',
         'subscription_id': _value(normal['subscription_id'], 'subscription_id'),
-        'compute': _value(normal['compute'], 'compute'),
+        'compute': compute, 'compute_ref': f'azureml:{compute}',
         'experiment_name': normal['experiment_name'] or project,
-        'data_asset_name': _value(normal['data_asset']['name'], 'data_asset.name'),
-        'data_asset_version': _value(normal['data_asset']['version'], 'data_asset.version'),
+        'data_asset_name': data_asset[0], 'data_asset_version': data_asset[1],
+        'data_asset_ref': f'azureml:{data_asset[0]}:{data_asset[1]}',
         'data_asset_description': f'Development rows, contracts and evaluated model of study '
                                   f'{doc["study_id"]} (no final test).',
-        'environment_name': _value(normal['environment']['name'], 'environment.name'),
-        'environment_version': _value(normal['environment']['version'], 'environment.version'),
+        'environment_name': environment[0], 'environment_version': environment[1],
+        'environment_ref': f'azureml:{environment[0]}:{environment[1]}',
         'environment_description': 'Python 3.13 environment of the Hypotrail export.',
         'base_image': _value(normal['environment']['base_image'], 'environment.base_image'),
         # Optional: without a name, the team template's pipeline variable is kept.
@@ -356,7 +377,6 @@ def context(snapshot: Snapshot, normal: Mapping, missing: list, template: layout
                            'recipe; technical checks only.',
         'pipeline_description': 'Prepare, split by the recorded plan, fit a rebuilt candidate, '
                                 'check it.',
-        'mlflow_tracking_cloud': 'false',
         'packaging_format': 'mlflow_pyfunc',
         'packaging_required': True,
         'parity_features_relpath': parity_rel or '<parity features file>',
@@ -411,7 +431,9 @@ def _target_yaml(normal: Mapping, missing: list) -> bytes:
                 'missing_fields': list(missing)}
     head = ('# Destination profile (hypotrail.azure_target/1), normalised by the export. It holds\n'
             '# no credential. Operational only: the scientific contracts are in data/hypotrail.\n')
-    return (head + yaml.safe_dump(document, sort_keys=True, allow_unicode=True)).encode('utf-8')
+    # Quoted texts (R4-B1): ``safe_dump`` leaves ``1e9`` plain, which OmegaConf reads as a float.
+    return (head + yaml.dump(document, Dumper=_quoted_dumper(), sort_keys=True,
+                             allow_unicode=True, width=10 ** 9)).encode('utf-8')
 
 
 def readiness(snapshot: Snapshot, missing: list, identities: Mapping) -> dict:
