@@ -157,6 +157,26 @@ def companion_decide_errors(sources):
             for rel, text in sorted(sources.items()) if DECIDE_WRITE.search(text)]
 
 
+# The same narrowing in the words the extension shows before it runs (R9UX-3): its name,
+# description, and command titles never claim that the panel confirms, withdraws, or
+# proposes a decision. "Proposals" and "confirmed" (a state it shows) are allowed.
+PANEL_DECISION_CLAIM = re.compile(r'\b(?:confirms?|withdraws?|proposes?)\b', re.IGNORECASE)
+
+
+def companion_package_claim_errors(package):
+    """Errors of the narrowing rule over the panel's ``package.json`` (a dict)."""
+    contributes = package.get('contributes', {})
+    texts = {'displayName': package.get('displayName', ''),
+             'description': package.get('description', '')}
+    for command in contributes.get('commands', []):
+        texts[f'command {command.get("command")}'] = command.get('title', '')
+    for key, prop in contributes.get('configuration', {}).get('properties', {}).items():
+        texts[f'setting {key}'] = prop.get('description', '')
+    return [f'Companion client package.json {where} claims a withdrawn decision write: '
+            f'{PANEL_DECISION_CLAIM.search(text).group(0)!r}'
+            for where, text in texts.items() if PANEL_DECISION_CLAIM.search(text or '')]
+
+
 def check_companion_client(errors):
     """The companion client stays default-off, dependency-free, and CLI-only."""
     folder = ROOT / COMPANION_CLIENT
@@ -175,6 +195,7 @@ def check_companion_client(errors):
         errors.append('Companion client does not require a trusted workspace')
     if package.get('dependencies'):
         errors.append('Companion client has runtime dependencies')
+    errors.extend(companion_package_claim_errors(package))
     sources = sorted(p for p in folder.rglob('*.js')
                      if 'test' not in p.relative_to(folder).parts and 'node_modules' not in p.parts)
     # The webview's protocol copy is generated from lib/protocol.js and must not drift.

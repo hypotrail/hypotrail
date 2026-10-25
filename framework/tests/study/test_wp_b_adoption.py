@@ -138,6 +138,39 @@ def test_the_other_options_never_confirm(flow, label):
     assert flow.rev() == rev
 
 
+# R9UX-2: the Copilot agent offers the picker in the study language. Its labels, per
+# language, are the ones ``copilot-agent.md.in`` names; the adopt label confirms through the
+# choice channel in a study of either language, the two others never do, and the closed
+# question it asks is the one ``next_action.pause.question`` ends with.
+PICKER = {'en': ('Do you adopt this decision?', ADOPT_EN, 'Change something', 'Explain first'),
+          'fr': ('Adoptez-vous cette décision ?', ADOPT_FR, 'Changer quelque chose',
+                 "Expliquer d'abord")}
+
+
+@pytest.mark.parametrize('lang', sorted(PICKER))
+def test_the_copilot_picker_labels_work_in_the_study_language(tmp_path, synthetic_case_dir,
+                                                              lang):
+    from mlkit.study import agent_files as af
+    agent = ' '.join((af.SOURCE / 'copilot-agent.md.in').read_text().split())
+    question, adopt, change, explain = PICKER[lang]
+    for text in PICKER[lang]:
+        assert f'"{text}"' in agent, text
+    flow = Flow(tmp_path / 'study', synthetic_case_dir, prefix='l')
+    flow.call('init', '--case', synthetic_case_dir, '--study', flow.study, '--lang', lang)
+    pid = _propose(flow, 'prediction_time', PT, PT_RESTATEMENT)
+    pause = flow.call('status', '--summary', '--study', flow.study)['next_action']['pause']
+    closed = pause['question'].replace('\N{NO-BREAK SPACE}', ' ').rsplit('\n\n', 1)[-1]
+    assert pause['language'] == lang and closed == question
+    rev = flow.rev()
+    for label in (change, explain):
+        out = _confirm(flow, pid, label, '--channel', 'choice', expect=2)
+        assert out['error']['code'] == 'ambiguous_confirmation', label
+    assert flow.rev() == rev
+    done = _confirm(flow, pid, adopt, '--channel', 'choice')['result']
+    assert done['status'] == 'confirmed' and done['basis'] == st.ENDORSED
+    assert flow.state()['decisions']['prediction_time']['confirmation']['user_words'] == adopt
+
+
 def test_a_choice_is_never_a_delegation(flow):
     pid = _propose(flow, 'prediction_time', PT, 'My recommended default: ' + PT_RESTATEMENT)
     out = _confirm(flow, pid, 'use your recommended default', '--channel', 'choice', '--basis',

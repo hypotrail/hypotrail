@@ -25,8 +25,10 @@ the CLI (:func:`cli_command`), ``{{STUDY}}`` by the absolute study directory,
 (:data:`STUDY_GLOSSARY`, copied at install so the agent never reads the engine's source
 tree, D10), ``{{SKILL}}`` by the skill path of the target agent, and ``{{CHOICE_TOOL}}``
 by the interactive choice tool of the target agent (Claude Code's ``AskUserQuestion``,
-VS Code's ``#tool:vscode/askQuestions``). The command is also
-written to ``.hypotrail/agent.json`` (``hypotrail.agent/1``).
+VS Code's ``#tool:vscode/askQuestions``), and ``{{RUN_NOTICE}}``, ``{{BLOCK_PLACE}}``,
+``{{CHOICE_STEPS}}`` and ``{{EXPLAIN_FIRST}}`` by where that agent's junior reads a pause
+(:data:`FLAVOUR_TEXTS`: Copilot shows only the last message of a turn and the picker).
+The command is also written to ``.hypotrail/agent.json`` (``hypotrail.agent/1``).
 
 Nothing that exists is overwritten: an existing target is reported under
 ``skipped_existing``.
@@ -64,8 +66,37 @@ SKILL_PATHS = {CLAUDE: '.claude/skills/hypotrail-study/SKILL.md',
 # as a picker in the chat. VS Code's tool exists from 1.109; a custom agent gets it only
 # when its ``tools`` list names it (``copilot-agent.md.in``).
 CHOICE_TOOLS = {CLAUDE: 'Claude Code: `AskUserQuestion`',
-                COPILOT: 'GitHub Copilot in VS Code: `#tool:vscode/askQuestions`, one '
-                         'single-select question, the adopt option marked recommended'}
+                COPILOT: 'GitHub Copilot in VS Code: `#tool:vscode/askQuestions`'}
+# Where the junior reads a pause, per agent (R9UX-1). Claude Code shows the text written
+# before a tool call; GitHub Copilot folds it into collapsed reasoning, so the junior sees
+# only the last message of the turn and the picker: what they must read goes there.
+FLAVOUR_TEXTS: dict[str, dict[str, str]] = {
+    CLAUDE: {
+        'RUN_NOTICE': 'Before runs, visibly state what was decided, what you will compute '
+                      'and why, expected delays, and whether the final test stays sealed.',
+        'BLOCK_PLACE': 'in the chat message itself',
+        'CHOICE_STEPS': 'send that message first, then offer one single-choice question '
+                        'repeating the decision title and one-line restatement before the '
+                        'closed question, so it survives collapsed prose.',
+        'EXPLAIN_FIRST': 'explain, show the block again, ask again.',
+    },
+    COPILOT: {
+        'RUN_NOTICE': 'Copilot folds text written before a tool call, so run announcements '
+                      'go in the final message of the turn, never before a tool call: what '
+                      'was decided, what you computed or will compute and why, expected '
+                      'delays, and whether the final test stays sealed.',
+        'BLOCK_PLACE': 'inside the picker question (in the final message when you ask in '
+                       'text)',
+        'CHOICE_STEPS': 'call it as the last step of the turn, with one single-select '
+                        'question that holds the key facts of the pause, the quoted block, '
+                        'and the closed question in the study language (the last line of '
+                        '`next_action.pause.question`); write nothing the junior must read '
+                        'before it. Mark the adopt option recommended only when you proposed '
+                        '`recommended.value`.',
+        'EXPLAIN_FIRST': 'end the turn with the explanation, the block, and the closed '
+                         'question, all in text.',
+    },
+}
 
 # template -> ((target, flavour), ...)
 TARGETS: dict[str, tuple[tuple[str, str], ...]] = {
@@ -158,7 +189,8 @@ def render(text: str, *, flavour: str, values: Mapping[str, str], source: str,
     replaced; a Copilot copy gets a header comment (after the front matter, which must
     stay first)."""
     text = select_task(text, task)
-    vals = dict(values, SKILL=SKILL_PATHS[flavour], CHOICE_TOOL=CHOICE_TOOLS[flavour])
+    vals = dict(values, SKILL=SKILL_PATHS[flavour], CHOICE_TOOL=CHOICE_TOOLS[flavour],
+                **FLAVOUR_TEXTS[flavour])
     unknown = sorted({m.group(1) for m in _PLACEHOLDER.finditer(text)} - set(vals))
     if unknown:
         raise ValueError(f'unknown placeholders in {source}: {", ".join(unknown)}')

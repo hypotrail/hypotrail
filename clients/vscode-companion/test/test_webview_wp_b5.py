@@ -287,6 +287,26 @@ def test_ev12_diagnostics_render_when_present_each_number_cited(open_panel, view
     assert page.locator('[data-ev="diagnostics"]').count() == 0
 
 
+@pytest.mark.parametrize('choice, policy, first', [
+    (('confirmed', 'fit.variant'), 'share:0.2', 'fit.variant'),
+    (('confirmed', 'fit.logistic'), 'share:0.2', 'fit.logistic'),
+    (('proposed', 'fit.variant'), 'share:0.2', 'fit.logistic'),
+    (('proposed', 'fit.variant'), 'share:0.2@fit.variant', 'fit.variant'),
+])
+def test_binary_diagnostics_show_the_chosen_model_first(open_panel, views, choice, policy, first):
+    """R9UX-10: in a binary study the confirmed model choice says which model's diagnostics
+    come first; without one, the policy's ``@model`` suffix does, else the candidate."""
+    summary = copy.deepcopy(views['summary.opened'])
+    summary['decisions']['model_choice'].update(status=choice[0], value=choice[1])
+    summary['decisions']['policy']['value'] = policy
+    panel = open_tab(open_panel, summary, 'evidence')
+    panel.view_data('evidence', views['evidence.diagnostics'])
+    dev = panel.page.locator('[data-diag="diag.binary"]')
+    order = dev.locator('[data-diag-model]').evaluate_all('ns => ns.map(n => n.dataset.diagModel)')
+    assert order[0] == first and sorted(order) == ['fit.logistic', 'fit.variant'], order
+    assert dev.locator('[data-diag-also] [data-diag-model]').get_attribute('data-diag-model') != first
+
+
 @pytest.mark.parametrize('theme', THEMES)
 def test_ev12_regression_diagnostics_residuals_without_rule_words(open_panel, views, theme):
     panel = open_tab(open_panel, views['summary.regression'], 'evidence', theme=theme)

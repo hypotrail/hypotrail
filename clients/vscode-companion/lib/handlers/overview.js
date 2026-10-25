@@ -73,15 +73,15 @@ function acknowledgeable(snapshot) {
 async function acknowledge(message, ctx) {
   const { executionId, words, revision } = message;
   if (!words.trim()) {
-    ctx.invalid('W6', 'Type your own reply first. Nothing was recorded.', executionId);
+    ctx.invalid('W6', ctx.say('ackEmpty'), executionId);
     return;
   }
   if (words.length > MAX_WORDS) {
-    ctx.invalid('W6', `Your reply is longer than ${MAX_WORDS} characters. Nothing was recorded.`, executionId);
+    ctx.invalid('W6', ctx.say('ackTooLong', MAX_WORDS), executionId);
     return;
   }
   if (!acknowledgeable(ctx.snapshot()).includes(executionId)) {
-    ctx.invalid('W6', 'This execution is not waiting for an acknowledgement any more. Nothing was recorded.', executionId);
+    ctx.invalid('W6', ctx.say('ackNotWaiting'), executionId);
     await ctx.refresh();
     return;
   }

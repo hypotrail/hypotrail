@@ -1,7 +1,7 @@
 {
   "name": "hypotrail-companion",
   "displayName": "Hypotrail study companion (feature flag)",
-  "description": "A study panel for a Hypotrail study, one more client of the hypotrail CLI. Stage v0 (the default) shows the recap, the plan, the deliverables, and the open proposals, and only confirms or withdraws a proposal with the junior's own typed words. Later stages are experimental. Off by default.",
+  "description": "A study panel for a Hypotrail study, one more client of the hypotrail CLI. Stage v0 (the default) shows the recap, the plan, the deliverables, and the open proposals, read-only; every decision is made in the chat. Later stages are experimental. Off by default.",
   "version": "0.1.0",
   "publisher": "hypotrail-local",
   "private": true,
@@ -84,6 +84,6 @@
     }
   },
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test test/*.test.js"
   }
 }

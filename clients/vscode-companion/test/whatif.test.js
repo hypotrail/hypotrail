@@ -69,6 +69,29 @@ test('WhatIfModel (regression): errors, paired difference, residuals, bias by gr
   assert.equal(m.unit, 'mpg');
 });
 
+// R9UX-5: a compared variant is named in words, with the model family its result records.
+function regressionWithVariant(family) {
+  const p = payload('evidence.regression');
+  const evaluation = p.results.find(r => r.slot === 'evaluate.regression');
+  evaluation.params.models = ['fit.baseline', 'fit.linear', 'fit.variant'];
+  const linear = p.results.find(r => r.slot === 'fit.linear');
+  const variant = JSON.parse(JSON.stringify(linear));
+  variant.slot = 'fit.variant';
+  variant.activity = 'fit.variant';
+  variant.result_id = 'f'.repeat(64);
+  if (family) variant.params = { model: family, family };
+  p.results.push(variant);
+  return p;
+}
+
+test('WhatIfModel (regression): the model family of each variant fit, from its result', () => {
+  const m = toWhatIfModel(regressionWithVariant('ebm'));
+  assert.deepEqual(m.models.map(x => x.fit), ['fit.linear', 'fit.variant', 'fit.baseline']);
+  assert.deepEqual(m.families, { 'fit.variant': 'ebm' });
+  assert.deepEqual(toWhatIfModel(regressionWithVariant(null)).families, {}, 'a linear variant records no family');
+  assert.deepEqual(toWhatIfModel(payload('evidence.regression')).families, {});
+});
+
 test('PolicyPreviewModel: per rule and fit, intervals and deltas, the adopted rule', () => {
   const m = toPolicyPreviewModel(payload('preview.binary'));
   assert.deepEqual(m.rules, ['capacity:100']);

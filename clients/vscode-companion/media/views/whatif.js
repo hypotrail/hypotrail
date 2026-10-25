@@ -124,10 +124,10 @@
    * The engine's draft and "Ask the agent to propose this" (a ready question copied for the
    * chat, no write; WP-E1), or why the value cannot be proposed yet.
    */
-  function proposeArea(ctx, decisionId, value, evaluated, t) {
+  function proposeArea(ctx, decisionId, value, evaluated, t, families) {
     const common = C().common;
     const kids = [];
-    const words = decisionId === 'policy' ? ruleWords(value) : (t.fits && t.fits[value]) || value;
+    const words = decisionId === 'policy' ? ruleWords(value) : fitLabel(t, value, families);
     if (!evaluated) {
       kids.push(ctx.el('p', { 'data-not-evaluated': value, text: t.notEvaluated }));
       if (decisionId === 'policy') {
@@ -266,6 +266,16 @@
 
   function fitName(t, fit) {
     return t.fits[fit] || fit;
+  }
+
+  // A regression fit slot in words (R9UX-5): the copy's name, a variant without one named
+  // generically, and the model family the engine recorded for a variant, when it has one.
+  function fitLabel(t, fit, families) {
+    const slot = String(fit);
+    const base = (t.fits && t.fits[slot]) || (slot.startsWith('fit.variant') && t.variantFit) || slot;
+    const family = families && families[slot];
+    const familyName = family && t.families && t.families[family];
+    return familyName && t.familyFit ? t.familyFit(base, familyName) : base;
   }
 
   function comparison(ctx, model) {
@@ -524,7 +534,7 @@
       if (!S.fit || !model.errors[S.fit]) S.fit = model.candidate || (model.models[0] && model.models[0].fit);
       const unit = model.unit ? ` ${model.unit}` : '';
       const f2 = x => fmt(ctx, x, 'f2');
-      const name = fit => t.fits[fit] || fit;
+      const name = fit => fitLabel(t, fit, model.families);
       // Model selector.
       out.push(ctx.el('fieldset', { className: 'card ht-wi-models', 'data-model-selector': true }, [
         ctx.el('legend', { text: t.modelTitle }),
@@ -602,7 +612,7 @@
       ]));
     }
     if (model.resultId && S.fit) {
-      out.push(proposeArea(ctx, 'model_choice', S.fit, model.models.some(m => m.fit === S.fit), t));
+      out.push(proposeArea(ctx, 'model_choice', S.fit, model.models.some(m => m.fit === S.fit), t, model.families));
     }
     return out;
   }

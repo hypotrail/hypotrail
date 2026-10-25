@@ -79,7 +79,11 @@
     },
     regression: {
       modelTitle: 'Model',
-      fits: { 'fit.linear': 'linear model', 'fit.baseline': 'training mean' },
+      fits: { 'fit.linear': 'linear model', 'fit.baseline': 'mean baseline', 'fit.variant': 'variant model',
+        'fit.variant:2': 'second variant model', 'fit.variant:3': 'third variant model' },
+      variantFit: 'variant model',
+      families: { linear: 'linear', ebm: 'Explainable Boosting Machine', hgb: 'histogram gradient boosting' },
+      familyFit: (name, family) => `${name} (${family})`,
       errorTitle: (description, n) => `Error on ${description} · ${n} validation rows`,
       ordinal: (column, cutoff) => `${column} ≥ ${cutoff}`,
       validationRows: 'the validation rows',

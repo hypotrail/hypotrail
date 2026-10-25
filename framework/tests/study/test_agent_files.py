@@ -547,3 +547,91 @@ def test_standard_vocabulary_and_no_ids(task):
                           'validation croisée à k plis')):
         entry = texts.glossary(term, task)
         assert (entry['term'], entry['term_fr']) == (en, fr), term
+
+
+# --- R9UX-1: GitHub Copilot shows only the last message of a turn and the picker ----------
+
+def test_generated_copilot_instructions_put_what_the_junior_reads_last(study):
+    """Copilot folds the text written before a tool call into collapsed reasoning. The
+    instructions ``init`` writes for it never order "message first, then picker", never
+    announce runs before them, and never answer "explain first" with another picker turn;
+    they put the facts, the quoted block and the closed question in the picker question, and
+    the run announcements in the final message. The Claude Code copy keeps its own
+    procedure, unchanged."""
+    target, _ = study
+    copilot = Flat((target / '.github/copilot-instructions.md').read_text())
+    claude = Flat((target / 'CLAUDE.md').read_text())
+    claude_only = ('send that message first', 'Before runs, visibly state',
+                   'in the chat message itself', 'explain, show the block again, ask again',
+                   'so it survives collapsed prose')
+    for phrase in claude_only:
+        assert phrase not in copilot, phrase
+        assert phrase in claude, phrase
+    for phrase in ('Copilot folds text written before a tool call',
+                   'run announcements go in the final message of the turn, never before a '
+                   'tool call', 'The block is inside the picker question',
+                   'call it as the last step of the turn, with one single-select question that '
+                   'holds the key facts of the pause, the quoted block, and the closed question',
+                   '`next_action.pause.question`',
+                   'write nothing the junior must read before it',
+                   'Mark the adopt option recommended only when you proposed '
+                   '`recommended.value`',
+                   'Explain first: end the turn with the explanation, the block, and the closed '
+                   'question, all in text'):
+        assert phrase in copilot, phrase
+        assert phrase not in claude, phrase
+    for task in af.TASKS:          # every task, both flavours: no placeholder left
+        text = (af.SOURCE / 'CLAUDE.md.in').read_text()
+        for flavour in (af.CLAUDE, af.COPILOT):
+            out = af.render(text, flavour=flavour, values={'HYPOTRAIL': 'h', 'STUDY': 's',
+                                                           'GLOSSARY': 'g'},
+                            source='CLAUDE.md.in', task=task)
+            assert '{{' not in out and 'directly above the question' in out
+            assert ('send that message first' in out) == (flavour == af.CLAUDE)
+            assert ('call it as the last step of the turn' in out) == (flavour == af.COPILOT)
+
+
+def test_the_copilot_agent_asks_in_the_study_language():
+    """R9UX-2: the picker's question and options are in the study language, the closed
+    question taken from ``next_action.pause``; adopt is marked recommended only when the
+    proposal is the engine's recommendation."""
+    agent = Flat((af.SOURCE / 'copilot-agent.md.in').read_text())
+    for phrase in ('one question in the study language', '`next_action.pause.question`',
+                   '"Do you adopt this decision?"', '"Adoptez-vous cette décision ?"',
+                   '"I adopt this decision"', '"J\'adopte cette décision"',
+                   '"Change something"', '"Changer quelque chose"', '"Explain first"',
+                   '"Expliquer d\'abord"',
+                   'recommended only if you proposed `recommended.value`'):
+        assert phrase in agent, phrase
+    assert '(recommended;' not in agent
+
+
+def test_the_short_read_asks_for_the_keys_rule_3_reads(study):
+    """R9UX-8: ``model_families`` and ``model_selection`` come only from ``--fields``; the
+    rule asks for them there instead of claiming the default fields give them."""
+    target, _ = study
+    rule1 = _rule(Flat((af.SOURCE / 'CLAUDE.md.in').read_text()), 1)
+    assert 'it also gives' not in rule1
+    assert ('after the fits add `model_families` and `model_selection`: only `--fields` '
+            'returns them') in rule1
+    short = cmd.status(target, summary=True, fields=['next_action', 'criterion']).payload
+    assert not {'model_families', 'model_selection'} & set(short)
+    assert not {'model_families', 'model_selection'} & set(cmd.status(target, summary=True)
+                                                           .payload)
+    asked = cmd.status(target, summary=True,
+                       fields=['model_families', 'model_selection']).payload
+    assert {'model_families', 'model_selection'} <= set(asked)
+
+
+def test_the_binary_decision_list_names_the_model_choice():
+    """R9UX-4: a binary study's ``model_choice`` is the logistic model or a declared variant
+    slot (the baseline is refused), and the rule then names that model."""
+    from mlkit.study import records as rec
+    binary = _binary('CLAUDE.md.in').split('Decisions, proposed with', 1)[1]
+    regression = Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), 'regression'))
+    for phrase in ('`model_choice` (`"fit.logistic"` or a declared variant slot',
+                   'not `fit.baseline`', '`<rule>@<slot>` when the chosen model is a variant'):
+        assert phrase in Flat(binary), phrase
+        assert phrase not in regression, phrase
+    assert rec.POLICY_CANDIDATE == 'fit.logistic' and rec.policy_model('capacity:5') == \
+        rec.POLICY_CANDIDATE and rec.policy_model('capacity:5@fit.variant') == 'fit.variant'

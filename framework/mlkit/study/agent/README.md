@@ -14,7 +14,11 @@ agent's rules:
 
 The Copilot files are generated from the same source with a header comment; they are
 **not tested** while directive A1 holds. Placeholders (`{{HYPOTRAIL}}`, `{{STUDY}}`,
-`{{GLOSSARY}}`, `{{SKILL}}`, `{{CHOICE_TOOL}}`) are replaced at install; the CLI invocation is also recorded
+`{{GLOSSARY}}`, `{{SKILL}}`, `{{CHOICE_TOOL}}`) are replaced at install; so are
+`{{RUN_NOTICE}}`, `{{BLOCK_PLACE}}`, `{{CHOICE_STEPS}}` and `{{EXPLAIN_FIRST}}`, per agent
+(`agent_files.FLAVOUR_TEXTS`): Copilot folds the text written before a tool call, so its
+copy puts the facts, the quoted block and the closed question inside the picker question,
+and run announcements in the final message of a turn. The CLI invocation is also recorded
 in `.hypotrail/agent.json`. Existing files are never overwritten. This README is not
 installed. Never add a file here under a loaded name (`CLAUDE.md`, `AGENTS.md`,
 `.claude/`, `.github/`): `framework/tests/study/test_agent_files.py` refuses it.

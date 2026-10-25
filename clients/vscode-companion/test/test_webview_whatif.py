@@ -260,6 +260,47 @@ def test_wi4_regression_renders_the_residual_explorer_without_rule_vocabulary(op
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
 
+def _regression_with_variant(payload, family):
+    p = copy.deepcopy(payload('evidence.regression'))
+    evaluation = next(r for r in p['results'] if r['slot'] == 'evaluate.regression')
+    evaluation['params']['models'] = ['fit.baseline', 'fit.linear', 'fit.variant']
+    variant = copy.deepcopy(next(r for r in p['results'] if r['slot'] == 'fit.linear'))
+    variant.update(slot='fit.variant', activity='fit.variant', result_id='f' * 64)
+    if family:
+        variant['params'] = {'model': family, 'family': family}
+    p['results'].append(variant)
+    return p
+
+
+@pytest.mark.parametrize('lang, family, labels, residuals', [
+    ('en', 'ebm', ['linear model', 'variant model (Explainable Boosting Machine)', 'mean baseline'],
+     'Residuals of the mean baseline, validation rows'),
+    ('en', None, ['linear model', 'variant model', 'mean baseline'],
+     'Residuals of the mean baseline, validation rows'),
+    ('fr', 'hgb', ['modèle linéaire', 'modèle variante (gradient boosting par histogrammes)', 'moyenne de référence'],
+     'Résidus (moyenne de référence), lignes de validation'),
+])
+def test_regression_names_every_model_in_words(open_panel, model, payload, regression, lang, family, labels,
+                                                residuals):
+    """R9UX-5: a variant fit is never shown as its slot; the baseline is the glossary's mean
+    baseline, and the French titles agree with the feminine "moyenne de référence"."""
+    summary = copy.deepcopy(regression)
+    summary['language'] = lang
+    panel = opened(open_panel, summary, task='regression')
+    page = panel.page
+    panel.view_data('whatif', model('whatif', _regression_with_variant(payload, family)))
+    selector = page.locator('[data-model-selector] label')
+    assert [x.strip() for x in selector.all_inner_texts()] == labels
+    text = page.locator('#panel-whatif').inner_text()
+    assert 'fit.variant' not in text and 'fit.baseline' not in text
+    assert 'training mean' not in text and "moyenne d'entraînement" not in text and 'du moyenne' not in text
+    page.locator('#ht-wi-fit-fit-baseline').check()
+    for toggle in page.locator('#panel-whatif .ht-figure button[aria-controls]').all():
+        toggle.click()
+    assert residuals in page.locator('#panel-whatif').inner_text()
+    assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
+
+
 def test_reviewer_mode_has_no_write_control_and_keeps_the_ask_button(open_panel, model, binary):
     panel = opened(open_panel, binary, reviewer=True)
     page = panel.page

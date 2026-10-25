@@ -1094,11 +1094,14 @@
     if (d.evidence === 'development' && opening && d.startedRevision !== null && d.startedRevision > opening.revision) {
       kids.push(ctx.el('p', { className: 'hold', 'data-after-opening': true, text: c.afterOpening }));
     }
-    // The chosen model first: the final test's, else the adopted choice (`@fit.variant` in a
-    // policy, the slot of a model choice), else the candidate (CLI-CONTRACT-COMPANION §14).
+    // The chosen model first: the final test's, else the adopted choice (the slot of a model
+    // choice; in a binary study a confirmed model choice, else `@fit.variant` in a policy),
+    // else the candidate (CLI-CONTRACT-COMPANION §14; R9UX-10).
     const decisions = (summary && summary.decisions) || {};
+    const selected = decisions.model_choice && decisions.model_choice.status === 'confirmed'
+      ? String(decisions.model_choice.value || '') : '';
     const choice = task === 'regression' ? String((decisions.model_choice || {}).value || '')
-      : String((decisions.policy || {}).value || '').split('@')[1] || '';
+      : (/^fit\./.test(selected) ? selected : String((decisions.policy || {}).value || '').split('@')[1] || '');
     const chosen = d.model || (/^fit\./.test(choice) ? choice : null);
     const order = [...d.models].sort((a, b) => (b.fit === chosen) - (a.fit === chosen));
     const [first, ...rest] = order;

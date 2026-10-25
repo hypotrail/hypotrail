@@ -16,14 +16,15 @@
 
 const { toEdaModel, requestable, requestableWhole } = require('../models/eda');
 const { toDataModel } = require('../models/data');
+const l10n = require('../l10n');
 
 const KEY = 'evidence';
-const MESSAGES = Object.freeze({
-  unread: 'The list of charts could not be read, so nothing was run.',
-  moved: 'The study changed since this list of charts was shown. Read it again; nothing was run.',
-  notInCatalog: 'This chart is not in the engine\'s EDA catalog for this study. Nothing was run.',
-  notRunnable: 'The engine cannot run this chart yet. Nothing was run.',
-});
+// The refusals of W4, by l10n key (R9UX-6: in the extension's language, lib/l10n.js);
+// MESSAGES keeps their English text for the tests and the contract.
+const KEYS = Object.freeze({ unread: 'edaUnread', moved: 'edaMoved', notInCatalog: 'edaNotInCatalog',
+  notRunnable: 'edaNotRunnable' });
+const MESSAGES = Object.freeze(Object.fromEntries(Object.entries(KEYS).map(([k, key]) => [k, l10n.EN[key]])));
+const say = (ctx, name) => (ctx.say ? ctx.say(KEYS[name]) : MESSAGES[name]);
 
 function readCatalog(ctx) {
   return ctx.read(KEY, ctx.cli.evidenceArgv(ctx.agent), toEdaModel);
@@ -35,21 +36,21 @@ async function runEda(message, ctx) {
   const slot = whole ? activity : `${activity}:${column}`;
   const shown = await readCatalog(ctx);
   if (!shown.ok) {
-    ctx.invalid('W4', `${MESSAGES.unread} ${shown.message}`.trim(), slot);
+    ctx.invalid('W4', `${say(ctx, 'unread')} ${shown.message}`.trim(), slot);
     return;
   }
   if (shown.model.revision !== revision) {
-    ctx.invalid('W4', MESSAGES.moved, slot);
+    ctx.invalid('W4', say(ctx, 'moved'), slot);
     await ctx.refresh();
     return;
   }
   const entry = shown.model.catalog.find(a => a.activity === activity && a.perColumn === !whole);
   if (!entry || (!whole && !entry.columns.some(c => c.name === column))) {
-    ctx.invalid('W4', MESSAGES.notInCatalog, slot);
+    ctx.invalid('W4', say(ctx, 'notInCatalog'), slot);
     return;
   }
   if (whole ? !requestableWhole(shown.model, activity) : !requestable(shown.model, activity, column)) {
-    ctx.invalid('W4', MESSAGES.notRunnable, slot);
+    ctx.invalid('W4', say(ctx, 'notRunnable'), slot);
     return;
   }
   await ctx.write('W4', {

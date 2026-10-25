@@ -391,3 +391,22 @@ test('copy: English strings without digits, decision-rule vocabulary, or suggest
     globalThis.Hypotrail = saved;
   }
 });
+
+test('R9UX-6: the W6 pre-check refusals follow the extension\'s language (lib/l10n.js)', async () => {
+  const l10n = require('../lib/l10n');
+  const { MAX_WORDS } = require('../lib/cli');
+  const { c, runCli, last } = make({ route: health(), settings: { stage: 'v1', language: 'fr' } });
+  await c.handle({ v: 2, type: 'ready' });
+  const before = runCli.calls.length;
+  await c.handle({ v: 2, type: 'acknowledge', executionId: INTERRUPTED, words: '   ', revision: 26 });
+  assert.equal(last('outcome').message, l10n.FR.ackEmpty);
+  // Over the limit: the protocol drops it before the handler, which refuses it too.
+  const invalid = [];
+  await require('../lib/handlers/overview').types.acknowledge(
+    { executionId: INTERRUPTED, words: 'x'.repeat(MAX_WORDS + 1), revision: 26 },
+    { invalid: (...a) => invalid.push(a), say: (key, ...args) => l10n.say('fr', key, ...args) });
+  assert.deepEqual(invalid, [['W6', `Votre réponse dépasse ${MAX_WORDS} caractères. Rien n'a été enregistré.`, INTERRUPTED]]);
+  await c.handle({ v: 2, type: 'acknowledge', executionId: LATE, words: 'Je sais.', revision: 26 });
+  assert.equal(last('outcome').message, l10n.FR.ackNotWaiting);
+  assert.ok(!runCli.calls.slice(before).some(x => x.tail[0] === 'run'), 'nothing ran');
+});
