@@ -1589,6 +1589,62 @@ def _diagnostic_rule(store, state: Mapping) -> str | None:
         return None
 
 
+def decision_refusals(state: Mapping, store, decision_id: str, value: Any, *,
+                      validate: bool = True) -> tuple[list[Exception], bool]:
+    """The refusals of confirming ``decision_id`` with ``value`` that depend on the state
+    only and not on any open proposal or words, in the order ``decide confirm`` raises
+    them: the final test already opened, an ``invalid_value`` (when ``validate``), then the
+    preconditions (``precondition_missing``). Returns ``(refusals, valid)``.
+
+    Review round 6 (area E, R6E-1, R6E-2): ``next_action`` checks a ``propose`` with this
+    same function before naming it (:mod:`mlkit.study.feasibility`)."""
+    refusals: list[Exception] = []
+    if decision_id == st.FINAL_TEST and st.final_test_opened(state):
+        refusals.append(final_test_opened_refusal(state))
+    valid = True
+    if validate:
+        try:
+            validate_value(state, decision_id, value)
+        except (CommandRefused, StudyError) as exc:
+            refusals.append(exc)
+            valid = False
+    if valid:
+        try:
+            if decision_id == st.FINAL_TEST:
+                from . import assurance
+                assurance.require_activity(state, 'final_test.evaluation')
+            preconditions.require_decision(state, decision_id, value, store=store)
+        except (CommandRefused, StudyError) as exc:
+            refusals.append(exc)
+    return refusals, valid
+
+
+def confirmation_refusals(state: Mapping, store, proposal_id: str, *,
+                          sources: bool = True) -> tuple[list[Exception], bool]:
+    """The refusals of ``decide confirm`` on the open proposal ``proposal_id`` that depend on
+    the state only, whatever the words, in this order: ``dataset_changed`` (when
+    ``sources``), ``final_test_already_opened``, ``decision_on_hold``, ``proposal_stale``,
+    ``invalid_value``, ``precondition_missing``. Returns ``(refusals, valid)``, ``valid``
+    False when the value is invalid. :func:`confirmation_plan` (so ``decide confirm`` and
+    ``preview effects``) and ``next_action`` (review round 6, R6E-1, R6E-2,
+    :mod:`mlkit.study.feasibility`) use it, so they cannot drift."""
+    proposal = state['proposals'][proposal_id]
+    decision_id, value = proposal['decision_id'], proposal['value']
+    refusals: list[Exception] = []
+    if sources:
+        changes = c.source_changes(state)
+        if changes:
+            refusals.append(c.changed_sources_error(changes))
+    rest, valid = decision_refusals(state, store, decision_id, value)
+    opened = [e for e in rest if getattr(e, 'code', None) == 'final_test_already_opened']
+    refusals += opened
+    for found in (_hold_refusal(state, decision_id, proposal_id), _stale_refusal(state, proposal)):
+        if found is not None:
+            refusals.append(found)
+    refusals += [e for e in rest if e not in opened]
+    return refusals, valid
+
+
 def confirmation_plan(state: Mapping, store, proposal_id: str, *,
                       basis: str = DEFAULT_BASIS) -> dict:
     """What confirming the open proposal ``proposal_id`` would do, whatever the words.
@@ -1617,29 +1673,7 @@ def confirmation_plan(state: Mapping, store, proposal_id: str, *,
     """
     proposal = state['proposals'][proposal_id]
     decision_id, value = proposal['decision_id'], proposal['value']
-    refusals: list[Exception] = []
-    changes = c.source_changes(state)
-    if changes:
-        refusals.append(c.changed_sources_error(changes))
-    if decision_id == st.FINAL_TEST and st.final_test_opened(state):
-        refusals.append(final_test_opened_refusal(state))
-    for found in (_hold_refusal(state, decision_id, proposal_id), _stale_refusal(state, proposal)):
-        if found is not None:
-            refusals.append(found)
-    valid = True
-    try:
-        validate_value(state, decision_id, value)
-    except (CommandRefused, StudyError) as exc:
-        refusals.append(exc)
-        valid = False
-    if valid:
-        try:
-            if decision_id == st.FINAL_TEST:
-                from . import assurance
-                assurance.require_activity(state, 'final_test.evaluation')
-            preconditions.require_decision(state, decision_id, value, store=store)
-        except (CommandRefused, StudyError) as exc:
-            refusals.append(exc)
+    refusals, valid = confirmation_refusals(state, store, proposal_id)
     plan = {'blocked': [refusal_dict(e) for e in refusals], 'refusals': refusals,
             'decision_id': decision_id, 'value': copy.deepcopy(value), 'previous': None,
             'effects': None, 'invalidation': None, 'supersedes_proposal': None}

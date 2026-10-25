@@ -171,10 +171,15 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
             from . import registry
             entry = registry.get(store, state['current'][CAPTURE])
             if value is not None and entry['inputs'].get('configuration') != value:
+                # Review round 6 (area E, R6E-1): with the junior's message, as every other
+                # refusal of the opening.
+                captured = entry['inputs'].get('configuration')
                 missing.append({'requirement': 'result_current', 'slot': CAPTURE,
-                                'captured': entry['inputs'].get('configuration'),
+                                'captured': captured,
                                 'detail': 'The captured predictor is another configuration; '
-                                          'capture the one the final test would open.'})
+                                          'capture the one the final test would open.',
+                                'junior_message': other_configuration_message(
+                                    state, captured, value)})
             else:
                 loading = capture.loading_problem(store, state, capture.predictor_of(entry))
                 if loading is not None:
@@ -247,6 +252,24 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
                             'detail': 'Compute the final diagnostic summary from the stored '
                                       'final predictions before drawing an empirical conclusion.'})
     return missing
+
+
+def other_configuration_message(state: Mapping, captured: Any, value: Any) -> str:
+    """Review round 6 (area E, R6E-1): the junior message of a final test that would open a
+    configuration other than the captured one, in the study language."""
+    from . import opening
+    lang = st.language_of(state)
+    if lang == 'fr':
+        return ('Votre modèle capturé est une autre configuration '
+                f'({opening.configuration_words(captured, lang)}) que celle que le test final '
+                f'ouvrirait ({opening.configuration_words(value, lang)}) : le test final ne '
+                "peut pas l'évaluer. Capturez d'abord à nouveau le modèle choisi, puis ouvrez "
+                f"le test final. {opening.NOT_READ['fr']}")
+    return ('Your captured model is another configuration '
+            f'({opening.configuration_words(captured, lang)}) than the one the final test would '
+            f'open ({opening.configuration_words(value, lang)}), so the final test cannot score '
+            'it. Capture the chosen model again first, then open the final test. '
+            f"{opening.NOT_READ['en']}")
 
 
 def final_test_missing(state: Mapping, value: Any = None, *, store=None) -> list[dict]:

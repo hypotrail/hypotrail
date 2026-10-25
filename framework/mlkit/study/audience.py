@@ -316,6 +316,19 @@ def _junior_next(action: Mapping, lang: str = EN) -> tuple[str, str]:
         return AGENT, (f'A proposal on {decision_words(action.get("decision"))} is waiting for '
                        'your answer. Read its restatement and say whether you adopt it, or '
                        'what you would change.')
+    if kind == 'resolve_hold':
+        # Review round 6 (area E): a decision the junior put on hold, in their own words.
+        said = str(action.get('user_words') or '').strip()
+        if fr:
+            return AGENT, (f'Vous avez mis {decision_words(action.get("decision"), lang)} en '
+                           f'attente, avec vos mots : « {said} ». Cette condition est-elle '
+                           'remplie maintenant ? Votre réponse, avec vos propres mots, lève '
+                           "l'attente ou la maintient ; tant qu'elle est en attente, rien de ce "
+                           "qu'elle couvre n'est confirmé.")
+        return AGENT, (f'You put {decision_words(action.get("decision"))} on hold, in your '
+                       f'words: "{said}". Is that condition met now? Your answer, in your own '
+                       'words, lifts the hold or keeps it; while it is on hold, nothing it '
+                       'covers is confirmed.')
     if kind == 'blocked':
         needed = join((decision_words(r, lang) for r in action.get('requires') or []), lang)
         if fr:

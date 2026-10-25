@@ -597,12 +597,31 @@ POLICY_WHY = {
                "donnée ; celle-ci est son choix par défaut, la part qu'utilisent ses "
                "diagnostics de développement, et non un chiffre fourni par une équipe. "
                "Indiquez la capacité de votre équipe si vous la connaissez."),
+    # Review round 6 (area E, R6E-3): a rule named for this study, not the engine's default.
+    'evaluated': ('This rule was named for this study\'s policy evaluation, which measured it: '
+                  'it comes from your side, not from an engine default. Keep it if it is your '
+                  'team\'s, or name the rule your team can act on.',
+                  "Cette règle a été nommée pour l'évaluation de la règle de décision de cette "
+                  "étude, qui l'a mesurée : elle vient de votre côté, pas d'un choix par défaut "
+                  "du moteur. Gardez-la si c'est celle de votre équipe, ou indiquez la règle "
+                  "qu'elle peut appliquer."),
+    'proposal': ('This rule was proposed earlier in this study; it is proposed again because '
+                 'something it rests on changed. It is not an engine default: keep it, or name '
+                 'the rule your team can act on.',
+                 "Cette règle a déjà été proposée dans cette étude ; elle est proposée à nouveau "
+                 "parce qu'un élément dont elle dépend a changé. Ce n'est pas un choix par "
+                 "défaut du moteur : gardez-la, ou indiquez la règle que votre équipe peut "
+                 'appliquer.'),
 }
 
 
 def _policy_source(value, view: Mapping, state: Mapping) -> str:
     """Where a proposed policy rule comes from: ``criterion`` (the rule a review-v1 success
-    criterion fixes), ``scenario`` (the case's assumed share), or ``engine``."""
+    criterion fixes), ``scenario`` (the case's assumed share), ``proposal`` (the rule of the
+    policy decision or of a policy proposal, proposed again: round 6, R6E-3), ``evaluated``
+    (a rule named for the current policy evaluation, whose rules are not the engine's own
+    list: R6E-3), or ``engine`` (the engine's recommended share, when the evaluation ran on
+    the engine's shares or there is none)."""
     from . import assurance
     from . import records as rec
     rule = rec.policy_rule(value)
@@ -615,6 +634,22 @@ def _policy_source(value, view: Mapping, state: Mapping) -> str:
              .get('value'))
     if share is not None and rec.canonical_rule(f'share:{share}') == rule:
         return 'scenario'
+    decision = (state.get('decisions') or {}).get('policy') or {}
+    earlier = [rec.policy_rule(decision.get('value'))] if decision.get('status') in (
+        'confirmed', 'reconfirm_required', 'proposed') else []
+    earlier += [rec.policy_rule(p.get('value'))
+                for p in (state.get('proposals') or {}).values()
+                if p.get('decision_id') == 'policy' and p.get('status') == 'open']
+    if rule is not None and rule in earlier:
+        return 'proposal'
+    params = (((view.get('results') or {}).get('policy.evaluation') or {}).get('params')
+              or {})
+    named = params.get('rules') if isinstance(params.get('rules'), list) else (
+        [params['rule']] if params.get('rule') is not None else [])
+    named = [rec.canonical_rule(r) or str(r) for r in named]
+    from .view import RECOMMENDED_RULES
+    if rule in named and set(named) != set(RECOMMENDED_RULES):
+        return 'evaluated'
     return 'engine'
 
 
@@ -692,6 +727,10 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
     if kind in ('outcome_unknown', 'acknowledge_interruption'):
         return _t(lang, 'May this run be recorded as interrupted?',
                   'Peut-on enregistrer cette exécution comme interrompue ?')
+    if kind == 'resolve_hold':
+        # Review round 6 (area E): the condition the junior set, in their own words.
+        return _t(lang, 'Is the condition you set met now?',
+                  'La condition que vous avez posée est-elle remplie maintenant ?')
     if kind == 'show_data_card':
         return _t(lang, 'Shall we look at the data card together?',
                   'On regarde ensemble la fiche des données ?')
@@ -902,7 +941,12 @@ def _digest_propose(decision: str, view: Mapping, ctx: dict, lang: str,
                         'scenario': _t(lang, f'The scenario assumes: {words}.',
                                        f'Le scénario suppose : {words_fr}.'),
                         'engine': _t(lang, f'The engine proposes: {words}.',
-                                     f'Le moteur propose : {words_fr}.')}[source])
+                                     f'Le moteur propose : {words_fr}.'),
+                        # Round 6 (R6E-3): where the rule comes from, truly.
+                        'evaluated': _t(lang, f'The rule named for this study: {words}.',
+                                        f'La règle nommée pour cette étude : {words_fr}.'),
+                        'proposal': _t(lang, f'Proposed again: {words}.',
+                                       f'Proposée à nouveau : {words_fr}.')}[source])
         return out
     if decision == 'model_choice':
         if view.get('task') == st.BINARY:

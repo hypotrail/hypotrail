@@ -1342,9 +1342,8 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'plan': plan,
         'current_step': next((s['id'] for s in plan if s['current']), None),
         # v0.2a (WP-A1): every message for a surface says who it is written for.
-        'next_action': _runnable(study, state, _opening_not_current(
-            study, state, audience.next_action(_with_default_rule(st.next_action(state, suspected),
-                                                                  defaults), language))),
+        'next_action': _next_action(study, state, audience.next_action(
+            _with_default_rule(st.next_action(state, suspected), defaults), language)),
         'open_proposals': [_proposal_view(p, st.language_of(state))
                            for p in sorted(st.open_proposals(state),
                                            key=lambda p: (p['revision'], p['proposal_id']))],
@@ -1406,6 +1405,19 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     from . import presentation
     out['presentation'] = presentation.build(out)
     return out
+
+
+def _next_action(study: read.Study, state: Mapping, action: dict | None) -> dict | None:
+    """The view's ``next_action``: the state's, completed (:func:`_opening_not_current`,
+    :func:`_runnable`), then checked as the engine would execute it (review round 6, area E,
+    R6E-1, R6E-2: :func:`mlkit.study.feasibility.checked`): an action the engine would refuse
+    is replaced by its first remedy, completed the same way. Never an action the engine
+    refuses as given, when it has a remedy."""
+    from . import feasibility
+
+    def finish(item: dict | None) -> dict | None:
+        return _runnable(study, state, _opening_not_current(study, state, item))
+    return feasibility.checked(study, state, finish(action), finish)
 
 
 def _opening_not_current(study: read.Study, state: Mapping, action: dict | None) -> dict | None:
@@ -1524,13 +1536,6 @@ def _runnable(study: read.Study, state: Mapping, action: dict | None) -> dict | 
         # Round 5 (review E, R5E-8): after the opening, a decision proposed while the final
         # evaluation is not current says so too (E4-2 for the runs).
         action = _with_final_test_notice(study, state, action)
-    if kind == 'await_user_words' and action.get('decision') == 'policy':
-        # R5E-7: never await words on a policy proposal that the confirmation would refuse
-        # (its rule, or its model, not evaluated by a current policy evaluation): evaluate it
-        # first, the proposal stays open.
-        replaced = _unevaluated_policy_proposal(study, state, action)
-        if replaced is not None:
-            return replaced
     if kind == 'propose' and action.get('decision') == 'policy':
         # R5E-4: the policy proposal carries the rule to propose (``default_value``).
         default = _policy_default(study, state, action)
@@ -1632,7 +1637,9 @@ def _unevaluated_policy_proposal(study: read.Study, state: Mapping, action: Mapp
     """R5E-7: the ``run`` that makes the open policy proposal confirmable, or None when the
     confirmation would accept it: the policy evaluation on its rule (and the rules already
     evaluated) when no current evaluation covers that rule or model, or the fit of its model
-    first when that fit is not current."""
+    first when that fit is not current. Round 6 (R6E-2): the remedy
+    :mod:`mlkit.study.feasibility` names for that refusal, after the confirmation's earlier
+    refusals (a hold, a stale proposal) and checked like any run."""
     proposal = state['proposals'].get(action.get('proposal_id')) or {}
     value = proposal.get('value')
     rule, model = rec.policy_rule(value), rec.policy_model(value)

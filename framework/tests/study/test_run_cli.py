@@ -117,6 +117,16 @@ def test_the_activity_flow_through_processes(tmp_path, work, cases, name):
         view['next_action']['activity'] == 'diag.binary'
     assert cli.run('diag.binary')['status'] == 'promoted'
     after = cli('status')['view']['next_action']
+    if name == 'bank':
+        # Review round 6 (R6E-2): the scenario's share (the policy proposal's default) is not
+        # among the evaluated rules, so its confirmation would be refused: it is evaluated
+        # first, with the rules already evaluated.
+        assert (after['kind'], after['activity']) == ('run', 'policy.evaluation'), after
+        assert after['rules'][0] == 'share:0.1' and 'capacity:100' in after['rules']
+        assert 'did not measure the rule' in after['junior_message']
+        assert cli.run('policy.evaluate', *[a for r in after['rules']
+                                            for a in ('--rule', r)])['status'] == 'promoted'
+        after = cli('status')['view']['next_action']
     assert after['kind'] == 'propose' and after['decision'] == 'policy'
     by_purpose = view['exposure']['by_purpose']
     # ADR 0006: init inspects the development rows; the final test is sealed, not inspected.

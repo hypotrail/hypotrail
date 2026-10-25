@@ -1007,12 +1007,22 @@ HEX_IDENTIFIER = re.compile(r'\b(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)[0-9a-f]{8,}\b'
 # and "1.5×10⁶" are the exponent forms; "1.5‰" is a per mille (0.15 %); "1.5x" is a
 # multiple (1.5). A single-letter symbol after a space is not read before a hyphen and a
 # letter ("5 k-fold").
+#
+# Round 6 (review E, R6E-4): "trillion(s)" is 10^12; in French (the long scale) "billion" is
+# 10^12, "billiard" 10^15 and "trillion" 10^18 (:data:`FRENCH_SCALE_WORDS`, read when the
+# text is French). A percentage or a per mille written in words after digits ("12 percent",
+# "12 per cent", "12 pour cent", "1.5 per mille", "12 pour mille") is read as one
+# (:data:`PERCENT_WORDS`, :data:`PER_MILLE_WORDS`), as "twelve percent" is
+# (:mod:`mlkit.study.wordnum`): never as the bare number, which a count could match.
 _SCALE_SEPARATOR = '[ \u00a0\u202f\u2009-]'
 SCALE_WORDS = {'thousand': 3, 'thousands': 3, 'mille': 3, 'millier': 3, 'milliers': 3,
                'million': 6, 'millions': 6, 'mio': 6, 'billion': 9, 'billions': 9,
-               'milliard': 9, 'milliards': 9, 'bn': 9, 'md': 9, 'mds': 9, 'mrd': 9}
+               'milliard': 9, 'milliards': 9, 'bn': 9, 'md': 9, 'mds': 9, 'mrd': 9,
+               'trillion': 12, 'trillions': 12}
+FRENCH_SCALE_WORDS = {**SCALE_WORDS, 'billion': 12, 'billions': 12, 'billiard': 15,
+                      'billiards': 15, 'trillion': 18, 'trillions': 18}
 MAGNITUDE = {'k': 3, 'K': 3, 'M': 6, 'x': 0, '\u00d7': 0}
-_WORD_ALTERNATION = '|'.join(sorted(SCALE_WORDS, key=len, reverse=True))
+_WORD_ALTERNATION = '|'.join(sorted(FRENCH_SCALE_WORDS, key=len, reverse=True))
 _BODY = r'([1-9]\d{0,2}(?:,\d{3})+(?:\.\d+)?|\d+(?:[.,]\d+)?)'
 SUPERSCRIPT = str.maketrans('\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079'
                             '\u207b\u207a', '0123456789-+')
@@ -1027,6 +1037,12 @@ SCALED_NUMBER = re.compile(
     rf'|{_SCALE_SEPARATOR}(k|K|M)(?!-[^\W\d_]))'
     r'(?![\w])(\s?%)?')
 PER_MILLE = re.compile(r'(?<![\w.,])([-\u2212](?=\d))?' + _BODY + r'\s?\u2030')
+_WORD_GAP = '[ \u00a0\u202f\u2009-]+'
+PERCENT_WORDS = re.compile(r'(?<![\w.,])([-\u2212](?=\d))?' + _BODY + _WORD_GAP
+                           + r'(?i:(?:per|pour)' + _WORD_GAP + r'cent|percent|pourcent)(?![\w])')
+PER_MILLE_WORDS = re.compile(r'(?<![\w.,])([-\u2212](?=\d))?' + _BODY + _WORD_GAP
+                             + r'(?i:(?:per|pour)' + _WORD_GAP + r'(?:mille|mil)|permille)'
+                             r'(?![\w])')
 
 
 def _scaled_body(body: str, language: str | None) -> str:
@@ -1054,7 +1070,10 @@ def scaled_numbers(text: str, language: str | None = None) -> list[cite.Token]:
         elif m.group(5) is not None:
             exponent = int(m.group(5).translate(SUPERSCRIPT))
         elif m.group(6) is not None:
-            exponent = SCALE_WORDS[m.group(6).lower()]
+            exponent = (FRENCH_SCALE_WORDS if language == 'fr'
+                        else SCALE_WORDS).get(m.group(6).lower())
+            if exponent is None:     # a French-only word ("billiard") in English text
+                continue
         else:
             exponent = MAGNITUDE[m.group(7) or m.group(8)]
         decimals = (len(body.split('.')[1]) if '.' in body else 0) - exponent
@@ -1063,13 +1082,18 @@ def scaled_numbers(text: str, language: str | None = None) -> list[cite.Token]:
             value = -value
         out.append(cite.Token(m.group(0), value, decimals, bool(m.group(9)), m.start(),
                               m.end()))
-    for m in PER_MILLE.finditer(text):
-        # A per mille is a tenth of a percent: "1.5‰" is 0.15 %, at one more decimal.
-        body = _scaled_body(m.group(2), language)
-        decimals = (len(body.split('.')[1]) if '.' in body else 0) + 1
-        value = float(decimal.Decimal(body).scaleb(-1))
-        out.append(cite.Token(m.group(0), -value if m.group(1) else value, decimals, True,
-                              m.start(), m.end()))
+    taken = [(t.start, t.end) for t in out]
+    for pattern, shift in ((PER_MILLE, 1), (PER_MILLE_WORDS, 1), (PERCENT_WORDS, 0)):
+        for m in pattern.finditer(text):
+            if any(a < m.end() and m.start() < b for a, b in taken):
+                continue
+            # A per mille is a tenth of a percent: "1.5‰" is 0.15 %, at one more decimal.
+            body = _scaled_body(m.group(2), language)
+            decimals = (len(body.split('.')[1]) if '.' in body else 0) + shift
+            value = float(decimal.Decimal(body).scaleb(-shift))
+            out.append(cite.Token(m.group(0), -value if m.group(1) else value, decimals, True,
+                                  m.start(), m.end()))
+            taken.append(m.span())
     return sorted(out, key=lambda t: t.start)
 
 

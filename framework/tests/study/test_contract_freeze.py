@@ -291,7 +291,9 @@ NEXT_ACTION_KINDS = {'acknowledge_interruption', 'reconfirm', 'await_user_words'
                      # Closure fix F1: a dead execution seen by the read-only lease probe.
                      'outcome_unknown',
                      # v0.2a (WP-A4, R2): step 0, informational.
-                     'show_data_card'}
+                     'show_data_card',
+                     # Review round 6 (area E): a decision the junior put on hold.
+                     'resolve_hold'}
 EXECUTION_VIEW_KEYS = ('active', 'interrupted', 'late', 'suspected_interrupted')
 LIVENESS_VALUES = ('running', 'outcome_unknown', 'not_checked')
 NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independent',

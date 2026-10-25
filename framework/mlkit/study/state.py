@@ -1249,6 +1249,25 @@ def open_holds(state: Mapping, decision_id: str | None = None) -> list[dict]:
             and (decision_id is None or n['decision_id'] == decision_id)]
 
 
+def hold_action(state: Mapping, decision_id: str) -> dict | None:
+    """Review round 6 (area E): the ``next_action`` of a decision the junior put on hold in
+    their own words (an open hold note), whose confirmation is refused
+    (``decision_on_hold``): ask the junior whether the condition they set is met; their own
+    words resolve the hold (``decide note --resolve``) or keep it. None without an open
+    hold. :mod:`mlkit.study.feasibility` names it instead of a confirmation it would refuse."""
+    holds = open_holds(state, decision_id)
+    if not holds:
+        return None
+    note = holds[0]
+    return {'kind': 'resolve_hold', 'decision': decision_id, 'note_id': note['note_id'],
+            'note_ids': [n['note_id'] for n in holds], 'user_words': note['user_words'],
+            'message': (f'The junior put the {decision_id} on hold in their own words '
+                        f'(note {note["note_id"]}): "{note["user_words"]}". It cannot be '
+                        'confirmed while the hold is open. Ask them whether the condition is '
+                        f'met; record their reply with decide note --resolve {note["note_id"]} '
+                        '(their own words), or leave it on hold. Do not answer for them.')}
+
+
 def _confirmed(state: dict, decision_id: str) -> bool:
     return state['decisions'][decision_id]['status'] == 'confirmed'
 
@@ -1308,7 +1327,8 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
        read-only lease probe by ``status``, F1) has an unknown outcome: tell the junior,
        never call it in progress, and ask before acknowledging;
     1. an interrupted execution must be acknowledged (never restarted automatically);
-    2. a decision needs reconfirmation;
+    2. a decision needs reconfirmation (once proposed again, the words awaited on that
+       proposal, review round 6);
     3. an open proposal waits for the user's verbatim answer to its restatement;
     4. the current step needs a proposal or a result;
     5. otherwise the plan is finished.
@@ -1332,24 +1352,9 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
     for decision_id in decision_ids(state):
         decision = state['decisions'][decision_id]
         if decision['status'] == 'reconfirm_required':
-            action = {'kind': 'reconfirm', 'decision': decision_id,
-                      'message': f'Decision {decision_id} must be confirmed again: '
-                                 f'{decision["reason"]}'}
-            # Review round 4 (E4-3): the value to propose again, so the action is runnable as
-            # given (E4-1: a final test on the configuration the study chooses now).
-            default = reconfirm_value(state, decision_id)
-            if default is not None:
-                action['default_value'] = default
-            # E4-3: a result the confirmation needs that is not current is run first (the
-            # confirmation would be refused): the plan's step question, as any run.
-            slot = _reconfirm_needs_run(state, decision_id, default)
-            if slot is not None:
-                step = next((s for s in derive_plan(state) if s['decision'] == decision_id),
-                            None) or {}
-                return {'kind': 'run', 'step': step.get('id'), 'activity': slot,
-                        'reconfirm': decision_id,
-                        'message': step.get('question') or action['message']}
-            return action
+            # Review round 6 (area E): once proposed again, the junior's words are awaited
+            # on that proposal (a ``reconfirm`` named again would only propose once more).
+            return decision_action(state, decision_id)
     pending = sorted(open_proposals(state), key=lambda p: (p['revision'], p['proposal_id']))
     from . import assurance
     if assurance.profile(state) == 'review-v1':
@@ -1365,16 +1370,7 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
                          else ('fit.baseline', 'fit.linear')))
              or not is_current(state, DIAG_SLOT[task_of(state)])))]
     if pending:
-        p = pending[0]
-        # v0.3 (WP-J): mode-aware; own words are asked only in the training mode (R27).
-        message = ('Show the restatement and record the user\'s own words in reply: what '
-                   'they keep and why. A bare "ok" is not a decision.'
-                   if mode_of(state) == TRAINING else
-                   'Show the restatement, then ask the closed question "Do you adopt this '
-                   'decision?" and record the reply verbatim. A bare "ok" before that '
-                   'question is not a decision.')
-        return {'kind': 'await_user_words', 'proposal_id': p['proposal_id'],
-                'decision': p['decision_id'], 'message': message}
+        return _await_action(state, pending[0])
     for step in derive_plan(state):
         if step['status'] == 'done':
             continue
@@ -1395,20 +1391,80 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
                     'message': f'Step {step["id"]} needs: {", ".join(step["requires"])}.'}
         decide = step['decision'] and not _confirmed(state, step['decision'])
         if decide and (step['decide_first'] or not step['missing_results']):
-            action = {'kind': 'propose', 'step': step['id'], 'decision': step['decision'],
-                      'message': step['question']}
-            if step['decision'] == PREPROCESSING:
-                # WP-A4: the engine's default, the preparation the models used before the
-                # decision existed (results stay comparable).
-                from .governance import DEFAULT_PREPROCESSING
-                action['default_value'] = copy.deepcopy(DEFAULT_PREPROCESSING)
-            default = b1_default_value(state, step['decision'])
-            if default is not None:
-                action['default_value'] = default
-            return action
+            return _propose_action(state, step)
         return {'kind': 'run', 'step': step['id'], 'activity': step['missing_results'][0],
                 'message': step['question']}
     return {'kind': 'done', 'message': 'Every step is done. Review what is not yet defensible.'}
+
+
+def _reconfirm_action(state: dict, decision_id: str) -> dict:
+    """The action of a decision to confirm again (``reconfirm``, or the ``run`` first of a
+    result its confirmation needs, E4-3)."""
+    decision = state['decisions'][decision_id]
+    action = {'kind': 'reconfirm', 'decision': decision_id,
+              'message': f'Decision {decision_id} must be confirmed again: '
+                         f'{decision["reason"]}'}
+    # Review round 4 (E4-3): the value to propose again, so the action is runnable as
+    # given (E4-1: a final test on the configuration the study chooses now).
+    default = reconfirm_value(state, decision_id)
+    if default is not None:
+        action['default_value'] = default
+    # E4-3: a result the confirmation needs that is not current is run first (the
+    # confirmation would be refused): the plan's step question, as any run.
+    slot = _reconfirm_needs_run(state, decision_id, default)
+    if slot is not None:
+        step = next((s for s in derive_plan(state) if s['decision'] == decision_id),
+                    None) or {}
+        return {'kind': 'run', 'step': step.get('id'), 'activity': slot,
+                'reconfirm': decision_id,
+                'message': step.get('question') or action['message']}
+    return action
+
+
+def _await_action(state: dict, proposal: Mapping) -> dict:
+    """The action of an open proposal: the junior's words awaited on it."""
+    # v0.3 (WP-J): mode-aware; own words are asked only in the training mode (R27).
+    message = ('Show the restatement and record the user\'s own words in reply: what '
+               'they keep and why. A bare "ok" is not a decision.'
+               if mode_of(state) == TRAINING else
+               'Show the restatement, then ask the closed question "Do you adopt this '
+               'decision?" and record the reply verbatim. A bare "ok" before that '
+               'question is not a decision.')
+    return {'kind': 'await_user_words', 'proposal_id': proposal['proposal_id'],
+            'decision': proposal['decision_id'], 'message': message}
+
+
+def _propose_action(state: dict, step: Mapping) -> dict:
+    """The proposal of a plan step's decision, with the engine's drafted value."""
+    action = {'kind': 'propose', 'step': step['id'], 'decision': step['decision'],
+              'message': step['question']}
+    if step['decision'] == PREPROCESSING:
+        # WP-A4: the engine's default, the preparation the models used before the
+        # decision existed (results stay comparable).
+        from .governance import DEFAULT_PREPROCESSING
+        action['default_value'] = copy.deepcopy(DEFAULT_PREPROCESSING)
+    default = b1_default_value(state, step['decision'])
+    if default is not None:
+        action['default_value'] = default
+    return action
+
+
+def decision_action(state: dict, decision_id: str) -> dict | None:
+    """Review round 6 (area E): the action ``next_action`` gives for one decision, wherever
+    it stands in the plan: ``await_user_words`` on its latest open proposal, else
+    ``reconfirm`` (or its ``run`` first) when it must be confirmed again, else its
+    ``propose``. None for a decision the study does not have or that is confirmed."""
+    decision = state['decisions'].get(decision_id)
+    if decision is None or decision['status'] == 'confirmed':
+        return None
+    pending = sorted((p for p in open_proposals(state) if p['decision_id'] == decision_id),
+                     key=lambda p: (p['revision'], p['proposal_id']))
+    if pending:
+        return _await_action(state, pending[-1])
+    if decision['status'] == 'reconfirm_required':
+        return _reconfirm_action(state, decision_id)
+    step = next((s for s in derive_plan(state) if s['decision'] == decision_id), None)
+    return _propose_action(state, step) if step is not None else None
 
 
 # v0.2b (WP-B1): the evaluation schemes of the ``split`` decision (cross-validation on the
