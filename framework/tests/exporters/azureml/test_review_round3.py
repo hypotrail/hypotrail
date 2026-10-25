@@ -76,33 +76,6 @@ def _canonical_sha(value) -> str:
     return canonical.canonical_sha256(value)
 
 
-# --- B3-0 workaround (not part of the export) ---------------------------------------------
-
-@pytest.fixture(scope='module')
-def engine_regression_cv():
-    """Until the engine fix of B3-0 lands; remove then. ``fit.compute_explicit_cv`` calls
-    ``.loc`` on the ndarray ``fit._target`` returns for a regression under review-v1; within
-    that function only, ``_target`` returns a float Series indexed like the frame (the
-    reviewer's ``delayed_kit.patch_engine_regression_cv``). The patch is undone after the
-    module."""
-    from mlkit.study import fit
-    original_cv, original_target = fit.compute_explicit_cv, fit._target
-
-    def series_target(case, frame, partition):
-        return pd.Series(original_target(case, frame, partition), index=frame.index)
-
-    def cv(*args, **kwargs):
-        fit._target = series_target
-        try:
-            return original_cv(*args, **kwargs)
-        finally:
-            fit._target = original_target
-
-    with pytest.MonkeyPatch.context() as patch:
-        patch.setattr(fit, 'compute_explicit_cv', cv)
-        yield
-
-
 # --- real studies --------------------------------------------------------------------------
 
 def _review_study(base: Path, *, future: bool, outcome_delay: int = 5, n_rows: int = 300):
@@ -216,7 +189,7 @@ def _rebuild(out: Path, data: Path, run_dir: Path) -> dict:
 
 
 @pytest.fixture(scope='module')
-def delayed(tmp_path_factory, engine_regression_cv):
+def delayed(tmp_path_factory):
     """Forward chaining with five delayed-label rows (the reviewer's 195 vs 235 case)."""
     base = tmp_path_factory.mktemp('r3-delayed')
     flow, paths = _review_study(base, future=True, outcome_delay=5)
@@ -227,7 +200,7 @@ def delayed(tmp_path_factory, engine_regression_cv):
 
 
 @pytest.fixture(scope='module')
-def undelayed(tmp_path_factory, engine_regression_cv):
+def undelayed(tmp_path_factory):
     """Forward chaining without delayed labels (the reviewer's 200 vs 240 case)."""
     base = tmp_path_factory.mktemp('r3-undelayed')
     flow, paths = _review_study(base, future=True, outcome_delay=0)
@@ -267,7 +240,7 @@ def test_a_forward_chaining_plan_keeps_its_warm_up_rows(request, case):
 
 
 @needs_mlflow
-def test_an_explicit_k_fold_plan_names_every_training_row(tmp_path, engine_regression_cv):
+def test_an_explicit_k_fold_plan_names_every_training_row(tmp_path):
     """A review-v1 k-fold (explicit evaluation plan, no unscored rows)."""
     flow, _ = _review_study(tmp_path, future=False)
     out = tmp_path / 'export'

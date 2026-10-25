@@ -683,10 +683,16 @@ def _read_text(arg: str) -> str:
     if arg == '-':
         return sys.stdin.read()
     path = Path(arg)
-    if not path.exists() or path.is_dir():
-        raise StudyError('invalid_arguments', f'--text: no such file {arg}',
-                         details={'text': arg})
-    return path.read_text(encoding='utf-8')
+    shown = arg if len(arg) <= 200 else arg[:200] + '…'
+    try:
+        if not path.exists() or path.is_dir():
+            raise StudyError('invalid_arguments', f'--text: no such file {shown}',
+                             details={'text': shown})
+        return path.read_text(encoding='utf-8')
+    except OSError as exc:      # e.g. a long message given in place of a path
+        raise StudyError('invalid_arguments', f'--text names no readable file ({exc.strerror})'
+                         '; pass a file path, `-` for stdin, or <(printf ...).',
+                         details={'text': shown}) from None
 
 
 def registry_ids(study: read.Study) -> list[str]:

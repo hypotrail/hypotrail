@@ -731,3 +731,13 @@ def test_byte_comparison_with_the_previous_engine(tmp_path):
                           capture_output=True, text=True, timeout=3600)
     assert proc.returncode == 0, proc.stdout[-4000:] + proc.stderr[-4000:]
     assert 'DIFFERENT' not in proc.stdout and proc.stdout.rstrip().endswith('MATCH')
+
+
+def test_check_text_given_a_long_message_instead_of_a_path_is_a_refusal(tmp_path):
+    """`check --text` with a long literal string (not a path) answers invalid_arguments, not
+    internal_error (an OSError, file name too long)."""
+    from mlkit.study import cmd_check
+    from mlkit.study.errors import StudyError
+    with pytest.raises(StudyError) as caught:
+        cmd_check._read_text('The rate is 37 % on 319 rows. ' * 40)
+    assert caught.value.code == 'invalid_arguments'
