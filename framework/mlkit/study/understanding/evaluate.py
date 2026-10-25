@@ -22,7 +22,14 @@ The history views (``conflicts``, ``open_reservations``, ``dimension_view`` with
 an arbitration it relies on, in any session, settles nothing unless it is admissible under
 the policy the gate applies and the policy of its own session (``arbitration_checker``),
 and a handover reservation resolved by a transfer the current assistance rule does not
-admit stays open (review round 3, R3C-1 and R3C-4).
+admit stays open (review round 3, R3C-1 and R3C-4). Likewise an attempt reservation resolved
+by a demonstrated decision whose assistance the stricter of the applied policy and that
+decision's session policy does not admit stays open (review round 4, C4-1).
+
+A selected decision's own problems (superseded, rubric or taskset changed, another policy,
+a lost arbitration, help rectified after the review...) are computed by one function,
+:func:`selected_decision_problems`, for the gate, the export projection and the report
+(review round 4, C4-2).
 """
 from __future__ import annotations
 
@@ -83,12 +90,17 @@ def conflicts(ext: Mapping, settles: Callable[[Mapping], bool] | None = None) ->
 
 def reservation_state(ext: Mapping, r: Mapping,
                       settles: Callable[[Mapping], bool] | None = None,
-                      policy_doc: Mapping | None = None) -> str | None:
+                      policy_doc: Mapping | None = None,
+                      session_policy_for: Callable[[Mapping], Mapping | None] | None = None
+                      ) -> str | None:
     """``None`` when the reservation is closed; otherwise why it still counts: ``open``,
     ``arbitration_not_admissible`` (the arbitration that resolved it settles nothing under
-    ``settles``) or ``peer_assistance_not_admissible`` (a handover reservation resolved by a
-    transfer whose peer declared AI assistance, or nothing, on a dimension ``policy_doc``
-    makes ``unaided_required``). Without ``settles`` and ``policy_doc``: the history."""
+    ``settles``), ``assistance_not_admissible`` (an attempt reservation resolved by a
+    demonstrated decision whose assistance, as known now, the stricter of ``policy_doc`` and
+    that decision's session policy does not admit, :func:`resolution_assistance_admissible`)
+    or ``peer_assistance_not_admissible`` (a handover reservation resolved by a transfer whose
+    peer declared AI assistance, or nothing, on a dimension ``policy_doc`` makes
+    ``unaided_required``). Without ``settles`` and ``policy_doc``: the history."""
     if r['status'] == 'open':
         return 'open'
     by = r.get('resolved_by')
@@ -96,6 +108,10 @@ def reservation_state(ext: Mapping, r: Mapping,
     if a is not None and settles is not None and not settles(a):
         return 'arbitration_not_admissible'
     d = ext['decisions'].get(by) if by else None
+    if policy_doc is not None and d is not None and d['kind'] == 'attempt' \
+            and r.get('origin') != 'transfer' \
+            and not resolution_assistance_admissible(ext, d, policy_doc, session_policy_for):
+        return 'assistance_not_admissible'
     if policy_doc is not None and d is not None and d['kind'] == 'transfer' \
             and r.get('origin') == 'transfer' \
             and peer_rule(policy_doc, r['dimension_id']) == 'unaided_required' \
@@ -104,16 +120,38 @@ def reservation_state(ext: Mapping, r: Mapping,
     return None
 
 
+def resolution_assistance_admissible(ext: Mapping, d: Mapping, policy_doc: Mapping | None,
+                                     session_policy_for: Callable[[Mapping], Mapping | None]
+                                     | None = None) -> bool:
+    """Whether the demonstrated decision ``d`` may resolve a reservation on its dimension as
+    far as help goes (review round 4, C4-1): when ``policy_doc`` (the policy applied) or the
+    policy ``d``'s session started under makes the dimension ``unaided_required`` (the
+    stricter wins), every attempt ``d`` rests on is unaided as known now (a rectification
+    counts). A session policy that cannot be read is taken as ``unaided_required``."""
+    dim = d['dimension_id']
+    strict = policy_doc is not None and peer_rule(policy_doc, dim) == 'unaided_required'
+    if not strict and session_policy_for is not None:
+        owner = ext['sessions'].get(d['session_id'])
+        try:
+            spol = session_policy_for(owner) if owner is not None else None
+            strict = spol is None or peer_rule(spol, dim) == 'unaided_required'
+        except Exception:           # noqa: BLE001 - an unreadable session policy: the strictest
+            strict = True
+    return not strict or assistance_summary(ext, d['attempt_ids']) == 'unaided'
+
+
 def open_reservations(ext: Mapping, actor: str | None = None,
                       dimension: str | None = None, *,
                       settles: Callable[[Mapping], bool] | None = None,
-                      policy_doc: Mapping | None = None) -> list[dict]:
+                      policy_doc: Mapping | None = None,
+                      session_policy_for: Callable[[Mapping], Mapping | None] | None = None
+                      ) -> list[dict]:
     """The reservations that still count (:func:`reservation_state`), oldest first."""
     return [r for r in sorted(ext['reservations'].values(),
                               key=lambda r: r['opened_revision'])
             if (actor is None or r['actor'] == actor)
             and (dimension is None or r['dimension_id'] == dimension)
-            and reservation_state(ext, r, settles, policy_doc) is not None]
+            and reservation_state(ext, r, settles, policy_doc, session_policy_for) is not None]
 
 
 def effective_decision(ext: Mapping, actor: str, dimension: str) -> dict | None:
@@ -189,13 +227,17 @@ def assistance_summary(ext: Mapping, attempt_ids) -> str:
 
 def dimension_view(ext: Mapping, actor: str, dimension: str, *, decision=_HISTORY,
                    settles: Callable[[Mapping], bool] | None = None,
-                   policy_doc: Mapping | None = None) -> dict:
+                   policy_doc: Mapping | None = None,
+                   session_policy_for: Callable[[Mapping], Mapping | None] | None = None
+                   ) -> dict:
     """Status of ``actor`` on ``dimension`` (not a gate): from the history, or from
     ``decision`` (the selected one, :func:`shown_decision`) with the reservations and
-    conflicts as the gate counts them under ``settles`` and ``policy_doc``."""
+    conflicts as the gate counts them under ``settles``, ``policy_doc`` and
+    ``session_policy_for``."""
     d = effective_decision(ext, actor, dimension) if decision is _HISTORY else decision
     reservations = open_reservations(ext, actor, dimension, settles=settles,
-                                     policy_doc=policy_doc)
+                                     policy_doc=policy_doc,
+                                     session_policy_for=session_policy_for)
     disputed = [c for c in conflicts(ext, settles) if c['actor'] == actor
                 and c['dimension_id'] == dimension]
     pending = [p for p in ext['proposals'].values()
@@ -312,14 +354,16 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
         # session; an arbitration that closed one of them is relied on and settles it only
         # when admissible now (R3C-1). One the gate does not rely on never blocks (C2-2).
         not_admissible = False
-        for r in open_reservations(ext, actor, dim, settles=settles, policy_doc=policy_doc):
+        for r in open_reservations(ext, actor, dim, settles=settles, policy_doc=policy_doc,
+                                   session_policy_for=session_policy_for):
             reasons.append({'code': 'open_reservation', 'dimension': dim,
                             'detail': r['reservation_id']})
-            why = reservation_state(ext, r, settles, policy_doc)
+            why = reservation_state(ext, r, settles, policy_doc, session_policy_for)
             if why == 'arbitration_not_admissible':
                 not_admissible = True
-            elif why == 'peer_assistance_not_admissible':
-                reasons.append({'code': 'peer_assistance_not_admissible', 'dimension': dim,
+            elif why in ('peer_assistance_not_admissible', 'assistance_not_admissible'):
+                # A resolution whose help the applied rule does not admit (R3C-4, C4-1).
+                reasons.append({'code': why, 'dimension': dim,
                                 'detail': r['reservation_id']})
         for c in gate_conflicts:
             if c['actor'] == actor and c['dimension_id'] == dim:
@@ -337,14 +381,8 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
         d = ext['decisions'][did]
         info.update(decision_id=did, status=d['status'], session_id=d['session_id'])
         session = ext['sessions'].get(d['session_id'])
-        problems = _decision_problems(ext, d, session, actor, dim, pdigest, taskset_for)
-        lost = arbitrated_ids(ext).get(did)
-        if lost is not None and lost['chosen_decision_id'] != did and settles(lost):
-            problems.append('lost_arbitration')
-        if d.get('assistance_at_review') and any(
-                attempt_assistance(ext, a)['aided'] != aided
-                for a, aided in d['assistance_at_review'].items() if a in ext['attempts']):
-            problems.append('assistance_rectified_after_review')
+        problems = selected_decision_problems(ext, d, actor, dim, pdigest, taskset_for,
+                                              settles)
         for p in problems:
             reasons.append({'code': p, 'dimension': dim})
         if d['status'] != 'demonstrated' or problems:
@@ -576,6 +614,30 @@ def _last_rectification(ext: Mapping, attempt_ids) -> int:
 
 def _private_key(key: str) -> bool:
     return key.startswith(('study:', 'case:', 'data:', 'engine:'))
+
+
+def selected_decision_problems(ext: Mapping, d: Mapping, actor: str, dim: str, pdigest: str,
+                               taskset_for: Callable[[Mapping], Mapping | None],
+                               settles: Callable[[Mapping], bool] | None) -> list[str]:
+    """The problems of a selected decision ``d`` for ``actor`` on ``dim`` under the policy of
+    digest ``pdigest``: the gate's own list (each makes the dimension missing), also used by
+    the export projection and the report so that they never show as demonstrated and current
+    a decision the gate refuses (review round 4, C4-2). ``session_missing``,
+    ``session_not_completed``, ``actor_mismatch``, ``decision_policy_changed``,
+    ``taskset_missing``, ``rubric_changed``, ``taskset_not_qualified``, ``taskset_changed``,
+    ``decision_superseded``, ``lost_arbitration`` (an arbitration admissible under
+    ``settles`` chose another decision) and ``assistance_rectified_after_review``."""
+    session = ext['sessions'].get(d['session_id'])
+    problems = _decision_problems(ext, d, session, actor, dim, pdigest, taskset_for)
+    lost = arbitrated_ids(ext).get(d['decision_id'])
+    if lost is not None and lost['chosen_decision_id'] != d['decision_id'] \
+            and (settles is None or settles(lost)):
+        problems.append('lost_arbitration')
+    if d.get('assistance_at_review') and any(
+            attempt_assistance(ext, a)['aided'] != aided
+            for a, aided in d['assistance_at_review'].items() if a in ext['attempts']):
+        problems.append('assistance_rectified_after_review')
+    return problems
 
 
 def _decision_problems(ext, d, session, actor, dim, pdigest, taskset_for) -> list[str]:

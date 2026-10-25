@@ -195,15 +195,16 @@ def _assistance(store, sha) -> dict:
 
 
 def _reservation_variant(ext: Mapping, session: Mapping, task: Mapping | None,
-                         settles=None) -> bool:
+                         settles=None, policy_doc=None, session_policy_for=None) -> bool:
     """True when ``task`` is a new variant (same family, another variant) of a task whose
     attempt opened a reservation for the session author (SPEC §07 step 5) that still
-    counts (open, or resolved by an arbitration no longer admissible, R3C-1)."""
+    counts (open, resolved by an arbitration no longer admissible, R3C-1, or by a decision
+    whose help is not admissible, C4-1)."""
     if task is None:
         return False
     for r in ext['reservations'].values():
         if r['actor'] != session['actor_declared_id'] or \
-                ev.reservation_state(ext, r, settles) is None:
+                ev.reservation_state(ext, r, settles, policy_doc, session_policy_for) is None:
             continue
         for aid in r['attempt_ids']:
             ref = ext['attempts'].get(aid, {}).get('task_ref') or {}
@@ -235,7 +236,8 @@ def _submit(ctx) -> Handler:
         taskset = _session_taskset(ctx.store, s)
         task = bk.task(taskset, tid)
         if tid not in s['task_ids'] and not _reservation_variant(
-                ext, s, task, sv.arbitration_checker(ctx.store, ext, doc_policy)):
+                ext, s, task, sv.arbitration_checker(ctx.store, ext, doc_policy), doc_policy,
+                sv.session_policy_for(ctx.store)):
             raise refuse('invalid_transition', 'This task is neither in the session plan nor a '
                          'new variant for an open reservation.',
                          'Ask for the next task with `understanding task`.', task_id=tid)
@@ -472,6 +474,7 @@ def _review(ctx) -> Handler:
         taskset = _session_taskset(ctx.store, s)
         allowed = _allowed_refs(ctx.store, s)
         settles = sv.arbitration_checker(ctx.store, ext, doc_policy)
+        session_policy_for = sv.session_policy_for(ctx.store)
         created = []
         for i, d in enumerate(doc['decisions']):
             if not isinstance(d, Mapping) or set(d) != set(DECISION_KEYS):
@@ -521,7 +524,10 @@ def _review(ctx) -> Handler:
                     raise refuse('review_required', 'Only its own reviewer replaces a decision; '
                                  'a disagreement between reviewers is settled by arbitration.',
                                  'Record your own decision and ask for an arbitration.')
-                if any(o['decision_id'] in c['decision_ids'] for c in ev.conflicts(ext)):
+                # The conflicts as the gate counts them: one whose arbitration is no longer
+                # admissible is unsettled, so only a new arbitration leaves it (C4-4).
+                if any(o['decision_id'] in c['decision_ids']
+                       for c in ev.conflicts(ext, settles)):
                     raise refuse('review_required', 'This decision is in a conflict; only an '
                                  'arbitration settles it.', 'Ask for an arbitration.')
                 if not (set(attempts) - set(o['attempt_ids'])) and not \
@@ -533,8 +539,10 @@ def _review(ctx) -> Handler:
             for rid in resolves:
                 r = ext['reservations'].get(rid)
                 # Open, or resolved by an arbitration that is no longer admissible (it
-                # settles nothing for the gate, so it can be resolved again; R3C-1).
-                if r is None or ev.reservation_state(ext, r, settles) is None \
+                # settles nothing for the gate, so it can be resolved again; R3C-1), or by a
+                # decision whose help is no longer admissible (C4-1).
+                if r is None or ev.reservation_state(ext, r, settles, doc_policy,
+                                                     session_policy_for) is None \
                         or r['actor'] != actor \
                         or r['dimension_id'] != dim or r.get('origin') == 'transfer':
                     raise refuse('evidence_invalid', 'resolves_reservation_ids names no open '
@@ -552,6 +560,18 @@ def _review(ctx) -> Handler:
                                  'same question again does not demonstrate anew), or by a '
                                  'correction of a review error by the same reviewer.',
                                  'Ask a new variant of the task, or arbitrate.')
+                # The resolving decision follows the dimension's assistance rule, the stricter
+                # of the policy in force and the session's (C4-1, as R3C-4 for handovers).
+                if not ev.resolution_assistance_admissible(
+                        ext, {'dimension_id': dim, 'session_id': s['session_id'],
+                              'attempt_ids': attempts}, doc_policy, session_policy_for):
+                    raise refuse('evidence_invalid', 'This reservation is on a dimension whose '
+                                 'assistance rule is unaided_required; an attempt this '
+                                 'decision rests on was given with help (hints, coaching or '
+                                 'declared AI assistance), so it does not resolve the '
+                                 'reservation.', 'Answer a new variant without help, or record '
+                                 'this review without naming the reservation.',
+                                 reservation_id=rid, dimension=dim)
             if not isinstance(d['correction_of_review_error'], bool):
                 raise refuse('evidence_invalid', 'correction_of_review_error is a boolean.',
                              'Correct the field.')
@@ -638,8 +658,10 @@ def _arbitrate(ctx) -> Handler:
         settles = sv.arbitration_checker(ctx.store, ext, doc_policy)
         for rid in reservations:
             r = ext['reservations'].get(rid)
-            # Open, or resolved by an arbitration no longer admissible (R3C-1).
-            if r is None or ev.reservation_state(ext, r, settles) is None:
+            # Open, or resolved by an arbitration (R3C-1) or a decision (C4-1) no longer
+            # admissible.
+            if r is None or ev.reservation_state(ext, r, settles, doc_policy,
+                                                 sv.session_policy_for(ctx.store)) is None:
                 raise refuse('evidence_invalid', 'A reservation is unknown or closed.',
                              'Name open reservations.')
             if r.get('origin') == 'transfer':

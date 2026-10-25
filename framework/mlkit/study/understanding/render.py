@@ -60,10 +60,23 @@ def section(study_dir, state: Mapping) -> str:
         # one, the history's latest decision.
         selection = ev.selection_for(ext, s['milestone'], actor, s['profile'])
         for dim in s['dimensions']:
+            problems = []
             if selection is not None:
                 d = ev.shown_decision(ext, selection, actor, dim)
                 v = ev.dimension_view(ext, actor, dim, decision=d, settles=settles,
-                                      policy_doc=doc)
+                                      policy_doc=doc,
+                                      session_policy_for=sv.session_policy_for(store))
+                if d is not None and doc is not None:
+                    # The gate's problems of the selected decision (C4-2): not demonstrated
+                    # now, whatever status it was recorded with.
+                    try:
+                        problems = ev.selected_decision_problems(
+                            ext, d, actor, dim, pol.digest(doc), loaders['taskset_for'],
+                            settles)
+                    except Exception:  # noqa: BLE001 - the report still renders
+                        problems = ['decision_unreadable']
+                    if problems and v['status'] == 'demonstrated':
+                        v = {**v, 'status': 'needs_review'}
             else:
                 v = ev.dimension_view(ext, actor, dim)
                 d = ext['decisions'].get(v['decision_id']) if v['decision_id'] else None
@@ -85,8 +98,9 @@ def section(study_dir, state: Mapping) -> str:
                 f'<td>{e(assist)}</td>'
                 f'<td>{_lit(d["reviewer_declared_id"]) if d else "—"}</td></tr>')
             if v['status'] != 'demonstrated':
+                why = (' (' + ', '.join(_lit(p) for p in problems) + ')') if problems else ''
                 gaps.append(f'{_lit(dim)} {e(DIMENSION_TITLES[dim])} for {_lit(actor)}: '
-                            f'{e(v["status"].replace("_", " "))}')
+                            f'{e(v["status"].replace("_", " "))}{why}')
         # The gate's own selection-based coverage (round 2, C2-3), never a search for any
         # demonstrated transfer: without a selection for this person and profile, missing.
         # The gap rule is the gate's and the export's (R3C-3): too few declared people is a

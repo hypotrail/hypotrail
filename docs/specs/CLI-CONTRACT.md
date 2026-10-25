@@ -1022,7 +1022,7 @@ Payloads: `hypotrail.understanding/1` (stdout of every verb except `verify-expor
 | `policy set --file F --author ID --reason T` | mutation | validates `hypotrail.understanding-policy/1`; logs previous and new digest |
 | `plan --profile P --milestone handoff --actor ID [--repo DIR --sources-file F] [--write-plan F]` | read | dimensions (profile plus critical), tasks whose references resolve, missing prerequisites, estimate, what stays local |
 | `start --plan-file F` | mutation | captures the snapshot (bounded retry, `context_changed`), freezes the mapped sources, creates the session |
-| `status [--session ID] [--repo DIR]` | read | per dimension: status, freshness, assistance, evidence availability, assurance; per session: `repository` (`{repository, origin: recorded_at_start\|relocated\|preview, exists, relocations}`, where freshness is read from) and the `relocations` history |
+| `status [--session ID] [--repo DIR]` | read | per dimension: status, freshness, assistance, evidence availability, assurance; per session: `repository` (`{repository, origin: recorded_at_start\|relocated\|preview\|unavailable, exists, relocations}`, where freshness is read from; `unavailable` when the session's plan payload is gone) and the `relocations` history; `policy_available` (false when the policy's stored payload cannot be read: `mode` and `policy_digest` are then the ones the state recorded, and freshness reads `unknown`, never a failure) |
 | `task --session ID` | read | the next admissible task (a new variant for an open reservation), never an expected answer |
 | `submit --session ID --task ID --response-file F --assistance-file F [--cite REF]` | mutation | a new attempt; the answer is a local blob, never printed |
 | `coach --attempt ID` | mutation | records the help, then returns hints and criteria |
@@ -1082,6 +1082,33 @@ differs from `coverage_selection.dimension_decision_map` for a mapped dimension:
 selection` (the document contradicts itself; no conformity is judged on it). Local
 verification (`--study`) reports `evidence_availability: unavailable` when an answer of a
 selected transfer is gone.
+
+**Since review round 4 (area C).** A reservation opened by an attempt review is resolved by a
+`review` only when the resolving decision's help is admissible: on a dimension that the
+policy in force or the session's makes `unaided_required` (the stricter wins), every attempt
+it rests on is unaided (no hint, coaching or declared AI assistance), else `evidence_invalid`.
+The gate applies the rule again under the policy it applies and the resolving decision's
+session policy, with the help known now (a `rectify` counts): a resolution it does not admit
+leaves the reservation counted (`open_reservation` and `assistance_not_admissible`, detail
+the reservation), and `review`, `arbitrate`, `submit` and `task` treat it as open, so a new
+unaided variant resolves it again (the replaced resolution stays in `previous_resolutions`).
+A `review` that supersedes a decision reads the conflicts as the gate counts them: a conflict
+whose arbitration is no longer admissible is unsettled, so superseding a decision in it is
+refused (`review_required`). For a selected decision, the export projection and the report
+apply the gate's own problems of that decision (`evaluate.selected_decision_problems`:
+`decision_superseded`, `rubric_changed`, `taskset_changed`, `taskset_not_qualified`,
+`decision_policy_changed`, `lost_arbitration`, `assistance_rectified_after_review`, ...):
+a dimension recorded `demonstrated` with such a problem is exported and shown as
+`needs_review`, with `dimension_not_demonstrated` and one `known_gaps` entry per problem
+(`kind` the gate's code, `ref` the dimension), so `verify-export` with the same policy reaches
+the gate's verdict. The export judges these problems, the reservations and the peer coverage
+and its gap under one policy, the one the gate applies (the study's, else the session's).
+`verify-export` applies the taskset rule from the export: `provenance.taskset_qualification`
+other than `reviewed`, or the limitation `taskset_not_qualified`, adds the reason
+`taskset_not_qualified` (so `declared_conformity` is `nonconforming` and a `--policy-file`
+gate blocks). The export schema did not change. When the policy's stored payload cannot be
+read, `export handoff` follows the mode the state recorded with it: `off` and `coaching` keep
+the ungated contract; `required` takes the gated protocol, which refuses and writes nothing.
 
 **`export handoff` under a required policy naming `handoff`** (the only change to §7/C7):
 the export computes the gate under the writer lock, reserves the milestone (one revision,

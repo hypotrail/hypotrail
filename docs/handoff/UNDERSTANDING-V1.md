@@ -293,6 +293,54 @@ Regression tests: `framework/tests/study/understanding/test_review_round4_d.py`.
 * With a coverage selection, a dimension it does not map shows no review (the verifier
   refuses one that does).
 
+## Review round 4: fixes (area C)
+
+Regression tests: `framework/tests/study/understanding/test_review_round4_c.py` (simulated
+humans, temporary directories; the reviewer's reproducing tests of round 4 are ported with
+the expected outcome of each fix).
+
+* C4-1: a `review` resolves an attempt reservation only with admissible help: on a dimension
+  the policy in force or the session's makes `unaided_required` (the stricter wins), every
+  attempt the resolving decision rests on is unaided (`evidence_invalid` otherwise;
+  `evaluate.resolution_assistance_admissible`). The gate re-checks it under the policy it
+  applies and the resolving decision's session policy, with the help known now:
+  `reservation_state` returns `assistance_not_admissible` for a resolution it does not admit
+  (recorded under a looser rule, or rectified afterwards), and the gate reports
+  `open_reservation` and `assistance_not_admissible` (detail the reservation). Such a
+  reservation is open again for `review`, `arbitrate`, `submit` and `task`, so an unaided
+  answer to a new variant resolves it again. Expectation changed: the reviewer's probe
+  `test_aided_attempt_resolves_an_unaided_required_reservation` asserted that the aided
+  resolution was recorded; it is now refused at record time (its port says so).
+* C4-2: one function, `evaluate.selected_decision_problems`, gives the problems of a selected
+  decision for the gate, the export projection and the report. A dimension whose selected
+  decision has one is exported and shown as `needs_review` (never demonstrated and current),
+  with `dimension_not_demonstrated` and one `known_gaps` entry per problem (`kind` the gate's
+  code); the report's gap names the codes. `verify-export` with the same policy then blocks
+  (`dimension_not_demonstrated`). The export schema did not change (`known_gaps.kind` is a
+  string) and the `export-valid` fixture did not change (its flow has no such problem;
+  regenerated to a scratch folder and compared, only timestamps and digests of the
+  temporary run differ).
+* C4-3: `verify-export` applies the taskset qualification rule from the export
+  (`provenance.taskset_qualification`, and the limitation `taskset_not_qualified`): reason
+  `taskset_not_qualified`, so a session on a `to_qualify` bank is `nonconforming` and blocked
+  by a `--policy-file` gate, as `check` blocks it. Only `verify._gate_on_export` changed in
+  the verifier.
+* C4-4: a `review` superseding a decision reads the conflicts as the gate counts them
+  (`conflicts(ext, settles)`): a conflict whose arbitration is no longer admissible is
+  unsettled, so superseding with `correction_of_review_error` is refused (`review_required`)
+  until an admissible arbitration settles it.
+* C4-5: the export projection judges the peer coverage and its gap under the same applied
+  policy as the gate (it judged the gap with the session's).
+* C4-6: when the policy's stored payload cannot be read, `milestone.required` follows the
+  mode the state recorded: `off` and `coaching` never block `export handoff` (ungated
+  contract); `required` takes the gated protocol, which refuses and writes no pack. `status`
+  reports `policy_available: false`, the recorded mode and digest, and freshness `unknown`
+  (repository origin `unavailable` when a plan payload is gone) instead of failing. Note on
+  the port: the reviewer's probe removed every blob of the study, the scientific study's own
+  payloads (exposure row keys) included, and the core export then refuses with
+  `integrity_error`, a rule of the study engine outside the review; the port removes the
+  payloads the review's state names.
+
 ## Gate run
 
 Run in this container (Python 3.13, uv 0.11, the `dev`, `browser` and `azureml` groups and the

@@ -49,6 +49,7 @@ import json
 from pathlib import Path
 
 from . import commands as cmd
+from .errors import StudyError
 from .understanding import (actions, taskset as bk, canonical, evaluate as ev, export as ex,
                             model, policy as pol, refuse, service as sv, snapshot as snap,
                             verify as vf)
@@ -335,21 +336,36 @@ def _status(args) -> dict:
     if ext.get('schema') != STATE_SCHEMA:
         return _ok('status', store.study_dir, mode='unsupported', sessions=[],
                    revision=state['revision'], found=ext.get('schema'))
-    doc = sv.policy_doc(store, ext)
+    # Stored payloads removed by hand (ADR 0008 keeps the historical judgement): the policy
+    # is reported as unavailable, with the mode the state recorded, never a failure (C4-6).
+    try:
+        doc = sv.policy_doc(store, ext)
+        policy_available = True
+    except StudyError:
+        doc, policy_available = None, False
+    recorded = ext.get('policy') or {}
     current = sv.current_for(store, state, ext, repo_override=args.repo)
     sessions = []
     for s in sorted(ext['sessions'].values(), key=lambda s: s['created_revision']):
         if args.session and s['session_id'] != args.session:
             continue
-        snapdoc = sv.session_snapshot(store, s)
-        taskset = sv.blob_json(store, s['taskset_blob'], 'taskset')
+        try:
+            snapdoc = sv.session_snapshot(store, s)
+            taskset = sv.blob_json(store, s['taskset_blob'], 'taskset')
+        except StudyError:
+            snapdoc = taskset = None
         dims = []
         for dim in s['dimensions']:
             v = ev.dimension_view(ext, s['actor_declared_id'], dim)
             d = ext['decisions'].get(v['decision_id']) if v['decision_id'] else None
-            keys = ev.decision_dependency_keys(ext, d, taskset) if d else \
-                ((bk.rubric_for(taskset, dim) or {}).get('dependency_keys') or [])
-            fresh = snap.freshness(snapdoc['local'], current(s), keys)
+            fresh = {'status': 'unknown', 'changed': [], 'unknown': ['session_payloads']}
+            if taskset is not None:
+                keys = ev.decision_dependency_keys(ext, d, taskset) if d else \
+                    ((bk.rubric_for(taskset, dim) or {}).get('dependency_keys') or [])
+                try:
+                    fresh = snap.freshness(snapdoc['local'], current(s), keys)
+                except StudyError:
+                    pass
             avail = ev.evidence_availability(ext, d['attempt_ids'],
                                              lambda sha: sv.blob_ok(store, sha)) if d else None
             dims.append({**v, 'freshness': fresh['status'], 'changed': fresh['changed'],
@@ -370,16 +386,28 @@ def _status(args) -> dict:
             'taskset_qualified': s['taskset_qualified'], 'taskset_simulated': s['taskset_simulated'],
             'local_snapshot_digest': s['local_snapshot_digest'],
             'source_scope_digest': s['source_scope_digest'],
-            'repository': sv.repository_of(store, s, repo_override=args.repo),
+            'repository': _repository_or_unavailable(store, s, args.repo),
             'relocations': [{k: r[k] for k in ('from', 'to', 'author_declared_id', 'reason',
                                                'revision')}
                             for r in s.get('relocations') or []]})
-    return _ok('status', store.study_dir, mode=pol.mode(doc), revision=state['revision'],
-               policy_digest=pol.digest(doc) if doc else None, sessions=sessions,
+    mode = pol.mode(doc) if policy_available else recorded.get('mode', 'off')
+    return _ok('status', store.study_dir, mode=mode, revision=state['revision'],
+               policy_digest=pol.digest(doc) if doc else recorded.get('digest'),
+               policy_available=policy_available, sessions=sessions,
                conflicts=ev.conflicts(ext),
                open_reservations=[r['reservation_id'] for r in ev.open_reservations(ext)],
                assurance=pol.SUPPORTED_ASSURANCE,
                limitations=pol.limitations(doc) if doc else [])
+
+
+def _repository_or_unavailable(store, session, repo_override) -> dict:
+    """``service.repository_of``; when the session's plan payload is gone, the origin is
+    ``unavailable`` (freshness then reads as unknown)."""
+    try:
+        return sv.repository_of(store, session, repo_override=repo_override)
+    except StudyError:
+        return {'repository': None, 'origin': 'unavailable', 'exists': False,
+                'relocations': len(session.get('relocations') or [])}
 
 
 def _task(args) -> dict:
@@ -397,9 +425,12 @@ def _task(args) -> dict:
                 if a['session_id'] == s['session_id']}
     pending = [t for t in s['task_ids'] if t not in answered]
     # A dimension with an open reservation asks a new variant (never the same question); a
-    # reservation resolved by an arbitration that is no longer admissible counts (R3C-1).
+    # reservation resolved by an arbitration (R3C-1) or a decision whose help (C4-1) is no
+    # longer admissible counts.
     for dim in s['dimensions']:
-        for r in ev.open_reservations(ext, s['actor_declared_id'], dim, settles=settles):
+        for r in ev.open_reservations(ext, s['actor_declared_id'], dim, settles=settles,
+                                      policy_doc=doc,
+                                      session_policy_for=sv.session_policy_for(store)):
             used = {ext['attempts'][a]['task_ref']['variant_id'] for a in r['attempt_ids']
                     if a in ext['attempts']}
             family = {ext['attempts'][a]['task_ref']['variant_family'] for a in r['attempt_ids']

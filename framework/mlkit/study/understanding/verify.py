@@ -268,6 +268,12 @@ def _gate_on_export(doc: Mapping, policy_doc: Mapping, axes: Mapping,
     today = today or _dt.datetime.now(_dt.timezone.utc).date().isoformat()
     if rule['kind'] == 'until' and today > rule['date']:
         reasons.append({'code': 'policy_expired'})
+    # The gate's taskset rule (C4-3): reviews made on a bank that is not qualified satisfy no
+    # required milestone. The export states it in its provenance and its limitations.
+    from . import taskset as bk
+    if not bk.qualified({'qualification': {'status': doc['provenance'].get(
+            'taskset_qualification')}}) or 'taskset_not_qualified' in doc['limitations']:
+        reasons.append({'code': 'taskset_not_qualified'})
     critical = set(policy_doc['critical_dimensions'])
     actor = (doc['coverage_selection'] or {}).get('actor_alias')
     for d in doc['dimensions']:

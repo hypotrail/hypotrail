@@ -105,18 +105,28 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
     critical = set(doc['critical_dimensions'])
     # The selection of this session's author and profile, the one the gate reads; the
     # policy the gate applies (the study's, else the session's) and its view of the
-    # arbitrations (R3C-1).
+    # arbitrations (R3C-1). That one policy judges the dimensions' problems (C4-2), the
+    # reservations (C4-1) and the peer coverage and its gap (C4-5).
     scope_sel = ev.selection_for(ext, session['milestone'], actor, session['profile'])
     gate_policy = sv.policy_doc(store, ext) or doc
+    gate_digest = pol.digest(gate_policy)
     settles = sv.arbitration_checker(store, ext, gate_policy)
+    session_policy_for = sv.session_policy_for(store)
     dims, gaps, safe, used_tasks = [], [], set(), {}
     for dim in session['dimensions']:
         # With a selection, a dimension shows the decision it maps (the one the gate
         # judges, R3C-2); without one, the history's latest decision of this session.
         d = ev.shown_decision(ext, scope_sel, actor, dim, session['session_id'])
+        problems = []
         if scope_sel is not None:
             view = ev.dimension_view(ext, actor, dim, decision=d, settles=settles,
-                                     policy_doc=gate_policy)
+                                     policy_doc=gate_policy,
+                                     session_policy_for=session_policy_for)
+            if d is not None:
+                # The gate's own problems of the selected decision (C4-2): such a decision
+                # is not demonstrated now, whatever status it was recorded with.
+                problems = ev.selected_decision_problems(
+                    ext, d, actor, dim, gate_digest, loaders['taskset_for'], settles)
         else:
             view = ev.dimension_view(ext, actor, dim)
         r = bk.rubric_for(taskset, dim)
@@ -138,6 +148,8 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
         safe.update(evidence)
         status = view['status'] if d is not None or view['status'] != 'demonstrated' \
             else 'not_evaluated'
+        if problems and status == 'demonstrated':
+            status = 'needs_review'
         entry = {
             'id': dim, 'title': DIMENSION_TITLES[dim], 'required': True,
             'critical': dim in critical, 'status': status,
@@ -163,6 +175,8 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
             gaps.append({'kind': 'dimension_not_demonstrated', 'ref': dim})
         elif entry['freshness_at_export'] != 'current':
             gaps.append({'kind': f'dimension_{entry["freshness_at_export"]}', 'ref': dim})
+        for code in problems:             # one gap per problem, with the gate's code
+            gaps.append({'kind': code, 'ref': dim})
         for rid in view['open_reservations']:
             gaps.append({'kind': 'open_reservation', 'ref': rid})
     peers = []
@@ -173,7 +187,7 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
     for dim in doc['peer_required_dimensions']:
         if dim not in session['dimensions']:
             continue
-        cover = ev.selected_peer_coverage(ext, actor, dim, scope_sel, pol.digest(gate_policy),
+        cover = ev.selected_peer_coverage(ext, actor, dim, scope_sel, gate_digest,
                                           loaders['taskset_for'], loaders['captured_for'],
                                           loaders['current_for'], policy_doc=gate_policy,
                                           blob_ok=lambda sha: sv.blob_ok(store, sha))
@@ -193,7 +207,7 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
                 'rationale': x['rationale'], 'human_review_ref': x['decision_id']})
         peers.append({'dimension_id': dim, 'people': cover['people'], 'status': cover['status'],
                       'transfers': transfers})
-        if ev.peer_gap(cover, doc):
+        if ev.peer_gap(cover, gate_policy):     # the gate's policy, as the coverage (C4-5)
             gaps.append({'kind': 'peer_coverage_missing', 'ref': dim})
     for key in snapdoc['local'].get('unreadable_sources') or []:
         gaps.append({'kind': 'source_unreadable',          # {logical_key, role} since round 1

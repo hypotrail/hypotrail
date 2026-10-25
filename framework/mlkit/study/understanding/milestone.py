@@ -36,15 +36,20 @@ from . import actions, export as ex, model, policy as pol, refuse, service as sv
 
 
 def required(study_dir, milestone: str) -> bool:
-    """True when the study's policy is required and names ``milestone``."""
+    """True when the study's policy is required and names ``milestone``.
+
+    When the policy's stored payload cannot be read, the mode the state recorded with it
+    decides (review round 4, C4-6): ``off`` and ``coaching`` never block, so the export keeps
+    its ungated contract; ``required`` (or anything else) goes through the gated protocol,
+    which then refuses: an unreadable required policy blocks, never skips."""
     state = sv.load_state(study_dir)
     ext = model.of(state)
     if not ext:
         return False
     try:
         doc = sv.policy_doc(sv.open_store(study_dir), ext)
-    except Exception:            # noqa: BLE001 - an unreadable policy blocks, never skips
-        return True
+    except Exception:            # noqa: BLE001 - an unreadable policy: the recorded mode
+        return (ext.get('policy') or {}).get('mode') not in ('off', 'coaching')
     return bool(doc) and doc['mode'] == 'required' and milestone in doc['milestones']
 
 
