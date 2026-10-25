@@ -192,7 +192,7 @@ def _evaluated() -> tuple[str, object]:
     features = mp.read_table(mp.inside(folder, spec.features_path, "parity.features_path"))
     expected = mp.read_table(mp.inside(folder, spec.expected_outputs_path, "parity.expected_outputs_path"))
     result = mp.compare(
-        mp.batch_frame(rt.load_predictor(folder, trusted_roots=[folder]).predict(features.copy())),
+        mp.batch_frame(rt.load_predictor(folder, trusted_roots=[folder.resolve()]).predict(features.copy())),
         expected,
         spec.rtol,
         spec.atol,
@@ -319,7 +319,7 @@ def predict(args: argparse.Namespace) -> int:
     else:
         features = contracts.typed_features(source, bundle_contract(folder))
     contracts.refuse_non_finite(features, bundle_contract(folder))
-    predictor = rt.load_predictor(folder, trusted_roots=[folder])
+    predictor = rt.load_predictor(folder, trusted_roots=[folder.resolve()])
     frame = mp.batch_frame(predictor.predict(features))
     document = {
         "schema_version": "hypotrail.predictions/1",

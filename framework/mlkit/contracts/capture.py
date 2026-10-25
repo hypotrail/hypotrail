@@ -338,6 +338,16 @@ def loading_refusal(state: Mapping, predictor: Mapping, exc) -> dict:
                   "bibliothèque a changé) : le modèle ne peut pas être chargé pour "
                   "l'échantillon de test final. Réinstallez les versions capturées (le "
                   "verrou d'environnement du bundle), puis ouvrez l'échantillon de test final.")
+    elif contract == 'artifact_integrity_failed' and details.get('bytecode_folders'):
+        folders = ', '.join(str(f) for f in details['bytecode_folders'])
+        junior = ('Loading the model package in place wrote a Python bytecode cache into the '
+                  f'saved bundle ({folders}), so the bundle no longer verifies. Delete that '
+                  'folder, load packages from a copy from now on, then open the final test.'
+                  if lang == 'en' else
+                  "Le chargement du package du modèle sur place a écrit un cache de bytecode "
+                  f"Python dans le bundle enregistré ({folders}) : le bundle ne se vérifie "
+                  "plus. Supprimez ce dossier, chargez désormais les packages depuis une "
+                  "copie, puis ouvrez l'échantillon de test final.")
     elif contract == 'artifact_integrity_failed':
         junior = ('The saved bundle of your captured model does not verify: a file in its '
                   'folder was added, changed or removed (a .DS_Store or an editor backup, '

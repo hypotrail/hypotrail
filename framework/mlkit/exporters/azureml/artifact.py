@@ -40,13 +40,16 @@ def _json(bundle_dir: Path, relative, where: str) -> dict:
 
 
 def read_files(root: Path) -> dict[str, bytes]:
-    """Every file under ``root`` by POSIX relative path; a symlink is refused; bytecode
-    caches (``__pycache__``) are not part of a bundle and are not copied."""
+    """Every file under ``root`` by POSIX relative path; a symlink or a Python bytecode
+    cache (``__pycache__``, ``*.pyc``) is refused, as the runtime refuses it in a bundle."""
     out, total = {}, 0
     for path in sorted(root.rglob('*')):
-        if '__pycache__' in path.relative_to(root).parts:
-            continue
         rel = path.relative_to(root).as_posix()
+        if '__pycache__' in path.relative_to(root).parts or path.suffix in ('.pyc', '.pyo'):
+            raise ExportError('artifact_integrity_failed', 'The bundle holds a Python bytecode '
+                              'cache, written by loading its package in place.', path=rel,
+                              remediation='Delete the __pycache__ folder from the bundle and '
+                                          'load packages from a copy.')
         if path.is_symlink():
             raise ExportError('artifact_integrity_failed', 'The bundle holds a symbolic link.',
                               path=rel, remediation='Capture the predictor again.')
@@ -71,10 +74,15 @@ def verify_predictor(bundle_dir: Path, recipe: Mapping, contract: Mapping) -> di
     try:
         rt.verify_bundle(bundle_dir)
     except Exception as error:   # the runtime refuses a bundle it cannot verify
+        # The runtime's own remediation (e.g. delete a bytecode cache) reaches the user.
+        remediation = getattr(error, 'remediation', None) or \
+            'Capture the predictor again; never edit a bundle.'
+        details = {'error': f'{type(error).__name__}: {error}'[:300]}
+        if isinstance(getattr(error, 'details', None), Mapping):
+            details['runtime'] = dict(error.details)
         raise ExportError('artifact_integrity_failed', 'hypotrail_runtime refused the bundle.',
-                          path='predictor.bundle_dir',
-                          remediation='Capture the predictor again; never edit a bundle.',
-                          details={'error': f'{type(error).__name__}: {error}'[:300]}) from error
+                          path='predictor.bundle_dir', remediation=remediation,
+                          details=details) from error
     bundle = _json(bundle_dir, mp.BUNDLE_DOCUMENT, mp.BUNDLE_DOCUMENT)
     manifest = _json(bundle_dir, bundle.get('predictor_manifest_path'), 'predictor_manifest_path')
     bundled_recipe = _json(bundle_dir, bundle.get('recipe_path'), 'recipe_path')
