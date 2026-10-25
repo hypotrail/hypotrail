@@ -32,6 +32,7 @@ import ctypes
 import ctypes.util
 import errno
 import os
+import re
 import secrets
 import sys
 from pathlib import Path
@@ -183,7 +184,8 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
                 cover['people'] < doc['team_coverage']['minimum_people']:
             gaps.append({'kind': 'peer_coverage_missing', 'ref': dim})
     for key in snapdoc['local'].get('unreadable_sources') or []:
-        gaps.append({'kind': 'source_unreadable', 'ref': key})
+        gaps.append({'kind': 'source_unreadable',          # {logical_key, role} since round 1
+                     'ref': key['logical_key'] if isinstance(key, Mapping) else key})
     if any(snap.is_external_source(e) for e in snapdoc['local']['entries']):
         gaps.append({'kind': 'external_unverified',
                      'ref': 'case contract, data identity and engine are local, not in Git'})
@@ -344,9 +346,10 @@ def _md(text) -> str:
     out = out.strip().replace('\\', '\\\\')
     for ch in '`*_{}[]()#+-.!|<>=~:&$':       # & entities, $ math
         out = out.replace(ch, '\\' + ch)
-    # GFM links an e-mail address after escapes are resolved: '@' as its own code span
-    # splits the text, so no address forms (the rendered text still reads, and copies, '@').
-    return out.replace('@', '`@`')
+    # GFM links an e-mail address after escapes are resolved: a run of '@' as its own code
+    # span splits the text, so no address forms (the rendered text still reads, and copies,
+    # the same characters).
+    return re.sub('@+', lambda m: f'`{m.group()}`', out)
 
 
 def markdown(doc: Mapping) -> str:
@@ -430,6 +433,25 @@ def files_of(doc: Mapping) -> dict:
 
 # --- validation (shared with the verifier) ---------------------------------------------------
 
+def _aliases_ok(doc) -> bool:
+    """Every ``*_alias`` value and every required contributor is a declared id (the
+    author always; a dimension's reviewer may be absent)."""
+    if not (isinstance(doc.get('author_alias'), str)
+            and model.ACTOR.fullmatch(doc['author_alias'])):
+        return False
+
+    def walk(node, key=None) -> bool:
+        if isinstance(node, dict):
+            return all(walk(v, k) for k, v in node.items())
+        if isinstance(node, list):
+            return all(walk(v, key) for v in node)
+        if key == 'required_contributors' or (key or '').endswith('_alias'):
+            return (node is None and key == 'reviewer_alias') or (
+                isinstance(node, str) and bool(model.ACTOR.fullmatch(node)))
+        return True
+    return walk({k: doc[k] for k in doc if k not in ('policy', 'handover_content')})
+
+
 def _is_code(value) -> bool:
     """A status code of the engine (peer coverage statuses are its problem codes)."""
     return isinstance(value, str) and 0 < len(value) <= 40 and all(
@@ -479,7 +501,12 @@ def validate_review(doc) -> list[str]:
     if not isinstance(doc['provenance'], dict) or set(doc['provenance']) != \
             set(PROVENANCE_FIELDS):
         p.append('provenance')
+    if not _aliases_ok(doc):
+        p.append('aliases')
     peers = doc['peer_coverage']
+    if isinstance(peers, list) and len({c.get('dimension_id') for c in peers
+                                        if isinstance(c, dict)}) != len(peers):
+        p.append('duplicate peer coverage')
     if not isinstance(peers, list) or not all(
             isinstance(c, dict) and c.get('dimension_id') in DIMENSIONS
             and type(c.get('people')) is int and c['people'] >= 1
@@ -555,6 +582,27 @@ def _same(dest: Path, files: Mapping[str, bytes]) -> bool:
     return all((dest / n).read_bytes() == data for n, data in files.items())
 
 
+LEFTOVER_AGE_SECONDS = 60
+
+
+def _clear_leftovers(parent: Path, review_id_: str) -> None:
+    """Remove the temporary folders of this review id left by a publication that was killed
+    before its rename (older than a minute, so a concurrent publication's live folder is
+    kept). Only the generation's own file names are removed; anything else stays."""
+    import time
+    for p in parent.glob(f'.{review_id_}.tmp-*'):
+        try:
+            if p.is_symlink() or not p.is_dir() or \
+                    time.time() - p.stat().st_mtime < LEFTOVER_AGE_SECONDS:
+                continue
+            for child in p.iterdir():
+                if child.name in FILES and child.is_file() and not child.is_symlink():
+                    child.unlink()
+            p.rmdir()
+        except OSError:
+            continue                      # left as is; the verifier reports it
+
+
 def publish(repo: Path, review_id_: str, files: Mapping[str, bytes], *, fault=None) -> str:
     """Publish one generation; ``'published'`` or ``'already_published'`` (same bytes)."""
     parent = Path(repo) / EXPORT_DIR
@@ -563,6 +611,7 @@ def publish(repo: Path, review_id_: str, files: Mapping[str, bytes], *, fault=No
         raise refuse('path_outside_scope', 'docs/understanding leaves the repository.',
                      'Remove the link.')
     parent.mkdir(parents=True, exist_ok=True)
+    _clear_leftovers(parent, review_id_)
     dest = parent / review_id_
     if dest.exists() or dest.is_symlink():
         if _same(dest, files):

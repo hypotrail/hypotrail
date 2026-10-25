@@ -31,8 +31,10 @@ SCHEMA = 'hypotrail.understanding-verification/1'
 MAX_FILE = 4 * 1024 * 1024
 # GIT_NO_LAZY_FETCH: a partial clone never fetches a missing object (Git 2.44 and later);
 # older Git is covered by refusing a partial clone (Tree).
+# GIT_NO_REPLACE_OBJECTS: refs/replace never substitutes other bytes for the ones the tree
+# names (a mirror clone or a refs/* fetch brings such refs).
 GIT_ENV = {'GIT_TERMINAL_PROMPT': '0', 'GIT_OPTIONAL_LOCKS': '0', 'LC_ALL': 'C',
-           'GIT_NO_LAZY_FETCH': '1'}
+           'GIT_NO_LAZY_FETCH': '1', 'GIT_NO_REPLACE_OBJECTS': '1'}
 
 
 def git(repo: Path, *args: str, input_: bytes | None = None) -> bytes:
@@ -377,6 +379,8 @@ def _verify_one(tree: Tree, rid: str, policy_doc, local) -> dict:
         problems.append('Markdown is not the rendering of the JSON')
     if manifest.get('renderer_version') != doc['renderer_version']:
         problems.append('renderer version')
+    if ex.files_of(doc)[ex.MANIFEST_FILE] != raw[ex.MANIFEST_FILE]:
+        problems.append('manifest is not the one of the published JSON and Markdown')
     scope = doc['public_source_scope']
     if canonical.digest(scope) != doc['source_scope_digest']:
         problems.append('source_scope_digest does not match the public scope')

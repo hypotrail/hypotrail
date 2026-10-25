@@ -210,6 +210,23 @@ humans, temporary directories; several are the reviewer's reproducing tests, por
   dimension whose assistance rule is `unaided_required` (`peer_assistance_not_admissible`);
   under `aided_allowed` it counts.
 
+## Review round 3: fixes (area D)
+
+Regression tests: `framework/tests/study/understanding/test_review_round3_d.py`. `cmarkgfm`
+is now a dev dependency, so the GFM rendering checks of `test_adv2_d.py` run in the gate.
+
+* `verify-export --study` with a study that never enabled the review reports the
+  generation as not exported by that study (`not_recorded`, invalid), never a silent skip.
+* Git replace objects are ignored (`GIT_NO_REPLACE_OBJECTS=1`) by the verifier, `git-plan`,
+  `git-stage`, `git-receipt` and the relocate check: the bytes read are those the tree names.
+* The verifier requires the manifest to be exactly the one of the published JSON and
+  Markdown, every alias (author included) to be a declared id, and one peer coverage entry
+  per dimension.
+* An unreadable source's gap names its logical key (a string, as the schema says).
+* A retry removes the temporary folder of a publication killed before its rename once it is
+  older than a minute (a younger one may belong to a live concurrent publication).
+* A run of `@` is one code span, so the rendered text keeps its characters.
+
 ## Gate run
 
 Run in this container (Python 3.13, uv 0.11, the `dev`, `browser` and `azureml` groups and the

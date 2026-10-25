@@ -46,7 +46,11 @@ hypotrail-runtime = { path = "runtime", editable = true }
 hypotrail = "mlkit.study.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=8.0", "hypothesis>=6.100"]
+dev = [
+    "pytest>=8.0",
+    "hypothesis>=6.100",
+    "cmarkgfm==2024.11.20",
+]
 browser = ["playwright==1.55.0"]
 # The same pins as the azureml extra, so the export tests run in the gate environment, and
 # the team template's ruff (its .pre-commit-config.yaml pin) to lint an exported project.

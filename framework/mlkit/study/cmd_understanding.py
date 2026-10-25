@@ -783,7 +783,7 @@ def _git_toplevel(repo: Path) -> Path | None:
     """The top level of the Git work tree holding ``repo`` (None outside one)."""
     import os
     import subprocess
-    env = {**os.environ, 'GIT_TERMINAL_PROMPT': '0', 'GIT_OPTIONAL_LOCKS': '0', 'LC_ALL': 'C'}
+    env = {**os.environ, **vf.GIT_ENV}
     try:
         proc = subprocess.run(['git', '-C', str(repo), '-c', 'core.hooksPath=/dev/null',
                                '-c', 'core.fsmonitor=false', 'rev-parse', '--show-toplevel'],
@@ -846,7 +846,9 @@ def _local_checker(study, repo):
 
     def run(doc, file_hashes=None) -> dict:
         if not ext:
-            return {}
+            # A study without the review exported nothing: the generation is not its own.
+            return {'private_context_verification': 'unknown', 'study_binding': 'not_recorded',
+                    'evidence_availability': 'unavailable'}
         session = next((s for s in ext['sessions'].values()
                         if ex._opaque(ext, 'session', s['session_id']) == doc['session_ref']),
                        None)
