@@ -62,6 +62,17 @@ def _fact(state: Mapping, fact_id: str) -> dict | None:
         if fact else None
 
 
+def _observation_unit(state: Mapping, tr) -> dict:
+    """What one row describes: the case's ``observation_unit`` fact, else its row unit,
+    with ``texts`` ({en, fr}; L3) from the case's translation sidecar."""
+    from . import l10n
+    fact = _fact(state, 'observation_unit')
+    if fact:
+        return {**fact, 'texts': l10n.pair(fact['value'], tr.fact('observation_unit', l10n.FR))}
+    unit = dict(state['structure']['row_unit'])
+    return {**unit, 'texts': l10n.pair(unit.get('value'), tr.row_unit(l10n.FR))}
+
+
 def _final_test_line(final: Mapping, lang: str = 'en') -> dict:
     from . import junior
     if final['status'] == 'absent':
@@ -101,12 +112,16 @@ def card(study_dir) -> dict:
     from . import partition, read
     from .activities import matches
 
-    from . import junior, assurance
+    from . import junior, assurance, l10n
     from . import state as st
     study = read.open(study_dir)
     state = study.state
     language = st.language_of(state)
     case = c.case_of(state, verify_data=True)
+    # L3 (R4, T4-T6; D4b): every case statement the card shows carries ``texts`` ({en, fr}):
+    # the case's words and their French form from the case's translation sidecar (null when
+    # the study recorded none).
+    tr = l10n.translations(state, case.document)
     keys = partition.development_keys(study.blob, partition.inputs(state))
     dataset = dt.load_development(case, keys)
     frame = dataset.frame
@@ -123,7 +138,9 @@ def card(study_dir) -> dict:
             mask = matches(values, s['value'], na_values) & ~special_mask
             special_mask |= mask
             specials.append({'value': s['value'], 'meaning': s['meaning'], 'status': s['status'],
-                             'n_rows': int(mask.sum())})
+                             'n_rows': int(mask.sum()),
+                             'texts': l10n.pair(s['meaning'],
+                                                tr.meaning(name, s['value'], l10n.FR))})
         ordinary = values[~special_mask & values.notna()]
         examples = []
         for x in ordinary.tolist():
@@ -137,7 +154,9 @@ def card(study_dir) -> dict:
                 'description': v['description'],
                 'description_fr': (v.get('labels') or {}).get('fr'),
                 'availability': {'value': a['value'], 'status': a['status'],
-                                 'source': a['source']},
+                                 'source': a['source'],
+                                 'texts': l10n.pair(a['source'],
+                                                    tr.availability_source(name, l10n.FR))},
                 'decided': ({'status': availability['status'], 'value': decided.get(name)}
                             if name in decided else None),
                 'special_values': specials, 'n_missing': int(values.isna().sum()),
@@ -155,7 +174,7 @@ def card(study_dir) -> dict:
     variable = case.variables[target]
     payload = {
         'schema': SCHEMA, 'ok': True, 'study': str(study.study_dir), 'revision': study.revision,
-        'observation_unit': _fact(state, 'observation_unit') or state['structure']['row_unit'],
+        'observation_unit': _observation_unit(state, tr),
         'development': {'rows': int(len(frame)), 'columns': len(case.column_names),
                         'partition': 'development' if keys is not None else 'all',
                         # v0.2b (WP-B3): groups of identical records and the case's policy.
@@ -166,7 +185,10 @@ def card(study_dir) -> dict:
                    'unit': variable.get('unit'), 'description': variable['description'],
                    'description_fr': (variable.get('labels') or {}).get('fr')},
         'final_test': _final_test_line(final, language),
-        'groups': [{'group': g, 'variables': items} for g, items in groups.items()],
+        'groups': [{'group': g, 'variables': items,
+                    'texts': l10n.pair(g, tr.group(g, l10n.FR)
+                                       or (junior.UNGROUPED_FR if g == UNGROUPED else None))}
+                   for g, items in groups.items()],
         'rows': rows,
         'note': {'text': NOTE, 'audience': 'junior',
                  'junior_text': junior.DATA_NOTE_FR if language == 'fr' else NOTE},
@@ -185,45 +207,81 @@ def main(args: argparse.Namespace):
     return cmd.Outcome(card(args.study))
 
 
+# L3 (owner session 2026-10-26, R4): the labels of the text card of a French study.
+TEXT_WORDS = {
+    'en': {'one_row': 'One row', 'not_stated': 'not stated by the case',
+           'development': 'Development rows: {rows}, columns: {columns}', 'target': 'Target',
+           'in': 'in', 'availability': 'availability (case)', 'special': 'special value',
+           'rows': 'rows', 'missing': 'missing {missing}, distinct {distinct}, examples ',
+           'first': 'First {n} development rows (target first):', 'row': 'row'},
+    'fr': {'one_row': 'Une ligne', 'not_stated': 'non indiqué par le cas',
+           'development': "Lignes de l'échantillon de développement : {rows}, colonnes : "
+                          "{columns}", 'target': 'Cible', 'in': 'en',
+           'availability': 'disponibilité (selon le cas)', 'special': 'valeur spéciale',
+           'rows': 'lignes', 'missing': 'manquants {missing}, distincts {distinct}, exemples ',
+           'first': "Les {n} premières lignes de développement (la cible d'abord) :",
+           'row': 'ligne'},
+}
+
+
+def _language_of(payload: Mapping) -> str:
+    """The study language of a card: French when its note is given in another text than the
+    English source (``junior_text``, WP-C)."""
+    note = payload.get('note') or {}
+    return 'fr' if note.get('junior_text') and note['junior_text'] != note.get('text') else 'en'
+
+
 def text(payload: Mapping) -> str:
-    """The data card as readable text (``--format text``; not a contract)."""
+    """The data card as readable text (``--format text``; not a contract), in the study
+    language (L3): a French study reads the case's statements in French where the case's
+    translation sidecar gives them (``texts.fr``) and the descriptions' ``description_fr``."""
+    lang = _language_of(payload)
+    w = TEXT_WORDS[lang]
+
+    def say(node, english):
+        return ((node or {}).get('texts') or {}).get(lang) or english
     unit = payload['observation_unit'] or {}
     dev = payload['development']
     t = payload['target']
-    lines = [f'One row: {unit.get("value") or "not stated by the case"}',
-             f'Development rows: {dev["rows"]}, columns: {dev["columns"]}',
-             dev['duplicates']['line']]
+    junior = lang != 'en'
+    colon = ' : ' if junior else ': '
+    lines = [f'{w["one_row"]}{colon}{say(unit, unit.get("value")) or w["not_stated"]}',
+             w['development'].format(rows=dev['rows'], columns=dev['columns']),
+             dev['duplicates']['junior_text'] if junior else dev['duplicates']['line']]
+    description = (t.get('description_fr') if junior else None) or t['description']
     if t['task'] == 'binary':
         labels = ' / '.join(str(x) for x in (t['positive_label'], t['negative_label'])
                             if x is not None)
-        lines.append(f'Target: {t["column"]} ({labels}): {t["description"]}')
+        lines.append(f'{w["target"]}{colon}{t["column"]} ({labels}){colon}{description}')
     else:
-        lines.append(f'Target: {t["column"]} (in {t["unit"]}): {t["description"]}')
-    lines.append(payload['final_test']['line'])
+        lines.append(f'{w["target"]}{colon}{t["column"]} ({w["in"]} {t["unit"]}){colon}'
+                     f'{description}')
+    final = payload['final_test']
+    lines.append(final['junior_text'] if junior else final['line'])
     for g in payload['groups']:
         lines.append('')
-        lines.append(f'## {g["group"]}')
+        lines.append(f'## {say(g, g["group"])}')
         for v in g['variables']:
             unit_text = f', {v["unit"]}' if v['unit'] else ''
-            lines.append(f'- {v["name"]} ({v["type"]}{unit_text}, {v["role"]}): '
-                         f'{v["description"]}')
-            if v['description_fr']:
+            shown = (v['description_fr'] if junior else None) or v['description']
+            lines.append(f'- {v["name"]} ({v["type"]}{unit_text}, {v["role"]}){colon}{shown}')
+            if v['description_fr'] and not junior:
                 lines.append(f'    fr: {v["description_fr"]}')
             if v['role'] == 'feature':
                 a = v['availability']
-                lines.append(f'    availability (case): {a["value"]} [{a["status"]}] - '
-                             f'{a["source"]}')
+                lines.append(f'    {w["availability"]}{colon}{a["value"]} [{a["status"]}] - '
+                             f'{say(a, a["source"])}')
             for s in v['special_values']:
-                lines.append(f'    special value {s["value"]!r}: {s["meaning"]} '
-                             f'({s["n_rows"]} rows)')
-            lines.append(f'    missing {v["n_missing"]}, distinct {v["n_distinct"]}, examples '
-                         + ', '.join(repr(x) for x in v['examples']))
+                lines.append(f'    {w["special"]} {s["value"]!r}{colon}{say(s, s["meaning"])} '
+                             f'({s["n_rows"]} {w["rows"]})')
+            lines.append(w['missing'].format(missing=v['n_missing'], distinct=v['n_distinct'])
+                         .join(['    ', '']) + ', '.join(repr(x) for x in v['examples']))
     lines.append('')
     rows = payload['rows']
-    lines.append(f'First {rows["n_rows"]} development rows (target first):')
-    lines.append(' | '.join(['row'] + rows['columns']))
+    lines.append(w['first'].format(n=rows['n_rows']))
+    lines.append(' | '.join([w['row']] + rows['columns']))
     for r in rows['items']:
         lines.append(' | '.join([r['row_key']] + [str(r['values'][c]) for c in rows['columns']]))
     lines.append('')
-    lines.append(payload['note']['text'])
+    lines.append(payload['note']['junior_text'] if junior else payload['note']['text'])
     return '\n'.join(lines)

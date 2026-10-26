@@ -46,7 +46,13 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
 # decision CA.3, ADR 0004 open question 7), then ``currency`` (review fix H1, CC §1.5).
 # Without ``--digest`` the summary is unchanged.
 DIGEST_SUMMARY_KEYS = SUMMARY_KEYS + ('moments', 'pauses', 'last_session', 'digest', 'task',
-                                      'currency')
+                                      'currency',
+                                      # L3 (owner session 2026-10-26, D4b): the junior texts
+                                      # of the summary in both languages, last.
+                                      'texts')
+# L3: the tables of ``texts.<language>`` (``view.LANGUAGE_TEXT_KEYS``).
+LANGUAGE_TEXT_KEYS = ('plan', 'moments', 'next_action', 'choice_options', 'limits',
+                      'artifacts', 'recap', 'digest', 'goal', 'proposals')
 CURRENCY_HEX = 16
 CURRENCY_INPUT_KEYS = ('revision', 'sources', 'artifacts', 'sources_changed', 'alerts',
                        'next_action', 'executions', 'results')
@@ -132,7 +138,13 @@ EVIDENCE_KEYS = ('schema', 'ok', 'study', 'revision', 'task', 'results', 'trunca
 EVIDENCE_RESULT_KEYS = ('result_id', 'activity', 'slot', 'promoted', 'current', 'stale_reason',
                         'integrity', 'partition', 'n_rows', 'params', 'upstream', 'downstream',
                         'created', 'started_revision', 'execution_id', 'exposure_id', 'values',
-                        'headline')
+                        'headline',
+                        # L3 (owner session 2026-10-26, R4, D4b): the question in the study
+                        # language and an EDA result's junior texts in both languages.
+                        'question_junior', 'texts')
+# L3: the junior texts of an EDA result in one language (``l10n.eda_texts``).
+EDA_TEXT_KEYS = ('question', 'note', 'warnings', 'binning', 'signal_questions', 'null_band',
+                 'meanings')
 SEGMENT_KEYS = ('text',)
 CITED_SEGMENT_KEYS = ('text', 'result_id', 'path', 'value', 'format')
 LINEAGE_KEYS = ('nodes', 'edges')
@@ -167,7 +179,10 @@ NOTEBOOK_HINT_KEYS = ('path', 'search')
 # --- C6 (CC §6) --------------------------------------------------------------------------
 EXPLAIN_SCHEMA = 'hypotrail.explain/1'
 EXPLAIN_KEYS = ('schema', 'ok', 'study', 'revision', 'task', 'terms', 'steps', 'predictions')
-EXPLAIN_TERM_KEYS = ('id', 'term', 'definition', 'example', 'example_status', 'steps')
+EXPLAIN_TERM_KEYS = ('id', 'term', 'definition', 'example', 'example_status', 'steps',
+                     # L3: the language of ``term`` and ``definition`` (the study's when the
+                     # glossary has it).
+                     'language')
 EXAMPLE_STATUSES = ('shown', 'needs_results', 'none')
 EXPLAIN_STEP_KEYS = ('concept', 'context', 'method', 'interpretation', 'consequence',
                      'text_status')

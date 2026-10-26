@@ -202,6 +202,7 @@
     "evidence_refs": [],
     "detail_topics": ["metric", "uncertainty"]
    }
-  }
+  },
+  "question_junior": "How are the values of age distributed among the training rows?"
  }
 }

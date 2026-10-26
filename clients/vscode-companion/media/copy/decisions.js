@@ -17,6 +17,9 @@
     byPanel: 'Proposed from this panel by an earlier version; not a decision yet.',
     madeAt: (pid, rev) => (rev === null || rev === undefined ? `Proposal ${pid}` : `Proposal ${pid}, made at revision ${rev}`),
     restatedAs: 'The assistant proposes:',
+    // L3 (owner session 2026-10-26, R4, D4b): a restatement the chat wrote in another language
+    // than the panel's (it gave none in this one) is shown as written, with this marker.
+    chatWording: { en: '(wording of the chat, in English)', fr: '(wording of the chat, in French)' },
     proposedValue: 'In short: ',
     recordedValue: 'Recorded value: ',
     details: 'Details',

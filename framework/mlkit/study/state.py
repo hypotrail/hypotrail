@@ -573,8 +573,11 @@ TOP_KEYS = ('schema', 'revision', 'created', 'updated', 'case', 'dataset', 'fact
 # ``mode set``.
 # ``understanding`` (ADR 0008): the opt-in understanding and handover review; a state
 # without it is ``off`` (``mlkit.study.understanding.model``).
+# ``case_l10n`` (owner session 2026-10-26, L3, D4 A): the case's translation sidecar
+# recorded at ``init`` (``{path, sha256}``, :mod:`mlkit.study.l10n`); a study whose case has
+# none, or created before it existed, has no ``case_l10n`` and shows the case's English.
 TOP_OPTIONAL_KEYS = ('task', 'notes', 'partition', 'mode', 'language', 'mode_history',
-                     'exploration', 'understanding')
+                     'exploration', 'understanding', 'case_l10n')
 DECISION_KEYS = ('status', 'value', 'proposal_id', 'confirmation', 'depends_on', 'revision',
                  'reason')
 PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale', 'revision',
@@ -1075,6 +1078,9 @@ def validate_state(state: Any) -> list[dict]:
         problems.append({'path': 'mode', 'problem': f'must be one of {", ".join(MODES)}'})
     if 'language' in present and state['language'] not in LANGUAGES:
         problems.append({'path': 'language', 'problem': f'must be one of {", ".join(LANGUAGES)}'})
+    if 'case_l10n' in present:
+        from . import l10n
+        problems.extend(l10n.state_problems(state))
     if 'mode_history' in present:
         history = state['mode_history']
         if not isinstance(history, list):

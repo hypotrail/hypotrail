@@ -23,7 +23,8 @@
     "definition": "The moment when the prediction is made and used. Only information known at that moment may enter the model.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "leakage",
@@ -31,7 +32,8 @@
     "definition": "A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "feature_availability",
@@ -39,7 +41,8 @@
     "definition": "Whether a variable is known at the prediction time. It is a decision about the use case, not a property the data can prove.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "validation_partition",
@@ -47,7 +50,8 @@
     "definition": "Rows held apart from model fitting and used to compare models and choose one. Once used to choose, they are no longer independent evidence.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "exposure",
@@ -55,7 +59,8 @@
     "definition": "The record of which rows were read, by which activity, and why. Changing the split does not make rows already seen unseen.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "distribution",
@@ -63,7 +68,8 @@
     "definition": "How the values of one column spread over the rows, read as how often each value occurs or, for a measurement, its range, quartiles, and missing cells. Read on training rows only, it leaves the validation rows unexplored.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "special_value",
@@ -71,7 +77,8 @@
     "definition": "A code that stands for something other than a measurement, such as \"never\" or \"unknown\". Treating it as an ordinary number distorts a model.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "baseline",
@@ -79,7 +86,8 @@
     "definition": "The simplest reference model, here the training mean of the target predicted for every row. Keeping the baseline is a valid conclusion.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "paired_bootstrap",
@@ -87,7 +95,8 @@
     "definition": "Resampling the same validation rows for both models at once, so the interval describes their difference rather than each one separately.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "paired_difference",
@@ -95,7 +104,8 @@
     "definition": "The difference between two models measured on the same rows, such as the linear model's MAE minus the baseline's. Pairing removes the noise of which rows each model was measured on.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "confidence_interval",
@@ -103,7 +113,8 @@
     "definition": "A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for future rows.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "percentile_interval",
@@ -111,7 +122,8 @@
     "definition": "The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the error on future rows.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "selection_on_validation",
@@ -119,7 +131,8 @@
     "definition": "Choosing a model by looking at validation results. The chosen model's validation error is optimistic for that reason.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "documented_fact",
@@ -127,7 +140,8 @@
     "definition": "A statement backed by the dataset documentation, with its source.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "scenario_assumption",
@@ -135,7 +149,8 @@
     "definition": "A statement the scenario takes as given without evidence. It can be challenged and is never a decision.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "confirmed_decision",
@@ -143,7 +158,8 @@
     "definition": "A choice recorded with the user's own words in reply to a restatement. The engine records the words; it cannot verify who typed them.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "proposal",
@@ -151,7 +167,8 @@
     "definition": "A restated choice waiting for the user's answer. It is not a decision until it is confirmed.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "stale_result",
@@ -159,7 +176,8 @@
     "definition": "A result computed under decisions that have since changed. It is kept for the record but is not cited.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "random_split",
@@ -167,7 +185,8 @@
     "definition": "A random division of the rows between training and validation, with a recorded seed. It assumes the rows are exchangeable, which a time order or repeated entities can contradict.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "ordinal_split",
@@ -175,7 +194,8 @@
     "definition": "A split on an ordered column such as a model year. Rows at or after a cutoff are validation rows and earlier rows train the model, so the validation asks whether a model fitted on the past holds on later periods.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "extrapolation",
@@ -183,7 +203,8 @@
     "definition": "Predicting for values outside the range the model was fitted on, such as later years. A model can be accurate inside its training range and biased outside it.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "group_overlap",
@@ -191,7 +212,8 @@
     "definition": "Rows that describe the same entity, such as one name recorded in several years, falling in both partitions. Their validation rows are not independent of the training rows; the study reports how many groups are shared.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "target_distribution",
@@ -201,7 +223,8 @@
     "example_status": "none",
     "steps": [
      "train_eda"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "linear_regression",
@@ -209,7 +232,8 @@
     "definition": "A model that predicts the target as a weighted sum of the features, with weights fitted on training rows by least squares. Its weights are associations, not effects.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "prediction",
@@ -217,7 +241,8 @@
     "definition": "The value a model gives for the target of a row, in the unit of the target.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "residual",
@@ -225,7 +250,8 @@
     "definition": "Observed minus predicted value for one row. A positive residual means the model predicted too low.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "bias",
@@ -233,7 +259,8 @@
     "definition": "The mean residual. A bias far from zero means the model is systematically too low or too high, for example on later periods than the ones it was fitted on.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "mae",
@@ -257,7 +284,8 @@
      ]
     },
     "example_status": "shown",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "rmse",
@@ -265,7 +293,8 @@
     "definition": "The square root of the average squared residual, in the unit of the target. Squaring weighs large errors more, so a gap between RMSE and MAE signals a few large errors.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    }
   ],
   "steps": {

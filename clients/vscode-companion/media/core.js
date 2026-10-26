@@ -39,7 +39,7 @@
   const diagnostics = { dropped: 0, ignored: 0 };
   const state = {
     init: { stage: 'v0', reviewer: false, learningLayer: true, chatInsert: false, task: null, language: 'auto' },
-    snapshot: null, data: {}, errors: {}, busy: null, outcomes: {}, lastOutcome: null,
+    snapshot: null, raw: null, snapshotLanguage: null, localizedFrom: null, data: {}, errors: {}, busy: null, outcomes: {}, lastOutcome: null,
     loadError: null, notice: null, lastRead: null, requested: {}, pendingNav: null,
     // CR.1: `epoch` counts the junior's explicit Refreshes; data read before the last one
     // is read again. `loadEpoch[view]` is the epoch at which a view's load was sent.
@@ -123,8 +123,63 @@
     return studyLanguage();
   }
   function studyLanguage() {
-    const l = state.snapshot && state.snapshot.language;
+    const snap = state.raw || state.snapshot;
+    const l = snap && snap.language;
     return LANGUAGES.includes(l) ? l : 'en';
+  }
+
+  /**
+   * The language the summary's engine texts are shown in (L3, D4b): the panel language when
+   * the engine gave them in it (`texts` of `status --summary --digest`), else the study
+   * language. An engine text in another language is marked (components `engineText`).
+   */
+  function textsLanguage() {
+    const snap = state.snapshot;
+    return snap && LANGUAGES.includes(snap.textsLanguage) ? snap.textsLanguage : studyLanguage();
+  }
+
+  /**
+   * L3 (owner session 2026-10-26, R4, D4b): the snapshot with the engine's junior texts in
+   * `lang`, from the engine's own `texts` tables: step and moment titles, the next move, the
+   * choice labels, the limits, the deliverables' lines, the recap, the digest, the goal, and
+   * each proposal's restatement when the chat gave it in that language (else the one written,
+   * with `restatementLang` so the view says whose wording it is). Nothing is translated here.
+   * Without `texts` (an older engine, stage v0) the snapshot is shown as sent.
+   */
+  function localize(snap, lang) {
+    if (!snap || !snap.texts || !snap.texts[lang]) return snap;
+    const T = snap.texts[lang];
+    const pick = (table, id, fallback) => (table && typeof table[id] === 'string' ? table[id] : fallback);
+    const title = s => (s ? { ...s, title: pick(T.plan, s.id, s.title) } : s);
+    const shown = snap.language || 'en';
+    const out = { ...snap, textsLanguage: lang };
+    out.plan = (snap.plan || []).map(s => ({ ...title(s), after: title(s.after) }));
+    out.currentStep = title(snap.currentStep);
+    out.moments = (snap.moments || []).map(m => ({ ...m, title: pick(T.moments, m.id, m.title) }));
+    out.proposals = (snap.proposals || []).map(p => {
+      const own = pick(T.proposals, p.proposalId, null);
+      return { ...p, decisionTitle: pick(T.plan, p.decisionId, p.decisionTitle), restatement: own || p.restatement,
+        restatementLang: own ? lang : shown };
+    });
+    out.holds = (snap.holds || []).map(h => ({ ...h, decisionTitle: pick(T.plan, h.decisionId, h.decisionTitle) }));
+    const next = snap.nextAction || {};
+    out.nextAction = { ...next, juniorMessage: T.next_action || next.juniorMessage,
+      choiceOptions: (next.choiceOptions || []).map(o => ({ ...o, label: pick(T.choice_options, o.id, o.label) })) };
+    const limit = i => ({ ...i, juniorText: i.id === 'outcome_unknown' ? T.next_action || i.juniorText : pick(T.limits, i.id, i.juniorText) });
+    const nyd = snap.notYetDefensible || { top: [], more: [] };
+    out.notYetDefensible = { ...nyd, top: (nyd.top || []).map(limit) };
+    out.alerts = (snap.alerts || []).map(limit);
+    out.artifacts = (snap.artifacts || []).map(a => ({ ...a, juniorMessage: pick(T.artifacts, a.name, a.juniorMessage) }));
+    out.recapJunior = Array.isArray(snap.recapJunior) && snap.recapJunior.length && Array.isArray(T.recap) && T.recap.length
+      ? T.recap.slice() : snap.recapJunior;
+    out.digest = snap.digest ? { ...snap.digest, items: (snap.digest.items || []).map(i =>
+      ({ ...i, juniorText: pick(T.digest, String(i.revision), i.juniorText) })) } : snap.digest;
+    const goal = {};
+    for (const [k, v] of Object.entries(snap.goal || {})) {
+      goal[k] = v && typeof v === 'object' ? { ...v, value: pick(T.goal, k, v.value) } : v;
+    }
+    out.goal = goal;
+    return out;
   }
 
   function applyLanguage() {
@@ -134,6 +189,13 @@
       const fr = HT.copyFr || {};
       for (const [ns, en] of Object.entries(english)) HT.copy[ns] = lang === 'fr' && fr[ns] ? merged(en, fr[ns]) : en;
       applied = lang;
+    }
+    // L3 (D4b): the engine's junior texts follow the panel language too, when the engine
+    // gave them in it.
+    if (state.raw && (state.snapshot === null || state.snapshotLanguage !== lang || state.localizedFrom !== state.raw)) {
+      state.snapshot = localize(state.raw, lang);
+      state.snapshotLanguage = lang;
+      state.localizedFrom = state.raw;
     }
     document.documentElement.setAttribute('lang', lang);
   }
@@ -730,7 +792,10 @@
     if (before !== m.model.revision) state.notice = null;
     for (const id of Object.keys(ui.ackDrafts || {})) if (!listed.has(id)) delete ui.ackDrafts[id];
     keep();
-    state.snapshot = m.model;
+    state.raw = m.model;
+    state.snapshot = localize(m.model, language());
+    state.snapshotLanguage = language();
+    state.localizedFrom = m.model;
     state.loadError = null;
     state.lastRead = Date.now();
   }
@@ -798,7 +863,8 @@
   const registered = () => views.map(v => ({ name: v.name, tab: v.tab, stage: v.stage }));
 
   Object.assign(HT, { el, svg, wordsArea, register, send, modal, tooltip, navigate, renderOutcome, start, PALETTE, SVG_NS,
-    diagnostics, registered, _state: state, TAB_ORDER, fresh, version, language, studyLanguage, LANGUAGES });
+    diagnostics, registered, _state: state, TAB_ORDER, fresh, version, language, studyLanguage, LANGUAGES,
+    textsLanguage, localize });
   HT.components = HT.components || {};
   HT.copy = HT.copy || {};
 })(globalThis.Hypotrail = globalThis.Hypotrail || {});

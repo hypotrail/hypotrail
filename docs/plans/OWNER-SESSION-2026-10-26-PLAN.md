@@ -25,6 +25,14 @@ only (`test_report_narrative.py`); not yet merged by the integrator, not read by
 at a rehearsal (§5.4 step 16 still to do). The Hotel report of the mockup study goes from
 about 4.0 MB to about 0.76 MB, `check` clean.
 
+Implementation status (wave W2): **L3** (one language per study: the `init` plan localized,
+EDA texts in French at read time, the case translation sidecar `case.l10n.yaml` of D4 A for
+the five workshop cases, `texts` in both languages for the panel (D4b) and the panel's switch
+following them, the report and notebook in the study language, J-LANG automated in
+`test_l3_language.py`) is implemented on branch `w2-l3`; agent wording in
+[proposals/L3-agent-text.md](proposals/L3-agent-text.md); not yet merged by the integrator,
+not run with Copilot.
+
 **Priority of this batch (owner, 2026-10-26): the workshop journey.** The batch prepares a
 workshop. What matters most is the junior's journey as they live it: visually clear,
 pedagogical, working features, a fluid path. Lots and waves are therefore ordered by their

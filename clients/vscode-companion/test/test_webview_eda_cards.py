@@ -48,6 +48,11 @@ def cv_views(views):
     eda = copy.deepcopy(views['eda.cv'])
     card = copy.deepcopy(next(c for c in views['eda.binary']['cards'] if c['slot'] == 'eda.distribution:age'))
     card['question'] = card['question'].replace('training rows', 'development rows')
+    # L3: the engine's texts of the card, in both languages, worded the same way.
+    for lang, words in (('en', ('training rows', 'development rows')),
+                        ('fr', ("lignes d'entraînement", 'lignes de développement'))):
+        if card.get('texts') and card['texts'].get(lang) and card['texts'][lang].get('question'):
+            card['texts'][lang]['question'] = card['texts'][lang]['question'].replace(*words)
     eda['cards'].append(card)
     out['eda.cv'] = eda
     return out, card

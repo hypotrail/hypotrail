@@ -4,8 +4,9 @@
 
 builds temporary studies outside the repository, Bank Marketing (binary; WP-B5 adds a
 cross-validated Bank study whose final test is opened once, then changed after) and Auto MPG
-(regression), drives them through the ``hypotrail`` CLI code path (``mlkit.study.cli.run``,
-the code a CLI process runs; fault-injected runs are real processes), and writes one file
+(regression, and since L3 a French Auto MPG study), drives them through the ``hypotrail``
+CLI code path (``mlkit.study.cli.run``, the code a CLI process runs; fault-injected runs are
+real processes), and writes one file
 per scenario to ``OUT`` (default ``test/fixtures/captured/``):
 ``{"about": {...}, "payload": {...}}``, the format of the hand-written fixtures, with
 ``about.source == "captured"``.
@@ -46,7 +47,9 @@ BANK = REPO / 'use-cases' / 'bank-marketing'
 AUTO = REPO / 'use-cases' / 'auto-mpg'
 SHOPPERS = REPO / 'use-cases' / 'online-shoppers'
 # The path the captured payloads show instead of the temporary study directory.
-STUDY_PLACEHOLDER = {'binary': '/studies/bank marketing "demo"', 'regression': '/studies/auto mpg'}
+STUDY_PLACEHOLDER = {'binary': '/studies/bank marketing "demo"', 'regression': '/studies/auto mpg',
+                     # L3 (owner session 2026-10-26): a French Auto MPG study.
+                     'french': '/studies/auto mpg fr'}
 OUT = HERE / 'captured'
 
 
@@ -416,6 +419,41 @@ def regression(cap: Capture) -> None:
              note='Auto MPG with its development diagnostics (diag.regression).')
 
 
+def french(cap: Capture) -> None:
+    """L3 (owner session 2026-10-26, R4, D4b): a French Auto MPG study, its case translated by
+    ``case.l10n.yaml``: the summary with ``texts`` in both languages, the data card with the
+    case's statements in both languages, the evidence with the EDA results' ``texts`` and
+    ``question_junior``, the Learn tab in French, and an open proposal restated in French and
+    in English."""
+    study = cap.root / 'french'
+    flow = fk.Flow(study, AUTO, prefix='f')
+    code, out = run('init', '--case', AUTO, '--lang', 'fr', '--study', study)
+    assert code == 0, out
+    flow.decide('prediction_time', 'quand les caractéristiques techniques sont fixées')
+    flow.decide('feature_availability', fk.availability(AUTO, acceleration='uncertain_excluded'))
+    flow.decide('split', {'method': 'ordinal_cutoff', 'column': 'model_year', 'cutoff': 79})
+    flow.model_decisions()
+    for activity in ('split', 'eda.target_summary', 'eda.special_values', 'eda.quality'):
+        flow.run(activity)
+    flow.run('eda.mean_by', '--column=model_year')
+    flow.run('fit.baseline')
+    flow.run('fit.linear')
+    flow.run('evaluate.regression')
+    code, out = run('decide', 'propose', 'model_choice', '--value', 'fit.linear', '--restatement',
+                    'Adopt the linear model.', '--restatement-fr', 'Adopter le modèle linéaire.',
+                    '--rationale', 'Erreur plus faible sur les années récentes.', '--request-id',
+                    'f-prop', '--expected-revision', flow.rev(), '--study', study)
+    assert code == 0, out
+    note = 'A French Auto MPG study (L3): the engine texts in both languages.'
+    cap.read('summary.regression.fr', 'regression', study, 'status', '--summary', '--digest',
+             '--json', note=note)
+    cap.read('data.regression.fr', 'regression', study, 'data', '--json', note=note)
+    cap.read('evidence.regression.fr', 'regression', study, 'evidence', '--json', note=note)
+    cap.read('explain.regression.fr', 'regression', study, 'explain', '--json', note=note)
+    cap.read('decisions.regression.fr', 'regression', study, 'decisions', '--json', note=note)
+    cap.read('status.regression.fr', 'regression', study, 'status', '--json', note=note)
+
+
 def capture(root: Path) -> dict[str, dict]:
     """Every captured scenario: ``{name: {about, payload}}`` (the studies live in ``root``)."""
     cap = Capture(root)
@@ -425,6 +463,7 @@ def capture(root: Path) -> dict[str, dict]:
         families(cap)
         scenario(cap)
         regression(cap)
+        french(cap)
     return cap.items
 
 

@@ -598,6 +598,61 @@
    "channel_actions": []
   },
   "task": "regression",
-  "currency": "2b8e61f0c4a9d375"
+  "currency": "2b8e61f0c4a9d375",
+  "texts": {
+   "en": {
+    "plan": {
+     "prediction_time": "Define the prediction moment",
+     "feature_availability": "Decide which variables are available at prediction time",
+     "split": "Split the data before exploring it",
+     "train_eda": "Explore the training partition",
+     "models": "Fit a mean baseline and a linear model",
+     "model_choice": "Choose the model",
+     "conclusion": "Conclude proportionately"
+    },
+    "moments": {
+     "frame": "Frame the change",
+     "evidence": "Prepare evidence",
+     "compare": "Work and compare",
+     "conclude": "Conclude and hand over"
+    },
+    "next_action": "A proposal on the model choice is waiting for your answer. Read its restatement and reply in your own words; a bare \"ok\" does not decide.",
+    "choice_options": {},
+    "limits": {
+     "unconfirmed_decisions": "Not confirmed by you yet: the model choice and the conclusion.",
+     "validation_is_not_independent": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error.",
+     "public_data_already_explored": "The data were explored or published before this study; its rows are not unseen.",
+     "grouped_split_unsupported": "Rows that share a value of car_name can fall in both partitions: this version has no grouped split, so a split reports how many group values its partitions share instead of preventing it. Validation rows of a shared group are not independent of the training rows.",
+     "no_causality": "Associations in observational data do not show that acting on a variable would change the outcome."
+    },
+    "artifacts": {
+     "editable": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence.",
+     "notebook": "The generated notebook is up to date.",
+     "report": "The report is up to date.",
+     "workbench": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
+    },
+    "recap": [
+     "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
+     "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79).",
+     "Now: Choose the model (validation MAE: the mean baseline 10.10 mpg; the linear model 6.31 mpg); the report and notebook are up to date.",
+     "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
+     "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
+    ],
+    "digest": {
+     "21": "The regression evaluation was added: the linear model and the training mean compared on the validation rows.",
+     "22": "The model choice was proposed: the linear model."
+    },
+    "goal": {
+     "intended_use": "Exercise: estimate a future model fuel efficiency from technical characteristics",
+     "decision": "Compare estimation methods without a real decision",
+     "observation_unit": "A vehicle model for a model year",
+     "prediction_time": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured"
+    },
+    "proposals": {
+     "p_4": "Adopt the linear model."
+    }
+   },
+   "fr": null
+  }
  }
 }

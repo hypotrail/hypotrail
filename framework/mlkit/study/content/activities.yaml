@@ -385,6 +385,144 @@ fr_labels:
   Rows: Lignes
   Positive rows: Lignes positives
   Positive share: Part de positifs
+  # L3 (owner session 2026-10-26, R4): every other label of the specs above, so a French
+  # report shows no English label (test_l3_language.py checks that each one has its line).
+  Always together: Toujours ensemble
+  Average precision: Précision moyenne
+  Average precision on validation: Précision moyenne sur le jeu de validation
+  Average precision out of fold: Précision moyenne hors pli
+  Bin width: Largeur de classe
+  Bootstrap replicates: Répétitions du bootstrap
+  Bounds included: Bornes incluses
+  Code: Code
+  Constant baseline: Modèle de référence constant
+  Constant score (development positive share): Score constant (part de positifs du développement)
+  Constant score (training positive share): Score constant (part de positifs à l'entraînement)
+  Cross-validation folds (each row validated once): Plis de validation croisée (chaque ligne validée une fois)
+  Cutoff (validation from this value of the time column): Seuil (validation à partir de cette valeur de la colonne de temps)
+  Development median (for reference): Médiane du développement (pour référence)
+  Development rows: Lignes de développement
+  Development rows of the reported coefficients: Lignes de développement des coefficients présentés
+  Development rows predicted out of fold: Lignes de développement prédites hors pli
+  Development rows read: Lignes de développement lues
+  Development rows the chosen configuration was refitted on: Lignes de développement sur lesquelles la configuration choisie a été réajustée
+  Development rows the chosen model was refitted on: Lignes de développement sur lesquelles le modèle choisi a été réajusté
+  Distinct values: Valeurs distinctes
+  Distribution of one column on the development rows: Distribution d'une colonne sur les lignes de développement
+  Distribution of one column on training rows: Distribution d'une colonne sur les lignes d'entraînement
+  Final-test rows scored once: Lignes du test final évaluées une fois
+  First quartile: Premier quartile
+  First variable: Première variable
+  From: De
+  Group: Groupe
+  Groups in both partitions (no grouped split): Groupes présents dans les deux partitions (pas de découpage groupé)
+  Highest fold AUC: AUC du meilleur pli
+  Linear model: Modèle linéaire
+  Logistic model: Modèle logistique
+  Lowest fold AUC: AUC du moins bon pli
+  MAE: MAE
+  Maximum: Maximum
+  Mean: Moyenne
+  Mean absolute error on the rows fitted (in sample): Erreur absolue moyenne sur les lignes ajustées (dans l'échantillon)
+  Mean absolute error on training rows: Erreur absolue moyenne sur les lignes d'entraînement
+  Mean absolute error on validation (MAE): Erreur absolue moyenne sur le jeu de validation (MAE)
+  Mean absolute error out of fold: Erreur absolue moyenne hors pli
+  Mean absolute error out of fold (MAE): Erreur absolue moyenne hors pli (MAE)
+  Mean absolute error out of fold or on validation: Erreur absolue moyenne hors pli ou sur le jeu de validation
+  Mean baseline: Moyenne de référence
+  Mean of the development rows (each fold is predicted with the mean of the other folds): Moyenne des lignes de développement (chaque pli est prédit avec la moyenne des autres plis)
+  Mean residual (bias): Résidu moyen (biais)
+  Mean residual on validation (bias): Résidu moyen sur le jeu de validation (biais)
+  Mean residual out of fold (bias): Résidu moyen hors pli (biais)
+  Mean target: Moyenne de la cible
+  Mean target by group on the development rows: Moyenne de la cible par groupe sur les lignes de développement
+  Mean target by group on training rows: Moyenne de la cible par groupe sur les lignes d'entraînement
+  Mean target in these rows: Moyenne de la cible dans ces lignes
+  Mean target overall: Moyenne de la cible sur l'ensemble
+  Meaning: Sens
+  Median: Médiane
+  Minimum: Minimum
+  Missing cells: Cellules manquantes
+  Model comparison on the out-of-fold predictions: Comparaison des modèles sur les prédictions hors pli
+  Model comparison on validation rows: Comparaison des modèles sur le jeu de validation
+  Model terms after encoding: Termes du modèle après encodage
+  Policy evaluation on the out-of-fold predictions: Évaluation de la règle sur les prédictions hors pli
+  Policy evaluation on validation rows: Évaluation de la règle sur le jeu de validation
+  Positive development rows: Lignes de développement positives
+  Positive rows in the final test: Lignes positives dans le test final
+  Positive rows in training: Lignes positives à l'entraînement
+  Positive rows in validation: Lignes positives en validation
+  Positive rows reached: Lignes positives atteintes
+  Positive share in training: Part de positifs à l'entraînement
+  Positive share in validation: Part de positifs en validation
+  Positive share overall: Part de positifs sur l'ensemble
+  Precision: Précision
+  Precision gain over the baseline on the final test (points): Gain de précision sur le modèle de référence au test final (points)
+  Prediction for every row (training mean): Prédiction pour chaque ligne (moyenne d'entraînement)
+  RMSE: RMSE
+  Ranking quality on validation (AUC): Qualité du classement sur le jeu de validation (AUC)
+  Ranking quality out of fold (AUC): Qualité du classement hors pli (AUC)
+  Ranking quality out of fold or on validation (AUC): Qualité du classement hors pli ou sur le jeu de validation (AUC)
+  Recall: Rappel
+  Reduction of the baseline error on the final test: Réduction de l'erreur du modèle de référence au test final
+  Regularisation parameter C of the variant: Paramètre de régularisation C de la variante
+  Ridge penalty alpha (the candidate has none): Pénalité ridge alpha (le candidat n'en a pas)
+  Root mean squared error: Racine de l'erreur quadratique moyenne
+  Root mean squared error on the rows fitted (in sample): Racine de l'erreur quadratique moyenne sur les lignes ajustées (dans l'échantillon)
+  Root mean squared error on training rows: Racine de l'erreur quadratique moyenne sur les lignes d'entraînement
+  Root mean squared error on validation (RMSE): Racine de l'erreur quadratique moyenne sur le jeu de validation (RMSE)
+  Root mean squared error out of fold (RMSE): Racine de l'erreur quadratique moyenne hors pli (RMSE)
+  Rows read: Lignes lues
+  Rows that changed partition since the previous split: Lignes qui ont changé de partition depuis le découpage précédent
+  Rows with an ordinary value: Lignes avec une valeur ordinaire
+  Rows with both: Lignes avec les deux
+  Rows with either: Lignes avec l'une ou l'autre
+  Rows without a target value: Lignes sans valeur de la cible
+  Second variable: Deuxième variable
+  Share of development rows: Part des lignes de développement
+  Share of rows in validation: Part des lignes en validation
+  Share of training rows: Part des lignes d'entraînement
+  Share of validation rows in a shared group: Part des lignes de validation dans un groupe partagé
+  Signal of each feature alone on the development rows: Signal de chaque variable seule sur les lignes de développement
+  Signal of each feature alone on training rows: Signal de chaque variable seule sur les lignes d'entraînement
+  Smallest group read on its own (rows): Plus petit groupe lu seul (lignes)
+  Special values on the development rows: Valeurs spéciales sur les lignes de développement
+  Special values on training rows: Valeurs spéciales sur les lignes d'entraînement
+  Split: Découpage
+  Spread of the AUC across folds (standard deviation): Dispersion de l'AUC entre les plis (écart-type)
+  Spread of the MAE across folds (standard deviation): Dispersion de la MAE entre les plis (écart-type)
+  Standard deviation: Écart-type
+  Target rate by group on the development rows: Taux de la cible par groupe sur les lignes de développement
+  Target rate by group on training rows: Taux de la cible par groupe sur les lignes d'entraînement
+  Target rate on the development rows: Taux de la cible sur les lignes de développement
+  Target rate on training rows: Taux de la cible sur les lignes d'entraînement
+  Target summary on the development rows: Résumé de la cible sur les lignes de développement
+  Target summary on training rows: Résumé de la cible sur les lignes d'entraînement
+  The final test, opened once: Le test final, ouvert une fois
+  Third quartile: Troisième quartile
+  Time column in training, first value: Colonne de temps à l'entraînement, première valeur
+  Time column in training, last value: Colonne de temps à l'entraînement, dernière valeur
+  Time column in validation, first value: Colonne de temps en validation, première valeur
+  Time column in validation, last value: Colonne de temps en validation, dernière valeur
+  To: À
+  Too few rows to read alone: Trop peu de lignes pour être lu seul
+  Training median (for reference): Médiane d'entraînement (pour référence)
+  Training rows: Lignes d'entraînement
+  Training rows fitted: Lignes d'entraînement ajustées
+  Training rows read: Lignes d'entraînement lues
+  Validation fraction (decided): Fraction de validation (décidée)
+  Validation rows: Lignes de validation
+  Validation rows already explored during EDA: Lignes de validation déjà explorées pendant l'exploration
+  Validation rows of a shared group: Lignes de validation d'un groupe partagé
+  Validation rows predicted: Lignes de validation prédites
+  Validation rows scored: Lignes de validation évaluées
+  Value: Valeur
+  Values folded into the other group: Valeurs regroupées dans le groupe « autres »
+  Variable: Variable
+  Variant of the linear model: Variante du modèle linéaire
+  Variant of the logistic model: Variante du modèle logistique
+  Volume: Volume
+  Volume share: Part du volume
 cv_labels:
   Target rate on training rows: Target rate on the development rows
   Special values on training rows: Special values on the development rows

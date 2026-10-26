@@ -536,6 +536,18 @@ def _fact(view: Mapping, fact_id: str):
     return None
 
 
+def case_fact(view: Mapping, state: Mapping, fact_id: str, lang: str) -> dict | None:
+    """A case fact of the view (``{id, value, source}``) with its ``value`` in ``lang``: the
+    French form the case's translation sidecar gives in a French study (L3, D4 A,
+    :mod:`mlkit.study.l10n`), else the case's own words."""
+    fact = _fact(view, fact_id)
+    if not fact or lang == EN:
+        return fact
+    french = ((((view.get('case_texts') or {}).get('facts') or {}).get(fact_id)) or {}) \
+        .get(lang)
+    return {**fact, 'value': french} if french else fact
+
+
 def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> dict | None:
     """The engine's default for the decision ``action`` proposes, with a one-line why."""
     if action.get('kind') != 'propose':
@@ -543,7 +555,8 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
     decision = action.get('decision')
     value = action.get('default_value')
     if decision == 'prediction_time':
-        fact = _fact(view, 'prediction_time')
+        # L3 (R4, T4): the case's moment in the study language when the case translates it.
+        fact = case_fact(view, state, 'prediction_time', lang)
         if not fact:
             return None
         return {'value': fact['value'],
@@ -818,7 +831,7 @@ def _digest_propose(decision: str, view: Mapping, ctx: dict, lang: str,
     dev, holdout, folds = ctx['dev'], ctx['holdout'], ctx['folds']
     target, positive, unit = ctx['target'], ctx['positive'], ctx['unit']
     if decision == 'prediction_time':
-        fact = _fact(view, 'prediction_time')
+        fact = case_fact(view, ctx['state'], 'prediction_time', lang)
         said = (_t(lang, f'The case states: "{fact["value"]}".',
                    f'Le cas indique : « {fact["value"]} ».') if fact else '')
         return [_t(lang, 'Prediction time: the moment when the score is computed and acted on. '

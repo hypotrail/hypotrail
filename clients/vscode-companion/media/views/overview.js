@@ -178,7 +178,13 @@
       el('p', { className: 'ov-hero-lead', 'data-hero-lead': true, text: lead }),
     ];
     if (proposal) {
-      children.push(el('blockquote', { className: 'ov-hero-quote', 'data-hero-restatement': proposal.proposalId, text: proposal.restatement }));
+      // L3 (D4b): the chat's wording, marked when it is not in the panel language.
+      const panel = HT.language ? HT.language() : 'en';
+      const said = proposal.restatementLang || (HT.studyLanguage ? HT.studyLanguage() : 'en');
+      const wording = said !== panel ? ((HT.copy.decisions && HT.copy.decisions.chatWording) || {})[said] : null;
+      children.push(el('blockquote', { className: 'ov-hero-quote', 'data-hero-restatement': proposal.proposalId,
+        lang: said !== panel ? said : null }, [proposal.restatement,
+        wording ? el('span', { className: 'ht-en-marker', 'data-chat-wording': said, text: ` ${wording}` }) : null]));
       const readable = J().value(proposal.decisionId, proposal.value, task);
       if (readable) {
         children.push(el('p', { className: 'ov-hero-short' }, [el('span', { className: 'muted', text: `${N.proposedValue}: ` }),

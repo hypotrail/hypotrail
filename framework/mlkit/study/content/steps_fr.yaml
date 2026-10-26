@@ -1,0 +1,165 @@
+# French form of content/steps.yaml (owner session 2026-10-26, L3, remark R4): the step
+# explanations of a French study's report, notebook and "Learn" tab. English (steps.yaml) is
+# the source; every text there has its counterpart here, in the same place, with the same
+# templates ({{fact:...}} quotes the case, in French when its translation sidecar gives it;
+# {{slot:...}} cites a result). The "vous" register. No literal digits.
+# ``texts.step`` merges it over the English when the report language is French
+# (``texts.report_language_context``); test_l3_language.py checks the parity.
+schema: hypotrail.content.steps_fr/1
+steps:
+  discover_data:
+    context: "Le cas décrit une ligne ainsi : {{fact:observation_unit|non indiqué par le cas}}. La fiche des données montre les colonnes regroupées avec leur sens et leur disponibilité, et quelques lignes de développement."
+    method: Rien n'est calculé et rien n'est décidé. Les lignes montrées sont des lignes de développement, déjà lues pour leur structure à la création de l'étude ; l'échantillon de test final reste scellé.
+    interpretation: Lire les colonnes avant toute décision est la façon de savoir ce que décrit chaque variable et quand sa valeur devient connue.
+    consequence: La décision de disponibilité qui suit s'appuie sur cette lecture.
+  success_criterion:
+    context: Le critère est fixé à la pause du découpage, avant tout ajustement de modèle, pour que le résultat ne puisse pas l'influencer.
+    method: Vous indiquez le plus petit gain de précision sur le modèle de référence, avec la règle que vous adopterez, qui rendrait le modèle utile, en points de pourcentage.
+    interpretation: La conclusion est lue par rapport à ce critère. Un gain inférieur, ou dont l'intervalle apparié contient zéro, ne justifie pas d'adopter le modèle.
+    consequence: Le changer plus tard demande de confirmer à nouveau la conclusion.
+  preprocessing:
+    context: L'exploration des lignes d'entraînement peut motiver la façon dont le modèle prépare les variables ; les analyses qui l'ont motivée sont enregistrées avec elle.
+    method: Les indicateurs de valeur manquante, le nombre minimal de lignes d'une catégorie, les plafonds aux quantiles d'entraînement et les transformations logarithmiques sont appris sur les lignes d'entraînement seulement et appliqués tels quels aux lignes de validation. Le choix par défaut ne change rien.
+    interpretation: Une préparation choisie après avoir regardé le résultat est marquée dépendante des données ; les chiffres de validation peuvent alors être un peu optimistes.
+    consequence: La changer réajuste le modèle candidat et demande de confirmer à nouveau la règle et la conclusion ; l'exploration ne change pas.
+  prediction_time:
+    context: "Dans ce cas, la décision est : {{fact:decision|non indiqué par le cas}}. Le moment de la prédiction décide quelles variables sont permises."
+    method: Vous indiquez le moment ; l'agent le reformule et enregistre votre réponse. Aucune donnée n'est lue.
+    interpretation: Chaque étape suivante est jugée par rapport à ce moment.
+    consequence: Le changer plus tard demande de confirmer à nouveau la décision de disponibilité, la règle et la conclusion.
+  feature_availability:
+    context: "Le cas décrit une ligne ainsi : {{fact:observation_unit|non indiqué par le cas}}. Pour chaque variable, vous décidez si elle est connue au moment de la prédiction."
+    method: Chaque variable candidate reçoit un statut. Les variables incertaines sont soit exclues, soit incluses et listées comme une limite.
+    interpretation: Les variables marquées non disponibles, ou incertaines et exclues, n'entrent jamais dans un modèle.
+    consequence: Un changement qui modifie l'ensemble des variables utilisables réajuste le modèle logistique et demande de confirmer à nouveau la règle.
+  split:
+    context: Le découpage est fixé avant toute exploration du résultat, pour que les lignes de validation restent à l'écart de l'ajustement.
+    method: Un découpage aléatoire stratifié avec une graine enregistrée. Les lignes lues sont enregistrées comme exposition.
+    interpretation: "Lignes d'entraînement : {{slot:split:partitions.train.n_rows|int}}, dont {{slot:split:partitions.train.rate|pct1}} sont positives. Lignes de validation : {{slot:split:partitions.validation.n_rows|int}}, dont {{slot:split:partitions.validation.rate|pct1}} sont positives : la stratification garde des parts proches."
+    consequence: Changer le découpage réajuste les deux modèles et recalcule l'exploration ; les lignes déjà explorées restent exposées.
+  train_eda:
+    context: "Le résultat est : {{fact:target|non indiqué par le cas}}. L'exploration lit seulement les lignes d'entraînement."
+    method: Le taux de la cible et les valeurs spéciales sont calculés sur la partition d'entraînement, avec leurs dénominateurs.
+    interpretation: "Dans les lignes d'entraînement, le résultat positif apparaît dans {{slot:eda.target_rate:rate|pct1}} des lignes. Un modèle doit battre ce taux de base pour être utile."
+    consequence: Les valeurs spéciales deviennent des indicateurs explicites dans le modèle au lieu de nombres ordinaires.
+  models:
+    context: Un modèle de référence constant et un modèle logistique sont ajustés sur les lignes d'entraînement et notés sur les lignes de validation.
+    method: Les prédictions sur les lignes de validation sont enregistrées, donc une nouvelle règle ne demande jamais de réajustement.
+    interpretation: La comparaison est faite sur les lignes de validation, qui ne sont alors plus une preuve indépendante.
+    consequence: L'étape de la règle lit ces prédictions enregistrées.
+  policy:
+    context: "L'usage prévu est : {{fact:intended_use|non indiqué par le cas}}. Une règle transforme les scores en un nombre d'actions que l'équipe peut traiter."
+    method: Chaque règle est évaluée sur les prédictions de validation enregistrées, les ex aequo au seuil étant comptés au prorata, avec des intervalles bootstrap appariés.
+    interpretation: Les chiffres décrivent ces lignes de validation après un choix fait sur elles ; ils sont optimistes et ne sont pas une prévision.
+    consequence: Adopter un autre seuil ou une autre capacité recalcule l'évaluation sans réajuster aucun modèle.
+  conclusion:
+    context: La conclusion dit ce qui peut être affirmé, pour quel usage et avec quelles limites.
+    method: Vous choisissez un verdict et écrivez le texte ; garder le modèle de référence ou déclarer l'étude non concluante sont des résultats valables.
+    interpretation: La conclusion repose sur des lignes de validation qui ont servi à la sélection.
+    consequence: Les limites listées sous « Ce qui n'est pas encore défendable » lui restent attachées.
+pending: Pas encore exécuté.
+stale: Pas à jour, non cité.
+regression_steps:
+  success_criterion:
+    context: Le critère est fixé à la pause du découpage, avant tout ajustement de modèle, pour que le résultat ne puisse pas l'influencer.
+    method: Vous indiquez la plus petite réduction relative de l'erreur absolue moyenne de validation de la moyenne de référence qui rendrait le modèle utile.
+    interpretation: La conclusion est lue par rapport à ce critère. Une réduction inférieure, ou dont l'intervalle apparié contient zéro, ne justifie pas d'adopter le modèle.
+    consequence: Le changer plus tard demande de confirmer à nouveau la conclusion.
+  preprocessing:
+    context: L'exploration des lignes d'entraînement peut motiver la façon dont le modèle prépare les variables ; les analyses qui l'ont motivée sont enregistrées avec elle.
+    method: Les indicateurs de valeur manquante, le nombre minimal de lignes d'une catégorie, les plafonds aux quantiles d'entraînement et les transformations logarithmiques sont appris sur les lignes d'entraînement seulement et appliqués tels quels aux lignes de validation. Le choix par défaut ne change rien.
+    interpretation: Une préparation choisie après avoir regardé la cible est marquée dépendante des données ; les erreurs de validation peuvent alors être un peu optimistes.
+    consequence: La changer réajuste le modèle linéaire et demande de confirmer à nouveau le choix du modèle et la conclusion ; l'exploration ne change pas.
+  prediction_time:
+    context: "Dans ce cas, la décision est : {{fact:decision|non indiqué par le cas}}. Le moment de la prédiction décide quelles variables sont permises."
+    method: Vous indiquez le moment ; l'agent le reformule et enregistre votre réponse. Aucune donnée n'est lue.
+    interpretation: Chaque étape suivante est jugée par rapport à ce moment.
+    consequence: Le changer plus tard demande de confirmer à nouveau la décision de disponibilité, le choix du modèle et la conclusion.
+  feature_availability:
+    context: "Le cas décrit une ligne ainsi : {{fact:observation_unit|non indiqué par le cas}}. Pour chaque variable, vous décidez si elle est connue au moment de la prédiction."
+    method: Chaque variable candidate reçoit un statut. Les variables incertaines sont soit exclues, soit incluses et listées comme une limite. Une colonne de temps n'est pas une variable candidate ; elle ordonne les lignes.
+    interpretation: Les variables marquées non disponibles, ou incertaines et exclues, n'entrent jamais dans un modèle.
+    consequence: Un changement qui modifie l'ensemble des variables utilisables réajuste le modèle linéaire et demande de confirmer à nouveau le choix du modèle.
+  split:
+    context: "Le découpage est fixé avant toute exploration de la cible. Quand le cas déclare une colonne de temps, la coupure est ordinale : les périodes plus récentes sont validées avec un modèle ajusté sur les plus anciennes, ce qui montre l'extrapolation au lieu de la cacher. Quand il déclare une colonne de groupe, le découpage indique les groupes que les deux partitions partagent."
+    method: Un découpage aléatoire avec une graine enregistrée, ou une coupure ordinale sur la colonne de temps entière (lue comme des entiers, jamais comme des dates). Les lignes lues sont enregistrées comme exposition.
+    interpretation: "Lignes d'entraînement : {{slot:split:partitions.train.n_rows|int}}. Lignes de validation : {{slot:split:partitions.validation.n_rows|int}}. Les groupes partagés et l'étendue de la colonne de temps dans chaque partition sont listés avec le résultat."
+    consequence: Changer le découpage réajuste les deux modèles et recalcule l'exploration ; les lignes déjà explorées restent exposées.
+  train_eda:
+    context: "La cible est : {{fact:target|non indiqué par le cas}}. L'exploration lit seulement les lignes d'entraînement."
+    method: Le résumé de la cible et les valeurs spéciales sont calculés sur la partition d'entraînement, avec leurs effectifs.
+    interpretation: "Sur les lignes d'entraînement, la cible a une moyenne de {{slot:eda.target_summary:mean|f2}} et un écart-type de {{slot:eda.target_summary:sd|f2}}, dans l'unité de la cible. La moyenne de référence prédit cette moyenne pour chaque ligne ; un modèle doit faire mieux pour être utile."
+    consequence: Un marqueur de valeur manquante sur une variable numérique devient un indicateur et une valeur imputée dans le modèle, jamais un nombre ordinaire.
+  models:
+    context: Une moyenne de référence et un modèle linéaire sont ajustés sur les lignes d'entraînement et prédisent les lignes de validation.
+    method: Les prédictions sur les lignes de validation sont enregistrées, donc comparer et choisir un modèle ne demande jamais de réajustement.
+    interpretation: "Sur les lignes de validation, la moyenne de référence a une erreur absolue moyenne de {{slot:fit.baseline:validation.mae|f2}} et le modèle linéaire de {{slot:fit.linear:validation.mae|f2}}, dans l'unité de la cible."
+    consequence: La comparaison des modèles lit ces prédictions enregistrées.
+  model_choice:
+    context: "L'usage prévu est : {{fact:intended_use|non indiqué par le cas}}. Un modèle n'est adopté que s'il réduit l'erreur de la moyenne de référence de plus que la variabilité de ces lignes de validation, et si ses résidus ne montrent pas de biais qui compte pour cet usage."
+    method: La MAE et la RMSE sont calculées dans l'unité de la cible sur les prédictions de validation enregistrées, avec des intervalles bootstrap appariés de chacune et de l'écart avec le modèle de référence, et les résidus par période.
+    interpretation: "La MAE du modèle linéaire moins celle du modèle de référence vaut {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} sur les lignes de validation, entre {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} et {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} sur des rééchantillonnages de ces lignes. Son résidu moyen (biais) vaut {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}}. Ces lignes ont servi au choix, donc les chiffres sont optimistes et ne sont pas une prévision."
+    consequence: Changer le choix du modèle réutilise les prédictions enregistrées et l'évaluation ; rien n'est réajusté.
+cv_steps:
+  preprocessing:
+    context: L'exploration des lignes de développement peut motiver la façon dont le modèle prépare les variables ; les analyses qui l'ont motivée sont enregistrées avec elle.
+    method: Les indicateurs de valeur manquante, le nombre minimal de lignes d'une catégorie, les plafonds aux quantiles et les transformations logarithmiques sont appris, pli par pli, sur les lignes sur lesquelles chaque modèle est ajusté, et appliqués tels quels au pli qu'il prédit. Le choix par défaut ne change rien.
+    interpretation: Une préparation choisie après avoir regardé le résultat est marquée dépendante des données ; les chiffres hors pli peuvent alors être un peu optimistes.
+  split:
+    context: Les plis sont fixés avant toute exploration du résultat. Chaque ligne de développement est prédite une fois, par un modèle ajusté sur les autres plis, donc chaque ligne compte dans la comparaison.
+    method: Des plis stratifiés avec une graine enregistrée, ou des blocs contigus dans l'ordre du temps quand le cas déclare un ordre. Les lignes lues sont enregistrées comme exposition.
+    interpretation: "{{slot:split:folds|int}} plis sur {{slot:split:n_rows|int}} lignes de développement ; chaque ligne est prédite une fois, hors pli."
+  train_eda:
+    context: "Le résultat est : {{fact:target|non indiqué par le cas}}. L'exploration lit les lignes de développement ; l'échantillon de test final reste scellé."
+    method: Le taux de la cible et les valeurs spéciales sont calculés sur les lignes de développement, avec leurs dénominateurs.
+    interpretation: "Dans les lignes de développement, le résultat positif apparaît dans {{slot:eda.target_rate:rate|pct1}} des lignes. Un modèle doit battre ce taux de base pour être utile."
+  models:
+    context: Un modèle de référence constant et un modèle logistique sont ajustés pli par pli ; chaque pli est noté par des modèles ajustés sur les autres plis.
+    method: Les prédictions hors pli de chaque ligne de développement sont enregistrées, donc une nouvelle règle ne demande jamais de réajustement.
+    interpretation: La comparaison est faite sur ces prédictions hors pli ; elles ont aidé à choisir, ce sont donc des résultats de développement, pas une preuve indépendante.
+  policy:
+    method: Chaque règle est évaluée sur les prédictions hors pli enregistrées ; une capacité ou une part est appliquée dans chaque pli, puisque chaque pli est noté par son propre modèle. Les ex aequo au seuil sont comptés au prorata, avec des intervalles bootstrap appariés.
+    interpretation: Les chiffres décrivent ces lignes de développement après un choix fait sur elles ; ils sont optimistes et ne sont pas une prévision. Seul le test final, ouvert une fois, est indépendant.
+  conclusion:
+    interpretation: La conclusion repose sur des chiffres hors pli de lignes qui ont servi à la sélection, et sur le test final une fois qu'il est ouvert.
+regression_cv_steps:
+  success_criterion:
+    method: Vous indiquez la plus petite réduction relative de l'erreur absolue moyenne hors pli de la moyenne de référence qui rendrait le modèle utile.
+  preprocessing:
+    context: L'exploration des lignes de développement peut motiver la façon dont le modèle prépare les variables ; les analyses qui l'ont motivée sont enregistrées avec elle.
+    method: Les indicateurs de valeur manquante, le nombre minimal de lignes d'une catégorie, les plafonds aux quantiles et les transformations logarithmiques sont appris, pli par pli, sur les lignes sur lesquelles chaque modèle est ajusté, et appliqués tels quels au pli qu'il prédit. Le choix par défaut ne change rien.
+    interpretation: Une préparation choisie après avoir regardé la cible est marquée dépendante des données ; les erreurs hors pli peuvent alors être un peu optimistes.
+  split:
+    context: Les plis sont fixés avant toute exploration de la cible. Chaque ligne de développement est prédite une fois, par un modèle ajusté sur les autres plis ; les plis par quantiles gardent une dispersion de la cible semblable dans chaque pli, et les plis temporels suivent l'ordre du temps.
+    method: Des plis sur les quantiles de la cible avec une graine enregistrée, ou des blocs contigus dans l'ordre du temps quand le cas déclare une colonne de temps ou un ordre. Les lignes lues sont enregistrées comme exposition.
+    interpretation: "{{slot:split:folds|int}} plis sur {{slot:split:n_rows|int}} lignes de développement ; chaque ligne est prédite une fois, hors pli."
+  train_eda:
+    context: "La cible est : {{fact:target|non indiqué par le cas}}. L'exploration lit les lignes de développement ; l'échantillon de test final reste scellé."
+    method: Le résumé de la cible et les valeurs spéciales sont calculés sur les lignes de développement, avec leurs effectifs.
+    interpretation: "Sur les lignes de développement, la cible a une moyenne de {{slot:eda.target_summary:mean|f2}} et un écart-type de {{slot:eda.target_summary:sd|f2}}, dans l'unité de la cible. La moyenne de référence prédit la moyenne des lignes sur lesquelles elle est ajustée ; un modèle doit faire mieux pour être utile."
+  models:
+    context: Une moyenne de référence et un modèle linéaire sont ajustés pli par pli ; chaque pli est prédit par des modèles ajustés sur les autres plis.
+    method: Les prédictions hors pli de chaque ligne de développement sont enregistrées, donc comparer et choisir un modèle ne demande jamais de réajustement.
+    interpretation: "Hors pli, la moyenne de référence a une erreur absolue moyenne de {{slot:fit.baseline:validation.mae|f2}} et le modèle linéaire de {{slot:fit.linear:validation.mae|f2}}, dans l'unité de la cible."
+  model_choice:
+    context: "L'usage prévu est : {{fact:intended_use|non indiqué par le cas}}. Un modèle n'est adopté que s'il réduit l'erreur de la moyenne de référence de plus que la variabilité de ces prédictions hors pli, et si ses résidus ne montrent pas de biais qui compte pour cet usage."
+    method: La MAE et la RMSE sont calculées dans l'unité de la cible sur les prédictions hors pli enregistrées, avec des intervalles bootstrap appariés de chacune et de l'écart avec le modèle de référence, et les résidus par période.
+    interpretation: "La MAE du modèle linéaire moins celle du modèle de référence vaut {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} hors pli, entre {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} et {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} sur des rééchantillonnages de ces lignes. Son résidu moyen (biais) vaut {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}}. Ces lignes ont servi au choix, donc les chiffres sont optimistes et ne sont pas une prévision."
+  conclusion:
+    interpretation: La conclusion repose sur des chiffres hors pli de lignes qui ont servi au choix, et sur le test final une fois qu'il est ouvert.
+forward_steps:
+  split:
+    context: "Les plis sont fixés avant toute exploration du résultat, dans l'ordre du moment de la prédiction. Chaque pli note une fenêtre plus récente de lignes de développement avec un modèle ajusté seulement sur des lignes plus anciennes dont le résultat était connu avant cette fenêtre ; la fenêtre la plus ancienne, l'amorçage, entraîne le premier pli et n'est jamais notée."
+    method: Des fenêtres du moment de la prédiction, avec l'écart enregistré entre les lignes sur lesquelles un modèle est ajusté et la fenêtre qu'il note ; une ligne d'entraînement dont le résultat arrive dans la fenêtre est écartée de ce pli. Les lignes lues sont enregistrées comme exposition.
+    interpretation: "{{slot:split:folds|int}} plis sur {{slot:split:n_rows|int}} lignes de développement : {{slot:split:n_scored|int}} lignes sont notées une fois, hors pli, et {{slot:split:n_warmup|int}} lignes d'amorçage servent seulement à l'entraînement."
+  models:
+    context: Un modèle de référence constant et un modèle logistique sont ajustés pli par pli ; chaque pli est noté par des modèles ajustés seulement sur des lignes plus anciennes.
+    method: Les prédictions hors pli de chaque ligne notée sont enregistrées (les lignes d'amorçage n'en ont pas), donc une nouvelle règle ne demande jamais de réajustement.
+regression_forward_steps:
+  split:
+    context: "Les plis sont fixés avant toute exploration de la cible, dans l'ordre du moment de la prédiction. Chaque pli prédit une fenêtre plus récente de lignes de développement avec un modèle ajusté seulement sur des lignes plus anciennes dont la cible était connue avant cette fenêtre ; la fenêtre la plus ancienne, l'amorçage, entraîne le premier pli et n'est jamais prédite."
+    method: Des fenêtres du moment de la prédiction, avec l'écart enregistré entre les lignes sur lesquelles un modèle est ajusté et la fenêtre qu'il prédit ; une ligne d'entraînement dont la cible arrive dans la fenêtre est écartée de ce pli. Les lignes lues sont enregistrées comme exposition.
+    interpretation: "{{slot:split:folds|int}} plis sur {{slot:split:n_rows|int}} lignes de développement : {{slot:split:n_scored|int}} lignes sont prédites une fois, hors pli, et {{slot:split:n_warmup|int}} lignes d'amorçage servent seulement à l'entraînement."
+  models:
+    context: Une moyenne de référence et un modèle linéaire sont ajustés pli par pli ; chaque pli est prédit par des modèles ajustés seulement sur des lignes plus anciennes.
+    method: Les prédictions hors pli de chaque ligne prédite sont enregistrées (les lignes d'amorçage n'en ont pas), donc comparer et choisir un modèle ne demande jamais de réajustement.

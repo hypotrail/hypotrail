@@ -74,12 +74,30 @@ def _pseudo_state(view: dict) -> dict:
 
 
 def _variables(view: dict) -> list[dict]:
+    """The case's variables for the report's dictionary; in a French study (L3, owner session
+    2026-10-26, R4) with each description and group in French where the case gives them (the
+    variable's ``labels.fr``, the translation sidecar recorded at ``init``: ``view.case_texts``)."""
     from . import case as c
 
     try:
-        return list(c.load_case(view['case']['path'], verify_data=False).document['variables'])
+        document = c.load_case(view['case']['path'], verify_data=False).document
+        variables = list(document['variables'])
     except Exception:      # the report still renders without the variable dictionary
         return []
+    if view.get('language') != 'fr':
+        return variables
+    groups = (view.get('case_texts') or {}).get('groups') or {}
+    out = []
+    for v in variables:
+        french = dict(v)
+        description = (v.get('labels') or {}).get('fr')
+        if description:
+            french['description'] = description
+        group = (groups.get(v.get('group')) or {}).get('fr')
+        if group:
+            french['group'] = group
+        out.append(french)
+    return out
 
 
 SAMPLE_ROWS = 5
@@ -144,7 +162,8 @@ def _render_report(study: Path, view: dict, manifest: dict, surfaces: dict) -> d
     path = study / mf.ARTIFACTS['report']
     try:
         _inject('render_html')
-        page, consumed = render_html.build(view, surfaces=surfaces, variables=_variables(view),
+        page, consumed = render_html.build(view, surfaces=surfaces,
+                                           variables=_variables(view),
                                            sample=sample_rows(study, view),
                                            understanding=_understanding(study))
         data = page.encode('utf-8')

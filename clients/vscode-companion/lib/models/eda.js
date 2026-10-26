@@ -17,7 +17,9 @@ const EVIDENCE_SCHEMA = 'hypotrail.evidence/1';
 const EDA_KEYS = ['revision', 'task', 'cards', 'catalog', 'rowsSeen'];
 // WP-A7: `question`, the question the result answers (the engine's `values.question`), which
 // titles its card.
-const CARD_KEYS = ['slot', 'activity', 'column', 'resultId', 'current', 'kind', 'question', 'data'];
+// L3 (owner session 2026-10-26, R4, D4b): `texts`, the result's junior texts in both languages
+// (`{en, fr}` of {question, note, warnings, meanings}, the engine's), or null.
+const CARD_KEYS = ['slot', 'activity', 'column', 'resultId', 'current', 'kind', 'question', 'data', 'texts'];
 
 // Gallery order (§6.3): the target, the special values, the by-column results, then the
 // distributions; by column name inside a group.
@@ -281,6 +283,20 @@ function columnOf(r) {
   return slot.includes(':') ? slot.slice(slot.indexOf(':') + 1) : null;
 }
 
+/** The engine's `texts` of an EDA result (L3): per language, the strings it gives, else null. */
+function edaTexts(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const text = x => (typeof x === 'string' && x.trim() ? x : null);
+  const out = {};
+  for (const lang of ['en', 'fr']) {
+    const t = obj(raw[lang]);
+    const meanings = {};
+    for (const [k, v] of Object.entries(obj(t.meanings))) meanings[k] = text(v);
+    out[lang] = { question: text(t.question), note: text(t.note), warnings: list(t.warnings).map(text), meanings };
+  }
+  return out;
+}
+
 function card(r) {
   const activity = str(r.activity);
   const current = r.current === true && r.integrity === 'ok' && r.values !== null && typeof r.values === 'object';
@@ -288,6 +304,7 @@ function card(r) {
   return {
     slot: str(r.slot), activity, column: columnOf(r), resultId: str(r.result_id), current,
     kind: KINDS[activity], question: current ? str(values.question) : '', data: current ? cardData(activity, r.values) : null,
+    texts: current ? edaTexts(r.texts) : null,
   };
 }
 

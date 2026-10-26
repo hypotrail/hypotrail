@@ -93,8 +93,22 @@
     local.timers.clear();
   }
 
+  // L3 (R4, D4b): the Learn tab's texts come from `explain`, written in the study language;
+  // in a panel of the other language each one is marked with its language, as an engine
+  // text is ("(en)" / "(fr)", `lang`).
+  function studyMark(node) {
+    const study = HT.studyLanguage ? HT.studyLanguage() : 'en';
+    const panel = HT.language ? HT.language() : 'en';
+    if (!node || study === panel) return node;
+    node.setAttribute('lang', study);
+    node.appendChild(HT.el('span', study === 'fr'
+      ? { className: 'ht-en-marker', 'data-fr-marker': true, text: '(fr)' }
+      : { className: 'ht-en-marker', 'data-en-marker': true, text: '(en)' }));
+    return node;
+  }
+
   function stepText(ctx, segments) {
-    return segments ? ctx.components.segments(ctx.el('p'), segments) : null;
+    return segments ? studyMark(ctx.components.segments(ctx.el('p'), segments)) : null;
   }
 
   function card(ctx, model, step, task) {
@@ -116,7 +130,7 @@
       'aria-label': `${c.cardLabel}: ${title}` }, [
       el('p', { className: 'ht-tag', text: c.cardLabel }),
       el('h3', {}, [term ? HT.terms.mark(term.term, term.id) : step.title]),
-      term ? el('p', { className: 'ht-concept-definition', text: term.definition }) : null,
+      term ? studyMark(el('p', { className: 'ht-concept-definition', text: term.definition })) : null,
       el('p', { className: 'muted', text: c.cardStep(step.title) }),
       ...body.map(s => stepText(ctx, s)),
       body.some(s => !s) || texts.textStatus === 'needs_results' ? el('p', { className: 'muted', text: c.cardMissing }) : null,
@@ -158,14 +172,14 @@
       const chosen = q.choices.find(x => x.id === answer);
       return el('section', { className: 'ht-predict', 'data-prediction': q.id, 'aria-label': c.predictTag }, [
         el('p', { className: 'ht-tag', text: c.predictTag }),
-        el('p', { className: 'ht-question', text: q.question }),
+        studyMark(el('p', { className: 'ht-question', text: q.question })),
         answer ? el('p', { 'data-answer': answer, text: c.yourAnswer(chosen ? chosen.label : answer) })
           : el('div', { className: 'ht-row', role: 'group', 'aria-label': q.question }, q.choices.map(x => el('button', {
             type: 'button', className: 'secondary', 'data-choice': x.id, text: x.label,
             onclick: () => ctx.send({ type: 'learn_set', key: 'prediction', id: q.id, value: x.id }) }))),
         answer ? el('div', { className: 'ht-reveal', 'data-reveal': q.available ? 'shown' : 'later' }, [
           el('p', { className: 'ht-tag', text: c.revealTitle }),
-          q.available ? ctx.components.segments(el('p'), q.reveal) : el('p', { text: c.revealLater }),
+          q.available ? studyMark(ctx.components.segments(el('p'), q.reveal)) : el('p', { text: c.revealLater }),
         ]) : null,
         el('p', { className: 'muted', 'data-kept-local': true, text: c.keptLocal }),
       ]);

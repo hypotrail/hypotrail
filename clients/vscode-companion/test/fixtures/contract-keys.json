@@ -119,7 +119,8 @@
     "last_session",
     "digest",
     "task",
-    "currency"
+    "currency",
+    "texts"
    ],
    "moments[]": [
     "id",
@@ -412,7 +413,9 @@
     "execution_id",
     "exposure_id",
     "values",
-    "headline"
+    "headline",
+    "question_junior",
+    "texts"
    ],
    "lineage": [
     "nodes",
@@ -538,7 +541,8 @@
     "definition",
     "example",
     "example_status",
-    "steps"
+    "steps",
+    "language"
    ],
    "steps.*": [
     "concept",
@@ -689,7 +693,8 @@
     "values",
     "result",
     "artifacts",
-    "next_action"
+    "next_action",
+    "question_junior"
    ]
   },
   "hypotrail.session_report/1": {

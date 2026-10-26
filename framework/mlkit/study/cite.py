@@ -314,6 +314,8 @@ class Citer:
         self.facts = dict(facts or {})
         self.language = language if language in ('en', 'fr') else 'en'
         self.cited: list[dict] = []
+        # L3: ``{"column=value": meaning}`` of the case's special values in ``language``.
+        self.meanings: dict[str, str] = {}
 
     @classmethod
     def from_view(cls, view: Mapping) -> 'Citer':
@@ -324,7 +326,18 @@ class Citer:
                                                item['integrity'])
         facts = {f['id']: f['value'] for items in view['facts']['by_status'].values()
                  for f in items}
-        return cls(results, facts, view.get('language', 'en'))
+        language = view.get('language', 'en')
+        # L3 (owner session 2026-10-26): a French study quotes the case in French when the
+        # case's translation sidecar gives the statement (``view.case_texts``).
+        case_texts = view.get('case_texts') or {}
+        for fid, pair in (case_texts.get('facts') or {}).items():
+            if fid in facts and (pair or {}).get(language):
+                facts[fid] = pair[language]
+        out = cls(results, facts, language)
+        out.meanings = {key: pair[language] for key, pair in
+                        (case_texts.get('special_values') or {}).items()
+                        if language != 'en' and (pair or {}).get(language)}
+        return out
 
     def citable(self, rid: str | None) -> bool:
         c = self.results.get(rid) if rid else None

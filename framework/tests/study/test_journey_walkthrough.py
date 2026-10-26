@@ -47,11 +47,13 @@ def _junior_value(decision: str, task: str):
 
 
 def walk(f: fk.Flow, task: str, on_write: Callable[[str, dict], None] | None = None,
-         on_read: Callable[[str, dict], None] | None = None, limit: int = 80) -> list:
+         on_read: Callable[[str, dict], None] | None = None, limit: int = 80,
+         restatement_fr: bool = False) -> list:
     """Follow ``next_action`` from step 0 to ``done``; every write's payload goes to
     ``on_write(label, payload)`` and is returned as ``(label, payload)``. At the split, a hold
     is recorded and resolved before the confirmation, so a hold and its resolution are walked
-    too. ``on_read(label, action)`` gets the ``status --summary`` next action between writes."""
+    too. ``on_read(label, action)`` gets the ``status --summary`` next action between writes.
+    ``restatement_fr`` (L3, J-LANG): each proposal also carries a French restatement."""
     writes = []
     held = False
 
@@ -108,9 +110,13 @@ def walk(f: fk.Flow, task: str, on_write: Callable[[str, dict], None] | None = N
                 value = nxt['choice_options'][0]['value']
             if value is None:
                 value = _junior_value(decision, task)
+        # L3 (J-LANG): in a French study the agent also gives the restatement in French.
+        french = ('--restatement-fr', f'Vous décidez : {decision}, comme indiqué.') \
+            if restatement_fr else ()
         proposal = wrote(f'propose:{decision}', call(
             'decide', 'propose', decision, '--value-json', json.dumps(value), '--restatement',
-            f'You decide the {decision} as stated.', '--rationale', 'It fits the scenario.'))
+            f'You decide the {decision} as stated.', *french,
+            '--rationale', 'It fits the scenario.'))
         if decision == 'split' and not held:
             held = True
             note = wrote('note:hold', call('decide', 'note', '--about', 'split', '--text', HOLD))

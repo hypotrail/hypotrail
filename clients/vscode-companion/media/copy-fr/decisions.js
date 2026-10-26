@@ -14,6 +14,7 @@
     byPanel: "Proposé depuis ce panneau par une version antérieure ; ce n'est pas encore une décision.",
     madeAt: (pid, rev) => (rev === null || rev === undefined ? `Proposition ${pid}` : `Proposition ${pid}, faite à la révision ${rev}`),
     restatedAs: "L'assistant propose :",
+    chatWording: { en: '(formulation du chat, en anglais)', fr: '(formulation du chat, en français)' },
     proposedValue: 'En bref : ',
     recordedValue: 'Valeur enregistrée : ',
     details: 'Détails',

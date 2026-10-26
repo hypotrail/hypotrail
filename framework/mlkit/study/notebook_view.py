@@ -34,6 +34,26 @@ from .errors import StudyError
 e = html.escape
 
 
+# L3 (owner session 2026-10-26, R4): the notebook's own words in a French study. The texts of
+# the engine are read in the study language (``texts.report_language_context``), so a French
+# study's notebook shows French labels, steps and definitions where the engine has them.
+WORDS = {'en': {'interpretation': 'Interpretation.', 'decision': 'Decision.',
+                'in_this_study': 'In this study.', 'generated': 'Generated at revision',
+                'study_at': 'the study is at revision'},
+         'fr': {'interpretation': 'Interprétation.', 'decision': 'Décision.',
+                'in_this_study': 'Dans cette étude.', 'generated': 'Généré à la révision',
+                'study_at': "l'étude est à la révision"}}
+
+
+def _language(study_or_cited) -> str:
+    """The study language of a study snapshot or of a citer (English by default)."""
+    if isinstance(study_or_cited, cite.Citer):
+        return study_or_cited.language
+    state = getattr(study_or_cited, 'state', None)
+    lang = state.get('language') if isinstance(state, Mapping) else None
+    return lang if lang in WORDS else 'en'
+
+
 def open_study(study_dir) -> read.Study:
     """Install the read-only guard (when requested), then open the study read-only."""
     guard.install(study_dir)
@@ -50,22 +70,32 @@ def citer(study: read.Study, result_ids: Mapping[str, str]) -> cite.Citer:
             results[rid] = cite.Cited(rid, slot, None, None, False, exc.code)
             continue
         results[rid] = cite.Cited(rid, slot, entry['output']['values'], entry['n_rows'], True, 'ok')
-    facts = {fid: f['value'] for fid, f in study.state['facts'].items()}
-    return cite.Citer(results, facts)
+    state = study.state
+    facts = {fid: f['value'] for fid, f in state['facts'].items()}
+    language = _language(study)
+    if language != 'en':
+        # L3: the case quoted in the study language when its translation sidecar gives it.
+        from . import l10n
+        tr = l10n.translations(state)
+        facts = {fid: tr.fact(fid, language) or value for fid, value in facts.items()}
+    return cite.Citer(results, facts, language)
 
 
 def banner_html(study: read.Study, generated_revision: int, result_ids: Mapping[str, str]) -> str:
-    labels = texts.report()['notebook']
+    language = _language(study)
+    with texts.report_language_context(language):
+        labels = texts.report()['notebook']
+    words = WORDS[language]
     state = study.state
     moved = [slot for slot, rid in sorted(result_ids.items())
              if state['current'].get(slot) != rid or rid in state['stale']]
     current = study.revision == generated_revision and not moved
     text = labels['banner_current'] if current else labels['banner_stale']
     status = 'current' if current else 'stale'
-    return (f'<div class="notice" data-notebook-banner="{status}"><strong>Generated at revision '
-            f'<span data-literal="revision">{generated_revision}</span></strong>; the study is at '
-            f'revision <span data-literal="revision">{study.revision}</span>. {e(text)} '
-            f'{e(labels["read_only"])}</div>')
+    return (f'<div class="notice" data-notebook-banner="{status}"><strong>{words["generated"]} '
+            f'<span data-literal="revision">{generated_revision}</span></strong>; '
+            f'{words["study_at"]} <span data-literal="revision">{study.revision}</span>. '
+            f'{e(text)} {e(labels["read_only"])}</div>')
 
 
 def step_html(cited: cite.Citer, result_ids: Mapping[str, str], slots: list[str],
@@ -75,13 +105,14 @@ def step_html(cited: cite.Citer, result_ids: Mapping[str, str], slots: list[str]
 
     ``task`` (``regression`` for a regression study) and ``scheme`` (``cross_validation``,
     B6c) select the display texts."""
-    with texts.task_context(task), texts.scheme_context(scheme):
+    with texts.task_context(task), texts.scheme_context(scheme), \
+            texts.report_language_context(cited.language):
         return _step_html(cited, result_ids, slots, context, interpretation)
 
 
 def _step_html(cited: cite.Citer, result_ids: Mapping[str, str], slots: list[str],
                context: str, interpretation: str) -> str:
-    pending = texts.load('steps')['pending']
+    pending = texts.step_status_words()['pending']
     parts = [f'<p>{cited.expand(context)}</p>'] if context and cited.ready(context) else []
     for slot in slots:
         spec = texts.activity(slot)
@@ -93,14 +124,18 @@ def _step_html(cited: cite.Citer, result_ids: Mapping[str, str], slots: list[str
         parts.append(f'<h4>{title}</h4>{render_html._figures(cited, rid, spec)}')
     if interpretation and cited.ready(interpretation) and (
             not slots or any(result_ids.get(s) for s in slots)):
-        parts.append(f'<p><strong>Interpretation.</strong> {cited.expand(interpretation)}</p>')
+        parts.append(f'<p><strong>{WORDS[cited.language]["interpretation"]}</strong> '
+                     f'{cited.expand(interpretation)}</p>')
     return ''.join(parts)
 
 
 def decision_html(study: read.Study, decision_id: str) -> str:
-    labels = texts.report()
+    language = _language(study)
+    with texts.report_language_context(language):
+        labels = texts.report()
     d = view_model.build(study)['decisions'][decision_id]
-    out = f'<p><strong>Decision.</strong> {e(labels["decision_status"][d["status"]])}'
+    out = (f'<p><strong>{WORDS[language]["decision"]}</strong> '
+           f'{e(labels["decision_status"][d["status"]])}')
     if d['confirmation'] and d['status'] == 'confirmed':
         delegated = d['confirmation'].get('basis') == 'delegated_default'
         label = labels['delegated_words'] if delegated else labels['user_words']
@@ -339,9 +374,12 @@ def example_html(cited: cite.Citer, term_id: str | None, task: str | None = None
                  scheme: str | None = None) -> str:
     """The contextual example of a glossary term, with this study's cited numbers, or ''
     when the term has none or its results are not computed yet."""
-    with texts.task_context(task), texts.scheme_context(scheme):
+    with texts.task_context(task), texts.scheme_context(scheme), \
+            texts.report_language_context(cited.language):
         entry = texts.glossary(term_id) if term_id else None
-        example = (entry or {}).get('cited_example')
+        # L3: the French example of a French study, when the glossary gives one.
+        example = ((entry or {}).get('cited_example_fr') if cited.language == 'fr' else None) \
+            or (entry or {}).get('cited_example')
         if not example or not cited.ready(example):
             return ''
         try:
@@ -354,7 +392,7 @@ def example_html(cited: cite.Citer, term_id: str | None, task: str | None = None
             if exc.code == 'untraceable_number':
                 return ''
             raise
-        return f'<p><em>In this study.</em> {expanded}</p>'
+        return f'<p><em>{WORDS[cited.language]["in_this_study"]}</em> {expanded}</p>'
 
 
 # --- workbench --------------------------------------------------------------------------

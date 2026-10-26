@@ -41,7 +41,8 @@
      "mode": "guided",
      "warnings": [],
      "reason_given": null,
-     "adoption_question": false
+     "adoption_question": false,
+     "label": "You score each client before the first call."
     },
     "open_proposals": []
    },
@@ -88,7 +89,8 @@
      "mode": "guided",
      "warnings": [],
      "reason_given": null,
-     "adoption_question": false
+     "adoption_question": false,
+     "label": "You exclude duration, day, month and campaign."
     },
     "open_proposals": []
    },
@@ -123,7 +125,8 @@
      "mode": "guided",
      "warnings": [],
      "reason_given": null,
-     "adoption_question": false
+     "adoption_question": false,
+     "label": "My recommended default: a stratified random split, 30% for validation."
     },
     "open_proposals": []
    },
@@ -153,7 +156,8 @@
      "mode": "guided",
      "warnings": [],
      "reason_given": null,
-     "adoption_question": false
+     "adoption_question": false,
+     "label": "Call the 100 clients with the highest scores."
     },
     "open_proposals": []
    },

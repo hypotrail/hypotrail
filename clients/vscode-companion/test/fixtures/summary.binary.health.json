@@ -694,6 +694,63 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "9d0c7a35e1b2f468"
+  "currency": "9d0c7a35e1b2f468",
+  "texts": {
+   "en": {
+    "plan": {
+     "prediction_time": "Define the prediction moment",
+     "feature_availability": "Decide which variables are available at prediction time",
+     "split": "Split the data before exploring it",
+     "train_eda": "Explore the training partition",
+     "models": "Fit a baseline and a logistic model",
+     "policy": "Choose a decision policy",
+     "conclusion": "Conclude proportionately"
+    },
+    "moments": {
+     "frame": "Frame the change",
+     "evidence": "Prepare evidence",
+     "compare": "Work and compare",
+     "conclude": "Conclude and hand over"
+    },
+    "next_action": "A run stopped before it finished, and its outcome is unknown. It is not in progress and does not restart by itself; you will be asked before it is recorded as interrupted.",
+    "choice_options": {},
+    "limits": {
+     "interrupted_executions": "These executions have an unknown outcome: policy.evaluate, fit.logistic.",
+     "unconfirmed_decisions": "Not confirmed by you yet: the conclusion.",
+     "uncertain_features_included": "These features are used although their availability at prediction time is uncertain: contact.",
+     "validation_is_not_independent": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance.",
+     "public_data_already_explored": "The data were explored or published before this study; its rows are not unseen.",
+     "no_time_or_entity_identifier": "The data have no time column or entity identifier, so the study cannot check drift over time or repeated entities across partitions."
+    },
+    "artifacts": {
+     "editable": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence.",
+     "notebook": "The generated notebook is up to date.",
+     "report": "The report is out of date: the study changed after it was written. Do not rely on it until it is written again.",
+     "workbench": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
+    },
+    "recap": [
+     "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
+     "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1357 validation rows: precision 34.8%, recall 25.6%).",
+     "Now: Conclude proportionately; notebook, report not up to date.",
+     "Next: A run stopped before it finished, and its outcome is unknown. It is not in progress and does not restart by itself; you will be asked before it is recorded as interrupted.",
+     "Limit: An execution has an unknown outcome."
+    ],
+    "digest": {
+     "24": "Your hold on the policy, \"don't adopt anything until I bring my manager's figure\", was resolved in your words: \"my manager says the team can make 100 calls per wave\".",
+     "25": "The policy needs confirmation again: its evaluation changed.",
+     "26": "The policy was proposed: call the top 100 by score."
+    },
+    "goal": {
+     "intended_use": "Teaching simulation: prioritize contacts when call capacity is limited",
+     "decision": "Select contacts to call first",
+     "observation_unit": "A customer contacted during a telephone campaign",
+     "prediction_time": "before the first contact of the campaign, from the client file"
+    },
+    "proposals": {
+     "p_5": "Call the 100 clients with the highest scores."
+    }
+   },
+   "fr": null
+  }
  }
 }

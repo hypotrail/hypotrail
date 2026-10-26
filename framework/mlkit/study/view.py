@@ -63,7 +63,10 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # engine's shortlist of model families; ``null`` in a study without variants.
              'model_selection', 'model_families', 'assurance',
              # reliability roadmap J2: one derived evaluator, never persisted.
-             'requirements', 'completion', 'claim_eligibility', 'presentation')
+             'requirements', 'completion', 'claim_eligibility', 'presentation',
+             # L3 (owner session 2026-10-26, R4; D4 A, D4b): the case's statements in both
+             # languages from its translation sidecar (``l10n.case_texts``), or ``null``.
+             'case_texts')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -83,7 +86,11 @@ CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'prop
                           # v0.3 (WP-B, R27): for a trade-off in the junior's words, whether
                           # they gave a reason (``null`` otherwise); whether the words answer
                           # the closed adoption question (``false`` when not recorded).
-                          'reason_given', 'adoption_question')
+                          'reason_given', 'adoption_question',
+                          # L3 (owner session 2026-10-26, R4): the confirmed proposal's
+                          # restatement in the study language (``state.label_of``; the
+                          # English ``restatement`` when the agent gave none in it).
+                          'label')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created',
                       # ADR 0005: the restatement per language (``null`` when none was
@@ -241,6 +248,16 @@ def _case_uncertain_limit(state: dict, defensible: list) -> None:
         item['text'] = f'{item["text"]} {text}'
 
 
+def _confirmed_label(state: Mapping, conf: Mapping) -> str | None:
+    """The restatement a confirmation answered, in the study language (L3): the proposal's
+    label in that language when the agent gave one, else the recorded restatement."""
+    proposal = (state.get('proposals') or {}).get(conf.get('proposal_id'))
+    if not isinstance(proposal, Mapping):
+        return conf.get('restatement')
+    labels = proposal.get('labels') or {}
+    return labels.get(st.language_of(state)) or conf.get('restatement')
+
+
 def _decisions(state: dict) -> dict:
     out = {}
     fa = state['decisions'].get('feature_availability') or {}
@@ -254,7 +271,8 @@ def _decisions(state: dict) -> dict:
                   'confirmation': ({**{k: conf.get(k) for k in CONFIRMATION_VIEW_KEYS},
                                     'basis': st.confirmation_basis(conf),
                                     'warnings': list(conf.get('warnings') or []),
-                                    'adoption_question': bool(conf.get('adoption_question'))}
+                                    'adoption_question': bool(conf.get('adoption_question')),
+                                    'label': _confirmed_label(state, conf)}
                                    if isinstance(conf, dict) else None),
                   'open_proposals': sorted(p['proposal_id'] for p in st.open_proposals(state)
                                            if p['decision_id'] == d),
@@ -523,15 +541,24 @@ def summary(view: dict) -> dict:
     ``recap``, five lines a new chat may quote (:func:`recap`). The full view stays in ``hypotrail status --json``.
     """
     lang = view.get('language') or audience.EN
+    # L3 (R4, T4; D4 A): the case's statements in the study language when its translation
+    # sidecar gives them (``view.case_texts``).
+    translated = ((view.get('case_texts') or {}).get('facts') or {}) if lang != audience.EN \
+        else {}
+
+    def fact(fact_id):
+        item = _fact(view, fact_id)
+        french = (translated.get(fact_id) or {}).get(lang) if item else None
+        return {**item, 'value': french} if french else item
     pt = view['decisions']['prediction_time']
     if pt['value'] is not None:
         prediction_time = {'value': pt['value'], 'source': 'decision', 'status': pt['status']}
     else:
-        fact = _fact(view, 'prediction_time')
-        prediction_time = ({'value': fact['value'], 'source': 'case', 'status': fact['status']}
-                           if fact else None)
-    goal = {'intended_use': _fact(view, 'intended_use'), 'decision': _fact(view, 'decision'),
-            'observation_unit': _fact(view, 'observation_unit'),
+        item = fact('prediction_time')
+        prediction_time = ({'value': item['value'], 'source': 'case', 'status': item['status']}
+                           if item else None)
+    goal = {'intended_use': fact('intended_use'), 'decision': fact('decision'),
+            'observation_unit': fact('observation_unit'),
             'prediction_time': prediction_time}
     decisions = {}
     for d, dec in view['decisions'].items():
@@ -1371,6 +1398,10 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         **_wp_f1(state, results),
     }
     case = _case_or_none(state) if not sources else None
+    # L3 (R4; D4 A, D4b): the case's statements in both languages, read by ``junior.enrich``
+    # (the prediction moment in the study language) and the surfaces; moved last below.
+    from . import l10n
+    out['case_texts'] = l10n.case_texts(state, case.document) if case is not None else None
     out['assurance'] = assurance.describe(state, case)
     if assurance.profile(state) == 'review-v1':
         from . import validity
@@ -1411,6 +1442,7 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     out['next_action']['pause'] = guidance.pause(out)
     from . import presentation
     out['presentation'] = presentation.build(out)
+    out['case_texts'] = out.pop('case_texts')          # the last key (VIEW_KEYS order)
     return out
 
 
@@ -1946,7 +1978,13 @@ def _proposal_view(p: dict, language: str) -> dict:
 # --- the digest of the advanced companion (CLI-CONTRACT-COMPANION §1, C1) -------------
 
 # ``status --summary --digest`` appends these keys after ``recap``, in this order.
-DIGEST_SUMMARY_KEYS = ('moments', 'pauses', 'last_session', 'digest', 'task', 'currency')
+DIGEST_SUMMARY_KEYS = ('moments', 'pauses', 'last_session', 'digest', 'task', 'currency',
+                       # L3 (owner session 2026-10-26, R4; D4b): the junior texts this summary
+                       # shows, in both languages (:func:`language_texts`).
+                       'texts')
+# ``texts.<language>``: where each junior text of the summary is, by its id (L3, D4b).
+LANGUAGE_TEXT_KEYS = ('plan', 'moments', 'next_action', 'choice_options', 'limits',
+                      'artifacts', 'recap', 'digest', 'goal', 'proposals')
 # Review fix H1: ``currency`` is the first CURRENCY_HEX hex characters of a sha256 over the
 # canonical JSON of :func:`currency_inputs` (CLI-CONTRACT-COMPANION §1.5).
 CURRENCY_HEX = 16
@@ -1996,13 +2034,14 @@ _COUNT_OF_KIND = {'proposed': 'proposed', 'confirmed': 'confirmed', 'withdrawn':
 def moments(task: str, state: dict | None = None) -> list[dict]:
     """The four moments of the plan (``content/steps.yaml``, ``moments``). With ``state``,
     only the steps of that study are listed (a study created before WP-A4 has no success
-    criterion or preprocessing step)."""
+    criterion or preprocessing step), with the titles in its language (L3)."""
     from . import texts
 
     data = texts.load('steps')
     overlay = data.get('regression_moments', {}) if task == st.REGRESSION else {}
     ids = set(st.step_ids(state if state is not None else task))
-    return [{'id': m['id'], 'title': m['title'],
+    french = st.language_of(state) == audience.FR if state is not None else False
+    return [{'id': m['id'], 'title': m.get('title_fr', m['title']) if french else m['title'],
              'steps': [s for s in overlay.get(m['id'], m['steps']) if s in ids]}
             for m in data['moments']]
 
@@ -2055,31 +2094,43 @@ def last_session(records: list[dict]) -> dict:
 
 
 class _Texts:
-    """The digest sentences of ``content/digest.yaml`` for one task."""
+    """The digest sentences of ``content/digest.yaml`` for one task. ``lang`` French (L3,
+    owner session 2026-10-26): the junior sentences of a French study, from the file's ``fr``
+    mapping, with the decisions and activities in the junior's French words."""
 
-    def __init__(self, task: str):
+    def __init__(self, task: str, lang: str = audience.EN):
         from . import texts
 
         data = texts.load('digest')
         if task == st.REGRESSION:
             data = texts._merge({k: v for k, v in data.items() if k != st.REGRESSION},
                                 data.get(st.REGRESSION, {}))
+        self.lang = lang
+        if lang == audience.FR:
+            french = data.get('fr') or {}
+            data = {**data, 'templates': french['templates'],
+                    'junior_templates': french['templates'], 'causes': french['causes'],
+                    'junior_causes': {}, 'effects': french['effects'],
+                    'slot_with_column': french['slot_with_column'],
+                    'webview': french['webview'], 'activities': {}}
         self.data = data
 
     def decision(self, decision_id) -> str:
+        if self.lang == audience.FR:
+            return audience.decision_words(decision_id, self.lang)
         return self.data['decisions'].get(decision_id, ' '.join(str(decision_id).split('_')))
 
     def slot(self, slot, junior: bool = False) -> str:
         base, sep, column = str(slot).partition(':')
         label = self.data['activities'].get(base) or (
-            audience.activity_words(base) if junior   # WP-A7: no activity id for the junior
+            audience.activity_words(base, self.lang) if junior   # WP-A7: no activity id
             else self.data['activity_fallback'].format(activity=base))
         return self.data['slot_with_column'].format(label=label, column=column) if sep else label
 
-    @staticmethod
-    def join(labels) -> str:
+    def join(self, labels) -> str:
         labels = list(labels)
-        return labels[0] if len(labels) == 1 else ', '.join(labels[:-1]) + ' and ' + labels[-1]
+        last = ' et ' if self.lang == audience.FR else ' and '
+        return labels[0] if len(labels) == 1 else ', '.join(labels[:-1]) + last + labels[-1]
 
     def template(self, name: str, junior: bool = False, **fields) -> str:
         own = self.data.get('junior_templates', {}).get(name) if junior else None
@@ -2163,8 +2214,8 @@ def _text(t: _Texts, item: dict, *, again: bool, state: dict, full: dict | None,
         # Only a rule identifier or a model slot is quoted: other values are free text.
         identifier = item['decision_id'] in st.CHOICE_DECISION.values() and isinstance(value, str)
         if identifier and junior:
-            value = (audience.model_words(value) if item['decision_id'] == 'model_choice'
-                     else audience.rule_words(value))
+            value = (audience.model_words(value, t.lang) if item['decision_id'] == 'model_choice'
+                     else audience.rule_words(value, t.lang))
         main = template('proposed_value', value=value) if identifier else template('proposed')
         if item['superseded']:
             main += ' ' + t.data['templates']['superseding']
@@ -2188,8 +2239,8 @@ def _text(t: _Texts, item: dict, *, again: bool, state: dict, full: dict | None,
         act = {'activity': activity, 'Activity': _cap(activity)}
         if kind in ('result_added', 'result_replaced'):
             if item['rules']:
-                rules = ('; '.join(audience.rule_words(r) for r in item['rules']) if junior
-                         else ', '.join(item['rules']))
+                rules = ('; '.join(audience.rule_words(r, t.lang) for r in item['rules'])
+                         if junior else ', '.join(item['rules']))
                 main = t.template(f'{kind}_rules', junior, rules=rules, **act)
             elif item['column'] and ':' not in str(item['slot']):
                 main = t.template(f'{kind}_column', junior, column=item['column'], **act)
@@ -2201,7 +2252,7 @@ def _text(t: _Texts, item: dict, *, again: bool, state: dict, full: dict | None,
             main = t.template(kind, junior, **act)
         if item.get('channel') == 'webview':
             # v0.3 (WP-J, R35): a run started from the study panel says so.
-            main += (' You ran it from the study panel.' if junior
+            main += (' ' + t.data.get('webview', 'You ran it from the study panel.') if junior
                      else ' It was started from the study panel (channel webview).')
     elif action == 'init':
         main = template('created')
@@ -2220,6 +2271,9 @@ def digest(study: read.Study, state: dict, *, since: int) -> dict:
     """
     records = study.revisions(0)
     t = _Texts(st.task_of(state))
+    # L3 (R4): the junior sentences of a French study are French (``text`` stays English).
+    lang = st.language_of(state)
+    tj = _Texts(st.task_of(state), lang) if lang == audience.FR else t
     full_by_revision: dict[int, dict] = {}
     for inv in state['invalidations']:
         full_by_revision.setdefault(inv['revision'], inv)
@@ -2308,6 +2362,10 @@ def digest(study: read.Study, state: dict, *, since: int) -> dict:
         # WP-A7: ``junior_text`` only when the sentence differs (the summary stays compact).
         item['audience'] = audience.JUNIOR if junior == item['text'] else audience.AGENT
         item['junior_text'] = None if junior == item['text'] else junior
+        if tj is not t:
+            # L3: in a French study the junior's sentence is always given, in French.
+            item['junior_text'] = _text(tj, item, again=again, state=state, full=own,
+                                        record=record, kept=kept, junior=True)
         if kind in _COUNT_OF_KIND:
             counts[_COUNT_OF_KIND[kind]] += 1
         inv = item['invalidation']
@@ -2352,7 +2410,7 @@ def _channel_events(study: read.Study, since: int) -> list[dict]:
 
 
 def with_digest(study: read.Study, built: dict, summary_out: dict, *,
-                since: int | None = None) -> dict:
+                since: int | None = None, leases: dict | None = None) -> dict:
     """``summary_out`` with the keys of ``--digest`` (CLI-CONTRACT-COMPANION §1, C1).
 
     It appends :data:`DIGEST_SUMMARY_KEYS` after ``recap`` and adds ``origin`` (C9, null
@@ -2370,12 +2428,60 @@ def with_digest(study: read.Study, built: dict, summary_out: dict, *,
     out = dict(summary_out)
     out['open_proposals'] = [{**p, 'origin': (state['proposals'].get(p['proposal_id']) or {})
                               .get('origin')} for p in summary_out['open_proposals']]
+    start = session['boundary_revision'] if since is None else since
     out.update({'moments': moments(built['task'], state), 'pauses': pauses(state),
                 'last_session': session,
-                'digest': digest(study, state, since=session['boundary_revision']
-                                 if since is None else since),
+                'digest': digest(study, state, since=start),
                 'task': built['task'], 'currency': currency_digest(study, built)})
+    out['texts'] = language_texts(study, built, out, since=start, leases=leases)
     return out
+
+
+def _texts_of(built: dict, summary_out: dict, lang: str) -> dict:
+    """The junior texts of one summary (and the view it was made from), by id."""
+    nxt = built.get('next_action') or {}
+    return {
+        'plan': {s['id']: s['title'] for s in built['plan']},
+        'moments': {m['id']: m['title'] for m in summary_out.get('moments') or []},
+        'next_action': nxt.get('junior_message'),
+        'choice_options': {o['id']: o['label'] for o in nxt.get('choice_options') or []},
+        'limits': {x['id']: x.get('junior_text') or x.get('text')
+                   for x in built['not_yet_defensible']},
+        'artifacts': {name: i.get('junior_message')
+                      for name, i in built['artifacts']['items'].items()},
+        'recap': list(summary_out.get('recap_junior') or []),
+        'digest': {str(i['revision']): i.get('junior_text') or i.get('text')
+                   for i in (summary_out.get('digest') or {}).get('items') or []},
+        'goal': {k: (v or {}).get('value') for k, v in (summary_out.get('goal') or {}).items()},
+        'proposals': {p['proposal_id']: (p.get('labels') or {}).get(lang)
+                      for p in built['open_proposals']},
+    }
+
+
+def language_texts(study: read.Study, built: dict, summary_out: dict, *, since: int,
+                   leases: dict | None = None) -> dict:
+    """``texts`` of ``status --summary --digest`` (L3, owner session 2026-10-26; D4b):
+    ``{"en": T, "fr": T}``, where ``T`` gives each junior text of the summary in that language
+    by its id (:data:`LANGUAGE_TEXT_KEYS`): the step titles (``plan``), the ``moments``, the
+    next action's ``junior_message`` and ``choice_options`` labels, the ``limits``'
+    ``junior_text``, the deliverables' ``junior_message`` (``artifacts``), ``recap_junior``
+    (``recap``), the digest items' junior sentences by revision (``digest``), the ``goal``,
+    and each open proposal's restatement in that language (``proposals``, null when the agent
+    gave none in it). The study language's table is read from this summary; the other one
+    from the same study read in the other language (no write, no clock), so the study panel
+    can follow its own language switch."""
+    state = study.state
+    lang = built.get('language') or audience.EN
+    other = audience.FR if lang == audience.EN else audience.EN
+    twin_state = {**state, 'language': other}
+    twin = read.Study.at_state(study.study_dir, twin_state)
+    twin_built = build(twin, leases=leases)
+    twin_summary = summary(twin_built)
+    twin_summary['moments'] = moments(twin_built['task'], twin_state)
+    twin_summary['digest'] = digest(twin, twin_state, since=since)
+    tables = {lang: _texts_of(built, summary_out, lang),
+              other: _texts_of(twin_built, twin_summary, other)}
+    return {k: tables[k] for k in (audience.EN, audience.FR)}
 
 
 def currency_inputs(study: read.Study, built: dict) -> dict:

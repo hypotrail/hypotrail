@@ -338,6 +338,7 @@
     "evidence_refs": [],
     "detail_topics": ["metric", "uncertainty"]
    }
-  }
+  },
+  "question_junior": "Does the positive rate differ across the groups of job by more than chance alone draws?"
  }
 }

@@ -25,7 +25,8 @@
     "example_status": "none",
     "steps": [
      "prediction_time"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "leakage",
@@ -33,7 +34,8 @@
     "definition": "A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use. For example, the duration of the last call to a client is known only once the call has ended, so a model that uses it to decide whom to call relies on information it cannot have before the call; it looks excellent on past calls and is useless in a campaign.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "feature_availability",
@@ -43,7 +45,8 @@
     "example_status": "none",
     "steps": [
      "feature_availability"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "validation_partition",
@@ -77,7 +80,8 @@
      ]
     },
     "example_status": "shown",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "stratified_split",
@@ -113,7 +117,8 @@
     "example_status": "shown",
     "steps": [
      "split"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "exposure",
@@ -121,7 +126,8 @@
     "definition": "The record of which rows were read, by which activity, and why. Changing the split does not make rows already seen unseen.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "distribution",
@@ -129,7 +135,8 @@
     "definition": "How the values of one column spread over the rows, read as how often each value occurs or, for a measurement, its range, quartiles, and missing cells. Read on training rows only, it leaves the validation rows unexplored.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "class_imbalance",
@@ -137,7 +144,8 @@
     "definition": "An outcome that occurs in a small share of the rows. A model can then look accurate by predicting the common outcome everywhere, so it is judged against the base rate.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "base_rate",
@@ -163,7 +171,8 @@
     "example_status": "shown",
     "steps": [
      "train_eda"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "special_value",
@@ -171,7 +180,8 @@
     "definition": "A code that stands for something other than a measurement, such as \"never\" or \"unknown\". Treating it as an ordinary number distorts a model.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "baseline",
@@ -197,7 +207,8 @@
     "example_status": "shown",
     "steps": [
      "models"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "logistic_regression",
@@ -205,7 +216,8 @@
     "definition": "A model that turns a weighted sum of the features into a score between zero and one. It ranks rows; its scores are not calibrated probabilities unless that is checked.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "score",
@@ -213,7 +225,8 @@
     "definition": "The number a model gives to each row to rank it. A higher score places the row earlier in the queue.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "policy",
@@ -223,7 +236,8 @@
     "example_status": "none",
     "steps": [
      "policy"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "threshold",
@@ -231,7 +245,8 @@
     "definition": "Act on every row whose score is at least the threshold. The number of actions then depends on the data.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "capacity",
@@ -239,7 +254,8 @@
     "definition": "Act on a fixed number of the highest-scored rows, matching what the team can actually handle. A share rule states the capacity as a share of the scored rows instead (the top tenth, for example), so it carries over to a population of another size.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "precision",
@@ -263,7 +279,8 @@
      ]
     },
     "example_status": "shown",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "recall",
@@ -287,7 +304,8 @@
      ]
     },
     "example_status": "shown",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "volume",
@@ -295,7 +313,8 @@
     "definition": "How many rows the policy acts on, also shown as a share of the partition.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "tie_at_cut",
@@ -303,7 +322,8 @@
     "definition": "Rows with exactly the score at the cut-off. They are counted pro rata, as an expected value, rather than broken arbitrarily.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "paired_bootstrap",
@@ -311,7 +331,8 @@
     "definition": "Resampling the same validation rows for both policies at once, so the interval describes their difference rather than each one separately.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "paired_difference",
@@ -319,7 +340,8 @@
     "definition": "The difference between two models measured on the same rows, such as the logistic model's precision minus the baseline's at one rule. Pairing removes the noise of which rows each model was measured on.",
     "example": null,
     "example_status": "needs_results",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "confidence_interval",
@@ -353,7 +375,8 @@
      ]
     },
     "example_status": "shown",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "percentile_interval",
@@ -361,7 +384,8 @@
     "definition": "The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the performance of a future campaign.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "selection_on_validation",
@@ -369,7 +393,8 @@
     "definition": "Choosing a model, a threshold, or a capacity by looking at validation results. The chosen figures are optimistic for that reason.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "documented_fact",
@@ -377,7 +402,8 @@
     "definition": "A statement backed by the dataset documentation, with its source.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "scenario_assumption",
@@ -385,7 +411,8 @@
     "definition": "A statement the scenario takes as given without evidence. It can be challenged and is never a decision.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "confirmed_decision",
@@ -395,7 +422,8 @@
     "example_status": "none",
     "steps": [
      "conclusion"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "proposal",
@@ -403,7 +431,8 @@
     "definition": "A restated choice waiting for the user's answer. It is not a decision until it is confirmed.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "stale_result",
@@ -411,7 +440,8 @@
     "definition": "A result computed under decisions that have since changed. It is kept for the record but is not cited.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "auc",
@@ -419,7 +449,8 @@
     "definition": "The chance that a randomly drawn positive row gets a higher score than a randomly drawn negative row. It judges the ranking over every possible cut-off, not the result of one decision rule. For example, for a campaign that ranks clients before calling them about a term deposit, an AUC of one half means the ranking puts subscribers ahead of non-subscribers no better than chance.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "average_precision",
@@ -427,7 +458,8 @@
     "definition": "A weighted sum of precision values, weighted by each increase in recall as the threshold moves down the ranked list. It is not an arbitrary trapezoidal area under a precision-recall curve. Unlike the AUC, it depends on the base rate. For example, it describes how pure the top of a client call list stays as recall increases.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "lift",
@@ -435,7 +467,8 @@
     "definition": "The precision of the rows acted on divided by the base rate. A lift above one means the rule finds positive rows more often than acting at random would. For example, if the clients called first subscribe twice as often as the clients in general, the lift of that call list is two.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "calibration",
@@ -443,7 +476,8 @@
     "definition": "Whether a score matches how often the outcome occurs among rows with that score. A model can rank well and still be badly calibrated; the model diagnostics compare the mean score with the observed rate in bins of rows sorted by score. For example, if the clients a model scores at about one in five subscribe far less often than one in five, its scores cannot be read as probabilities, even if the ranking is useful.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "overfitting",
@@ -451,7 +485,8 @@
     "definition": "A model that fits the noise of its training set as well as its pattern. It looks better on the rows it was fitted on than on new rows. For example, a model that memorises which months of the training clients had many subscriptions can score those clients well and the next campaign badly; the gap between training and validation figures reveals it.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "regularisation",
@@ -459,7 +494,8 @@
     "definition": "A penalty on large model weights during fitting. It trades a little fit on the training set for steadier predictions on new rows. For example, in a logistic model of client subscriptions with many job and month categories, regularisation keeps a rare category from getting an extreme weight from a handful of clients.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "one_hot_encoding",
@@ -467,7 +503,8 @@
     "definition": "Turning a category column into one indicator column per category, set for the rows that have that category. A linear model needs it because categories have no order. For example, the job of a client becomes one indicator per job, such as \"technician\" or \"retired\", and the model learns a weight for each.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "imputation",
@@ -475,7 +512,8 @@
     "definition": "Filling a missing value with a substitute, such as the median of the training set, before fitting. The substitute is computed on the training set only, and an indicator can record that the value was missing. For example, a client whose account balance is missing would get the median balance of the training clients, never a figure computed with validation clients.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "standardisation",
@@ -483,7 +521,8 @@
     "definition": "Rescaling a numeric column to a mean of zero and a standard deviation of one, with both computed on the training set. It puts features on one scale, so their weights and a penalty treat them alike. For example, a client's age in years and account balance in euros are rescaled so that the weight on balance is not tiny only because euro amounts are large numbers.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "cross_validation",
@@ -491,7 +530,8 @@
     "definition": "Dividing the development set into k folds; each fold is in turn the validation fold, measured by a model fitted on the other folds, the training folds. Every development row is measured once, so the estimate rests on more rows than one validation set; a choice made with it is still optimistic. For example, with five folds of the clients, each model is fitted five times and judged each time on clients it did not see.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "out_of_fold",
@@ -499,7 +539,8 @@
     "definition": "The score of a development row given by the model fitted on the training folds, the folds other than the row's own validation fold, so by a model that never saw that row. Every development row gets one, and the comparisons and the decision rule are read on them; they are development evidence, because the choice is made on them. For example, a client in the third fold is scored by the model fitted on the other folds' clients.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "fold_spread",
@@ -507,7 +548,8 @@
     "definition": "How much a figure moves from one validation fold to another, given as its lowest and highest fold value. It is not a confidence interval, since it describes the folds of this development set, while a confidence interval describes how a figure could move with another sample. A difference between two models smaller than the spread is not a difference this study can see. For example, if the ranking quality of the call list ranges widely across folds, a small gain of the variant over the candidate says little.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "final_test",
@@ -515,7 +557,8 @@
     "definition": "Rows set apart and sealed before any look at the data, opened once, after the model and the decision rule are frozen, to measure them on rows that played no part in any choice. It is the study's only independent evidence. For example, the clients sealed at the start are scored once by the chosen model and call list; any change made after that opening is reported as made after the final test.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "development_rows",
@@ -525,7 +568,8 @@
     "example_status": "none",
     "steps": [
      "discover_data"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "wilson_interval",
@@ -533,7 +577,8 @@
     "definition": "An interval for a proportion, such as a positive rate in a group, that stays inside zero and one and remains sensible for small groups and rates close to zero. It shows how much the rate could move with another sample of the same size. For example, a rate computed on a few dozen clients gets a wide interval, the same rate on a thousand clients a narrow one.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "permutation_null_band",
@@ -541,7 +586,8 @@
     "definition": "The range of a chart's figures after shuffling the outcome among the training rows several times with a fixed seed, which breaks any real link between the variable and the outcome. A pattern that stays inside the band is what chance alone draws; one above every shuffle is unlikely to be chance alone. For example, if the rates by job group differ less than they do after shuffling who subscribed, the differences are not evidence of anything.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "data_contingent_decision",
@@ -551,7 +597,8 @@
     "example_status": "none",
     "steps": [
      "preprocessing"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "success_criterion",
@@ -561,7 +608,8 @@
     "example_status": "none",
     "steps": [
      "success_criterion"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "single_feature_signal",
@@ -569,7 +617,8 @@
     "definition": "How well one variable alone predicts the outcome, measured out of fold on the training rows. A variable that predicts far better than the others raises a question about when its value becomes known, because a value recorded at or after the outcome would leak it. It never decides which variables to keep. For example, the length of the last call predicts the answer of that call very well, because it is only known once the call has ended.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "confusion_matrix",
@@ -577,7 +626,8 @@
     "definition": "The four counts of a decision rule against the outcome, selected positive rows, selected negative rows, missed positive rows and correctly left-out negative rows. Precision and recall are read from it. For example, of the clients a call list selects, some subscribe and some do not, and some subscribers are never called; the matrix counts each case.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "gain_curve",
@@ -585,7 +635,8 @@
     "definition": "The share of all positive rows found when acting on the top share of the rows ranked by score, for every share from the top of the list to all of it. A curve above the diagonal finds positive rows faster than acting at random. For example, it tells how many of all subscribers a campaign would reach by calling only the best-ranked tenth, fifth, or half of the clients.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "roc_curve",
@@ -593,7 +644,8 @@
     "definition": "The share of positive rows found against the share of negative rows selected, as the cut-off moves down the ranked list. The area under it is the AUC. For example, it shows how many non-subscribers a call list must also call to reach a given share of the subscribers.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "brier_score",
@@ -601,7 +653,8 @@
     "definition": "The mean squared difference between a score and the outcome counted as zero or one. Lower is better; giving every row the base rate is the reference to beat, and a model that ranks well can still score worse than it when its scores are not probabilities. For example, scoring every client with the average subscription rate gives the Brier score a model of the clients must improve on.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "heteroscedasticity",
@@ -609,7 +662,8 @@
     "definition": "Errors whose size changes with the prediction or across groups instead of staying about the same. The mean error stays a fair summary, but one interval width for every row would be wrong. For example, if a model of client deposits errs more for the clients it ranks highest, its errors are heteroscedastic.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "qq_plot",
@@ -617,7 +671,8 @@
     "definition": "The quantiles of the residuals, rescaled, plotted against the same quantiles of a normal distribution; points on the diagonal mean normal residuals. Normality is a question about the residuals after the fit, never about the raw variables, and it matters for prediction intervals rather than for the mean error. For example, a few clients with very large errors bend the ends of the plot away from the diagonal.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "example_errors",
@@ -625,7 +680,8 @@
     "definition": "A few rows where the decision and the outcome disagree, shown with their values so a person can read what the model saw. They are examples to understand, not a sample to count. For example, the called clients with the highest scores who did not subscribe can reveal a variable the model reads too much.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "training_set",
@@ -633,7 +689,8 @@
     "definition": "The rows a model is fitted on. Under k-fold cross-validation each model's training set is the training folds, every fold but the one it is measured on. For example, with five folds of the clients, each model learns from four folds of clients.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "fold",
@@ -641,7 +698,8 @@
     "definition": "One of the k parts the development set is divided into for k-fold cross-validation. Each fold is in turn the validation fold, measured by a model fitted on the other folds, the training folds. For example, with five folds the clients of the third fold are scored by a model that learnt from the clients of the four other folds.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "sample",
@@ -649,7 +707,8 @@
     "definition": "A set of rows drawn from the population the study is about; a figure computed on it would move with another sample of the same size. For example, the development set is one sample of the clients, and the holdout another one.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "forward_chaining",
@@ -657,7 +716,8 @@
     "definition": "Cross-validation that follows the order of prediction time. The development rows are cut into consecutive windows; each later window is scored once by a model fitted only on earlier rows whose outcome was already known, and the first window, the warm-up, only trains and is never scored. A choice made with it is still optimistic. For example, the clients of the third window are scored by a model fitted on the clients of the first two windows, never on later ones.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    }
   ],
   "steps": {

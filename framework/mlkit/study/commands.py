@@ -2000,6 +2000,13 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
     # partition planner is not implemented must be refused without inspecting the source data.
     case = c.require_supported(c.load_case(_case_file(case_path), verify_data=False))
     assurance.require_initialization(case, reliability_profile)
+    # L3 (D4 A): the case's translation sidecar is validated before any data byte is read; a
+    # committed translation that drifted from its case is refused like an invalid case.
+    from . import l10n
+    try:
+        sidecar = l10n.load(case)
+    except l10n.L10nError as exc:
+        raise c.CaseError('invalid_case', str(exc), problems=exc.problems) from exc
     c.verify_dataset(case)
     c.prior_exposed_keys(case)
     # ADR 0006: the final test is assigned and sealed before any look. Row keys and
@@ -2022,6 +2029,8 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
         raise partition.with_final_test_counts(exc, check)
     partition.refuse_failed_check(case, check)
     state = st.initial_state(case, language=language, reliability_profile=reliability_profile)
+    if sidecar is not None:
+        state[l10n.STATE_KEY] = {'path': sidecar['path'], 'sha256': sidecar['sha256']}
     study_dir.mkdir(parents=True, exist_ok=True)
     dev_sha = store.put_blob(rec.row_keys_bytes(assigned['development']))
     final_sha = store.put_blob(rec.row_keys_bytes(assigned['final_test']))
@@ -2070,7 +2079,8 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
                     'structural_exposure': {'exposure_id': record['exposure_id'],
                                             'n_rows': record['n_rows']},
                     'final_test': partition.final_test_status(snapshot),
-                    'plan': st.derive_plan(snapshot),
+                    # L3 (R4, T2): the plan in the study language, as ``status`` gives it.
+                    'plan': _localized_plan(snapshot),
                     'next_action': companion_env.annotate(
                         audience.next_action(st.next_action(snapshot), st.language_of(snapshot)),
                         study_dir, st.language_of(snapshot), produced={'command': 'init'}),
@@ -2080,6 +2090,16 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
                             'tutorial choices, not decisions. Every decision starts open.',
                     'notices': notices,
                     'deliverables': launch.deliverables(study_dir)})
+
+
+def _localized_plan(state: Mapping) -> list[dict]:
+    """The derived plan with each step's title and question in the study language
+    (:func:`mlkit.study.junior.step_text`, the path ``view.build`` takes for ``status``)."""
+    from . import junior
+    language = st.language_of(state)
+    return [{**step, 'title': junior.step_text(step['title'], language),
+             'question': junior.step_text(step['question'], language)}
+            for step in st.derive_plan(state)]
 
 
 SUMMARY_FIXED_KEYS = ('schema', 'ok', 'study', 'revision')
@@ -2106,7 +2126,7 @@ def status(study_dir, since: int | None = None, summary: bool = False,
     if summary:
         out = view.summary(built)
         if digest:
-            out = view.with_digest(study, built, out, since=since)
+            out = view.with_digest(study, built, out, since=since, leases=leases)
         payload = {'schema': SUMMARY_SCHEMA, 'ok': True, 'study': str(study.study_dir),
                    'revision': study.revision, 'since': since,
                    'changed': None if since is None else study.revision > since, **out}
@@ -2140,7 +2160,8 @@ def plan(study_dir) -> Outcome:
 
     study = read.open(study_dir)
     state = study.state
-    steps = st.derive_plan(state)
+    # L3 (R4, T2): the step titles and questions in the study language, as ``status``.
+    steps = _localized_plan(state)
     # v0.3 (WP-C): the view's next action, with its junior-ready keys (the same as status).
     return Outcome({'schema': SCHEMAS['plan'], 'ok': True, 'study': str(study.study_dir),
                     'revision': study.revision, 'steps': steps,

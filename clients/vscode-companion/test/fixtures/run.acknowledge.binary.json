@@ -88,6 +88,7 @@
     "evidence_refs": [],
     "detail_topics": ["metric", "uncertainty"]
    }
-  }
+  },
+  "question_junior": null
  }
 }

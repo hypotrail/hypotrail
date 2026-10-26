@@ -24,11 +24,12 @@ import contextlib
 import contextvars
 import copy
 import functools
+import re
 from importlib import resources
 
 import yaml
 
-CONTENT_FILES = ('glossary', 'steps', 'activities', 'report', 'report_fr',
+CONTENT_FILES = ('glossary', 'steps', 'steps_fr', 'activities', 'report', 'report_fr',
                  # Advanced companion (CLI-CONTRACT-COMPANION C11): WP-0 stubs that carry
                  # their schema header only; WP-E1 fills digest, WP-E2 evidence and learn,
                  # WP-E3 drafts.
@@ -96,16 +97,69 @@ def report_language() -> str:
     return _REPORT_LANGUAGE.get()
 
 
-def concept(term_id: str | None, task: str | None = None) -> tuple[str, str, str] | None:
-    """``(term, definition, language)`` of a glossary entry as the report shows it: in a
-    French report (v0.3, WP-J) the French term and definition when the entry has
-    ``definition_fr`` (the English otherwise); None for an unknown term."""
-    entry = glossary(term_id, task) if term_id else None
+# L3 (owner session 2026-10-26, remark R4): the case of the study a surface is written for
+# (``study_context`` sets it from the view). The glossary's "For example" sentences speak of
+# the canonical case of each task (``example_cases`` of ``content/glossary.yaml``); in a
+# study of another case they would explain the term with somebody else's data, so a surface
+# shows the definition without them there, and the study's own figures (``cited_example``)
+# give the contextual example.
+_CASE_ID = contextvars.ContextVar('hypotrail_texts_case_id', default=None)
+
+
+def example_cases(task: str | None = None) -> tuple[str, ...]:
+    """The case ids (without their version suffix) the glossary's own examples speak of."""
+    cases = load('glossary').get('example_cases') or {}
+    return tuple(cases.get(current_task(task)) or ())
+
+
+_EXAMPLE_SENTENCE = re.compile(r'\s*(?:For example|Par exemple),.*?\.(?=\s|$)', re.S)
+
+
+@contextlib.contextmanager
+def case_context(case_id: str | None):
+    token = _CASE_ID.set(case_id)
+    try:
+        yield
+    finally:
+        _CASE_ID.reset(token)
+
+
+def examples_apply(task: str | None = None) -> bool:
+    """Whether the glossary's own examples speak of this study's case (always true outside
+    a study context)."""
+    case_id = _CASE_ID.get()
+    return case_id is None or re.sub(r'-v\d+$', '', case_id) in example_cases(task)
+
+
+def without_examples(text: str) -> str:
+    """``text`` without its "For example, ..." (or "Par exemple, ...") sentences."""
+    return _EXAMPLE_SENTENCE.sub('', text or '').strip()
+
+
+def definition(entry: dict | None, task: str | None = None) -> tuple[str, str] | None:
+    """``(definition, language)`` of a glossary entry as a surface shows it: in the report's
+    language when the entry has it (``definition_fr``), without the glossary's examples in a
+    study of another case (:func:`examples_apply`)."""
     if not entry:
         return None
     if _REPORT_LANGUAGE.get() == 'fr' and entry.get('definition_fr'):
-        return entry.get('term_fr') or entry['term'], entry['definition_fr'], 'fr'
-    return entry['term'], entry['definition'], 'en'
+        text, lang = entry['definition_fr'], 'fr'
+    else:
+        text, lang = entry['definition'], 'en'
+    return (text if examples_apply(task) else without_examples(text)), lang
+
+
+def concept(term_id: str | None, task: str | None = None) -> tuple[str, str, str] | None:
+    """``(term, definition, language)`` of a glossary entry as the report shows it: in a
+    French report (v0.3, WP-J) the French term and definition when the entry has
+    ``definition_fr`` (the English otherwise); None for an unknown term. L3: without the
+    glossary's examples in a study of another case (:func:`definition`)."""
+    entry = glossary(term_id, task) if term_id else None
+    if not entry:
+        return None
+    text, lang = definition(entry, task)
+    term = (entry.get('term_fr') or entry['term']) if lang == 'fr' else entry['term']
+    return term, text, lang
 
 
 @contextlib.contextmanager
@@ -126,8 +180,9 @@ def is_forward() -> bool:
 def study_context(view):
     """The task and the evaluation scheme of a view (or a state): both contexts at once
     (and whether its plan chains forward in time, E4-5)."""
+    case_id = ((view or {}).get('case') or {}).get('id') if isinstance(view, dict) else None
     with task_context(view.get('task')), scheme_context(scheme_of(view)), \
-            forward_context(split_method_of(view) in FORWARD_METHODS):
+            forward_context(split_method_of(view) in FORWARD_METHODS), case_context(case_id):
         yield
 
 
@@ -210,6 +265,8 @@ def glossary_terms(task: str | None = None) -> dict:
                 if 'definition' in value and 'definition_fr' not in value:
                     # v0.3 (WP-J): a French definition describes the text it translates.
                     merged.pop('definition_fr', None)
+                if 'cited_example' in value and 'cited_example_fr' not in value:
+                    merged.pop('cited_example_fr', None)        # L3: the same rule
                 out[key] = merged
     return out
 
@@ -245,7 +302,20 @@ def report(task: str | None = None) -> dict:
 
 
 def step(step_id: str, task: str | None = None) -> dict:
-    data = load('steps')
+    english = load('steps')
+    # L3 (owner session 2026-10-26, R4): a French report, notebook or "Learn" tab reads each
+    # section with its French form (``steps_fr.yaml``) merged over the English.
+    french = load('steps_fr') if _REPORT_LANGUAGE.get() == 'fr' else {}
+
+    def section(name: str) -> dict:
+        out = {}
+        for key, value in english.get(name, {}).items():
+            fr = (french.get(name) or {}).get(key)
+            out[key] = _merge(value, fr) if isinstance(value, dict) and fr else value
+        return out
+    data = {name: section(name) for name in ('steps', 'regression_steps', 'cv_steps',
+                                             'regression_cv_steps', 'forward_steps',
+                                             'regression_forward_steps')}
     regression = current_task(task) == REGRESSION
     if regression and step_id in data.get('regression_steps', {}):
         out = data['regression_steps'][step_id]
@@ -264,7 +334,15 @@ def step(step_id: str, task: str | None = None) -> dict:
     return out
 
 
+def step_status_words() -> dict:
+    """``{pending, stale}`` of ``steps.yaml`` in the report's language (L3)."""
+    english = load('steps')
+    french = load('steps_fr') if _REPORT_LANGUAGE.get() == 'fr' else {}
+    return {k: french.get(k) or english[k] for k in ('pending', 'stale')}
+
+
 VARIANT_ORDINALS = {'2': 'second', '3': 'third'}
+VARIANT_ORDINALS_FR = {'2': 'deuxième', '3': 'troisième'}
 
 
 def activity(slot: str, task: str | None = None) -> dict:
@@ -299,8 +377,12 @@ def activity(slot: str, task: str | None = None) -> dict:
         ordinal = VARIANT_ORDINALS.get(column) if base == 'fit.variant' else None
         # v0.3 (WP-F1): the second and third variants, in words (a digit in a label would
         # read as an uncited number).
-        spec['label'] = (f'{spec.get("label", base)}, the {ordinal} one' if ordinal
-                         else f'{spec.get("label", base)}: {column}')
+        if ordinal and _REPORT_LANGUAGE.get() == 'fr':
+            # L3: the ordinal of a French report (no digit, as above).
+            spec['label'] = f'{spec.get("label", base)}, la {VARIANT_ORDINALS_FR[column]}'
+        else:
+            spec['label'] = (f'{spec.get("label", base)}, the {ordinal} one' if ordinal
+                             else f'{spec.get("label", base)}: {column}')
         return spec
     return {}
 

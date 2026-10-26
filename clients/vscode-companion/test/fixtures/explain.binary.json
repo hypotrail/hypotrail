@@ -23,7 +23,8 @@
     "definition": "The moment when the score is computed and acted on. Only information known at that moment may enter the model.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "leakage",
@@ -31,7 +32,8 @@
     "definition": "A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "feature_availability",
@@ -39,7 +41,8 @@
     "definition": "Whether a variable is known at the prediction time. It is a decision about the use case, not a property the data can prove.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "validation_partition",
@@ -47,7 +50,8 @@
     "definition": "Rows held apart from model fitting and used to compare models and choose a policy. Once used to choose, they are no longer independent evidence.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "stratified_split",
@@ -55,7 +59,8 @@
     "definition": "A random division of the rows that keeps the share of the positive outcome similar in the training and validation partitions.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "exposure",
@@ -63,7 +68,8 @@
     "definition": "The record of which rows were read, by which activity, and why. Changing the split does not make rows already seen unseen.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "distribution",
@@ -71,7 +77,8 @@
     "definition": "How the values of one column spread over the rows, read as how often each value occurs or, for a measurement, its range, quartiles, and missing cells. Read on training rows only, it leaves the validation rows unexplored.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "class_imbalance",
@@ -79,7 +86,8 @@
     "definition": "An outcome that occurs in a small share of the rows. A model can then look accurate by predicting the common outcome everywhere, so it is judged against the base rate.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "base_rate",
@@ -105,7 +113,8 @@
     "example_status": "shown",
     "steps": [
      "train_eda"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "special_value",
@@ -113,7 +122,8 @@
     "definition": "A code that stands for something other than a measurement, such as \"never\" or \"unknown\". Treating it as an ordinary number distorts a model.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "baseline",
@@ -121,7 +131,8 @@
     "definition": "The simplest reference model, a constant score equal to the training base rate. Keeping the baseline is a valid conclusion.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "logistic_regression",
@@ -129,7 +140,8 @@
     "definition": "A model that turns a weighted sum of the features into a score between zero and one. It ranks rows; its scores are not calibrated probabilities unless that is checked.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "score",
@@ -137,7 +149,8 @@
     "definition": "The number a model gives to each row to rank it. A higher score places the row earlier in the queue.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "policy",
@@ -145,7 +158,8 @@
     "definition": "The rule that turns scores into actions, either a threshold on the score or a fixed capacity of rows to act on.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "threshold",
@@ -153,7 +167,8 @@
     "definition": "Act on every row whose score is at least the threshold. The number of actions then depends on the data.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "capacity",
@@ -161,7 +176,8 @@
     "definition": "Act on a fixed number of the highest-scored rows, matching what the team can actually handle.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "precision",
@@ -169,7 +185,8 @@
     "definition": "Among the rows acted on, the share that turned out positive.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "recall",
@@ -177,7 +194,8 @@
     "definition": "Among all positive rows, the share the policy reached.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "volume",
@@ -185,7 +203,8 @@
     "definition": "How many rows the policy acts on, also shown as a share of the partition.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "tie_at_cut",
@@ -193,7 +212,8 @@
     "definition": "Rows with exactly the score at the cut-off. They are counted pro rata, as an expected value, rather than broken arbitrarily.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "paired_bootstrap",
@@ -201,7 +221,8 @@
     "definition": "Resampling the same validation rows for both policies at once, so the interval describes their difference rather than each one separately.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "paired_difference",
@@ -209,7 +230,8 @@
     "definition": "The difference between two models measured on the same rows, such as the logistic model's precision minus the baseline's at one rule. Pairing removes the noise of which rows each model was measured on.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "confidence_interval",
@@ -217,7 +239,8 @@
     "definition": "A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for a future campaign.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "percentile_interval",
@@ -225,7 +248,8 @@
     "definition": "The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the performance of a future campaign.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "selection_on_validation",
@@ -233,7 +257,8 @@
     "definition": "Choosing a model, a threshold, or a capacity by looking at validation results. The chosen figures are optimistic for that reason.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "documented_fact",
@@ -241,7 +266,8 @@
     "definition": "A statement backed by the dataset documentation, with its source.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "scenario_assumption",
@@ -249,7 +275,8 @@
     "definition": "A statement the scenario takes as given without evidence. It can be challenged and is never a decision.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "confirmed_decision",
@@ -257,7 +284,8 @@
     "definition": "A choice recorded with the user's own words in reply to a restatement. The engine records the words; it cannot verify who typed them.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "proposal",
@@ -265,7 +293,8 @@
     "definition": "A restated choice waiting for the user's answer. It is not a decision until it is confirmed.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "stale_result",
@@ -273,7 +302,8 @@
     "definition": "A result computed under decisions that have since changed. It is kept for the record but is not cited.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    }
   ],
   "steps": {

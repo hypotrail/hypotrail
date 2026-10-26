@@ -1,0 +1,3537 @@
+{
+ "about": {
+  "schema": "hypotrail.evidence/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "evidence",
+   "--json"
+  ],
+  "note": "A French Auto MPG study (L3): the engine texts in both languages."
+ },
+ "payload": {
+  "schema": "hypotrail.evidence/1",
+  "ok": true,
+  "study": "/studies/auto mpg fr",
+  "revision": 32,
+  "task": "regression",
+  "results": [
+   {
+    "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+    "activity": "split",
+    "slot": "split",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "development",
+    "n_rows": 318,
+    "params": {},
+    "upstream": {},
+    "downstream": [
+     "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
+     "876eda50acd11c16bd83567bc96af1b37a294ec7f974bc5de94df8d1d911f95d",
+     "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
+     "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+     "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+     "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
+     "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d"
+    ],
+    "created": "2026-10-26T13:22:01.128720+00:00",
+    "started_revision": 12,
+    "execution_id": "e_839104bf9d2cae503476be39",
+    "exposure_id": "x_5992d567d884470383377b14aae792e8",
+    "values": {
+     "method": "ordinal_cutoff",
+     "column": "model_year",
+     "cutoff": 79,
+     "n_rows": 318,
+     "partitions": {
+      "train": {
+       "n_rows": 222,
+       "column_min": 70,
+       "column_max": 78,
+       "distinct_values": 9
+      },
+      "validation": {
+       "n_rows": 96,
+       "column_min": 79,
+       "column_max": 82,
+       "distinct_values": 4
+      }
+     },
+     "validation_share": 0.3018867924528302,
+     "stratified_on": null,
+     "implementation": "mlkit.study.activities (ordinal cutoff on the integer values of the time column, never converted to a date)",
+     "scenario": "Rows with model_year >= 79 are validated on a model fitted on rows with model_year < 79: later periods validated on earlier ones. Values beyond the training range are extrapolation.",
+     "groups": {
+      "column": "car_name",
+      "n_groups": 254,
+      "train_groups": 178,
+      "validation_groups": 89,
+      "shared_groups": 13,
+      "validation_rows": 96,
+      "validation_rows_in_shared_groups": 15,
+      "validation_share_in_shared_groups": 0.15625,
+      "examples": [
+       "amc concord",
+       "buick century",
+       "buick estate wagon (sw)",
+       "buick skylark",
+       "chevrolet caprice classic"
+      ],
+      "capability": "grouped split (v0.2)",
+      "note": "Grouped split is not available in this version: validation rows of a shared group are not independent of the training rows."
+     },
+     "overlap": null
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "222",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+       "path": "partitions.train.n_rows",
+       "value": 222,
+       "format": "int"
+      },
+      {
+       "text": " lignes d'entraînement / "
+      },
+      {
+       "text": "96",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+       "path": "partitions.validation.n_rows",
+       "value": 96,
+       "format": "int"
+      },
+      {
+       "text": " lignes de validation"
+      }
+     ]
+    },
+    "question_junior": null,
+    "texts": null
+   },
+   {
+    "result_id": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
+    "activity": "eda.target_summary",
+    "slot": "eda.target_summary",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 222,
+    "params": {},
+    "upstream": {
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [],
+    "created": "2026-10-26T13:22:02.844937+00:00",
+    "started_revision": 14,
+    "execution_id": "e_92aaf17d67568d5f7880d18a",
+    "exposure_id": "x_85c6529dfc7247aca1f157e35c1366db",
+    "values": {
+     "partition": "train",
+     "target": "mpg",
+     "unit": "mpg",
+     "n_rows": 222,
+     "n_missing": 0,
+     "n": 222,
+     "mean": 20.565315315315317,
+     "sd": 6.195978453412262,
+     "min": 9.0,
+     "q25": 15.5,
+     "median": 19.2,
+     "q75": 25.0,
+     "max": 43.1,
+     "note": "Distribution of the target on training rows, in its unit. The mean is what the baseline predicts for every row.",
+     "mean_interval": {
+      "low": 19.74578253659207,
+      "high": 21.384848094038563,
+      "level": 0.95,
+      "method": "t"
+     },
+     "question": "How is the target distributed among the training rows?"
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Moyenne "
+      },
+      {
+       "text": "20.57",
+       "result_id": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
+       "path": "mean",
+       "value": 20.565315315315317,
+       "format": "f2"
+      },
+      {
+       "text": " mpg, écart-type "
+      },
+      {
+       "text": "6.20",
+       "result_id": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
+       "path": "sd",
+       "value": 6.195978453412262,
+       "format": "f2"
+      },
+      {
+       "text": " sur "
+      },
+      {
+       "text": "222",
+       "result_id": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
+       "path": "n_rows",
+       "value": 222,
+       "format": "int"
+      },
+      {
+       "text": " lignes d'entraînement"
+      }
+     ]
+    },
+    "question_junior": "Comment la cible se répartit-elle parmi les lignes d'entraînement ?",
+    "texts": {
+     "en": {
+      "question": "How is the target distributed among the training rows?",
+      "note": "Distribution of the target on training rows, in its unit. The mean is what the baseline predicts for every row.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Comment la cible se répartit-elle parmi les lignes d'entraînement ?",
+      "note": "Distribution de la cible sur les lignes d'entraînement, dans son unité. La moyenne est ce que le modèle de référence prédit pour chaque ligne.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "876eda50acd11c16bd83567bc96af1b37a294ec7f974bc5de94df8d1d911f95d",
+    "activity": "eda.special_values",
+    "slot": "eda.special_values",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 222,
+    "params": {},
+    "upstream": {
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [],
+    "created": "2026-10-26T13:22:04.701958+00:00",
+    "started_revision": 16,
+    "execution_id": "e_a6285653c29e349d0b0beb2b",
+    "exposure_id": "x_ba978c06c77f4611becef544ac4640e5",
+    "values": {
+     "partition": "train",
+     "n_rows": 222,
+     "target": "mpg",
+     "unit": "mpg",
+     "special_values": [
+      {
+       "column": "horsepower",
+       "value": "?",
+       "meaning": "Missing value.",
+       "status": "observed",
+       "source": "data/auto-mpg.names:44 documents 6 missing horsepower values; structural inspection of data/auto-mpg.data shows that they are written \"?\"",
+       "n_rows": 2,
+       "share": 0.009009009009009009,
+       "mean_target": 23.0
+      }
+     ],
+     "co_occurrence": [],
+     "note": "Counts on training rows. A missing-value marker is imputed by the model, with an indicator column for a numeric variable.",
+     "question": "How many training rows carry each special value, and how does the target look among them?"
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Valeurs spéciales comptées sur "
+      },
+      {
+       "text": "222",
+       "result_id": "876eda50acd11c16bd83567bc96af1b37a294ec7f974bc5de94df8d1d911f95d",
+       "path": "n_rows",
+       "value": 222,
+       "format": "int"
+      },
+      {
+       "text": " lignes d'entraînement"
+      }
+     ]
+    },
+    "question_junior": "Combien des lignes d'entraînement portent chaque valeur spéciale, et à quoi ressemble la cible parmi elles ?",
+    "texts": {
+     "en": {
+      "question": "How many training rows carry each special value, and how does the target look among them?",
+      "note": "Counts on training rows. A missing-value marker is imputed by the model, with an indicator column for a numeric variable.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {
+       "horsepower=?": "Missing value."
+      }
+     },
+     "fr": {
+      "question": "Combien des lignes d'entraînement portent chaque valeur spéciale, et à quoi ressemble la cible parmi elles ?",
+      "note": "Effectifs sur les lignes d'entraînement. Un marqueur de valeur manquante est imputé par le modèle, avec une colonne indicatrice pour une variable numérique.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {
+       "horsepower=?": "Valeur manquante."
+      }
+     }
+    }
+   },
+   {
+    "result_id": "6f96fd645db7bc66a43b7688265afd25b0499653e3f6452f1106b6bc1acf9048",
+    "activity": "eda.quality",
+    "slot": "eda.quality",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "development",
+    "n_rows": 318,
+    "params": {
+     "partition": "development"
+    },
+    "upstream": {},
+    "downstream": [],
+    "created": "2026-10-26T13:22:06.718283+00:00",
+    "started_revision": 18,
+    "execution_id": "e_b5c9bc6dc2acb308345f4b5b",
+    "exposure_id": "x_58da307c2f5942be825a0a3727d96174",
+    "values": {
+     "partition": "development",
+     "n_rows": 318,
+     "n_columns": 8,
+     "target_read": false,
+     "missing": [
+      {
+       "column": "cylinders",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "displacement",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "horsepower",
+       "n_missing": 6,
+       "share": 0.018867924528301886
+      },
+      {
+       "column": "weight",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "acceleration",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "model_year",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "origin",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "car_name",
+       "n_missing": 0,
+       "share": 0.0
+      }
+     ],
+     "n_rows_with_missing": 6,
+     "co_missing": [
+      {
+       "columns": [
+        "horsepower"
+       ],
+       "n_rows": 6,
+       "share": 0.018867924528301886
+      }
+     ],
+     "duplicates": {
+      "n_rows": 0,
+      "n_groups": 0,
+      "definition": "rows identical on every column except the target"
+     },
+     "cardinality": [
+      {
+       "column": "origin",
+       "type": "category",
+       "n_distinct": 3,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "car_name",
+       "type": "string",
+       "n_distinct": 254,
+       "rare": [
+        {
+         "value": "amc ambassador brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "amc ambassador dpl",
+         "n_rows": 1
+        },
+        {
+         "value": "amc ambassador sst",
+         "n_rows": 1
+        },
+        {
+         "value": "amc concord d/l",
+         "n_rows": 1
+        },
+        {
+         "value": "amc concord dl",
+         "n_rows": 1
+        },
+        {
+         "value": "amc concord dl 6",
+         "n_rows": 1
+        },
+        {
+         "value": "amc hornet sportabout (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "amc pacer",
+         "n_rows": 1
+        },
+        {
+         "value": "amc pacer d/l",
+         "n_rows": 1
+        },
+        {
+         "value": "amc rebel sst",
+         "n_rows": 1
+        },
+        {
+         "value": "amc spirit dl",
+         "n_rows": 1
+        },
+        {
+         "value": "audi 100 ls",
+         "n_rows": 1
+        },
+        {
+         "value": "audi 4000",
+         "n_rows": 1
+        },
+        {
+         "value": "audi 5000",
+         "n_rows": 1
+        },
+        {
+         "value": "audi 5000s (diesel)",
+         "n_rows": 1
+        },
+        {
+         "value": "bmw 2002",
+         "n_rows": 1
+        },
+        {
+         "value": "bmw 320i",
+         "n_rows": 1
+        },
+        {
+         "value": "buick century 350",
+         "n_rows": 1
+        },
+        {
+         "value": "buick century limited",
+         "n_rows": 1
+        },
+        {
+         "value": "buick century luxus (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "buick century special",
+         "n_rows": 1
+        },
+        {
+         "value": "buick electra 225 custom",
+         "n_rows": 1
+        },
+        {
+         "value": "buick lesabre custom",
+         "n_rows": 1
+        },
+        {
+         "value": "buick opel isuzu deluxe",
+         "n_rows": 1
+        },
+        {
+         "value": "buick regal sport coupe (turbo)",
+         "n_rows": 1
+        },
+        {
+         "value": "buick skylark 320",
+         "n_rows": 1
+        },
+        {
+         "value": "buick skylark limited",
+         "n_rows": 1
+        },
+        {
+         "value": "cadillac eldorado",
+         "n_rows": 1
+        },
+        {
+         "value": "cadillac seville",
+         "n_rows": 1
+        },
+        {
+         "value": "capri ii",
+         "n_rows": 1
+        },
+        {
+         "value": "chevroelt chevelle malibu",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet bel air",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet cavalier",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet cavalier 2-door",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet cavalier wagon",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet chevelle concours (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet chevelle malibu",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet chevelle malibu classic",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet concours",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet malibu classic (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet monza 2+2",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet nova custom",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet vega (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet vega 2300",
+         "n_rows": 1
+        },
+        {
+         "value": "chevy c10",
+         "n_rows": 1
+        },
+        {
+         "value": "chevy c20",
+         "n_rows": 1
+        },
+        {
+         "value": "chevy s-10",
+         "n_rows": 1
+        },
+        {
+         "value": "chrysler cordoba",
+         "n_rows": 1
+        },
+        {
+         "value": "chrysler lebaron medallion",
+         "n_rows": 1
+        },
+        {
+         "value": "chrysler lebaron salon",
+         "n_rows": 1
+        },
+        {
+         "value": "chrysler newport royal",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 1200",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 200-sx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 200sx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 210 mpg",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 280-zx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 310",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 310 gx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 510",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 510 (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 510 hatchback",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 610",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 810",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 810 maxima",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun b-210",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun b210 gx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun f-10 hatchback",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge aries se",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge aries wagon (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge aspen 6",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge aspen se",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge challenger se",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge colt (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge colt hardtop",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge colt hatchback custom",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge colt m/m",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge coronet custom (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge d100",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge dart custom",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge diplomat",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge monaco brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge omni",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge rampage",
+         "n_rows": 1
+        },
+        {
+         "value": "fiat 124 sport coupe",
+         "n_rows": 1
+        },
+        {
+         "value": "fiat 124 tc",
+         "n_rows": 1
+        },
+        {
+         "value": "fiat 131",
+         "n_rows": 1
+        },
+        {
+         "value": "ford country",
+         "n_rows": 1
+        },
+        {
+         "value": "ford escort 2h",
+         "n_rows": 1
+        },
+        {
+         "value": "ford f108",
+         "n_rows": 1
+        },
+        {
+         "value": "ford fairmont",
+         "n_rows": 1
+        },
+        {
+         "value": "ford fairmont (auto)",
+         "n_rows": 1
+        },
+        {
+         "value": "ford fairmont 4",
+         "n_rows": 1
+        },
+        {
+         "value": "ford fairmont futura",
+         "n_rows": 1
+        },
+        {
+         "value": "ford futura",
+         "n_rows": 1
+        },
+        {
+         "value": "ford granada",
+         "n_rows": 1
+        },
+        {
+         "value": "ford granada ghia",
+         "n_rows": 1
+        },
+        {
+         "value": "ford ltd",
+         "n_rows": 1
+        },
+        {
+         "value": "ford ltd landau",
+         "n_rows": 1
+        },
+        {
+         "value": "ford mustang",
+         "n_rows": 1
+        },
+        {
+         "value": "ford mustang cobra",
+         "n_rows": 1
+        },
+        {
+         "value": "ford mustang gl",
+         "n_rows": 1
+        },
+        {
+         "value": "ford mustang ii 2+2",
+         "n_rows": 1
+        },
+        {
+         "value": "ford pinto (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "ford ranger",
+         "n_rows": 1
+        },
+        {
+         "value": "ford thunderbird",
+         "n_rows": 1
+        },
+        {
+         "value": "ford torino",
+         "n_rows": 1
+        },
+        {
+         "value": "hi 1200d",
+         "n_rows": 1
+        },
+        {
+         "value": "honda accord",
+         "n_rows": 1
+        },
+        {
+         "value": "honda accord cvcc",
+         "n_rows": 1
+        },
+        {
+         "value": "honda civic (auto)",
+         "n_rows": 1
+        },
+        {
+         "value": "honda civic 1500 gl",
+         "n_rows": 1
+        },
+        {
+         "value": "honda civic cvcc",
+         "n_rows": 1
+        },
+        {
+         "value": "honda prelude",
+         "n_rows": 1
+        },
+        {
+         "value": "maxda rx3",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc 4",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc custom",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc custom l",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc deluxe",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda rx-4",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda rx2 coupe",
+         "n_rows": 1
+        },
+        {
+         "value": "mercedes benz 300d",
+         "n_rows": 1
+        },
+        {
+         "value": "mercedes-benz 240d",
+         "n_rows": 1
+        },
+        {
+         "value": "mercedes-benz 280s",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury capri 2000",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury capri v6",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury lynx l",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury marquis brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury monarch ghia",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury zephyr",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury zephyr 6",
+         "n_rows": 1
+        },
+        {
+         "value": "nissan stanza xe",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile cutlass ciera (diesel)",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile cutlass ls",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile cutlass salon brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile cutlass supreme",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile delta 88 royale",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile omega",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile omega brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile starfire sx",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile vista cruiser",
+         "n_rows": 1
+        },
+        {
+         "value": "opel 1900",
+         "n_rows": 1
+        },
+        {
+         "value": "peugeot 304",
+         "n_rows": 1
+        },
+        {
+         "value": "peugeot 505s turbo diesel",
+         "n_rows": 1
+        },
+        {
+         "value": "peugeot 604sl",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth arrow gs",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth champ",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth cricket",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth custom suburb",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth duster",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth fury",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth fury gran sedan",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth grand fury",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth horizon tc3",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth sapporo",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth satellite",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth satellite custom",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth satellite custom (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth valiant custom",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth volare custom",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth volare premier v8",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac astro",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac catalina brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac firebird",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac grand prix",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac grand prix lj",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac j2000 se hatchback",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac lemans v6",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac phoenix",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac phoenix lj",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac safari (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac sunbird coupe",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac ventura sj",
+         "n_rows": 1
+        },
+        {
+         "value": "renault 12 (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "renault 12tl",
+         "n_rows": 1
+        },
+        {
+         "value": "renault 18i",
+         "n_rows": 1
+        },
+        {
+         "value": "renault lecar deluxe",
+         "n_rows": 1
+        },
+        {
+         "value": "saab 99e",
+         "n_rows": 1
+        },
+        {
+         "value": "saab 99gle",
+         "n_rows": 1
+        },
+        {
+         "value": "subaru dl",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota carina",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota celica gt",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota celica gt liftback",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corolla 1200",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corolla 1600 (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corolla liftback",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corolla tercel",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corona hardtop",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota cressida",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota starlet",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota tercel",
+         "n_rows": 1
+        },
+        {
+         "value": "toyouta corona mark ii (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "triumph tr7 coupe",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen 1131 deluxe sedan",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen 411 (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen jetta",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen model 111",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen rabbit custom",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen rabbit custom diesel",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen rabbit l",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen scirocco",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen super beetle",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen type 3",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo 144ea",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo 145e (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo 244dl",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo 264gl",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo diesel",
+         "n_rows": 1
+        },
+        {
+         "value": "vw pickup",
+         "n_rows": 1
+        },
+        {
+         "value": "vw rabbit c (diesel)",
+         "n_rows": 1
+        },
+        {
+         "value": "vw rabbit custom",
+         "n_rows": 1
+        },
+        {
+         "value": "amc concord",
+         "n_rows": 2
+        },
+        {
+         "value": "amc matador (sw)",
+         "n_rows": 2
+        },
+        {
+         "value": "audi 100ls",
+         "n_rows": 2
+        },
+        {
+         "value": "buick century",
+         "n_rows": 2
+        },
+        {
+         "value": "buick estate wagon (sw)",
+         "n_rows": 2
+        },
+        {
+         "value": "buick skylark",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet caprice classic",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet malibu",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet monte carlo landau",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet nova",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet vega",
+         "n_rows": 2
+        },
+        {
+         "value": "datsun 210",
+         "n_rows": 2
+        },
+        {
+         "value": "datsun 710",
+         "n_rows": 2
+        },
+        {
+         "value": "dodge aspen",
+         "n_rows": 2
+        },
+        {
+         "value": "fiat 128",
+         "n_rows": 2
+        },
+        {
+         "value": "ford country squire (sw)",
+         "n_rows": 2
+        },
+        {
+         "value": "ford gran torino (sw)",
+         "n_rows": 2
+        },
+        {
+         "value": "mazda 626",
+         "n_rows": 2
+        },
+        {
+         "value": "opel manta",
+         "n_rows": 2
+        },
+        {
+         "value": "plymouth fury iii",
+         "n_rows": 2
+        },
+        {
+         "value": "plymouth reliant",
+         "n_rows": 2
+        },
+        {
+         "value": "plymouth valiant",
+         "n_rows": 2
+        },
+        {
+         "value": "pontiac catalina",
+         "n_rows": 2
+        },
+        {
+         "value": "saab 99le",
+         "n_rows": 2
+        },
+        {
+         "value": "subaru",
+         "n_rows": 2
+        },
+        {
+         "value": "volkswagen dasher",
+         "n_rows": 2
+        },
+        {
+         "value": "volkswagen rabbit",
+         "n_rows": 2
+        },
+        {
+         "value": "vw rabbit",
+         "n_rows": 2
+        },
+        {
+         "value": "amc gremlin",
+         "n_rows": 3
+        },
+        {
+         "value": "amc hornet",
+         "n_rows": 3
+        },
+        {
+         "value": "chevrolet chevette",
+         "n_rows": 3
+        },
+        {
+         "value": "chevrolet citation",
+         "n_rows": 3
+        },
+        {
+         "value": "chevrolet impala",
+         "n_rows": 3
+        },
+        {
+         "value": "dodge colt",
+         "n_rows": 3
+        },
+        {
+         "value": "ford galaxie 500",
+         "n_rows": 3
+        },
+        {
+         "value": "ford gran torino",
+         "n_rows": 3
+        },
+        {
+         "value": "ford maverick",
+         "n_rows": 3
+        },
+        {
+         "value": "honda civic",
+         "n_rows": 3
+        },
+        {
+         "value": "peugeot 504",
+         "n_rows": 3
+        },
+        {
+         "value": "toyota corolla",
+         "n_rows": 4
+        },
+        {
+         "value": "toyota corona",
+         "n_rows": 4
+        },
+        {
+         "value": "amc matador",
+         "n_rows": 5
+        },
+        {
+         "value": "ford pinto",
+         "n_rows": 5
+        }
+       ],
+       "rare_rows": 30
+      }
+     ],
+     "ranges": [
+      {
+       "column": "cylinders",
+       "type": "integer",
+       "min": 3,
+       "max": 8,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "displacement",
+       "type": "numeric",
+       "min": 68,
+       "max": 455,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "horsepower",
+       "type": "numeric",
+       "min": 46,
+       "max": 230,
+       "n_special": 6,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "weight",
+       "type": "numeric",
+       "min": 1613,
+       "max": 5140,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "acceleration",
+       "type": "numeric",
+       "min": 8.5,
+       "max": 24.8,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "model_year",
+       "type": "integer",
+       "min": 70,
+       "max": 82,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      }
+     ],
+     "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
+     "note": "Structural reading of the development rows: the target is not read, and nothing here is a rate or an association. A range is checked only against a range the case declares."
+    },
+    "headline": null,
+    "question_junior": "Y a-t-il des cellules manquantes, des lignes répétées, des catégories rares ou des valeurs hors de leur plage possible dans les lignes de l'échantillon de développement ?",
+    "texts": {
+     "en": {
+      "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
+      "note": "Structural reading of the development rows: the target is not read, and nothing here is a rate or an association. A range is checked only against a range the case declares.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Y a-t-il des cellules manquantes, des lignes répétées, des catégories rares ou des valeurs hors de leur plage possible dans les lignes de l'échantillon de développement ?",
+      "note": "Lecture structurelle des lignes de l'échantillon de développement : la cible n'est pas lue, et rien ici n'est un taux ni une association. Une plage n'est vérifiée que par rapport à une plage que le cas déclare.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
+    "activity": "eda.mean_by",
+    "slot": "eda.mean_by:model_year",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 222,
+    "params": {
+     "column": "model_year"
+    },
+    "upstream": {
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [],
+    "created": "2026-10-26T13:22:09.100346+00:00",
+    "started_revision": 20,
+    "execution_id": "e_a2a3d5fe7f8806c9c98f6929",
+    "exposure_id": "x_b1d7fa58006c4dfab508cf3b15b0cbd4",
+    "values": {
+     "partition": "train",
+     "column": "model_year",
+     "target": "mpg",
+     "unit": "mpg",
+     "n_rows": 222,
+     "overall_mean": 20.565315315315317,
+     "binned": false,
+     "binning": null,
+     "groups": [
+      {
+       "value": "70",
+       "n_rows": 22,
+       "mean": 18.09090909090909,
+       "sd": 5.022891321682883,
+       "small_count": true,
+       "interval": {
+        "low": 15.863883840267457,
+        "high": 20.31793434155072,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.504545454545454,
+        "high": 23.722727272727273
+       }
+      },
+      {
+       "value": "71",
+       "n_rows": 20,
+       "mean": 21.7,
+       "sd": 6.489667901648297,
+       "small_count": true,
+       "interval": {
+        "low": 18.662741929147668,
+        "high": 24.73725807085233,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.740000000000002,
+        "high": 23.0
+       }
+      },
+      {
+       "value": "72",
+       "n_rows": 25,
+       "mean": 18.84,
+       "sd": 5.5051491048532615,
+       "small_count": true,
+       "interval": {
+        "low": 16.56758613618911,
+        "high": 21.11241386381089,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.212,
+        "high": 22.54
+       }
+      },
+      {
+       "value": "73",
+       "n_rows": 32,
+       "mean": 17.0625,
+       "sd": 4.950969276232033,
+       "small_count": false,
+       "interval": {
+        "low": 15.277485225670816,
+        "high": 18.847514774329184,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 18.06875,
+        "high": 22.96875
+       }
+      },
+      {
+       "value": "74",
+       "n_rows": 19,
+       "mean": 21.05263157894737,
+       "sd": 6.25809417395252,
+       "small_count": true,
+       "interval": {
+        "low": 18.03632673906477,
+        "high": 24.06893641882997,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.110526315789475,
+        "high": 22.50526315789474
+       }
+      },
+      {
+       "value": "75",
+       "n_rows": 24,
+       "mean": 20.125,
+       "sd": 4.455699818161589,
+       "small_count": true,
+       "interval": {
+        "low": 18.243522976930336,
+        "high": 22.006477023069664,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.758333333333333,
+        "high": 23.05
+       }
+      },
+      {
+       "value": "76",
+       "n_rows": 25,
+       "mean": 21.6,
+       "sd": 6.554260700745228,
+       "small_count": true,
+       "interval": {
+        "low": 18.89453415343937,
+        "high": 24.305465846560633,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 18.128,
+        "high": 22.628
+       }
+      },
+      {
+       "value": "77",
+       "n_rows": 24,
+       "mean": 23.166666666666668,
+       "sd": 6.23570829746024,
+       "small_count": true,
+       "interval": {
+        "low": 20.533557982725515,
+        "high": 25.79977535060782,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 19.029166666666665,
+        "high": 22.46666666666667
+       }
+      },
+      {
+       "value": "78",
+       "n_rows": 31,
+       "mean": 23.79032258064516,
+       "sd": 6.9084660544730525,
+       "small_count": false,
+       "interval": {
+        "low": 21.256276773582485,
+        "high": 26.324368387707835,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 19.190322580645162,
+        "high": 24.483870967741932
+       }
+      }
+     ],
+     "min_group_rows": 30,
+     "warnings": [
+      "model_year = 70: only 22 training rows; its mean is too noisy to read on its own.",
+      "model_year = 71: only 20 training rows; its mean is too noisy to read on its own.",
+      "model_year = 72: only 25 training rows; its mean is too noisy to read on its own.",
+      "model_year = 74: only 19 training rows; its mean is too noisy to read on its own.",
+      "model_year = 75: only 24 training rows; its mean is too noisy to read on its own.",
+      "model_year = 76: only 25 training rows; its mean is too noisy to read on its own.",
+      "model_year = 77: only 24 training rows; its mean is too noisy to read on its own."
+     ],
+     "n_groups": 9,
+     "max_groups": 20,
+     "other": null,
+     "note": "Mean target by group on training rows: associations, not effects of the variable.",
+     "question": "Does the mean target differ across the groups of model_year by more than chance alone draws?",
+     "null_band": {
+      "chart": {
+       "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+       "observed": 6.72782258064516,
+       "null_min": 0.04415322580645409,
+       "null_max": 4.108870967741932,
+       "outside": true
+      },
+      "shuffles": 19,
+      "seed": 20261019,
+      "note": "The band is the range of the same figure after shuffling the target among the training rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "9",
+       "result_id": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
+       "path": "n_groups",
+       "value": 9,
+       "format": "int"
+      },
+      {
+       "text": " groupes sur "
+      },
+      {
+       "text": "222",
+       "result_id": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
+       "path": "n_rows",
+       "value": 222,
+       "format": "int"
+      },
+      {
+       "text": " lignes d'entraînement"
+      }
+     ]
+    },
+    "question_junior": "La moyenne de la cible diffère-t-elle entre les groupes de model_year plus que le hasard seul ne le produit ?",
+    "texts": {
+     "en": {
+      "question": "Does the mean target differ across the groups of model_year by more than chance alone draws?",
+      "note": "Mean target by group on training rows: associations, not effects of the variable.",
+      "warnings": [
+       "model_year = 70: only 22 training rows; its mean is too noisy to read on its own.",
+       "model_year = 71: only 20 training rows; its mean is too noisy to read on its own.",
+       "model_year = 72: only 25 training rows; its mean is too noisy to read on its own.",
+       "model_year = 74: only 19 training rows; its mean is too noisy to read on its own.",
+       "model_year = 75: only 24 training rows; its mean is too noisy to read on its own.",
+       "model_year = 76: only 25 training rows; its mean is too noisy to read on its own.",
+       "model_year = 77: only 24 training rows; its mean is too noisy to read on its own."
+      ],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": "The band is the range of the same figure after shuffling the target among the training rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks.",
+      "meanings": {}
+     },
+     "fr": {
+      "question": "La moyenne de la cible diffère-t-elle entre les groupes de model_year plus que le hasard seul ne le produit ?",
+      "note": "Moyenne de la cible par groupe sur les lignes d'entraînement : des associations, pas des effets de la variable.",
+      "warnings": [
+       "model_year = 70 : seulement 22 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 71 : seulement 20 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 72 : seulement 25 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 74 : seulement 19 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 75 : seulement 24 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 76 : seulement 25 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 77 : seulement 24 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule."
+      ],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": "La bande est l'étendue du même chiffre après avoir mélangé la cible entre les lignes d'entraînement 19 fois (graine fixe) : ce que le hasard seul produit. Un motif à l'intérieur ne se distingue pas du hasard ; un motif au-dessus de chaque mélange arrive par hasard environ une fois sur 20 regards.",
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+    "activity": "fit.baseline",
+    "slot": "fit.baseline",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 96,
+    "params": {
+     "model": "train_mean"
+    },
+    "upstream": {
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [
+     "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d"
+    ],
+    "created": "2026-10-26T13:22:10.893404+00:00",
+    "started_revision": 22,
+    "execution_id": "e_218811c490cacf105137f8c6",
+    "exposure_id": "x_eea1d39b5deb4fc494dd4dc171530d4e",
+    "values": {
+     "model": "train_mean",
+     "target": "mpg",
+     "unit": "mpg",
+     "train_mean": 20.565315315315317,
+     "train_median": 19.2,
+     "n_train": 222,
+     "features": [],
+     "train": {
+      "n_rows": 222,
+      "mae": 5.114093823553284,
+      "rmse": 6.182007796506872,
+      "mean_residual": -1.5363086178596762e-15
+     },
+     "validation": {
+      "n_rows": 96,
+      "mae": 10.268806306306304,
+      "rmse": 11.924502477405836,
+      "mean_residual": 9.806559684684684
+     },
+     "predictions": {
+      "blob": "predictions",
+      "format": "gzip csv row_key,y,prediction",
+      "model": "train_mean",
+      "partition": "validation",
+      "target": "mpg",
+      "unit": "mpg",
+      "prediction_semantics": "A prediction of the target, in its unit.",
+      "n": 96,
+      "features": []
+     },
+     "note": "Every row receives the training mean: the reference a model must beat."
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "MAE de validation "
+      },
+      {
+       "text": "10.27",
+       "result_id": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+       "path": "validation.mae",
+       "value": 10.268806306306304,
+       "format": "f2"
+      },
+      {
+       "text": " mpg sur "
+      },
+      {
+       "text": "96",
+       "result_id": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+       "path": "validation.n_rows",
+       "value": 96,
+       "format": "int"
+      },
+      {
+       "text": " lignes"
+      }
+     ]
+    },
+    "question_junior": null,
+    "texts": null
+   },
+   {
+    "result_id": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+    "activity": "fit.linear",
+    "slot": "fit.linear",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 96,
+    "params": {
+     "estimator": "sklearn.linear_model.LinearRegression",
+     "implementation": "mlkit.classical.pipeline",
+     "model": "linear",
+     "preprocessing": "numeric: median imputation and standardisation; categorical: most frequent imputation and one-hot encoding; fitted on training rows only",
+     "seed": 0,
+     "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
+    },
+    "upstream": {
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [
+     "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d"
+    ],
+    "created": "2026-10-26T13:22:12.757612+00:00",
+    "started_revision": 24,
+    "execution_id": "e_aff36faf73c7439f15bd6f24",
+    "exposure_id": "x_54508226ef5847459307af48ca0979c5",
+    "values": {
+     "model": "linear",
+     "target": "mpg",
+     "unit": "mpg",
+     "features": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin"
+     ],
+     "special_value_indicators": [
+      "horsepower=?"
+     ],
+     "n_train": 222,
+     "n_terms": 8,
+     "intercept": 21.07139386751173,
+     "coefficients": {
+      "num__cylinders": -0.37022387198762724,
+      "num__displacement": 0.41888510741149876,
+      "num__horsepower": -1.1866635219111468,
+      "num__weight": -4.061984545313062,
+      "num__horsepower=?": -0.04154318702939566,
+      "cat__origin_1": -0.9522927696704008,
+      "cat__origin_2": -0.1883477305837519,
+      "cat__origin_3": 1.1406405002541518
+     },
+     "coefficient_scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects",
+     "train": {
+      "n_rows": 222,
+      "mae": 2.107827519590371,
+      "rmse": 2.828244905141762,
+      "mean_residual": 6.40128590774865e-17
+     },
+     "validation": {
+      "n_rows": 96,
+      "mae": 6.476590382656274,
+      "rmse": 7.664419781686159,
+      "mean_residual": 6.394515464632113
+     },
+     "predictions": {
+      "blob": "predictions",
+      "format": "gzip csv row_key,y,prediction",
+      "model": "linear",
+      "partition": "validation",
+      "target": "mpg",
+      "unit": "mpg",
+      "prediction_semantics": "A prediction of the target, in its unit.",
+      "n": 96,
+      "features": [
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight",
+       "origin"
+      ]
+     },
+     "preprocessing": {
+      "value": {
+       "missing": "none",
+       "rare_category_min_rows": 0,
+       "caps": {},
+       "log_transform": []
+      },
+      "fitted": {
+       "missing_indicators": [],
+       "rare_categories": {},
+       "caps": {},
+       "log_transform": [],
+       "ignored": []
+      },
+      "note": "Parameters learnt on training rows only and applied unchanged to validation rows."
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "MAE de validation "
+      },
+      {
+       "text": "6.48",
+       "result_id": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+       "path": "validation.mae",
+       "value": 6.476590382656274,
+       "format": "f2"
+      },
+      {
+       "text": " mpg sur "
+      },
+      {
+       "text": "96",
+       "result_id": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+       "path": "validation.n_rows",
+       "value": 96,
+       "format": "int"
+      },
+      {
+       "text": " lignes"
+      }
+     ]
+    },
+    "question_junior": null,
+    "texts": null
+   },
+   {
+    "result_id": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
+    "activity": "fit.variant",
+    "slot": "fit.variant",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 96,
+    "params": {
+     "alpha": 10.0,
+     "estimator": "sklearn.linear_model.Ridge",
+     "implementation": "mlkit.classical.pipeline",
+     "model": "ridge",
+     "preprocessing": "numeric: median imputation and standardisation; categorical: most frequent imputation and one-hot encoding; fitted on training rows only",
+     "seed": 0,
+     "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
+    },
+    "upstream": {
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [
+     "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d"
+    ],
+    "created": "2026-10-26T13:22:17.885661+00:00",
+    "started_revision": 28,
+    "execution_id": "e_0fce83ab7847d276df6d9250",
+    "exposure_id": "x_9f3410a1c4ee452fb467ad35dd80d752",
+    "values": {
+     "model": "ridge",
+     "target": "mpg",
+     "unit": "mpg",
+     "features": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin"
+     ],
+     "special_value_indicators": [
+      "horsepower=?"
+     ],
+     "n_train": 222,
+     "n_terms": 8,
+     "intercept": 20.943266941816127,
+     "coefficients": {
+      "num__cylinders": -0.5206655589928507,
+      "num__displacement": -0.4706630199042758,
+      "num__horsepower": -1.0461027069104654,
+      "num__weight": -3.1876711076603237,
+      "num__horsepower=?": -0.04053541390734935,
+      "cat__origin_1": -0.7060718689819638,
+      "cat__origin_2": -0.20009242812717776,
+      "cat__origin_3": 0.9061642971091335
+     },
+     "coefficient_scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects",
+     "train": {
+      "n_rows": 222,
+      "mae": 2.0983194550246034,
+      "rmse": 2.8506217842819295,
+      "mean_residual": -7.681543089298381e-16
+     },
+     "validation": {
+      "n_rows": 96,
+      "mae": 6.505297098322088,
+      "rmse": 7.754118337852464,
+      "mean_residual": 6.409752295558562
+     },
+     "predictions": {
+      "blob": "predictions",
+      "format": "gzip csv row_key,y,prediction",
+      "model": "linear",
+      "partition": "validation",
+      "target": "mpg",
+      "unit": "mpg",
+      "prediction_semantics": "A prediction of the target, in its unit.",
+      "n": 96,
+      "features": [
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight",
+       "origin"
+      ]
+     },
+     "preprocessing": {
+      "value": {
+       "missing": "none",
+       "rare_category_min_rows": 0,
+       "caps": {},
+       "log_transform": []
+      },
+      "fitted": {
+       "missing_indicators": [],
+       "rare_categories": {},
+       "caps": {},
+       "log_transform": [],
+       "ignored": []
+      },
+      "note": "Parameters learnt on training rows only and applied unchanged to validation rows."
+     },
+     "variant": {
+      "kind": "regularisation",
+      "strength": "strong"
+     },
+     "alpha": 10.0
+    },
+    "headline": null,
+    "question_junior": null,
+    "texts": null
+   },
+   {
+    "result_id": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+    "activity": "evaluate.regression",
+    "slot": "evaluate.regression",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 96,
+    "params": {
+     "candidate": "fit.linear",
+     "metrics": [
+      "mae",
+      "rmse"
+     ],
+     "models": [
+      "fit.baseline",
+      "fit.linear",
+      "fit.variant"
+     ],
+     "reference": "fit.baseline"
+    },
+    "upstream": {
+     "fit.baseline": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+     "fit.linear": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+     "fit.variant": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [],
+    "created": "2026-10-26T13:22:19.857576+00:00",
+    "started_revision": 30,
+    "execution_id": "e_13402e84eaabec613a733a22",
+    "exposure_id": "x_5481f3096e8a4ef0b44d90a979898c9f",
+    "values": {
+     "n": 96,
+     "target": "mpg",
+     "unit": "mpg",
+     "models": {
+      "fit.baseline": {
+       "n": 96,
+       "mae": 10.268806306306304,
+       "rmse": 11.924502477405836,
+       "mean_residual": 9.806559684684684,
+       "median_abs_residual": 10.434684684684683,
+       "max_abs_residual": 26.034684684684684
+      },
+      "fit.linear": {
+       "n": 96,
+       "mae": 6.476590382656274,
+       "rmse": 7.664419781686159,
+       "mean_residual": 6.394515464632113,
+       "median_abs_residual": 5.572351386623355,
+       "max_abs_residual": 18.45304785315237
+      },
+      "fit.variant": {
+       "n": 96,
+       "mae": 6.505297098322088,
+       "rmse": 7.754118337852464,
+       "mean_residual": 6.409752295558562,
+       "median_abs_residual": 5.673693089740421,
+       "max_abs_residual": 18.794732120875594
+      }
+     },
+     "intervals": {
+      "fit.baseline": {
+       "mae": {
+        "low": 9.020375609984985,
+        "high": 11.442172719594593
+       },
+       "rmse": {
+        "low": 10.7294383439307,
+        "high": 13.066515033675511
+       }
+      },
+      "fit.linear": {
+       "mae": {
+        "low": 5.690730215654784,
+        "high": 7.3058496174077225
+       },
+       "rmse": {
+        "low": 6.765424236359606,
+        "high": 8.545695275480197
+       }
+      },
+      "fit.variant": {
+       "mae": {
+        "low": 5.700070241671318,
+        "high": 7.367522314327747
+       },
+       "rmse": {
+        "low": 6.833640498704084,
+        "high": 8.65974474375661
+       }
+      }
+     },
+     "deltas": {
+      "fit.linear": {
+       "mae": {
+        "point": -3.792215923650031,
+        "low": -4.375861635363238,
+        "high": -3.159283658688826
+       },
+       "rmse": {
+        "point": -4.260082695719677,
+        "low": -4.785149196088145,
+        "high": -3.7022079436310995
+       }
+      },
+      "fit.variant": {
+       "mae": {
+        "point": -3.7635092079842165,
+        "low": -4.318230357129342,
+        "high": -3.182753899638755
+       },
+       "rmse": {
+        "point": -4.170384139553372,
+        "low": -4.660485375760737,
+        "high": -3.648570386778664
+       }
+      }
+     },
+     "residuals": {
+      "fit.baseline": {
+       "n": 96,
+       "mean": 9.806559684684684,
+       "sd": 6.81979631004668,
+       "min": -5.065315315315317,
+       "q05": -1.8403153153153156,
+       "q25": 5.384684684684683,
+       "median": 10.434684684684683,
+       "q75": 14.059684684684683,
+       "q95": 20.48468468468468,
+       "max": 26.034684684684684
+      },
+      "fit.linear": {
+       "n": 96,
+       "mean": 6.394515464632113,
+       "sd": 4.2475209438452115,
+       "min": -1.776599519158502,
+       "q05": 0.41185178765315067,
+       "q25": 3.261984922442746,
+       "median": 5.572351386623355,
+       "q75": 8.998533037532638,
+       "q95": 15.165754635580324,
+       "max": 18.45304785315237
+      },
+      "fit.variant": {
+       "n": 96,
+       "mean": 6.409752295558562,
+       "sd": 4.386554773122254,
+       "min": -2.0154747653481238,
+       "q05": 0.4804557357102279,
+       "q25": 3.3901253743852857,
+       "median": 5.673693089740421,
+       "q75": 9.178199377862295,
+       "q95": 15.431844902403551,
+       "max": 18.794732120875594
+      }
+     },
+     "residuals_by": [
+      {
+       "column": "model_year",
+       "binned": false,
+       "binning": null,
+       "groups": [
+        {
+         "value": "79",
+         "n_rows": 22,
+         "small_count": true,
+         "models": {
+          "fit.baseline": {
+           "mae": 5.82170352170352,
+           "mean_residual": 4.2074119574119555
+          },
+          "fit.linear": {
+           "mae": 3.95800803197313,
+           "mean_residual": 3.807868612211449
+          },
+          "fit.variant": {
+           "mae": 3.924945436027481,
+           "mean_residual": 3.753553139485518
+          }
+         }
+        },
+        {
+         "value": "80",
+         "n_rows": 24,
+         "small_count": true,
+         "models": {
+          "fit.baseline": {
+           "mae": 13.656794294294292,
+           "mean_residual": 13.534684684684683
+          },
+          "fit.linear": {
+           "mae": 8.942708621261152,
+           "mean_residual": 8.90008671054259
+          },
+          "fit.variant": {
+           "mae": 9.00156758638398,
+           "mean_residual": 8.944454210939016
+          }
+         }
+        },
+        {
+         "value": "81",
+         "n_rows": 25,
+         "small_count": true,
+         "models": {
+          "fit.baseline": {
+           "mae": 9.883909909909908,
+           "mean_residual": 9.646684684684683
+          },
+          "fit.linear": {
+           "mae": 5.841737309743365,
+           "mean_residual": 5.699609348210685
+          },
+          "fit.variant": {
+           "mae": 5.9372553994158785,
+           "mean_residual": 5.776017418188028
+          }
+         }
+        },
+        {
+         "value": "82",
+         "n_rows": 25,
+         "small_count": true,
+         "models": {
+          "fit.baseline": {
+           "mae": 11.314684684684682,
+           "mean_residual": 11.314684684684682
+          },
+          "fit.linear": {
+           "mae": 6.960322415109672,
+           "mean_residual": 6.960322415109672
+          },
+          "fit.variant": {
+           "mae": 6.947628591508134,
+           "mean_residual": 6.947628591508134
+          }
+         }
+        }
+       ],
+       "min_group_rows": 30
+      }
+     ],
+     "predictions": {
+      "fit.baseline": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+      "fit.linear": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+      "fit.variant": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18"
+     },
+     "reference": "fit.baseline",
+     "candidate": "fit.linear",
+     "bootstrap": {
+      "replicates": 2000,
+      "seed": 20261017,
+      "level": 0.95,
+      "method": "paired percentile bootstrap over validation rows"
+     },
+     "residual_definition": "residual = observed minus predicted; a positive residual means the model predicted too low; the mean residual is the bias",
+     "note": "The model is chosen on these validation rows: these errors are not independent evidence of future error. No model was refitted.",
+     "model_selection": {
+      "available": false,
+      "metric": "mae",
+      "direction": "lower",
+      "folds": null,
+      "configurations": [],
+      "best": null,
+      "one_se": null,
+      "optimism": null,
+      "advice": {
+       "code": "not_available",
+       "text": "The comparison across folds needs a cross-validation of the development rows.",
+       "texts": {
+        "en": "The comparison across folds needs a cross-validation of the development rows.",
+        "fr": "La comparaison entre plis demande une validation croisée des lignes de développement."
+       }
+      },
+      "budget": {
+       "max": 3,
+       "declared": 1,
+       "used": 1,
+       "remaining": 2,
+       "legacy": true
+      },
+      "trials": 0,
+      "note": "Development evidence: every configuration is compared on the same out-of-fold predictions of the development rows. The fold standard errors ignore the overlap of the folds' training rows (Bengio & Grandvalet 2004), so they understate the noise: the advice errs towards stopping late, not early. The final test, opened once, is not affected by this choice."
+     },
+     "comparisons": {
+      "fit.variant": {
+       "reference": "fit.linear",
+       "mae": {
+        "point": 0.028706715665814286,
+        "low": -0.04194178849329033,
+        "high": 0.09590339908292789
+       },
+       "rmse": {
+        "point": 0.08969855616630529,
+        "low": 0.021499179657065777,
+        "high": 0.15014827065407482
+       }
+      }
+     },
+     "evaluation": "validation"
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "MAE "
+      },
+      {
+       "text": "6.48",
+       "result_id": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+       "path": "models.[fit.linear].mae",
+       "value": 6.476590382656274,
+       "format": "f2"
+      },
+      {
+       "text": " mpg pour le modèle linéaire et "
+      },
+      {
+       "text": "10.27",
+       "result_id": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+       "path": "models.[fit.baseline].mae",
+       "value": 10.268806306306304,
+       "format": "f2"
+      },
+      {
+       "text": " mpg pour le modèle de référence (la moyenne) sur "
+      },
+      {
+       "text": "96",
+       "result_id": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+       "path": "n",
+       "value": 96,
+       "format": "int"
+      },
+      {
+       "text": " lignes de validation"
+      }
+     ]
+    },
+    "question_junior": null,
+    "texts": null
+   }
+  ],
+  "truncated": false,
+  "lineage": {
+   "nodes": [
+    {
+     "id": "case",
+     "kind": "source",
+     "label": "case.yaml",
+     "status": "ok"
+    },
+    {
+     "id": "dataset",
+     "kind": "source",
+     "label": "auto-mpg.data",
+     "status": "ok"
+    },
+    {
+     "id": "decision:prediction_time",
+     "kind": "decision",
+     "label": "prediction_time",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:feature_availability",
+     "kind": "decision",
+     "label": "feature_availability",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:split",
+     "kind": "decision",
+     "label": "split",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:success_criterion",
+     "kind": "decision",
+     "label": "success_criterion",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:preprocessing",
+     "kind": "decision",
+     "label": "preprocessing",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:model_variant",
+     "kind": "decision",
+     "label": "model_variant",
+     "status": "confirmed"
+    },
+    {
+     "id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "kind": "result",
+     "label": "split",
+     "status": "current"
+    },
+    {
+     "id": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
+     "kind": "result",
+     "label": "eda.target_summary",
+     "status": "current"
+    },
+    {
+     "id": "876eda50acd11c16bd83567bc96af1b37a294ec7f974bc5de94df8d1d911f95d",
+     "kind": "result",
+     "label": "eda.special_values",
+     "status": "current"
+    },
+    {
+     "id": "6f96fd645db7bc66a43b7688265afd25b0499653e3f6452f1106b6bc1acf9048",
+     "kind": "result",
+     "label": "eda.quality",
+     "status": "current"
+    },
+    {
+     "id": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
+     "kind": "result",
+     "label": "eda.mean_by:model_year",
+     "status": "current"
+    },
+    {
+     "id": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+     "kind": "result",
+     "label": "fit.baseline",
+     "status": "current"
+    },
+    {
+     "id": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+     "kind": "result",
+     "label": "fit.linear",
+     "status": "current"
+    },
+    {
+     "id": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
+     "kind": "result",
+     "label": "fit.variant",
+     "status": "current"
+    },
+    {
+     "id": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+     "kind": "result",
+     "label": "evaluate.regression",
+     "status": "current"
+    },
+    {
+     "id": "artifact:report",
+     "kind": "artifact",
+     "label": "report",
+     "status": "ok"
+    },
+    {
+     "id": "artifact:notebook",
+     "kind": "artifact",
+     "label": "notebook",
+     "status": "ok"
+    }
+   ],
+   "edges": [
+    {
+     "from": "dataset",
+     "to": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "role": "rows"
+    },
+    {
+     "from": "decision:split",
+     "to": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
+     "role": "rows"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "876eda50acd11c16bd83567bc96af1b37a294ec7f974bc5de94df8d1d911f95d",
+     "role": "rows"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "876eda50acd11c16bd83567bc96af1b37a294ec7f974bc5de94df8d1d911f95d",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "6f96fd645db7bc66a43b7688265afd25b0499653e3f6452f1106b6bc1acf9048",
+     "role": "rows"
+    },
+    {
+     "from": "dataset",
+     "to": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
+     "role": "rows"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+     "role": "rows"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+     "role": "rows"
+    },
+    {
+     "from": "decision:feature_availability",
+     "to": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+     "role": "features"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
+     "role": "rows"
+    },
+    {
+     "from": "decision:feature_availability",
+     "to": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
+     "role": "features"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+     "role": "rows"
+    },
+    {
+     "from": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+     "to": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+     "role": "fit.baseline"
+    },
+    {
+     "from": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+     "to": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+     "role": "fit.linear"
+    },
+    {
+     "from": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
+     "to": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+     "role": "fit.variant"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+     "role": "split"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "876eda50acd11c16bd83567bc96af1b37a294ec7f974bc5de94df8d1d911f95d",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "876eda50acd11c16bd83567bc96af1b37a294ec7f974bc5de94df8d1d911f95d",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "6f96fd645db7bc66a43b7688265afd25b0499653e3f6452f1106b6bc1acf9048",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "6f96fd645db7bc66a43b7688265afd25b0499653e3f6452f1106b6bc1acf9048",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    }
+   ]
+  },
+  "exposure": {
+   "summary": {
+    "records": 15,
+    "rows_exposed": 318,
+    "by_purpose": {
+     "labelled_preview_available": 5,
+     "sealed": 80,
+     "structural_inspection": 318,
+     "train_eda": 222,
+     "train_fit": 222,
+     "validation_model_evaluation": 96
+    },
+    "by_partition": {
+     "development": {
+      "labelled_preview_available": 5,
+      "structural_inspection": 318
+     },
+     "final_test": {
+      "sealed": 80
+     },
+     "train": {
+      "train_eda": 222,
+      "train_fit": 222
+     },
+     "validation": {
+      "validation_model_evaluation": 96
+     }
+    },
+    "validation_rows_used_for_selection": 96,
+    "prior_exposure": [
+     {
+      "source": "Results of an earlier analysis published with the dataset",
+      "status": "observed",
+      "value": "Outputs of an earlier analysis (protocol \"chronological-70-78-vs-79-82\": Train on 1970–1978, compare on 1979–1982. Chronological split by model year. The horsepower imputation median is calculated from training data only.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
+     },
+     {
+      "source": "Results of an earlier analysis published with the dataset",
+      "status": "observed",
+      "value": "Outputs of an earlier analysis (protocol \"random-70-30-counterexample\": Counterexample: random 70/30 split (mixed years). Random split with seed 20261017. Future years also contribute to training.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
+     }
+    ]
+   },
+   "records": [
+    {
+     "exposure_id": "x_71b4d526bff5477193ea18f2c46d9c69",
+     "revision": 1,
+     "time": "2026-10-26T13:21:48.013325+00:00",
+     "activity": "init.structure",
+     "result_id": null,
+     "execution_id": null,
+     "purpose": "structural_inspection",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "mpg",
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "model_year",
+      "origin",
+      "car_name"
+     ]
+    },
+    {
+     "exposure_id": "x_6841147e02fd47b2b78c27f0e992caf4",
+     "revision": 1,
+     "time": "2026-10-26T13:21:48.032931+00:00",
+     "activity": "init.labelled_preview",
+     "result_id": null,
+     "execution_id": null,
+     "purpose": "labelled_preview_available",
+     "partition": "development",
+     "n_rows": 5,
+     "columns": [
+      "mpg",
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "model_year",
+      "origin",
+      "car_name"
+     ]
+    },
+    {
+     "exposure_id": "x_1949bd9a419149c6998b708e17de7e62",
+     "revision": 1,
+     "time": "2026-10-26T13:21:48.037224+00:00",
+     "activity": "init.final_test",
+     "result_id": null,
+     "execution_id": null,
+     "purpose": "sealed",
+     "partition": "final_test",
+     "n_rows": 80,
+     "columns": [
+      "mpg",
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "model_year",
+      "origin",
+      "car_name"
+     ]
+    },
+    {
+     "exposure_id": "x_5992d567d884470383377b14aae792e8",
+     "revision": 12,
+     "time": "2026-10-26T13:22:01.149386+00:00",
+     "activity": "split",
+     "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "execution_id": "e_839104bf9d2cae503476be39",
+     "purpose": "structural_inspection",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "model_year",
+      "car_name"
+     ]
+    },
+    {
+     "exposure_id": "x_85c6529dfc7247aca1f157e35c1366db",
+     "revision": 14,
+     "time": "2026-10-26T13:22:02.857320+00:00",
+     "activity": "eda.target_summary",
+     "result_id": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
+     "execution_id": "e_92aaf17d67568d5f7880d18a",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 222,
+     "columns": [
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_ba978c06c77f4611becef544ac4640e5",
+     "revision": 16,
+     "time": "2026-10-26T13:22:04.725346+00:00",
+     "activity": "eda.special_values",
+     "result_id": "876eda50acd11c16bd83567bc96af1b37a294ec7f974bc5de94df8d1d911f95d",
+     "execution_id": "e_a6285653c29e349d0b0beb2b",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 222,
+     "columns": [
+      "mpg",
+      "horsepower"
+     ]
+    },
+    {
+     "exposure_id": "x_58da307c2f5942be825a0a3727d96174",
+     "revision": 18,
+     "time": "2026-10-26T13:22:06.741006+00:00",
+     "activity": "eda.quality",
+     "result_id": "6f96fd645db7bc66a43b7688265afd25b0499653e3f6452f1106b6bc1acf9048",
+     "execution_id": "e_b5c9bc6dc2acb308345f4b5b",
+     "purpose": "structural_inspection",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "model_year",
+      "origin",
+      "car_name"
+     ]
+    },
+    {
+     "exposure_id": "x_b1d7fa58006c4dfab508cf3b15b0cbd4",
+     "revision": 20,
+     "time": "2026-10-26T13:22:09.121382+00:00",
+     "activity": "eda.mean_by",
+     "result_id": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
+     "execution_id": "e_a2a3d5fe7f8806c9c98f6929",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 222,
+     "columns": [
+      "mpg",
+      "model_year"
+     ]
+    },
+    {
+     "exposure_id": "x_a1a4d3b6ffdf4e8aa55f819e3864dff7",
+     "revision": 22,
+     "time": "2026-10-26T13:22:10.905901+00:00",
+     "activity": "fit.baseline",
+     "result_id": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+     "execution_id": "e_218811c490cacf105137f8c6",
+     "purpose": "train_fit",
+     "partition": "train",
+     "n_rows": 222,
+     "columns": [
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_eea1d39b5deb4fc494dd4dc171530d4e",
+     "revision": 22,
+     "time": "2026-10-26T13:22:10.909293+00:00",
+     "activity": "fit.baseline",
+     "result_id": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+     "execution_id": "e_218811c490cacf105137f8c6",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 96,
+     "columns": [
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_d83049055b504c83a9c761eb2197681d",
+     "revision": 24,
+     "time": "2026-10-26T13:22:12.770241+00:00",
+     "activity": "fit.linear",
+     "result_id": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+     "execution_id": "e_aff36faf73c7439f15bd6f24",
+     "purpose": "train_fit",
+     "partition": "train",
+     "n_rows": 222,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_54508226ef5847459307af48ca0979c5",
+     "revision": 24,
+     "time": "2026-10-26T13:22:12.773207+00:00",
+     "activity": "fit.linear",
+     "result_id": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+     "execution_id": "e_aff36faf73c7439f15bd6f24",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 96,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_8a6d2eca8cfc45a1a0493020d313196e",
+     "revision": 28,
+     "time": "2026-10-26T13:22:17.897343+00:00",
+     "activity": "fit.variant",
+     "result_id": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
+     "execution_id": "e_0fce83ab7847d276df6d9250",
+     "purpose": "train_fit",
+     "partition": "train",
+     "n_rows": 222,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_9f3410a1c4ee452fb467ad35dd80d752",
+     "revision": 28,
+     "time": "2026-10-26T13:22:17.901256+00:00",
+     "activity": "fit.variant",
+     "result_id": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
+     "execution_id": "e_0fce83ab7847d276df6d9250",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 96,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_5481f3096e8a4ef0b44d90a979898c9f",
+     "revision": 30,
+     "time": "2026-10-26T13:22:19.877354+00:00",
+     "activity": "evaluate.regression",
+     "result_id": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+     "execution_id": "e_13402e84eaabec613a733a22",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 96,
+     "columns": [
+      "mpg",
+      "model_year"
+     ]
+    }
+   ],
+   "ledger": [
+    {
+     "purpose": "structural_inspection",
+     "partition": "development",
+     "rows": 318,
+     "records": 3,
+     "activities": [
+      "init.structure",
+      "split",
+      "eda.quality"
+     ],
+     "first_revision": 1,
+     "last_revision": 18
+    },
+    {
+     "purpose": "train_eda",
+     "partition": "train",
+     "rows": 222,
+     "records": 3,
+     "activities": [
+      "eda.target_summary",
+      "eda.special_values",
+      "eda.mean_by"
+     ],
+     "first_revision": 14,
+     "last_revision": 20
+    },
+    {
+     "purpose": "train_fit",
+     "partition": "train",
+     "rows": 222,
+     "records": 3,
+     "activities": [
+      "fit.baseline",
+      "fit.linear",
+      "fit.variant"
+     ],
+     "first_revision": 22,
+     "last_revision": 28
+    },
+    {
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "rows": 96,
+     "records": 4,
+     "activities": [
+      "fit.baseline",
+      "fit.linear",
+      "fit.variant",
+      "evaluate.regression"
+     ],
+     "first_revision": 22,
+     "last_revision": 30
+    },
+    {
+     "purpose": "sealed",
+     "partition": "final_test",
+     "rows": 80,
+     "records": 1,
+     "activities": [
+      "init.final_test"
+     ],
+     "first_revision": 1,
+     "last_revision": 1
+    },
+    {
+     "purpose": "labelled_preview_available",
+     "partition": "development",
+     "rows": 5,
+     "records": 1,
+     "activities": [
+      "init.labelled_preview"
+     ],
+     "first_revision": 1,
+     "last_revision": 1
+    }
+   ],
+   "prior_exposure": [
+    {
+     "source": "Results of an earlier analysis published with the dataset",
+     "status": "observed",
+     "value": "Outputs of an earlier analysis (protocol \"chronological-70-78-vs-79-82\": Train on 1970–1978, compare on 1979–1982. Chronological split by model year. The horsepower imputation median is calculated from training data only.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
+    },
+    {
+     "source": "Results of an earlier analysis published with the dataset",
+     "status": "observed",
+     "value": "Outputs of an earlier analysis (protocol \"random-70-30-counterexample\": Counterexample: random 70/30 split (mixed years). Random split with seed 20261017. Future years also contribute to training.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
+    }
+   ]
+  },
+  "impacts": [
+   {
+    "decision_id": "prediction_time",
+    "mutation": "prediction_time",
+    "row": 1,
+    "change": "a different prediction moment",
+    "stale_slots": [
+     "fit.linear",
+     "fit.variant",
+     "evaluate.regression"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.mean_by:model_year",
+     "eda.quality",
+     "fit.baseline"
+    ],
+    "refit": [
+     "fit.linear",
+     "fit.variant"
+    ],
+    "reconfirm": [
+     "feature_availability"
+    ],
+    "notes": [
+     "The linear refit waits until feature availability is confirmed again."
+    ]
+   },
+   {
+    "decision_id": "feature_availability",
+    "mutation": "feature_availability.feature_set",
+    "row": 2,
+    "change": "a change that alters the set of usable features",
+    "stale_slots": [
+     "fit.linear",
+     "fit.variant",
+     "evaluate.regression"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.mean_by:model_year",
+     "eda.quality",
+     "fit.baseline"
+    ],
+    "refit": [
+     "fit.linear",
+     "fit.variant"
+    ],
+    "reconfirm": [],
+    "notes": [
+     "The mean baseline uses no feature and stays current."
+    ]
+   },
+   {
+    "decision_id": "feature_availability",
+    "mutation": "feature_availability.wording",
+    "row": 3,
+    "change": "a change of the variable descriptions that keeps the same usable features",
+    "stale_slots": [],
+    "kept_slots": [
+     "split",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.mean_by:model_year",
+     "eda.quality",
+     "fit.baseline",
+     "fit.linear",
+     "fit.variant",
+     "evaluate.regression"
+    ],
+    "refit": [],
+    "reconfirm": [],
+    "notes": [
+     "The feature set is unchanged; only the dictionary text changes."
+    ]
+   },
+   {
+    "decision_id": "split",
+    "mutation": "split",
+    "row": 4,
+    "change": "a different split of the rows",
+    "stale_slots": [
+     "split",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.mean_by:model_year",
+     "eda.quality",
+     "fit.baseline",
+     "fit.linear",
+     "fit.variant",
+     "evaluate.regression"
+    ],
+    "kept_slots": [],
+    "refit": [
+     "fit.baseline",
+     "fit.linear"
+    ],
+    "reconfirm": [],
+    "notes": [
+     "Exposure is retained: rows explored under the old split are not unseen. The split activity reports the overlap (exposure.overlap) when it runs."
+    ]
+   },
+   {
+    "decision_id": "preprocessing",
+    "mutation": "preprocessing",
+    "row": 14,
+    "change": "a different preparation of the variables",
+    "stale_slots": [
+     "fit.linear",
+     "fit.variant",
+     "evaluate.regression"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.mean_by:model_year",
+     "eda.quality",
+     "fit.baseline"
+    ],
+    "refit": [
+     "fit.linear",
+     "fit.variant"
+    ],
+    "reconfirm": [],
+    "notes": [
+     "The mean baseline uses no feature and stays current; the exploration is unchanged."
+    ]
+   },
+   {
+    "decision_id": "success_criterion",
+    "mutation": "success_criterion",
+    "row": 16,
+    "change": "a different success criterion",
+    "stale_slots": [],
+    "kept_slots": [
+     "split",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.mean_by:model_year",
+     "eda.quality",
+     "fit.baseline",
+     "fit.linear",
+     "fit.variant",
+     "evaluate.regression"
+    ],
+    "refit": [],
+    "reconfirm": [],
+    "notes": [
+     "No result changes; the conclusion is judged against the new criterion."
+    ]
+   },
+   {
+    "decision_id": "model_variant",
+    "mutation": "model_variant",
+    "row": 17,
+    "change": "model_variant",
+    "stale_slots": [
+     "fit.variant",
+     "evaluate.regression"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.mean_by:model_year",
+     "eda.quality",
+     "fit.baseline",
+     "fit.linear"
+    ],
+    "refit": [
+     "fit.variant"
+    ],
+    "reconfirm": [],
+    "notes": [
+     "The baseline and the candidate stay current; only the variant is fitted again. The trial count grows by one configuration."
+    ]
+   }
+  ],
+  "eda_catalog": {
+   "activities": [
+    {
+     "activity": "eda.target_summary",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": [],
+     "partition": "train"
+    },
+    {
+     "activity": "eda.special_values",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": [],
+     "partition": "train"
+    },
+    {
+     "activity": "eda.mean_by",
+     "per_column": true,
+     "columns": [
+      {
+       "name": "cylinders",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "displacement",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "horsepower",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "weight",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "acceleration",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "model_year",
+       "role": "time",
+       "type": "integer",
+       "slot": "eda.mean_by:model_year",
+       "result_id": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa"
+      },
+      {
+       "name": "origin",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      }
+     ],
+     "runnable": true,
+     "missing": [],
+     "partition": "train"
+    },
+    {
+     "activity": "eda.distribution",
+     "per_column": true,
+     "columns": [
+      {
+       "name": "mpg",
+       "role": "target",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "cylinders",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "displacement",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "horsepower",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "weight",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "acceleration",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "model_year",
+       "role": "time",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "origin",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      }
+     ],
+     "runnable": true,
+     "missing": [],
+     "partition": "train"
+    },
+    {
+     "activity": "eda.quality",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": [],
+     "partition": "development"
+    },
+    {
+     "activity": "eda.single_feature_signal",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": [],
+     "partition": "train"
+    },
+    {
+     "activity": "eda.correlation",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": [],
+     "partition": "development"
+    }
+   ]
+  },
+  "sources": {
+   "case": {
+    "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
+    "sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+    "matches": true
+   },
+   "dataset": {
+    "path": "/hypotrail/use-cases/auto-mpg/data/auto-mpg.data",
+    "sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+    "matches": true
+   }
+  },
+  "detail": null
+ }
+}

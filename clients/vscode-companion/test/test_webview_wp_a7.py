@@ -202,9 +202,16 @@ def test_da4_french_labels_toggle_when_the_case_has_them(open_panel, views, task
 def test_da5_no_french_toggle_without_french_labels(open_panel, views, model, payload):
     raw = copy.deepcopy(payload('captured/data.binary'))
     raw['target']['description_fr'] = None
+    # L3: nor French case statements (a case without a translation sidecar).
+    raw['observation_unit']['texts']['fr'] = None
     for g in raw['groups']:
+        g['texts']['fr'] = None
         for v in g['variables']:
             v['description_fr'] = None
+            if v.get('availability'):
+                v['availability']['texts']['fr'] = None
+            for sv in v['special_values']:
+                sv['texts']['fr'] = None
     panel = open_tab(open_panel, views, 'binary', 'eda')
     panel.view_data('data', model('data', raw))
     panel.view_data('eda', views['eda.binary'])

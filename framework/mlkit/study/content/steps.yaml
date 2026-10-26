@@ -122,19 +122,23 @@ regression_steps:
 # The four moments of JUNIOR-WORKFLOW.md, as plan step ids (CLI-CONTRACT-COMPANION §1.1,
 # C1, C11). ``status --summary --digest`` lists them in this order; a client shows the
 # plan's step titles. ``regression_moments`` replaces the steps of a moment for a
-# regression study.
+# regression study. ``title_fr`` (L3, owner session 2026-10-26): the title in a French study.
 moments:
   - id: frame
     title: Frame the change
+    title_fr: Cadrer le changement
     steps: [discover_data, prediction_time, feature_availability, split, success_criterion]
   - id: evidence
     title: Prepare evidence
+    title_fr: Préparer les preuves
     steps: [train_eda, preprocessing]
   - id: compare
     title: Work and compare
+    title_fr: Travailler et comparer
     steps: [models, model_variant, policy]
   - id: conclude
     title: Conclude and hand over
+    title_fr: Conclure et transmettre
     steps: [final_test, conclusion]
 regression_moments:
   compare: [models, model_variant, model_choice]

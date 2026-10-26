@@ -56,6 +56,49 @@ regression_headlines:
   evaluate.regression: "MAE {{r:@.models.[fit.linear].mae|f2}} <unit> for the linear model and {{r:@.models.[fit.baseline].mae|f2}} <unit> for the mean baseline on {{r:@.n|int}} validation rows"
   diag.regression: "Mean residual {{r:@.models.[fit.linear].residuals.mean|f2}} <unit>, error-size rank correlation with the prediction {{r:@.models.[fit.linear].heteroscedasticity.abs_residual_prediction_correlation|f2}} on {{r:@.n|int}} development rows"
   diag.final_test: "Final-test diagnostics on {{r:@.n|int}} rows"
+# L3 (owner session 2026-10-26, remark R4): the headlines of a French study, by the same
+# keys; a headline missing here is shown from the English tables above.
+fr:
+  headlines:
+    split: "{{r:@.partitions.train.n_rows|int}} lignes d'entraînement / {{r:@.partitions.validation.n_rows|int}} lignes de validation"
+    eda.target_rate: "Taux de positifs {{r:@.rate|pct1}} sur {{r:@.n_rows|int}} lignes d'entraînement"
+    eda.special_values: "Valeurs spéciales comptées sur {{r:@.n_rows|int}} lignes d'entraînement"
+    eda.rate_by: "{{r:@.n_groups|int}} groupes sur {{r:@.n_rows|int}} lignes d'entraînement"
+    eda.distribution: "Distribution sur {{r:@.n_rows|int}} lignes d'entraînement"
+    fit.baseline: "AUC {{r:@.validation.roc_auc|f3}} sur {{r:@.validation.n_rows|int}} lignes de validation"
+    fit.logistic: "AUC {{r:@.validation.roc_auc|f3}} sur {{r:@.validation.n_rows|int}} lignes de validation"
+    policy.evaluation: "<rule> : précision {{r:@.rules.[<rule>].models.[fit.logistic].precision|pct1}}, rappel {{r:@.rules.[<rule>].models.[fit.logistic].recall|pct1}} sur {{r:@.n|int}} lignes de validation"
+    diag.binary: "Score de Brier {{r:@.models.[fit.logistic].calibration.brier|f4}}, AUC {{r:@.models.[fit.logistic].roc_auc|f3}} sur {{r:@.n|int}} lignes de développement"
+    diag.final_test: "Diagnostics du test final sur {{r:@.n|int}} lignes"
+  cv_headlines:
+    split: "{{r:@.folds|int}} plis sur {{r:@.n_rows|int}} lignes de développement"
+    eda.target_rate: "Taux de positifs {{r:@.rate|pct1}} sur {{r:@.n_rows|int}} lignes de développement"
+    eda.special_values: "Valeurs spéciales comptées sur {{r:@.n_rows|int}} lignes de développement"
+    eda.rate_by: "{{r:@.n_groups|int}} groupes sur {{r:@.n_rows|int}} lignes de développement"
+    eda.distribution: "Distribution sur {{r:@.n_rows|int}} lignes de développement"
+    fit.baseline: "AUC hors pli {{r:@.validation.roc_auc|f3}} sur {{r:@.validation.n_rows|int}} lignes de développement"
+    fit.logistic: "AUC hors pli {{r:@.validation.roc_auc|f3}} sur {{r:@.validation.n_rows|int}} lignes de développement"
+    policy.evaluation: "<rule> : précision {{r:@.rules.[<rule>].models.[fit.logistic].precision|pct1}}, rappel {{r:@.rules.[<rule>].models.[fit.logistic].recall|pct1}} sur les prédictions hors pli de {{r:@.n|int}} lignes de développement"
+  regression_cv_headlines:
+    split: "{{r:@.folds|int}} plis sur {{r:@.n_rows|int}} lignes de développement"
+    eda.target_summary: "Moyenne {{r:@.mean|f2}} <unit>, écart-type {{r:@.sd|f2}} sur {{r:@.n_rows|int}} lignes de développement"
+    eda.special_values: "Valeurs spéciales comptées sur {{r:@.n_rows|int}} lignes de développement"
+    eda.mean_by: "{{r:@.n_groups|int}} groupes sur {{r:@.n_rows|int}} lignes de développement"
+    eda.distribution: "Distribution sur {{r:@.n_rows|int}} lignes de développement"
+    fit.baseline: "MAE hors pli {{r:@.validation.mae|f2}} <unit> sur {{r:@.validation.n_rows|int}} lignes de développement"
+    fit.linear: "MAE hors pli {{r:@.validation.mae|f2}} <unit> sur {{r:@.validation.n_rows|int}} lignes de développement"
+    evaluate.regression: "MAE {{r:@.models.[fit.linear].mae|f2}} <unit> pour le modèle linéaire et {{r:@.models.[fit.baseline].mae|f2}} <unit> pour le modèle de référence (la moyenne) sur les prédictions hors pli de {{r:@.n|int}} lignes de développement"
+  regression_headlines:
+    split: "{{r:@.partitions.train.n_rows|int}} lignes d'entraînement / {{r:@.partitions.validation.n_rows|int}} lignes de validation"
+    eda.target_summary: "Moyenne {{r:@.mean|f2}} <unit>, écart-type {{r:@.sd|f2}} sur {{r:@.n_rows|int}} lignes d'entraînement"
+    eda.special_values: "Valeurs spéciales comptées sur {{r:@.n_rows|int}} lignes d'entraînement"
+    eda.mean_by: "{{r:@.n_groups|int}} groupes sur {{r:@.n_rows|int}} lignes d'entraînement"
+    eda.distribution: "Distribution sur {{r:@.n_rows|int}} lignes d'entraînement"
+    fit.baseline: "MAE de validation {{r:@.validation.mae|f2}} <unit> sur {{r:@.validation.n_rows|int}} lignes"
+    fit.linear: "MAE de validation {{r:@.validation.mae|f2}} <unit> sur {{r:@.validation.n_rows|int}} lignes"
+    evaluate.regression: "MAE {{r:@.models.[fit.linear].mae|f2}} <unit> pour le modèle linéaire et {{r:@.models.[fit.baseline].mae|f2}} <unit> pour le modèle de référence (la moyenne) sur {{r:@.n|int}} lignes de validation"
+    diag.regression: "Résidu moyen {{r:@.models.[fit.linear].residuals.mean|f2}} <unit>, corrélation de rang entre la taille de l'erreur et la prédiction {{r:@.models.[fit.linear].heteroscedasticity.abs_residual_prediction_correlation|f2}} sur {{r:@.n|int}} lignes de développement"
+    diag.final_test: "Diagnostics du test final sur {{r:@.n|int}} lignes"
 changes:
   prediction_time: a different prediction moment
   feature_availability.feature_set: a change that alters the set of usable features

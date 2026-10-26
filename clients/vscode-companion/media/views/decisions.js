@@ -35,6 +35,32 @@
   const rid8 = id => str(id).slice(0, 8);
   const J = () => HT.copy.junior;
 
+  /**
+   * L3 (owner session 2026-10-26, R4, D4b): a proposal's restatement, the chat's own words. In
+   * the panel language when the chat gave it in that language; else as written, in its
+   * language (`restatementLang`), with a marker that says whose wording it is.
+   */
+  // L3 (R4, D4b): the `decisions` read gives its step titles in the study language; the
+  // summary's `texts` give them in both, so the titles follow the panel's language switch.
+  function localTitles(model, snapshot) {
+    const tables = snapshot && snapshot.texts;
+    const T = tables && tables[snapshot.textsLanguage];
+    if (!T || !T.plan) return model;
+    const retitle = list => (Array.isArray(list) ? list.map(x => (x && typeof T.plan[x.decisionId] === 'string'
+      ? { ...x, title: T.plan[x.decisionId] } : x)) : list);
+    const out = { ...model };
+    for (const [k, v] of Object.entries(model)) if (Array.isArray(v)) out[k] = retitle(v);
+    return out;
+  }
+
+  function restatementQuote(c, p, attrs = {}) {
+    const panel = HT.language ? HT.language() : 'en';
+    const lang = p.restatementLang || (HT.studyLanguage ? HT.studyLanguage() : 'en');
+    const foreign = lang !== panel;
+    return el('blockquote', { ...attrs, lang: foreign ? lang : null }, [str(p.restatement),
+      foreign ? el('span', { className: 'ht-en-marker', 'data-chat-wording': lang, text: ` ${(c.chatWording || {})[lang] || ''}` }) : null]);
+  }
+
   /** A decision value in words (WP-A5); the recorded value in its hover, never lost. */
   function readable(ctx, decisionId, raw, attrs) {
     const words = J().value(decisionId, raw, taskOf(ctx));
@@ -344,7 +370,7 @@
       // The restatement block (R14, R22): what the assistant proposes, then the value in words.
       el('div', { className: 'dc-restatement', 'data-restatement-block': id }, [
         el('p', { className: 'dc-lead', text: c.restatedAs }),
-        el('blockquote', { text: str(p.restatement), 'data-restatement': id }),
+        restatementQuote(c, p, { 'data-restatement': id }),
         el('div', { className: 'dc-value' }, [el('p', { 'data-proposed-value': id }, [c.proposedValue, readable(ctx, p.decisionId, p.value)]),
           groups ? groupsList(groups, c) : null]),
       ]),
@@ -539,7 +565,8 @@
       if (v1) {
         // WP-A7: the mode follows the waiting cards, so what waits for the junior comes first.
         out.push(modeSection(model, ctx, c));
-        const entry = ctx.data('decisions');
+        const read = ctx.data('decisions');
+        const entry = read && read.model ? { ...read, model: localTitles(read.model, ctx.snapshot) } : read;
         if (entry && entry.model) out.push(queueSection(entry.model, ctx, c));
         out.push(historySection(entry && entry.model ? entry : null, ctx, c));
         observeCards(articles);

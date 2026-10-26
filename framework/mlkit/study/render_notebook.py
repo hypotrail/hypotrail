@@ -100,8 +100,9 @@ RECOMPUTE_NOTE = ('Each code cell below is the pandas (or scikit-learn) you woul
                   'are not replaced by an equal-fold mean. Copy any cell to your workbench to '
                   'experiment.')
 # WP-F2: the notebook narrative is in the study language where the engine provides French
-# (WP-C: step titles and questions, glossary term names). Definitions, methods, and code
-# comments have no French source yet and stay English.
+# (WP-C: step titles and questions, glossary term names). L3 (owner session 2026-10-26, R4):
+# the definitions, the step explanations (``steps_fr.yaml``) and the notebook's own labels
+# too; code comments stay English (the code is the junior's to copy).
 RECOMPUTE_NOTE_FR = ("Chaque cellule de code ci-dessous est le pandas (ou scikit-learn) que vous "
                      "taperiez sur l'échantillon de développement, suivi d'un `assert` qui "
                      "vérifie que son résultat est celui du registre. Avec review-v1, "
@@ -122,13 +123,14 @@ def _step_markdown(index: int, step: Mapping, content: Mapping, pending: bool,
     term = texts.glossary(content.get('concept')) if content.get('concept') else None
     if term:
         name = term['term_fr'] if fr and term.get('term_fr') else term['term']
-        lines += ['', f'**{name[:1].upper() + name[1:]}.** {term["definition"]}']
+        definition = texts.definition(term)[0]
+        lines += ['', f'**{name[:1].upper() + name[1:]}.** {definition}']
     if content.get('method'):
-        lines += ['', f'**Method.** {content["method"]}']
+        lines += ['', f'**{"Méthode" if fr else "Method"}.** {content["method"]}']
     if recompute:
         lines += ['', RECOMPUTE_NOTE_FR if fr else RECOMPUTE_NOTE]
     if pending:
-        lines += ['', f'_{texts.load("steps")["pending"]}_']
+        lines += ['', f'_{texts.step_status_words()["pending"]}_']
     return '\n'.join(lines)
 
 
@@ -157,7 +159,8 @@ CACHE_FILE = 'render-cache/study_generated.json'
 
 
 def _study_cells(view: Mapping, revision: Any) -> tuple[str, list[tuple[str, str]]]:
-    with texts.study_context(view):
+    # L3: the engine's texts in the study language (an English study is unchanged).
+    with texts.study_context(view), texts.report_language_context(view.get('language')):
         return _study_cells_for_task(view, revision)
 
 
@@ -185,13 +188,18 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
     target, positive, facts = _target(view)
     recompute = code_cells.cells_by_step(view, task, target, positive, facts,
                                          [step['id'] for step in view['plan']])
+    fr = view.get('language') == 'fr'
     if recompute:
+        button = ('Lancer les recalculs enregistrés' if fr
+                  else 'Run registered recomputations')
+        paused = ('Les recalculs sont en pause tant que vous n\'appuyez pas sur le bouton.'
+                  if fr else 'Recomputation is paused until you press the run button.')
         cells.append(('run_recompute',
-                      'run_recompute = mo.ui.run_button(label="Run registered recomputations")\n'
+                      f'run_recompute = mo.ui.run_button(label={json.dumps(button, ensure_ascii=False)})\n'
                       'run_recompute'))
         guard = ('mo.stop(not (run_recompute.value or '
                  'os.environ.get("HYPOTRAIL_NOTEBOOK_RECOMPUTE") == "1"), '
-                 'mo.md("Recomputation is paused until you press the run button."))\n')
+                 f'mo.md({json.dumps(paused, ensure_ascii=False)}))\n')
         cells.append(('recompute_imports', guard + code_cells.imports(task)))
     for index, step in enumerate(view['plan'], start=1):
         content = texts.step(step['id'])
@@ -218,7 +226,8 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
         if step['decision']:
             items.append(f'mo.Html(nv.decision_html(study, {step["decision"]!r}))')
         if content.get('consequence'):
-            items.append(f'mo.md({("**Consequence.** " + content["consequence"])!r})')
+            lead = '**Conséquence.** ' if fr else '**Consequence.** '
+            items.append(f'mo.md({(lead + content["consequence"])!r})')
         body = 'mo.vstack(\n    [\n' + ''.join(f'        {i},\n' for i in items) + '    ]\n)'
         cells.append((f'step_{step["id"]}', body))
     return header, cells

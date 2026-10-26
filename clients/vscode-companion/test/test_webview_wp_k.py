@@ -228,9 +228,11 @@ def test_the_journey_labels_never_break_a_word_at_420_px(open_panel, views, lang
     labels = page.locator('.ht-journey [data-step-label]').evaluate_all('ss => ss.map(s => s.dataset.stepLabel)')
     assert 'Conclusion' in labels
     assert ('Split' if lang == 'en' else 'Découpage') in labels
-    # The plan's full title stays in the hover and for screen readers.
+    # The plan's full title stays in the hover and for screen readers, in the panel's language
+    # since L3 (the summary's `texts`, D4b).
     conclusion = page.locator('.ht-journey [data-step="conclusion"]')
-    assert 'Conclude proportionately' in conclusion.get_attribute('title')
+    assert ('Conclude proportionately' if lang == 'en' else 'Conclure avec mesure') \
+        in conclusion.get_attribute('title')
     assert conclusion.locator('.sr-only').last.inner_text() != ''
 
 

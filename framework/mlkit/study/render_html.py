@@ -257,6 +257,14 @@ def _recorded(conf: Mapping) -> str:
             f'{lit("revision", conf.get("revision"))}. {e(labels["not_authenticated"])}</span>')
 
 
+def _restatement(text: Any, english: Any) -> str:
+    """A restatement the agent wrote (L3): in the study language when the agent gave it in
+    that language, else its English words, labelled ``lang="en"`` in a French report."""
+    shown = text or english or ''
+    other = ' lang="en"' if _french() and shown == english else ''
+    return f'<span data-literal="proposal"{other}>{e(str(shown))}</span>'
+
+
 def _confirmation(conf: Mapping) -> str:
     labels = _labels()
     if conf.get('basis') == 'delegated_default':
@@ -267,14 +275,16 @@ def _confirmation(conf: Mapping) -> str:
                 f'<br><span class="small">{e(labels["delegated_note"])}</span>'
                 f'<br>{_recorded(conf)}'
                 f'<br><span class="small">{e(labels["delegated_restatement"])}: '
-                f'{lit("proposal", conf.get("restatement", ""))}</span>{_concern(conf)}'
+                f'{_restatement(conf.get("label"), conf.get("restatement", ""))}</span>'
+                f'{_concern(conf)}'
                 f'{_warnings(conf)}</div>')
     return (f'<div class="words" data-basis="explicit">{_chip(conf)}'
             f'<strong>{e(labels["user_words"])}:</strong> '
             f'<q data-literal="user_words">{e(conf["user_words"])}</q>{_reason_note(conf)}'
             f'<br>{_recorded(conf)}'
             f'<br><span class="small">{e(labels["restatement"])}: '
-            f'{lit("proposal", conf.get("restatement", ""))}</span>{_concern(conf)}'
+            f'{_restatement(conf.get("label"), conf.get("restatement", ""))}</span>'
+            f'{_concern(conf)}'
             f'{_warnings(conf)}</div>')
 
 
@@ -427,7 +437,8 @@ def decision_card(view: Mapping, did: str, variables: list[dict],
                          f'</span> ' if origin.get('channel') == 'webview' else '')
             parts.append(f'<div class="feedback" data-proposal="{e(p["proposal_id"])}">'
                          f'{_badge("proposed", labels["proposal_waiting"])}'
-                         f'{companion}{lit("proposal", p["restatement"])}<br><span class="small">'
+                         f'{companion}{_restatement(p.get("label"), p["restatement"])}'
+                         f'<br><span class="small">'
                          f'{lit("proposal", p["rationale"])}</span></div>')
     return (f'<article class="decision" data-decision="{e(did)}" data-status="{e(status)}">'
             f'{"".join(parts)}</article>')
@@ -498,12 +509,19 @@ def _motivation(view: Mapping, value: Mapping) -> str:
 def _facts(view: Mapping) -> str:
     labels = _labels()
     groups = []
+    # L3 (R4, D4 A): a French study quotes the case in French when its translation sidecar
+    # gives the statement (``view.case_texts``).
+    translated = (view.get('case_texts') or {}).get('facts') or {}
+    lang = 'fr' if _french() else 'en'
+
+    def value(f):
+        return (translated.get(f['id']) or {}).get(lang) or f['value']
     for status, items in view['facts']['by_status'].items():
         if not items:
             continue
         label = labels['fact_status'][status]
         lis = ''.join(f'<li data-fact="{e(f["id"])}" data-status="{e(status)}">{_badge(status, label)}'
-                      f'{lit("case", _value_text(f["value"]), "q")} <span class="small">Source: '
+                      f'{lit("case", _value_text(value(f)), "q")} <span class="small">Source: '
                       f'{lit("case", f["source"])}</span></li>' for f in items)
         groups.append(f'<h3>{e(label)}</h3>{_concept(status) if texts.glossary(status) else ""}'
                       f'<ul>{lis}</ul>')
@@ -543,6 +561,8 @@ def _figures(citer: cite.Citer, rid: str, spec: Mapping) -> str:
 def _table(citer: cite.Citer, rid: str, table: Mapping, items: list) -> str:
     """A list of rows of a result; a column ``key`` may be a dotted path inside the row."""
     head = ''.join(f'<th>{e(c["label"])}</th>' for c in table['columns'])
+    # L3: a special value's meaning in French when the case's translation sidecar gives it.
+    meanings = getattr(citer, 'meanings', None) or {}
     body = []
     for i, row in enumerate(items):
         cells = []
@@ -557,6 +577,8 @@ def _table(citer: cite.Citer, rid: str, table: Mapping, items: list) -> str:
                 if isinstance(raw, bool):
                     # WP-A9 (M6): a flag reads in words, and only when it is set.
                     raw = 'yes' if raw else None
+                if c['key'] == 'meaning' and isinstance(row, Mapping) and meanings:
+                    raw = meanings.get(f'{row.get("column")}={row.get("value")}') or raw
                 cells.append(f'<td>{lit("category", "" if raw is None else _value_text(raw))}</td>')
             elif citer.has(rid, path):
                 cells.append(f'<td>{citer.num(rid, path, c.get("fmt", "auto"))}</td>')
@@ -1409,10 +1431,14 @@ def _final_rows(view: Mapping, citer: cite.Citer, task: str) -> list[tuple[str, 
 # --- v0.2a (WP-A6): the objective and the data -----------------------------------------------
 
 def _fact_value(view: Mapping, fact_id: str):
+    """A case fact of the view; in a French report its French form when the case's
+    translation sidecar gives it (L3, ``view.case_texts``)."""
     for items in view['facts']['by_status'].values():
         for f in items:
             if f['id'] == fact_id:
-                return f
+                french = ((((view.get('case_texts') or {}).get('facts') or {})
+                           .get(fact_id)) or {}).get('fr')
+                return {**f, 'value': french} if french and _french() else f
     return None
 
 
@@ -1694,6 +1720,12 @@ def _build(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | N
     mobile, side, body = narrative.body(view, citer, surfaces=surfaces,
                                         variables=variables or [], sample=sample,
                                         understanding=understanding)
+    if _french():
+        # L3 (owner session 2026-10-26, R4): the renderers' own English phrases (charts,
+        # diagnostics, table heads) in French (:mod:`mlkit.study.l10n_report`).
+        from . import l10n_report
+        mobile, side, body = (l10n_report.french(mobile), l10n_report.french(side),
+                              l10n_report.french(body))
 
     consumed = sorted({c['result_id'] for c in citer.cited})
     snapshot_json = json.dumps(view.get('presentation'), sort_keys=True,

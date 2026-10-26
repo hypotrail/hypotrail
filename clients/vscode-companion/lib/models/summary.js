@@ -39,7 +39,13 @@ const SUMMARY_KEYS = ['study', 'revision', 'task', 'recap', 'goal', 'currentStep
   // WP-B5: the count of model configurations evaluated so far (CLI-CONTRACT §12, a disclosure).
   'trials',
   // v0.3 (WP-E2, R21): the study language (`en`, `fr`), which the panel's `auto` follows.
-  'language'];
+  'language',
+  // L3 (owner session 2026-10-26, R4, D4b): the junior texts of the summary in both languages
+  // (`texts` of `status --summary --digest`), or null: the panel shows the ones of its own
+  // language (media/core.js `localize`).
+  'texts'];
+// The tables of `texts.<language>` (CLI-CONTRACT-COMPANION §1, `view.LANGUAGE_TEXT_KEYS`).
+const TEXT_TABLES = ['plan', 'moments', 'choice_options', 'limits', 'artifacts', 'digest', 'goal', 'proposals'];
 // The statuses of the success criterion (CLI-CONTRACT §11.4).
 const CRITERION_STATUSES = ['met', 'uncertain', 'not_met', 'not_assessed'];
 const num = x => (typeof x === 'number' && Number.isFinite(x) ? x : null);
@@ -156,6 +162,28 @@ function afterStudyOf(raw) {
   if (!juniorText) return null;
   const azure = raw.azureml && typeof raw.azureml === 'object' ? raw.azureml : {};
   return { juniorText, exportPlanAvailable: azure.supported === true, cloudStatus: strOrNull(raw.cloud_status) };
+}
+
+/**
+ * L3 (D4b): `texts` as `{en, fr}` tables of strings (a text the engine has not in that
+ * language is null), or null when the summary has none (`status --summary` without
+ * `--digest`, an older engine). Nothing is translated here: the strings are the engine's.
+ */
+function textsOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const out = {};
+  for (const lang of ['en', 'fr']) {
+    const t = obj(raw[lang]);
+    const table = {};
+    for (const name of TEXT_TABLES) {
+      table[name] = {};
+      for (const [id, text] of Object.entries(obj(t[name]))) table[name][id] = typeof text === 'string' && text.trim() ? text : null;
+    }
+    table.next_action = typeof t.next_action === 'string' && t.next_action.trim() ? t.next_action : null;
+    table.recap = list(t.recap).filter(x => typeof x === 'string');
+    out[lang] = table;
+  }
+  return out;
 }
 
 function taskOf(summary, plan) {
@@ -365,6 +393,7 @@ function toSummaryModel(summary) {
     trials: summary.trials && typeof summary.trials === 'object' && !Array.isArray(summary.trials)
       ? { count: int(summary.trials.count) } : null,
     language: summary.language === 'fr' || summary.language === 'en' ? summary.language : null,
+    texts: textsOf(summary.texts),
   };
 }
 
@@ -374,5 +403,5 @@ const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary'
 // v0 name, kept for the migrated tests and older callers.
 const toModel = toSummaryModel;
 
-module.exports = { toSummaryModel, toModel, currencyOf, juniorOf, choiceOptionsOf, afterStudyOf, CRITERION_STATUSES, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
+module.exports = { toSummaryModel, toModel, currencyOf, juniorOf, choiceOptionsOf, afterStudyOf, textsOf, TEXT_TABLES, CRITERION_STATUSES, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
   SUMMARY_KEYS, ALERT_IDS, GENERATED, FIXTURES };

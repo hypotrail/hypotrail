@@ -89,3 +89,45 @@ regression:
     fit.baseline: the mean baseline
     fit.linear: the linear model
     evaluate.regression: the model evaluation
+# Owner session 2026-10-26 (L3, R4): the junior sentences of a French study (``junior_text``;
+# ``text`` stays the English source above). The decisions and the activities are named in the
+# junior's words (``audience.decision_words`` and ``audience.activity_words`` in French), and no
+# participle agrees with them, so one sentence fits every name. The register is "vous".
+fr:
+  slot_with_column: "{label} de {column}"
+  webview: "Lancé depuis le panneau d'étude."
+  templates:
+    proposed: "Une proposition a été faite pour {decision}."
+    proposed_value: "Une proposition a été faite pour {decision} : {value}."
+    superseding: "Elle remplace la proposition ouverte."
+    confirmed: "Vous avez confirmé {decision}."
+    confirmed_again: "Vous avez de nouveau confirmé {decision}."
+    confirmed_delegated: "Vous avez laissé {decision} au choix recommandé par l'assistant, comme vous l'avez demandé."
+    withdrawn: "La proposition pour {decision} a été retirée."
+    hold_recorded: "Vous avez mis {decision} en attente : « {words} »."
+    correction_recorded: "Vous avez enregistré une correction sur {decision} : « {words} »."
+    hold_resolved: "Votre condition sur {decision}, « {hold} », est levée dans vos mots : « {words} »."
+    hold_withdrawn: "Votre condition sur {decision}, « {hold} », est retirée dans vos mots : « {words} »."
+    result_added: "Résultat calculé : {activity}."
+    result_added_column: "Résultat calculé : {activity}, pour {column}."
+    result_added_rules: "Résultat calculé : {activity}, pour : {rules}."
+    result_replaced: "Résultat remplacé : {activity}."
+    result_replaced_column: "Résultat remplacé : {activity}, pour {column}."
+    result_replaced_rules: "Résultat remplacé : {activity}, pour : {rules}."
+    run_late: "Calcul terminé après un changement de ses entrées : {activity} ; son résultat n'est pas retenu."
+    run_failed: "Échec du calcul : {activity} ; aucun résultat n'est enregistré."
+    run_interrupted: "Calcul interrompu avant la fin : {activity} ; son issue est inconnue."
+    interruption_acknowledged: "Vous avez pris acte de l'interruption du calcul : {activity}, sans le relancer."
+    created: "L'étude a été créée."
+    other: "L'étude a changé."
+  causes:
+    decision: "{decision} a changé"
+    result_replaced: "{activity} a changé"
+    hold_added: "vous avez mis {decision} en attente"
+    conclusion: "les décisions qu'elle résume ont changé"
+  effects:
+    nothing_refitted: "Modèles inchangés, rien n'est réajusté."
+    refit: "À réajuster : {slots}."
+    stale: "Plus à jour : {slots}."
+    reconfirm_one: "{Decisions} : à confirmer de nouveau ({cause})."
+    reconfirm_many: "{Decisions} : à confirmer de nouveau ({cause})."

@@ -65,10 +65,16 @@
    */
   function engineText(text, { lang = null, tag = 'span', attrs = {} } = {}) {
     const panel = HT.language ? HT.language() : 'en';
-    const source = lang || (HT.studyLanguage ? HT.studyLanguage() : 'en') || 'en';
-    const foreign = panel === 'fr' && source !== 'fr';
-    return HT.el(tag, { ...attrs, lang: foreign ? 'en' : null }, [text,
-      foreign && text ? HT.el('span', { className: 'ht-en-marker', 'data-en-marker': true, text: '(en)' }) : null]);
+    // L3 (D4b): an engine text is in `lang` when given, else in the language the summary's
+    // texts are shown in (the panel's when the engine gave them in it, else the study's).
+    const source = lang || (HT.textsLanguage ? HT.textsLanguage() : HT.studyLanguage ? HT.studyLanguage() : 'en') || 'en';
+    const foreign = source !== panel;
+    // An English text in a French panel is marked "(en)" (WP-E2); since L3 a French text in
+    // an English panel is marked "(fr)" the same way.
+    const marker = foreign && text ? (source === 'fr'
+      ? HT.el('span', { className: 'ht-en-marker', 'data-fr-marker': true, text: '(fr)' })
+      : HT.el('span', { className: 'ht-en-marker', 'data-en-marker': true, text: '(en)' })) : null;
+    return HT.el(tag, { ...attrs, lang: foreign ? source : null }, [text, marker]);
   }
 
   Object.assign(HT.components, { card, why, source, chip, lead, engineText });

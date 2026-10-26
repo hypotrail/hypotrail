@@ -165,7 +165,12 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # v0.3 (WP-F1): the selection among the variants and the model families.
              'model_selection', 'model_families', 'assurance',
              # Reliability roadmap J2: derived, null for legacy studies.
-             'requirements', 'completion', 'claim_eligibility', 'presentation')
+             'requirements', 'completion', 'claim_eligibility', 'presentation',
+             # L3 (owner session 2026-10-26, R4; D4 A, D4b): the case's statements in both
+             # languages from its translation sidecar, or null.
+             'case_texts')
+# L3: the tables of ``view.case_texts`` (``mlkit.study.l10n.case_texts``).
+CASE_TEXTS_KEYS = ('facts', 'special_values', 'groups', 'availability', 'row_unit')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals',
                       # v0.2a (WP-A1): per-feature basis of a feature availability value.
@@ -180,7 +185,10 @@ CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'prop
                           'warnings',
                           # v0.3 (WP-B, R27, R14/R16): a trade-off's reason, the closed
                           # adoption question.
-                          'reason_given', 'adoption_question')
+                          'reason_given', 'adoption_question',
+                          # L3 (owner session 2026-10-26): the restatement in the study
+                          # language.
+                          'label')
 # Post-acceptance contract (D1): how the user decided. ADR 0005 adds the two recorded kinds
 # of own words of the guided mode; ``explicit`` stays readable and is the request default.
 CONFIRMATION_BASES = ('explicit', 'endorsed', 'restated', 'delegated_default')
@@ -663,7 +671,9 @@ def test_notes_hold_a_decision_until_the_junior_resolves_them(tmp_path, syntheti
     """P2 (post-v0.1): ``decide note --about`` / ``--resolve``, its state, view, summary and
     refusal keys."""
     assert st.TOP_OPTIONAL_KEYS == ('task', 'notes', 'partition', 'mode', 'language',
-                                    'mode_history', 'exploration', 'understanding')
+                                    'mode_history', 'exploration', 'understanding',
+                                    # L3 (D4 A): the case's translation sidecar of ``init``.
+                                    'case_l10n')
     assert st.NOTE_KEYS == NOTE_STATE_KEYS and st.NOTE_RESOLUTION_KEYS == NOTE_RESOLUTION_KEYS
     assert st.NOTE_KINDS == ('hold', 'correction') and st.NOTE_STATUSES == NOTE_STATUSES
     assert view.NOTE_VIEW_KEYS == NOTE_VIEW_KEYS

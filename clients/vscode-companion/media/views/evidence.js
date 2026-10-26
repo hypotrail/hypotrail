@@ -100,7 +100,7 @@
   function resultRow(ctx, r, sel) {
     const c = C();
     const right = r.current && r.headline
-      ? ctx.components.segments(ctx.el('span', { className: 'ht-ev-headline' }), ruleWordsIn(r.headline))
+      ? studyText(ctx.components.segments(ctx.el('span', { className: 'ht-ev-headline' }), ruleWordsIn(r.headline)))
       : ctx.el('span', { className: 'ht-ev-headline muted', text: r.current ? '' : c.notCited });
     return ctx.el('li', {}, [ctx.el('button', {
       type: 'button', className: 'ht-ev-item', 'data-result-item': r.resultId, 'aria-pressed': r.resultId === sel ? 'true' : 'false',
@@ -159,7 +159,7 @@
       const parts = [detail.partition, detail.nRows !== null ? c.rows(int(ctx, detail.nRows)) : null,
         task === 'binary' && detail.nPositive !== null ? c.positives(int(ctx, detail.nPositive)) : null].filter(Boolean);
       add(c.facts.evaluatedOn, parts.join(' · '));
-      if (detail.headline && detail.headline.length) add(c.facts.headline, ctx.components.segments(ctx.el('span'), ruleWordsIn(detail.headline)));
+      if (detail.headline && detail.headline.length) add(c.facts.headline, studyText(ctx.components.segments(ctx.el('span'), ruleWordsIn(detail.headline))));
     } else if (detail.partition) {
       add(c.facts.evaluatedOn, detail.partition);
     }
@@ -259,13 +259,35 @@
     ]);
   }
 
+  // L3 (R4): a headline is written in the study language (`evidence`); in a panel of the
+  // other language it is marked with its language, as an engine text is.
+  function studyText(node) {
+    const study = HT.studyLanguage ? HT.studyLanguage() : 'en';
+    const panel = HT.language ? HT.language() : 'en';
+    if (study === panel) return node;
+    node.setAttribute('lang', study);
+    node.appendChild(HT.el('span', study === 'fr'
+      ? { className: 'ht-en-marker', 'data-fr-marker': true, text: '(fr)' }
+      : { className: 'ht-en-marker', 'data-en-marker': true, text: '(en)' }));
+    return node;
+  }
+
+  // L3 (R4): a limit as the junior reads it, `juniorText` (localized from the engine's `texts`),
+  // else the engine's English `text`, marked when it is not in the panel's language.
+  function limitText(ctx, i, attrs = {}) {
+    return i.juniorText
+      ? ctx.components.engineText(i.juniorText, { tag: 'p', attrs })
+      : ctx.components.engineText(i.text, { tag: 'p', attrs, lang: 'en' });
+  }
+
   function smallData(ctx, detail) {
     const top = (ctx.snapshot && ctx.snapshot.notYetDefensible && ctx.snapshot.notYetDefensible.top) || [];
     const slot = detail.slot || '';
     const ids = /^(policy\.evaluation|evaluate\.regression|fit\.)/.test(slot)
       ? ['small_validation_partition', 'capacity_exceeds_validation'] : /^eda\./.test(slot) ? ['high_cardinality_grouping'] : [];
     const items = top.filter(i => ids.includes(i.id));
-    return items.map(i => ctx.el('div', { className: 'card ht-warn', role: 'note', 'data-small-data': i.id }, [ctx.el('p', { text: i.text })]));
+    // L3 (R4): the limit in the junior's words (the panel's language when the engine gave it).
+    return items.map(i => ctx.el('div', { className: 'card ht-warn', role: 'note', 'data-small-data': i.id }, [limitText(ctx, i)]));
   }
 
   // "Select the id": opens the full id and selects it, for the junior to copy with the
@@ -410,7 +432,7 @@
       ctx.el('h3', { id: 'ht-ev-ledger-h' }, [HT.terms.mark(c.ledgerTitle, 'exposure')]),
       rows.length ? ctx.el('table', { className: 'ht-values ht-ledger' }, [ctx.el('caption', { className: 'sr-only', text: c.ledgerTitle }), head,
         ctx.el('tbody', {}, rows)]) : ctx.el('p', { className: 'muted', text: c.ledgerEmpty }),
-      ...limits.map(i => ctx.el('p', { className: 'hold', 'data-limit': i.id, text: i.text })),
+      ...limits.map(i => limitText(ctx, i, { className: 'hold', 'data-limit': i.id })),
       model.splitOverlap ? ctx.el('p', { className: 'hold', 'data-split-unseen': true, text: c.splitUnseen }) : null,
     ]);
   }

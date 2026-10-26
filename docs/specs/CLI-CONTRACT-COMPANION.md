@@ -27,6 +27,8 @@ CLI-CONTRACT.md §8.7 points here and lists the new schemas; `test_contract_free
 
 **What comes after the study (owner session 2026-10-26, L7 D15; wave W1 integration).** The panel reads one more key of the summary it already reads: on `done`, `next_action.after_study` (CLI-CONTRACT §3.1). It keeps `junior_text` and `azureml.supported` only (`lib/models/summary.js`, `nextAction.afterStudy = {juniorText, exportPlanAvailable, cloudStatus}`), never the commands (`handoff.command`, `azureml.plan_command`, the agent's): Overview "Your next move" and the Learn & hand off tab show the text read only, and say that the export plan is asked for in the chat when it is available (COMPANION-ADVANCED HO-3). A conclusion option's value `{"verdict": ...}` is shown as its verdict. The client key lists of `next_action` (`pause`, `choice_options[]`, `after_study`, `after_study.azureml`, `panel`, `panel.shown`) are frozen in `test/fixtures/contract-keys.json` and checked against the engine by `test_contract_keys.py`. No new read, no new write.
 
+**Both languages for the panel (owner session 2026-10-26, L3; remark R4, decision D4b).** The panel's EN/FR switch now switches the engine's texts too: the engine gives each junior text the panel shows in both languages, and the panel shows the one of its switch. Three reads gain additive keys, last: `status --summary --digest` gains `texts` (`{en, fr}`, §1); each `evidence` result gains `question_junior` (its question in the study language) and `texts` (§5); each `explain` term gains `language` (§6). The data card's case statements carry `texts` (CLI-CONTRACT §11.1). A text the agent wrote (a proposal's restatement) is shown in the panel's language when the agent gave it (`--restatement-fr`), else in the language it has, labelled with that language. No new read, no new write: `lib/cli.js` keeps W4–W7 only.
+
 ## 0. Summary of additions
 
 | # | Addition | Kind | Schema | Writes |
@@ -60,6 +62,7 @@ hypotrail status --study DIR --summary --digest [--since REV] [--json]
 - `--digest` requires `--summary`. Without it the command fails with `invalid_arguments`.
 - Without `--digest`, `status --summary` is byte-for-byte unchanged. `status --json` changes only by the additive `origin` of its `open_proposals` (§9, decision CI.6).
 - With `--digest`, six keys are appended **after** `recap`, in this order: `moments`, `pauses`, `last_session`, `digest`, `task`, and (review fix H1) `currency` (§1.5). The schema stays `hypotrail.summary/1`, because the change is additive (CLI-CONTRACT §3, the precedent of `recap` and `notes`).
+- L3 (owner session 2026-10-26, D4b): with `--digest`, `texts` is appended last: `{en: T, fr: T}`, each junior text of this summary by its id in that language (`view.LANGUAGE_TEXT_KEYS`: `plan`, `moments`, `next_action`, `choice_options`, `limits`, `artifacts`, `recap`, `digest`, `goal`, `proposals`; CLI-CONTRACT §3.3). The table of the other language is built from the same state read in that language, with no write and no clock (R1, R4 hold).
 - `task` is `binary` or `regression` (`view.task`). It removes the client's inference from step ids (ADR 0004 open question 7, answered yes; decision CA.3).
 - With `--digest` only, each `open_proposals` item gains `origin` as its last key (C9). Without `--digest` the items are unchanged, so the byte-identical rule above holds (decision CA.4).
 
@@ -323,8 +326,10 @@ This command reads everything the EDA, Evidence, and What if? tabs show, in one 
 ```text
 {result_id, activity, slot, promoted, current, stale_reason, integrity, partition, n_rows,
  params, upstream, downstream, created, started_revision, execution_id, exposure_id,
- values, headline}
+ values, headline, question_junior, texts}
 ```
+
+L3 (owner session 2026-10-26, D4b; additive, last): `question_junior` is the question the result answers in the study language (`null` for a result whose values hold none), and `texts` is `{en, fr}` of the junior texts of an `eda.*` result (`question`, `note`, `warnings`, `binning`, `signal_questions`, `null_band`, `meanings`; the French forms are made at read time from the English source, `l10n.eda_texts`), `null` for another activity. In a French study `headline` is written in French (`fr` of `content/evidence.yaml`), the English one where no French form exists.
 
 | Key | Content |
 |---|---|
@@ -417,7 +422,7 @@ hypotrail explain --study DIR [--term ID] [--json]
 
 This command is the learning layer's only source of text. Payload `hypotrail.explain/1`, keys: `schema`, `ok`, `study`, `revision`, `task`, `terms`, `steps`, `predictions`.
 
-**`terms`.** It lists the glossary entries of the task (the `regression_terms` overlay and the `binary_only` filter of `texts.py`), in file order. With `--term ID`, only that term is returned; an unknown id is `invalid_arguments`, with `details.terms`. Each item is `{id, term, definition, example, example_status, steps}`:
+**`terms`.** It lists the glossary entries of the task (the `regression_terms` overlay and the `binary_only` filter of `texts.py`), in file order. With `--term ID`, only that term is returned; an unknown id is `invalid_arguments`, with `details.terms`. Each item is `{id, term, definition, example, example_status, steps, language}` (`language`, L3, owner session 2026-10-26: `en` or `fr`, the language of `term` and `definition`; a French study gets the glossary's French forms where they exist, and never a glossary example written for another case):
 
 - `example` is `null` or `{segments}`: the contextual example of the new optional `cited_example` field of `glossary.yaml`, a template that cites study results (for example, for `base_rate`: "In this study's training rows the positive outcome occurs in {{slot:eda.target_rate:rate|pct1}} of rows."). The existing `example` field of `glossary.yaml` (post-v0.1 fix D11) is the agent's placeholder text and stays unchanged; `explain` never reads it (decision CA.2).
 - `example_status` is `shown` when every cited result is current and verified, `needs_results` when a cited slot is missing or not current (`example: null`), and `none` when the term has no example.

@@ -134,11 +134,13 @@
         // Each card is titled by the engine's question (ED-7). In a French panel a per-column
         // chart takes the panel's French question rather than the English engine text; other
         // cards keep the engine's text with its "(en)" marker.
+        // L3: the engine's French question when it gives one (`localCard`).
         HT.language && HT.language() === 'fr' && PER_COLUMN.includes(card.activity) && card.column
+          && (!card.langs || card.langs.question !== 'fr')
           ? el('h3', { id, className: 'eda-question', 'data-question': true,
             text: c.requestQuestion(card.activity, card.column) })
           : el('h3', { id, className: card.question ? 'eda-question' : null, 'data-question': card.question ? true : null },
-            [card.question ? ctx.components.engineText(card.question) : title]),
+            [card.question ? ctx.components.engineText(card.question, { lang: card.langs ? card.langs.question : 'en' }) : title]),
         sub,
       ])]),
       el('div', { className: 'eda-analysis-body' }, [
@@ -173,15 +175,64 @@
     return terms[id] || null;
   }
 
-  /** An engine text (a note, a warning) as the engine sent it, "(en)" in a French panel. */
-  function engine(ctx, t, attrs) {
-    return t ? ctx.components.engineText(t, { tag: 'p', attrs }) : null;
+  /**
+   * An engine text (a note, a warning) in `lang`, the language it is shown in: the panel's
+   * when the engine gave it (L3, `localCard`), else the stored English, marked "(en)" in a
+   * French panel.
+   */
+  function engine(ctx, t, attrs, lang = 'en') {
+    return t ? ctx.components.engineText(t, { tag: 'p', attrs, lang }) : null;
+  }
+
+  /**
+   * L3 (owner session 2026-10-26, R4, D4b): the card with the engine's junior texts in the
+   * panel language when the evidence result gives them (`texts`, CLI-CONTRACT-COMPANION §5):
+   * the question, the note, the warnings and the special values' meanings. `langs` names the
+   * language each text is in now; a text the engine has not in that language stays the stored
+   * English (an EDA result stores its sentences in English), and the view marks it.
+   */
+  function localCard(card) {
+    const lang = HT.language ? HT.language() : 'en';
+    const t = (card && card.texts && card.texts[lang]) || null;
+    const out = { ...card, langs: { question: 'en', note: 'en', warnings: 'en' } };
+    if (t && t.question && card.question) { out.question = t.question; out.langs.question = lang; }
+    if (!card.data) return out;
+    const d = { ...card.data };
+    if (t && t.note && d.note) { d.note = t.note; out.langs.note = lang; }
+    const warnings = Array.isArray(d.warnings) ? d.warnings : [];
+    if (t && warnings.length && Array.isArray(t.warnings) && t.warnings.length === warnings.length && t.warnings.every(Boolean)) {
+      d.warnings = t.warnings.slice();
+      out.langs.warnings = lang;
+    }
+    if (Array.isArray(d.rows)) {
+      d.rows = d.rows.map(r => {
+        const m = t && t.meanings ? t.meanings[`${r.column}=${r.value}`] : null;
+        return m ? { ...r, meaning: m } : r;
+      });
+    }
+    out.data = d;
+    return out;
   }
 
   // --- the data card (WP-A7) -------------------------------------------------------------
 
+  /**
+   * L3 (D4b): a junior line of the data card in the panel language when the engine gives it
+   * in it (`lines`: {en, fr}), else the line as sent, in the study language, marked.
+   */
+  function lineOf(ctx, both, fallback) {
+    // An English study's junior line is the one to show (its `junior_text`, `fallback`); a
+    // French study gives it in French (`junior_text`) and in English (`line`), and the panel
+    // shows the one of its language.
+    const lang = HT.language ? HT.language() : 'en';
+    const study = HT.studyLanguage ? HT.studyLanguage() : 'en';
+    if (study === 'en' || !both) return ctx.components.engineText(fallback, { lang: study });
+    if (both[lang]) return ctx.components.engineText(both[lang], { lang });
+    return ctx.components.engineText(fallback, { lang: study });
+  }
+
   /** A variable's availability in words: the junior's decision when there is one, else the case. */
-  function knownCell(c, v) {
+  function knownCell(c, v, fr = false) {
     if (v.role === 'target') return el('span', { className: 'ht-status ht-st-accent', 'data-known': 'target', text: c.data.target });
     if (v.decided && v.decided.value) {
       const excluded = EXCLUDED.includes(v.decided.value);
@@ -192,7 +243,9 @@
     }
     const a = v.availability || {};
     const stated = a.value && a.value !== 'unknown' ? (c.data.availability[a.value] || a.value) : c.data.notDocumented;
-    return el('span', { title: [a.status ? c.data.factStatus[a.status] || a.status : '', a.source || ''].filter(Boolean).join(' · ') || null }, [
+    // L3: the case's source in French when the panel shows the meanings in French.
+    const source = fr && a.sourceFr ? a.sourceFr : a.source;
+    return el('span', { title: [a.status ? c.data.factStatus[a.status] || a.status : '', source || ''].filter(Boolean).join(' · ') || null }, [
       el('span', { className: 'ht-status ht-st-neutral', 'data-known': a.value || 'unknown', text: stated }),
     ]);
   }
@@ -210,7 +263,9 @@
       el('span', { lang: french ? 'fr' : 'en', 'data-description': french ? 'fr' : 'en', text: french ? v.descriptionFr : v.description }),
       v.examples.length ? el('div', { className: 'ht-sub', text: c.data.examples(v.examples.join(' · ')) }) : null,
       ...v.specialValues.map(s => el('div', { className: 'ht-sub eda-special-line', 'data-special': `${v.name}:${s.value}` }, [
-        c.data.special, el('code', { text: s.value }), `: ${s.meaning}`,
+        c.data.special, el('code', { text: s.value }), ': ',
+        el('span', { lang: fr && s.meaningFr ? 'fr' : 'en', 'data-special-meaning': fr && s.meaningFr ? 'fr' : 'en',
+          text: fr && s.meaningFr ? s.meaningFr : s.meaning }),
         Number.isInteger(s.nRows) ? ` (${c.data.rows(count(ctx, s.nRows))})` : '',
       ])),
     ]);
@@ -221,13 +276,14 @@
     const rows = [];
     for (const g of d.groups) {
       rows.push(el('tr', { className: 'eda-group-row', 'data-group': g.group }, [
-        el('th', { scope: 'colgroup', colspan: String(head.length), text: g.group })]));
+        el('th', { scope: 'colgroup', colspan: String(head.length), lang: fr && g.groupFr ? 'fr' : null,
+          text: fr && g.groupFr ? g.groupFr : g.group })]));
       for (const v of g.variables) {
         rows.push(el('tr', { 'data-variable': v.name, 'data-role': v.role }, [
           el('td', { className: 'eda-name' }, [el('span', { className: 'colname', text: v.name }),
             el('div', { className: 'ht-sub', text: typeText(ctx, c, v) })]),
           el('td', { className: 'eda-meaning' }, [meaningCell(ctx, c, v, fr)]),
-          el('td', {}, [knownCell(c, v)]),
+          el('td', {}, [knownCell(c, v, fr)]),
           el('td', { className: 'eda-num', 'data-missing-cell': v.name, text: count(ctx, v.nMissing) }),
         ]));
       }
@@ -285,7 +341,7 @@
     return el('section', { className: 'card eda-data', 'aria-labelledby': 'eda-data-title', 'data-data-card': true }, [
       el('div', { className: 'ht-card-h' }, [
         el('div', {}, [el('span', { className: 'ht-cap', text: c.data.eyebrow }),
-          el('h3', { id: 'eda-data-title', 'data-fact': 'unit' }, [c.data.oneRowIs(unit.value || c.data.notStated)])]),
+          el('h3', { id: 'eda-data-title', 'data-fact': 'unit' }, [c.data.oneRowIs((fr && unit.valueFr) || unit.value || c.data.notStated)])]),
         el('span', { className: 'ht-status ht-st-neutral', text: c.data.structural }),
       ]),
       el('div', { className: 'ht-grid ht-g4 eda-facts' }, [
@@ -302,12 +358,12 @@
       d.finalTest.line && d.finalTest.audience !== 'agent'
         ? el('p', { className: 'eda-seal-line ht-sub', 'data-seal-line': d.finalTest.status || '' }, [
           el('span', { className: 'ht-status ht-st-sealed', text: c.data.sealed }), ' ',
-          ctx.components.engineText(d.finalTest.line)]) : null,
+          lineOf(ctx, d.finalTest.lines, d.finalTest.line)]) : null,
       el('div', { className: 'ht-section-h' }, [el('h4', { text: c.data.dictionaryTitle(count(ctx, d.development.columns)) }), toggle]),
       d.hasFrench ? el('p', { className: 'ht-sub', 'data-meanings-hint': true, text: c.data.meaningsHint }) : null,
       dictionary(ctx, c, d, fr),
       fiveRows(ctx, c, d),
-      d.note ? el('p', { className: 'ht-sub', 'data-data-note': true }, [ctx.components.engineText(d.note)]) : null,
+      d.note ? el('p', { className: 'ht-sub', 'data-data-note': true }, [lineOf(ctx, d.noteLines, d.note)]) : null,
     ]);
   }
 
@@ -380,7 +436,7 @@
           term && typeof term.definition === 'string' ? `: ${term.definition}` : null]),
         el('p', {}, weave(c.summaryLine, [num(ctx, d.median, rid), num(ctx, d.q25, rid), num(ctx, d.q75, rid), num(ctx, d.min, rid),
           num(ctx, d.max, rid), num(ctx, d.mean, rid), num(ctx, d.nRows, rid)])),
-        engine(ctx, d.note, { 'data-note': true }),
+        engine(ctx, d.note, { 'data-note': true }, card.langs.note),
       ],
     };
   }
@@ -415,7 +471,7 @@
         share: cell(ctx, r.share, rid), measure: cell(ctx, r[measure], rid) })),
     });
     body.push(table);
-    why.push(engine(ctx, d.note, { 'data-note': true }));
+    why.push(engine(ctx, d.note, { 'data-note': true }, card.langs.note));
     return { body, why };
   }
 
@@ -468,8 +524,8 @@
         el('p', { 'data-hatch-caption': true }, weave(c.hatch, [num(ctx, d.minGroupRows, rid)])),
         el('p', { className: 'eda-noncausal', 'data-noncausal': true, text: c.nonCausal(column) }),
         d.warnings.length ? el('ul', { className: 'eda-warnings', 'data-warnings': true },
-          d.warnings.map(w => ctx.components.engineText(w, { tag: 'li' }))) : null,
-        engine(ctx, d.note, { 'data-note': true }),
+          d.warnings.map(w => ctx.components.engineText(w, { tag: 'li', lang: card.langs.warnings }))) : null,
+        engine(ctx, d.note, { 'data-note': true }, card.langs.note),
       ],
     };
   }
@@ -542,8 +598,8 @@
       ctx.components.bars(box, { title: c.specialsChart(column), items: own, max: top, unit: c.rowsHead, showTitle: false });
       body.push(el('p', { className: 'ht-sub', text: c.specialsLine }), box);
     }
-    if (d.warnings.length) why.push(el('ul', { className: 'eda-warnings', 'data-warnings': true }, d.warnings.map(w => ctx.components.engineText(w, { tag: 'li' }))));
-    why.push(engine(ctx, d.note, { 'data-note': true }));
+    if (d.warnings.length) why.push(el('ul', { className: 'eda-warnings', 'data-warnings': true }, d.warnings.map(w => ctx.components.engineText(w, { tag: 'li', lang: card.langs.warnings }))));
+    why.push(engine(ctx, d.note, { 'data-note': true }, card.langs.note));
     return { body, finding, why };
   }
 
@@ -584,7 +640,7 @@
     }
     return { body, finding, why: [
       el('p', { 'data-signal-legend': true }, weave(c.signalLegend(metric), [num(ctx, d.folds, rid), num(ctx, d.nRows, rid), num(ctx, d.median, rid)])),
-      engine(ctx, d.note, { 'data-note': true })] };
+      engine(ctx, d.note, { 'data-note': true }, card.langs.note)] };
   }
 
   /**
@@ -628,7 +684,7 @@
       el('p', { text: k.measuresText }),
       el('p', {}, weave(k.rowsRead, [num(ctx, d.nRows, rid)])),
       el('p', { text: k.notALook }),
-      engine(ctx, d.note, { 'data-note': true }),
+      engine(ctx, d.note, { 'data-note': true }, card.langs.note),
     ] };
   }
 
@@ -688,13 +744,13 @@
           ...(declared ? { outside: outside(r) } : {}) })),
       });
     }
-    why.push(engine(ctx, d.note, { 'data-note': true }));
+    why.push(engine(ctx, d.note, { 'data-note': true }, card.langs.note));
     return el('section', { className: 'card eda-card eda-quality', 'aria-labelledby': id, 'data-quality-card': card.slot,
       'data-current': 'true', 'data-nav': `result:${card.resultId}` }, [
       el('div', { className: 'ht-card-h' }, [el('div', {}, [
         el('span', { className: 'ht-cap', 'data-eyebrow': true, text: q.eyebrow }),
         el('h3', { id, className: card.question ? 'eda-question' : null, 'data-question': card.question ? true : null },
-          [card.question ? ctx.components.engineText(card.question) : titleOf(c, card)])])]),
+          [card.question ? ctx.components.engineText(card.question, { lang: card.langs ? card.langs.question : 'en' }) : titleOf(c, card)])])]),
       el('div', { className: 'ht-chips eda-chips' }, chips),
       d.ranges.length ? ranges : null,
       el('div', { className: 'ht-card-f' }, [ctx.components.why(why), sourceButton(ctx, c, card)]),
@@ -912,7 +968,8 @@
         ]));
         return out;
       }
-      const cards = arr(data.model.cards);
+      // L3 (D4b): each card's engine texts in the panel language when the engine gave them.
+      const cards = arr(data.model.cards).map(localCard);
       // The structural quality check reads the development rows without the target: it
       // belongs with the data card, before the training-row exploration.
       const quality = cards.filter(k => k.kind === 'quality');

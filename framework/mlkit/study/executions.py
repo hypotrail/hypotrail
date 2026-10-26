@@ -66,7 +66,10 @@ PAYLOAD_KEYS = ('schema', 'ok', 'study', 'action', 'request_id', 'replayed', 're
                 'activity', 'execution_id', 'status', 'result_id', 'values', 'result',
                 'artifacts',
                 # v0.3 (WP-J): the next action after the run, as status gives it.
-                'next_action')
+                'next_action',
+                # L3 (owner session 2026-10-26, R4): the question the result answers, in the
+                # study language (``values.question`` stays the stored English), or null.
+                'question_junior')
 RESERVE, PROMOTE, FAIL, RECOVER, ACKNOWLEDGE = ('run.reserve', 'run.promote', 'run.fail',
                                                'run.recover', 'run.acknowledge')
 STATUSES = ('running', 'promoted', 'late_not_promoted', 'already_current', 'failed',
@@ -476,6 +479,9 @@ def _outcome(store: StudyStore, payload: dict, *, render: bool,
     produced = {'command': 'run', 'action': payload['action'], 'activity': payload['activity'],
                 'slot': (payload['result'] or {}).get('slot'), 'status': payload['status']}
     payload['next_action'] = cmd.refreshed_next_action(store.study_dir, produced)
+    from . import l10n
+    payload['question_junior'] = l10n.question_junior(
+        payload['values'], (payload['next_action'] or {}).get('language') or l10n.EN)
     return cmd.Outcome(payload, code)
 
 
