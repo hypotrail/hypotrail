@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/auto mpg fr",
    "revision": 32,
-   "updated": "2026-10-26T20:04:25.139496+00:00",
+   "updated": "2026-10-26T20:37:31.365822+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
@@ -348,7 +348,7 @@
      "restatement": "Adopt the linear model.",
      "rationale": "Erreur plus faible sur les années récentes.",
      "revision": 32,
-     "created": "2026-10-26T20:04:25.139468+00:00",
+     "created": "2026-10-26T20:37:31.365786+00:00",
      "labels": {
       "fr": "Adopter le modèle linéaire."
      },
@@ -374,7 +374,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-26T20:04:12.330399+00:00",
+      "time": "2026-10-26T20:37:18.690445+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -383,7 +383,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the prediction_time as stated."
+      "label": "You decide the prediction_time as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -412,7 +413,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-26T20:04:13.138744+00:00",
+      "time": "2026-10-26T20:37:19.508580+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -421,7 +422,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the feature_availability as stated."
+      "label": "You decide the feature_availability as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": {
@@ -452,7 +454,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-26T20:04:14.225120+00:00",
+      "time": "2026-10-26T20:37:20.589351+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -461,7 +463,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the split as stated."
+      "label": "You decide the split as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -484,7 +487,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-26T20:04:15.219708+00:00",
+      "time": "2026-10-26T20:37:21.682694+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -493,7 +496,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the success_criterion as stated."
+      "label": "You decide the success_criterion as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -521,7 +525,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-26T20:04:16.434011+00:00",
+      "time": "2026-10-26T20:37:22.913917+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -530,7 +534,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the preprocessing as stated."
+      "label": "You decide the preprocessing as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -553,7 +558,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 27,
-      "time": "2026-10-26T20:04:22.937872+00:00",
+      "time": "2026-10-26T20:37:29.028916+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -562,7 +567,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the model_variant as stated."
+      "label": "You decide the model_variant as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -934,7 +940,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_a2a3d5fe7f8806c9c98f6929",
-     "exposure_id": "x_a6c27486910d44149cd1d0409b240521",
+     "exposure_id": "x_9c7e53edd6bb4d6e811033206068f34c",
      "started_revision": 20,
      "integrity": "ok"
     },
@@ -2178,7 +2184,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_b5c9bc6dc2acb308345f4b5b",
-     "exposure_id": "x_f352d1ea0624427bb69ce70ad42dff29",
+     "exposure_id": "x_c5663133bc164e12805a6d99e6d9e5da",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -2248,7 +2254,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_a6285653c29e349d0b0beb2b",
-     "exposure_id": "x_f714dc400eb14a3491208515e8014390",
+     "exposure_id": "x_9343205f53384f79a5a953bf733ac97e",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -2314,7 +2320,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_92aaf17d67568d5f7880d18a",
-     "exposure_id": "x_991a548ee1d34c10889ba3f9060d4863",
+     "exposure_id": "x_fb0a8de7bdb3455993a4054ed5e49f35",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -2664,7 +2670,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_13402e84eaabec613a733a22",
-     "exposure_id": "x_5242b157ca2841a7b9c717aa76853dc6",
+     "exposure_id": "x_138b6c50ca46407fab8ec14a53bf0abb",
      "started_revision": 30,
      "integrity": "ok"
     },
@@ -2744,7 +2750,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_218811c490cacf105137f8c6",
-     "exposure_id": "x_08ed8b8e9d974b8881105ee982bd6fee",
+     "exposure_id": "x_423ae1e79db94edf9b921efb08c7e111",
      "started_revision": 22,
      "integrity": "ok"
     },
@@ -2889,7 +2895,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_aff36faf73c7439f15bd6f24",
-     "exposure_id": "x_4534304133f0469180b80ba9d23deb98",
+     "exposure_id": "x_3463ac866b2a4d6c98c1e96529472a0c",
      "started_revision": 24,
      "integrity": "ok"
     },
@@ -3044,7 +3050,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_0fce83ab7847d276df6d9250",
-     "exposure_id": "x_5b393277043e4994b5563686b74eba5f",
+     "exposure_id": "x_1fc3474a69884bfd8f953c3012b81e0a",
      "started_revision": 28,
      "integrity": "ok"
     },
@@ -3137,7 +3143,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_839104bf9d2cae503476be39",
-     "exposure_id": "x_32789b0445e5466db2d23e98233ad5e9",
+     "exposure_id": "x_e9ab5018a63346afa12311136e3f72bf",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -3670,6 +3676,8 @@
      "changed_after_opening": false
     }
    },
+   "automation": null,
+   "review_queue": [],
    "case_texts": {
     "facts": {
      "target": {

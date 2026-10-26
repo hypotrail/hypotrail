@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/tmp/capture/shoppers",
    "revision": 1,
-   "updated": "2026-10-26T20:03:54.412100+00:00",
+   "updated": "2026-10-26T20:37:00.251185+00:00",
    "case": {
     "id": "uci-online-shoppers-v1",
     "path": "/hypotrail/use-cases/online-shoppers/case.yaml",
@@ -1023,6 +1023,8 @@
      "changed_after_opening": false
     }
    },
+   "automation": null,
+   "review_queue": [],
    "case_texts": {
     "facts": {
      "target": {

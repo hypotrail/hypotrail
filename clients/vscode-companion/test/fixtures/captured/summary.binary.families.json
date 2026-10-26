@@ -676,7 +676,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-26T20:03:01.970444+00:00",
+   "boundary_time": "2026-10-26T20:36:10.346672+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -685,7 +685,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-26T20:03:02.175744+00:00",
+     "time": "2026-10-26T20:36:10.575088+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -708,7 +708,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-26T20:03:02.749304+00:00",
+     "time": "2026-10-26T20:36:11.093040+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -738,7 +738,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-26T20:03:03.389413+00:00",
+     "time": "2026-10-26T20:36:11.607799+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -761,7 +761,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-26T20:03:04.045461+00:00",
+     "time": "2026-10-26T20:36:12.193723+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -791,7 +791,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-26T20:03:04.729324+00:00",
+     "time": "2026-10-26T20:36:12.956113+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -814,7 +814,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-26T20:03:05.423137+00:00",
+     "time": "2026-10-26T20:36:13.724336+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -844,7 +844,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-26T20:03:06.453414+00:00",
+     "time": "2026-10-26T20:36:14.539274+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -867,7 +867,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-26T20:03:07.301421+00:00",
+     "time": "2026-10-26T20:36:15.255148+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -897,7 +897,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-26T20:03:08.504052+00:00",
+     "time": "2026-10-26T20:36:16.167506+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -920,7 +920,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-26T20:03:09.325823+00:00",
+     "time": "2026-10-26T20:36:17.169112+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -950,7 +950,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-26T20:03:10.348453+00:00",
+     "time": "2026-10-26T20:36:18.265169+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -973,7 +973,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-26T20:03:11.293445+00:00",
+     "time": "2026-10-26T20:36:19.497263+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -996,7 +996,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-26T20:03:12.402044+00:00",
+     "time": "2026-10-26T20:36:20.658802+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1019,7 +1019,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-26T20:03:13.981446+00:00",
+     "time": "2026-10-26T20:36:21.970589+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1042,7 +1042,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-26T20:03:15.181730+00:00",
+     "time": "2026-10-26T20:36:23.195844+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1065,7 +1065,7 @@
     },
     {
      "revision": 22,
-     "time": "2026-10-26T20:03:16.143275+00:00",
+     "time": "2026-10-26T20:36:24.151990+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1088,7 +1088,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-26T20:03:17.928851+00:00",
+     "time": "2026-10-26T20:36:25.837296+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1123,7 +1123,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-26T20:03:19.896276+00:00",
+     "time": "2026-10-26T20:36:27.281044+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1146,7 +1146,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-26T20:03:33.378763+00:00",
+     "time": "2026-10-26T20:36:39.988158+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1169,7 +1169,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-26T20:03:42.326884+00:00",
+     "time": "2026-10-26T20:36:48.499722+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1192,7 +1192,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-26T20:03:50.627835+00:00",
+     "time": "2026-10-26T20:36:56.618499+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1218,7 +1218,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-26T20:03:52.127117+00:00",
+     "time": "2026-10-26T20:36:57.865254+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,

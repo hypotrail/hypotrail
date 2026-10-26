@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"",
    "revision": 50,
-   "updated": "2026-10-26T20:02:01.176679+00:00",
+   "updated": "2026-10-26T20:35:13.047825+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -366,7 +366,7 @@
      "restatement": "Call the 100 clients with the highest scores.",
      "rationale": "The team can make 100 calls per wave.",
      "revision": 50,
-     "created": "2026-10-26T20:02:01.176625+00:00",
+     "created": "2026-10-26T20:35:13.047775+00:00",
      "labels": null,
      "label": "Call the 100 clients with the highest scores.",
      "origin": {
@@ -390,7 +390,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-26T20:01:24.104430+00:00",
+      "time": "2026-10-26T20:34:38.451800+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -399,7 +399,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the prediction_time as stated."
+      "label": "You decide the prediction_time as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -438,7 +439,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-26T20:01:25.187125+00:00",
+      "time": "2026-10-26T20:34:39.644465+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -447,7 +448,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the feature_availability as stated."
+      "label": "You decide the feature_availability as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": {
@@ -488,7 +490,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-26T20:01:26.607579+00:00",
+      "time": "2026-10-26T20:34:41.241268+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -497,7 +499,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the split as stated."
+      "label": "You decide the split as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -520,7 +523,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-26T20:01:28.142661+00:00",
+      "time": "2026-10-26T20:34:42.810903+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -529,7 +532,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the success_criterion as stated."
+      "label": "You decide the success_criterion as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -557,7 +561,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-26T20:01:29.950506+00:00",
+      "time": "2026-10-26T20:34:44.692005+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -566,7 +570,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the preprocessing as stated."
+      "label": "You decide the preprocessing as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -589,7 +594,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 37,
-      "time": "2026-10-26T20:01:50.769365+00:00",
+      "time": "2026-10-26T20:35:02.721464+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -598,7 +603,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the model_variant as stated."
+      "label": "You decide the model_variant as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -625,7 +631,7 @@
       "restatement": "You decide the model_choice as stated.",
       "proposal_id": "p_7",
       "revision": 43,
-      "time": "2026-10-26T20:01:54.796677+00:00",
+      "time": "2026-10-26T20:35:06.520412+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -634,7 +640,8 @@
       "warnings": [],
       "reason_given": true,
       "adoption_question": false,
-      "label": "You decide the model_choice as stated."
+      "label": "You decide the model_choice as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -661,7 +668,7 @@
       "restatement": "You decide the policy as stated.",
       "proposal_id": "p_8",
       "revision": 45,
-      "time": "2026-10-26T20:01:56.389656+00:00",
+      "time": "2026-10-26T20:35:08.297414+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -670,7 +677,8 @@
       "warnings": [],
       "reason_given": true,
       "adoption_question": false,
-      "label": "You decide the policy as stated."
+      "label": "You decide the policy as stated.",
+      "adopted_from": null
      },
      "open_proposals": [
       "p_9"
@@ -3404,7 +3412,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_6ed23e1b9a8128024e723b74",
-     "exposure_id": "x_fbc7d02f9e7a4da591a88488ee4a592d",
+     "exposure_id": "x_768be02cf83244d1beaca77affd5eb9f",
      "started_revision": 46,
      "integrity": "ok"
     },
@@ -4550,7 +4558,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_dc60c4ca476066179e139318",
-     "exposure_id": "x_848b9e5ba89d4e0795d66a1fdf3540d8",
+     "exposure_id": "x_b665feac425b4fe28c71bd2d8e865cc0",
      "started_revision": 30,
      "integrity": "ok"
     },
@@ -4700,7 +4708,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_17bb42fe2af6771b4815132d",
-     "exposure_id": "x_3b42b7e36af842df9a1c1eb51f2c836e",
+     "exposure_id": "x_ce5ae3ba1b2b4a00b69fe5ffdfbe4c1e",
      "started_revision": 24,
      "integrity": "ok"
     },
@@ -4840,7 +4848,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
-     "exposure_id": "x_836c285218d247e0926ce4954c28249e",
+     "exposure_id": "x_d473db673dcb465981e99e8bb85e67f7",
      "started_revision": 26,
      "integrity": "ok"
     },
@@ -5012,7 +5020,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_9bfea10e1d03fc0af5aa162b",
-     "exposure_id": "x_4929e1b322194f7a8d998a2eed1d52e9",
+     "exposure_id": "x_c0ba310e7629471490ccc7d2456cea94",
      "started_revision": 28,
      "integrity": "ok"
     },
@@ -5349,7 +5357,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_1cc8ff5e6aa02f9fae196751",
-     "exposure_id": "x_d1063293a34c4ca18ac9e78a35aa346c",
+     "exposure_id": "x_609bdb600aff41eeb8aa1db2e14ef0f6",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -5635,7 +5643,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_3b7e9da2df5de95232824246",
-     "exposure_id": "x_15400f6231fc4323b0342317aa5fd50e",
+     "exposure_id": "x_242398900d464347bcc392e9f35ad2e5",
      "started_revision": 22,
      "integrity": "ok"
     },
@@ -5874,7 +5882,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_40d674998c07527b12a31e29",
-     "exposure_id": "x_9ce491fd5322454d8ddc7efcc73127f4",
+     "exposure_id": "x_d9c43555767f4d71a08bb14462b146bb",
      "started_revision": 20,
      "integrity": "ok"
     },
@@ -6184,7 +6192,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_76bdb563530c997e6fdf55cc",
-     "exposure_id": "x_602105c9390a451ea28629d236cd1938",
+     "exposure_id": "x_40bddcea85ee4f11af32e493894fdd7c",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -6243,7 +6251,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8651b2bcef1776e9ebffd170",
-     "exposure_id": "x_16e5ec01c0dd4be5a2b0a5390a0bc270",
+     "exposure_id": "x_ce18ccc9fd77424fa3e587b09f0f6f2d",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -6315,7 +6323,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_056df3f4fa8f8aaf96fa6c38",
-     "exposure_id": "x_eb0a3e4d0e80475a8027436c53a57837",
+     "exposure_id": "x_e04a397e69b546f6ad17775e8fc8f5f3",
      "started_revision": 32,
      "integrity": "ok"
     },
@@ -6522,7 +6530,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_c4ffa7146bc75b1b1b3352d5",
-     "exposure_id": "x_6a42b72bc7bd487abfb632cd2318ebd4",
+     "exposure_id": "x_60f969b2d7c6446fae740df865eb5def",
      "started_revision": 34,
      "integrity": "ok"
     },
@@ -6741,7 +6749,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_fd2d4cab3d29a091ff558cfa",
-     "exposure_id": "x_a36ced6dcd754378ad048588fc096e70",
+     "exposure_id": "x_926a8457543742c9afd9fd068bc8619b",
      "started_revision": 38,
      "integrity": "ok"
     },
@@ -7337,7 +7345,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_405ea565bcf4773f753be1e0",
-     "exposure_id": "x_149c6ef61bf84ec1ace5ded4402cb80a",
+     "exposure_id": "x_227cdbdc8a6f4fd28e6ff22b62b368aa",
      "started_revision": 48,
      "integrity": "ok"
     },
@@ -7406,7 +7414,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8101d16893f3425fbb4ff727",
-     "exposure_id": "x_065bb1bc685a4da38f5c4d27358f7f7b",
+     "exposure_id": "x_4f19a21660c84b4b9d1eaabab5a1314e",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -8220,6 +8228,8 @@
      "changed_after_opening": false
     }
    },
+   "automation": null,
+   "review_queue": [],
    "case_texts": {
     "facts": {
      "target": {

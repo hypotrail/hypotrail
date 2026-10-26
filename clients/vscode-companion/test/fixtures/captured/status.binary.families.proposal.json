@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-families",
    "revision": 22,
-   "updated": "2026-10-26T20:03:16.143275+00:00",
+   "updated": "2026-10-26T20:36:24.151990+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -393,7 +393,7 @@
      "restatement": "You compare three variants of the candidate, each with its question.",
      "rationale": "One penalty change and two model families, inside the budget of three.",
      "revision": 22,
-     "created": "2026-10-26T20:03:16.142204+00:00",
+     "created": "2026-10-26T20:36:24.150464+00:00",
      "labels": null,
      "label": "You compare three variants of the candidate, each with its question.",
      "origin": {
@@ -417,7 +417,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-26T20:03:02.749168+00:00",
+      "time": "2026-10-26T20:36:11.092981+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -426,7 +426,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the prediction_time as stated."
+      "label": "You decide the prediction_time as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -465,7 +466,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-26T20:03:04.045383+00:00",
+      "time": "2026-10-26T20:36:12.193636+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -474,7 +475,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the feature_availability as stated."
+      "label": "You decide the feature_availability as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": {
@@ -515,7 +517,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-26T20:03:05.423073+00:00",
+      "time": "2026-10-26T20:36:13.724277+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -524,7 +526,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the split as stated."
+      "label": "You decide the split as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -547,7 +550,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-26T20:03:07.301344+00:00",
+      "time": "2026-10-26T20:36:15.255091+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -556,7 +559,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the success_criterion as stated."
+      "label": "You decide the success_criterion as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -584,7 +588,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-26T20:03:09.325733+00:00",
+      "time": "2026-10-26T20:36:17.169029+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -593,7 +597,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the preprocessing as stated."
+      "label": "You decide the preprocessing as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -2265,7 +2270,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_e3011a6950ece5ea44c0419c",
-     "exposure_id": "x_d519a4bbb659474ebb1399f9f28ef568",
+     "exposure_id": "x_fe68b94e69814863b11658fe3bc0ed6d",
      "started_revision": 20,
      "integrity": "ok"
     },
@@ -2324,7 +2329,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_a8274014a4c678f4a2a235d2",
-     "exposure_id": "x_afe3c403f8b544798f02ed71ab6d9cd3",
+     "exposure_id": "x_cb0fa80c81804cbcb4d61de87fe259bc",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -2459,7 +2464,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_eff39ccb2204a33ff345cb41",
-     "exposure_id": "x_cf2ecd2bc3e544388c7a8ff247394145",
+     "exposure_id": "x_9b68af8fe05744c195b2af276e0fb27e",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -2729,7 +2734,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
-     "exposure_id": "x_c854b8e53ea2400ba9366b3ed45dcc47",
+     "exposure_id": "x_25fb9a0cdd36459c944f5ccbe1eb8169",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -2834,7 +2839,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_bb85e451e092b31aedb250d1",
-     "exposure_id": "x_19c19c44084743cea49b36a7983e81a9",
+     "exposure_id": "x_efbef3fc7e45457da31e8ed20c171fab",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -3690,6 +3695,8 @@
      "changed_after_opening": false
     }
    },
+   "automation": null,
+   "review_queue": [],
    "case_texts": {
     "facts": {
      "target": {

@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-families",
    "revision": 33,
-   "updated": "2026-10-26T20:03:52.127117+00:00",
+   "updated": "2026-10-26T20:36:57.865254+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -379,7 +379,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-26T20:03:02.749168+00:00",
+      "time": "2026-10-26T20:36:11.092981+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -388,7 +388,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the prediction_time as stated."
+      "label": "You decide the prediction_time as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -427,7 +428,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-26T20:03:04.045383+00:00",
+      "time": "2026-10-26T20:36:12.193636+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -436,7 +437,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the feature_availability as stated."
+      "label": "You decide the feature_availability as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": {
@@ -477,7 +479,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-26T20:03:05.423073+00:00",
+      "time": "2026-10-26T20:36:13.724277+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -486,7 +488,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the split as stated."
+      "label": "You decide the split as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -509,7 +512,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-26T20:03:07.301344+00:00",
+      "time": "2026-10-26T20:36:15.255091+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -518,7 +521,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the success_criterion as stated."
+      "label": "You decide the success_criterion as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -546,7 +550,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-26T20:03:09.325733+00:00",
+      "time": "2026-10-26T20:36:17.169029+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -555,7 +559,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You decide the preprocessing as stated."
+      "label": "You decide the preprocessing as stated.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -593,7 +598,7 @@
       "restatement": "You compare three variants of the candidate, each with its question.",
       "proposal_id": "p_6",
       "revision": 23,
-      "time": "2026-10-26T20:03:17.927024+00:00",
+      "time": "2026-10-26T20:36:25.835077+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -602,7 +607,8 @@
       "warnings": [],
       "reason_given": null,
       "adoption_question": false,
-      "label": "You compare three variants of the candidate, each with its question."
+      "label": "You compare three variants of the candidate, each with its question.",
+      "adopted_from": null
      },
      "open_proposals": [],
      "feature_basis": null
@@ -6316,7 +6322,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_b8734faf726d77e6af0ae94a",
-     "exposure_id": "x_86f52a1876444c1f8ebb1f4a21329a7e",
+     "exposure_id": "x_087c2fa671b440519aa667b5894f6d47",
      "started_revision": 32,
      "integrity": "ok"
     },
@@ -6375,7 +6381,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_a8274014a4c678f4a2a235d2",
-     "exposure_id": "x_afe3c403f8b544798f02ed71ab6d9cd3",
+     "exposure_id": "x_cb0fa80c81804cbcb4d61de87fe259bc",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -6510,7 +6516,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_eff39ccb2204a33ff345cb41",
-     "exposure_id": "x_cf2ecd2bc3e544388c7a8ff247394145",
+     "exposure_id": "x_9b68af8fe05744c195b2af276e0fb27e",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -6780,7 +6786,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
-     "exposure_id": "x_c854b8e53ea2400ba9366b3ed45dcc47",
+     "exposure_id": "x_25fb9a0cdd36459c944f5ccbe1eb8169",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -7062,7 +7068,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_60b0cfe62d69e0ed78f7ce7e",
-     "exposure_id": "x_977a8403d20746a79d990967b31090da",
+     "exposure_id": "x_c3747f9467a845d48bb142647c89a1cd",
      "started_revision": 24,
      "integrity": "ok"
     },
@@ -8376,7 +8382,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_46ed3fd080ad3849123b1718",
-     "exposure_id": "x_d707067896fb4221ae3ebcb16db658b2",
+     "exposure_id": "x_4afa2dbed90e4375bb30850ac8e677cf",
      "started_revision": 26,
      "integrity": "ok"
     },
@@ -8891,7 +8897,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_5c3f9f2dbbc0a17a1254423f",
-     "exposure_id": "x_3c23473cc3df4a708fce95000a295c13",
+     "exposure_id": "x_b832422746384f1fb956545974c175c1",
      "started_revision": 28,
      "integrity": "ok"
     },
@@ -10575,7 +10581,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_b98236d8cafd383b17becb1c",
-     "exposure_id": "x_7be224d82ccf40958161618f00039011",
+     "exposure_id": "x_8885befb1c9741c88917754a02ec3dd3",
      "started_revision": 30,
      "integrity": "ok"
     },
@@ -10680,7 +10686,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_bb85e451e092b31aedb250d1",
-     "exposure_id": "x_19c19c44084743cea49b36a7983e81a9",
+     "exposure_id": "x_efbef3fc7e45457da31e8ed20c171fab",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -11705,6 +11711,8 @@
      "changed_after_opening": false
     }
    },
+   "automation": null,
+   "review_queue": [],
    "case_texts": {
     "facts": {
      "target": {
