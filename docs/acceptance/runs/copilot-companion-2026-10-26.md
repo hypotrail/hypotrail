@@ -100,3 +100,12 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   other case defaults (feature availability, criterion…) and the other cases. To decide: add
   `fr` to the case's decision values and have the engine pick the study language (with the
   panel showing it), or have the panel show the junior-language restatement instead.
+  Other direction too: with the panel switched to EN (study in French), the Decisions card
+  "Pause 2 · evaluation design" shows the French step title "Découper les données avant de
+  les explorer" and the French quoted restatement, under English panel text ("The assistant
+  proposes:", "In short: Cross-validation in 5 folds…"). So the panel's language switch
+  changes only the panel's own copy, not the engine's texts, which come in the study
+  language (step titles, junior messages) or in English only (case values). To decide: the
+  engine gives each junior text in both languages (or the panel asks the CLI for its
+  language), and the restatement, written by the agent in the junior's language, is labelled
+  as the junior's language rather than translated.
