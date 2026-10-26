@@ -67,7 +67,7 @@ def test_done_offers_the_export_plan_of_a_supported_model(tmp_path, task, langua
     assert after['handoff']['command'].startswith('hypotrail export handoff --study ')
     text = after['junior_text']
     if language == 'fr':
-        assert text.startswith('Et ensuite : le dossier de transmission')
+        assert text.startswith('Et ensuite : le dossier de passation')
         assert 'la régression linéaire' in text and "plan d'export" in text
         assert "Aucun job ni point de terminaison Azure n'a jamais été lancé" in text
     else:

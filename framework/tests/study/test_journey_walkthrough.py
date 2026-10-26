@@ -94,8 +94,11 @@ def walk(f: fk.Flow, task: str, on_write: Callable[[str, dict], None] | None = N
         assert kind in ('propose', 'reconfirm'), nxt
         decision = nxt['decision']
         if decision == 'conclusion':
+            # L1 (R2c): a conclusion option's value is ``{"verdict": ...}``; the text is the
+            # junior's, written when it is proposed.
             options = nxt.get('choice_options') or []
-            verdict = options[0]['value'] if options else (nxt.get('verdicts') or ['inconclusive'])[0]
+            verdict = (options[0]['value']['verdict'] if options
+                       else (nxt.get('verdicts') or ['inconclusive'])[0])
             value = {'verdict': verdict, 'text': CONCLUSION}
         else:
             value = nxt.get('default_value')
@@ -194,7 +197,21 @@ def test_j_panel_every_write_names_a_section_and_every_read_none(tmp_path, monke
 
     writes = walk(f, task, on_write=on_write, on_read=on_read)
     assert len(writes) > 15 and reads
-    for section in ('waiting', 'history', 'holds', 'development', 'diagnostics', 'final_test'):
+    # W1 integration (L1 + L2): the opening's confirmation is followed by the conclusion, a
+    # choice the chat asks (``choice_options``), so by CLI-CONTRACT §3.2 its line names the
+    # choice card ("after any command"); what the write produced is still the final test.
+    opening = [p for label, p in writes if label == 'confirm:final_test']
+    assert len(opening) == 1
+    action = opening[0]['next_action']
+    assert action['decision'] == 'conclusion' and action['choice_options'], action
+    assert action['recommended'] is None and action['pause']['kind'] == 'choice'
+    assert action['panel']['shown']['section'] == 'choice'
+    produced = {'command': 'decide', 'action': 'decide.confirm',
+                'opening': opening[0]['result']['opening']}
+    assert ce.shown_section(produced, action) == 'final_test'
+    seen.append('final_test')
+    for section in ('waiting', 'history', 'holds', 'development', 'diagnostics', 'final_test',
+                    'choice'):
         assert section in seen, (section, [w for w, _ in writes], seen)
     if lang == 'fr':
         assert all('Dans le panneau : ' in p['next_action']['panel']['shown']['line']

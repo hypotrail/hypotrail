@@ -129,11 +129,33 @@ function finalTestModel(raw) {
 /**
  * R16: `next_action.choice_options` as `[{id, value, label}]` (the value as shown text);
  * entries without an id or a label are dropped, so a malformed list reads as no choice.
+ * W1 integration: a conclusion option's value is `{"verdict": ...}` (CLI-CONTRACT §3.1), shown
+ * as its verdict, never as raw JSON.
  */
+function choiceValueText(value) {
+  if (value && typeof value === 'object' && !Array.isArray(value) && typeof value.verdict === 'string') return value.verdict;
+  return showValue(value);
+}
+
 function choiceOptionsOf(raw) {
   return list(raw).filter(o => o && typeof o === 'object' && typeof o.id === 'string' && o.id
     && typeof o.label === 'string' && o.label.trim())
-    .map(o => ({ id: o.id, value: showValue(o.value), label: o.label }));
+    .map(o => ({ id: o.id, value: choiceValueText(o.value), label: o.label }));
+}
+
+/**
+ * Owner session 2026-10-26 (L7, D15): `next_action.after_study` on `done`, read only: the
+ * engine's junior text (the study language; no command, id or revision) and whether the
+ * Azure ML export plan is available from the chat (`azureml.supported`). The commands it
+ * carries are the agent's and are not kept: the panel offers no new write (W4-W7 only).
+ * Null when absent or without a junior text.
+ */
+function afterStudyOf(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const juniorText = str(raw.junior_text).trim();
+  if (!juniorText) return null;
+  const azure = raw.azureml && typeof raw.azureml === 'object' ? raw.azureml : {};
+  return { juniorText, exportPlanAvailable: azure.supported === true, cloudStatus: strOrNull(raw.cloud_status) };
 }
 
 function taskOf(summary, plan) {
@@ -304,7 +326,9 @@ function toSummaryModel(summary) {
       // R16 (owner session 2026-10-26): a choice the chat asks before any proposal exists
       // (the conclusion, the model choice): the values the engine accepts now, labelled in
       // the study language (`next_action.choice_options`, CLI-CONTRACT §3.1). Read only.
-      choiceOptions: choiceOptionsOf(next.choice_options) },
+      choiceOptions: choiceOptionsOf(next.choice_options),
+      // L7 (D15): what comes after the study, at `done` (CLI-CONTRACT §3.1). Read only.
+      afterStudy: next.kind === 'done' ? afterStudyOf(next.after_study) : null },
     artifacts,
     artifactsStatus: str(summary.artifacts && summary.artifacts.status),
     proposals,
@@ -350,5 +374,5 @@ const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary'
 // v0 name, kept for the migrated tests and older callers.
 const toModel = toSummaryModel;
 
-module.exports = { toSummaryModel, toModel, currencyOf, juniorOf, choiceOptionsOf, CRITERION_STATUSES, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
+module.exports = { toSummaryModel, toModel, currencyOf, juniorOf, choiceOptionsOf, afterStudyOf, CRITERION_STATUSES, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
   SUMMARY_KEYS, ALERT_IDS, GENERATED, FIXTURES };

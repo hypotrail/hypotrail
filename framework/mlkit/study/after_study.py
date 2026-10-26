@@ -166,7 +166,7 @@ def build(view: Mapping, state: Mapping, case) -> dict:
 def junior_text(supported: bool, reason: str | None, words: str | None, lang: str) -> str:
     """What comes next, for the junior, in the study language: no command, id or revision."""
     if lang == 'fr':
-        head = ('Et ensuite : le dossier de transmission rassemble vos décisions, les résultats '
+        head = ('Et ensuite : le dossier de passation rassemble vos décisions, les résultats '
                 'cités et les limites, pour une relecture.')
         if supported:
             mid = (f' Le modèle choisi, {words}, peut aussi être exporté en projet Azure ML : '

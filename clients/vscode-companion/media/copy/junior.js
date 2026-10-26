@@ -303,6 +303,10 @@
       lead: 'This step waits for an earlier one. The assistant guides you in the chat.' },
     done: { title: () => 'Every step is done', action: null,
       lead: 'The report and the notebook carry the study. Read them again before you hand them over.' },
+    // L7 (owner session 2026-10-26, D15): what comes after the study, read only. The text
+    // is the engine's (`next_action.after_study.junior_text`); the plan is asked for in the chat.
+    afterStudyTitle: 'After the study',
+    exportPlanInChat: 'The Azure ML export plan is available for this model: ask the assistant for it in the chat. This panel exports only the handoff pack.',
     other: { title: () => 'Continue in the chat', action: null, lead: 'The assistant guides the next step in the chat.' },
     // WP-B5: the opening of the final test is a chat act. The panel explains it and points
     // to the chat; it never offers a control that opens it.

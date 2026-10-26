@@ -721,6 +721,7 @@ The answer is never sent to the CLI, the chat, or the study. "Reset my answers f
 
 - HO-1. Export runs the exact argv of W7. A non-empty target gives the `export_target_exists` refusal, verbatim.
 - HO-2. Export stays in reviewer mode, and is the only write control there (decision CA.9, which answered the open question; WP-I aligned this text).
+- HO-3. (Owner session 2026-10-26, L7, D15; wave W1 integration) At `done`, when the summary's `next_action.after_study` carries a junior text, the section shows "After the study" (`data-after-study`): that text verbatim (the handoff pack; the Azure ML export plan only when the chosen model is supported, else why not; no Azure job or endpoint ever run), and, only when `after_study.azureml.supported` is true, "The Azure ML export plan is available for this model: ask the assistant for it in the chat. This panel exports only the handoff pack." Read only: no control, no command, no new write (the panel's writes stay W4–W7). "Your next move" in Overview shows the same block under "Every step is done", at every stage.
 
 #### 6.6.3 Session report (J)
 

@@ -137,6 +137,15 @@
     return null;
   }
 
+  /** L7 (D15): `next_action.after_study` as text only (`data-after-study`), or null. */
+  function afterStudyNode(after, N) {
+    if (!after || !str(after.juniorText)) return null;
+    return el('div', { className: 'ov-hero-after', 'data-after-study': after.exportPlanAvailable ? 'export_plan' : 'handoff' }, [
+      el('p', { className: 'ov-hero-why' }, [el('strong', { text: `${N.afterStudyTitle}. ` }), after.juniorText]),
+      after.exportPlanAvailable ? el('p', { className: 'muted', 'data-after-study-export': true, text: N.exportPlanInChat }) : null,
+    ]);
+  }
+
   function hero(model, ctx) {
     const c = copy().hero;
     const N = J().nextMove;
@@ -185,6 +194,11 @@
     }
     const support = supporting(model, ctx, proposal);
     if (support) children.push(support);
+    // L7 (owner session 2026-10-26, D15): at `done`, what comes after the study, read only:
+    // the engine's junior text and, when the model is supported, that the Azure ML export
+    // plan is asked for in the chat. No control: the panel's writes stay W4-W7.
+    const after = kind === 'done' ? afterStudyNode(next.afterStudy, N) : null;
+    if (after) children.push(after);
     // The action: where the junior answers.
     const actions = [];
     const target = opening ? null

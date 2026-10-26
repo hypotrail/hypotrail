@@ -362,3 +362,19 @@ test('DC-13: the choice card is read only: no write control, no words field, onl
   assert.match(body, /HT\.askButton\([^)]*\{ kind: 'decision', id \}/);
   assert.match(body, /direct: true/);
 });
+
+test('DC-13 (W1 integration): the captured conclusion of a real study is a choice; its values read as verdicts', () => {
+  const raw = payload('captured/summary.binary.cv.conclusion');
+  const m = toSummaryModel(raw);
+  assert.deepEqual(m.nextAction.choiceOptions.map(o => [o.id, o.label]), raw.next_action.choice_options.map(o => [o.id, o.label]));
+  assert.deepEqual(m.nextAction.choiceOptions.map(o => o.value), raw.next_action.choice_options.map(o => o.value.verdict));
+  assert.equal(raw.next_action.pause.kind, 'choice');
+});
+
+test('DC-13 (W1 integration): a conclusion option from the engine has the value {verdict}; it reads as its verdict', () => {
+  const engine = [{ id: 'keep_baseline', value: { verdict: 'keep_baseline' }, label: 'Keep the baseline' },
+    { id: 'inconclusive', value: { verdict: 'inconclusive' }, label: 'Do not conclude (inconclusive)' }];
+  const m = toSummaryModel(choiceSummary(engine));
+  assert.deepEqual(m.nextAction.choiceOptions.map(o => o.value), ['keep_baseline', 'inconclusive']);
+  assert.ok(!m.nextAction.choiceOptions.some(o => o.value.includes('{')));
+});

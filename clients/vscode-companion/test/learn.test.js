@@ -395,3 +395,42 @@ test('the warnings of an export have words for every code of CLI-CONTRACT-COMPAN
   }
   assert.equal(learn.warningsText([]), '');
 });
+
+// --- L7 (owner session 2026-10-26, D15): what comes after the study, read only ---------------
+
+const { toSummaryModel, afterStudyOf } = require('../lib/models/summary');
+
+test('HO-3 (L7): the summary keeps the junior text of after_study and whether the plan is available, never its commands', () => {
+  const raw = JSON.parse(JSON.stringify(payload('captured/summary.binary.cv')));
+  const after = { handoff: { command: 'hypotrail export handoff --study /s --expected-revision 9' },
+    azureml: { supported: true, reason_id: null, reason: null, plan_command: 'hypotrail export azureml --study /s --expected-revision 9 --plan',
+      model: { task: 'binary', family: 'logistic', output_kind: 'binary_score' }, template: 'team-azureml-v1' },
+    cloud_status: 'not_qualified', junior_text: 'What comes next: the handoff pack.' };
+  raw.next_action = { kind: 'done', message: 'Done.', audience: 'junior', junior_message: 'Done.', after_study: after };
+  const m = toSummaryModel(raw);
+  assert.deepEqual(m.nextAction.afterStudy, { juniorText: 'What comes next: the handoff pack.', exportPlanAvailable: true, cloudStatus: 'not_qualified' });
+  assert.ok(!JSON.stringify(m.nextAction.afterStudy).includes('hypotrail'));
+  // Not supported, absent, blank, or on another kind: no plan line, or no block at all.
+  assert.equal(afterStudyOf({ ...after, azureml: { supported: false } }).exportPlanAvailable, false);
+  assert.equal(afterStudyOf({ ...after, junior_text: '  ' }), null);
+  assert.equal(afterStudyOf(null), null);
+  raw.next_action.kind = 'propose';
+  assert.equal(toSummaryModel(raw).nextAction.afterStudy, null);
+  // The captured payload of a real study at done (capture.py, wave W1).
+  const done = payload('captured/summary.binary.cv.done');
+  const real = toSummaryModel(done).nextAction.afterStudy;
+  assert.equal(real.juniorText, done.next_action.after_study.junior_text);
+  assert.equal(real.exportPlanAvailable, done.next_action.after_study.azureml.supported);
+});
+
+test('HO-3 (L7): the after-study blocks of Overview and Learn are text only (no control, no write)', () => {
+  for (const [file, fn] of [['overview.js', 'function afterStudyNode('], ['learn.js', 'function afterStudy(']]) {
+    const source = fs.readFileSync(path.join(__dirname, '..', 'media', 'views', file), 'utf8');
+    const start = source.indexOf(fn);
+    const body = source.slice(start, source.indexOf('\n  }\n', start));
+    assert.ok(start > 0, file);
+    for (const forbidden of ['data-write', 'onclick', 'ctx.send', 'HT.send', "type: 'button'", 'textarea', 'askButton']) {
+      assert.ok(!body.includes(forbidden), `${file}: ${forbidden}`);
+    }
+  }
+});

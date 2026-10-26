@@ -234,6 +234,10 @@
       lead: "Cette étape attend une étape antérieure. L'assistant vous guide dans le chat." },
     done: { title: () => 'Toutes les étapes sont faites', action: null,
       lead: "Le rapport et le notebook portent l'étude. Relisez-les avant de les transmettre." },
+    // L7 (session du 2026-10-26, D15) : la suite de l'étude, en lecture seule. Le texte est
+    // celui du moteur (`next_action.after_study.junior_text`) ; le plan se demande dans le chat.
+    afterStudyTitle: "Après l'étude",
+    exportPlanInChat: "Le plan d'export Azure ML est disponible pour ce modèle : demandez-le à l'assistant dans le chat. Ce panneau n'exporte que le dossier de passation.",
     other: { title: () => 'Continuer dans le chat', action: null, lead: "L'assistant guide l'étape suivante dans le chat." },
     finalTest: {
       await: { title: () => 'Ouvrir le test final, dans le chat', action: null,
