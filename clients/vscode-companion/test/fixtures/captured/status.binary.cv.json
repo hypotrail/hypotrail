@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-cv",
    "revision": 43,
-   "updated": "2026-10-26T16:37:40.691380+00:00",
+   "updated": "2026-10-26T20:02:52.908400+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -375,7 +375,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-26T16:37:04.453089+00:00",
+      "time": "2026-10-26T20:02:13.457765+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -423,7 +423,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-26T16:37:05.577656+00:00",
+      "time": "2026-10-26T20:02:14.621710+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -473,7 +473,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-26T16:37:07.155722+00:00",
+      "time": "2026-10-26T20:02:16.141998+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -505,7 +505,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-26T16:37:08.579414+00:00",
+      "time": "2026-10-26T20:02:17.608368+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -542,7 +542,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-26T16:37:10.170402+00:00",
+      "time": "2026-10-26T20:02:19.362909+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -574,7 +574,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 21,
-      "time": "2026-10-26T16:37:15.896717+00:00",
+      "time": "2026-10-26T20:02:26.465863+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -610,7 +610,7 @@
       "restatement": "You decide the model_choice as stated.",
       "proposal_id": "p_7",
       "revision": 27,
-      "time": "2026-10-26T16:37:23.986634+00:00",
+      "time": "2026-10-26T20:02:35.200605+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -646,7 +646,7 @@
       "restatement": "You decide the policy as stated.",
       "proposal_id": "p_10",
       "revision": 41,
-      "time": "2026-10-26T16:37:39.458047+00:00",
+      "time": "2026-10-26T20:02:51.539124+00:00",
       "authenticated": false,
       "basis": "endorsed",
       "delegation_scope": null,
@@ -687,7 +687,7 @@
       "restatement": "You open the sealed final test once, for the chosen configuration.",
       "proposal_id": "p_9",
       "revision": 33,
-      "time": "2026-10-26T16:37:29.294486+00:00",
+      "time": "2026-10-26T20:02:40.891304+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -796,7 +796,7 @@
    "results": {
     "diag.binary": {
      "slot": "diag.binary",
-     "result_id": "0927c306e713f4f50053c76c4b5f84d2d4eb862b63a04e5dc568d09944a63e2b",
+     "result_id": "8547b35ca01463264588fd0ca0aea3ee2c6b43f21dd542ddae8254b6b245af5c",
      "activity": "diag.binary",
      "current": true,
      "stale_reason": null,
@@ -1973,7 +1973,7 @@
          "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
          "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
         },
-        "predictions": "96d756c1537b462384be51f04ec776123bda212dbe199974b408ed9617b0fc40"
+        "predictions": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e"
        },
        "fit.variant": {
         "confusion": {
@@ -3129,7 +3129,7 @@
          "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
          "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
         },
-        "predictions": "41d1c0e8f46c6ccd72626bfaab362c9be662296f1c9d87f256830b0154cdaa5a"
+        "predictions": "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d"
        }
       },
       "coefficient_rows": 3617,
@@ -3412,8 +3412,8 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "fit.logistic": "96d756c1537b462384be51f04ec776123bda212dbe199974b408ed9617b0fc40",
-       "fit.variant": "41d1c0e8f46c6ccd72626bfaab362c9be662296f1c9d87f256830b0154cdaa5a",
+       "fit.logistic": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
+       "fit.variant": "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d",
        "split": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b"
       },
       "target": {
@@ -3421,7 +3421,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "1d1a09a980a72d6215acda12888a2aea22daef609cc5605debf5e3d376b1a719",
+     "code_fingerprint": "96a78981862239f242fa57ac4d0dfb9a95a0d6700fded9a3a3fc83c322d9bcae",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -3435,13 +3435,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8519f7987822bead348d47d9",
-     "exposure_id": "x_8a8453f8857446109ad5fb49fd9c4516",
+     "exposure_id": "x_73218dcc004b4e228c5d53d292177f83",
      "started_revision": 42,
      "integrity": "ok"
     },
     "diag.final_test": {
      "slot": "diag.final_test",
-     "result_id": "b4f1f9f0ffcc1e3e06072efe3948cccece49de5b3f7627f0c0ec606eb4a69067",
+     "result_id": "e893f21448fa28cb91c560ff7188568da7f0a8b03a754850148b610a2adc8ebe",
      "activity": "diag.final_test",
      "current": true,
      "stale_reason": null,
@@ -3455,7 +3455,7 @@
       "evaluation": "final_test",
       "n": 904,
       "model": "fit.logistic",
-      "final_evaluation": "8a13735443250bf8d5ec8a774d6d365541bbe4580ad07f0e64c9ecd0a416c0df",
+      "final_evaluation": "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94",
       "n_positive": 104,
       "base_rate": 0.11504424778761062,
       "rule": "share:0.1",
@@ -4268,7 +4268,7 @@
          ],
          "note": "Rows whose selection at the rule disagrees with the outcome, with the feature values as written in the file. Examples to read, not a sample."
         },
-        "predictions": "8a13735443250bf8d5ec8a774d6d365541bbe4580ad07f0e64c9ecd0a416c0df"
+        "predictions": "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94"
        }
       },
       "note": "Final evidence: computed once the final test was opened, from the predictions of its one evaluation, on rows no choice had seen."
@@ -4295,14 +4295,14 @@
        "row_keys": "709fa7079e85b6a172ec56995df0520059d582284a44794497d779bf8c95abd0"
       },
       "results": {
-       "final_test.evaluation": "8a13735443250bf8d5ec8a774d6d365541bbe4580ad07f0e64c9ecd0a416c0df"
+       "final_test.evaluation": "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94"
       },
       "target": {
        "column": "y",
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "165419d43a35a363e5f7621adde487f2640025d92e9562f63b01b90678bc5388",
+     "code_fingerprint": "5d24ed51d46cc1ca5049e04789d7799d0d290f32915455ade542c45afd07debe",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -4316,13 +4316,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_f09116e554021da514197565",
-     "exposure_id": "x_1af269a454114e6e99a91f3269c43dba",
+     "exposure_id": "x_caa230fb09384ab1a55f8c54fac6dc1c",
      "started_revision": 36,
      "integrity": "ok"
     },
     "eda.target_rate": {
      "slot": "eda.target_rate",
-     "result_id": "d88b93ed4c8841cab627e64ff39a481e1af7f51f08b5d179ff58e9f28570afe9",
+     "result_id": "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
      "activity": "eda.target_rate",
      "current": true,
      "stale_reason": null,
@@ -4361,7 +4361,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "ead61d7cff66e2806354756f95a000c7a33735fa82cfce6378a92715ebc90cc7",
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -4375,13 +4375,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_2ab8c63a63b208bd8731b8b3",
-     "exposure_id": "x_f4e5102251814014bc406b463c08ba35",
+     "exposure_id": "x_7956518840d74c63b3b3040174c5c525",
      "started_revision": 14,
      "integrity": "ok"
     },
     "final_test.evaluation": {
      "slot": "final_test.evaluation",
-     "result_id": "8a13735443250bf8d5ec8a774d6d365541bbe4580ad07f0e64c9ecd0a416c0df",
+     "result_id": "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94",
      "activity": "final_test.evaluation",
      "current": true,
      "stale_reason": null,
@@ -4639,7 +4639,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "fe1ad7372094bad4167bc192a7163e67dd7d2a5e3486406cac4e7f5f3fb92b86",
+     "code_fingerprint": "89bc9dc81ccfe859e0a64a92bb55bd14c1332b51d9310f89729620b3544a831d",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -4653,13 +4653,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_bbd92c0dbf7a62be9ca5ed0d",
-     "exposure_id": "x_2f33ffe5df9344d297962c2a3e2fc88e",
+     "exposure_id": "x_ff3e0a006b614a61b2aec772ad2b92c4",
      "started_revision": 34,
      "integrity": "ok"
     },
     "fit.baseline": {
      "slot": "fit.baseline",
-     "result_id": "7c8801f9dc382cca6229aa86976a1bbb27036d01b0438bc190b718f456c034e5",
+     "result_id": "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
      "activity": "fit.baseline",
      "current": true,
      "stale_reason": null,
@@ -4774,7 +4774,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "c12d8d6e80d594f0499f072d049d84f769400d3b38cdba3deeabfbd28a08cab2",
+     "code_fingerprint": "efae0e23bfde26a230cb4497001a261d2fab8dc7b012d8f6046c2c71f63d703b",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -4788,13 +4788,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_9c2f7f2c69f91be9c07e4331",
-     "exposure_id": "x_5202b3f056e242269467c54e6b9dad75",
+     "exposure_id": "x_32e54ab4b0f6492b805ee17cf6a86b05",
      "started_revision": 16,
      "integrity": "ok"
     },
     "fit.logistic": {
      "slot": "fit.logistic",
-     "result_id": "96d756c1537b462384be51f04ec776123bda212dbe199974b408ed9617b0fc40",
+     "result_id": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
      "activity": "fit.logistic",
      "current": true,
      "stale_reason": null,
@@ -5044,7 +5044,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "36ba5b4363107fd05b1140a28148d85b2dd9540473f6dcde804b7ee0446a0cd6",
+     "code_fingerprint": "770d1a57981b945f8ee6b8bc4a99478fe0b5b621af83277928791cd574136976",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -5058,13 +5058,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_c4434080afdaeb4edd1ce5b5",
-     "exposure_id": "x_8937df38968c4a709f26c5e362edacbb",
+     "exposure_id": "x_b3df067f3be04796869b4b222b2a7940",
      "started_revision": 18,
      "integrity": "ok"
     },
     "fit.variant": {
      "slot": "fit.variant",
-     "result_id": "41d1c0e8f46c6ccd72626bfaab362c9be662296f1c9d87f256830b0154cdaa5a",
+     "result_id": "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d",
      "activity": "fit.variant",
      "current": true,
      "stale_reason": null,
@@ -5326,7 +5326,7 @@
        "strength": "strong"
       }
      },
-     "code_fingerprint": "e6e5934430a95c63d7b306b538dfbf1c19a000f1429709b4b6cde1394de0ba0b",
+     "code_fingerprint": "f0df640102995ed7c3a12cbe110d920302518324dd2d1832f73471c9c55cf025",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -5340,13 +5340,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8b6b767c3df161e7401893c1",
-     "exposure_id": "x_3a4179537e4a41c4b71558cc7c18fef3",
+     "exposure_id": "x_d6bd37e98fa04593a521c39296dc28b3",
      "started_revision": 22,
      "integrity": "ok"
     },
     "policy.evaluation": {
      "slot": "policy.evaluation",
-     "result_id": "844cd097e1a6df7c1c99e0b1b5f45c7d6611ebc3dcdd3ee7a3dad2e4c58a2da1",
+     "result_id": "9b08b1a85b6dc2aefb2cd7410a09d60a988d61420d52b4ae991d8a4e89b62bc8",
      "activity": "policy.evaluation",
      "current": true,
      "stale_reason": null,
@@ -6030,9 +6030,9 @@
       "n": 3617,
       "n_positive": 417,
       "predictions": {
-       "fit.baseline": "7c8801f9dc382cca6229aa86976a1bbb27036d01b0438bc190b718f456c034e5",
-       "fit.logistic": "96d756c1537b462384be51f04ec776123bda212dbe199974b408ed9617b0fc40",
-       "fit.variant": "41d1c0e8f46c6ccd72626bfaab362c9be662296f1c9d87f256830b0154cdaa5a"
+       "fit.baseline": "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
+       "fit.logistic": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
+       "fit.variant": "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d"
       },
       "reference": "fit.baseline",
       "population_digest": "2485df345d6bb072908c13d74b9c67e8428cd653e7c22164626dbcb6fe9f292f",
@@ -6300,9 +6300,9 @@
       },
       "fold_split": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
       "results": {
-       "fit.baseline": "7c8801f9dc382cca6229aa86976a1bbb27036d01b0438bc190b718f456c034e5",
-       "fit.logistic": "96d756c1537b462384be51f04ec776123bda212dbe199974b408ed9617b0fc40",
-       "fit.variant": "41d1c0e8f46c6ccd72626bfaab362c9be662296f1c9d87f256830b0154cdaa5a"
+       "fit.baseline": "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
+       "fit.logistic": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
+       "fit.variant": "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d"
       },
       "trial_budget": {
        "declared": 1,
@@ -6318,7 +6318,7 @@
        }
       ]
      },
-     "code_fingerprint": "0e75d180a5d40704b69786ede82b83d091723323be06b212156fafd3878dc0bc",
+     "code_fingerprint": "5338c1505a833bcc478cccf648c7fad1062e50fdcdacdde262035f7ea1fa88fd",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6332,7 +6332,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ed89c3d6b5ceb43c540c9096",
-     "exposure_id": "x_9c404aafaa60463bba1d2cf9b1a93d3d",
+     "exposure_id": "x_65f88093d0ee4d49be264ced707aa08b",
      "started_revision": 38,
      "integrity": "ok"
     },
@@ -6437,13 +6437,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_0eee3a0bb608847ca1ac05a7",
-     "exposure_id": "x_b74b062883344e599bbe4708a76d6b41",
+     "exposure_id": "x_f18bf1c8ebe145ccbef81a882e861520",
      "started_revision": 12,
      "integrity": "ok"
     }
    },
    "stale": {
-    "64d95f9eebe14a88f58950dba60eeb23223be5e20fd85fbde8e75810b4663429": {
+    "6e73621b6f03637b6525a003585c332e6475e8ee92363c6136b0c77105963dfe": {
      "reason": "policy changed (§3.7 row 5: policy.parameter)",
      "since": 41
     }
@@ -6495,7 +6495,7 @@
        "reason_given": true,
        "restatement": "You decide the policy as stated.",
        "revision": 29,
-       "time": "2026-10-26T16:37:25.526538+00:00",
+       "time": "2026-10-26T20:02:37.110996+00:00",
        "user_words": "Yes, I adopt calling the top tenth, because the team can make that many calls"
       },
       "proposal_id": "p_8",
@@ -6506,7 +6506,7 @@
      "revision": 41,
      "row": 5,
      "stale_results": [
-      "64d95f9eebe14a88f58950dba60eeb23223be5e20fd85fbde8e75810b4663429"
+      "6e73621b6f03637b6525a003585c332e6475e8ee92363c6136b0c77105963dfe"
      ],
      "stale_slots": [
       "diag.binary"
@@ -6532,7 +6532,7 @@
       "last_ok_revision": 43,
       "path": "notebooks/study_editable.py",
       "revision": 43,
-      "sha256": "b3d9a140a995ebda93d1e187b5e272519a0e2ade38f939756b2e7c5a5258effd",
+      "sha256": "f9dad037864105c703f26b769ce353021ba14c59c3d2c894222bfc3dc1f4a400",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -6546,23 +6546,23 @@
       "candidate": null,
       "consumed": [
        "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
-       "0927c306e713f4f50053c76c4b5f84d2d4eb862b63a04e5dc568d09944a63e2b",
-       "41d1c0e8f46c6ccd72626bfaab362c9be662296f1c9d87f256830b0154cdaa5a",
-       "7c8801f9dc382cca6229aa86976a1bbb27036d01b0438bc190b718f456c034e5",
-       "844cd097e1a6df7c1c99e0b1b5f45c7d6611ebc3dcdd3ee7a3dad2e4c58a2da1",
-       "8a13735443250bf8d5ec8a774d6d365541bbe4580ad07f0e64c9ecd0a416c0df",
-       "96d756c1537b462384be51f04ec776123bda212dbe199974b408ed9617b0fc40",
-       "b4f1f9f0ffcc1e3e06072efe3948cccece49de5b3f7627f0c0ec606eb4a69067",
-       "d88b93ed4c8841cab627e64ff39a481e1af7f51f08b5d179ff58e9f28570afe9"
+       "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
+       "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
+       "8547b35ca01463264588fd0ca0aea3ee2c6b43f21dd542ddae8254b6b245af5c",
+       "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94",
+       "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d",
+       "9b08b1a85b6dc2aefb2cd7410a09d60a988d61420d52b4ae991d8a4e89b62bc8",
+       "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
+       "e893f21448fa28cb91c560ff7188568da7f0a8b03a754850148b610a2adc8ebe"
       ],
-      "edit_check_sha256": "eba1ac1e2f51c229923cf573a079939e86b4aafdb714229f2f30e40dad70c8d6",
+      "edit_check_sha256": "506b64819e469f2ce3e5b04aedf1984d5f4b993c60def32869421c281111e6aa",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
       "last_ok_revision": 43,
       "path": "notebooks/study_generated.py",
       "revision": 43,
-      "sha256": "73fec9b80311473d978f1009e73179be8b7f4ef586d391b2116af82dfd089d9b",
+      "sha256": "1883478153a17c5ec348824c1d19dcdf3ecfc7399f41cc302de36841fa1130a2",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -6576,14 +6576,14 @@
       "candidate": null,
       "consumed": [
        "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
-       "0927c306e713f4f50053c76c4b5f84d2d4eb862b63a04e5dc568d09944a63e2b",
-       "41d1c0e8f46c6ccd72626bfaab362c9be662296f1c9d87f256830b0154cdaa5a",
-       "7c8801f9dc382cca6229aa86976a1bbb27036d01b0438bc190b718f456c034e5",
-       "844cd097e1a6df7c1c99e0b1b5f45c7d6611ebc3dcdd3ee7a3dad2e4c58a2da1",
-       "8a13735443250bf8d5ec8a774d6d365541bbe4580ad07f0e64c9ecd0a416c0df",
-       "96d756c1537b462384be51f04ec776123bda212dbe199974b408ed9617b0fc40",
-       "b4f1f9f0ffcc1e3e06072efe3948cccece49de5b3f7627f0c0ec606eb4a69067",
-       "d88b93ed4c8841cab627e64ff39a481e1af7f51f08b5d179ff58e9f28570afe9"
+       "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
+       "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
+       "8547b35ca01463264588fd0ca0aea3ee2c6b43f21dd542ddae8254b6b245af5c",
+       "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94",
+       "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d",
+       "9b08b1a85b6dc2aefb2cd7410a09d60a988d61420d52b4ae991d8a4e89b62bc8",
+       "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
+       "e893f21448fa28cb91c560ff7188568da7f0a8b03a754850148b610a2adc8ebe"
       ],
       "error": null,
       "generated": true,
@@ -6591,7 +6591,7 @@
       "last_ok_revision": 43,
       "path": "reports/study.html",
       "revision": 43,
-      "sha256": "3888262e94b72a807365dbbe70fdef1261c1aceee649291ec27ceb72cf78fe53",
+      "sha256": "2afb7632e5b5db0cdeb725d34663053ddd28c9b2ea3b36c9b27bf7b70e2b22cd",
       "status": "ok",
       "template_version": 3,
       "user_edits_preserved": [],
@@ -6732,7 +6732,7 @@
     {
      "id": "stale_results",
      "results": [
-      "64d95f9eebe14a88f58950dba60eeb23223be5e20fd85fbde8e75810b4663429"
+      "6e73621b6f03637b6525a003585c332e6475e8ee92363c6136b0c77105963dfe"
      ],
      "cited_by": [],
      "junior": false,
@@ -6783,9 +6783,9 @@
      "revision": 34,
      "model": "fit.logistic",
      "rule": "share:0.1",
-     "result_id": "8a13735443250bf8d5ec8a774d6d365541bbe4580ad07f0e64c9ecd0a416c0df",
+     "result_id": "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94",
      "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
-     "time": "2026-10-26T16:37:29.337136+00:00"
+     "time": "2026-10-26T20:02:40.934637+00:00"
     },
     "post_final_test": true,
     "changed_after": [
@@ -6851,7 +6851,7 @@
     },
     "metric": "precision_gain",
     "status": "met",
-    "result_id": "844cd097e1a6df7c1c99e0b1b5f45c7d6611ebc3dcdd3ee7a3dad2e4c58a2da1",
+    "result_id": "9b08b1a85b6dc2aefb2cd7410a09d60a988d61420d52b4ae991d8a4e89b62bc8",
     "rule": "share:0.2",
     "model": "fit.logistic",
     "gain": 13.712528527465023,
@@ -6877,7 +6877,7 @@
      "decision_rule": null,
      "decision_status": null,
      "basis": null,
-     "result_id": "8a13735443250bf8d5ec8a774d6d365541bbe4580ad07f0e64c9ecd0a416c0df"
+     "result_id": "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94"
     },
     "judged_on": "development",
     "judged_status": "met"
@@ -6885,9 +6885,9 @@
    "eda_looks": {
     "target_looks": 3,
     "results": [
-     "d88b93ed4c8841cab627e64ff39a481e1af7f51f08b5d179ff58e9f28570afe9",
-     "64d95f9eebe14a88f58950dba60eeb23223be5e20fd85fbde8e75810b4663429",
-     "0927c306e713f4f50053c76c4b5f84d2d4eb862b63a04e5dc568d09944a63e2b"
+     "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
+     "6e73621b6f03637b6525a003585c332e6475e8ee92363c6136b0c77105963dfe",
+     "8547b35ca01463264588fd0ca0aea3ee2c6b43f21dd542ddae8254b6b245af5c"
     ],
     "by_activity": {
      "diag.binary": 2,
@@ -6905,8 +6905,8 @@
    "trials": {
     "count": 2,
     "results": [
-     "96d756c1537b462384be51f04ec776123bda212dbe199974b408ed9617b0fc40",
-     "41d1c0e8f46c6ccd72626bfaab362c9be662296f1c9d87f256830b0154cdaa5a"
+     "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
+     "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d"
     ],
     "note": "Each candidate or variant configuration fitted is a trial. Choosing the best of several trials on the same rows makes its figures slightly optimistic; the final test, opened once, is not affected."
    },
@@ -7035,7 +7035,7 @@
      "declared": false
     },
     "evidence": {
-     "source": "0927c306e713f4f50053c76c4b5f84d2d4eb862b63a04e5dc568d09944a63e2b",
+     "source": "8547b35ca01463264588fd0ca0aea3ee2c6b43f21dd542ddae8254b6b245af5c",
      "checked": true,
      "flags": [],
      "checks": {
@@ -7375,14 +7375,14 @@
     "schema": "hypotrail.presentation/1",
     "revision": 43,
     "result_ids": {
-     "diag.binary": "0927c306e713f4f50053c76c4b5f84d2d4eb862b63a04e5dc568d09944a63e2b",
-     "diag.final_test": "b4f1f9f0ffcc1e3e06072efe3948cccece49de5b3f7627f0c0ec606eb4a69067",
-     "eda.target_rate": "d88b93ed4c8841cab627e64ff39a481e1af7f51f08b5d179ff58e9f28570afe9",
-     "final_test.evaluation": "8a13735443250bf8d5ec8a774d6d365541bbe4580ad07f0e64c9ecd0a416c0df",
-     "fit.baseline": "7c8801f9dc382cca6229aa86976a1bbb27036d01b0438bc190b718f456c034e5",
-     "fit.logistic": "96d756c1537b462384be51f04ec776123bda212dbe199974b408ed9617b0fc40",
-     "fit.variant": "41d1c0e8f46c6ccd72626bfaab362c9be662296f1c9d87f256830b0154cdaa5a",
-     "policy.evaluation": "844cd097e1a6df7c1c99e0b1b5f45c7d6611ebc3dcdd3ee7a3dad2e4c58a2da1",
+     "diag.binary": "8547b35ca01463264588fd0ca0aea3ee2c6b43f21dd542ddae8254b6b245af5c",
+     "diag.final_test": "e893f21448fa28cb91c560ff7188568da7f0a8b03a754850148b610a2adc8ebe",
+     "eda.target_rate": "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
+     "final_test.evaluation": "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94",
+     "fit.baseline": "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
+     "fit.logistic": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
+     "fit.variant": "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d",
+     "policy.evaluation": "9b08b1a85b6dc2aefb2cd7410a09d60a988d61420d52b4ae991d8a4e89b62bc8",
      "split": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b"
     },
     "eligibility": null,
@@ -7446,7 +7446,7 @@
     },
     "historical": {
      "stale_result_ids": [
-      "64d95f9eebe14a88f58950dba60eeb23223be5e20fd85fbde8e75810b4663429"
+      "6e73621b6f03637b6525a003585c332e6475e8ee92363c6136b0c77105963dfe"
      ],
      "final_test_opened": true,
      "changed_after_opening": true

@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"",
    "revision": 50,
-   "updated": "2026-10-26T16:36:53.291570+00:00",
+   "updated": "2026-10-26T20:02:01.176679+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -366,7 +366,7 @@
      "restatement": "Call the 100 clients with the highest scores.",
      "rationale": "The team can make 100 calls per wave.",
      "revision": 50,
-     "created": "2026-10-26T16:36:53.291511+00:00",
+     "created": "2026-10-26T20:02:01.176625+00:00",
      "labels": null,
      "label": "Call the 100 clients with the highest scores.",
      "origin": {
@@ -390,7 +390,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-26T16:36:21.488285+00:00",
+      "time": "2026-10-26T20:01:24.104430+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -438,7 +438,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-26T16:36:22.634945+00:00",
+      "time": "2026-10-26T20:01:25.187125+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -488,7 +488,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-26T16:36:24.157757+00:00",
+      "time": "2026-10-26T20:01:26.607579+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -520,7 +520,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-26T16:36:25.678517+00:00",
+      "time": "2026-10-26T20:01:28.142661+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -557,7 +557,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-26T16:36:27.299746+00:00",
+      "time": "2026-10-26T20:01:29.950506+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -589,7 +589,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 37,
-      "time": "2026-10-26T16:36:44.088252+00:00",
+      "time": "2026-10-26T20:01:50.769365+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -625,7 +625,7 @@
       "restatement": "You decide the model_choice as stated.",
       "proposal_id": "p_7",
       "revision": 43,
-      "time": "2026-10-26T16:36:47.766858+00:00",
+      "time": "2026-10-26T20:01:54.796677+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -661,7 +661,7 @@
       "restatement": "You decide the policy as stated.",
       "proposal_id": "p_8",
       "revision": 45,
-      "time": "2026-10-26T16:36:49.414201+00:00",
+      "time": "2026-10-26T20:01:56.389656+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -793,7 +793,7 @@
    "results": {
     "diag.binary": {
      "slot": "diag.binary",
-     "result_id": "38a2186d9b7477664a238c16994cf1c0131d25214ada14ef0b708fb51850fa21",
+     "result_id": "afaa453cc8f7d53ad432be8dffee226bfdd66c8fd342bece0473c320a12625db",
      "activity": "diag.binary",
      "current": true,
      "stale_reason": null,
@@ -1968,7 +1968,7 @@
          "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
          "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
         },
-        "predictions": "55e0a805a41c1b08fe9a5e5aea4d62b4ef0e3a88cbbed6fd57d9a70f62ca896d"
+        "predictions": "3c6fd1dc403d60d9e2733e78500db47196ded2d65d48e4e73d854fc08bd96249"
        },
        "fit.variant": {
         "confusion": {
@@ -3122,7 +3122,7 @@
          "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
          "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
         },
-        "predictions": "e3472ea18f4918acb5c3d1c6f0cddb7eb4593657ecc1d1bb41cfdeca47f34077"
+        "predictions": "688c2df4c82592b31ada7e6b4ceeb8459c10e721ef7182c04f525aabbd3d83c4"
        }
       },
       "coefficient_rows": 2531,
@@ -3381,8 +3381,8 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "fit.logistic": "55e0a805a41c1b08fe9a5e5aea4d62b4ef0e3a88cbbed6fd57d9a70f62ca896d",
-       "fit.variant": "e3472ea18f4918acb5c3d1c6f0cddb7eb4593657ecc1d1bb41cfdeca47f34077",
+       "fit.logistic": "3c6fd1dc403d60d9e2733e78500db47196ded2d65d48e4e73d854fc08bd96249",
+       "fit.variant": "688c2df4c82592b31ada7e6b4ceeb8459c10e721ef7182c04f525aabbd3d83c4",
        "split": "911dd1efe7cca40b504db86c60b7d27be6a1930e02c0fbd9734dbe3437f94127"
       },
       "target": {
@@ -3390,7 +3390,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "1d1a09a980a72d6215acda12888a2aea22daef609cc5605debf5e3d376b1a719",
+     "code_fingerprint": "96a78981862239f242fa57ac4d0dfb9a95a0d6700fded9a3a3fc83c322d9bcae",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -3404,7 +3404,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_6ed23e1b9a8128024e723b74",
-     "exposure_id": "x_a2cd3a1ea52f4658827e8ed742f80b79",
+     "exposure_id": "x_fbc7d02f9e7a4da591a88488ee4a592d",
      "started_revision": 46,
      "integrity": "ok"
     },
@@ -4550,13 +4550,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_dc60c4ca476066179e139318",
-     "exposure_id": "x_8791ffad12e3462fba022da2b88aeb6c",
+     "exposure_id": "x_848b9e5ba89d4e0795d66a1fdf3540d8",
      "started_revision": 30,
      "integrity": "ok"
     },
     "eda.distribution:age": {
      "slot": "eda.distribution:age",
-     "result_id": "674ac6a65496760919e713927d7cb3d98797e307224c2c56b35284a94995aef9",
+     "result_id": "e355985f3e935f00111229333a94078dafa8c1696a1d0214d8680c81824b32e2",
      "activity": "eda.distribution",
      "current": true,
      "stale_reason": null,
@@ -4686,7 +4686,7 @@
       },
       "special_values": []
      },
-     "code_fingerprint": "ead61d7cff66e2806354756f95a000c7a33735fa82cfce6378a92715ebc90cc7",
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -4700,13 +4700,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_17bb42fe2af6771b4815132d",
-     "exposure_id": "x_4c35e8d173244577b51028cae72f0557",
+     "exposure_id": "x_3b42b7e36af842df9a1c1eb51f2c836e",
      "started_revision": 24,
      "integrity": "ok"
     },
     "eda.distribution:job": {
      "slot": "eda.distribution:job",
-     "result_id": "228f8ec0a4030d6a42a3113c0f2ab6670a68d62554d1c94b5da8f0538c2c2418",
+     "result_id": "38d11b8c56663281600d7990f032fb758103dce7808e196a2ab5d1f6e5d01070",
      "activity": "eda.distribution",
      "current": true,
      "stale_reason": null,
@@ -4826,7 +4826,7 @@
        }
       ]
      },
-     "code_fingerprint": "ead61d7cff66e2806354756f95a000c7a33735fa82cfce6378a92715ebc90cc7",
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -4840,13 +4840,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
-     "exposure_id": "x_602230760a244778b50e2acd12755c9a",
+     "exposure_id": "x_836c285218d247e0926ce4954c28249e",
      "started_revision": 26,
      "integrity": "ok"
     },
     "eda.distribution:previous": {
      "slot": "eda.distribution:previous",
-     "result_id": "b04b17c61d2b332cb7dd9b3f92ba712d389655ee45c14d11f7ed4a211503f714",
+     "result_id": "65258127a2d99e43bef73ec8f6c21faff933a9cd52110bdb5c7b5fa8fe484d27",
      "activity": "eda.distribution",
      "current": true,
      "stale_reason": null,
@@ -4998,7 +4998,7 @@
       },
       "special_values": []
      },
-     "code_fingerprint": "ead61d7cff66e2806354756f95a000c7a33735fa82cfce6378a92715ebc90cc7",
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -5012,13 +5012,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_9bfea10e1d03fc0af5aa162b",
-     "exposure_id": "x_5e9bd9b9ea4b4e16a221b04db563bcaf",
+     "exposure_id": "x_4929e1b322194f7a8d998a2eed1d52e9",
      "started_revision": 28,
      "integrity": "ok"
     },
     "eda.quality": {
      "slot": "eda.quality",
-     "result_id": "85c261606734f4fd3953cfd1ff287d2a5265817ab3066646ec101ce3cb05555b",
+     "result_id": "bd0f5021d267175fb88d9d3d0b17c384c889601aa46e5faade5832b41d98b200",
      "activity": "eda.quality",
      "current": true,
      "stale_reason": null,
@@ -5197,7 +5197,13 @@
         "n_special": 0,
         "declared": null,
         "n_below": null,
-        "n_above": null
+        "n_above": null,
+        "quantiles": {
+         "0.01": 24.0,
+         "0.5": 39.0,
+         "0.99": 72.0
+        },
+        "skewness": 0.7104648240995637
        },
        {
         "column": "balance",
@@ -5207,7 +5213,13 @@
         "n_special": 0,
         "declared": null,
         "n_below": null,
-        "n_above": null
+        "n_above": null,
+        "quantiles": {
+         "0.01": -697.4799999999999,
+         "0.5": 437.0,
+         "0.99": 14194.080000000024
+        },
+        "skewness": 6.994888925868318
        },
        {
         "column": "day",
@@ -5217,7 +5229,13 @@
         "n_special": 0,
         "declared": null,
         "n_below": null,
-        "n_above": null
+        "n_above": null,
+        "quantiles": {
+         "0.01": 2.0,
+         "0.5": 16.0,
+         "0.99": 31.0
+        },
+        "skewness": 0.07594344973210176
        },
        {
         "column": "duration",
@@ -5227,7 +5245,13 @@
         "n_special": 0,
         "declared": null,
         "n_below": null,
-        "n_above": null
+        "n_above": null,
+        "quantiles": {
+         "0.01": 11.0,
+         "0.5": 185.0,
+         "0.99": 1254.4800000000032
+        },
+        "skewness": 2.7719386035576674
        },
        {
         "column": "campaign",
@@ -5237,7 +5261,13 @@
         "n_special": 0,
         "declared": null,
         "n_below": null,
-        "n_above": null
+        "n_above": null,
+        "quantiles": {
+         "0.01": 1.0,
+         "0.5": 2.0,
+         "0.99": 16.0
+        },
+        "skewness": 4.545635235815573
        },
        {
         "column": "pdays",
@@ -5247,7 +5277,13 @@
         "n_special": 2962,
         "declared": null,
         "n_below": null,
-        "n_above": null
+        "n_above": null,
+        "quantiles": {
+         "0.01": 4.08,
+         "0.5": 190.0,
+         "0.99": 476.3000000000002
+        },
+        "skewness": 0.6989773663477385
        },
        {
         "column": "previous",
@@ -5257,7 +5293,13 @@
         "n_special": 0,
         "declared": null,
         "n_below": null,
-        "n_above": null
+        "n_above": null,
+        "quantiles": {
+         "0.01": 0.0,
+         "0.5": 0.0,
+         "0.99": 8.0
+        },
+        "skewness": 5.7518645749411865
        }
       ],
       "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
@@ -5293,7 +5335,7 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       }
      },
-     "code_fingerprint": "ead61d7cff66e2806354756f95a000c7a33735fa82cfce6378a92715ebc90cc7",
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -5307,13 +5349,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_1cc8ff5e6aa02f9fae196751",
-     "exposure_id": "x_5071a94278ff4f8eba651d370634d7fd",
+     "exposure_id": "x_d1063293a34c4ca18ac9e78a35aa346c",
      "started_revision": 18,
      "integrity": "ok"
     },
     "eda.rate_by:job": {
      "slot": "eda.rate_by:job",
-     "result_id": "dfea61dcc82b454e926d2a8e6033eac1a2c81fad31a0ea0f76cbb226cb774500",
+     "result_id": "df1bd4e68b536adea82668704d986c02a293a6ef486f187e93a0e2c172c501f7",
      "activity": "eda.rate_by",
      "current": true,
      "stale_reason": null,
@@ -5579,7 +5621,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "ead61d7cff66e2806354756f95a000c7a33735fa82cfce6378a92715ebc90cc7",
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -5593,13 +5635,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_3b7e9da2df5de95232824246",
-     "exposure_id": "x_68a524366dce475cb278d56af6ebfed8",
+     "exposure_id": "x_15400f6231fc4323b0342317aa5fd50e",
      "started_revision": 22,
      "integrity": "ok"
     },
     "eda.single_feature_signal": {
      "slot": "eda.single_feature_signal",
-     "result_id": "be99fb3181abeab87f0478a86ed2118d1dba04fef964140c2723a833cba26d44",
+     "result_id": "54312bf6cfae81cf93c8a28ea71e6321eb0cff3612992b7ad87733dd880d68b0",
      "activity": "eda.single_feature_signal",
      "current": true,
      "stale_reason": null,
@@ -5818,7 +5860,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "f0c7b14ee45bf39f66f400fe5cfb223d9467ad497d5d26f15025c5bc96a4e504",
+     "code_fingerprint": "2efd81578a0bc77e5a3b3ebbe2d402dd6ca3dbfd7b8f5cf28f7d03f328078b85",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -5832,13 +5874,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_40d674998c07527b12a31e29",
-     "exposure_id": "x_f018e21a8131415a8db78067e381d996",
+     "exposure_id": "x_9ce491fd5322454d8ddc7efcc73127f4",
      "started_revision": 20,
      "integrity": "ok"
     },
     "eda.special_values": {
      "slot": "eda.special_values",
-     "result_id": "19700e183ec044dd98508ba2b456f597a7d1fcebe354156813d970741b5c17e1",
+     "result_id": "1fa97eb7e0b16b7eca521d7ef7fa0e03e5c41c1fe69e5c82e6cba0e9a4f65509",
      "activity": "eda.special_values",
      "current": true,
      "stale_reason": null,
@@ -6128,7 +6170,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "ead61d7cff66e2806354756f95a000c7a33735fa82cfce6378a92715ebc90cc7",
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6142,13 +6184,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_76bdb563530c997e6fdf55cc",
-     "exposure_id": "x_7b0d667b56694f2bbe199479a370a64d",
+     "exposure_id": "x_602105c9390a451ea28629d236cd1938",
      "started_revision": 16,
      "integrity": "ok"
     },
     "eda.target_rate": {
      "slot": "eda.target_rate",
-     "result_id": "c67519a84ee46d4d81ffd5a53f51b2fd546d286e864dcf095d61f941f9a956f5",
+     "result_id": "80c0c7169535603c9a5e42355090ba21d341cfdc702654ea2b613c04a8fb7f01",
      "activity": "eda.target_rate",
      "current": true,
      "stale_reason": null,
@@ -6187,7 +6229,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "ead61d7cff66e2806354756f95a000c7a33735fa82cfce6378a92715ebc90cc7",
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6201,13 +6243,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8651b2bcef1776e9ebffd170",
-     "exposure_id": "x_2665cc356bbc4e15997ec6ff6625ac5b",
+     "exposure_id": "x_16e5ec01c0dd4be5a2b0a5390a0bc270",
      "started_revision": 14,
      "integrity": "ok"
     },
     "fit.baseline": {
      "slot": "fit.baseline",
-     "result_id": "7bebaa981ca9328ee83af71c7abbbf05fab26883b12d3a4f7ce64a76c636dd47",
+     "result_id": "9abd65918f72482d5dccd75d48e58bc0253c45bdc4e6c6de0519a60b5e0f22fd",
      "activity": "fit.baseline",
      "current": true,
      "stale_reason": null,
@@ -6259,7 +6301,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "c12d8d6e80d594f0499f072d049d84f769400d3b38cdba3deeabfbd28a08cab2",
+     "code_fingerprint": "efae0e23bfde26a230cb4497001a261d2fab8dc7b012d8f6046c2c71f63d703b",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6273,13 +6315,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_056df3f4fa8f8aaf96fa6c38",
-     "exposure_id": "x_d2e762365a4b427b871d1c9f1ad93fb0",
+     "exposure_id": "x_eb0a3e4d0e80475a8027436c53a57837",
      "started_revision": 32,
      "integrity": "ok"
     },
     "fit.logistic": {
      "slot": "fit.logistic",
-     "result_id": "55e0a805a41c1b08fe9a5e5aea4d62b4ef0e3a88cbbed6fd57d9a70f62ca896d",
+     "result_id": "3c6fd1dc403d60d9e2733e78500db47196ded2d65d48e4e73d854fc08bd96249",
      "activity": "fit.logistic",
      "current": true,
      "stale_reason": null,
@@ -6466,7 +6508,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "36ba5b4363107fd05b1140a28148d85b2dd9540473f6dcde804b7ee0446a0cd6",
+     "code_fingerprint": "770d1a57981b945f8ee6b8bc4a99478fe0b5b621af83277928791cd574136976",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6480,13 +6522,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_c4ffa7146bc75b1b1b3352d5",
-     "exposure_id": "x_0ec40cb46c5b439980266c4a2b783e08",
+     "exposure_id": "x_6a42b72bc7bd487abfb632cd2318ebd4",
      "started_revision": 34,
      "integrity": "ok"
     },
     "fit.variant": {
      "slot": "fit.variant",
-     "result_id": "e3472ea18f4918acb5c3d1c6f0cddb7eb4593657ecc1d1bb41cfdeca47f34077",
+     "result_id": "688c2df4c82592b31ada7e6b4ceeb8459c10e721ef7182c04f525aabbd3d83c4",
      "activity": "fit.variant",
      "current": true,
      "stale_reason": null,
@@ -6685,7 +6727,7 @@
        "strength": "strong"
       }
      },
-     "code_fingerprint": "e6e5934430a95c63d7b306b538dfbf1c19a000f1429709b4b6cde1394de0ba0b",
+     "code_fingerprint": "f0df640102995ed7c3a12cbe110d920302518324dd2d1832f73471c9c55cf025",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6699,13 +6741,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_fd2d4cab3d29a091ff558cfa",
-     "exposure_id": "x_8ec6d4ce051b486a823b4752053e4e04",
+     "exposure_id": "x_a36ced6dcd754378ad048588fc096e70",
      "started_revision": 38,
      "integrity": "ok"
     },
     "policy.evaluation": {
      "slot": "policy.evaluation",
-     "result_id": "457b8200dbef2e374aeea81d44d328d1d9e471ecca5cd134e3646836c1f1d978",
+     "result_id": "7badf1dfdfc32377b33e9376f05c914cad989474d248eec173bac6b1581b493b",
      "activity": "policy.evaluation",
      "current": true,
      "stale_reason": null,
@@ -7095,9 +7137,9 @@
       "n": 1086,
       "n_positive": 125,
       "predictions": {
-       "fit.baseline": "7bebaa981ca9328ee83af71c7abbbf05fab26883b12d3a4f7ce64a76c636dd47",
-       "fit.logistic": "55e0a805a41c1b08fe9a5e5aea4d62b4ef0e3a88cbbed6fd57d9a70f62ca896d",
-       "fit.variant": "e3472ea18f4918acb5c3d1c6f0cddb7eb4593657ecc1d1bb41cfdeca47f34077"
+       "fit.baseline": "9abd65918f72482d5dccd75d48e58bc0253c45bdc4e6c6de0519a60b5e0f22fd",
+       "fit.logistic": "3c6fd1dc403d60d9e2733e78500db47196ded2d65d48e4e73d854fc08bd96249",
+       "fit.variant": "688c2df4c82592b31ada7e6b4ceeb8459c10e721ef7182c04f525aabbd3d83c4"
       },
       "reference": "fit.baseline",
       "population_digest": "e11ff98750881550f797efadc17c59faf4462b4ae5ff6e4d67922e603b8ca80c",
@@ -7263,9 +7305,9 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "fit.baseline": "7bebaa981ca9328ee83af71c7abbbf05fab26883b12d3a4f7ce64a76c636dd47",
-       "fit.logistic": "55e0a805a41c1b08fe9a5e5aea4d62b4ef0e3a88cbbed6fd57d9a70f62ca896d",
-       "fit.variant": "e3472ea18f4918acb5c3d1c6f0cddb7eb4593657ecc1d1bb41cfdeca47f34077"
+       "fit.baseline": "9abd65918f72482d5dccd75d48e58bc0253c45bdc4e6c6de0519a60b5e0f22fd",
+       "fit.logistic": "3c6fd1dc403d60d9e2733e78500db47196ded2d65d48e4e73d854fc08bd96249",
+       "fit.variant": "688c2df4c82592b31ada7e6b4ceeb8459c10e721ef7182c04f525aabbd3d83c4"
       },
       "trial_budget": {
        "declared": 1,
@@ -7281,7 +7323,7 @@
        }
       ]
      },
-     "code_fingerprint": "0e75d180a5d40704b69786ede82b83d091723323be06b212156fafd3878dc0bc",
+     "code_fingerprint": "5338c1505a833bcc478cccf648c7fad1062e50fdcdacdde262035f7ea1fa88fd",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -7295,7 +7337,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_405ea565bcf4773f753be1e0",
-     "exposure_id": "x_ac1b1e9f551c4801ac5174605b4a0ca3",
+     "exposure_id": "x_149c6ef61bf84ec1ace5ded4402cb80a",
      "started_revision": 48,
      "integrity": "ok"
     },
@@ -7364,7 +7406,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8101d16893f3425fbb4ff727",
-     "exposure_id": "x_a9d7132e466f48a894cc7fcee7875d05",
+     "exposure_id": "x_065bb1bc685a4da38f5c4d27358f7f7b",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -7390,7 +7432,7 @@
       "last_ok_revision": 50,
       "path": "notebooks/study_editable.py",
       "revision": 50,
-      "sha256": "7eecbdc427b75b8317898de92e1736191edc0d06eda457d66a377dfb177dd12f",
+      "sha256": "f6be47e4a4bf653f60fbd871a5f04f4b5abdfa62e07bd8d762ce43d392990a83",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -7404,29 +7446,29 @@
       "candidate": null,
       "consumed": [
        "0dd6cba3e5a066eb8a4eee4fbddf77b7e67cc8554137559570b02270260865e2",
-       "19700e183ec044dd98508ba2b456f597a7d1fcebe354156813d970741b5c17e1",
-       "228f8ec0a4030d6a42a3113c0f2ab6670a68d62554d1c94b5da8f0538c2c2418",
-       "38a2186d9b7477664a238c16994cf1c0131d25214ada14ef0b708fb51850fa21",
-       "457b8200dbef2e374aeea81d44d328d1d9e471ecca5cd134e3646836c1f1d978",
-       "55e0a805a41c1b08fe9a5e5aea4d62b4ef0e3a88cbbed6fd57d9a70f62ca896d",
-       "674ac6a65496760919e713927d7cb3d98797e307224c2c56b35284a94995aef9",
-       "7bebaa981ca9328ee83af71c7abbbf05fab26883b12d3a4f7ce64a76c636dd47",
-       "85c261606734f4fd3953cfd1ff287d2a5265817ab3066646ec101ce3cb05555b",
+       "1fa97eb7e0b16b7eca521d7ef7fa0e03e5c41c1fe69e5c82e6cba0e9a4f65509",
+       "38d11b8c56663281600d7990f032fb758103dce7808e196a2ab5d1f6e5d01070",
+       "3c6fd1dc403d60d9e2733e78500db47196ded2d65d48e4e73d854fc08bd96249",
+       "54312bf6cfae81cf93c8a28ea71e6321eb0cff3612992b7ad87733dd880d68b0",
+       "65258127a2d99e43bef73ec8f6c21faff933a9cd52110bdb5c7b5fa8fe484d27",
+       "688c2df4c82592b31ada7e6b4ceeb8459c10e721ef7182c04f525aabbd3d83c4",
+       "7badf1dfdfc32377b33e9376f05c914cad989474d248eec173bac6b1581b493b",
+       "80c0c7169535603c9a5e42355090ba21d341cfdc702654ea2b613c04a8fb7f01",
        "911dd1efe7cca40b504db86c60b7d27be6a1930e02c0fbd9734dbe3437f94127",
-       "b04b17c61d2b332cb7dd9b3f92ba712d389655ee45c14d11f7ed4a211503f714",
-       "be99fb3181abeab87f0478a86ed2118d1dba04fef964140c2723a833cba26d44",
-       "c67519a84ee46d4d81ffd5a53f51b2fd546d286e864dcf095d61f941f9a956f5",
-       "dfea61dcc82b454e926d2a8e6033eac1a2c81fad31a0ea0f76cbb226cb774500",
-       "e3472ea18f4918acb5c3d1c6f0cddb7eb4593657ecc1d1bb41cfdeca47f34077"
+       "9abd65918f72482d5dccd75d48e58bc0253c45bdc4e6c6de0519a60b5e0f22fd",
+       "afaa453cc8f7d53ad432be8dffee226bfdd66c8fd342bece0473c320a12625db",
+       "bd0f5021d267175fb88d9d3d0b17c384c889601aa46e5faade5832b41d98b200",
+       "df1bd4e68b536adea82668704d986c02a293a6ef486f187e93a0e2c172c501f7",
+       "e355985f3e935f00111229333a94078dafa8c1696a1d0214d8680c81824b32e2"
       ],
-      "edit_check_sha256": "9e35c304040ee388474b87e8cbebd4f0477ac7b09bd68ce84594361c10965cd5",
+      "edit_check_sha256": "63ebee07ef2f033035b48e09ee9c14c6093bce7de1ceb16bbe3ec8193eee0c0a",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
       "last_ok_revision": 50,
       "path": "notebooks/study_generated.py",
       "revision": 50,
-      "sha256": "adaf6d1d85361f5b0764664cf4fef6e21685455e4027c1623aec2bbb385b2129",
+      "sha256": "308321fe268bdf07580e5820c6b101a85e0adf5c30fa87c4eeec2679253afbc2",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -7440,20 +7482,20 @@
       "candidate": null,
       "consumed": [
        "0dd6cba3e5a066eb8a4eee4fbddf77b7e67cc8554137559570b02270260865e2",
-       "19700e183ec044dd98508ba2b456f597a7d1fcebe354156813d970741b5c17e1",
-       "228f8ec0a4030d6a42a3113c0f2ab6670a68d62554d1c94b5da8f0538c2c2418",
-       "38a2186d9b7477664a238c16994cf1c0131d25214ada14ef0b708fb51850fa21",
-       "457b8200dbef2e374aeea81d44d328d1d9e471ecca5cd134e3646836c1f1d978",
-       "55e0a805a41c1b08fe9a5e5aea4d62b4ef0e3a88cbbed6fd57d9a70f62ca896d",
-       "674ac6a65496760919e713927d7cb3d98797e307224c2c56b35284a94995aef9",
-       "7bebaa981ca9328ee83af71c7abbbf05fab26883b12d3a4f7ce64a76c636dd47",
-       "85c261606734f4fd3953cfd1ff287d2a5265817ab3066646ec101ce3cb05555b",
+       "1fa97eb7e0b16b7eca521d7ef7fa0e03e5c41c1fe69e5c82e6cba0e9a4f65509",
+       "38d11b8c56663281600d7990f032fb758103dce7808e196a2ab5d1f6e5d01070",
+       "3c6fd1dc403d60d9e2733e78500db47196ded2d65d48e4e73d854fc08bd96249",
+       "54312bf6cfae81cf93c8a28ea71e6321eb0cff3612992b7ad87733dd880d68b0",
+       "65258127a2d99e43bef73ec8f6c21faff933a9cd52110bdb5c7b5fa8fe484d27",
+       "688c2df4c82592b31ada7e6b4ceeb8459c10e721ef7182c04f525aabbd3d83c4",
+       "7badf1dfdfc32377b33e9376f05c914cad989474d248eec173bac6b1581b493b",
+       "80c0c7169535603c9a5e42355090ba21d341cfdc702654ea2b613c04a8fb7f01",
        "911dd1efe7cca40b504db86c60b7d27be6a1930e02c0fbd9734dbe3437f94127",
-       "b04b17c61d2b332cb7dd9b3f92ba712d389655ee45c14d11f7ed4a211503f714",
-       "be99fb3181abeab87f0478a86ed2118d1dba04fef964140c2723a833cba26d44",
-       "c67519a84ee46d4d81ffd5a53f51b2fd546d286e864dcf095d61f941f9a956f5",
-       "dfea61dcc82b454e926d2a8e6033eac1a2c81fad31a0ea0f76cbb226cb774500",
-       "e3472ea18f4918acb5c3d1c6f0cddb7eb4593657ecc1d1bb41cfdeca47f34077"
+       "9abd65918f72482d5dccd75d48e58bc0253c45bdc4e6c6de0519a60b5e0f22fd",
+       "afaa453cc8f7d53ad432be8dffee226bfdd66c8fd342bece0473c320a12625db",
+       "bd0f5021d267175fb88d9d3d0b17c384c889601aa46e5faade5832b41d98b200",
+       "df1bd4e68b536adea82668704d986c02a293a6ef486f187e93a0e2c172c501f7",
+       "e355985f3e935f00111229333a94078dafa8c1696a1d0214d8680c81824b32e2"
       ],
       "error": null,
       "generated": true,
@@ -7461,7 +7503,7 @@
       "last_ok_revision": 50,
       "path": "reports/study.html",
       "revision": 50,
-      "sha256": "751310c64765f1f91d9e47f5ebcd694309c6554391fc20a6453bf3726887de91",
+      "sha256": "b9e0520908a3f53bc609faba4b59f182189fc2957d931e4f998c0715dc28d556",
       "status": "ok",
       "template_version": 3,
       "user_edits_preserved": [],
@@ -7716,11 +7758,11 @@
    "eda_looks": {
     "target_looks": 5,
     "results": [
-     "c67519a84ee46d4d81ffd5a53f51b2fd546d286e864dcf095d61f941f9a956f5",
-     "19700e183ec044dd98508ba2b456f597a7d1fcebe354156813d970741b5c17e1",
-     "be99fb3181abeab87f0478a86ed2118d1dba04fef964140c2723a833cba26d44",
-     "dfea61dcc82b454e926d2a8e6033eac1a2c81fad31a0ea0f76cbb226cb774500",
-     "38a2186d9b7477664a238c16994cf1c0131d25214ada14ef0b708fb51850fa21"
+     "80c0c7169535603c9a5e42355090ba21d341cfdc702654ea2b613c04a8fb7f01",
+     "1fa97eb7e0b16b7eca521d7ef7fa0e03e5c41c1fe69e5c82e6cba0e9a4f65509",
+     "54312bf6cfae81cf93c8a28ea71e6321eb0cff3612992b7ad87733dd880d68b0",
+     "df1bd4e68b536adea82668704d986c02a293a6ef486f187e93a0e2c172c501f7",
+     "afaa453cc8f7d53ad432be8dffee226bfdd66c8fd342bece0473c320a12625db"
     ],
     "by_activity": {
      "diag.binary": 1,
@@ -7741,8 +7783,8 @@
    "trials": {
     "count": 2,
     "results": [
-     "55e0a805a41c1b08fe9a5e5aea4d62b4ef0e3a88cbbed6fd57d9a70f62ca896d",
-     "e3472ea18f4918acb5c3d1c6f0cddb7eb4593657ecc1d1bb41cfdeca47f34077"
+     "3c6fd1dc403d60d9e2733e78500db47196ded2d65d48e4e73d854fc08bd96249",
+     "688c2df4c82592b31ada7e6b4ceeb8459c10e721ef7182c04f525aabbd3d83c4"
     ],
     "note": "Each candidate or variant configuration fitted is a trial. Choosing the best of several trials on the same rows makes its figures slightly optimistic; the final test, opened once, is not affected."
    },
@@ -7779,7 +7821,7 @@
      "declared": false
     },
     "evidence": {
-     "source": "38a2186d9b7477664a238c16994cf1c0131d25214ada14ef0b708fb51850fa21",
+     "source": "afaa453cc8f7d53ad432be8dffee226bfdd66c8fd342bece0473c320a12625db",
      "checked": true,
      "flags": [],
      "checks": {
@@ -8095,20 +8137,20 @@
     "schema": "hypotrail.presentation/1",
     "revision": 50,
     "result_ids": {
-     "diag.binary": "38a2186d9b7477664a238c16994cf1c0131d25214ada14ef0b708fb51850fa21",
+     "diag.binary": "afaa453cc8f7d53ad432be8dffee226bfdd66c8fd342bece0473c320a12625db",
      "eda.correlation": "0dd6cba3e5a066eb8a4eee4fbddf77b7e67cc8554137559570b02270260865e2",
-     "eda.distribution:age": "674ac6a65496760919e713927d7cb3d98797e307224c2c56b35284a94995aef9",
-     "eda.distribution:job": "228f8ec0a4030d6a42a3113c0f2ab6670a68d62554d1c94b5da8f0538c2c2418",
-     "eda.distribution:previous": "b04b17c61d2b332cb7dd9b3f92ba712d389655ee45c14d11f7ed4a211503f714",
-     "eda.quality": "85c261606734f4fd3953cfd1ff287d2a5265817ab3066646ec101ce3cb05555b",
-     "eda.rate_by:job": "dfea61dcc82b454e926d2a8e6033eac1a2c81fad31a0ea0f76cbb226cb774500",
-     "eda.single_feature_signal": "be99fb3181abeab87f0478a86ed2118d1dba04fef964140c2723a833cba26d44",
-     "eda.special_values": "19700e183ec044dd98508ba2b456f597a7d1fcebe354156813d970741b5c17e1",
-     "eda.target_rate": "c67519a84ee46d4d81ffd5a53f51b2fd546d286e864dcf095d61f941f9a956f5",
-     "fit.baseline": "7bebaa981ca9328ee83af71c7abbbf05fab26883b12d3a4f7ce64a76c636dd47",
-     "fit.logistic": "55e0a805a41c1b08fe9a5e5aea4d62b4ef0e3a88cbbed6fd57d9a70f62ca896d",
-     "fit.variant": "e3472ea18f4918acb5c3d1c6f0cddb7eb4593657ecc1d1bb41cfdeca47f34077",
-     "policy.evaluation": "457b8200dbef2e374aeea81d44d328d1d9e471ecca5cd134e3646836c1f1d978",
+     "eda.distribution:age": "e355985f3e935f00111229333a94078dafa8c1696a1d0214d8680c81824b32e2",
+     "eda.distribution:job": "38d11b8c56663281600d7990f032fb758103dce7808e196a2ab5d1f6e5d01070",
+     "eda.distribution:previous": "65258127a2d99e43bef73ec8f6c21faff933a9cd52110bdb5c7b5fa8fe484d27",
+     "eda.quality": "bd0f5021d267175fb88d9d3d0b17c384c889601aa46e5faade5832b41d98b200",
+     "eda.rate_by:job": "df1bd4e68b536adea82668704d986c02a293a6ef486f187e93a0e2c172c501f7",
+     "eda.single_feature_signal": "54312bf6cfae81cf93c8a28ea71e6321eb0cff3612992b7ad87733dd880d68b0",
+     "eda.special_values": "1fa97eb7e0b16b7eca521d7ef7fa0e03e5c41c1fe69e5c82e6cba0e9a4f65509",
+     "eda.target_rate": "80c0c7169535603c9a5e42355090ba21d341cfdc702654ea2b613c04a8fb7f01",
+     "fit.baseline": "9abd65918f72482d5dccd75d48e58bc0253c45bdc4e6c6de0519a60b5e0f22fd",
+     "fit.logistic": "3c6fd1dc403d60d9e2733e78500db47196ded2d65d48e4e73d854fc08bd96249",
+     "fit.variant": "688c2df4c82592b31ada7e6b4ceeb8459c10e721ef7182c04f525aabbd3d83c4",
+     "policy.evaluation": "7badf1dfdfc32377b33e9376f05c914cad989474d248eec173bac6b1581b493b",
      "split": "911dd1efe7cca40b504db86c60b7d27be6a1930e02c0fbd9734dbe3437f94127"
     },
     "eligibility": null,

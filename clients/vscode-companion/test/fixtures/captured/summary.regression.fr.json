@@ -311,49 +311,49 @@
   },
   "results": {
    "eda.mean_by:model_year": {
-    "result_id": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
+    "result_id": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "6f96fd645db7bc66a43b7688265afd25b0499653e3f6452f1106b6bc1acf9048",
+    "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "876eda50acd11c16bd83567bc96af1b37a294ec7f974bc5de94df8d1d911f95d",
+    "result_id": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_summary": {
-    "result_id": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
+    "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "evaluate.regression": {
-    "result_id": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+    "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+    "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.linear": {
-    "result_id": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+    "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
+    "result_id": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -473,7 +473,7 @@
    "minimum": 0.1,
    "unit": "share",
    "rule": null,
-   "result_id": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+   "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
    "contradicts_verdict": false,
    "final_test": null,
    "model": "fit.linear",
@@ -483,15 +483,15 @@
   "eda_looks": {
    "target_looks": 3,
    "results": [
-    "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
-    "876eda50acd11c16bd83567bc96af1b37a294ec7f974bc5de94df8d1d911f95d",
-    "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa"
+    "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+    "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+    "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77"
    ]
   },
   "recap": [
    "Goal: Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques; the prediction is made quand les caractéristiques techniques sont fixées.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation).",
-   "Now: Choisir le modèle (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result b6c64547); the report and notebook are up to date.",
+   "Now: Choisir le modèle (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result f1f5a9a3); the report and notebook are up to date.",
    "Next: whether you adopt the model choice: \"Adopter le modèle linéaire.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
@@ -634,7 +634,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-26T16:38:54.807155+00:00",
+   "boundary_time": "2026-10-26T20:04:11.793501+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -643,7 +643,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-26T16:38:54.921972+00:00",
+     "time": "2026-10-26T20:04:11.920050+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -666,7 +666,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-26T16:38:55.343857+00:00",
+     "time": "2026-10-26T20:04:12.330454+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -696,7 +696,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-26T16:38:55.799689+00:00",
+     "time": "2026-10-26T20:04:12.729375+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -719,7 +719,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-26T16:38:56.380607+00:00",
+     "time": "2026-10-26T20:04:13.138812+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -749,7 +749,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-26T16:38:56.833653+00:00",
+     "time": "2026-10-26T20:04:13.716196+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -772,7 +772,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-26T16:38:57.304612+00:00",
+     "time": "2026-10-26T20:04:14.225193+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -802,7 +802,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-26T16:38:57.835117+00:00",
+     "time": "2026-10-26T20:04:14.750968+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -825,7 +825,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-26T16:38:58.325846+00:00",
+     "time": "2026-10-26T20:04:15.219760+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -855,7 +855,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-26T16:38:58.874336+00:00",
+     "time": "2026-10-26T20:04:15.808228+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -878,7 +878,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-26T16:38:59.480845+00:00",
+     "time": "2026-10-26T20:04:16.434094+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -908,7 +908,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-26T16:39:00.121771+00:00",
+     "time": "2026-10-26T20:04:17.167005+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -931,7 +931,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-26T16:39:00.791901+00:00",
+     "time": "2026-10-26T20:04:17.793557+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -939,7 +939,7 @@
      "note_id": null,
      "activity": "eda.target_summary",
      "slot": "eda.target_summary",
-     "result_id": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
+     "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
      "execution_id": "e_92aaf17d67568d5f7880d18a",
      "rules": null,
      "column": null,
@@ -954,7 +954,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-26T16:39:01.408700+00:00",
+     "time": "2026-10-26T20:04:18.497272+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -962,7 +962,7 @@
      "note_id": null,
      "activity": "eda.special_values",
      "slot": "eda.special_values",
-     "result_id": "876eda50acd11c16bd83567bc96af1b37a294ec7f974bc5de94df8d1d911f95d",
+     "result_id": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
      "execution_id": "e_a6285653c29e349d0b0beb2b",
      "rules": null,
      "column": null,
@@ -977,7 +977,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-26T16:39:02.096049+00:00",
+     "time": "2026-10-26T20:04:19.221692+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -985,7 +985,7 @@
      "note_id": null,
      "activity": "eda.quality",
      "slot": "eda.quality",
-     "result_id": "6f96fd645db7bc66a43b7688265afd25b0499653e3f6452f1106b6bc1acf9048",
+     "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
      "execution_id": "e_b5c9bc6dc2acb308345f4b5b",
      "rules": null,
      "column": null,
@@ -1000,7 +1000,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-26T16:39:02.834955+00:00",
+     "time": "2026-10-26T20:04:19.989768+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1008,7 +1008,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:model_year",
-     "result_id": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
+     "result_id": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
      "execution_id": "e_a2a3d5fe7f8806c9c98f6929",
      "rules": null,
      "column": "model_year",
@@ -1023,7 +1023,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-26T16:39:03.618275+00:00",
+     "time": "2026-10-26T20:04:20.728386+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1031,7 +1031,7 @@
      "note_id": null,
      "activity": "fit.baseline",
      "slot": "fit.baseline",
-     "result_id": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
+     "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
      "execution_id": "e_218811c490cacf105137f8c6",
      "rules": null,
      "column": null,
@@ -1046,7 +1046,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-26T16:39:04.446770+00:00",
+     "time": "2026-10-26T20:04:21.529831+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1054,7 +1054,7 @@
      "note_id": null,
      "activity": "fit.linear",
      "slot": "fit.linear",
-     "result_id": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
+     "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
      "execution_id": "e_aff36faf73c7439f15bd6f24",
      "rules": null,
      "column": null,
@@ -1069,7 +1069,7 @@
     },
     {
      "revision": 26,
-     "time": "2026-10-26T16:39:05.156918+00:00",
+     "time": "2026-10-26T20:04:22.263051+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1092,7 +1092,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-26T16:39:05.791317+00:00",
+     "time": "2026-10-26T20:04:22.937936+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1125,7 +1125,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-26T16:39:06.586370+00:00",
+     "time": "2026-10-26T20:04:23.709811+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1133,7 +1133,7 @@
      "note_id": null,
      "activity": "fit.variant",
      "slot": "fit.variant",
-     "result_id": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
+     "result_id": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
      "execution_id": "e_0fce83ab7847d276df6d9250",
      "rules": null,
      "column": null,
@@ -1148,7 +1148,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-26T16:39:07.432479+00:00",
+     "time": "2026-10-26T20:04:24.550157+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1156,7 +1156,7 @@
      "note_id": null,
      "activity": "evaluate.regression",
      "slot": "evaluate.regression",
-     "result_id": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
+     "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
      "execution_id": "e_13402e84eaabec613a733a22",
      "rules": null,
      "column": null,
@@ -1171,7 +1171,7 @@
     },
     {
      "revision": 32,
-     "time": "2026-10-26T16:39:08.087122+00:00",
+     "time": "2026-10-26T20:04:25.139496+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1209,7 +1209,7 @@
    "channel_actions": []
   },
   "task": "regression",
-  "currency": "2c0257b5925796dc",
+  "currency": "6e85621cdb010ed7",
   "texts": {
    "en": {
     "plan": {

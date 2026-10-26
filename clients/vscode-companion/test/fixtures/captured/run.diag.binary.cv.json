@@ -21,7 +21,7 @@
   "activity": "diag.binary",
   "execution_id": "e_6f568a7e009178d11fe5261f",
   "status": "promoted",
-  "result_id": "64d95f9eebe14a88f58950dba60eeb23223be5e20fd85fbde8e75810b4663429",
+  "result_id": "6e73621b6f03637b6525a003585c332e6475e8ee92363c6136b0c77105963dfe",
   "values": {
    "question": "Where does the model err at the rule, and can its score be read as a probability?",
    "evidence": "development",
@@ -1193,7 +1193,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "96d756c1537b462384be51f04ec776123bda212dbe199974b408ed9617b0fc40"
+     "predictions": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e"
     },
     "fit.variant": {
      "confusion": {
@@ -2349,7 +2349,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "41d1c0e8f46c6ccd72626bfaab362c9be662296f1c9d87f256830b0154cdaa5a"
+     "predictions": "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d"
     }
    },
    "coefficient_rows": 3617,
@@ -2611,13 +2611,13 @@
    "activity": "diag.binary",
    "slot": "diag.binary",
    "status": "promoted",
-   "result_id": "64d95f9eebe14a88f58950dba60eeb23223be5e20fd85fbde8e75810b4663429",
-   "input_key": "5875f12b7f78e2b66d66f1e2f4c90fb2fd7619d59d20b0999aed352dba960c5d",
+   "result_id": "6e73621b6f03637b6525a003585c332e6475e8ee92363c6136b0c77105963dfe",
+   "input_key": "dada7d7d08f4e98a46607ccfb212b59e5144d17859dea99b57db0a54cfad69c4",
    "reason": null,
    "started_revision": 31,
    "invalidation": null,
    "exposure_ids": [
-    "x_9facad68b71941cc9d4246ab15cfe360"
+    "x_0e72d0fb8f1844b7904b2ab33f394993"
    ],
    "registry_created": true,
    "nondeterministic": false
