@@ -1030,6 +1030,48 @@ CLAUDE_CODE_INTENDED_CHANGES = {
         '"rare_category_min_rows", "caps", "log_transform", "motivated_by"}`), `model_variant`\n'
         '(`{"variants": [{"kind": "tuned" | "regularisation" | "drop_group" | "family", ...,\n'
         '"question"}]}`),\n'),
+    # L9 (R20, proposals/L9-agent-text.md): the automatic mode, one shared bullet of rule 4;
+    # the words come from cuts of text the engine now states itself (L0 integration of W3,
+    # each served sentence checked in test_the_l9_cuts_are_served_by_the_engine).
+    'L9 (R20): the automatic mode (rule 4), without the credit sentence': (
+        '     with the plan.\n'
+        '   - **Automatic mode** (`automation.status` `running`, chosen at `init`). Run\n'
+        '     `automation run --progress`, relay its lines, then its `reason` in one sentence;\n'
+        '     only the runner passes `--basis automatic`. A `next_action` with `review: true` is\n'
+        '     the review: propose its value again and ask the closed question; the junior adopts\n'
+        '     or changes it. Until none is left, the study is not defensible. Their "stop" is\n'
+        '     `automation stop`.\n',
+        '     with the plan. A delegated decision is credited as "the assistant\'s recommended\n'
+        '     default, delegated by the analyst".\n'),
+    'L9 (L0 cut): junior_digest described once (rule 1)': (
+        '   pause. Its `next_action` is written for you to relay: `junior_digest` (the\n'
+        '   explanation), `recommended` (`value` and `why`: your recommendation), `question` '
+        '(the\n'
+        '   one question to ask), `default_value` (the value to\n',
+        '   pause. Its `next_action` is written for you to relay: `junior_digest` (the '
+        'explanation,\n'
+        '   term first, in the study language), `recommended` (`value` and `why`: your\n'
+        '   recommendation), `question` (the one question to ask), `default_value` (the value '
+        'to\n'),
+    'L9 (L0 cut): --fields refused by the engine without --summary (rule 1)': (
+        "   `status --json` only for a result's values. Use at most four tool calls per pause.\n",
+        "   `status --json` only for a result's values. `--fields` belongs to `status --summary`\n"
+        '   only. Use at most four tool calls per pause.\n'),
+    'L9 (L0 cut): rule 2 states the computing rule once': (
+        '   for fewer keys with `--fields`. Do not compute differences, sums, or counts '
+        'yourself:\n'
+        '   cite the registered value or write the two registered figures side by side.\n',
+        '   for fewer keys with `--fields`.\n'
+        '   Compute only with `hypotrail run`. Do not compute differences, sums, or counts\n'
+        '   yourself: cite the registered value or write the two registered figures side by '
+        'side.\n'),
+    'L9 (L0 cut): the one-standard-error rule defined by advice.text': (
+        '   rule** (`one_se`), the selection optimism, and `advice.text`; when `advice.stop` is\n'
+        '   true, recommend stopping.\n',
+        '   rule** (`one_se`, the simplest configuration within one standard error of the '
+        'best),\n'
+        '   the selection optimism, and `advice.text`; when `advice.stop` is true, recommend\n'
+        '   stopping.\n'),
 }
 
 
@@ -1065,3 +1107,39 @@ def test_the_rendered_copilot_copy_stays_bounded(task):
     included) is capped too, where the junior's agent reads it."""
     words = sum(len(text.split()) for text in _copilot_files(task).values())
     assert words <= RENDERED_COPILOT_CAP, words
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_the_automatic_mode_rule(task):
+    """L9 (R20, proposals/L9-agent-text.md): rule 4 of both tasks runs the automatic mode
+    through the engine's runner, never records ``--basis automatic`` itself, walks the review,
+    and records the junior's "stop"; the names are the engine's."""
+    from mlkit.study import automation, cli
+    rule4 = _rule(Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task)), 4)
+    for phrase in ('**Automatic mode** (`automation.status` `running`, chosen at `init`)',
+                   '`automation run --progress`', 'only the runner passes `--basis automatic`',
+                   '`review: true`', 'ask the closed question; the junior adopts or changes it',
+                   'the study is not defensible', '`automation stop`'):
+        assert phrase in rule4, phrase
+    assert {'reason', 'review_queue', 'next_action'} <= set(automation.PAYLOAD_KEYS)
+    assert st.AUTOMATIC == 'automatic' and 'automation' in inspect.getsource(cli)
+
+
+def test_the_l9_cuts_are_served_by_the_engine():
+    """The words L0 freed for the L9 bullet (§2.4: a removed sentence is replaced by the
+    engine stating it): ``--fields`` without ``--summary`` is refused with that reason; the
+    selection advice defines the one-standard-error pick; a conclusion that credits a
+    delegated default to the analyst is refused with the credit wording; the pause message
+    gives the term first in the study language (the skill); the computing rule is stated
+    once in rule 2."""
+    from mlkit.study import cli, trials
+    assert "'--fields requires --summary'" in inspect.getsource(cli)
+    assert 'within one standard error of the best' in ' '.join(inspect.getsource(trials).split())
+    source = inspect.getsource(cmd)
+    assert "'misattributed_delegation'" in source and \
+        "recommended default, ' 'delegated by the analyst; say so." in ' '.join(source.split())
+    skill = _binary('dot-claude/skills/hypotrail-study/SKILL.md')
+    assert '**The explanation**: `next_action.junior_digest`' in skill
+    assert 'Introduce a statistical term in bold under its glossary name' in skill
+    rule2 = _rule(_binary('CLAUDE.md.in'), 2)
+    assert 'Do not run or write python' in rule2 and 'Do not compute differences' in rule2
