@@ -207,3 +207,17 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   from the next step's kind alone, name the section, not only the tab ("onglet Décisions,
   Historique des décisions"), and give no line when nothing new is shown. Check whether the
   agent used `next_action.panel.where.line` or its own rule-6 mapping here.
+- **R9. No progress narration during long runs.** While the models run, the chat shows only
+  "Ran uv run --project …", "Read content.txt", "Evaluating": nothing says what is being done.
+  The owner wants, for each major step, a short line before it ("Je vais maintenant ajuster
+  le modèle de référence", "je passe au modèle logistique") and the intermediate result after
+  it ("le modèle de référence obtient …").
+  Cause: the round-9 Copilot rule (R9UX-1 `RUN_NOTICE`) moves every run announcement to the
+  final message of the turn, "never before a tool call", to avoid the folded-reasoning bug;
+  so during the turn nothing is written.
+  To fix: separate progress from content. Progress lines before and between tool calls are
+  allowed (they are visible live while the turn runs, folded afterwards), one short line per
+  major step and one per intermediate result; everything the junior must keep (the results,
+  the pause, the question) is repeated in the final message or the picker. Also consider the
+  `todo` tool (already in the agent's tool list): a visible checklist of the turn's major
+  steps (baseline, logistic model, diagnostics) updated as each one finishes.
