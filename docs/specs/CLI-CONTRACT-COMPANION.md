@@ -19,6 +19,8 @@ document lists. Every rule of CLI-CONTRACT §1 to §3 applies here too:
 
 CLI-CONTRACT.md §8.7 points here and lists the new schemas; `test_contract_freeze.py` pins their names (`test_companion_schema_names`).
 
+**The engine knows the panel's tabs (owner session 2026-10-26, R1).** So that the agent's chat can name the panel tab that shows each step, `next_action` carries an optional `panel` key when the panel is on (`HYPOTRAIL_COMPANION=1` or `hypotrail.companion.enabled` in the study's `.vscode/settings.json`): the stage, the panel's title and tab labels in the study language, and `where` the current step is shown (CLI-CONTRACT §3.2, `mlkit.study.companion_env`). This couples the engine to the panel's layout in one direction only: the engine copies the tab of each stage and the labels of `media/copy*/core.js`, and `clients/vscode-companion/test/test_panel_labels.py` fails when they drift (renaming a tab or moving it to another stage is then one change in each place). The panel's code, writes, and stages are unchanged, and the key is absent when the panel is off. Reads that add `panel` stay deterministic for one study content **and** one environment: two runs with the same `HYPOTRAIL_COMPANION*` variables and the same `.vscode/settings.json` give the same bytes (R4).
+
 **Why a separate document.** CLI-CONTRACT.md is frozen. Its freeze test reads it. Three engine work packages will edit their parts of this contract in parallel. Keeping the additions in one separate file avoids merge conflicts in the frozen document, and it keeps the v0.1 contract readable on its own.
 
 ## 0. Summary of additions

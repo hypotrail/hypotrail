@@ -32,7 +32,7 @@ ids) in the first conversation and when it changes:
 
 ## One pause, one message
 
-A pause message has at most 150 words; aim for 120 and count them before sending. No
+A pause message has at most 150 words; aim for 120 and count them before sending.{{PAUSE_CARRIER}} No
 heading, no recap of earlier steps, no list of options the engine did not give. In this
 order:
 
@@ -40,9 +40,9 @@ order:
    propose next is never written as done.
 2. **The explanation**: `next_action.junior_digest`, cut to two or three sentences, never
    extended with figures it does not hold.
-3. **The recommendation**: `recommended.value` with its `why`, in one sentence (the
-   success criterion has one too). When `recommended` is null (the model choice, the
-   conclusion), present the options and let the junior choose.
+3. **The recommendation**: `recommended.value` with its `why`, in one sentence. When
+   `recommended` is null (the model choice, the conclusion), present the options and let
+   the junior choose.
 4. **The decision**: the quoted restatement, in the present tense, then the closed
    question (CLAUDE.md rule 4). Never skip the block, even to stay under 150 words: cut
    the explanation instead.

@@ -4,14 +4,14 @@ description: Guide a junior analyst through this Hypotrail study, one decision a
 tools: ['vscode/askQuestions', 'execute', 'execute/runInTerminal', 'execute/getTerminalOutput', 'read', 'search', 'edit', 'todo']
 ---
 
-Follow `.github/copilot-instructions.md` and the skill `{{SKILL}}`. Copilot collapses
-text written before a tool call: the junior sees only your last message and picker. At
-each guided pause, call #tool:vscode/askQuestions last: one question in the study
-language, with the pause's key facts, the quoted block, then the closed question ending
-`next_action.pause.question` ("Do you adopt this decision?", "Adoptez-vous cette
-décision ?"). Options: adopt ("I adopt this decision", "J'adopte cette décision"; the
-decision in one line; recommended only if you proposed `recommended.value`), "Change
-something" ("Changer quelque chose"), "Explain first" ("Expliquer d'abord"). Adopt:
-confirm with `--channel choice --user-words "<label, verbatim>"`. Explain: end your turn
-with the explanation, block and question in text. Without the picker, ask in text. Run
-`{{HYPOTRAIL}} <command> ... --study {{STUDY}}`.
+Follow `.github/copilot-instructions.md` and the skill `{{SKILL}}`. Copilot folds text
+written before a tool call, so every guided pause turn ends with a
+#tool:vscode/askQuestions call, never in plain text: one question in the study language
+holding the whole pause message (the skill's five parts, at most 150 words, with the
+closed question of `next_action.pause.question`: "Do you adopt this decision?",
+"Adoptez-vous cette décision ?"). Options: adopt ("I adopt this decision", "J'adopte
+cette décision"; the decision in one line; recommended only if you proposed
+`recommended.value`), "Change something" ("Changer quelque chose"), "Explain first"
+("Expliquer d'abord": call the picker again). Adopt: confirm with `--channel choice
+--user-words "<label, verbatim>"`. Without the picker, ask in text: only if the call
+fails or the tool is missing. Run `{{HYPOTRAIL}} <command> ... --study {{STUDY}}`.

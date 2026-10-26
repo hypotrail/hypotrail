@@ -133,7 +133,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      tool ({{CHOICE_TOOL}}), use it at every pause: {{CHOICE_STEPS}} Use three options in
      the junior's language: adopt ("I adopt this decision", "J'adopte cette décision", its
      description the decision in one line, e.g. "J'exclus les 4 colonnes connues après la
-     réservation"), change something, explain first. Without one, ask it in text.
+     réservation"), change something, explain first. Without one, ask it in text{{TEXT_FALLBACK}}.
      Adopt picked: confirm with `--channel choice --user-words "<the label, verbatim>"`. A
      typed yes to that question ("oui", "ok", "je confirme"): confirm with
      `--adoption-question`, only when your last message asked that question about this
@@ -197,23 +197,24 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    timeout, replay the same id with the same arguments. On `stale_revision`, reread the
    summary, explain the change in one sentence (`error.details.changes_since`), and
    propose again if it still applies.
-6. **The panel.** If the junior works in VS Code (Copilot, or Claude Code in VS Code) and
-   has already said the Hypotrail panel is open, remember it. Do not append a panel-open
-   question to a resume, decision summary, or conclusion. When it is open, add one short
-   line per step naming the tab to look at: Data & EDA ("Données et EDA") after the data
-   card and the charts, Decisions ("Décisions") at a proposal, Evidence ("Preuves") after
-   the fits, the diagnostics, and the opening,
+6. **The panel.** It is open when `next_action.panel` is present or the junior has
+   already said the Hypotrail panel is open; remember it. Do not append a panel-open
+   question to a resume, decision summary, or conclusion. When it is open, end each
+   message that shows or changes something with one short line per step naming the tab
+   to look at (`next_action.panel.where.line`, or the `panel.tabs` label of the step the
+   message covers): Data & EDA ("Données et EDA") after the data card and the charts,
+   Decisions ("Décisions") at a proposal, Evidence ("Preuves") after the fits, the
+   diagnostics, and the opening,
 <!-- hypotrail:task binary -->
-   What if? ("Et si ?") at the decision rule.
+   What if? ("Et si ?") at the decision rule.{{PANEL_LINE_PLACE}}
 <!-- hypotrail:task regression -->
-   What if? ("Et si ?") at the model choice.
+   What if? ("Et si ?") at the model choice.{{PANEL_LINE_PLACE}}
 <!-- hypotrail:end -->
    The line adds to the chat; it never replaces its content. The panel can run charts,
-   regenerate the deliverables, acknowledge an interruption, and export a handoff pack.
-   When the revision moved without a command of yours, read `status --summary --digest
-   --since <your last revision>`: `digest.channel_actions` lists the runs, renders and
-   exports made from the panel (`channel` `webview`); say so ("you ran these charts from
-   the panel") and use them.
+   regenerate the deliverables, acknowledge an interruption, and export a handoff pack:
+   when the revision moved without a command of yours, `status --summary --digest --since
+   <your last revision>` lists them in `digest.channel_actions` (`channel` `webview`); say
+   so ("you ran these charts from the panel") and use them.
 7. **Deliverables.** Say "up to date" only after a read that shows it, each deliverable in
    the words of its `junior_message`, without a revision number. After exit `3` with a
    failed report, say "previous report kept and marked stale at revision N" (N from the
@@ -327,4 +328,4 @@ The target is a number in its unit; the time column orders the rows and is not a
 <!-- hypotrail:end -->
 
 Deliverables, regenerated after every change: `reports/study.html` and
-`notebooks/study_generated.py`; `notebooks/workbench.py` is the junior's free space.
+`notebooks/study_generated.py`.

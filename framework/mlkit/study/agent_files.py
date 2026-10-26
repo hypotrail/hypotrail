@@ -26,8 +26,10 @@ the CLI (:func:`cli_command`), ``{{STUDY}}`` by the absolute study directory,
 tree, D10), ``{{SKILL}}`` by the skill path of the target agent, and ``{{CHOICE_TOOL}}``
 by the interactive choice tool of the target agent (Claude Code's ``AskUserQuestion``,
 VS Code's ``#tool:vscode/askQuestions``), and ``{{RUN_NOTICE}}``, ``{{BLOCK_PLACE}}``,
-``{{CHOICE_STEPS}}`` and ``{{EXPLAIN_FIRST}}`` by where that agent's junior reads a pause
-(:data:`FLAVOUR_TEXTS`: Copilot shows only the last message of a turn and the picker).
+``{{CHOICE_STEPS}}``, ``{{EXPLAIN_FIRST}}``, ``{{TEXT_FALLBACK}}``, ``{{PAUSE_CARRIER}}``
+and ``{{PANEL_LINE_PLACE}}`` by where that agent's junior reads a pause
+(:data:`FLAVOUR_TEXTS`: Copilot shows only the last message of a turn and the picker; the
+last three are empty for Claude Code).
 The command is also written to ``.hypotrail/agent.json`` (``hypotrail.agent/1``).
 
 Nothing that exists is overwritten: an existing target is reported under
@@ -70,6 +72,10 @@ CHOICE_TOOLS = {CLAUDE: 'Claude Code: `AskUserQuestion`',
 # Where the junior reads a pause, per agent (R9UX-1). Claude Code shows the text written
 # before a tool call; GitHub Copilot folds it into collapsed reasoning, so the junior sees
 # only the last message of the turn and the picker: what they must read goes there.
+# Owner session 2026-10-26 (R2): Copilot ended every pause in text and never showed the
+# picker, so for Copilot the picker call is mandatory at every pause, "explain first" calls
+# it again, and the text form is only the fallback when the call fails or the tool is
+# missing. An empty text leaves the Claude Code copy byte for byte as it was.
 FLAVOUR_TEXTS: dict[str, dict[str, str]] = {
     CLAUDE: {
         'RUN_NOTICE': 'Before runs, visibly state what was decided, what you will compute '
@@ -79,22 +85,34 @@ FLAVOUR_TEXTS: dict[str, dict[str, str]] = {
                         'repeating the decision title and one-line restatement before the '
                         'closed question, so it survives collapsed prose.',
         'EXPLAIN_FIRST': 'explain, show the block again, ask again.',
+        'TEXT_FALLBACK': '',
+        'PAUSE_CARRIER': '',
+        'PANEL_LINE_PLACE': '',
     },
     COPILOT: {
         'RUN_NOTICE': 'Copilot folds text written before a tool call, so run announcements '
-                      'go in the final message of the turn, never before a tool call: what '
-                      'was decided, what you computed or will compute and why, expected '
-                      'delays, and whether the final test stays sealed.',
-        'BLOCK_PLACE': 'inside the picker question (in the final message when you ask in '
-                       'text)',
+                      'go in the final message of the turn, never before a tool call (at a '
+                      'pause, in the picker question): what was decided, what you computed or '
+                      'will compute and why, expected delays, and whether the final test stays '
+                      'sealed.',
+        'BLOCK_PLACE': 'inside the picker question (in the final message only when the picker '
+                       'call fails)',
         'CHOICE_STEPS': 'call it as the last step of the turn, with one single-select '
                         'question that holds the key facts of the pause, the quoted block, '
                         'and the closed question in the study language (the last line of '
-                        '`next_action.pause.question`); write nothing the junior must read '
-                        'before it. Mark the adopt option recommended only when you proposed '
-                        '`recommended.value`.',
-        'EXPLAIN_FIRST': 'end the turn with the explanation, the block, and the closed '
-                         'question, all in text.',
+                        '`next_action.pause.question`): the whole pause message of the skill, '
+                        'at most 150 words. Every pause turn ends with this call, never in '
+                        'plain text; write nothing the junior must read before it. Mark the '
+                        'adopt option recommended only when you proposed `recommended.value`.',
+        'EXPLAIN_FIRST': 'call the picker again, its question holding the explanation, the '
+                         'block, and the closed question.',
+        'TEXT_FALLBACK': ' only when the picker call fails or the tool is missing',
+        'PAUSE_CARRIER': ' With GitHub Copilot this message is the question of the '
+                         '`#tool:vscode/askQuestions` call that ends the pause turn: write '
+                         'nothing before the call, and never end a pause turn in plain text.',
+        'PANEL_LINE_PLACE': ' At a pause it is the last line of the picker question, '
+                            'after the closed question; otherwise the last line of your '
+                            'final message.',
     },
 }
 

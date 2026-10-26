@@ -2,7 +2,8 @@
 
 Owner test of the chat-plus-panel walkthrough on Hotel booking demand (Resort Hotel), GitHub
 Copilot agent **Hypotrail** in VS Code, panel flag on at stage v3, branch
-`claude/zealous-franklin-gywbya` at `d59f0c4`. Notes only: nothing below is implemented yet.
+`claude/zealous-franklin-gywbya` at `d59f0c4`. R1 and R2 are fixed since (see Fixes); the
+fixes are tested by unit tests only, not yet in a real Copilot session.
 
 ## Observations
 
@@ -42,10 +43,37 @@ Copilot agent **Hypotrail** in VS Code, panel flag on at stage v3, branch
   decision block, then "Adoptez-vous cette décision ? Vous pouvez l'adopter, changer quelque
   chose ou me demander d'abord une explication." No picker appears at any pause; typing is
   the only option. The content itself is right and visible (not collapsed).
-  Lead: the earlier session at `0065fcd` did call the picker (its text was folded above it,
-  the bug that commit fixed), so this is probably a regression from the round-9 rewrite
-  (R9UX-1/R9UX-2, `90e89e4`): the agent now takes the "Without the picker, ask in text"
-  fallback, or the text-ending "explain first" path, at every pause. Check the generated
+  Lead: the earlier owner session that saw the picker, with its text folded above it, ran
+  before `0065fcd` (that commit fixed the folding); it says nothing about the picker after
+  that commit. The likely cause is the wording of the round-9 rewrite (R9UX-1/R9UX-2,
+  `90e89e4`): it offered several text endings (the "Without the picker, ask in text"
+  fallback, "explain first" answered in text, the skill's pause message described as a
+  text message), and the agent took one at every pause. Check the generated
   `.github/agents/hypotrail.agent.md` and `.github/copilot-instructions.md` for wording that
   makes the text form look like the default, and confirm the tool is still offered to the
   agent in that session (chat tools picker).
+
+## Fixes
+
+Branch `r1r2`, commit "Fix R2 (Copilot picker at every pause) and R1 (panel tab line)".
+Unit tests only: no real Copilot or VS Code session has been run with these fixes.
+
+- **R2, fixed.** For Copilot only (the Claude Code instructions are unchanged), every pause
+  turn ends with the `#tool:vscode/askQuestions` call, never in plain text: its question
+  holds the whole pause message of the skill (at most 150 words), "explain first" calls the
+  picker again, and the text form is only the fallback when the call fails or the tool is
+  missing (`copilot-agent.md.in`; the Copilot slots of `CLAUDE.md.in` and of the skill's
+  "One pause, one message" in `agent_files.FLAVOUR_TEXTS`). Tests:
+  `test_agent_files.py::test_copilot_ends_every_pause_with_the_picker`,
+  `::test_the_r2_fix_leaves_the_claude_code_copy_unchanged`.
+- **R1, fixed.** When the panel is on (`HYPOTRAIL_COMPANION=1`, or
+  `hypotrail.companion.enabled` in the study's `.vscode/settings.json`), every
+  `next_action` carries `panel`: the stage, the panel's tab labels at that stage in the
+  study language, and `where` the current step is shown, with a ready line ("Dans le
+  panneau : onglet Données et EDA."). Rule 6 of the agent instructions now triggers on it
+  and ends each message that shows or changes something with that line (with Copilot, the
+  last line of the picker question). Absent when the panel is off. Section labels (for
+  example "fiche des données") are not given: tabs only. Engine: `mlkit/study/companion_env.py`;
+  contract: CLI-CONTRACT §3.2; ADR 0004 amendment note 10. Tests:
+  `framework/tests/study/test_companion_env.py`,
+  `clients/vscode-companion/test/test_panel_labels.py`.

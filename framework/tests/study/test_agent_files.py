@@ -475,12 +475,17 @@ def test_the_agent_relays_the_engine_payloads(task):
 @pytest.mark.parametrize('task', af.TASKS)
 def test_the_panel_rule(task):
     """WP-D, R13, R20, R35: remember an already-open panel without interrupting resumes;
-    one line per step names the tab; panel actions are said as such."""
+    one line per step names the tab; panel actions are said as such. Owner session
+    2026-10-26 (R1): the panel is open when the engine says so (``next_action.panel``) or
+    the junior said it, and each message that shows or changes something ends with the
+    line ``next_action.panel.where.line`` names (with Copilot, the picker's last line)."""
     text = Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task))
     rule6 = _rule(text, 6)
-    for phrase in ('If the junior works in VS Code',
-                   'has already said the Hypotrail panel is open', 'Do not append a panel-open',
-                   'one short line per step naming the tab', 'Data & EDA ("Données et EDA")',
+    for phrase in ('It is open when `next_action.panel` is present or the junior has already '
+                   'said the Hypotrail panel is open; remember it', 'Do not append a panel-open',
+                   'end each message that shows or changes something with one short line per '
+                   'step naming the tab', '(`next_action.panel.where.line`, or the `panel.tabs` '
+                   'label of the step the message covers)', 'Data & EDA ("Données et EDA")',
                    'after the data card and the charts', 'Decisions ("Décisions") at a proposal',
                    'Evidence ("Preuves") after the fits, the diagnostics, and the opening',
                    'What if? ("Et si ?")', 'it never replaces its content',
@@ -488,8 +493,17 @@ def test_the_panel_rule(task):
                    '"you ran these charts from the panel"'):
         assert phrase in rule6, phrase
     assert ('at the decision rule' in rule6) == (task == 'binary')
-    from mlkit.study import view
+    assert 'If the junior works in VS Code' not in rule6           # the trigger before R1
+    from mlkit.study import companion_env as ce, view
     assert 'channel' in view.DIGEST_ITEM_KEYS
+    assert {'tabs', 'where'} <= set(ce.PANEL_KEYS) and 'line' in ce.WHERE_KEYS
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    source = (af.SOURCE / 'CLAUDE.md.in').read_text()
+    claude, copilot = (Flat(_rule(af.render(source, flavour=f, values=values,
+                                            source='CLAUDE.md.in', task=task), 6))
+                       for f in (af.CLAUDE, af.COPILOT))
+    place = 'At a pause it is the last line of the picker question, after the closed question'
+    assert place in copilot and place not in claude
 
 
 @pytest.mark.parametrize('task', af.TASKS)
@@ -553,11 +567,11 @@ def test_standard_vocabulary_and_no_ids(task):
 
 def test_generated_copilot_instructions_put_what_the_junior_reads_last(study):
     """Copilot folds the text written before a tool call into collapsed reasoning. The
-    instructions ``init`` writes for it never order "message first, then picker", never
-    announce runs before them, and never answer "explain first" with another picker turn;
-    they put the facts, the quoted block and the closed question in the picker question, and
-    the run announcements in the final message. The Claude Code copy keeps its own
-    procedure, unchanged."""
+    instructions ``init`` writes for it never order "message first, then picker" and never
+    announce runs before them; they put the facts, the quoted block and the closed question
+    in the picker question, and the run announcements in the final message. Since the owner
+    session of 2026-10-26 (R2), "explain first" calls the picker again instead of ending the
+    turn in text. The Claude Code copy keeps its own procedure, unchanged."""
     target, _ = study
     copilot = Flat((target / '.github/copilot-instructions.md').read_text())
     claude = Flat((target / 'CLAUDE.md').read_text())
@@ -576,8 +590,8 @@ def test_generated_copilot_instructions_put_what_the_junior_reads_last(study):
                    'write nothing the junior must read before it',
                    'Mark the adopt option recommended only when you proposed '
                    '`recommended.value`',
-                   'Explain first: end the turn with the explanation, the block, and the closed '
-                   'question, all in text'):
+                   'Explain first: call the picker again, its question holding the explanation, '
+                   'the block, and the closed question'):
         assert phrase in copilot, phrase
         assert phrase not in claude, phrase
     for task in af.TASKS:          # every task, both flavours: no placeholder left
@@ -635,3 +649,83 @@ def test_the_binary_decision_list_names_the_model_choice():
         assert phrase not in regression, phrase
     assert rec.POLICY_CANDIDATE == 'fit.logistic' and rec.policy_model('capacity:5') == \
         rec.POLICY_CANDIDATE and rec.policy_model('capacity:5@fit.variant') == 'fit.variant'
+
+
+# --- Owner session 2026-10-26, R2: Copilot never showed the picker -------------------------
+
+_TEXT_ENDING = re.compile(r'\b(?:in text|all in text|end (?:the|your) turn with)\b', re.I)
+_OLD_TEXT_ENDINGS = ('all in text', 'end the turn with the explanation',
+                     'Explain: end your turn', 'when you ask in text', 'Without one, ask it in text.',
+                     'Without the picker, ask in text. ')
+
+
+def _sentences(text: str) -> list[str]:
+    return re.split(r'(?<=[.!?])\s+(?=[A-Z"(])', ' '.join(text.split()))
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_copilot_ends_every_pause_with_the_picker(tmp_path, task):
+    """R2: with Copilot, every pause turn ends with the ``#tool:vscode/askQuestions`` call,
+    whose question holds the whole pause message; "explain first" calls it again; the only
+    text form left is the fallback when the call fails or the tool is missing. Checked on the
+    files ``init`` writes for Copilot (the agent, the instructions, the skill)."""
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    out = {}
+    for rel in af.templates():
+        for target, flavour in af.targets(rel):
+            if flavour == af.COPILOT:
+                out[target] = Flat(af.render((af.SOURCE / rel).read_text(), flavour=flavour,
+                                             values=values, source=rel, task=task))
+    agent = out['.github/agents/hypotrail.agent.md']
+    instructions = out['.github/copilot-instructions.md']
+    skill = out['.github/skills/hypotrail-study/SKILL.md']
+    for name, text in out.items():
+        for old in _OLD_TEXT_ENDINGS:
+            assert old not in text, (name, old)
+        # every remaining "in text" is the failure fallback, in the same sentence
+        for sentence in _sentences(text):
+            if _TEXT_ENDING.search(sentence):
+                assert re.search(r'call fails', sentence), (name, sentence)
+    for phrase in ('every guided pause turn ends with a #tool:vscode/askQuestions call, never '
+                   'in plain text', 'holding the whole pause message',
+                   '"Explain first" ("Expliquer d\'abord": call the picker again)',
+                   'Without the picker, ask in text: only if the call fails or the tool is '
+                   'missing'):
+        assert phrase in agent, phrase
+    assert any('Without the picker, ask' in line for line in agent.splitlines())  # one line
+    for phrase in ('use it at every pause', 'Every pause turn ends with this call, never in '
+                   'plain text', 'the whole pause message of the skill, at most 150 words',
+                   'write nothing the junior must read before it',
+                   'Explain first: call the picker again',
+                   'Without one, ask it in text only when the picker call fails or the tool is '
+                   'missing', 'in the final message only when the picker call fails'):
+        assert phrase in instructions, phrase
+    one_pause = Flat(skill.split('## One pause, one message', 1)[1].split('\n## ', 1)[0])
+    assert ('With GitHub Copilot this message is the question of the '
+            '`#tool:vscode/askQuestions` call that ends the pause turn') in one_pause
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_the_r2_fix_leaves_the_claude_code_copy_unchanged(task):
+    """R2 is Copilot only: the slots it adds are empty for Claude Code, so the Claude Code
+    copy keeps its pause procedure word for word (text before the choice tool, "explain
+    first" answered in the chat, the text fallback without a tool)."""
+    for key in ('TEXT_FALLBACK', 'PAUSE_CARRIER', 'PANEL_LINE_PLACE'):
+        assert af.FLAVOUR_TEXTS[af.CLAUDE][key] == '', key
+        assert af.FLAVOUR_TEXTS[af.COPILOT][key].strip(), key
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    claude = af.render((af.SOURCE / 'CLAUDE.md.in').read_text(), flavour=af.CLAUDE,
+                       values=values, source='CLAUDE.md.in', task=task)
+    skill = af.render((af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text(),
+                      flavour=af.CLAUDE, values=values, source='SKILL.md', task=task)
+    flat = Flat(claude)
+    for phrase in ('With an interactive choice tool (Claude Code: `AskUserQuestion`), use it at '
+                   'every pause: send that message first, then offer one single-choice question',
+                   'explain first. Without one, ask it in text. Adopt picked:',
+                   'Explain first: explain, show the block again, ask again. A reason is optional',
+                   'The block is in the chat message itself, directly above the question',
+                   'What if? ("Et si ?") at the',
+                   'Before runs, visibly state what was decided'):
+        assert phrase in flat, phrase
+    assert 'picker' not in claude and 'Copilot this message' not in skill
+    assert ('count them before sending. No\nheading, no recap of earlier steps' in skill)
