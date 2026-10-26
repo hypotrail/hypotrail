@@ -175,25 +175,3 @@ def test_a_choice_pick_is_never_a_confirmation(tmp_path, monkeypatch):
     assert out['result']['status'] == 'confirmed'
     assert s.state()['decisions']['model_choice']['value'] == pick['value']
 
-
-# The names L1 adds to the contract, pinned here until the integrator moves them into
-# ``test_contract_freeze.py`` with the wave's contract commit (plan §1.3).
-PAUSE_KEYS = ('schema', 'kind', 'language', 'revision', 'position', 'learned', 'limitations',
-              'proposal_id', 'proposal_text', 'recommended_option', 'options', 'option_labels',
-              'question', 'evidence_refs', 'detail_topics')
-PAUSE_KINDS = ('decision', 'action', 'explanation', 'blocked', 'complete', 'choice')
-
-
-def test_the_l1_names_are_frozen_and_documented():
-    from pathlib import Path
-    doc = (Path(fk.REPO) / 'docs' / 'specs' / 'CLI-CONTRACT.md').read_text(encoding='utf-8')
-    assert tuple(guidance.pause({'next_action': {'kind': 'run'}, 'revision': 1})) == PAUSE_KEYS
-    assert guidance.KINDS == PAUSE_KINDS and guidance.SCHEMA == 'hypotrail.pause/1'
-    assert junior.CHOICE_OPTION_KEYS == ('id', 'value', 'label')
-    for name in PAUSE_KEYS + PAUSE_KINDS + ('choice_options', 'junior.choice_options',
-                                            'feasibility.accepts', 'guidance.OPTION_LABELS',
-                                            'junior.CHOICE_OPTION_KEYS'):
-        assert f'`{name}`' in doc, name
-    flat = ' '.join(doc.split())
-    for label_en, label_fr in guidance.OPTION_LABELS.values():
-        assert f'"{label_en}" / "{label_fr}"' in flat, label_en

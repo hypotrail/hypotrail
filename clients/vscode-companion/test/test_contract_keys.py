@@ -17,12 +17,27 @@ sys.path.insert(0, str(REPO / 'framework' / 'tests' / 'study'))
 import companion_contract as cc  # noqa: E402
 import test_contract_freeze as freeze  # noqa: E402  (WP-A7: the data card's frozen keys)
 
+from mlkit.study import after_study as aft, companion_env as ce  # noqa: E402
+
 CONTRACT = json.loads((HERE / 'fixtures' / 'contract-keys.json').read_text(encoding='utf-8'))
 
+# Owner session 2026-10-26, wave W1 (CLI-CONTRACT §3.1, §3.2; CLI-CONTRACT-COMPANION): the
+# objects of the summary's ``next_action`` the panel reads or receives, frozen with the wave's
+# contract commit: the pause (L1 ``option_labels``), a free choice's options (L1, the R16
+# choice card), what comes after the study (L7), and the panel line (R1, R1b; absent when the
+# panel is off). Each list is absent from a payload where it does not apply.
+NEXT_ACTION = {'next_action.pause': freeze.PAUSE_KEYS,
+               'next_action.choice_options[]': freeze.CHOICE_OPTION_KEYS,
+               'next_action.after_study': aft.AFTER_STUDY_KEYS,
+               'next_action.after_study.azureml': aft.AZUREML_KEYS,
+               'next_action.panel': ce.PANEL_KEYS,
+               'next_action.panel.shown': ce.SHOWN_KEYS}
+
 EXPECTED = {
-    'hypotrail.summary/1': {'': cc.SUMMARY_KEYS},
+    'hypotrail.summary/1': {'': cc.SUMMARY_KEYS, **NEXT_ACTION},
     'hypotrail.summary/1+digest': {'': cc.DIGEST_SUMMARY_KEYS, 'digest.items[]': cc.DIGEST_ITEM_KEYS,
-                                   'digest.counts': cc.DIGEST_COUNT_KEYS, 'last_session': cc.LAST_SESSION_KEYS},
+                                   'digest.counts': cc.DIGEST_COUNT_KEYS, 'last_session': cc.LAST_SESSION_KEYS,
+                                   **NEXT_ACTION},
     'hypotrail.decisions/1': {'': cc.DECISIONS_KEYS, 'history[]': cc.DECISIONS_HISTORY_KEYS,
                               'proposals[]': cc.DECISIONS_PROPOSAL_KEYS},
     'hypotrail.preview_effects/1': {'': cc.PREVIEW_EFFECTS_KEYS},

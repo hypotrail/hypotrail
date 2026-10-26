@@ -1374,3 +1374,89 @@ def test_l7_after_study_and_structure_limit_contract():
                'current_revision', 'study_revision'})
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
     assert '--expected-revision is required: the study at' in DOC
+
+
+# --- Owner session 2026-10-26, wave W1 (lots L1, L2, L4, L7): the integrator's contract
+# commit (plan §1.3). L1's names were pinned in ``test_pause_pickers.py`` until here.
+
+PAUSE_KEYS = ('schema', 'kind', 'language', 'revision', 'position', 'learned', 'limitations',
+              'proposal_id', 'proposal_text', 'recommended_option', 'options', 'option_labels',
+              'question', 'evidence_refs', 'detail_topics')
+PAUSE_KINDS = ('decision', 'action', 'explanation', 'blocked', 'complete', 'choice')
+OPTION_LABELS = {'adopt': ('I adopt this decision', "J'adopte cette décision"),
+                 'change': ('Change something', 'Changer quelque chose'),
+                 'explain': ('Explain first', "Expliquer d'abord"),
+                 'continue': ("Let's continue", 'On continue')}
+CHOICE_OPTION_KEYS = ('id', 'value', 'label')
+CHOICE_DECISIONS = ('model_choice', 'conclusion')
+# The order of the keys the view and the command surfaces append to ``next_action`` (each
+# present only when it applies): the junior-ready keys (v0.3), then ``choice_options`` (L1),
+# ``after_study`` (L7), ``pause`` (J5) and, with the panel on, ``panel`` last (R1, L2).
+NEXT_ACTION_TAIL = ('language', 'recommended', 'question', 'junior_digest', 'choice_options',
+                    'after_study', 'pause', 'panel')
+
+
+def test_w1_pause_and_choice_contract():
+    """L1 (R3, R2c): ``hypotrail.pause/1`` keys and kinds, the option labels in both
+    languages, the ``choice_options`` items; every name and label documented (§3.1, J4–J7)."""
+    from mlkit.study import feasibility, guidance, junior
+    assert tuple(guidance.pause({'next_action': {'kind': 'run'}, 'revision': 1})) == PAUSE_KEYS
+    assert guidance.KINDS == PAUSE_KINDS and guidance.SCHEMA == 'hypotrail.pause/1'
+    assert guidance.OPTION_LABELS == OPTION_LABELS
+    assert junior.CHOICE_OPTION_KEYS == CHOICE_OPTION_KEYS
+    assert junior.CHOICE_DECISIONS == CHOICE_DECISIONS
+    assert callable(feasibility.accepts) and callable(junior.choice_options)
+    for name in PAUSE_KEYS + PAUSE_KINDS + ('choice_options', 'junior.choice_options',
+                                            'feasibility.accepts', 'guidance.OPTION_LABELS',
+                                            'junior.CHOICE_OPTION_KEYS'):
+        assert f'`{name}`' in DOC, name
+    flat = ' '.join(DOC.split())
+    for label_en, label_fr in OPTION_LABELS.values():
+        assert f'"{label_en}" / "{label_fr}"' in flat, label_en
+
+
+def test_w1_run_progress_contract():
+    """L4 (R10 level 1, D12): ``run --progress`` is a flag of ``run`` only, its heartbeat at
+    most 10 s, documented in §1 (the stderr clause) and §8.1."""
+    import argparse
+    from mlkit.study import cmd_run, progress
+    parser = argparse.ArgumentParser()
+    cmd_run.configure(parser)
+    assert '--progress' in parser._option_string_actions
+    assert progress.HEARTBEAT_SECONDS == 10.0
+    flat = ' '.join(DOC.split())
+    assert 'except the progress lines of `run --progress`' in flat
+    assert '`progress.HEARTBEAT_SECONDS`' in DOC and '`mlkit.study.progress`' in DOC
+
+
+def test_w1_next_action_key_order(tmp_path, synthetic_case_dir, monkeypatch):
+    """Plan §1.3: the wave's additive ``next_action`` keys come in one fixed order, set by
+    the integrator: in the source (``junior.enrich``, ``view.build``) and in a payload with
+    the panel on, where ``panel`` is the last key; with the panel off it is absent."""
+    from mlkit.study import companion_env as ce, junior
+    enrich = inspect.getsource(junior.enrich)
+    assert enrich.index("action['junior_digest']") < enrich.index("action['choice_options']")
+    build = inspect.getsource(view.build)
+    assert (build.index('junior.enrich(') < build.index("['after_study']")
+            < build.index("['pause'] = guidance.pause"))
+    assert 'panel' not in view.VIEW_KEYS
+
+    def tail(action):
+        return tuple(k for k in action if k in NEXT_ACTION_TAIL)
+
+    def ordered(keys):
+        return list(keys) == sorted(keys, key=NEXT_ACTION_TAIL.index)
+
+    study = tmp_path / 'study'
+    monkeypatch.delenv(ce.ENV_VAR, raising=False)
+    monkeypatch.delenv(ce.STAGE_ENV, raising=False)
+    off = _run('init', '--case', synthetic_case_dir, '--study', study)
+    action = _run('status', '--summary', '--study', study).payload['next_action']
+    assert off.exit_code == 0 and 'panel' not in action and ordered(tail(action))
+    monkeypatch.setenv(ce.ENV_VAR, '1')
+    action = _run('status', '--summary', '--study', study).payload['next_action']
+    assert tail(action) == ('language', 'recommended', 'question', 'junior_digest', 'pause',
+                            'panel')
+    assert list(action)[-1] == 'panel'
+    for key in NEXT_ACTION_TAIL:
+        assert f'`{key}`' in DOC, key

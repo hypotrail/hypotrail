@@ -32,6 +32,55 @@
     "trials",
     "scenario_defaults",
     "language"
+   ],
+   "next_action.pause": [
+    "schema",
+    "kind",
+    "language",
+    "revision",
+    "position",
+    "learned",
+    "limitations",
+    "proposal_id",
+    "proposal_text",
+    "recommended_option",
+    "options",
+    "option_labels",
+    "question",
+    "evidence_refs",
+    "detail_topics"
+   ],
+   "next_action.choice_options[]": [
+    "id",
+    "value",
+    "label"
+   ],
+   "next_action.after_study": [
+    "handoff",
+    "azureml",
+    "cloud_status",
+    "junior_text"
+   ],
+   "next_action.after_study.azureml": [
+    "supported",
+    "reason_id",
+    "reason",
+    "plan_command",
+    "model",
+    "template"
+   ],
+   "next_action.panel": [
+    "stage",
+    "title",
+    "tabs",
+    "where",
+    "shown"
+   ],
+   "next_action.panel.shown": [
+    "tab",
+    "section",
+    "label",
+    "line"
    ]
   },
   "hypotrail.summary/1+digest": {
@@ -138,6 +187,55 @@
     "runs_started",
     "runs_failed",
     "invalidations"
+   ],
+   "next_action.pause": [
+    "schema",
+    "kind",
+    "language",
+    "revision",
+    "position",
+    "learned",
+    "limitations",
+    "proposal_id",
+    "proposal_text",
+    "recommended_option",
+    "options",
+    "option_labels",
+    "question",
+    "evidence_refs",
+    "detail_topics"
+   ],
+   "next_action.choice_options[]": [
+    "id",
+    "value",
+    "label"
+   ],
+   "next_action.after_study": [
+    "handoff",
+    "azureml",
+    "cloud_status",
+    "junior_text"
+   ],
+   "next_action.after_study.azureml": [
+    "supported",
+    "reason_id",
+    "reason",
+    "plan_command",
+    "model",
+    "template"
+   ],
+   "next_action.panel": [
+    "stage",
+    "title",
+    "tabs",
+    "where",
+    "shown"
+   ],
+   "next_action.panel.shown": [
+    "tab",
+    "section",
+    "label",
+    "line"
    ]
   },
   "hypotrail.decisions/1": {
