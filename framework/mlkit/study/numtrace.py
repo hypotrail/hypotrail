@@ -40,7 +40,10 @@ FINDING_CODES = tuple(SEVERITY)
 # Review round 9 (R9E-3): the word starts at a word boundary, so "grow 3", "narrow 12",
 # "tomorrow 5", "borrow 2" and "intersection 4" are figures, while "row 12", "step 3",
 # "section 4" and "exit 2" stay exempt; "p_" and "§" must not follow a word character.
-EXEMPT_BEFORE = re.compile(r'(?:\b(?:revision|revisions|rev\.?|step|steps|pause|pauses|proposal|'
+# Third session of 2026-10-26 (R22): the French "révision" is a revision too, as a French
+# handoff.md writes it ("Étude à la révision 49").
+EXEMPT_BEFORE = re.compile(r'(?:\b(?:revision|revisions|r\u00e9vision|r\u00e9visions|rev\.?|step|'
+                           r'steps|pause|pauses|proposal|'
                            r'request|req-|expected-revision|section|row|'
                            r'exit|exit code|exit status|exited with|exited with code)'
                            r'|(?<!\w)(?:p_|§))'
@@ -60,7 +63,9 @@ RULE_IDENTIFIER = re.compile(r'\b(?:threshold|capacity|share)\s*:\s*(-?\d+(?:\.\
 # figure (R3): at least this many digits, after one of these words or as the start of a
 # registry ``result_id``.
 RESULT_ID_DIGITS = re.compile(r'\d{6,}')
-RESULT_ID_LEAD = re.compile(r'\b(?:results?(?:[ _-]?ids?)?|rids?|ids?|executions?(?:[ _-]?ids?)?)'
+# R22: a French text names a result "résultat" ("(résultat 52659681)").
+RESULT_ID_LEAD = re.compile(r'\b(?:results?(?:[ _-]?ids?)?|r\u00e9sultats?|rids?|ids?|'
+                            r'executions?(?:[ _-]?ids?)?)'
                             r'\s*[#:=]?\s*[`(\[]?\s*$', re.IGNORECASE)
 # "29.5 percentage points": a difference of two rates, read as a percentage of a registered
 # difference (``deltas``), never of a rate (D4).

@@ -47,11 +47,11 @@ times 100; "percentage points" match only a registered difference, ``deltas``, t
 what a number stands for. A number may also repeat a recorded literal: a decision or
 proposal value, a rule of the current policy evaluation, the junior's recorded words, a
 setting, a case statement, or text the junior wrote, passed with ``--allow-user-text``.
-Numbers following "revision" (with the comparison that follows it: "revision 26 instead
-of 24"), "step", "pause", "proposal", "row", "section", or "exit" (whole words, review round 9:
+Numbers following "revision" or the French "révision" (with the comparison that follows
+it: "revision 26 instead of 24"), "step", "pause", "proposal", "row", "section", or "exit" (whole words, review round 9:
 "grow 3" and "intersection 4" are figures), list markers, and ISO dates are exempt.
 A rule identifier (``capacity:100``) is never reported. Nor is a result id prefix made only
-of digits (R3): a run of 6 or more digits that follows "result", "result_id", "rid",
+of digits (R3): a run of 6 or more digits that follows "result", "résultat", "result_id", "rid",
 "id", or "execution" ("(result 52659681)"), or that begins a ``result_id`` of the
 registry; a number that traces to a figure is still traced as that figure. A minus sign
 may be ``-``, the Unicode minus U+2212, or (review round 9) an en dash U+2013 that follows no

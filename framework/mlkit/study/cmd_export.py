@@ -22,6 +22,13 @@ clean, and the export refuses with ``untraceable_number``, writing nothing, when
 not be), ``handoff.json``, ``study.html`` (a byte copy of the report, only when it is
 current), and ``SHA256SUMS``. Exit code 3 when the report is not current; the pack is
 written all the same.
+
+Third session of 2026-10-26 (R22): ``handoff.md`` is written in the study language, with
+that language's number forms (a French study: thousands grouped by a narrow no-break space,
+a decimal comma, French labels), and checked in the language it is written in, so a count
+of 1,000 rows or more no longer reads as a decimal in a French study. An English study's
+pack is unchanged byte for byte. ``handoff.json`` keeps its keys; its ``results_cited``
+``shown`` is the text ``handoff.md`` shows.
 """
 from __future__ import annotations
 
@@ -32,7 +39,7 @@ import os
 from pathlib import Path
 from typing import Mapping
 
-from . import cite, read, texts
+from . import audience, cite, read, texts
 from . import cmd_check
 from . import cmd_evidence as ev
 from . import commands as cmd
@@ -81,6 +88,44 @@ NOT_AUTHENTICATED = 'Recorded words, not an authenticated signature.'
 CLOSING = ('This pack records a study made for learning and review. It does not authorise '
            'production use: the validation rows were used to choose, the decisions are '
            'recorded words rather than signatures, and the limits listed above still apply.')
+EN, FR = 'en', 'fr'
+# R22 (third session of 2026-10-26): the words of a French study's handoff.md. The English
+# words stay in the code paths above and below, unchanged.
+PURPOSE_LABELS_FR = {'structural_inspection': 'Inspection de la structure',
+                     'train_eda': "Exploration des lignes d'entraînement",
+                     'train_fit': 'Ajustement des modèles',
+                     'validation_model_evaluation': 'Évaluation des modèles',
+                     'validation_policy_selection': 'Choix de la règle',
+                     'policy_exploration': 'Exploration enregistrée des règles',
+                     'labelled_preview_available': 'Aperçu étiqueté mis à disposition',
+                     'sealed': 'Test final mis de côté, scellé (contrôle du schéma seulement)',
+                     'cross_validated_fit': 'Ajustement en validation croisée',
+                     'out_of_fold_evaluation': 'Évaluation hors pli',
+                     'out_of_fold_policy_selection': 'Choix de la règle sur les prédictions '
+                                                     'hors pli',
+                     'final_evaluation': 'Évaluation du test final',
+                     'development_diagnostics': 'Diagnostics de développement'}
+BASIS_WORDS_FR = {st.EXPLICIT: "la décision de l'analyste",
+                  st.ENDORSED: "la décision de l'analyste (une approbation explicite)",
+                  st.RESTATED: "la décision de l'analyste (reformulée avec ses mots)",
+                  st.DELEGATED_DEFAULT: "déléguée par l'analyste à la valeur par défaut "
+                                        "recommandée par l'assistant"}
+STATUS_WORDS_FR = {'open': 'ouverte', 'proposed': 'proposée', 'confirmed': 'confirmée',
+                   'reconfirm_required': 'à confirmer de nouveau', 'superseded': 'remplacée'}
+AVAILABILITY_WORDS_FR = {'available_at_prediction': 'Disponible au moment de la prédiction',
+                         'not_available': 'Non disponible',
+                         'uncertain_excluded': 'Incertaine, exclue',
+                         'uncertain_included': 'Incertaine, incluse'}
+PARTITION_WORDS_FR = {'all': 'toutes les lignes du jeu de données',
+                      'train': "tout l'échantillon d'entraînement",
+                      'validation': "tout l'échantillon de validation",
+                      'development': "toutes les lignes de l'échantillon de développement (le "
+                                     'test final reste scellé)'}
+NOT_AUTHENTICATED_FR = 'Des mots enregistrés, pas une signature authentifiée.'
+CLOSING_FR = ("Ce dossier rend compte d'une étude faite pour apprendre et pour être relue. Il "
+              "n'autorise pas un usage en production : les lignes de validation ont servi à "
+              'choisir, les décisions sont des mots enregistrés et non des signatures, et les '
+              'limites ci-dessus restent valables.')
 
 
 def configure(parser: argparse.ArgumentParser) -> None:
@@ -129,8 +174,42 @@ def _target(study_dir: Path, out, revision: int) -> Path:
 
 # --- content ---------------------------------------------------------------------------
 
-def _label(decision_id: str) -> str:
+def _label(decision_id: str, lang: str = EN) -> str:
+    if lang == FR:
+        words = audience.decision_words(decision_id, FR)
+        for article in ('le ', 'la ', "l'"):
+            if words.startswith(article):
+                words = words[len(article):]
+                break
+        return words[:1].upper() + words[1:]
     return view_model.DECISION_LABELS.get(decision_id, decision_id).capitalize()
+
+
+def _value_lines_fr(decision_id: str, value, task: str) -> list[str]:
+    if value is None:
+        return []
+    if decision_id == 'feature_availability' and isinstance(value, Mapping):
+        grouped: dict[str, list[str]] = {}
+        for feature, status in sorted(value.items()):
+            grouped.setdefault(str(status), []).append(str(feature))
+        return [f'- {AVAILABILITY_WORDS_FR.get(status, " ".join(status.split("_")))} : '
+                f'{", ".join(names)}' for status, names in sorted(grouped.items())]
+    if decision_id == 'model_choice' and isinstance(value, str):
+        from . import render_html
+        with texts.report_language_context(FR):
+            words = render_html.value_words('model_choice', value, task)
+        return [f'- Valeur : {words} (`{value}`)']
+    if decision_id == 'conclusion' and isinstance(value, Mapping):
+        from . import junior
+        verdict = str(value.get('verdict', ''))
+        pair = junior.VERDICT_LABELS.get(verdict)
+        out = [f'- Verdict : {pair[1] if pair else " ".join(verdict.split("_"))}']
+        if isinstance(value.get('text'), str):
+            out.append(f'- Texte : « {value["text"]} »')
+        return out
+    if isinstance(value, (Mapping, list)):
+        return [f'- Valeur : `{json.dumps(value, sort_keys=True, ensure_ascii=False)}`']
+    return [f'- Valeur : {value}']
 
 
 def _value_lines(decision_id: str, value) -> list[str]:
@@ -154,7 +233,7 @@ def _value_lines(decision_id: str, value) -> list[str]:
     return [f'- Value: {value}']
 
 
-def _decisions(view: Mapping) -> tuple[list[dict], list[str]]:
+def _decisions(view: Mapping, lang: str = EN) -> tuple[list[dict], list[str]]:
     items, lines = [], []
     for d, dec in view['decisions'].items():
         conf = dec['confirmation'] or None
@@ -166,6 +245,9 @@ def _decisions(view: Mapping) -> tuple[list[dict], list[str]]:
                       'actor': conf['actor'] if conf else None,
                       'authenticated': bool(conf['authenticated']) if conf else False,
                       'proposal_id': dec['proposal_id']})
+        if lang == FR:
+            lines += _decision_lines_fr(d, dec, conf, view['task'])
+            continue
         lines.append(f'### {_label(d)} (`{d}`)')
         lines.append('')
         lines.append(f'- Status: {" ".join(dec["status"].split("_"))}')
@@ -190,8 +272,36 @@ def _decisions(view: Mapping) -> tuple[list[dict], list[str]]:
     return items, lines
 
 
-def _cited(view: Mapping, study: read.Study, citer: cite.Citer) -> tuple[list[dict], list[str]]:
-    """One line per current, verified result: its headline, cited (``results_cited``)."""
+def _decision_lines_fr(d: str, dec: Mapping, conf: Mapping | None, task: str) -> list[str]:
+    """R22: the lines of one decision in a French study's handoff.md."""
+    status = STATUS_WORDS_FR.get(dec['status'], ' '.join(dec['status'].split('_')))
+    lines = [f'### {_label(d, FR)} (`{d}`)', '', f'- Statut : {status}']
+    if dec['status'] in ('confirmed', 'reconfirm_required'):
+        lines += _value_lines_fr(d, dec['value'], task)
+    if conf:
+        lines.append(f"- Les mots de l'analyste : « {conf['user_words']} »")
+        if conf.get('reason_given') is False:
+            lines.append('- Sans raison donnée')
+        basis = BASIS_WORDS_FR.get(conf['basis'], conf['basis'])
+        if conf.get('delegation_scope'):
+            basis += f' (portée : {" ".join(conf["delegation_scope"].split("_"))})'
+        lines.append(f'- Fondement : {basis}')
+        if conf.get('agent_concern'):
+            lines.append("- Point soulevé par l'agent, maintenu par l'analyste : "
+                         f"« {conf['agent_concern']} »")
+        lines.append(f'- Canal : {conf["channel"]}')
+        lines.append(f'- {NOT_AUTHENTICATED_FR}')
+    if dec['status'] == 'reconfirm_required' and dec.get('reason'):
+        lines.append("- À confirmer de nouveau avant de s'appuyer dessus.")
+    lines.append('')
+    return lines
+
+
+def _cited(view: Mapping, study: read.Study, citer: cite.Citer,
+           lang: str = EN) -> tuple[list[dict], list[str]]:
+    """One line per current, verified result: its headline, cited (``results_cited``).
+    R22: a French study reads the French headline (out of fold where the result is) and
+    writes each cited number in French (:func:`mlkit.study.cite.format_value`)."""
     values = placeholders(view)
     order = ev._slot_order(study.state)
     items, lines = [], []
@@ -201,12 +311,26 @@ def _cited(view: Mapping, study: read.Study, citer: cite.Citer) -> tuple[list[di
             continue
         rid = item['result_id']
         before = len(citer.cited)
-        headline = ev._headline(view['task'], item['activity'], rid, citer, values)
+        if lang == FR:
+            headline = ev._headline(view['task'], item['activity'], rid, citer, values,
+                                    ev._cross_validated(study, study.result(rid)), FR)
+            cited = [s for s in (headline or {}).get('segments') or [] if 'result_id' in s]
+            for segment, c in zip(cited, citer.cited[before:]):
+                segment['text'] = c['text'] = cite.format_value(segment['value'],
+                                                                segment['format'], FR)
+        else:
+            headline = ev._headline(view['task'], item['activity'], rid, citer, values)
         for c in citer.cited[before:]:
             items.append({'result_id': c['result_id'], 'activity': item['activity'],
                           'path': c['path'], 'value': c['value'], 'shown': c['text']})
+        if lang == FR:
+            text = ''.join(s['text'] for s in headline['segments']) if headline else 'à jour'
+            lines.append(f'- `{slot}` : {text} (résultat {rid[:RID]})')
+            continue
         text = ''.join(s['text'] for s in headline['segments']) if headline else 'current'
         lines.append(f'- `{slot}`: {text} (result {rid[:RID]})')
+    if lang == FR:
+        return items, lines or ['- Aucun résultat à jour pour le moment.']
     return items, lines or ['- No current result yet.']
 
 
@@ -220,32 +344,52 @@ PARTITION_WORDS = {'all': 'every row of the dataset', 'train': 'the whole traini
                    'development': 'every development row (the final test stays sealed)'}
 
 
-def _ledger_lines(ledger: list[dict], citer: cite.Citer) -> tuple[list[dict], list[str]]:
+def _ledger_lines(ledger: list[dict], citer: cite.Citer,
+                  lang: str = EN) -> tuple[list[dict], list[str]]:
     """One line per ledger row. A row count is written when it equals the size of its
     partition in the current split, cited from it; otherwise (rows read under an earlier
     split too) it is in ``handoff.json`` only, since no registry value states it."""
     lines, cited = [], []
     split = citer.slot_rid('split')
     for row in ledger:
-        label = PURPOSE_LABELS.get(row['purpose'], row['purpose'])
+        if lang == FR:
+            label = PURPOSE_LABELS_FR.get(row['purpose'], row['purpose'])
+        else:
+            label = PURPOSE_LABELS.get(row['purpose'], row['purpose'])
         path = PARTITION_PATHS.get(row['partition'])
         try:
             size = citer.lookup(split, path) if split and path else None
         except StudyError:
             size = None
         if size is not None and size == row['rows']:
-            shown = cite.fmt_number(size, 'int')
+            # R22: the count in the language handoff.md is written in (a French study:
+            # "32 049", never "32,049", which a French reader reads as a decimal).
+            shown = cite.format_value(size, 'int', FR) if lang == FR \
+                else cite.fmt_number(size, 'int')
             cited.append({'result_id': split, 'activity': 'split', 'path': path,
                           'value': size, 'shown': shown})
-            count = f'{shown} rows, {PARTITION_WORDS[row["partition"]]} (result {split[:RID]})'
+            if lang == FR:
+                count = (f'{shown} lignes, {PARTITION_WORDS_FR[row["partition"]]} '
+                         f'(résultat {split[:RID]})')
+            else:
+                count = (f'{shown} rows, {PARTITION_WORDS[row["partition"]]} '
+                         f'(result {split[:RID]})')
         else:
-            count = 'the count of distinct rows is in handoff.json'
-        lines.append(f'- {label}, `{row["partition"]}` partition: {count}; recorded by '
-                     + ', '.join(f'`{a}`' for a in row['activities']) + '.')
+            count = ('le nombre de lignes distinctes est dans handoff.json' if lang == FR
+                     else 'the count of distinct rows is in handoff.json')
+        names = ', '.join(f'`{a}`' for a in row['activities'])
+        if lang == FR:
+            lines.append(f'- {label}, échantillon `{row["partition"]}` : {count} ; enregistré '
+                         f'par {names}.')
+        else:
+            lines.append(f'- {label}, `{row["partition"]}` partition: {count}; recorded by '
+                         + names + '.')
+    if lang == FR:
+        return cited, lines or ["- Aucune ligne n'a encore été lue."]
     return cited, lines or ['- No rows were read yet.']
 
 
-def _open_items(view: Mapping) -> tuple[dict, list[str]]:
+def _open_items(view: Mapping, lang: str = EN) -> tuple[dict, list[str]]:
     ex = view['executions']
     proposals = [p['proposal_id'] for p in view['open_proposals']]
     holds = [n['note_id'] for n in view['notes'] if n['status'] == 'open']
@@ -255,6 +399,9 @@ def _open_items(view: Mapping) -> tuple[dict, list[str]]:
                    if name in ev.LINEAGE_ARTIFACTS and item.get('status') != 'ok')
     stale += [name for name in ev.LINEAGE_ARTIFACTS
               if name not in view['artifacts']['items']]
+    if lang == FR:
+        return ({'proposals': proposals, 'holds': holds, 'executions': executions,
+                 'stale_deliverables': stale}, _open_lines_fr(view, stale))
     lines = []
     for p in view['open_proposals']:
         lines.append(f'- Open proposal {p["proposal_id"]} on the '
@@ -276,6 +423,31 @@ def _open_items(view: Mapping) -> tuple[dict, list[str]]:
         lines.append(f'- {message}')
     return ({'proposals': proposals, 'holds': holds, 'executions': executions,
              'stale_deliverables': stale}, lines or ['- Nothing is open.'])
+
+
+def _open_lines_fr(view: Mapping, stale: list[str]) -> list[str]:
+    """R22: the open items of a French study's handoff.md."""
+    ex, lines = view['executions'], []
+    for p in view['open_proposals']:
+        lines.append(f'- Proposition ouverte {p["proposal_id"]} sur '
+                     f'{audience.decision_words(p["decision_id"], FR)} : ce n\'est pas une '
+                     "décision tant que l'analyste ne l'a pas confirmée.")
+    for n in view['notes']:
+        if n['status'] == 'open':
+            lines.append(f'- Condition {n["note_id"]} sur '
+                         f'{audience.decision_words(n["decision_id"], FR)}, avec les mots de '
+                         f"l'analyste : « {n['user_words']} »")
+    for bucket, words in (('interrupted', 'interrompue, résultat inconnu'),
+                          ('suspected_interrupted', 'arrêtée, résultat inconnu'),
+                          ('late', "terminée après que l'étude a avancé, non promue")):
+        for eid, record in sorted(ex[bucket].items()):
+            lines.append(f'- Exécution {eid} (`{record.get("activity")}`) : {words}.')
+    for name in stale:
+        item = view['artifacts']['items'].get(name)
+        message = (item.get('junior_message') or item.get('message')) if item \
+            else f"Le livrable {name} n'a pas encore été produit."
+        lines.append(f'- {message}')
+    return lines or ["- Rien n'est ouvert."]
 
 
 def _reproduce(view: Mapping, order) -> list[str]:
@@ -313,6 +485,13 @@ def _environment(view: Mapping) -> dict | None:
 def _goal(summary: Mapping) -> str:
     line = summary['recap'][0]
     return line[len('Goal: '):] if line.startswith('Goal: ') else line
+
+
+def _goal_fr(summary: Mapping) -> str:
+    """R22: the goal as the French recap words it (``recap_junior``)."""
+    lines = summary.get('recap_junior') or []
+    line = lines[0] if lines else _goal(summary)
+    return line[len('Objectif : '):] if line.startswith('Objectif : ') else line
 
 
 def _warnings(view: Mapping, included: bool) -> list[str]:
@@ -381,6 +560,45 @@ def _markdown(view, summary, decisions_md, cited_md, ledger_md, open_md, include
     return '\n'.join(rows)
 
 
+def _markdown_fr(view, summary, decisions_md, cited_md, ledger_md, open_md, included, status,
+                 reproduce, environment) -> str:
+    """R22: :func:`_markdown` in French, for a French study."""
+    task = 'binaire' if st.task_of(view['task']) == st.BINARY else 'de régression'
+    rows = [f'# Dossier de passation : {view["case"].get("id", "étude")}', '',
+            f'Étude à la révision {view["revision"]}, une tâche {task}. Chaque chiffre '
+            "ci-dessous est cité d'un résultat du registre à jour et vérifié, avec son "
+            'identifiant ; handoff.json contient le même contenu sous forme de données.', '',
+            '## Objectif', '', _goal_fr(summary), '',
+            '## Décisions', '', *decisions_md,
+            '## Résultats cités', '', *cited_md, '',
+            '## Registre des lignes lues', '',
+            "Lignes lues par l'étude, par usage. Changer le découpage ne rend pas invisibles "
+            'les lignes déjà explorées.', '', *ledger_md, '',
+            '## Pas encore défendable', '',
+            *[f'- {x.get("junior_text") or x["text"]}' for x in view['not_yet_defensible']], '',
+            '## Points ouverts', '', *open_md, '',
+            '## Rapport', '']
+    if included:
+        rows.append(f'Le rapport ({mf.ARTIFACTS["report"]}) est à jour ; ce dossier en contient '
+                    'une copie octet pour octet, study.html.')
+    else:
+        rows.append(f"Le rapport ({mf.ARTIFACTS['report']}) n'est pas à jour ({status}) : il "
+                    "n'est donc pas dans ce dossier. Produisez-le de nouveau puis exportez de "
+                    "nouveau pour l'inclure.")
+    rows += ['', '## Reproduire', '',
+             f"Lancez ces commandes en remplaçant {STUDY} par le dossier de l'étude ; une "
+             'exécution demande un nouvel identifiant de requête et la révision lue avec status.',
+             '', *[f'- `{c}`' for c in reproduce], '']
+    if environment:
+        packages = ', '.join(sorted((environment.get('packages') or {}).keys()))
+        rows.append('Environnement enregistré avec les résultats : Python '
+                    f'({environment.get("implementation", "python")}) avec {packages} ; les '
+                    'versions sont dans handoff.json (`environment`).')
+        rows.append('')
+    rows += ['## Pas pour un usage en production', '', CLOSING_FR, '']
+    return '\n'.join(rows)
+
+
 def _sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -426,20 +644,23 @@ def build(study_dir) -> tuple[read.Study, dict, dict[str, bytes], bool]:
     view = view_model.build(study)
     summary = view_model.summary(view)
     task = st.task_of(view['task'])
+    # R22: handoff.md is written in the study language, the one check_text reads it in.
+    lang = FR if view.get('language') == FR else EN
     with texts.study_context(view):
         citer = cite.Citer.from_view(view)
-        decisions, decisions_md = _decisions(view)
-        results_cited, cited_md = _cited(view, study, citer)
+        decisions, decisions_md = _decisions(view, lang)
+        results_cited, cited_md = _cited(view, study, citer, lang)
         exposure = ev._exposure(study)
-        ledger_cited, ledger_md = _ledger_lines(exposure['ledger'], citer)
+        ledger_cited, ledger_md = _ledger_lines(exposure['ledger'], citer, lang)
         results_cited += ledger_cited
-        open_items, open_md = _open_items(view)
+        open_items, open_md = _open_items(view, lang)
         report, status = _report(study, view)
         included = report is not None
         reproduce = _reproduce(view, ev._slot_order(study.state))
         environment = _environment(view)
-        md = _markdown(view, summary, decisions_md, cited_md, ledger_md, open_md, included,
-                       status, reproduce, environment)
+        md = (_markdown_fr if lang == FR else _markdown)(
+            view, summary, decisions_md, cited_md, ledger_md, open_md, included, status,
+            reproduce, environment)
     findings, _ = cmd_check.check_text(view, md, 'handoff.md',
                                        result_ids=cmd_check.registry_ids(study))
     errors = [f for f in findings if f['severity'] == 'error']

@@ -399,6 +399,18 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   the language it is written in (English), or write it in the study language with French
   number forms (narrow no-break space thousands, comma decimals, as `junior._int` does); add a
   French handoff export test.
+  Fixed: `handoff.md` is written in the study language. A French study's pack has French
+  headings, labels and verdicts, the French evidence headlines (out of fold where the result
+  is), and every cited number in French form (`cite.format_value(..., 'fr')`: "1 200",
+  "11,7 %"); it is checked in the language it is written in, so a count of 1,000 or more no
+  longer reads as a decimal. `numtrace` reads the French "révision" and "résultat" like
+  "revision" and "result" (exempt revision numbers and digit-only result id prefixes).
+  `handoff.json` keeps its keys (`results_cited[].shown` is the text `handoff.md` shows). The
+  English pack is byte-identical to the one before (compared on a 1,500-row study, and
+  `test_adv_c4_bytes`). Tests: `test_export_handoff.py::test_a_french_study_with_thousands_of_rows_exports_its_pack`
+  (1,200 development rows, `check --text handoff.md` clean) and
+  `::test_an_english_pack_keeps_its_words_and_number_forms`. Contracts: CLI-CONTRACT-COMPANION
+  §7 (`handoff.md` in the study language), CLI-CONTRACT (exempting words).
   The Azure ML export was not written either; its own refusal message was not captured in the
   session (to check: whether the agent chained it after the handoff failure, or the export
   itself refused, e.g. `artifact_status` not `packaged`).
