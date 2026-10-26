@@ -342,3 +342,13 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   supported. Also seen: running the export on the wrong study (another `$STUDY`) gave
   "no recipe of a selected model … final test is sealed": correct, but the message could
   name the study path and its revision so a wrong folder is obvious.
+- **R20. A fully automatic mode, reviewed at the end (owner request).** The owner wants a
+  mode where the assistant makes every choice and the junior reviews them at the end.
+  Owner decision (2026-10-26): both variants, chosen at launch: "auto until the final test"
+  (default: every decision and computation up to the model and the rule, each recorded as
+  automatic and to review; the junior then adopts or changes each one in their own words and
+  opens the final test themselves) and an explicit "full auto (demo)" that also opens the
+  final test and concludes, with a report banner "automatic study, not defensible until
+  reviewed" and every later change marked as made after the final test. This amends ADR 0005
+  (confirmation modes) and the rule that the final-test opening is never delegated, for the
+  demo variant only.
