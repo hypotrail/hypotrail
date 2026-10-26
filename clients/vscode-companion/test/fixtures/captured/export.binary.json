@@ -21,22 +21,22 @@
   "files": [
    {
     "path": "handoff.md",
-    "sha256": "21defec6be0ce14bb2a00279586456f2e75647bbfac0581da50ee235c5fc018a",
+    "sha256": "89b04b0ca3bacedffb42c522c6ee8bf69b12cf4e530eb431c5484014b196868d",
     "bytes": 9660
    },
    {
     "path": "handoff.json",
-    "sha256": "0a264a87063253fa9a720e37a1634946c8a1e73d6a6c7ef7a5034556fd2f2abf",
+    "sha256": "16604df69d93d802d9163c19183b3fe401352cf2ab3ba480d51c94959c366742",
     "bytes": 19817
    },
    {
     "path": "study.html",
-    "sha256": "e1ed68084d21a43f6920a668881ae824d318e5b3ab46c41116c84cf1e0f3f9f3",
-    "bytes": 1375922
+    "sha256": "751310c64765f1f91d9e47f5ebcd694309c6554391fc20a6453bf3726887de91",
+    "bytes": 454241
    },
    {
     "path": "SHA256SUMS",
-    "sha256": "e414f396ed5859ba846b832650e705e4a64486a180b8bf5bf904a145d180a781",
+    "sha256": "064f5720e20670b2fb471c697bcf2692d132a9a1e0073674ceed9e28df47b3e7",
     "bytes": 233
    }
   ],

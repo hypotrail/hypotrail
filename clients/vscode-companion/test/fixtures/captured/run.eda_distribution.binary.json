@@ -142,7 +142,7 @@
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_0c38ec592574430a98857812c32fb368"
+    "x_3f0795789260430494249f501a19f191"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -201,8 +201,8 @@
     "revision": 25,
     "position": {
      "step_id": "models",
-     "completed": 7,
-     "total": 13
+     "completed": 8,
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -237,6 +237,7 @@
      "uncertainty"
     ]
    }
-  }
+  },
+  "question_junior": "How are the values of age distributed among the training rows?"
  }
 }

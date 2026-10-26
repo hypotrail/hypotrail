@@ -66,13 +66,18 @@
     "status": "done"
    },
    {
-    "id": "train_eda",
-    "title": "Explore the training partition",
+    "id": "structural_eda",
+    "title": "Check the structure of the data",
     "status": "done"
    },
    {
     "id": "preprocessing",
     "title": "Decide how the model prepares the variables",
+    "status": "done"
+   },
+   {
+    "id": "train_eda",
+    "title": "Explore the target on the training rows",
     "status": "done"
    },
    {
@@ -124,8 +129,8 @@
     "revision": 51,
     "position": {
      "step_id": "final_test",
-     "completed": 11,
-     "total": 13
+     "completed": 12,
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -641,8 +646,9 @@
     "id": "evidence",
     "title": "Prepare evidence",
     "steps": [
-     "train_eda",
-     "preprocessing"
+     "structural_eda",
+     "preprocessing",
+     "train_eda"
     ]
    },
    {
@@ -709,7 +715,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-26T11:55:53.441379+00:00",
+   "boundary_time": "2026-10-26T16:02:41.000595+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -718,7 +724,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-26T11:55:54.024769+00:00",
+     "time": "2026-10-26T16:02:41.209092+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -741,7 +747,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-26T11:55:56.512627+00:00",
+     "time": "2026-10-26T16:02:43.328318+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -771,7 +777,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-26T11:55:57.882080+00:00",
+     "time": "2026-10-26T16:02:44.030793+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -794,7 +800,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-26T11:55:59.213557+00:00",
+     "time": "2026-10-26T16:02:44.590650+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -824,7 +830,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-26T11:56:01.186121+00:00",
+     "time": "2026-10-26T16:02:45.317689+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -847,7 +853,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-26T11:56:03.090955+00:00",
+     "time": "2026-10-26T16:02:46.074410+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -877,7 +883,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-26T11:56:04.670021+00:00",
+     "time": "2026-10-26T16:02:46.963259+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -900,7 +906,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-26T11:56:06.110861+00:00",
+     "time": "2026-10-26T16:02:47.796705+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -930,7 +936,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-26T11:56:08.033155+00:00",
+     "time": "2026-10-26T16:02:48.676218+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -953,7 +959,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-26T11:56:10.002177+00:00",
+     "time": "2026-10-26T16:02:49.494506+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -983,7 +989,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-26T11:56:14.407700+00:00",
+     "time": "2026-10-26T16:02:53.042478+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1006,7 +1012,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-26T11:56:16.579762+00:00",
+     "time": "2026-10-26T16:02:54.064843+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1029,7 +1035,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-26T11:56:19.305876+00:00",
+     "time": "2026-10-26T16:02:55.101609+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1052,7 +1058,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-26T11:56:21.631238+00:00",
+     "time": "2026-10-26T16:02:56.170234+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1075,7 +1081,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-26T11:57:00.322486+00:00",
+     "time": "2026-10-26T16:03:05.167869+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1098,7 +1104,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-26T11:57:02.708223+00:00",
+     "time": "2026-10-26T16:03:06.228257+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1121,7 +1127,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-26T11:57:05.027577+00:00",
+     "time": "2026-10-26T16:03:07.271842+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1144,7 +1150,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-26T11:57:07.438440+00:00",
+     "time": "2026-10-26T16:03:08.486156+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1167,7 +1173,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-26T11:57:10.130599+00:00",
+     "time": "2026-10-26T16:03:09.797059+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1190,7 +1196,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-26T11:57:13.442182+00:00",
+     "time": "2026-10-26T16:03:11.174867+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1213,7 +1219,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-26T11:57:16.085499+00:00",
+     "time": "2026-10-26T16:03:12.512084+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1236,7 +1242,7 @@
     },
     {
      "revision": 35,
-     "time": "2026-10-26T11:57:20.882178+00:00",
+     "time": "2026-10-26T16:03:14.088388+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1259,7 +1265,7 @@
     },
     {
      "revision": 36,
-     "time": "2026-10-26T11:57:23.119781+00:00",
+     "time": "2026-10-26T16:03:14.975558+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1282,7 +1288,7 @@
     },
     {
      "revision": 37,
-     "time": "2026-10-26T11:57:25.161346+00:00",
+     "time": "2026-10-26T16:03:16.057584+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1315,7 +1321,7 @@
     },
     {
      "revision": 39,
-     "time": "2026-10-26T11:57:29.494489+00:00",
+     "time": "2026-10-26T16:03:17.354933+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1338,7 +1344,7 @@
     },
     {
      "revision": 41,
-     "time": "2026-10-26T11:57:31.510804+00:00",
+     "time": "2026-10-26T16:03:18.349595+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1363,7 +1369,7 @@
     },
     {
      "revision": 42,
-     "time": "2026-10-26T11:57:33.097936+00:00",
+     "time": "2026-10-26T16:03:19.252328+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1386,7 +1392,7 @@
     },
     {
      "revision": 43,
-     "time": "2026-10-26T11:57:34.747626+00:00",
+     "time": "2026-10-26T16:03:19.971131+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_choice",
@@ -1420,7 +1426,7 @@
     },
     {
      "revision": 44,
-     "time": "2026-10-26T11:57:36.798533+00:00",
+     "time": "2026-10-26T16:03:20.840076+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
@@ -1443,7 +1449,7 @@
     },
     {
      "revision": 45,
-     "time": "2026-10-26T11:57:38.464594+00:00",
+     "time": "2026-10-26T16:03:21.601465+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "policy",
@@ -1477,7 +1483,7 @@
     },
     {
      "revision": 47,
-     "time": "2026-10-26T11:57:42.313598+00:00",
+     "time": "2026-10-26T16:03:22.834029+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1500,7 +1506,7 @@
     },
     {
      "revision": 49,
-     "time": "2026-10-26T11:57:45.644375+00:00",
+     "time": "2026-10-26T16:03:24.331655+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1525,7 +1531,7 @@
     },
     {
      "revision": 50,
-     "time": "2026-10-26T11:57:48.705141+00:00",
+     "time": "2026-10-26T16:03:25.527069+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
@@ -1563,6 +1569,196 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "829ae1a14e256e3d"
+  "currency": "5cd0d758b6503f7b",
+  "texts": {
+   "en": {
+    "plan": {
+     "discover_data": "Discover the data",
+     "prediction_time": "Define the prediction moment",
+     "feature_availability": "Decide which variables are available at prediction time",
+     "split": "Split the data before exploring it",
+     "success_criterion": "Fix the success criterion before seeing a model",
+     "structural_eda": "Check the structure of the data",
+     "preprocessing": "Decide how the model prepares the variables",
+     "train_eda": "Explore the target on the training rows",
+     "models": "Fit a baseline and a logistic model",
+     "model_variant": "Choose the variants to compare",
+     "model_choice": "Choose the model",
+     "policy": "Choose a decision policy",
+     "final_test": "Open the final test once",
+     "conclusion": "Conclude proportionately"
+    },
+    "moments": {
+     "frame": "Frame the change",
+     "evidence": "Prepare evidence",
+     "compare": "Work and compare",
+     "conclude": "Conclude and hand over"
+    },
+    "next_action": "A run of the distribution of a column stopped before it finished, and its outcome is unknown. It is not in progress and does not restart by itself; you will be asked before it is recorded as interrupted.",
+    "choice_options": {},
+    "limits": {
+     "unconfirmed_decisions": "Not confirmed by you yet: the opening of the final test and the conclusion.",
+     "validation_is_not_independent": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance.",
+     "public_data_already_explored": "The data were explored or published before this study; its rows are not unseen.",
+     "no_time_or_entity_identifier": "The data have no time column or entity identifier, so the study cannot check drift over time or repeated entities across partitions.",
+     "uncertain_features_included": "These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment.",
+     "no_causality": "Associations in observational data do not show that acting on a variable would change the outcome.",
+     "workbench_not_tracked": "Experiments in the notebook workbench are not recorded and are not decisions.",
+     "interrupted_executions": "An execution has an unknown outcome.",
+     "final_test_sealed": "The final test is still sealed: every figure so far is development evidence, measured on rows used to explore, fit, and choose."
+    },
+    "artifacts": {
+     "editable": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence.",
+     "notebook": "The generated notebook is out of date: the study changed after it was written. Do not rely on it until it is written again.",
+     "report": "The report is out of date: the study changed after it was written. Do not rely on it until it is written again.",
+     "workbench": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
+    },
+    "recap": [
+     "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
+     "Decided: the prediction moment; the feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); the split (stratified random, 30% for validation); the success criterion (precision gain over the baseline of at least 5 points); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation); the model choice: the logistic model; the decision policy: select every row scored 0.2 or more (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%).",
+     "Now: a run of the distribution of a column stopped and its outcome is unknown, waiting for your acknowledgement; notebook, report not up to date.",
+     "Next: A run of the distribution of a column stopped before it finished, and its outcome is unknown. It is not in progress and does not restart by itself; you will be asked before it is recorded as interrupted.",
+     "Limit: An execution has an unknown outcome."
+    ],
+    "digest": {
+     "2": "The prediction moment was proposed.",
+     "3": "You confirmed the prediction moment.",
+     "4": "The feature availability was proposed.",
+     "5": "You confirmed the feature availability.",
+     "6": "The split was proposed.",
+     "7": "You confirmed the split.",
+     "8": "The success criterion was proposed.",
+     "9": "You confirmed the success criterion.",
+     "10": "The preparation of the variables was proposed.",
+     "11": "You confirmed the preparation of the variables.",
+     "13": "The split was computed.",
+     "15": "The target rate was computed.",
+     "17": "The special-value check was computed.",
+     "19": "The data quality check was computed.",
+     "21": "The single-feature signal check was computed.",
+     "23": "The target rate by group of job was computed.",
+     "25": "The distribution of age was computed.",
+     "27": "The distribution of job was computed.",
+     "29": "The distribution of previous was computed.",
+     "31": "An analysis was computed.",
+     "33": "The baseline model was computed.",
+     "35": "The logistic model was computed.",
+     "36": "Model variant was proposed.",
+     "37": "You confirmed model variant.",
+     "39": "The variant model was computed.",
+     "41": "The policy evaluation was computed for: select every row scored 0.2 or more.",
+     "42": "The model choice was proposed: the logistic model.",
+     "43": "You confirmed the model choice.",
+     "44": "The policy was proposed: select every row scored 0.2 or more.",
+     "45": "You confirmed the policy.",
+     "47": "The development diagnostics was computed.",
+     "49": "The policy evaluation was replaced for: select the top 100 by score. Models unchanged, nothing refitted.",
+     "50": "The policy was proposed: select the top 100 by score."
+    },
+    "goal": {
+     "intended_use": "Teaching simulation: prioritize contacts when call capacity is limited",
+     "decision": "Select contacts to call first",
+     "observation_unit": "A customer contacted during a telephone campaign",
+     "prediction_time": "before the first contact of the campaign, from the client file"
+    },
+    "proposals": {
+     "p_9": null
+    }
+   },
+   "fr": {
+    "plan": {
+     "discover_data": "Découvrir les données",
+     "prediction_time": "Définir le moment de la prédiction",
+     "feature_availability": "Décider quelles variables sont disponibles au moment de la prédiction",
+     "split": "Découper les données avant de les explorer",
+     "success_criterion": "Fixer le critère de succès avant de voir un modèle",
+     "structural_eda": "Vérifier la structure des données",
+     "preprocessing": "Décider comment le modèle prépare les variables",
+     "train_eda": "Explorer la cible sur le jeu d'entraînement",
+     "models": "Ajuster un modèle de référence et un modèle logistique",
+     "model_variant": "Choisir les variantes à comparer",
+     "model_choice": "Choisir le modèle",
+     "policy": "Choisir une règle de décision",
+     "final_test": "Ouvrir une fois l'échantillon de test final",
+     "conclusion": "Conclure avec mesure"
+    },
+    "moments": {
+     "frame": "Cadrer le changement",
+     "evidence": "Préparer les preuves",
+     "compare": "Travailler et comparer",
+     "conclude": "Conclure et transmettre"
+    },
+    "next_action": "Une exécution de la distribution d'une colonne s'est arrêtée avant la fin, et son résultat est inconnu. Elle n'est pas en cours et ne redémarre pas seule ; on vous demandera avant de l'enregistrer comme interrompue.",
+    "choice_options": {},
+    "limits": {
+     "unconfirmed_decisions": "Pas encore confirmé par vous : l'ouverture de l'échantillon de test final et la conclusion.",
+     "validation_is_not_independent": "Le jeu de validation sert à comparer les modèles et à choisir la règle et son seuil ou sa capacité : ses résultats ne sont donc pas une preuve indépendante de la performance future.",
+     "public_data_already_explored": "Les données ont été explorées ou publiées avant cette étude : ses lignes ne sont pas inédites.",
+     "no_time_or_entity_identifier": "Les données n'ont ni colonne de temps ni identifiant d'entité : l'étude ne peut pas vérifier une dérive dans le temps ni des entités répétées entre les échantillons.",
+     "uncertain_features_included": "Ces variables sont utilisées alors que leur disponibilité au moment de la prédiction est incertaine : age, contact, default, education, housing, job, loan, marital. Vérifiez qu'elles sont connues à ce moment-là.",
+     "no_causality": "Des associations dans des données observées ne montrent pas qu'agir sur une variable changerait le résultat.",
+     "workbench_not_tracked": "Les essais faits dans l'atelier (workbench) ne sont pas enregistrés et ne sont pas des décisions.",
+     "interrupted_executions": "Une exécution a un résultat inconnu.",
+     "final_test_sealed": "L'échantillon de test final est encore scellé : chaque chiffre jusqu'ici est un résultat de développement, mesuré sur des lignes qui ont servi à explorer, ajuster et choisir."
+    },
+    "artifacts": {
+     "editable": "Le notebook éditable de l'étude suit le notebook généré jusqu'à votre première modification ; ensuite il n'est jamais écrasé et ne constitue pas une preuve officielle.",
+     "notebook": "Le notebook généré n'est plus à jour : l'étude a changé après son écriture. Ne vous y fiez pas tant qu'il n'est pas réécrit.",
+     "report": "Le rapport n'est plus à jour : l'étude a changé après son écriture. Ne vous y fiez pas tant qu'il n'est pas réécrit.",
+     "workbench": "L'atelier (workbench) est votre espace libre : il est créé une fois, jamais écrasé, et n'est pas suivi par l'étude."
+    },
+    "recap": [
+     "Objectif : « Simulation pédagogique : prioriser les contacts quand la capacité d'appel est limitée » ; la prédiction est faite « before the first contact of the campaign, from the client file ».",
+     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : campaign, day, duration, month; gardées malgré un doute : contact) ; le découpage des données (aléatoire, 30 % pour le jeu de validation) ; le critère de succès (gain de précision sur le modèle de référence d'au moins 5 points) ; la préparation des variables (par défaut, rien ne change) ; la variante à comparer (une régularisation plus forte) ; le choix du modèle : le modèle logistique ; la règle de décision : sélectionner chaque ligne de score 0.2 ou plus (le modèle logistique sur les 1086 lignes du jeu de validation : précision 38,1 %, rappel 29,6 %).",
+     "Maintenant : une exécution de la distribution d'une colonne s'est arrêtée et son résultat est inconnu, en attente de votre accord ; le notebook généré, le rapport pas à jour.",
+     "Ensuite : Une exécution de la distribution d'une colonne s'est arrêtée avant la fin, et son résultat est inconnu. Elle n'est pas en cours et ne redémarre pas seule ; on vous demandera avant de l'enregistrer comme interrompue.",
+     "Limite : Une exécution a un résultat inconnu."
+    ],
+    "digest": {
+     "2": "Une proposition a été faite pour le moment de la prédiction.",
+     "3": "Vous avez confirmé le moment de la prédiction.",
+     "4": "Une proposition a été faite pour la disponibilité des variables.",
+     "5": "Vous avez confirmé la disponibilité des variables.",
+     "6": "Une proposition a été faite pour le découpage des données.",
+     "7": "Vous avez confirmé le découpage des données.",
+     "8": "Une proposition a été faite pour le critère de succès.",
+     "9": "Vous avez confirmé le critère de succès.",
+     "10": "Une proposition a été faite pour la préparation des variables.",
+     "11": "Vous avez confirmé la préparation des variables.",
+     "13": "Résultat calculé : le découpage.",
+     "15": "Résultat calculé : le taux de résultat positif.",
+     "17": "Résultat calculé : la vérification des valeurs spéciales.",
+     "19": "Résultat calculé : le contrôle de qualité des données.",
+     "21": "Résultat calculé : le signal d'une variable seule.",
+     "23": "Résultat calculé : un taux de résultat positif par groupe de job.",
+     "25": "Résultat calculé : la distribution d'une colonne de age.",
+     "27": "Résultat calculé : la distribution d'une colonne de job.",
+     "29": "Résultat calculé : la distribution d'une colonne de previous.",
+     "31": "Résultat calculé : une analyse.",
+     "33": "Résultat calculé : le modèle de référence.",
+     "35": "Résultat calculé : le modèle logistique.",
+     "36": "Une proposition a été faite pour la variante à comparer.",
+     "37": "Vous avez confirmé la variante à comparer.",
+     "39": "Résultat calculé : le modèle variante.",
+     "41": "Résultat calculé : l'évaluation de la règle, pour : sélectionner chaque ligne de score 0.2 ou plus.",
+     "42": "Une proposition a été faite pour le choix du modèle : le modèle logistique.",
+     "43": "Vous avez confirmé le choix du modèle.",
+     "44": "Une proposition a été faite pour la règle de décision : sélectionner chaque ligne de score 0.2 ou plus.",
+     "45": "Vous avez confirmé la règle de décision.",
+     "47": "Résultat calculé : les diagnostics de développement.",
+     "49": "Résultat remplacé : l'évaluation de la règle, pour : sélectionner les 100 meilleurs scores. Modèles inchangés, rien n'est réajusté.",
+     "50": "Une proposition a été faite pour la règle de décision : sélectionner les 100 meilleurs scores."
+    },
+    "goal": {
+     "intended_use": "Simulation pédagogique : prioriser les contacts quand la capacité d'appel est limitée",
+     "decision": "Sélectionner les contacts à appeler en premier",
+     "observation_unit": "Un client contacté pendant une campagne téléphonique",
+     "prediction_time": "before the first contact of the campaign, from the client file"
+    },
+    "proposals": {
+     "p_9": null
+    }
+   }
+  }
  }
 }

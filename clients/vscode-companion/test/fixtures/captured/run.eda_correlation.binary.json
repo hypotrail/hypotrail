@@ -1101,7 +1101,7 @@
    "started_revision": 30,
    "invalidation": null,
    "exposure_ids": [
-    "x_a1c7aaa369c2403882ce4d9c39146dcf"
+    "x_76fe288a24e24d08b777cc2d65688ec5"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -1160,8 +1160,8 @@
     "revision": 31,
     "position": {
      "step_id": "models",
-     "completed": 7,
-     "total": 13
+     "completed": 8,
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -1196,6 +1196,7 @@
      "uncertainty"
     ]
    }
-  }
+  },
+  "question_junior": "Do any two predictors carry nearly the same information in the development rows, so that a model would split its weight between them?"
  }
 }

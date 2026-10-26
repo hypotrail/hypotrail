@@ -38,10 +38,10 @@
      "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
      "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d"
     ],
-    "created": "2026-10-26T13:22:01.128720+00:00",
+    "created": "2026-10-26T16:05:43.844986+00:00",
     "started_revision": 12,
     "execution_id": "e_839104bf9d2cae503476be39",
-    "exposure_id": "x_5992d567d884470383377b14aae792e8",
+    "exposure_id": "x_f974931aa91748a5994e20c2cf70ea0d",
     "values": {
      "method": "ordinal_cutoff",
      "column": "model_year",
@@ -128,10 +128,10 @@
      "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
     },
     "downstream": [],
-    "created": "2026-10-26T13:22:02.844937+00:00",
+    "created": "2026-10-26T16:05:44.530319+00:00",
     "started_revision": 14,
     "execution_id": "e_92aaf17d67568d5f7880d18a",
-    "exposure_id": "x_85c6529dfc7247aca1f157e35c1366db",
+    "exposure_id": "x_33c0b1987f744ac0a4d3db9dc6d1b2ca",
     "values": {
      "partition": "train",
      "target": "mpg",
@@ -229,10 +229,10 @@
      "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
     },
     "downstream": [],
-    "created": "2026-10-26T13:22:04.701958+00:00",
+    "created": "2026-10-26T16:05:45.197446+00:00",
     "started_revision": 16,
     "execution_id": "e_a6285653c29e349d0b0beb2b",
-    "exposure_id": "x_ba978c06c77f4611becef544ac4640e5",
+    "exposure_id": "x_80d8f12e899d47a392e2d649ee84fca4",
     "values": {
      "partition": "train",
      "n_rows": 222,
@@ -312,10 +312,10 @@
     },
     "upstream": {},
     "downstream": [],
-    "created": "2026-10-26T13:22:06.718283+00:00",
+    "created": "2026-10-26T16:05:45.963893+00:00",
     "started_revision": 18,
     "execution_id": "e_b5c9bc6dc2acb308345f4b5b",
-    "exposure_id": "x_58da307c2f5942be825a0a3727d96174",
+    "exposure_id": "x_ee84a03a7bef4698aab11da788709089",
     "values": {
      "partition": "development",
      "n_rows": 318,
@@ -1516,10 +1516,10 @@
      "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
     },
     "downstream": [],
-    "created": "2026-10-26T13:22:09.100346+00:00",
+    "created": "2026-10-26T16:05:46.904690+00:00",
     "started_revision": 20,
     "execution_id": "e_a2a3d5fe7f8806c9c98f6929",
-    "exposure_id": "x_b1d7fa58006c4dfab508cf3b15b0cbd4",
+    "exposure_id": "x_c4ed55f14657480b9ee0ca2f7f5cae97",
     "values": {
      "partition": "train",
      "column": "model_year",
@@ -1793,10 +1793,10 @@
     "downstream": [
      "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d"
     ],
-    "created": "2026-10-26T13:22:10.893404+00:00",
+    "created": "2026-10-26T16:05:47.691629+00:00",
     "started_revision": 22,
     "execution_id": "e_218811c490cacf105137f8c6",
-    "exposure_id": "x_eea1d39b5deb4fc494dd4dc171530d4e",
+    "exposure_id": "x_5145e6485112469aad221c5c946b7bbb",
     "values": {
      "model": "train_mean",
      "target": "mpg",
@@ -1884,10 +1884,10 @@
     "downstream": [
      "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d"
     ],
-    "created": "2026-10-26T13:22:12.757612+00:00",
+    "created": "2026-10-26T16:05:48.457279+00:00",
     "started_revision": 24,
     "execution_id": "e_aff36faf73c7439f15bd6f24",
-    "exposure_id": "x_54508226ef5847459307af48ca0979c5",
+    "exposure_id": "x_9c00ab08465f43b9a40f27be52d5c311",
     "values": {
      "model": "linear",
      "target": "mpg",
@@ -2017,10 +2017,10 @@
     "downstream": [
      "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d"
     ],
-    "created": "2026-10-26T13:22:17.885661+00:00",
+    "created": "2026-10-26T16:05:50.974951+00:00",
     "started_revision": 28,
     "execution_id": "e_0fce83ab7847d276df6d9250",
-    "exposure_id": "x_9f3410a1c4ee452fb467ad35dd80d752",
+    "exposure_id": "x_8081ff9906fb4f9abfafadc86a233c28",
     "values": {
      "model": "ridge",
      "target": "mpg",
@@ -2134,10 +2134,10 @@
      "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
     },
     "downstream": [],
-    "created": "2026-10-26T13:22:19.857576+00:00",
+    "created": "2026-10-26T16:05:51.753577+00:00",
     "started_revision": 30,
     "execution_id": "e_13402e84eaabec613a733a22",
-    "exposure_id": "x_5481f3096e8a4ef0b44d90a979898c9f",
+    "exposure_id": "x_02f787c497db42a7834aa97999e97049",
     "values": {
      "n": 96,
      "target": "mpg",
@@ -2815,9 +2815,9 @@
    },
    "records": [
     {
-     "exposure_id": "x_71b4d526bff5477193ea18f2c46d9c69",
+     "exposure_id": "x_d1d23e8de4a64ac6b55ea4e9254f6902",
      "revision": 1,
-     "time": "2026-10-26T13:21:48.013325+00:00",
+     "time": "2026-10-26T16:05:38.090326+00:00",
      "activity": "init.structure",
      "result_id": null,
      "execution_id": null,
@@ -2837,9 +2837,9 @@
      ]
     },
     {
-     "exposure_id": "x_6841147e02fd47b2b78c27f0e992caf4",
+     "exposure_id": "x_9b4c86aad4884bc282b8633fd1f4ca9f",
      "revision": 1,
-     "time": "2026-10-26T13:21:48.032931+00:00",
+     "time": "2026-10-26T16:05:38.091066+00:00",
      "activity": "init.labelled_preview",
      "result_id": null,
      "execution_id": null,
@@ -2859,9 +2859,9 @@
      ]
     },
     {
-     "exposure_id": "x_1949bd9a419149c6998b708e17de7e62",
+     "exposure_id": "x_639f918f996a433888b8c6cea8ff9bdc",
      "revision": 1,
-     "time": "2026-10-26T13:21:48.037224+00:00",
+     "time": "2026-10-26T16:05:38.091448+00:00",
      "activity": "init.final_test",
      "result_id": null,
      "execution_id": null,
@@ -2881,9 +2881,9 @@
      ]
     },
     {
-     "exposure_id": "x_5992d567d884470383377b14aae792e8",
+     "exposure_id": "x_f974931aa91748a5994e20c2cf70ea0d",
      "revision": 12,
-     "time": "2026-10-26T13:22:01.149386+00:00",
+     "time": "2026-10-26T16:05:43.847016+00:00",
      "activity": "split",
      "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
      "execution_id": "e_839104bf9d2cae503476be39",
@@ -2896,9 +2896,9 @@
      ]
     },
     {
-     "exposure_id": "x_85c6529dfc7247aca1f157e35c1366db",
+     "exposure_id": "x_33c0b1987f744ac0a4d3db9dc6d1b2ca",
      "revision": 14,
-     "time": "2026-10-26T13:22:02.857320+00:00",
+     "time": "2026-10-26T16:05:44.532084+00:00",
      "activity": "eda.target_summary",
      "result_id": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
      "execution_id": "e_92aaf17d67568d5f7880d18a",
@@ -2910,9 +2910,9 @@
      ]
     },
     {
-     "exposure_id": "x_ba978c06c77f4611becef544ac4640e5",
+     "exposure_id": "x_80d8f12e899d47a392e2d649ee84fca4",
      "revision": 16,
-     "time": "2026-10-26T13:22:04.725346+00:00",
+     "time": "2026-10-26T16:05:45.199108+00:00",
      "activity": "eda.special_values",
      "result_id": "876eda50acd11c16bd83567bc96af1b37a294ec7f974bc5de94df8d1d911f95d",
      "execution_id": "e_a6285653c29e349d0b0beb2b",
@@ -2925,9 +2925,9 @@
      ]
     },
     {
-     "exposure_id": "x_58da307c2f5942be825a0a3727d96174",
+     "exposure_id": "x_ee84a03a7bef4698aab11da788709089",
      "revision": 18,
-     "time": "2026-10-26T13:22:06.741006+00:00",
+     "time": "2026-10-26T16:05:45.966237+00:00",
      "activity": "eda.quality",
      "result_id": "6f96fd645db7bc66a43b7688265afd25b0499653e3f6452f1106b6bc1acf9048",
      "execution_id": "e_b5c9bc6dc2acb308345f4b5b",
@@ -2946,9 +2946,9 @@
      ]
     },
     {
-     "exposure_id": "x_b1d7fa58006c4dfab508cf3b15b0cbd4",
+     "exposure_id": "x_c4ed55f14657480b9ee0ca2f7f5cae97",
      "revision": 20,
-     "time": "2026-10-26T13:22:09.121382+00:00",
+     "time": "2026-10-26T16:05:46.907453+00:00",
      "activity": "eda.mean_by",
      "result_id": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
      "execution_id": "e_a2a3d5fe7f8806c9c98f6929",
@@ -2961,9 +2961,9 @@
      ]
     },
     {
-     "exposure_id": "x_a1a4d3b6ffdf4e8aa55f819e3864dff7",
+     "exposure_id": "x_54a93231e43e40608fbfab37c3ed157a",
      "revision": 22,
-     "time": "2026-10-26T13:22:10.905901+00:00",
+     "time": "2026-10-26T16:05:47.693431+00:00",
      "activity": "fit.baseline",
      "result_id": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
      "execution_id": "e_218811c490cacf105137f8c6",
@@ -2975,9 +2975,9 @@
      ]
     },
     {
-     "exposure_id": "x_eea1d39b5deb4fc494dd4dc171530d4e",
+     "exposure_id": "x_5145e6485112469aad221c5c946b7bbb",
      "revision": 22,
-     "time": "2026-10-26T13:22:10.909293+00:00",
+     "time": "2026-10-26T16:05:47.694025+00:00",
      "activity": "fit.baseline",
      "result_id": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
      "execution_id": "e_218811c490cacf105137f8c6",
@@ -2989,9 +2989,9 @@
      ]
     },
     {
-     "exposure_id": "x_d83049055b504c83a9c761eb2197681d",
+     "exposure_id": "x_70b9779bf5584ed2bcffec39213145f6",
      "revision": 24,
-     "time": "2026-10-26T13:22:12.770241+00:00",
+     "time": "2026-10-26T16:05:48.459756+00:00",
      "activity": "fit.linear",
      "result_id": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
      "execution_id": "e_aff36faf73c7439f15bd6f24",
@@ -3008,9 +3008,9 @@
      ]
     },
     {
-     "exposure_id": "x_54508226ef5847459307af48ca0979c5",
+     "exposure_id": "x_9c00ab08465f43b9a40f27be52d5c311",
      "revision": 24,
-     "time": "2026-10-26T13:22:12.773207+00:00",
+     "time": "2026-10-26T16:05:48.460527+00:00",
      "activity": "fit.linear",
      "result_id": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
      "execution_id": "e_aff36faf73c7439f15bd6f24",
@@ -3027,9 +3027,9 @@
      ]
     },
     {
-     "exposure_id": "x_8a6d2eca8cfc45a1a0493020d313196e",
+     "exposure_id": "x_07e9578625f44a309d39efcecf4690bb",
      "revision": 28,
-     "time": "2026-10-26T13:22:17.897343+00:00",
+     "time": "2026-10-26T16:05:50.977042+00:00",
      "activity": "fit.variant",
      "result_id": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
      "execution_id": "e_0fce83ab7847d276df6d9250",
@@ -3046,9 +3046,9 @@
      ]
     },
     {
-     "exposure_id": "x_9f3410a1c4ee452fb467ad35dd80d752",
+     "exposure_id": "x_8081ff9906fb4f9abfafadc86a233c28",
      "revision": 28,
-     "time": "2026-10-26T13:22:17.901256+00:00",
+     "time": "2026-10-26T16:05:50.977727+00:00",
      "activity": "fit.variant",
      "result_id": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
      "execution_id": "e_0fce83ab7847d276df6d9250",
@@ -3065,9 +3065,9 @@
      ]
     },
     {
-     "exposure_id": "x_5481f3096e8a4ef0b44d90a979898c9f",
+     "exposure_id": "x_02f787c497db42a7834aa97999e97049",
      "revision": 30,
-     "time": "2026-10-26T13:22:19.877354+00:00",
+     "time": "2026-10-26T16:05:51.755899+00:00",
      "activity": "evaluate.regression",
      "result_id": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
      "execution_id": "e_13402e84eaabec613a733a22",
@@ -3183,10 +3183,10 @@
     ],
     "kept_slots": [
      "split",
+     "eda.quality",
      "eda.target_summary",
      "eda.special_values",
      "eda.mean_by:model_year",
-     "eda.quality",
      "fit.baseline"
     ],
     "refit": [
@@ -3212,10 +3212,10 @@
     ],
     "kept_slots": [
      "split",
+     "eda.quality",
      "eda.target_summary",
      "eda.special_values",
      "eda.mean_by:model_year",
-     "eda.quality",
      "fit.baseline"
     ],
     "refit": [
@@ -3235,10 +3235,10 @@
     "stale_slots": [],
     "kept_slots": [
      "split",
+     "eda.quality",
      "eda.target_summary",
      "eda.special_values",
      "eda.mean_by:model_year",
-     "eda.quality",
      "fit.baseline",
      "fit.linear",
      "fit.variant",
@@ -3257,10 +3257,10 @@
     "change": "a different split of the rows",
     "stale_slots": [
      "split",
+     "eda.quality",
      "eda.target_summary",
      "eda.special_values",
      "eda.mean_by:model_year",
-     "eda.quality",
      "fit.baseline",
      "fit.linear",
      "fit.variant",
@@ -3288,10 +3288,10 @@
     ],
     "kept_slots": [
      "split",
+     "eda.quality",
      "eda.target_summary",
      "eda.special_values",
      "eda.mean_by:model_year",
-     "eda.quality",
      "fit.baseline"
     ],
     "refit": [
@@ -3311,10 +3311,10 @@
     "stale_slots": [],
     "kept_slots": [
      "split",
+     "eda.quality",
      "eda.target_summary",
      "eda.special_values",
      "eda.mean_by:model_year",
-     "eda.quality",
      "fit.baseline",
      "fit.linear",
      "fit.variant",
@@ -3337,10 +3337,10 @@
     ],
     "kept_slots": [
      "split",
+     "eda.quality",
      "eda.target_summary",
      "eda.special_values",
      "eda.mean_by:model_year",
-     "eda.quality",
      "fit.baseline",
      "fit.linear"
     ],

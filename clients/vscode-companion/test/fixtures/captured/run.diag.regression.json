@@ -2694,8 +2694,8 @@
    "started_revision": 39,
    "invalidation": null,
    "exposure_ids": [
-    "x_ee5b4f13d98b42d09419eea8719db0d6",
-    "x_81a94dad9c474b588383b0cb4ac2fa38"
+    "x_328759d331fa401ea229e2f9d2c66dcf",
+    "x_76b05ad5d99840d48daad624d95a7c45"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2754,8 +2754,8 @@
     "revision": 40,
     "position": {
      "step_id": "model_choice",
-     "completed": 9,
-     "total": 12
+     "completed": 10,
+     "total": 13
     },
     "learned": [],
     "limitations": [
@@ -2793,6 +2793,7 @@
      "why-consider-a-nonlinear-family"
     ]
    }
-  }
+  },
+  "question_junior": "Where are the predictions off, by how much, and does the error grow with the prediction or differ across groups?"
  }
 }

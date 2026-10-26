@@ -597,7 +597,8 @@
     "example_status": "none",
     "steps": [
      "structural_eda"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "data_contingent_decision",

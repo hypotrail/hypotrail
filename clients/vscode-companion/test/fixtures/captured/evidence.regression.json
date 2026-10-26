@@ -40,10 +40,10 @@
      "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
      "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d"
     ],
-    "created": "2026-10-26T12:02:42.516601+00:00",
+    "created": "2026-10-26T16:05:25.193682+00:00",
     "started_revision": 12,
     "execution_id": "e_ea1ff066194e9ce5fbc1533b",
-    "exposure_id": "x_7e82578f51bc4a3592a8d61e70e6a547",
+    "exposure_id": "x_06e3ca90c4bd4b4fbbec3ac289f53f3e",
     "values": {
      "method": "ordinal_cutoff",
      "column": "model_year",
@@ -111,7 +111,9 @@
        "text": " validation rows"
       }
      ]
-    }
+    },
+    "question_junior": null,
+    "texts": null
    },
    {
     "result_id": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
@@ -128,10 +130,10 @@
      "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
     },
     "downstream": [],
-    "created": "2026-10-26T12:02:44.189833+00:00",
+    "created": "2026-10-26T16:05:25.838719+00:00",
     "started_revision": 14,
     "execution_id": "e_f37508d21e9ebda7c2ebce28",
-    "exposure_id": "x_dddd25e77c3c40aca9b3bb57275258ed",
+    "exposure_id": "x_739ba6c3d23b46ee85cbcae5ff332226",
     "values": {
      "partition": "train",
      "target": "mpg",
@@ -191,6 +193,27 @@
        "text": " training rows"
       }
      ]
+    },
+    "question_junior": "How is the target distributed among the training rows?",
+    "texts": {
+     "en": {
+      "question": "How is the target distributed among the training rows?",
+      "note": "Distribution of the target on training rows, in its unit. The mean is what the baseline predicts for every row.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Comment la cible se répartit-elle parmi les lignes d'entraînement ?",
+      "note": "Distribution de la cible sur les lignes d'entraînement, dans son unité. La moyenne est ce que le modèle de référence prédit pour chaque ligne.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
     }
    },
    {
@@ -208,10 +231,10 @@
      "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
     },
     "downstream": [],
-    "created": "2026-10-26T12:02:46.310770+00:00",
+    "created": "2026-10-26T16:05:26.608426+00:00",
     "started_revision": 16,
     "execution_id": "e_305370681065d9971a93f227",
-    "exposure_id": "x_870675bea2324368a8e6c81bfc764b27",
+    "exposure_id": "x_9a0e76d042464073bc139118ded2bb27",
     "values": {
      "partition": "train",
      "n_rows": 222,
@@ -249,6 +272,31 @@
        "text": " training rows"
       }
      ]
+    },
+    "question_junior": "How many training rows carry each special value, and how does the target look among them?",
+    "texts": {
+     "en": {
+      "question": "How many training rows carry each special value, and how does the target look among them?",
+      "note": "Counts on training rows. A missing-value marker is imputed by the model, with an indicator column for a numeric variable.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {
+       "horsepower=?": "Missing value."
+      }
+     },
+     "fr": {
+      "question": "Combien des lignes d'entraînement portent chaque valeur spéciale, et à quoi ressemble la cible parmi elles ?",
+      "note": "Effectifs sur les lignes d'entraînement. Un marqueur de valeur manquante est imputé par le modèle, avec une colonne indicatrice pour une variable numérique.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {
+       "horsepower=?": "Valeur manquante."
+      }
+     }
     }
    },
    {
@@ -266,10 +314,10 @@
     },
     "upstream": {},
     "downstream": [],
-    "created": "2026-10-26T12:02:48.266252+00:00",
+    "created": "2026-10-26T16:05:27.290121+00:00",
     "started_revision": 18,
     "execution_id": "e_808e66ec55e19cf01a72e71c",
-    "exposure_id": "x_9ecc073aa47d44bea35e22408ecc1e43",
+    "exposure_id": "x_bb9a486c8920426e8111ca7c8d68d3c8",
     "values": {
      "partition": "development",
      "n_rows": 318,
@@ -1430,7 +1478,28 @@
      "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
      "note": "Structural reading of the development rows: the target is not read, and nothing here is a rate or an association. A range is checked only against a range the case declares."
     },
-    "headline": null
+    "headline": null,
+    "question_junior": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
+    "texts": {
+     "en": {
+      "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
+      "note": "Structural reading of the development rows: the target is not read, and nothing here is a rate or an association. A range is checked only against a range the case declares.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Y a-t-il des cellules manquantes, des lignes répétées, des catégories rares ou des valeurs hors de leur plage possible dans les lignes de l'échantillon de développement ?",
+      "note": "Lecture structurelle des lignes de l'échantillon de développement : la cible n'est pas lue, et rien ici n'est un taux ni une association. Une plage n'est vérifiée que par rapport à une plage que le cas déclare.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
    },
    {
     "result_id": "e20657f1c136c1eb126ad79a9278719a4e71f2ffc4e4251168c819c3a4e5d51b",
@@ -1451,10 +1520,10 @@
      "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
     },
     "downstream": [],
-    "created": "2026-10-26T12:02:50.608794+00:00",
+    "created": "2026-10-26T16:05:28.198252+00:00",
     "started_revision": 20,
     "execution_id": "e_75c47b1ef767a30eb39cdb4d",
-    "exposure_id": "x_9283d22113b942079d006b8457356eca",
+    "exposure_id": "x_37d5e03a89d24740aaecd627841bffde",
     "values": {
      "partition": "train",
      "n_rows": 222,
@@ -1512,7 +1581,28 @@
      "question": "Does any single feature, on its own, predict the target so well that its availability at the prediction moment should be questioned?",
      "note": "Each feature alone, scored out of fold on the training rows. A high value only raises a question about when the value is known; it never keeps or drops a feature, and a legitimate feature may score high."
     },
-    "headline": null
+    "headline": null,
+    "question_junior": "Does any single feature, on its own, predict the target so well that its availability at the prediction moment should be questioned?",
+    "texts": {
+     "en": {
+      "question": "Does any single feature, on its own, predict the target so well that its availability at the prediction moment should be questioned?",
+      "note": "Each feature alone, scored out of fold on the training rows. A high value only raises a question about when the value is known; it never keeps or drops a feature, and a legitimate feature may score high.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Une variable, à elle seule, prédit-elle la cible si bien que sa disponibilité au moment de la prédiction doit être mise en question ?",
+      "note": "Chaque variable seule, notée hors pli sur les lignes d'entraînement. Une valeur élevée pose seulement une question sur le moment où la valeur est connue ; elle ne garde ni n'écarte jamais une variable, et une variable légitime peut obtenir une valeur élevée.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
    },
    {
     "result_id": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
@@ -1531,10 +1621,10 @@
      "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
     },
     "downstream": [],
-    "created": "2026-10-26T12:02:52.309666+00:00",
+    "created": "2026-10-26T16:05:28.851554+00:00",
     "started_revision": 22,
     "execution_id": "e_5f95a7d242e4ea751ed82afb",
-    "exposure_id": "x_1ddc14c6c58c4b16868868aa3238bfbf",
+    "exposure_id": "x_4fd25e002cd84f3b9390afdc97cbb430",
     "values": {
      "partition": "train",
      "column": "model_year",
@@ -1750,6 +1840,43 @@
        "text": " training rows"
       }
      ]
+    },
+    "question_junior": "Does the mean target differ across the groups of model_year by more than chance alone draws?",
+    "texts": {
+     "en": {
+      "question": "Does the mean target differ across the groups of model_year by more than chance alone draws?",
+      "note": "Mean target by group on training rows: associations, not effects of the variable.",
+      "warnings": [
+       "model_year = 70: only 22 training rows; its mean is too noisy to read on its own.",
+       "model_year = 71: only 20 training rows; its mean is too noisy to read on its own.",
+       "model_year = 72: only 25 training rows; its mean is too noisy to read on its own.",
+       "model_year = 74: only 19 training rows; its mean is too noisy to read on its own.",
+       "model_year = 75: only 24 training rows; its mean is too noisy to read on its own.",
+       "model_year = 76: only 25 training rows; its mean is too noisy to read on its own.",
+       "model_year = 77: only 24 training rows; its mean is too noisy to read on its own."
+      ],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": "The band is the range of the same figure after shuffling the target among the training rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks.",
+      "meanings": {}
+     },
+     "fr": {
+      "question": "La moyenne de la cible diffère-t-elle entre les groupes de model_year plus que le hasard seul ne le produit ?",
+      "note": "Moyenne de la cible par groupe sur les lignes d'entraînement : des associations, pas des effets de la variable.",
+      "warnings": [
+       "model_year = 70 : seulement 22 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 71 : seulement 20 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 72 : seulement 25 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 74 : seulement 19 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 75 : seulement 24 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 76 : seulement 25 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 77 : seulement 24 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule."
+      ],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": "La bande est l'étendue du même chiffre après avoir mélangé la cible entre les lignes d'entraînement 19 fois (graine fixe) : ce que le hasard seul produit. Un motif à l'intérieur ne se distingue pas du hasard ; un motif au-dessus de chaque mélange arrive par hasard environ une fois sur 20 regards.",
+      "meanings": {}
+     }
     }
    },
    {
@@ -1769,10 +1896,10 @@
      "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
     },
     "downstream": [],
-    "created": "2026-10-26T12:02:53.793019+00:00",
+    "created": "2026-10-26T16:05:29.519323+00:00",
     "started_revision": 24,
     "execution_id": "e_622dd0c704d6af123eea761a",
-    "exposure_id": "x_e0b53a179d4a4ccb8883447fdabcc33f",
+    "exposure_id": "x_f5a8c5b82eca4366aed4742fbc188df1",
     "values": {
      "partition": "train",
      "column": "weight",
@@ -1897,6 +2024,27 @@
        "text": " training rows"
       }
      ]
+    },
+    "question_junior": "How are the values of weight distributed among the training rows?",
+    "texts": {
+     "en": {
+      "question": "How are the values of weight distributed among the training rows?",
+      "note": "Counts of training rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Comment les valeurs de weight se répartissent-elles parmi les lignes d'entraînement ?",
+      "note": "Effectifs des lignes d'entraînement seulement. Une distribution décrit cet échantillon ; ce n'est pas un taux du résultat et elle ne dit rien des causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
     }
    },
    {
@@ -1914,10 +2062,10 @@
     },
     "upstream": {},
     "downstream": [],
-    "created": "2026-10-26T12:02:55.537376+00:00",
+    "created": "2026-10-26T16:05:30.190209+00:00",
     "started_revision": 26,
     "execution_id": "e_284db43c31758f9aef75cd0b",
-    "exposure_id": "x_d4a83d3eb40340f0a3873323349c982b",
+    "exposure_id": "x_aa073ab9b8c746948e52472130763e65",
     "values": {
      "partition": "development",
      "n_rows": 318,
@@ -2126,7 +2274,28 @@
      "question": "Do any two predictors carry nearly the same information in the development rows, so that a model would split its weight between them?",
      "note": "Structural reading of the development rows: the target is not read, so this is not a look at the outcome. An association between two predictors is not an effect on the outcome; a flagged pair only asks whether both are needed."
     },
-    "headline": null
+    "headline": null,
+    "question_junior": "Do any two predictors carry nearly the same information in the development rows, so that a model would split its weight between them?",
+    "texts": {
+     "en": {
+      "question": "Do any two predictors carry nearly the same information in the development rows, so that a model would split its weight between them?",
+      "note": "Structural reading of the development rows: the target is not read, so this is not a look at the outcome. An association between two predictors is not an effect on the outcome; a flagged pair only asks whether both are needed.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Deux prédicteurs portent-ils presque la même information dans les lignes de l'échantillon de développement, au point qu'un modèle partagerait son poids entre eux ?",
+      "note": "Lecture structurelle des lignes de l'échantillon de développement : la cible n'est pas lue, ce n'est donc pas un regard sur le résultat. Une association entre deux prédicteurs n'est pas un effet sur le résultat ; une paire signalée demande seulement si les deux sont nécessaires.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
    },
    {
     "result_id": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
@@ -2147,10 +2316,10 @@
     "downstream": [
      "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d"
     ],
-    "created": "2026-10-26T12:02:57.300237+00:00",
+    "created": "2026-10-26T16:05:30.842772+00:00",
     "started_revision": 28,
     "execution_id": "e_aa1477c41bc44c975f9888ce",
-    "exposure_id": "x_191b4b63a09d4f9d80e87f0e05c55138",
+    "exposure_id": "x_3bde1c04617d4c1b85c5556ada9893dc",
     "values": {
      "model": "train_mean",
      "target": "mpg",
@@ -2210,7 +2379,9 @@
        "text": " rows"
       }
      ]
-    }
+    },
+    "question_junior": null,
+    "texts": null
    },
    {
     "result_id": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
@@ -2236,10 +2407,10 @@
     "downstream": [
      "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d"
     ],
-    "created": "2026-10-26T12:02:58.852363+00:00",
+    "created": "2026-10-26T16:05:31.535249+00:00",
     "started_revision": 30,
     "execution_id": "e_2033db067e905124ef78ea82",
-    "exposure_id": "x_dbab92bbad9445a196d3ae9846b107dd",
+    "exposure_id": "x_08e8ce79e4d04528964366fb8c6260d2",
     "values": {
      "model": "linear",
      "target": "mpg",
@@ -2340,7 +2511,9 @@
        "text": " rows"
       }
      ]
-    }
+    },
+    "question_junior": null,
+    "texts": null
    },
    {
     "result_id": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
@@ -2367,10 +2540,10 @@
     "downstream": [
      "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d"
     ],
-    "created": "2026-10-26T12:03:03.299985+00:00",
+    "created": "2026-10-26T16:05:33.657189+00:00",
     "started_revision": 34,
     "execution_id": "e_9ef87905207eafeced71da38",
-    "exposure_id": "x_1474cc73fd87474fbd88b8d9b9d3699f",
+    "exposure_id": "x_132ab0bfa20348c0a13de9b191fafb6d",
     "values": {
      "model": "ridge",
      "target": "mpg",
@@ -2450,7 +2623,9 @@
      },
      "alpha": 10.0
     },
-    "headline": null
+    "headline": null,
+    "question_junior": null,
+    "texts": null
    },
    {
     "result_id": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
@@ -2482,10 +2657,10 @@
      "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
     },
     "downstream": [],
-    "created": "2026-10-26T12:03:05.299420+00:00",
+    "created": "2026-10-26T16:05:34.682585+00:00",
     "started_revision": 36,
     "execution_id": "e_952532c3c79c0a600a6ca16b",
-    "exposure_id": "x_d07460944486409089e996ce02d4d9a1",
+    "exposure_id": "x_5dce08c077c04e6eb8beda9dc4174d78",
     "values": {
      "n": 96,
      "target": "mpg",
@@ -2793,7 +2968,9 @@
        "text": " validation rows"
       }
      ]
-    }
+    },
+    "question_junior": null,
+    "texts": null
    }
   ],
   "truncated": false,
@@ -3234,9 +3411,9 @@
    },
    "records": [
     {
-     "exposure_id": "x_0692c5a19161441d8881b6a400cef6aa",
+     "exposure_id": "x_336dbf015dbc421383a68d3720926b9e",
      "revision": 1,
-     "time": "2026-10-26T12:02:29.665478+00:00",
+     "time": "2026-10-26T16:05:20.105579+00:00",
      "activity": "init.structure",
      "result_id": null,
      "execution_id": null,
@@ -3256,9 +3433,9 @@
      ]
     },
     {
-     "exposure_id": "x_3d1d5a2adf0146dd8ddf9790ffd6afc3",
+     "exposure_id": "x_2ed49605552944ee828cfc1f6da71368",
      "revision": 1,
-     "time": "2026-10-26T12:02:29.676945+00:00",
+     "time": "2026-10-26T16:05:20.106505+00:00",
      "activity": "init.labelled_preview",
      "result_id": null,
      "execution_id": null,
@@ -3278,9 +3455,9 @@
      ]
     },
     {
-     "exposure_id": "x_1200a2fd46a34fb39facedec3b4b451b",
+     "exposure_id": "x_c4983ca5c37745c786dd2990612bdb03",
      "revision": 1,
-     "time": "2026-10-26T12:02:29.681292+00:00",
+     "time": "2026-10-26T16:05:20.106889+00:00",
      "activity": "init.final_test",
      "result_id": null,
      "execution_id": null,
@@ -3300,9 +3477,9 @@
      ]
     },
     {
-     "exposure_id": "x_7e82578f51bc4a3592a8d61e70e6a547",
+     "exposure_id": "x_06e3ca90c4bd4b4fbbec3ac289f53f3e",
      "revision": 12,
-     "time": "2026-10-26T12:02:42.541574+00:00",
+     "time": "2026-10-26T16:05:25.195955+00:00",
      "activity": "split",
      "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
      "execution_id": "e_ea1ff066194e9ce5fbc1533b",
@@ -3315,9 +3492,9 @@
      ]
     },
     {
-     "exposure_id": "x_dddd25e77c3c40aca9b3bb57275258ed",
+     "exposure_id": "x_739ba6c3d23b46ee85cbcae5ff332226",
      "revision": 14,
-     "time": "2026-10-26T12:02:44.209543+00:00",
+     "time": "2026-10-26T16:05:25.840770+00:00",
      "activity": "eda.target_summary",
      "result_id": "6e4a81eea61ba75c86a5ba3cd54154afd4aed8e757bce6946710022d7b254b96",
      "execution_id": "e_f37508d21e9ebda7c2ebce28",
@@ -3329,9 +3506,9 @@
      ]
     },
     {
-     "exposure_id": "x_870675bea2324368a8e6c81bfc764b27",
+     "exposure_id": "x_9a0e76d042464073bc139118ded2bb27",
      "revision": 16,
-     "time": "2026-10-26T12:02:46.333308+00:00",
+     "time": "2026-10-26T16:05:26.610142+00:00",
      "activity": "eda.special_values",
      "result_id": "876eda50acd11c16bd83567bc96af1b37a294ec7f974bc5de94df8d1d911f95d",
      "execution_id": "e_305370681065d9971a93f227",
@@ -3344,9 +3521,9 @@
      ]
     },
     {
-     "exposure_id": "x_9ecc073aa47d44bea35e22408ecc1e43",
+     "exposure_id": "x_bb9a486c8920426e8111ca7c8d68d3c8",
      "revision": 18,
-     "time": "2026-10-26T12:02:48.297773+00:00",
+     "time": "2026-10-26T16:05:27.292282+00:00",
      "activity": "eda.quality",
      "result_id": "6f96fd645db7bc66a43b7688265afd25b0499653e3f6452f1106b6bc1acf9048",
      "execution_id": "e_808e66ec55e19cf01a72e71c",
@@ -3365,9 +3542,9 @@
      ]
     },
     {
-     "exposure_id": "x_9283d22113b942079d006b8457356eca",
+     "exposure_id": "x_37d5e03a89d24740aaecd627841bffde",
      "revision": 20,
-     "time": "2026-10-26T12:02:50.625619+00:00",
+     "time": "2026-10-26T16:05:28.200112+00:00",
      "activity": "eda.single_feature_signal",
      "result_id": "e20657f1c136c1eb126ad79a9278719a4e71f2ffc4e4251168c819c3a4e5d51b",
      "execution_id": "e_75c47b1ef767a30eb39cdb4d",
@@ -3385,9 +3562,9 @@
      ]
     },
     {
-     "exposure_id": "x_1ddc14c6c58c4b16868868aa3238bfbf",
+     "exposure_id": "x_4fd25e002cd84f3b9390afdc97cbb430",
      "revision": 22,
-     "time": "2026-10-26T12:02:52.329408+00:00",
+     "time": "2026-10-26T16:05:28.853432+00:00",
      "activity": "eda.mean_by",
      "result_id": "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
      "execution_id": "e_5f95a7d242e4ea751ed82afb",
@@ -3400,9 +3577,9 @@
      ]
     },
     {
-     "exposure_id": "x_e0b53a179d4a4ccb8883447fdabcc33f",
+     "exposure_id": "x_f5a8c5b82eca4366aed4742fbc188df1",
      "revision": 24,
-     "time": "2026-10-26T12:02:53.809367+00:00",
+     "time": "2026-10-26T16:05:29.521227+00:00",
      "activity": "eda.distribution",
      "result_id": "5facc7f820f915cdaf7b5ef89e7452a0ae93b71717832572fad274d943f8ad6f",
      "execution_id": "e_622dd0c704d6af123eea761a",
@@ -3414,9 +3591,9 @@
      ]
     },
     {
-     "exposure_id": "x_d4a83d3eb40340f0a3873323349c982b",
+     "exposure_id": "x_aa073ab9b8c746948e52472130763e65",
      "revision": 26,
-     "time": "2026-10-26T12:02:55.547816+00:00",
+     "time": "2026-10-26T16:05:30.192166+00:00",
      "activity": "eda.correlation",
      "result_id": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
      "execution_id": "e_284db43c31758f9aef75cd0b",
@@ -3433,9 +3610,9 @@
      ]
     },
     {
-     "exposure_id": "x_c79401c771fc4a2f988527ff0e0f5207",
+     "exposure_id": "x_b80dc7469b0e418f92441a422d503985",
      "revision": 28,
-     "time": "2026-10-26T12:02:57.313294+00:00",
+     "time": "2026-10-26T16:05:30.844690+00:00",
      "activity": "fit.baseline",
      "result_id": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
      "execution_id": "e_aa1477c41bc44c975f9888ce",
@@ -3447,9 +3624,9 @@
      ]
     },
     {
-     "exposure_id": "x_191b4b63a09d4f9d80e87f0e05c55138",
+     "exposure_id": "x_3bde1c04617d4c1b85c5556ada9893dc",
      "revision": 28,
-     "time": "2026-10-26T12:02:57.317220+00:00",
+     "time": "2026-10-26T16:05:30.845370+00:00",
      "activity": "fit.baseline",
      "result_id": "7bd73d8b7296b4fbc9cc41f66b1904165cb6b69110b7feb2e4baa936054b3834",
      "execution_id": "e_aa1477c41bc44c975f9888ce",
@@ -3461,9 +3638,9 @@
      ]
     },
     {
-     "exposure_id": "x_c91cd8059485457789189fc3f115b05f",
+     "exposure_id": "x_5dfd0c8f73a0402bb1eef08b111456b9",
      "revision": 30,
-     "time": "2026-10-26T12:02:58.869287+00:00",
+     "time": "2026-10-26T16:05:31.537131+00:00",
      "activity": "fit.linear",
      "result_id": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
      "execution_id": "e_2033db067e905124ef78ea82",
@@ -3480,9 +3657,9 @@
      ]
     },
     {
-     "exposure_id": "x_dbab92bbad9445a196d3ae9846b107dd",
+     "exposure_id": "x_08e8ce79e4d04528964366fb8c6260d2",
      "revision": 30,
-     "time": "2026-10-26T12:02:58.873241+00:00",
+     "time": "2026-10-26T16:05:31.537762+00:00",
      "activity": "fit.linear",
      "result_id": "4feb1e965976f79d956a66dab0b75541535bbeea5fc23a3f95671f23bc8883ef",
      "execution_id": "e_2033db067e905124ef78ea82",
@@ -3499,9 +3676,9 @@
      ]
     },
     {
-     "exposure_id": "x_e00e25bdd34944248734638804efdfb0",
+     "exposure_id": "x_62e51a9bc2c4433b8a14c5e1a3bfce89",
      "revision": 34,
-     "time": "2026-10-26T12:03:03.313550+00:00",
+     "time": "2026-10-26T16:05:33.659038+00:00",
      "activity": "fit.variant",
      "result_id": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
      "execution_id": "e_9ef87905207eafeced71da38",
@@ -3518,9 +3695,9 @@
      ]
     },
     {
-     "exposure_id": "x_1474cc73fd87474fbd88b8d9b9d3699f",
+     "exposure_id": "x_132ab0bfa20348c0a13de9b191fafb6d",
      "revision": 34,
-     "time": "2026-10-26T12:03:03.317458+00:00",
+     "time": "2026-10-26T16:05:33.659767+00:00",
      "activity": "fit.variant",
      "result_id": "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18",
      "execution_id": "e_9ef87905207eafeced71da38",
@@ -3537,9 +3714,9 @@
      ]
     },
     {
-     "exposure_id": "x_d07460944486409089e996ce02d4d9a1",
+     "exposure_id": "x_5dce08c077c04e6eb8beda9dc4174d78",
      "revision": 36,
-     "time": "2026-10-26T12:03:05.317284+00:00",
+     "time": "2026-10-26T16:05:34.684774+00:00",
      "activity": "evaluate.regression",
      "result_id": "b6c64547b9785a2bb53897039e9bbe5dcd1a757bb26db903cc4e1d899bb8863d",
      "execution_id": "e_952532c3c79c0a600a6ca16b",
@@ -3658,12 +3835,12 @@
     ],
     "kept_slots": [
      "split",
+     "eda.quality",
      "eda.target_summary",
      "eda.special_values",
      "eda.correlation",
      "eda.distribution:weight",
      "eda.mean_by:model_year",
-     "eda.quality",
      "eda.single_feature_signal",
      "fit.baseline"
     ],
@@ -3690,12 +3867,12 @@
     ],
     "kept_slots": [
      "split",
+     "eda.quality",
      "eda.target_summary",
      "eda.special_values",
      "eda.correlation",
      "eda.distribution:weight",
      "eda.mean_by:model_year",
-     "eda.quality",
      "eda.single_feature_signal",
      "fit.baseline"
     ],
@@ -3716,12 +3893,12 @@
     "stale_slots": [],
     "kept_slots": [
      "split",
+     "eda.quality",
      "eda.target_summary",
      "eda.special_values",
      "eda.correlation",
      "eda.distribution:weight",
      "eda.mean_by:model_year",
-     "eda.quality",
      "eda.single_feature_signal",
      "fit.baseline",
      "fit.linear",
@@ -3741,12 +3918,12 @@
     "change": "a different split of the rows",
     "stale_slots": [
      "split",
+     "eda.quality",
      "eda.target_summary",
      "eda.special_values",
      "eda.correlation",
      "eda.distribution:weight",
      "eda.mean_by:model_year",
-     "eda.quality",
      "eda.single_feature_signal",
      "fit.baseline",
      "fit.linear",
@@ -3775,12 +3952,12 @@
     ],
     "kept_slots": [
      "split",
+     "eda.quality",
      "eda.target_summary",
      "eda.special_values",
      "eda.correlation",
      "eda.distribution:weight",
      "eda.mean_by:model_year",
-     "eda.quality",
      "eda.single_feature_signal",
      "fit.baseline"
     ],
@@ -3801,12 +3978,12 @@
     "stale_slots": [],
     "kept_slots": [
      "split",
+     "eda.quality",
      "eda.target_summary",
      "eda.special_values",
      "eda.correlation",
      "eda.distribution:weight",
      "eda.mean_by:model_year",
-     "eda.quality",
      "eda.single_feature_signal",
      "fit.baseline",
      "fit.linear",
@@ -3830,12 +4007,12 @@
     ],
     "kept_slots": [
      "split",
+     "eda.quality",
      "eda.target_summary",
      "eda.special_values",
      "eda.correlation",
      "eda.distribution:weight",
      "eda.mean_by:model_year",
-     "eda.quality",
      "eda.single_feature_signal",
      "fit.baseline",
      "fit.linear"

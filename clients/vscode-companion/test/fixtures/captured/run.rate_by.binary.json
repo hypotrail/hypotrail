@@ -269,7 +269,7 @@
    "started_revision": 22,
    "invalidation": null,
    "exposure_ids": [
-    "x_3307dfd167764cd4928a4658af671a4d"
+    "x_e392b563359f4e93967ed8a55a3c7f5b"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -328,8 +328,8 @@
     "revision": 23,
     "position": {
      "step_id": "models",
-     "completed": 7,
-     "total": 13
+     "completed": 8,
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -364,6 +364,7 @@
      "uncertainty"
     ]
    }
-  }
+  },
+  "question_junior": "Does the positive rate differ across the groups of job by more than chance alone draws?"
  }
 }

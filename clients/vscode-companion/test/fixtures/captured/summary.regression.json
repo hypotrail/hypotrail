@@ -66,13 +66,18 @@
     "status": "done"
    },
    {
-    "id": "train_eda",
-    "title": "Explore the training partition",
+    "id": "structural_eda",
+    "title": "Check the structure of the data",
     "status": "done"
    },
    {
     "id": "preprocessing",
     "title": "Decide how the model prepares the variables",
+    "status": "done"
+   },
+   {
+    "id": "train_eda",
+    "title": "Explore the target on the training rows",
     "status": "done"
    },
    {
@@ -119,8 +124,8 @@
     "revision": 38,
     "position": {
      "step_id": "model_choice",
-     "completed": 9,
-     "total": 12
+     "completed": 10,
+     "total": 13
     },
     "learned": [],
     "limitations": [
@@ -582,8 +587,9 @@
     "id": "evidence",
     "title": "Prepare evidence",
     "steps": [
-     "train_eda",
-     "preprocessing"
+     "structural_eda",
+     "preprocessing",
+     "train_eda"
     ]
    },
    {
@@ -647,7 +653,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-26T12:02:29.641268+00:00",
+   "boundary_time": "2026-10-26T16:05:20.102540+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -656,7 +662,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-26T12:02:30.037711+00:00",
+     "time": "2026-10-26T16:05:20.222900+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -679,7 +685,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-26T12:02:31.108143+00:00",
+     "time": "2026-10-26T16:05:20.537670+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -709,7 +715,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-26T12:02:32.163654+00:00",
+     "time": "2026-10-26T16:05:20.882172+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -732,7 +738,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-26T12:02:33.279875+00:00",
+     "time": "2026-10-26T16:05:21.254264+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -762,7 +768,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-26T12:02:34.577660+00:00",
+     "time": "2026-10-26T16:05:21.847799+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -785,7 +791,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-26T12:02:35.754157+00:00",
+     "time": "2026-10-26T16:05:22.361127+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -815,7 +821,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-26T12:02:37.030770+00:00",
+     "time": "2026-10-26T16:05:23.020114+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -838,7 +844,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-26T12:02:38.178389+00:00",
+     "time": "2026-10-26T16:05:23.496179+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -868,7 +874,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-26T12:02:39.608028+00:00",
+     "time": "2026-10-26T16:05:24.052983+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -891,7 +897,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-26T12:02:40.884957+00:00",
+     "time": "2026-10-26T16:05:24.589284+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -921,7 +927,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-26T12:02:42.617934+00:00",
+     "time": "2026-10-26T16:05:25.215821+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -944,7 +950,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-26T12:02:44.287077+00:00",
+     "time": "2026-10-26T16:05:25.863796+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -967,7 +973,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-26T12:02:46.393283+00:00",
+     "time": "2026-10-26T16:05:26.630338+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -990,7 +996,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-26T12:02:48.367727+00:00",
+     "time": "2026-10-26T16:05:27.314153+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1013,7 +1019,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-26T12:02:50.702631+00:00",
+     "time": "2026-10-26T16:05:28.223970+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1036,7 +1042,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-26T12:02:52.389389+00:00",
+     "time": "2026-10-26T16:05:28.872770+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1059,7 +1065,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-26T12:02:53.894199+00:00",
+     "time": "2026-10-26T16:05:29.541703+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1082,7 +1088,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-26T12:02:55.631810+00:00",
+     "time": "2026-10-26T16:05:30.211729+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1105,7 +1111,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-26T12:02:57.369975+00:00",
+     "time": "2026-10-26T16:05:30.866136+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1128,7 +1134,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-26T12:02:58.918534+00:00",
+     "time": "2026-10-26T16:05:31.558707+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1151,7 +1157,7 @@
     },
     {
      "revision": 32,
-     "time": "2026-10-26T12:03:00.277290+00:00",
+     "time": "2026-10-26T16:05:32.217937+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1174,7 +1180,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-26T12:03:01.797465+00:00",
+     "time": "2026-10-26T16:05:32.851337+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1207,7 +1213,7 @@
     },
     {
      "revision": 35,
-     "time": "2026-10-26T12:03:03.395328+00:00",
+     "time": "2026-10-26T16:05:33.682052+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1230,7 +1236,7 @@
     },
     {
      "revision": 37,
-     "time": "2026-10-26T12:03:05.367094+00:00",
+     "time": "2026-10-26T16:05:34.708100+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1253,7 +1259,7 @@
     },
     {
      "revision": 38,
-     "time": "2026-10-26T12:03:06.894491+00:00",
+     "time": "2026-10-26T16:05:35.485471+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1291,6 +1297,174 @@
    "channel_actions": []
   },
   "task": "regression",
-  "currency": "a2ef53de3846f4de"
+  "currency": "3c966d64f3c0f6cb",
+  "texts": {
+   "en": {
+    "plan": {
+     "discover_data": "Discover the data",
+     "prediction_time": "Define the prediction moment",
+     "feature_availability": "Decide which variables are available at prediction time",
+     "split": "Split the data before exploring it",
+     "success_criterion": "Fix the success criterion before seeing a model",
+     "structural_eda": "Check the structure of the data",
+     "preprocessing": "Decide how the model prepares the variables",
+     "train_eda": "Explore the target on the training rows",
+     "models": "Fit a mean baseline and a linear model",
+     "model_variant": "Choose the variants to compare",
+     "model_choice": "Choose the model",
+     "final_test": "Open the final test once",
+     "conclusion": "Conclude proportionately"
+    },
+    "moments": {
+     "frame": "Frame the change",
+     "evidence": "Prepare evidence",
+     "compare": "Work and compare",
+     "conclude": "Conclude and hand over"
+    },
+    "next_action": "A proposal on the model choice is waiting for your answer. Read its restatement and say whether you adopt it, or what you would change.",
+    "choice_options": {},
+    "limits": {
+     "unconfirmed_decisions": "Not confirmed by you yet: the model choice, the opening of the final test and the conclusion.",
+     "validation_is_not_independent": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error.",
+     "public_data_already_explored": "The data were explored or published before this study; its rows are not unseen.",
+     "grouped_split_unsupported": "Rows that share a value of car_name can fall in both partitions: this version has no grouped split, so a split reports how many group values its partitions share instead of preventing it. Validation rows of a shared group are not independent of the training rows.",
+     "no_causality": "Associations in observational data do not show that acting on a variable would change the outcome.",
+     "workbench_not_tracked": "Experiments in the notebook workbench are not recorded and are not decisions.",
+     "final_test_sealed": "The final test is still sealed: every figure so far is development evidence, measured on rows used to explore, fit, and choose."
+    },
+    "artifacts": {
+     "editable": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence.",
+     "notebook": "The generated notebook is up to date.",
+     "report": "The report is up to date.",
+     "workbench": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
+    },
+    "recap": [
+     "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
+     "Decided: the prediction moment; the feature availability (excluded acceleration); the split (ordinal cutoff on model_year, validation from 79); the success criterion (validation error at least 10% below the mean baseline); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation).",
+     "Now: Choose the model, waiting for your answer (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg); the report and notebook are up to date.",
+     "Next: whether you adopt the model choice: \"Adopt the linear model.\"",
+     "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
+    ],
+    "digest": {
+     "2": "The prediction moment was proposed.",
+     "3": "You confirmed the prediction moment.",
+     "4": "The feature availability was proposed.",
+     "5": "You confirmed the feature availability.",
+     "6": "The split was proposed.",
+     "7": "You confirmed the split.",
+     "8": "The success criterion was proposed.",
+     "9": "You confirmed the success criterion.",
+     "10": "The preparation of the variables was proposed.",
+     "11": "You confirmed the preparation of the variables.",
+     "13": "The split was computed.",
+     "15": "The target summary was computed.",
+     "17": "The special-value check was computed.",
+     "19": "The data quality check was computed.",
+     "21": "The single-feature signal check was computed.",
+     "23": "The target mean by group of model_year was computed.",
+     "25": "The distribution of weight was computed.",
+     "27": "An analysis was computed.",
+     "29": "The mean baseline was computed.",
+     "31": "The linear model was computed.",
+     "32": "Model variant was proposed.",
+     "33": "You confirmed model variant.",
+     "35": "The variant model was computed.",
+     "37": "The model evaluation was computed.",
+     "38": "The model choice was proposed: the linear model."
+    },
+    "goal": {
+     "intended_use": "Exercise: estimate a future model fuel efficiency from technical characteristics",
+     "decision": "Compare estimation methods without a real decision",
+     "observation_unit": "A vehicle model for a model year",
+     "prediction_time": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured"
+    },
+    "proposals": {
+     "p_7": null
+    }
+   },
+   "fr": {
+    "plan": {
+     "discover_data": "Découvrir les données",
+     "prediction_time": "Définir le moment de la prédiction",
+     "feature_availability": "Décider quelles variables sont disponibles au moment de la prédiction",
+     "split": "Découper les données avant de les explorer",
+     "success_criterion": "Fixer le critère de succès avant de voir un modèle",
+     "structural_eda": "Vérifier la structure des données",
+     "preprocessing": "Décider comment le modèle prépare les variables",
+     "train_eda": "Explorer la cible sur le jeu d'entraînement",
+     "models": "Ajuster une moyenne de référence et un modèle linéaire",
+     "model_variant": "Choisir les variantes à comparer",
+     "model_choice": "Choisir le modèle",
+     "final_test": "Ouvrir une fois l'échantillon de test final",
+     "conclusion": "Conclure avec mesure"
+    },
+    "moments": {
+     "frame": "Cadrer le changement",
+     "evidence": "Préparer les preuves",
+     "compare": "Travailler et comparer",
+     "conclude": "Conclure et transmettre"
+    },
+    "next_action": "Une proposition sur le choix du modèle attend votre réponse. Lisez sa reformulation et dites si vous l'adoptez, ou ce que vous changeriez.",
+    "choice_options": {},
+    "limits": {
+     "unconfirmed_decisions": "Pas encore confirmé par vous : le choix du modèle, l'ouverture de l'échantillon de test final et la conclusion.",
+     "validation_is_not_independent": "Le jeu de validation sert à comparer les modèles et à en choisir un : ses erreurs ne sont donc pas une preuve indépendante de l'erreur future.",
+     "public_data_already_explored": "Les données ont été explorées ou publiées avant cette étude : ses lignes ne sont pas inédites.",
+     "grouped_split_unsupported": "Des lignes qui partagent une valeur de car_name peuvent tomber dans les deux jeux : cette version ne fait pas de découpage groupé, elle compte les valeurs partagées. Le jeu de validation n'est alors pas indépendant du jeu d'entraînement pour ces groupes.",
+     "no_causality": "Des associations dans des données observées ne montrent pas qu'agir sur une variable changerait le résultat.",
+     "workbench_not_tracked": "Les essais faits dans l'atelier (workbench) ne sont pas enregistrés et ne sont pas des décisions.",
+     "final_test_sealed": "L'échantillon de test final est encore scellé : chaque chiffre jusqu'ici est un résultat de développement, mesuré sur des lignes qui ont servi à explorer, ajuster et choisir."
+    },
+    "artifacts": {
+     "editable": "Le notebook éditable de l'étude suit le notebook généré jusqu'à votre première modification ; ensuite il n'est jamais écrasé et ne constitue pas une preuve officielle.",
+     "notebook": "Le notebook généré est à jour.",
+     "report": "Le rapport est à jour.",
+     "workbench": "L'atelier (workbench) est votre espace libre : il est créé une fois, jamais écrasé, et n'est pas suivi par l'étude."
+    },
+    "recap": [
+     "Objectif : « Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques » ; la prédiction est faite « when the technical characteristics of a new model are fixed, before its fuel efficiency is measured ».",
+     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : acceleration) ; le découpage des données (selon model_year, jeu de validation à partir de 79) ; le critère de succès (erreur de validation au moins 10 % sous celle de la moyenne de référence) ; la préparation des variables (par défaut, rien ne change) ; la variante à comparer (une régularisation plus forte).",
+     "Maintenant : Choisir le modèle, en attente de votre réponse (MAE de validation : la moyenne de référence 10,27 mpg; le modèle linéaire 6,48 mpg; la variante 6,51 mpg) ; le rapport et le notebook sont à jour.",
+     "Ensuite : si vous adoptez le choix du modèle : « Adopt the linear model. »",
+     "Limite : Le jeu de validation sert à comparer les modèles et à en choisir un : ses erreurs ne sont donc pas une preuve indépendante de l'erreur future."
+    ],
+    "digest": {
+     "2": "Une proposition a été faite pour le moment de la prédiction.",
+     "3": "Vous avez confirmé le moment de la prédiction.",
+     "4": "Une proposition a été faite pour la disponibilité des variables.",
+     "5": "Vous avez confirmé la disponibilité des variables.",
+     "6": "Une proposition a été faite pour le découpage des données.",
+     "7": "Vous avez confirmé le découpage des données.",
+     "8": "Une proposition a été faite pour le critère de succès.",
+     "9": "Vous avez confirmé le critère de succès.",
+     "10": "Une proposition a été faite pour la préparation des variables.",
+     "11": "Vous avez confirmé la préparation des variables.",
+     "13": "Résultat calculé : le découpage.",
+     "15": "Résultat calculé : le résumé de la cible.",
+     "17": "Résultat calculé : la vérification des valeurs spéciales.",
+     "19": "Résultat calculé : le contrôle de qualité des données.",
+     "21": "Résultat calculé : le signal d'une variable seule.",
+     "23": "Résultat calculé : une moyenne de la cible par groupe de model_year.",
+     "25": "Résultat calculé : la distribution d'une colonne de weight.",
+     "27": "Résultat calculé : une analyse.",
+     "29": "Résultat calculé : le modèle de référence.",
+     "31": "Résultat calculé : le modèle linéaire.",
+     "32": "Une proposition a été faite pour la variante à comparer.",
+     "33": "Vous avez confirmé la variante à comparer.",
+     "35": "Résultat calculé : le modèle variante.",
+     "37": "Résultat calculé : la comparaison des modèles.",
+     "38": "Une proposition a été faite pour le choix du modèle : le modèle linéaire."
+    },
+    "goal": {
+     "intended_use": "Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques",
+     "decision": "Comparer des méthodes d'estimation, sans décision réelle",
+     "observation_unit": "Un modèle de véhicule pour une année de modèle",
+     "prediction_time": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured"
+    },
+    "proposals": {
+     "p_7": null
+    }
+   }
+  }
  }
 }

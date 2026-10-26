@@ -395,6 +395,17 @@
     "language": "fr"
    },
    {
+    "id": "target_look",
+    "term": "regard sur la cible",
+    "definition": "Une analyse qui a lu la variable à prédire, comme son taux ou sa distribution, les valeurs spéciales lues avec elle, ou un résumé par groupe. Chacune est comptée. Plus il y a de regards, plus une forme trouvée parmi eux peut être due au hasard. Par exemple, le contrôle de qualité des colonnes ne lit pas la cible et n'est pas un regard ; la distribution de la variable à prédire en est un.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "structural_eda"
+    ],
+    "language": "fr"
+   },
+   {
     "id": "data_contingent_decision",
     "term": "décision dépendante des données",
     "definition": "Une décision choisie après avoir regardé le résultat dans les données. Elle est permise, mais enregistrée avec les analyses qui l'ont motivée, car un choix adapté au jeu d'entraînement rend les chiffres de validation un peu optimistes. Par exemple, plafonner une variable parce qu'un graphique du résultat semblait étrange à ses extrêmes est une préparation dépendante des données.",
@@ -906,6 +917,82 @@
     },
     "text_status": "shown"
    },
+   "structural_eda": {
+    "concept": {
+     "segments": [
+      {
+       "text": "regard sur la cible"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "Le contrôle de qualité lit les lignes de développement sans la cible ; la préparation décidée à partir de lui vient donc avant tout regard sur la cible."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Les cellules manquantes par colonne, les lignes répétées, les catégories de chaque colonne catégorielle avec les plus rares, et l'étendue de chaque colonne numérique comparée à celle que déclare le cas. Les lignes lues sont enregistrées comme une inspection de structure."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "La préparation proposée cite ce que ce contrôle a trouvé ; elle n'est pas dépendante des données tant qu'aucun regard sur la cible ne l'a précédée."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Une préparation proposée après un regard sur la cible reste marquée dépendante des données."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "preprocessing": {
+    "concept": {
+     "segments": [
+      {
+       "text": "décision dépendante des données"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "L'exploration des lignes d'entraînement peut motiver la façon dont le modèle prépare les variables ; les analyses qui l'ont motivée sont enregistrées avec elle."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Les indicateurs de valeur manquante, le nombre minimal de lignes d'une catégorie, les plafonds aux quantiles d'entraînement et les transformations logarithmiques sont appris sur les lignes d'entraînement seulement et appliqués tels quels aux lignes de validation. Le choix par défaut ne change rien."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Une préparation choisie après avoir regardé la cible est marquée dépendante des données ; les erreurs de validation peuvent alors être un peu optimistes."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "La changer réajuste le modèle linéaire et demande de confirmer à nouveau le choix du modèle et la conclusion ; l'exploration ne change pas."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
    "train_eda": {
     "concept": {
      "segments": [
@@ -959,44 +1046,6 @@
      "segments": [
       {
        "text": "Un marqueur de valeur manquante sur une variable numérique devient un indicateur et une valeur imputée dans le modèle, jamais un nombre ordinaire."
-      }
-     ]
-    },
-    "text_status": "shown"
-   },
-   "preprocessing": {
-    "concept": {
-     "segments": [
-      {
-       "text": "décision dépendante des données"
-      }
-     ]
-    },
-    "context": {
-     "segments": [
-      {
-       "text": "L'exploration des lignes d'entraînement peut motiver la façon dont le modèle prépare les variables ; les analyses qui l'ont motivée sont enregistrées avec elle."
-      }
-     ]
-    },
-    "method": {
-     "segments": [
-      {
-       "text": "Les indicateurs de valeur manquante, le nombre minimal de lignes d'une catégorie, les plafonds aux quantiles d'entraînement et les transformations logarithmiques sont appris sur les lignes d'entraînement seulement et appliqués tels quels aux lignes de validation. Le choix par défaut ne change rien."
-      }
-     ]
-    },
-    "interpretation": {
-     "segments": [
-      {
-       "text": "Une préparation choisie après avoir regardé la cible est marquée dépendante des données ; les erreurs de validation peuvent alors être un peu optimistes."
-      }
-     ]
-    },
-    "consequence": {
-     "segments": [
-      {
-       "text": "La changer réajuste le modèle linéaire et demande de confirmer à nouveau le choix du modèle et la conclusion ; l'exploration ne change pas."
       }
      ]
     },

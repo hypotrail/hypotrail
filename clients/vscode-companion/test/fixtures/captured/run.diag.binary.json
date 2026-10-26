@@ -2589,8 +2589,8 @@
    "started_revision": 46,
    "invalidation": null,
    "exposure_ids": [
-    "x_760b4dbba8254b96b7b9386dd7e02d55",
-    "x_3647c05a5fac47349bb1575b620df9c3"
+    "x_a9d7560977e8425c939f9ea8178c5bd5",
+    "x_ce000290070b4fb49f9b50c2e954c78c"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2659,8 +2659,8 @@
     "revision": 47,
     "position": {
      "step_id": "final_test",
-     "completed": 11,
-     "total": 13
+     "completed": 12,
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -2695,6 +2695,7 @@
      "uncertainty"
     ]
    }
-  }
+  },
+  "question_junior": "Where does the model err at the rule, and can its score be read as a probability?"
  }
 }

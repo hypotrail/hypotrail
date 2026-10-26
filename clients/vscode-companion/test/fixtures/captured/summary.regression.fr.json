@@ -66,13 +66,18 @@
     "status": "done"
    },
    {
-    "id": "train_eda",
-    "title": "Explorer le jeu d'entraînement",
+    "id": "structural_eda",
+    "title": "Vérifier la structure des données",
     "status": "done"
    },
    {
     "id": "preprocessing",
     "title": "Décider comment le modèle prépare les variables",
+    "status": "done"
+   },
+   {
+    "id": "train_eda",
+    "title": "Explorer la cible sur le jeu d'entraînement",
     "status": "done"
    },
    {
@@ -119,8 +124,8 @@
     "revision": 32,
     "position": {
      "step_id": "model_choice",
-     "completed": 9,
-     "total": 12
+     "completed": 10,
+     "total": 13
     },
     "learned": [],
     "limitations": [
@@ -563,8 +568,9 @@
     "id": "evidence",
     "title": "Préparer les preuves",
     "steps": [
-     "train_eda",
-     "preprocessing"
+     "structural_eda",
+     "preprocessing",
+     "train_eda"
     ]
    },
    {
@@ -628,7 +634,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-26T13:21:47.972632+00:00",
+   "boundary_time": "2026-10-26T16:05:38.087469+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -637,7 +643,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-26T13:21:48.303310+00:00",
+     "time": "2026-10-26T16:05:38.208477+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -660,7 +666,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-26T13:21:49.491444+00:00",
+     "time": "2026-10-26T16:05:38.606206+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -690,7 +696,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-26T13:21:50.453458+00:00",
+     "time": "2026-10-26T16:05:38.980290+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -713,7 +719,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-26T13:21:51.628667+00:00",
+     "time": "2026-10-26T16:05:39.517287+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -743,7 +749,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-26T13:21:52.953679+00:00",
+     "time": "2026-10-26T16:05:40.335203+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -766,7 +772,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-26T13:21:54.206279+00:00",
+     "time": "2026-10-26T16:05:40.898999+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -796,7 +802,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-26T13:21:55.485661+00:00",
+     "time": "2026-10-26T16:05:41.441831+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -819,7 +825,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-26T13:21:56.622346+00:00",
+     "time": "2026-10-26T16:05:41.984995+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -849,7 +855,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-26T13:21:58.146434+00:00",
+     "time": "2026-10-26T16:05:42.678592+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -872,7 +878,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-26T13:21:59.588349+00:00",
+     "time": "2026-10-26T16:05:43.219962+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -902,7 +908,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-26T13:22:01.197438+00:00",
+     "time": "2026-10-26T16:05:43.868782+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -925,7 +931,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-26T13:22:02.907987+00:00",
+     "time": "2026-10-26T16:05:44.552529+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -948,7 +954,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-26T13:22:04.777579+00:00",
+     "time": "2026-10-26T16:05:45.219538+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -971,7 +977,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-26T13:22:06.810681+00:00",
+     "time": "2026-10-26T16:05:45.987911+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -994,7 +1000,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-26T13:22:09.181716+00:00",
+     "time": "2026-10-26T16:05:46.946727+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1017,7 +1023,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-26T13:22:10.950836+00:00",
+     "time": "2026-10-26T16:05:47.716482+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1040,7 +1046,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-26T13:22:12.834386+00:00",
+     "time": "2026-10-26T16:05:48.484770+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1063,7 +1069,7 @@
     },
     {
      "revision": 26,
-     "time": "2026-10-26T13:22:14.299464+00:00",
+     "time": "2026-10-26T16:05:49.161167+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1086,7 +1092,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-26T13:22:15.911558+00:00",
+     "time": "2026-10-26T16:05:50.001729+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1119,7 +1125,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-26T13:22:17.946297+00:00",
+     "time": "2026-10-26T16:05:51.000562+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1142,7 +1148,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-26T13:22:19.926125+00:00",
+     "time": "2026-10-26T16:05:51.777636+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1165,7 +1171,7 @@
     },
     {
      "revision": 32,
-     "time": "2026-10-26T13:22:21.445850+00:00",
+     "time": "2026-10-26T16:05:52.605552+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1203,7 +1209,7 @@
    "channel_actions": []
   },
   "task": "regression",
-  "currency": "5e278fea678c303c",
+  "currency": "2c0257b5925796dc",
   "texts": {
    "en": {
     "plan": {
@@ -1212,8 +1218,9 @@
      "feature_availability": "Decide which variables are available at prediction time",
      "split": "Split the data before exploring it",
      "success_criterion": "Fix the success criterion before seeing a model",
-     "train_eda": "Explore the training partition",
+     "structural_eda": "Check the structure of the data",
      "preprocessing": "Decide how the model prepares the variables",
+     "train_eda": "Explore the target on the training rows",
      "models": "Fit a mean baseline and a linear model",
      "model_variant": "Choose the variants to compare",
      "model_choice": "Choose the model",
@@ -1291,8 +1298,9 @@
      "feature_availability": "Décider quelles variables sont disponibles au moment de la prédiction",
      "split": "Découper les données avant de les explorer",
      "success_criterion": "Fixer le critère de succès avant de voir un modèle",
-     "train_eda": "Explorer le jeu d'entraînement",
+     "structural_eda": "Vérifier la structure des données",
      "preprocessing": "Décider comment le modèle prépare les variables",
+     "train_eda": "Explorer la cible sur le jeu d'entraînement",
      "models": "Ajuster une moyenne de référence et un modèle linéaire",
      "model_variant": "Choisir les variantes à comparer",
      "model_choice": "Choisir le modèle",

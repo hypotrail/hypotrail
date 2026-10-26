@@ -859,7 +859,7 @@
    "started_revision": 36,
    "invalidation": null,
    "exposure_ids": [
-    "x_86daa7ddb4d24b29ac14188f7d890ada"
+    "x_9bd58052fc344e168a14154bff53e2b6"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -902,24 +902,24 @@
   },
   "next_action": {
    "kind": "run",
-   "step": "train_eda",
-   "activity": "eda.special_values",
-   "message": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+   "step": "structural_eda",
+   "activity": "eda.quality",
+   "message": "Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
    "audience": "junior",
-   "junior_message": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+   "junior_message": "Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: the special-value check, run without asking you. What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+   "junior_digest": "Next: the data quality check, run without asking you. Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",
     "language": "en",
     "revision": 37,
     "position": {
-     "step_id": "train_eda",
+     "step_id": "structural_eda",
      "completed": 11,
-     "total": 13
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -947,13 +947,14 @@
      "continue": "Let's continue",
      "explain": "Explain first"
     },
-    "question": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+    "question": "Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
     "evidence_refs": [],
     "detail_topics": [
      "metric",
      "uncertainty"
     ]
    }
-  }
+  },
+  "question_junior": "On rows nothing had seen, where does the chosen model err at the rule, and do its scores match the observed rates?"
  }
 }

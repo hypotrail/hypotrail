@@ -2617,7 +2617,7 @@
    "started_revision": 31,
    "invalidation": null,
    "exposure_ids": [
-    "x_846007cec6b44e12bccbbce3e2148ba9"
+    "x_6865f1fd6e79438c980d5145a2f1e5fb"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2675,9 +2675,9 @@
     "language": "en",
     "revision": 32,
     "position": {
-     "step_id": "train_eda",
+     "step_id": "structural_eda",
      "completed": 10,
-     "total": 13
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -2714,6 +2714,7 @@
      "uncertainty"
     ]
    }
-  }
+  },
+  "question_junior": "Where does the model err at the rule, and can its score be read as a probability?"
  }
 }

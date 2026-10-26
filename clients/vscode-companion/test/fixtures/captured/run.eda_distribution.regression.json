@@ -142,7 +142,7 @@
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_e0b53a179d4a4ccb8883447fdabcc33f"
+    "x_f5a8c5b82eca4366aed4742fbc188df1"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -201,8 +201,8 @@
     "revision": 25,
     "position": {
      "step_id": "models",
-     "completed": 7,
-     "total": 12
+     "completed": 8,
+     "total": 13
     },
     "learned": [],
     "limitations": [
@@ -237,6 +237,7 @@
      "uncertainty"
     ]
    }
-  }
+  },
+  "question_junior": "How are the values of weight distributed among the training rows?"
  }
 }

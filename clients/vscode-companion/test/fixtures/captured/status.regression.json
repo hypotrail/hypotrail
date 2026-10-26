@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/auto mpg",
    "revision": 38,
-   "updated": "2026-10-26T12:03:06.894491+00:00",
+   "updated": "2026-10-26T16:05:35.485471+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
@@ -123,16 +123,15 @@
      "current": false
     },
     {
-     "id": "train_eda",
-     "title": "Explore the training partition",
-     "question": "What do the training rows show about the distribution of the target and the special values? Other explorations (the quality overview, means by variable, distributions, the single-feature signal) each answer a question stated first; every look at the target is counted.",
-     "expected_output": "A target summary (count, mean, standard deviation, quantiles, missing values) and special-value counts on training rows, with their exposure recorded.",
-     "completion": "The training EDA results are current.",
+     "id": "structural_eda",
+     "title": "Check the structure of the data",
+     "question": "Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
+     "expected_output": "A current quality overview of the development rows, read without the target.",
+     "completion": "The quality overview is current.",
      "pause": null,
      "decision": null,
      "activities": [
-      "eda.target_summary",
-      "eda.special_values"
+      "eda.quality"
      ],
      "decide_first": true,
      "missing_results": [],
@@ -145,12 +144,33 @@
     {
      "id": "preprocessing",
      "title": "Decide how the model prepares the variables",
-     "question": "How should the model treat missing values, rare categories, extreme values and skewed variables? Every parameter is learnt on training rows only.",
+     "question": "How should the model treat missing values, rare categories, extreme values and skewed variables? The draft reads the quality check, which does not read the target; every parameter is learnt only on the rows each model is fitted on.",
      "expected_output": "A confirmed preprocessing, with the explorations that motivated it.",
      "completion": "Decision preprocessing is confirmed.",
      "pause": 2,
      "decision": "preprocessing",
      "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "split",
+      "structural_eda"
+     ],
+     "status": "done",
+     "current": false
+    },
+    {
+     "id": "train_eda",
+     "title": "Explore the target on the training rows",
+     "question": "What do the training rows show about the distribution of the target and the special values? Each of these analyses is a look at the target: it reads the variable to predict, and every look is counted. The preparation is already decided, before these looks.",
+     "expected_output": "A target summary (count, mean, standard deviation, quantiles, missing values) and special-value counts on training rows, with their exposure recorded.",
+     "completion": "The training EDA results are current.",
+     "pause": null,
+     "decision": null,
+     "activities": [
+      "eda.target_summary",
+      "eda.special_values"
+     ],
      "decide_first": true,
      "missing_results": [],
      "requires": [
@@ -281,8 +301,8 @@
      "revision": 38,
      "position": {
       "step_id": "model_choice",
-      "completed": 9,
-      "total": 12
+      "completed": 10,
+      "total": 13
      },
      "learned": [],
      "limitations": [
@@ -328,7 +348,7 @@
      "restatement": "Adopt the linear model.",
      "rationale": "Lower error on later years.",
      "revision": 38,
-     "created": "2026-10-26T12:03:06.894444+00:00",
+     "created": "2026-10-26T16:05:35.485425+00:00",
      "labels": null,
      "label": "Adopt the linear model.",
      "origin": {
@@ -352,7 +372,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-26T12:02:31.108083+00:00",
+      "time": "2026-10-26T16:05:20.537610+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -360,7 +380,8 @@
       "mode": "guided",
       "warnings": [],
       "reason_given": null,
-      "adoption_question": false
+      "adoption_question": false,
+      "label": "You decide the prediction_time as stated."
      },
      "open_proposals": [],
      "feature_basis": null
@@ -389,7 +410,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-26T12:02:33.279804+00:00",
+      "time": "2026-10-26T16:05:21.254176+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -397,7 +418,8 @@
       "mode": "guided",
       "warnings": [],
       "reason_given": null,
-      "adoption_question": false
+      "adoption_question": false,
+      "label": "You decide the feature_availability as stated."
      },
      "open_proposals": [],
      "feature_basis": {
@@ -428,7 +450,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-26T12:02:35.754105+00:00",
+      "time": "2026-10-26T16:05:22.361069+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -436,7 +458,8 @@
       "mode": "guided",
       "warnings": [],
       "reason_given": null,
-      "adoption_question": false
+      "adoption_question": false,
+      "label": "You decide the split as stated."
      },
      "open_proposals": [],
      "feature_basis": null
@@ -459,7 +482,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-26T12:02:38.178304+00:00",
+      "time": "2026-10-26T16:05:23.496126+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -467,7 +490,8 @@
       "mode": "guided",
       "warnings": [],
       "reason_given": null,
-      "adoption_question": false
+      "adoption_question": false,
+      "label": "You decide the success_criterion as stated."
      },
      "open_proposals": [],
      "feature_basis": null
@@ -495,7 +519,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-26T12:02:40.880825+00:00",
+      "time": "2026-10-26T16:05:24.589196+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -503,7 +527,8 @@
       "mode": "guided",
       "warnings": [],
       "reason_given": null,
-      "adoption_question": false
+      "adoption_question": false,
+      "label": "You decide the preprocessing as stated."
      },
      "open_proposals": [],
      "feature_basis": null
@@ -526,7 +551,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 33,
-      "time": "2026-10-26T12:03:01.797395+00:00",
+      "time": "2026-10-26T16:05:32.851257+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -534,7 +559,8 @@
       "mode": "guided",
       "warnings": [],
       "reason_given": null,
-      "adoption_question": false
+      "adoption_question": false,
+      "label": "You decide the model_variant as stated."
      },
      "open_proposals": [],
      "feature_basis": null
@@ -928,7 +954,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_284db43c31758f9aef75cd0b",
-     "exposure_id": "x_d4a83d3eb40340f0a3873323349c982b",
+     "exposure_id": "x_aa073ab9b8c746948e52472130763e65",
      "started_revision": 26,
      "integrity": "ok"
     },
@@ -1078,7 +1104,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_622dd0c704d6af123eea761a",
-     "exposure_id": "x_e0b53a179d4a4ccb8883447fdabcc33f",
+     "exposure_id": "x_f5a8c5b82eca4366aed4742fbc188df1",
      "started_revision": 24,
      "integrity": "ok"
     },
@@ -1316,7 +1342,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_5f95a7d242e4ea751ed82afb",
-     "exposure_id": "x_1ddc14c6c58c4b16868868aa3238bfbf",
+     "exposure_id": "x_4fd25e002cd84f3b9390afdc97cbb430",
      "started_revision": 22,
      "integrity": "ok"
     },
@@ -2524,7 +2550,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_808e66ec55e19cf01a72e71c",
-     "exposure_id": "x_9ecc073aa47d44bea35e22408ecc1e43",
+     "exposure_id": "x_bb9a486c8920426e8111ca7c8d68d3c8",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -2650,7 +2676,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_75c47b1ef767a30eb39cdb4d",
-     "exposure_id": "x_9283d22113b942079d006b8457356eca",
+     "exposure_id": "x_37d5e03a89d24740aaecd627841bffde",
      "started_revision": 20,
      "integrity": "ok"
     },
@@ -2720,7 +2746,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_305370681065d9971a93f227",
-     "exposure_id": "x_870675bea2324368a8e6c81bfc764b27",
+     "exposure_id": "x_9a0e76d042464073bc139118ded2bb27",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -2786,7 +2812,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_f37508d21e9ebda7c2ebce28",
-     "exposure_id": "x_dddd25e77c3c40aca9b3bb57275258ed",
+     "exposure_id": "x_739ba6c3d23b46ee85cbcae5ff332226",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -3136,7 +3162,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_952532c3c79c0a600a6ca16b",
-     "exposure_id": "x_d07460944486409089e996ce02d4d9a1",
+     "exposure_id": "x_5dce08c077c04e6eb8beda9dc4174d78",
      "started_revision": 36,
      "integrity": "ok"
     },
@@ -3216,7 +3242,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_aa1477c41bc44c975f9888ce",
-     "exposure_id": "x_191b4b63a09d4f9d80e87f0e05c55138",
+     "exposure_id": "x_3bde1c04617d4c1b85c5556ada9893dc",
      "started_revision": 28,
      "integrity": "ok"
     },
@@ -3361,7 +3387,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_2033db067e905124ef78ea82",
-     "exposure_id": "x_dbab92bbad9445a196d3ae9846b107dd",
+     "exposure_id": "x_08e8ce79e4d04528964366fb8c6260d2",
      "started_revision": 30,
      "integrity": "ok"
     },
@@ -3516,7 +3542,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_9ef87905207eafeced71da38",
-     "exposure_id": "x_1474cc73fd87474fbd88b8d9b9d3699f",
+     "exposure_id": "x_132ab0bfa20348c0a13de9b191fafb6d",
      "started_revision": 34,
      "integrity": "ok"
     },
@@ -3609,7 +3635,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ea1ff066194e9ce5fbc1533b",
-     "exposure_id": "x_7e82578f51bc4a3592a8d61e70e6a547",
+     "exposure_id": "x_06e3ca90c4bd4b4fbbec3ac289f53f3e",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -3635,7 +3661,7 @@
       "last_ok_revision": 38,
       "path": "notebooks/study_editable.py",
       "revision": 38,
-      "sha256": "7b777a2b50f5710d8c6b023c07e4fc86a2d64b766ff27e4888d4596ea8fe8a61",
+      "sha256": "e36d4f7a1fc99c18bf37f13661deee53b1d1016f225e57c8e39881d8af2f345a",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -3661,14 +3687,14 @@
        "e974a2a4bfb270e677f782424bf69a59b1753d8245ecfcaa3fab4183ba0593fa",
        "f36afca7f3ef4910d3c0a3ad25d96fd5b8d8d4385149eb4ba7b2901bc21c9b18"
       ],
-      "edit_check_sha256": "61ef5704ace93e40cc1596f76c727a6764be1fb6c5df2eac671d7c36468d302e",
+      "edit_check_sha256": "16f221911033c54ede50e62f1f875998cfb1a41e549c36f1cce671fbe44d4056",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
       "last_ok_revision": 38,
       "path": "notebooks/study_generated.py",
       "revision": 38,
-      "sha256": "1caffb2db9d96dec0b1253bdb13725ffd9e5f0916cc894a6c121c98b5a749bfe",
+      "sha256": "592986ecfdb5e0684a699f5bbf8e4faa1099c9ed107f48327bbab39c25111fdb",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -3700,9 +3726,9 @@
       "last_ok_revision": 38,
       "path": "reports/study.html",
       "revision": 38,
-      "sha256": "33e689d55a353d34d3ad9f2b2ebbc2d6c01984e4218a9b29762b247c416e1347",
+      "sha256": "054b385a3290b2397e710bee873e5157e40f119d2cda314c7cfbeb1191d42600",
       "status": "ok",
-      "template_version": 2,
+      "template_version": 3,
       "user_edits_preserved": [],
       "recorded_status": "ok",
       "stale_reason": null,
@@ -3995,7 +4021,8 @@
       "allowed": true,
       "excluded_reason": null,
       "motivated": false,
-      "words": "the linear model"
+      "words": "the linear model",
+      "junior_words": "the linear model"
      },
      {
       "family": "ebm",
@@ -4007,7 +4034,8 @@
       "allowed": true,
       "excluded_reason": null,
       "motivated": false,
-      "words": "an Explainable Boosting Machine"
+      "words": "an Explainable Boosting Machine",
+      "junior_words": "an Explainable Boosting Machine (EBM), a readable model with one curve per variable"
      },
      {
       "family": "hgb",
@@ -4019,7 +4047,8 @@
       "allowed": true,
       "excluded_reason": null,
       "motivated": false,
-      "words": "histogram gradient boosting"
+      "words": "histogram gradient boosting",
+      "junior_words": "tree boosting (the same family as XGBoost and LightGBM)"
      }
     ],
     "shortlist": [
@@ -4036,6 +4065,13 @@
      "linear",
      "ebm",
      "hgb"
+    ],
+    "not_offered": [
+     {
+      "name": "random forest",
+      "words": "a random forest",
+      "why": "A random forest usually does less well than a tuned boosting on tabular data, and a variant of the same kind would spend a trial for little new information."
+     }
     ]
    },
    "assurance": {
@@ -4099,8 +4135,8 @@
      "revision": 38,
      "position": {
       "step_id": "model_choice",
-      "completed": 9,
-      "total": 12
+      "completed": 10,
+      "total": 13
      },
      "learned": [],
      "limitations": [
@@ -4141,6 +4177,104 @@
      "stale_result_ids": [],
      "final_test_opened": false,
      "changed_after_opening": false
+    }
+   },
+   "case_texts": {
+    "facts": {
+     "target": {
+      "en": "mpg: city-cycle fuel efficiency in miles per gallon according to the source",
+      "fr": "mpg : consommation en cycle urbain, en miles par gallon, selon la source"
+     },
+     "observation_unit": {
+      "en": "A vehicle model for a model year",
+      "fr": "Un modèle de véhicule pour une année de modèle"
+     },
+     "intended_use": {
+      "en": "Exercise: estimate a future model fuel efficiency from technical characteristics",
+      "fr": "Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques"
+     },
+     "decision": {
+      "en": "Compare estimation methods without a real decision",
+      "fr": "Comparer des méthodes d'estimation, sans décision réelle"
+     },
+     "prediction_time": {
+      "en": "When technical characteristics are fixed, before measuring fuel efficiency",
+      "fr": "Quand les caractéristiques techniques sont fixées, avant de mesurer la consommation"
+     },
+     "repeated_observations": {
+      "en": "Model years 70 to 82 (read as 1970 to 1982). The 398 rows carry 305 distinct car names: some names occur in several rows, including across model years.",
+      "fr": "Années de modèle 70 à 82 (lues comme 1970 à 1982). Les 398 lignes portent 305 noms de voitures distincts ; certains noms apparaissent dans plusieurs lignes, y compris d'une année de modèle à l'autre."
+     },
+     "origin_meaning": {
+      "en": "Codes 1, 2, 3 are not documented in auto-mpg.names (often interpreted as USA, Europe, Japan)",
+      "fr": "Les codes 1, 2, 3 ne sont pas documentés dans auto-mpg.names (souvent interprétés comme USA, Europe, Japon)"
+     }
+    },
+    "special_values": {
+     "horsepower=?": {
+      "en": "Missing value.",
+      "fr": "Valeur manquante."
+     }
+    },
+    "groups": {
+     "Outcome": {
+      "en": "Outcome",
+      "fr": "Résultat"
+     },
+     "Engine": {
+      "en": "Engine",
+      "fr": "Moteur"
+     },
+     "Body and performance": {
+      "en": "Body and performance",
+      "fr": "Carrosserie et performances"
+     },
+     "Model": {
+      "en": "Model",
+      "fr": "Modèle"
+     }
+    },
+    "availability": {
+     "mpg": {
+      "en": "Teaching scenario assumption; not established by the dataset documentation",
+      "fr": "Hypothèse du scénario pédagogique ; non établi par la documentation des données"
+     },
+     "cylinders": {
+      "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+      "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+     },
+     "displacement": {
+      "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+      "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+     },
+     "horsepower": {
+      "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+      "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+     },
+     "weight": {
+      "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+      "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+     },
+     "acceleration": {
+      "en": "Availability at prediction time is not documented",
+      "fr": "La disponibilité au moment de la prédiction n'est pas documentée"
+     },
+     "model_year": {
+      "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+      "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+     },
+     "origin": {
+      "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+      "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+     },
+     "car_name": {
+      "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+      "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+     }
+    },
+    "row_unit": {
+     "en": "A vehicle model for a model year",
+     "fr": "Un modèle de véhicule pour une année de modèle"
     }
    }
   }

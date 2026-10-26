@@ -38,7 +38,7 @@
     "status": "confirmed"
    }
   },
-  "current_step": "train_eda",
+  "current_step": "structural_eda",
   "plan": [
    {
     "id": "discover_data",
@@ -66,14 +66,19 @@
     "status": "done"
    },
    {
-    "id": "train_eda",
-    "title": "Explore the development rows",
+    "id": "structural_eda",
+    "title": "Check the structure of the data",
     "status": "ready"
    },
    {
     "id": "preprocessing",
     "title": "Decide how the model prepares the variables",
     "status": "done"
+   },
+   {
+    "id": "train_eda",
+    "title": "Explore the target on the development rows",
+    "status": "ready"
    },
    {
     "id": "models",
@@ -123,9 +128,9 @@
     "language": "en",
     "revision": 22,
     "position": {
-     "step_id": "train_eda",
+     "step_id": "structural_eda",
      "completed": 7,
-     "total": 13
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -532,7 +537,7 @@
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
    "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (5-fold cross-validation, kfold stratified); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform).",
-   "Now: Explore the development rows; the report and notebook are up to date.",
+   "Now: Check the structure of the data; the report and notebook are up to date.",
    "Next: whether you adopt the variant: \"You compare three variants of the candidate, each with its question.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."
   ],
@@ -611,8 +616,9 @@
     "id": "evidence",
     "title": "Prepare evidence",
     "steps": [
-     "train_eda",
-     "preprocessing"
+     "structural_eda",
+     "preprocessing",
+     "train_eda"
     ]
    },
    {
@@ -675,7 +681,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-26T12:00:13.273193+00:00",
+   "boundary_time": "2026-10-26T16:04:28.697994+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -684,7 +690,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-26T12:00:13.574470+00:00",
+     "time": "2026-10-26T16:04:28.829350+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -707,7 +713,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-26T12:00:14.687609+00:00",
+     "time": "2026-10-26T16:04:29.382587+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -737,7 +743,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-26T12:00:15.761856+00:00",
+     "time": "2026-10-26T16:04:29.859534+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -760,7 +766,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-26T12:00:17.178006+00:00",
+     "time": "2026-10-26T16:04:30.462796+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -790,7 +796,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-26T12:00:18.721952+00:00",
+     "time": "2026-10-26T16:04:31.196550+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -813,7 +819,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-26T12:00:20.389745+00:00",
+     "time": "2026-10-26T16:04:32.121196+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -843,7 +849,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-26T12:00:22.546629+00:00",
+     "time": "2026-10-26T16:04:32.881204+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -866,7 +872,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-26T12:00:24.474672+00:00",
+     "time": "2026-10-26T16:04:33.664662+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -896,7 +902,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-26T12:00:26.432724+00:00",
+     "time": "2026-10-26T16:04:34.479739+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -919,7 +925,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-26T12:00:28.411669+00:00",
+     "time": "2026-10-26T16:04:35.455827+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -949,7 +955,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-26T12:00:30.935339+00:00",
+     "time": "2026-10-26T16:04:36.464201+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -972,7 +978,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-26T12:00:33.478193+00:00",
+     "time": "2026-10-26T16:04:37.629128+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -995,7 +1001,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-26T12:00:36.083401+00:00",
+     "time": "2026-10-26T16:04:38.747500+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1018,7 +1024,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-26T12:00:51.256505+00:00",
+     "time": "2026-10-26T16:04:40.405255+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1041,7 +1047,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-26T12:00:55.036274+00:00",
+     "time": "2026-10-26T16:04:41.690535+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1064,7 +1070,7 @@
     },
     {
      "revision": 22,
-     "time": "2026-10-26T12:00:57.327251+00:00",
+     "time": "2026-10-26T16:04:42.640247+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1102,6 +1108,160 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "c316182a317de14c"
+  "currency": "080d044142909336",
+  "texts": {
+   "en": {
+    "plan": {
+     "discover_data": "Discover the data",
+     "prediction_time": "Define the prediction moment",
+     "feature_availability": "Decide which variables are available at prediction time",
+     "split": "Split the data before exploring it",
+     "success_criterion": "Fix the success criterion before seeing a model",
+     "structural_eda": "Check the structure of the data",
+     "preprocessing": "Decide how the model prepares the variables",
+     "train_eda": "Explore the target on the development rows",
+     "models": "Fit a baseline and a logistic model",
+     "model_variant": "Choose the variants to compare",
+     "model_choice": "Choose the model",
+     "policy": "Choose a decision policy",
+     "final_test": "Open the final test once",
+     "conclusion": "Conclude proportionately"
+    },
+    "moments": {
+     "frame": "Frame the change",
+     "evidence": "Prepare evidence",
+     "compare": "Work and compare",
+     "conclude": "Conclude and hand over"
+    },
+    "next_action": "A proposal on the variant to compare is waiting for your answer. Read its restatement and say whether you adopt it, or what you would change.",
+    "choice_options": {},
+    "limits": {
+     "unconfirmed_decisions": "Not confirmed by you yet: the variant to compare, the model choice, the decision policy, the opening of the final test and the conclusion.",
+     "validation_is_not_independent": "Out-of-fold predictions on the development rows are used to compare the models, the variant and the rule, so they are development evidence, not independent evidence of future performance. Only the sealed final test, opened once, is.",
+     "public_data_already_explored": "The data were explored or published before this study; its rows are not unseen.",
+     "no_time_or_entity_identifier": "The data have no time column or entity identifier, so the study cannot check drift over time or repeated entities across partitions.",
+     "uncertain_features_included": "These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment.",
+     "no_causality": "Associations in observational data do not show that acting on a variable would change the outcome.",
+     "workbench_not_tracked": "Experiments in the notebook workbench are not recorded and are not decisions.",
+     "final_test_sealed": "The final test is still sealed: every figure so far is development evidence, measured on rows used to explore, fit, and choose."
+    },
+    "artifacts": {
+     "editable": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence.",
+     "notebook": "The generated notebook is up to date.",
+     "report": "The report is up to date.",
+     "workbench": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
+    },
+    "recap": [
+     "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
+     "Decided: the prediction moment; the feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); the split (5-fold cross-validation, stratified on the outcome); the success criterion (precision gain over the baseline of at least 5 points); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform).",
+     "Now: Choose the variants to compare, waiting for your answer; the report and notebook are up to date.",
+     "Next: whether you adopt the variant: \"You compare three variants of the candidate, each with its question.\"",
+     "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."
+    ],
+    "digest": {
+     "2": "The prediction moment was proposed.",
+     "3": "You confirmed the prediction moment.",
+     "4": "The feature availability was proposed.",
+     "5": "You confirmed the feature availability.",
+     "6": "The split was proposed.",
+     "7": "You confirmed the split.",
+     "8": "The success criterion was proposed.",
+     "9": "You confirmed the success criterion.",
+     "10": "The preparation of the variables was proposed.",
+     "11": "You confirmed the preparation of the variables.",
+     "13": "The split was computed.",
+     "15": "The target rate was computed.",
+     "17": "The baseline model was computed.",
+     "19": "The logistic model was computed.",
+     "21": "The development diagnostics was computed.",
+     "22": "Model variant was proposed."
+    },
+    "goal": {
+     "intended_use": "Teaching simulation: prioritize contacts when call capacity is limited",
+     "decision": "Select contacts to call first",
+     "observation_unit": "A customer contacted during a telephone campaign",
+     "prediction_time": "before the first contact of the campaign, from the client file"
+    },
+    "proposals": {
+     "p_6": null
+    }
+   },
+   "fr": {
+    "plan": {
+     "discover_data": "Découvrir les données",
+     "prediction_time": "Définir le moment de la prédiction",
+     "feature_availability": "Décider quelles variables sont disponibles au moment de la prédiction",
+     "split": "Découper les données avant de les explorer",
+     "success_criterion": "Fixer le critère de succès avant de voir un modèle",
+     "structural_eda": "Vérifier la structure des données",
+     "preprocessing": "Décider comment le modèle prépare les variables",
+     "train_eda": "Explorer la cible sur l'échantillon de développement",
+     "models": "Ajuster un modèle de référence et un modèle logistique",
+     "model_variant": "Choisir les variantes à comparer",
+     "model_choice": "Choisir le modèle",
+     "policy": "Choisir une règle de décision",
+     "final_test": "Ouvrir une fois l'échantillon de test final",
+     "conclusion": "Conclure avec mesure"
+    },
+    "moments": {
+     "frame": "Cadrer le changement",
+     "evidence": "Préparer les preuves",
+     "compare": "Travailler et comparer",
+     "conclude": "Conclure et transmettre"
+    },
+    "next_action": "Une proposition sur la variante à comparer attend votre réponse. Lisez sa reformulation et dites si vous l'adoptez, ou ce que vous changeriez.",
+    "choice_options": {},
+    "limits": {
+     "unconfirmed_decisions": "Pas encore confirmé par vous : la variante à comparer, le choix du modèle, la règle de décision, l'ouverture de l'échantillon de test final et la conclusion.",
+     "validation_is_not_independent": "Les prédictions hors pli de l'échantillon de développement servent à comparer les modèles, la variante et la règle : ce sont des résultats de développement, pas une preuve indépendante de la performance future. Seul l'échantillon de test final scellé, ouvert une fois, l'est.",
+     "public_data_already_explored": "Les données ont été explorées ou publiées avant cette étude : ses lignes ne sont pas inédites.",
+     "no_time_or_entity_identifier": "Les données n'ont ni colonne de temps ni identifiant d'entité : l'étude ne peut pas vérifier une dérive dans le temps ni des entités répétées entre les échantillons.",
+     "uncertain_features_included": "Ces variables sont utilisées alors que leur disponibilité au moment de la prédiction est incertaine : age, contact, default, education, housing, job, loan, marital. Vérifiez qu'elles sont connues à ce moment-là.",
+     "no_causality": "Des associations dans des données observées ne montrent pas qu'agir sur une variable changerait le résultat.",
+     "workbench_not_tracked": "Les essais faits dans l'atelier (workbench) ne sont pas enregistrés et ne sont pas des décisions.",
+     "final_test_sealed": "L'échantillon de test final est encore scellé : chaque chiffre jusqu'ici est un résultat de développement, mesuré sur des lignes qui ont servi à explorer, ajuster et choisir."
+    },
+    "artifacts": {
+     "editable": "Le notebook éditable de l'étude suit le notebook généré jusqu'à votre première modification ; ensuite il n'est jamais écrasé et ne constitue pas une preuve officielle.",
+     "notebook": "Le notebook généré est à jour.",
+     "report": "Le rapport est à jour.",
+     "workbench": "L'atelier (workbench) est votre espace libre : il est créé une fois, jamais écrasé, et n'est pas suivi par l'étude."
+    },
+    "recap": [
+     "Objectif : « Simulation pédagogique : prioriser les contacts quand la capacité d'appel est limitée » ; la prédiction est faite « before the first contact of the campaign, from the client file ».",
+     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : campaign, day, duration, month; gardées malgré un doute : contact) ; le découpage des données (validation croisée à 5 plis, stratifiée sur le résultat) ; le critère de succès (gain de précision sur le modèle de référence d'au moins 5 points) ; la préparation des variables (par défaut, rien ne change).",
+     "Maintenant : Choisir les variantes à comparer, en attente de votre réponse ; le rapport et le notebook sont à jour.",
+     "Ensuite : si vous adoptez la variante à comparer : « You compare three variants of the candidate, each with its question. »",
+     "Limite : Ces variables sont utilisées alors que leur disponibilité au moment de la prédiction est incertaine : age, contact, default, education, housing, job, loan, marital. Vérifiez qu'elles sont connues à ce moment-là."
+    ],
+    "digest": {
+     "2": "Une proposition a été faite pour le moment de la prédiction.",
+     "3": "Vous avez confirmé le moment de la prédiction.",
+     "4": "Une proposition a été faite pour la disponibilité des variables.",
+     "5": "Vous avez confirmé la disponibilité des variables.",
+     "6": "Une proposition a été faite pour le découpage des données.",
+     "7": "Vous avez confirmé le découpage des données.",
+     "8": "Une proposition a été faite pour le critère de succès.",
+     "9": "Vous avez confirmé le critère de succès.",
+     "10": "Une proposition a été faite pour la préparation des variables.",
+     "11": "Vous avez confirmé la préparation des variables.",
+     "13": "Résultat calculé : le découpage.",
+     "15": "Résultat calculé : le taux de résultat positif.",
+     "17": "Résultat calculé : le modèle de référence.",
+     "19": "Résultat calculé : le modèle logistique.",
+     "21": "Résultat calculé : les diagnostics de développement.",
+     "22": "Une proposition a été faite pour la variante à comparer."
+    },
+    "goal": {
+     "intended_use": "Simulation pédagogique : prioriser les contacts quand la capacité d'appel est limitée",
+     "decision": "Sélectionner les contacts à appeler en premier",
+     "observation_unit": "Un client contacté pendant une campagne téléphonique",
+     "prediction_time": "before the first contact of the campaign, from the client file"
+    },
+    "proposals": {
+     "p_6": null
+    }
+   }
+  }
  }
 }
