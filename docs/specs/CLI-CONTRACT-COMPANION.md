@@ -45,6 +45,8 @@ CLI-CONTRACT.md §8.7 points here and lists the new schemas; `test_contract_free
 | C10 | report anchors `id="r-<result_id>"` and `check` finding `location` | deliverable and read, additive | `hypotrail.check/1` (key added in findings) | nothing new |
 | C11 | content files `digest.yaml`, `drafts.yaml`, `evidence.yaml`, `learn.yaml`; `moments` in `steps.yaml`; `example` in `glossary.yaml` | engine data | `hypotrail.content.*/1` | nothing |
 
+Owner session 2026-10-26 (L9, R20; CLI-CONTRACT §5.5): the panel reads an automatic study through keys it already reads, with no new command and no new write: the `not_yet_defensible` ids `automatic_decisions_to_review` and `final_test_opened_automatically` (first in `status --summary`'s `top`, shown in the alert strip with their `junior_text`, the banners) and each decision's `basis` `automatic` (the chip "automatic, to review" / "automatique, à relire"). The review itself happens in the chat.
+
 Common guarantees of every **read** addition (C1 to C6):
 
 - R1. It takes no writer lock. It writes no state, revision, registry entry, blob, exposure record, artefact, manifest, or event. It works under `HYPOTRAIL_READ_ONLY=1`. A test runs each one on a study whose directory tree is made read-only (`chmod -R a-w`), and the test compares the tree's digest before and after.

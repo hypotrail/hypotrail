@@ -137,7 +137,9 @@ ACTION_PARAMS = {'decide.propose': {'decision_id', 'value', 'restatement', 'rati
                  'decide.resolve_note': {'note_id', 'user_words'},
                  'decide.withdraw_note': {'note_id', 'user_words'},
                  # ADR 0005: the confirmation mode, in the user's words.
-                 'study.set_mode': {'mode', 'user_words'}}
+                 'study.set_mode': {'mode', 'user_words'},
+                 # L9 (R20): the one-way end of the automatic mode.
+                 'study.end_automation': {'reason', 'user_words'}}
 # ADR 0005: optional parameters, carried only when given (a replay stays a replay).
 OPTIONAL_ACTION_PARAMS = {'decide.propose': {'channel', 'labels'},
                           'decide.confirm': {'agent_concern', 'adoption_question'},
@@ -166,6 +168,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              'model_selection', 'model_families', 'assurance',
              # Reliability roadmap J2: derived, null for legacy studies.
              'requirements', 'completion', 'claim_eligibility', 'presentation',
+             # L9 (owner session 2026-10-26, R20): the automatic mode chosen at launch, or
+             # null, and the decisions it recorded that wait for the junior's review.
+             'automation', 'review_queue',
              # L3 (owner session 2026-10-26, R4; D4 A, D4b): the case's statements in both
              # languages from its translation sidecar, or null.
              'case_texts')
@@ -190,11 +195,15 @@ CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'prop
                           'reason_given', 'adoption_question',
                           # L3 (owner session 2026-10-26): the restatement in the study
                           # language.
-                          'label')
+                          'label',
+                          # L9 (R20): the automatic confirmation a review adopted.
+                          'adopted_from')
 # Post-acceptance contract (D1): how the user decided. ADR 0005 adds the two recorded kinds
 # of own words of the guided mode; ``explicit`` stays readable and is the request default.
-CONFIRMATION_BASES = ('explicit', 'endorsed', 'restated', 'delegated_default')
-REQUEST_BASES = ('explicit', 'delegated_default')
+CONFIRMATION_BASES = ('explicit', 'endorsed', 'restated', 'delegated_default',
+                      # L9 (R20; ADR 0005 amendment of 2026-10-26): never the junior's words.
+                      'automatic')
+REQUEST_BASES = ('explicit', 'delegated_default', 'automatic')
 # ADR 0005: confirmation modes, languages, the guided reply reasons and warnings.
 MODES = ('guided', 'training', 'express')
 # v0.2b (WP-B2): the three modes are implemented.
@@ -346,7 +355,9 @@ NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independen
                           'verdict_keeps_baseline_against_criterion',
                           # Review 2026-10-24 round 2: development rows left out of training
                           # for a delayed label (review-v1 outcome clock).
-                          'delayed_labels_excluded'}
+                          'delayed_labels_excluded',
+                          # L9 (R20): an automatic study not reviewed yet; a demo's opening.
+                          'automatic_decisions_to_review', 'final_test_opened_automatically'}
 INVALIDATION_KEYS = ('revision', 'decision_id', 'mutation', 'row', 'reason', 'stale_results',
                      'stale_slots', 'reconfirm_required', 'effects', 'previous')
 CONFIRM_INVALIDATION_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',
@@ -410,7 +421,10 @@ AMBIGUOUS_REASONS = {'missing_user_words', 'bare_acknowledgement', 'proposal_not
                      'question_reply', 'conditional_reply',
                      # v0.3 (WP-B): the final-test opening is never delegated (it was
                      # reason_required while a reason was mandatory).
-                     'delegation_not_allowed'}
+                     'delegation_not_allowed',
+                     # L9 (R20): --basis automatic outside an automatic mode in force, or for
+                     # a decision it does not cover (no new error code).
+                     'automation_not_set', 'automation_does_not_cover'}
 REGISTRY_ENTRY_KEYS = ('schema', 'result_id', 'input_key', 'activity', 'params', 'inputs', 'code',
                        'output', 'blobs', 'partition', 'n_rows', 'exposure_id', 'execution_id',
                        'started_revision', 'environment', 'created')
@@ -448,7 +462,9 @@ EXTENSIONS = {'run': 'mlkit.study.cmd_run', 'render': 'mlkit.study.cmd_render',
               # v0.2a (WP-A4, R2): the read-only data card.
               'data': 'mlkit.study.cmd_data',
               # ADR 0008: the opt-in understanding and handover review.
-              'understanding': 'mlkit.study.cmd_understanding'}
+              'understanding': 'mlkit.study.cmd_understanding',
+              # L9 (R20): the automatic mode chosen at init (run, stop).
+              'automation': 'mlkit.study.cmd_automation'}
 # Post-v0.1 observation kit: ``session-report`` and the opt-in session log.
 SESSION_REPORT_SCHEMA = 'hypotrail.session_report/1'
 SESSION_REPORT_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'sources', 'span',
@@ -684,7 +700,9 @@ def test_notes_hold_a_decision_until_the_junior_resolves_them(tmp_path, syntheti
                                     # L3 (D4 A): the case's translation sidecar of ``init``.
                                     'case_l10n',
                                     # L5 (D5): the structural-first plan generation.
-                                    'exploration_order')
+                                    'exploration_order',
+                                    # L9 (R20): the automatic mode chosen at init.
+                                    'automation')
     assert st.NOTE_KEYS == NOTE_STATE_KEYS and st.NOTE_RESOLUTION_KEYS == NOTE_RESOLUTION_KEYS
     assert st.NOTE_KINDS == ('hold', 'correction') and st.NOTE_STATUSES == NOTE_STATUSES
     assert view.NOTE_VIEW_KEYS == NOTE_VIEW_KEYS
@@ -790,7 +808,9 @@ def test_actions_and_their_parameters():
     assert st.REQUEST_BASES == REQUEST_BASES
     assert st.CONFIRMATION_OPTIONAL_KEYS == ('basis', 'delegation_scope', 'agent_concern',
                                             'mode', 'warnings', 'reason_given',
-                                            'adoption_question')
+                                            'adoption_question',
+                                            # L9 (R20): a review's adoption.
+                                            'adopted_from')
     assert {a: set(p) for a, p in cmd.OPTIONAL_PARAMS.items()} == OPTIONAL_ACTION_PARAMS
     assert not set(CONFIRMATION_BASES) - DOC_TOKENS
     assert st.DELEGATION_SCOPES == DELEGATION_SCOPES
@@ -892,7 +912,9 @@ def test_extension_point_signatures():
     assert _params(cmd.register_action) == [('name', 'POSITIONAL_OR_KEYWORD'),
                                             ('factory', 'POSITIONAL_OR_KEYWORD')]
     assert [n for n, _ in _params(cmd.apply)] == ['study_dir', 'action', 'params', 'request_id',
-                                                  'expected_revision', 'command']
+                                                  'expected_revision', 'command',
+                                                  # L9: the automatic runner's own writes.
+                                                  'quiet']
     assert [f for f in cmd.Context.__dataclass_fields__] == ['store', 'request_id']
     assert [f for f in cmd.Outcome.__dataclass_fields__] == ['payload', 'exit_code']
     assert [n for n, _ in _params(registry.put)] == [
@@ -1572,3 +1594,55 @@ def test_w2_contract(tmp_path):
         assert name in DOC_TOKENS, name
     for cls in rn.EVIDENCE_CLASSES:
         assert f'`{cls}`' in DOC, cls
+
+
+def test_l9_automation_contract(tmp_path):
+    """Owner session 2026-10-26 (L9, R20; ADR 0005 and ADR 0006 amendments): the automatic
+    mode's names, the state and view keys, the runner's payload, and the documentation of
+    every new token."""
+    from mlkit.study import automation, partition
+    assert st.AUTOMATIC == 'automatic' and st.AUTOMATIC_ACTOR == 'assistant'
+    assert st.AUTOMATION_MODES == ('until_final_test', 'full_demo')
+    assert st.AUTOMATION_KEYS == ('mode', 'status', 'started_revision', 'ended')
+    assert st.AUTOMATION_STATUSES == ('running', 'ended')
+    assert st.AUTOMATION_ENDED_KEYS == ('revision', 'reason', 'user_words', 'time', 'request_id')
+    assert st.AUTOMATION_END_REASONS == ('reached_end', 'stopped')
+    assert st.DEMO_ONLY_DECISIONS == ('final_test', 'conclusion')
+    assert st.ADOPTED_FROM_KEYS == ('basis', 'proposal_id', 'revision')
+    assert st.MODE_CHANGE_OPTIONAL_KEYS == ('automation',)
+    assert st.AUTOMATION_END_KEYS == ('previous', 'reason')
+    assert st.basis_class('automatic') == 'automatic'
+    assert partition.OPENING_OPTIONAL_KEYS == ('basis',)
+    assert view.REVIEW_QUEUE_KEYS == ('decision_id', 'status', 'value', 'proposal_id',
+                                      'revision')
+    assert cmd.ACTION_END_AUTOMATION == 'study.end_automation'
+    assert automation.SCHEMA == 'hypotrail.automation/1'
+    assert automation.PAYLOAD_KEYS == ('schema', 'ok', 'study', 'revision', 'automation',
+                                       'status', 'stopped_at', 'reason', 'refusal', 'steps',
+                                       'review_queue', 'next_action', 'artifacts')
+    assert automation.STEP_KEYS == ('revision', 'kind', 'decision', 'activity', 'outcome')
+    assert automation.STOP_REASONS == ('reached_end', 'needs_junior', 'no_automatic_value',
+                                       'refused', 'not_promoted', 'automation_not_set',
+                                       'limit')
+    assert set(automation.RULES) == {'model_choice', 'policy', 'conclusion'}
+    # ``auto_value`` comes after the junior-ready keys and before ``pause``.
+    build = inspect.getsource(view.build)
+    assert build.index('junior.enrich(') < build.index('automation.annotate(') \
+        < build.index("['pause'] = guidance.pause(")
+    for name in ('automatic', 'until_final_test', 'full_demo', 'auto_value', 'review_queue',
+                 'automation_not_set', 'automation_does_not_cover', 'reached_end', 'stopped',
+                 'automatic_decisions_to_review', 'final_test_opened_automatically',
+                 'adopted_from', 'study.end_automation', 'hypotrail.automation/1',
+                 'automatic_decisions_reviewed', 'started_revision'):
+        assert name in DOC_TOKENS, name
+    assert 'hypotrail init --case CASE --study DIR [--lang en|fr]' in DOC
+    assert '[--automation until_final_test|full_demo]' in DOC
+    assert 'hypotrail automation run' in DOC and 'hypotrail automation stop' in DOC
+    # A study created without the flag has no key; its view says so.
+    study = tmp_path / 'plain'
+    auto = REPO / 'use-cases' / 'auto-mpg'
+    assert _run('init', '--case', auto, '--study', study).exit_code == 0
+    assert 'automation' not in read.open(study).state
+    v = _run('status', '--study', study).payload['view']
+    assert v['automation'] is None and v['review_queue'] == []
+    assert 'auto_value' not in v['next_action']

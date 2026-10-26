@@ -1,15 +1,16 @@
 """``hypotrail`` command-line interface (plan §4, ``docs/specs/CLI-CONTRACT.md``).
 
     hypotrail init --case CASE --study DIR [--lang en|fr]
+                   [--automation until_final_test|full_demo]                 (L9, R20)
     hypotrail status --study DIR [--since REV] [--json] [--summary [--fields KEY,...]]
     hypotrail plan --study DIR
     hypotrail decide propose DECISION (--value TEXT | --value-json JSON)
                      --restatement TEXT --rationale TEXT [--lang en|fr]
                      [--restatement-en TEXT] [--restatement-fr TEXT]
                      --request-id ID --expected-revision REV --study DIR
-    hypotrail decide confirm (PROPOSAL | --proposal PROPOSAL) --user-words TEXT
+    hypotrail decide confirm (PROPOSAL | --proposal PROPOSAL) [--user-words TEXT]
                      [--channel chat|cli|webview|choice] [--adoption-question] [--actor NAME]
-                     [--basis explicit|delegated_default]
+                     [--basis explicit|delegated_default|automatic]
                      [--delegation-scope this_decision|standing] [--agent-concern TEXT]
                      --request-id ID --expected-revision REV --study DIR
     hypotrail decide withdraw PROPOSAL [--reason TEXT]
@@ -83,6 +84,8 @@ EXTENSIONS = {
     'data': 'mlkit.study.cmd_data',
     # ADR 0008: the opt-in understanding and handover review (off by default).
     'understanding': 'mlkit.study.cmd_understanding',
+    # Owner session 2026-10-26 (L9, R20): the automatic mode chosen at init (run, stop).
+    'automation': 'mlkit.study.cmd_automation',
 }
 # One line per extension command for ``hypotrail --help`` (v0.2a, WP-A1): the help lists
 # every command without importing the extension modules.
@@ -98,6 +101,7 @@ EXTENSION_HELP = {
     'export': 'export a handoff pack of the study into a new folder',
     'data': 'read-only data card: row unit, sizes, grouped columns, five development rows',
     'understanding': 'opt-in understanding and handover review (off by default; ADR 0008)',
+    'automation': 'run the automatic mode chosen at init, or stop it in the junior\'s words',
 }
 REFUSALS = (CommandRefused, StudyError, CaseError)
 
@@ -154,6 +158,11 @@ def build_parser(extension: str | None = None, *, listing: bool = False
                    help='the study language: surfaces show restatements in it (ADR 0005)')
     p.add_argument('--reliability-profile', choices=('legacy', 'review-v1'), default=None,
                    help='opt-in reliability profile; review-v1 enforces the declared evaluation protocol')
+    p.add_argument('--automation', choices=st.AUTOMATION_MODES, default=None,
+                   help='the automatic mode, chosen at launch only (L9): until_final_test '
+                        'records every decision before the final test with the engine\'s '
+                        'values; full_demo also opens the final test and concludes (a '
+                        'demonstration). Every automatic decision is reviewed at the end')
     p = sub.add_parser('status', parents=[common], help='read-only view of the study')
     p.add_argument('--since', type=int, default=None, help='report revisions after REV')
     p.add_argument('--summary', action='store_true',
@@ -194,8 +203,9 @@ def build_parser(extension: str | None = None, *, listing: bool = False
     p.add_argument('proposal_id', nargs='?', default=None)
     p.add_argument('--proposal', default=None, dest='proposal_flag', metavar='PROPOSAL',
                    help='the open proposal the words answer (same as the positional PROPOSAL)')
-    p.add_argument('--user-words', required=True,
-                   help="the user's verbatim reply to the restatement")
+    p.add_argument('--user-words', default=None,
+                   help="the user's verbatim reply to the restatement (required, except with "
+                        '--basis automatic, which records no words)')
     p.add_argument('--channel', choices=st.CONFIRMATION_CHANNELS, default=cmd.DEFAULT_CHANNEL,
                    help='chat (the default), cli, webview, or choice: the junior picked the '
                         'adoption option of an interactive choice; --user-words is the option '
@@ -209,7 +219,8 @@ def build_parser(extension: str | None = None, *, listing: bool = False
                    help="explicit (the default): the junior's own reply decides (recorded as "
                         'endorsed or restated); delegated_default: the reply explicitly '
                         "delegates to the assistant's recommended default, which the "
-                        'restatement states')
+                        'restatement states; automatic: the automatic mode chosen at init '
+                        'records the engine\'s value (no words; reviewed at the end, L9)')
     p.add_argument('--delegation-scope', choices=st.DELEGATION_SCOPES, default=None,
                    help='with delegated_default: this_decision (the junior delegated at this '
                         'pause) or standing (an earlier delegation for questions they cannot '
@@ -290,6 +301,8 @@ def _decide(args) -> cmd.Outcome:
     elif args.verb == 'confirm':
         if (args.proposal_id is None) == (args.proposal_flag is None):
             raise ArgumentError('decide confirm names one proposal: PROPOSAL or --proposal')
+        if args.user_words is None and args.basis != st.AUTOMATIC:
+            raise ArgumentError('the following arguments are required: --user-words')
         action, params = cmd.ACTION_CONFIRM, {'proposal_id': args.proposal_id
                                               or args.proposal_flag,
                                               'user_words': args.user_words,
@@ -320,7 +333,8 @@ def _decide(args) -> cmd.Outcome:
 def dispatch(args) -> cmd.Outcome:
     if args.command == 'init':
         return cmd.init(args.case, args.study, language=args.lang,
-                        reliability_profile=args.reliability_profile)
+                        reliability_profile=args.reliability_profile,
+                        automation=args.automation)
     if args.command == 'mode':
         return cmd.apply(args.study, action=cmd.ACTION_SET_MODE,
                          params={'mode': args.mode, 'user_words': args.user_words},
@@ -454,7 +468,8 @@ def _run(argv: list) -> cmd.Outcome:
     name = argv[0] if argv else ''
     # A command with a verb is named with it (`decide confirm`, `export handoff`), as its
     # own payloads name it (WP-I).
-    command = ' '.join(argv[:2]) if name in ('decide', 'export', 'mode', 'understanding') \
+    command = ' '.join(argv[:2]) if name in ('decide', 'export', 'mode', 'understanding',
+                                             'automation') \
         else name
     try:
         extension = name if name in EXTENSIONS else None

@@ -91,11 +91,14 @@
     basisChannel: (basisText, channel) => `${basisText} · ${channel}`,
     basisChip: {
       restated: 'reformulée', endorsed: 'approuvée', delegated_default: 'déléguée', explicit: 'vos mots',
+      // L9 (R20) : enregistrée par le mode automatique choisi au lancement ; à relire dans le chat.
+      automatic: 'automatique, à relire',
     },
     basisHelp: {
       restated: 'Vos mots reprennent ce que dit la proposition : vous l’avez reformulée.',
       endorsed: 'Vos mots approuvent la proposition sans la répéter : vous l’avez approuvée.',
       delegated_default: "Vous avez confié ce choix à la valeur par défaut recommandée par l'assistant, dans le chat.",
+      automatic: "Le mode automatique choisi au lancement a enregistré la valeur du moteur, sans vos mots. Adoptez-la ou changez-la avec vos propres mots, dans le chat.",
       explicit: "Enregistré avec vos propres mots avant que la règle guidée ne nomme les types de réponse.",
     },
     channelWords: channel => (channel === 'webview' ? 'dans ce panneau' : channel === 'chat' ? 'dans le chat'

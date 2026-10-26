@@ -94,6 +94,10 @@ ACTION_WITHDRAW_NOTE = 'decide.withdraw_note'
 # ADR 0005: the confirmation mode of the study, set in the user's words.
 ACTION_SET_MODE = 'study.set_mode'
 SET_MODE_PARAMS = frozenset({'mode', 'user_words'})
+# L9 (R20): the one-way end of the automatic mode (``hypotrail automation stop``, or the
+# runner when it reached what the mode covers).
+ACTION_END_AUTOMATION = 'study.end_automation'
+END_AUTOMATION_PARAMS = frozenset({'reason', 'user_words'})
 PROPOSE_PARAMS = frozenset({'decision_id', 'value', 'restatement', 'rationale'})
 # Parameters an action accepts when present (CLI-CONTRACT-COMPANION §9, C9): a propose
 # request carries ``channel`` only when it is not ``chat``, so every request recorded
@@ -1132,14 +1136,18 @@ def _propose(ctx: Context) -> Handler:
                                                      'task': st.task_of(state)})
         _verify_sources(state)                     # L1: never propose on changed bytes
 
-        if decision_id == st.FINAL_TEST and st.final_test_opened(state):
+        if decision_id == st.FINAL_TEST and st.final_test_opened(state) \
+                and not st.reviews_automatic_opening(state, value):
             raise final_test_opened_refusal(state)
-        if decision_id == st.MODEL_VARIANT:
+        # L9 (R20): the review of an automatic decision proposes the value it recorded, as
+        # it stands (its engine stamps included), so adopting it changes nothing.
+        review = adopted_from(state, decision_id, value, st.EXPLICIT) is not None
+        if decision_id == st.MODEL_VARIANT and not review:
             value = normalize_variant_provenance(state, value)
         validate_value(state, decision_id, value)
         if decision_id == 'policy':
             value = rec.canonical_policy(value)      # L2: one spelling per rule
-        if decision_id == st.PREPROCESSING:
+        if decision_id == st.PREPROCESSING and not review:
             # WP-A4: the motivating results are checked, and the engine stamps the value
             # data-contingent when any of them read the target.
             value = _normalized_preprocessing(ctx.store, state, value)
@@ -1298,8 +1306,83 @@ def data_contingency(store, state: Mapping, decision_id: str,
                       st.language_of(state))}
 
 
+def _check_automatic(params) -> None:
+    """L9 (R20): the word-independent checks of ``--basis automatic``: no words, no agent
+    concern, no adoption question, no delegation scope, never the choice channel."""
+    if params['user_words'] is not None:
+        raise _invalid('An automatic confirmation records no words: the junior said nothing. '
+                       'Leave --user-words out with --basis automatic.', field='user_words')
+    for key in ('agent_concern', 'adoption_question'):
+        if params.get(key) is not None:
+            raise _invalid(f'{key} goes with the junior\'s own words, never with --basis '
+                           f'automatic.', field=key)
+    if params['delegation_scope'] is not None:
+        raise _invalid('delegation_scope goes with basis delegated_default only.',
+                       field='delegation_scope')
+    if params['channel'] not in st.CONFIRMATION_CHANNELS \
+            or params['channel'] == st.CHOICE_CHANNEL:
+        raise _invalid('An automatic confirmation comes from the chat or the CLI, never from '
+                       'an option the junior picked.', field='channel')
+    if not isinstance(params['actor'], str) or not params['actor'].strip():
+        raise _invalid('actor is a non-empty string.')
+
+
+def automation_refusal(state: Mapping, proposal: Mapping) -> CommandRefused | None:
+    """L9 (R20; ADR 0005 amendment of 2026-10-26): why ``--basis automatic`` cannot confirm
+    ``proposal`` (``ambiguous_confirmation``), or None. ``automation_not_set``: the study has
+    no automatic mode, or it ended (one way). ``automation_does_not_cover``: the mode in force
+    does not record this decision (the final test and the conclusion outside ``full_demo``),
+    or the decision is already confirmed (its review is the junior's)."""
+    decision_id = proposal['decision_id']
+    record = st.automation_of(state)
+    mode = st.automation_in_force(state)
+    details = {'decision_id': decision_id, 'proposal_id': proposal['proposal_id'],
+               'automation': (dict(record) if record is not None else None)}
+    if mode is None:
+        return _ambiguous('automation_not_set',
+                          'This study has no automatic mode in force (none was chosen at '
+                          'init, or it ended): a decision is recorded only in the junior\'s '
+                          'own words or by their delegation.', **details)
+    if not st.automation_covers(state, decision_id) \
+            or state['decisions'][decision_id]['status'] == 'confirmed':
+        return _ambiguous('automation_does_not_cover',
+                          f'The automatic mode {mode} does not record the {decision_id}'
+                          + (' again: it is confirmed, and its review is the junior\'s.'
+                             if state['decisions'][decision_id]['status'] == 'confirmed'
+                             else ': ask the junior.'), **details)
+    return None
+
+
+def _review_refusal(state: Mapping, decision_id: str) -> CommandRefused | None:
+    """L9 (R20): the junior opens the final test only once every automatic decision is
+    reviewed (``precondition_missing``, requirement ``automatic_decisions_reviewed``)."""
+    queue = st.review_queue(state)
+    if decision_id != st.FINAL_TEST or not queue or st.final_test_opened(state):
+        return None
+    from . import audience
+    lang = st.language_of(state)
+    named = audience.join((audience.decision_words(d, lang) for d in queue), lang)
+    junior = (f"Le test final s'ouvre une fois chaque décision automatique relue avec vos "
+              f'propres mots : {named}. Aucune ligne du test final n\'a été lue.'
+              if lang == 'fr' else
+              f'The final test opens once you have reviewed each automatic decision in your own '
+              f'words: {named}. No final-test row was read.')
+    item = {'requirement': 'automatic_decisions_reviewed', 'decisions': queue,
+            'detail': 'Each decision the automatic mode recorded is adopted or changed in the '
+                      'junior\'s own words before they open the final test.',
+            'junior_message': junior}
+    return CommandRefused('precondition_missing',
+                          'Opening the final test needs every automatic decision reviewed in '
+                          'the junior\'s own words first.',
+                          details={'decision_id': decision_id, 'missing': [item],
+                                   'junior_message': junior})
+
+
 def _confirm(ctx: Context) -> Handler:
     def check(params):
+        if params['basis'] == st.AUTOMATIC:
+            _check_automatic(params)
+            return
         words = params['user_words']
         # ADR 0005: the reply rules of every mode (the training rules follow in ``run``).
         reason = cf.reply_problem(words)
@@ -1367,9 +1450,17 @@ def _confirm(ctx: Context) -> Handler:
         if proposal.get('request_id') == ctx.request_id or proposal['revision'] > state['revision']:
             raise _ambiguous('same_request', 'A proposal is confirmed by a later request than the '
                                              'one that created it.', proposal_id=pid)
+        automatic = params['basis'] == st.AUTOMATIC
+        if automatic:
+            refusal = automation_refusal(state, proposal)
+            if refusal is not None:
+                raise refusal
         if proposal['decision_id'] == st.FINAL_TEST:
             decision_id = proposal['decision_id']
-            if decision_id == st.FINAL_TEST and st.final_test_opened(state):
+            # L9 (ADR 0006 amendment): the junior's review of an automatic demo opening
+            # adopts it; it opens nothing again.
+            if decision_id == st.FINAL_TEST and st.final_test_opened(state) \
+                    and not st.reviews_automatic_opening(state, proposal['value']):
                 raise final_test_opened_refusal(state)
             if decision_id == st.FINAL_TEST and params['basis'] == st.DELEGATED_DEFAULT:
                 # WP-B1: the opening is the junior's own act, never delegated. v0.3 (WP-B,
@@ -1379,6 +1470,10 @@ def _confirm(ctx: Context) -> Handler:
                                  'cannot be delegated. Ask them whether they adopt the opening.',
                                  decision_id=decision_id, proposal_id=pid,
                                  user_words=params['user_words'], mode=st.mode_of(state))
+            if not automatic:
+                review = _review_refusal(state, decision_id)
+                if review is not None:
+                    raise review
         if params['basis'] == st.DELEGATED_DEFAULT and not states_default(proposal['restatement']):
             raise _ambiguous('restatement_not_default',
                              f'Proposal {pid} does not say it is the assistant\'s recommended '
@@ -1422,16 +1517,21 @@ def _confirm(ctx: Context) -> Handler:
         delegated = params['basis'] == st.DELEGATED_DEFAULT
         # WP-A9 (B1): accepting one part of the proposal and refusing another is no
         # confirmation, in every mode ("oui pour le plafonnement, pas de log").
-        partial = cf.partial_refusal(words, proposal)
+        partial = None if automatic else cf.partial_refusal(words, proposal)
         if partial is not None:
             raise _ambiguous('conditional_reply', partial_reply_message(decision_id, partial),
                              proposal_id=pid, user_words=words, partial=partial)
         warnings = cf.availability_warnings(words, value) \
-            if decision_id == 'feature_availability' and not delegated else []
+            if decision_id == 'feature_availability' and not delegated and not automatic \
+            else []
         concern = params.get('agent_concern')
         closed = answers_adoption_question(params)
         reason_given = None
-        if delegated:
+        if automatic:
+            # L9 (R20): the engine's value recorded by the automatic mode chosen at launch;
+            # never the junior's words, never a delegation (ADR 0005 amendment).
+            basis_recorded = st.AUTOMATIC
+        elif delegated:
             basis_recorded = st.DELEGATED_DEFAULT
         elif mode == st.TRAINING:
             # v0.2b (WP-B2): the training rules, concept matching and a stop on a contradiction.
@@ -1463,24 +1563,45 @@ def _confirm(ctx: Context) -> Handler:
         plan = confirmation_plan(state, ctx.store, pid, basis=basis_recorded)
         if plan['refusals']:
             raise plan['refusals'][0]
+        actor = st.AUTOMATIC_ACTOR if automatic else params['actor']
+        adopted = adopted_from(state, decision_id, value, basis_recorded)
         # R3 by mode: a recorded warning in express, and in guided once the agent raised it
         # (``--agent-concern``); a contradiction stops a training confirmation before this
         # point. WP-A9 (H3): the warnings are kept on the confirmation record.
         record = _apply_confirmation(state, plan, pid, store=ctx.store,
                                      user_words=words, channel=params['channel'],
-                                     actor=params['actor'], basis=basis_recorded,
+                                     actor=actor, basis=basis_recorded,
                                      delegation_scope=params['delegation_scope'],
                                      agent_concern=concern, mode=mode, warnings=warnings,
                                      reason_given=reason_given,
-                                     adoption_question=closed and not delegated)
+                                     adoption_question=closed and not delegated
+                                     and not automatic, adopted_from=adopted)
         return {'decision_id': decision_id, 'proposal_id': pid, 'status': 'confirmed',
                 'value': copy.deepcopy(value), 'user_words': words,
-                'channel': params['channel'], 'actor': params['actor'],
+                'channel': params['channel'], 'actor': actor,
                 'invalidation': {k: record[k] for k in INVALIDATION_RESULT_KEYS},
                 'basis': basis_recorded, 'delegation_scope': params['delegation_scope'],
                 'agent_concern': concern, 'warnings': warnings, 'mode': mode,
-                'reason_given': reason_given, 'adoption_question': closed and not delegated}
+                'reason_given': reason_given,
+                'adoption_question': closed and not delegated and not automatic}
     return Handler(CONFIRM_PARAMS, run, check)
+
+
+def adopted_from(state: Mapping, decision_id: str, value: Any, basis: str) -> dict | None:
+    """L9 (R20): ``{basis: automatic, proposal_id, revision}`` when a confirmation in the
+    junior's own words adopts, with the same value, the automatic confirmation of a decision
+    still confirmed (its review); None otherwise. An adoption changes nothing: it is never
+    marked as made after the final test."""
+    if basis not in st.OWN_WORDS_BASES:
+        return None
+    decision = state['decisions'][decision_id]
+    conf = decision.get('confirmation')
+    if decision['status'] != 'confirmed' or not isinstance(conf, Mapping) \
+            or st.confirmation_basis(conf) != st.AUTOMATIC \
+            or rec.canonical(decision['value']) != rec.canonical(value):
+        return None
+    return {'basis': st.AUTOMATIC, 'proposal_id': conf.get('proposal_id'),
+            'revision': conf.get('revision')}
 
 
 def answers_adoption_question(params: Mapping) -> bool:
@@ -1621,6 +1742,10 @@ def decision_refusals(state: Mapping, store, decision_id: str, value: Any, *,
     same function before naming it (:mod:`mlkit.study.feasibility`)."""
     refusals: list[Exception] = []
     if decision_id == st.FINAL_TEST and st.final_test_opened(state):
+        if st.reviews_automatic_opening(state, value):
+            # L9 (ADR 0006 amendment): the review of an automatic demo opening adopts it;
+            # nothing is opened or measured again, so no opening precondition applies.
+            return refusals, True
         refusals.append(final_test_opened_refusal(state))
     valid = True
     if validate:
@@ -1724,7 +1849,8 @@ def confirmation_plan(state: Mapping, store, proposal_id: str, *,
     plan['effects'] = eff
     dry = copy.deepcopy(dict(state))
     plan['invalidation'] = _apply_confirmation(
-        dry, plan, proposal_id, store=store, user_words='(preview)', channel=DEFAULT_CHANNEL,
+        dry, plan, proposal_id, store=store,
+        user_words=None if basis == st.AUTOMATIC else '(preview)', channel=DEFAULT_CHANNEL,
         actor=DEFAULT_ACTOR, basis=basis, delegation_scope=None, time=state['updated'])
     return plan
 
@@ -1734,7 +1860,8 @@ def _apply_confirmation(state: dict, plan: Mapping, proposal_id: str, *, store, 
                         time: str | None = None, agent_concern: str | None = None,
                         mode: str | None = None, warnings: list | None = None,
                         reason_given: bool | None = None,
-                        adoption_question: bool = False) -> dict:
+                        adoption_question: bool = False,
+                        adopted_from: Mapping | None = None) -> dict:
     """Apply a :func:`confirmation_plan` to ``state`` in memory; the invalidation record."""
     decision_id, value = plan['decision_id'], plan['value']
     proposal = state['proposals'][proposal_id]
@@ -1750,7 +1877,8 @@ def _apply_confirmation(state: dict, plan: Mapping, proposal_id: str, *, store, 
                                    agent_concern=agent_concern,
                                    mode=mode if mode is not None else st.mode_of(state),
                                    warnings=warnings, reason_given=reason_given,
-                                   adoption_question=adoption_question)
+                                   adoption_question=adoption_question,
+                                   adopted_from=adopted_from)
     proposal.update(status='confirmed', closed_revision=revision, closed_reason='confirmed')
     decision.update(status='confirmed', value=copy.deepcopy(value), proposal_id=proposal_id,
                     confirmation=confirmation, revision=revision, reason=None)
@@ -1979,6 +2107,71 @@ def _set_mode(ctx: Context) -> Handler:
     return Handler(SET_MODE_PARAMS, run, check)
 
 
+def automation_reached_end(state: Mapping) -> bool:
+    """Whether the automatic mode in force has nothing left that it covers: the next action
+    of the state (:func:`state.next_action`) is a review, the final test in
+    ``until_final_test``, ``done``, or anything else it never carries out."""
+    return st.automation_in_force(state) is not None \
+        and not st.action_covered(state, st.next_action(dict(state)))
+
+
+def _end_automation(ctx: Context) -> Handler:
+    """``study.end_automation`` (L9, R20; ADR 0005 amendment of 2026-10-26): the automatic
+    mode ends, one way. ``reason: stopped`` is the junior stopping it midway, in their own
+    words (``hypotrail automation stop --user-words``); ``reason: reached_end`` is the run
+    reaching what the mode covers (no words: it makes the study stricter). The confirmation
+    mode in force does not change; the end is recorded in ``state.automation.ended`` and in
+    ``mode_history``. Decisions already recorded stay automatic until the junior reviews
+    them."""
+    def check(params):
+        reason, words = params['reason'], params['user_words']
+        if reason not in st.AUTOMATION_END_REASONS:
+            raise _invalid(f'reason is one of {", ".join(st.AUTOMATION_END_REASONS)}.',
+                           field='reason')
+        if reason == 'reached_end':
+            if words is not None:
+                raise _invalid('The end of an automatic run records no words.',
+                               field='user_words')
+            return
+        if not isinstance(words, str) or not words.strip():
+            raise _ambiguous('missing_user_words', 'Stopping the automatic mode needs the '
+                             'junior\'s own words asking for it.')
+        if cf.is_question(words):
+            raise _ambiguous('question_reply', REPLY_MESSAGES['question_reply'],
+                             user_words=words)
+
+    def run(state, params):
+        record = state.get('automation')
+        if st.automation_in_force(state) is None:
+            raise _ambiguous('automation_not_set',
+                             'This study has no automatic mode in force: none was chosen at '
+                             'init, or it already ended (it ends once, one way).',
+                             automation=copy.deepcopy(record))
+        if params['reason'] == 'reached_end' and not automation_reached_end(state):
+            raise CommandRefused('precondition_missing',
+                                 'The automatic mode still covers the next action; it ends by '
+                                 'itself only once it reached what it covers. The junior can '
+                                 'stop it with their own words.',
+                                 details={'missing': [{'requirement': 'automation_reached_end',
+                                                       'detail': 'the next action is one the '
+                                                                 'automatic mode carries out'}]})
+        revision = state['revision'] + 1
+        words = params['user_words'] if params['reason'] == 'stopped' else None
+        mode = st.mode_of(state)
+        time = st.now()
+        record.update(status=st.AUTOMATION_ENDED,
+                      ended={'revision': revision, 'reason': params['reason'],
+                             'user_words': words, 'time': time,
+                             'request_id': ctx.request_id})
+        state.setdefault('mode_history', []).append(
+            {'mode': mode, 'previous': mode, 'user_words': words, 'revision': revision,
+             'time': time, 'request_id': ctx.request_id,
+             'automation': {'previous': record['mode'], 'reason': params['reason']}})
+        return {'automation': copy.deepcopy(record), 'mode': mode,
+                'review_queue': st.review_queue(state)}
+    return Handler(END_AUTOMATION_PARAMS, run, check)
+
+
 register_action(ACTION_PROPOSE, _propose)
 register_action(ACTION_CONFIRM, _confirm)
 register_action(ACTION_WITHDRAW, _withdraw)
@@ -1986,6 +2179,7 @@ register_action(ACTION_NOTE, _note)
 register_action(ACTION_RESOLVE_NOTE, _resolve_note)
 register_action(ACTION_WITHDRAW_NOTE, _withdraw_note)
 register_action(ACTION_SET_MODE, _set_mode)
+register_action(ACTION_END_AUTOMATION, _end_automation)
 
 
 # --- commands ---------------------------------------------------------------------------
@@ -2003,10 +2197,15 @@ def _copy_agent_templates(study_dir: Path, task: str = st.DEFAULT_TASK) -> dict:
 
 
 def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
-         reliability_profile: str | None = None) -> Outcome:
+         reliability_profile: str | None = None, automation: str | None = None) -> Outcome:
     """Create a study on a case (revision 1). Never overwrites an existing study.
-    ``language`` is the study language (ADR 0005, ``init --lang``)."""
+    ``language`` is the study language (ADR 0005, ``init --lang``). ``automation`` (L9, R20;
+    ``init --automation``) is the automatic mode chosen at launch, ``until_final_test`` or
+    ``full_demo``; None (the default) creates a study without one, as before."""
     guard.assert_writable()
+    if automation is not None and automation not in st.AUTOMATION_MODES:
+        raise StudyError('invalid_arguments',
+                         f'automation is one of {", ".join(st.AUTOMATION_MODES)}.')
     lock.require_posix()
     study_dir = Path(study_dir).resolve()
     store = StudyStore(study_dir)
@@ -2055,6 +2254,9 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
     # decides the preparation before any look at the target. A study created before keeps its
     # plan (no key, never migrated).
     state[st.EXPLORATION_ORDER_KEY] = st.STRUCTURAL_FIRST
+    if automation is not None:
+        # L9 (R20, D17): chosen at launch only; no command sets it later.
+        state['automation'] = st.automation_record(automation, state['revision'] + 1)
     study_dir.mkdir(parents=True, exist_ok=True)
     dev_sha = store.put_blob(rec.row_keys_bytes(assigned['development']))
     final_sha = store.put_blob(rec.row_keys_bytes(assigned['final_test']))
@@ -2195,8 +2397,12 @@ def plan(study_dir) -> Outcome:
 
 
 def apply(study_dir, *, action: str, params: dict, request_id: str, expected_revision: int,
-          command: str = 'decide') -> Outcome:
-    """Apply one registered action through ``apply_command`` and describe the receipt."""
+          command: str = 'decide', quiet: bool = False) -> Outcome:
+    """Apply one registered action through ``apply_command`` and describe the receipt.
+
+    ``quiet`` (L9, the automatic runner only): the deliverables are not rendered after the
+    commit and ``next_action`` is not refreshed (``null``); the runner renders once at the
+    end and reads the view itself."""
     guard.assert_writable()
     store = StudyStore(study_dir)
     if not store.exists():
@@ -2229,6 +2435,9 @@ def apply(study_dir, *, action: str, params: dict, request_id: str, expected_rev
             payload['revision'] = max(payload['revision'],
                                       read.open(store.study_dir).state['revision'])
     code = EXIT_OK
+    if quiet:
+        payload['next_action'] = None
+        return Outcome(payload, code)
     if not payload['replayed']:
         artifacts = after_commit(store.study_dir, payload)
         if artifacts is not None:
@@ -2281,6 +2490,15 @@ def _opening(store: StudyStore, payload: dict, request_id: str) -> dict | None:
     if result.get('decision_id') != st.FINAL_TEST:
         return None
     from . import executions
+    state = read.open(store.study_dir).state
+    recorded = (state.get('partition') or {}).get('opening') or {}
+    if not payload['replayed'] and st.final_test_opened(state) \
+            and recorded.get('proposal_id') != result.get('proposal_id'):
+        # L9 (ADR 0006 amendment): the junior's review of an automatic demo opening adopts
+        # it; the final test was opened once, by the automatic mode, and is not opened again.
+        return {'status': 'opened', 'execution_id': recorded.get('execution_id'),
+                'result_id': recorded.get('result_id'), 'revision': state['revision'],
+                'error': None}
     if payload['replayed']:
         state = read.open(store.study_dir).state
         opening = (state.get('partition') or {}).get('opening') or {}

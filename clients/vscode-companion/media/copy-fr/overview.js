@@ -41,6 +41,8 @@
     nothingDecided: "Rien n'est encore décidé.",
     toConfirmAgain: 'à confirmer de nouveau',
     delegated: "laissé à l'assistant",
+    // L9 (R20) : enregistré par le mode automatique, en attente de votre relecture.
+    automatic: 'automatique, à relire',
     recapDetails: 'Détails : le récapitulatif du moteur',
     criterion: {
       title: 'Critère de succès',
@@ -92,6 +94,7 @@
       blocked: 'bloqué', reopened: 'rouvert, vous attend' },
     pauseWords: pause => `pause ${pause} · vos mots`,
     pauseDelegated: pause => `pause ${pause} · délégué`,
+    pauseAutomatic: pause => `pause ${pause} · automatique, à relire`,
     pauseWaiting: pause => `pause ${pause} · vous attend`,
     pauseAgain: pause => `pause ${pause} · à confirmer de nouveau`,
     pauseReopened: pause => `pause ${pause} · nouvelle proposition, vous attend`,

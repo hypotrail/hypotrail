@@ -104,11 +104,14 @@
     // WP-A7 (ADR 0005): the basis of a confirmation as a chip, with what it means in a hover.
     basisChip: {
       restated: 'restated', endorsed: 'endorsed', delegated_default: 'delegated', explicit: 'your words',
+      // L9 (R20): recorded by the automatic mode chosen at launch; review it in the chat.
+      automatic: 'automatic, to review',
     },
     basisHelp: {
       restated: 'Your words repeat what the proposal says: you restated it.',
       endorsed: 'Your words agree with the proposal without repeating it: you endorsed it.',
       delegated_default: 'You handed this choice to the assistant\'s recommended default, in the chat.',
+      automatic: 'The automatic mode chosen at launch recorded the engine\'s value, without your words. Adopt it or change it in your own words, in the chat.',
       explicit: 'Recorded in your own words before the guided rule named the kinds of answer.',
     },
     channelWords: channel => (channel === 'webview' ? 'in this panel' : channel === 'chat' ? 'in the chat'

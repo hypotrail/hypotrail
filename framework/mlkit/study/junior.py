@@ -310,6 +310,15 @@ def limit_fr(item: Mapping) -> str:
     if kind == 'delegated_decisions':
         return ("Vous avez délégué ces décisions à la recommandation de l'assistant ; elles "
                 f'ne sont donc pas votre propre jugement : {_named(item.get("decisions"))}.')
+    if kind == 'automatic_decisions_to_review':
+        return ('Étude automatique : à relire, pas encore défendable. Le mode automatique a '
+                'pris ces décisions sans vos mots ; adoptez ou changez chacune avec vos propres '
+                f'mots : {_named(item.get("decisions"))}.')
+    if kind == 'final_test_opened_automatically':
+        return ("Le test final a été ouvert automatiquement, par le mode démonstration, et non "
+                "par votre décision. Son unique évaluation est conservée et l'ouverture ne peut "
+                "pas être refaite ; tout changement fait depuis est marqué comme fait après le "
+                'test final.')
     if kind == 'stale_results':
         return ('Certains résultats ne sont plus à jour et sont recalculés avant d\'être '
                 'cités.')
@@ -469,7 +478,9 @@ LIMIT_IDS_FR = ('unconfirmed_decisions', 'open_holds', 'conclusion_outdated',
                 'high_cardinality_grouping', 'capacity_assumed_for_exercise',
                 'final_test_sealed', 'final_test_opening_interrupted',
                 'changed_after_final_test', 'verdict_contradicts_criterion',
-                'verdict_keeps_baseline_against_criterion', 'data_contingent_preprocessing')
+                'verdict_keeps_baseline_against_criterion', 'data_contingent_preprocessing',
+                # L9 (R20): an automatic study.
+                'automatic_decisions_to_review', 'final_test_opened_automatically')
 
 
 # --- data card lines -------------------------------------------------------------------------

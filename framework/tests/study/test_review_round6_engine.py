@@ -91,6 +91,22 @@ def _previous(base: Path, task: str, language: str) -> Study:
     return s
 
 
+def _automatic(base: Path, task: str, language: str, mode: str) -> Study:
+    """Owner session 2026-10-26 (L9, R20): a study created with ``init --automation``
+    whose automatic mode ran to its end (``hypotrail automation run``); the walk then
+    follows the review it leaves (every automatic decision adopted, or changed, in the
+    junior's words, then the rest of the plan)."""
+    case_dir = fk.make_case(base / f'case-{task}', n_rows=300, task=task)['case'].parent
+    f = fk.Flow(base / f'study-{task}', case_dir, prefix=task[:3])
+    f.call('init', '--case', case_dir, '--study', f.study, '--lang', language,
+           '--automation', mode)
+    out = f.call('automation', 'run', '--request-id', 'auto', '--expected-revision', f.rev(),
+                 '--study', f.study)
+    assert (out['status'], out['reason'], out['refusal']) == ('ended', 'reached_end', None), out
+    assert out['review_queue'] and out['next_action']['review'] is True, out
+    return Study(f, task, False)
+
+
 BASES = {'legacy-binary-en': lambda b, m: _legacy(b, 'binary', 'en'),
          'legacy-binary-fr': lambda b, m: _legacy(b, 'binary', 'fr'),
          'legacy-regression-fr': lambda b, m: _legacy(b, 'regression', 'fr'),
@@ -99,7 +115,11 @@ BASES = {'legacy-binary-en': lambda b, m: _legacy(b, 'binary', 'en'),
          'review-regression-en': lambda b, m: _review(b, 'regression', 'en', m),
          # L5: every base above is structural-first (``init`` writes it); these two are not.
          'previous-binary-en': lambda b, m: _previous(b, 'binary', 'en'),
-         'previous-regression-fr': lambda b, m: _previous(b, 'regression', 'fr')}
+         'previous-regression-fr': lambda b, m: _previous(b, 'regression', 'fr'),
+         # L9: the review left by an automatic run, in both variants.
+         'auto-until-regression-en': lambda b, m: _automatic(b, 'regression', 'en',
+                                                             'until_final_test'),
+         'auto-demo-binary-fr': lambda b, m: _automatic(b, 'binary', 'fr', 'full_demo')}
 
 
 # --- the walker: every next_action executed exactly as given --------------------------------
@@ -512,6 +532,12 @@ def _scenarios():
                        'hold')])
     add('policy-proposal-then-preprocessing', ['previous-binary-en'],
         lambda m, t: [(at_await('policy'), change_preprocessing, 'preprocessing')])
+    # Owner session 2026-10-26 (L9): the review changes a decision instead of adopting it,
+    # before the junior's opening, and after the demonstration's automatic opening.
+    add('review-changes-preprocessing', ['auto-until-regression-en'],
+        lambda m, t: [(proposing('preprocessing'), change_preprocessing, 'preprocessing')])
+    add('review-changes-variant-after-opening', ['auto-demo-binary-fr'],
+        lambda m, t: [(proposing('model_variant'), change_variant, 'variant')])
     return out
 
 

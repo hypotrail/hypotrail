@@ -276,6 +276,14 @@ def _restatement(text: Any, english: Any) -> str:
 
 def _confirmation(conf: Mapping) -> str:
     labels = _labels()
+    if conf.get('basis') == st.AUTOMATIC:
+        # L9 (R20): recorded by the automatic mode; there are no words of the junior.
+        return (f'<div class="words delegated" data-basis="automatic">'
+                f'{_chip(conf)}{_badge("proposed", labels["automatic"])}'
+                f'<span class="small">{e(labels["automatic_note"])}</span>'
+                f'<br>{_recorded(conf)}'
+                f'<br><span class="small">{e(labels["automatic_restatement"])}: '
+                f'{_restatement(conf.get("label"), conf.get("restatement", ""))}</span></div>')
     if conf.get('basis') == 'delegated_default':
         return (f'<div class="words delegated" data-basis="delegated_default">'
                 f'{_chip(conf)}{_badge("delegated", labels["delegated"])}'
@@ -290,7 +298,9 @@ def _confirmation(conf: Mapping) -> str:
     return (f'<div class="words" data-basis="explicit">{_chip(conf)}'
             f'<strong>{e(labels["user_words"])}:</strong> '
             f'<q data-literal="user_words">{e(conf["user_words"])}</q>{_reason_note(conf)}'
-            f'<br>{_recorded(conf)}'
+            + (f'<br><span class="small" data-adopted-from="automatic">'
+               f'{e(labels["adopted_note"])}</span>' if conf.get('adopted_from') else '')
+            + f'<br>{_recorded(conf)}'
             f'<br><span class="small">{e(labels["restatement"])}: '
             f'{_restatement(conf.get("label"), conf.get("restatement", ""))}</span>'
             f'{_concern(conf)}'
@@ -301,17 +311,22 @@ def _credit(view: Mapping, titles: Mapping) -> str:
     """Who decided what, next to the conclusion (P7): a delegated decision is the
     assistant's recommended default, delegated by the analyst, never the analyst's choice."""
     labels = _labels()
-    delegated, explicit = [], []
+    delegated, explicit, automatic = [], [], []
     for did, d in view['decisions'].items():
         conf = d['confirmation']
         if did == 'conclusion' or d['status'] not in ('confirmed', 'reconfirm_required') \
                 or not conf:
             continue
-        (delegated if conf.get('basis') == 'delegated_default' else explicit).append(
+        # L9 (R20): an automatic decision is neither the analyst's nor a delegation.
+        (automatic if conf.get('basis') == st.AUTOMATIC else
+         delegated if conf.get('basis') == 'delegated_default' else explicit).append(
             titles.get(did, did))
-    if not delegated and not explicit:
+    if not delegated and not explicit and not automatic:
         return ''
     rows = []
+    if automatic:
+        rows.append(f'<li data-basis="automatic">{e(labels["credit_automatic"])} '
+                    f'{e("; ".join(automatic))}.</li>')
     if delegated:
         rows.append(f'<li data-basis="delegated_default">{e(labels["credit_delegated"])} '
                     f'{e("; ".join(delegated))}.</li>')
@@ -1757,12 +1772,34 @@ def _build(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | N
         f'<span>{e(labels["title"])} · {lit("case", case.get("id", ""))}</span>'
         f'<button type="button" data-theme-toggle aria-pressed="false">{e(labels["theme_toggle"])}</button>'
         f'</header>\n{mobile}<div class="layout">{side}'
-        f'<main><p class="lead">{e(labels["subtitle"])}</p>{body}</main></div>\n'
+        f'<main><p class="lead">{e(labels["subtitle"])}</p>{automation_banner(view)}'
+        f'{body}</main></div>\n'
         f'<footer class="page-footer">{e(labels["generated_by_for_revision"])} '
         f'{lit("revision", view["revision"])}. {e(labels["no_controls"])}</footer>\n'
         f'<script type="application/json" id="hypotrail-presentation">{snapshot_json}</script>'
         f'<script>{THEME_SCRIPT}\n{ANCHOR_SCRIPT}\n{narrative.SCRIPT}</script></body></html>\n')
     return page, consumed
+
+
+def automation_banner(view: Mapping) -> str:
+    """L9 (R20): the banners of an automatic study, in the study language: "Automatic
+    study: not defensible until reviewed" while a decision of the automatic mode waits for
+    the junior's review, and, for good after a demonstration, "The final test was opened
+    automatically". Empty in any other study."""
+    labels = _labels()
+    ids = {item.get('id') for item in view.get('not_yet_defensible') or []}
+    parts = []
+    if 'automatic_decisions_to_review' in ids:
+        parts.append(f'<p data-automation-banner="review"><strong>'
+                     f'{e(labels["automation_banner_review"])}</strong> '
+                     f'{e(labels["automation_banner_review_detail"])}</p>')
+    if 'final_test_opened_automatically' in ids:
+        parts.append(f'<p data-automation-banner="opened"><strong>'
+                     f'{e(labels["automation_banner_opened"])}</strong> '
+                     f'{e(labels["automation_banner_opened_detail"])}</p>')
+    if not parts:
+        return ''
+    return f'<div class="notice" role="note" data-automation="banner">{"".join(parts)}</div>'
 
 
 def banner_html(*, report_revision: int | None, failed_revision: int, error: Mapping) -> str:

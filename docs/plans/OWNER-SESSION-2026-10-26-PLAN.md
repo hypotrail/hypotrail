@@ -45,6 +45,23 @@ the 10c1e70, 818995c and 506180a engines) is implemented on branch `w3-l8`, unit
 exporter tests only; existing captures stop being current (K3); not yet merged by the
 integrator, not run with Copilot.
 
+Implementation status (wave W3): **L9** (R20, the automatic mode reviewed at the end, both
+variants chosen at launch; D17 a-g as approved, the AGENTS.md exception included) is
+implemented on branch `w3-l9`: `init --automation until_final_test|full_demo`, the basis
+`automatic` (`ambiguous_confirmation` reasons `automation_not_set`,
+`automation_does_not_cover`), `next_action.auto_value` and its fixed rules,
+`hypotrail automation run [--progress]` (follows `next_action`, honours every refusal, ends
+the mode one way where it stops covering the plan) and `automation stop --user-words`,
+`view.automation` and `view.review_queue`, the review in `next_action` (`review: true`;
+adoption records `adopted_from`, never "after the final test"), the opening by the junior
+only once the queue is empty (`automatic_decisions_reviewed`), the demo's automatic opening
+(`basis: automatic` on the opening record), the limits and banners
+`automatic_decisions_to_review` and `final_test_opened_automatically` in the report, the
+notebook and the panel (read only). ADR 0005 and ADR 0006 amendments, CLI-CONTRACT §5.5. Agent
+text in [proposals/L9-agent-text.md](proposals/L9-agent-text.md) for the integrator. Unit,
+walker and in-process CLI tests on Auto MPG and synthetic cases; not merged by the integrator,
+panel fixtures not recaptured, not run with Copilot (J-A still to rehearse).
+
 **Priority of this batch (owner, 2026-10-26): the workshop journey.** The batch prepares a
 workshop. What matters most is the junior's journey as they live it: visually clear,
 pedagogical, working features, a fluid path. Lots and waves are therefore ordered by their

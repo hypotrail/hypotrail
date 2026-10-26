@@ -190,7 +190,9 @@ def _reserve(ctx: cmd.Context) -> Handler:
             state['partition']['opening'] = partition.open_record(
                 revision=revision, execution_id=eid, proposal_id=conf.get('proposal_id'),
                 user_words=conf.get('user_words'), model=config.get('model'),
-                rule=config.get('rule'), time=st.now())
+                rule=config.get('rule'), time=st.now(),
+                # L9 (ADR 0006 amendment): the demo's automatic opening says so, for good.
+                basis=st.AUTOMATIC if st.confirmation_basis(conf) == st.AUTOMATIC else None)
         record = {'execution_id': eid, 'activity': activity, 'slot': plan['slot'],
                   'options': plan['options'], 'request_id': ctx.request_id, 'status': 'running',
                   'started_revision': revision, 'started': st.now(),

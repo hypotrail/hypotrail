@@ -81,6 +81,16 @@ delegated: Delegated to the assistant's recommended default
 delegated_words: Your words delegating the choice
 delegated_note: Decided by delegation to the assistant's default, not by your own judgment. Confirm it yourself when you can.
 delegated_restatement: Recommended default you delegated to
+# Owner session 2026-10-26 (L9, R20): the automatic mode, reviewed at the end.
+automatic: Recorded by the automatic mode, to review
+automatic_note: Decided by the automatic mode chosen at launch, with the engine's value, not in your words. Adopt it or change it in your own words before the study is defensible.
+automatic_restatement: What the automatic mode recorded
+adopted_note: Adopted in your own words after the automatic mode recorded it.
+automation_banner_review: "Automatic study: not defensible until reviewed."
+automation_banner_review_detail: Every decision marked as automatic was made by the automatic mode chosen at launch; review each one in your own words.
+automation_banner_opened: The final test was opened automatically.
+automation_banner_opened_detail: The demonstration mode opened it, not your decision. Its one evaluation stands; the opening cannot be redone.
+credit_automatic: "Recorded by the automatic mode, not yet reviewed by the analyst:"
 not_authenticated: Recorded words, not an authenticated signature.
 restatement: Restatement you answered
 proposal_waiting: Waiting for your answer
@@ -248,6 +258,7 @@ basis:
   restated: Restated in your words
   endorsed: Endorsed in your words
   delegated_default: Delegated to the assistant
+  automatic: Automatic, to review
 recorded_at: Recorded at revision
 looks:
   summary: Looks at the outcome on training rows

@@ -45,6 +45,8 @@
     nothingDecided: 'Nothing is decided yet.',
     toConfirmAgain: 'to confirm again',
     delegated: 'left to the assistant',
+    // L9 (R20): recorded by the automatic mode, waiting for your review.
+    automatic: 'automatic, to review',
     recapDetails: 'Details: the engine\'s recap',
     // WP-A7: the success criterion against the evaluation (the term first, then its use).
     criterion: {
@@ -105,6 +107,7 @@
       blocked: 'blocked', reopened: 'reopened, waiting for you' },
     pauseWords: pause => `pause ${pause} · your words`,
     pauseDelegated: pause => `pause ${pause} · delegated`,
+    pauseAutomatic: pause => `pause ${pause} · automatic, to review`,
     pauseWaiting: pause => `pause ${pause} · waiting for you`,
     pauseAgain: pause => `pause ${pause} · confirm again`,
     pauseReopened: pause => `pause ${pause} · new proposal, waiting for you`,

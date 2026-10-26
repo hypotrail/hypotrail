@@ -106,9 +106,15 @@ EXPLICIT, DELEGATED_DEFAULT = 'explicit', 'delegated_default'
 # ``decide confirm --basis`` for "the junior's own words": the engine records which of
 # ``endorsed`` and ``restated`` they are.
 ENDORSED, RESTATED = 'endorsed', 'restated'
-CONFIRMATION_BASES = (EXPLICIT, ENDORSED, RESTATED, DELEGATED_DEFAULT)
-# What ``decide confirm --basis`` accepts (the junior's own words, or a delegation).
-REQUEST_BASES = (EXPLICIT, DELEGATED_DEFAULT)
+# Owner session 2026-10-26 (L9, R20; ADR 0005 amendment of 2026-10-26): ``automatic``, a
+# decision the automatic mode chosen at launch recorded with the engine's value
+# (``actor: assistant``, ``user_words: null``). It is never the junior's own words and never
+# a delegation: it stays in the review queue until the junior adopts or changes it.
+AUTOMATIC = 'automatic'
+CONFIRMATION_BASES = (EXPLICIT, ENDORSED, RESTATED, DELEGATED_DEFAULT, AUTOMATIC)
+# What ``decide confirm --basis`` accepts (the junior's own words, a delegation, or, in an
+# automatic study only, the automatic mode).
+REQUEST_BASES = (EXPLICIT, DELEGATED_DEFAULT, AUTOMATIC)
 # Bases of a decision taken in the junior's own words (not delegated).
 OWN_WORDS_BASES = (EXPLICIT, ENDORSED, RESTATED)
 DEFAULT_BASIS = EXPLICIT
@@ -134,7 +140,13 @@ CONFIRMATION_OPTIONAL_KEYS = ('basis', 'delegation_scope', 'agent_concern', 'mod
                               # v0.3 (WP-B, R27): whether the junior's words give a reason,
                               # for the trade-offs only; and whether they answer the closed
                               # adoption question (written only when true).
-                              'reason_given', 'adoption_question')
+                              'reason_given', 'adoption_question',
+                              # L9 (R20): a confirmation in the junior's words that adopts,
+                              # with the same value, an automatic one (its review):
+                              # ``{basis: automatic, proposal_id, revision}`` of the
+                              # automatic confirmation it replaced.
+                              'adopted_from')
+ADOPTED_FROM_KEYS = ('basis', 'proposal_id', 'revision')
 
 # Confirmation modes (ADR 0005). ``guided`` is the default (v0.2a); ``training`` and
 # ``express`` are implemented in v0.2b (WP-B2). ``MODE_STRICTNESS`` orders them: lowering the
@@ -148,6 +160,29 @@ DEFAULT_MODE = GUIDED
 MODES_AVAILABLE_IN: dict[str, str] = {}
 MODE_STRICTNESS = {EXPRESS: 0, GUIDED: 1, TRAINING: 2}
 MODE_CHANGE_KEYS = ('mode', 'previous', 'user_words', 'revision', 'time', 'request_id')
+# L9 (R20): the end of an automatic mode is recorded in ``mode_history`` with this optional
+# key, ``{previous, reason}``: ``previous`` the automation that ended, ``reason``
+# ``reached_end`` (the run reached what it covers; no words needed) or ``stopped`` (the
+# junior's words stopped it midway). The confirmation mode itself does not change.
+MODE_CHANGE_OPTIONAL_KEYS = ('automation',)
+AUTOMATION_END_KEYS = ('previous', 'reason')
+# L9 (R20, D17): the automatic mode, chosen at ``init`` only (``init --automation``).
+# ``until_final_test`` (the default variant) records every decision before the final test;
+# ``full_demo`` also opens the final test and concludes (a demonstration, never defensible
+# until reviewed). ``state.automation`` is ``{mode, status, started_revision, ended}``;
+# ``status`` goes one way, ``running`` to ``ended``. A study without the key has no
+# automation (every study created before L9, and every study created without the flag).
+UNTIL_FINAL_TEST, FULL_DEMO = 'until_final_test', 'full_demo'
+AUTOMATION_MODES = (UNTIL_FINAL_TEST, FULL_DEMO)
+AUTOMATION_RUNNING, AUTOMATION_ENDED = 'running', 'ended'
+AUTOMATION_STATUSES = (AUTOMATION_RUNNING, AUTOMATION_ENDED)
+AUTOMATION_KEYS = ('mode', 'status', 'started_revision', 'ended')
+AUTOMATION_ENDED_KEYS = ('revision', 'reason', 'user_words', 'time', 'request_id')
+AUTOMATION_END_REASONS = ('reached_end', 'stopped')
+# The decisions ``full_demo`` covers beyond ``until_final_test``.
+DEMO_ONLY_DECISIONS = ('final_test', 'conclusion')
+# The actor of an automatic confirmation.
+AUTOMATIC_ACTOR = 'assistant'
 # The study language (``init --lang``): proposals may carry a restatement per language
 # (``labels``) and surfaces show the one of the study language.
 LANGUAGES = ('en', 'fr')
@@ -638,7 +673,10 @@ TOP_OPTIONAL_KEYS = ('task', 'notes', 'partition', 'mode', 'language', 'mode_his
                      # Owner session 2026-10-26 (L5, D5): the plan generation that checks the
                      # structure before the target (``structural_first``), written by
                      # ``init``; absent in a study created before.
-                     'exploration_order')
+                     'exploration_order',
+                     # Owner session 2026-10-26 (L9, R20): the automatic mode chosen at
+                     # ``init --automation`` (AUTOMATION_KEYS); absent otherwise.
+                     'automation')
 DECISION_KEYS = ('status', 'value', 'proposal_id', 'confirmation', 'depends_on', 'revision',
                  'reason')
 PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale', 'revision',
@@ -940,11 +978,12 @@ def _sha256_file(path) -> str:
     return digest.hexdigest()
 
 
-def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, revision: int,
-                 time: str | None = None, basis: str = DEFAULT_BASIS,
+def confirmation(*, user_words: str | None, proposal: dict, channel: str, actor: str,
+                 revision: int, time: str | None = None, basis: str = DEFAULT_BASIS,
                  delegation_scope: str | None = None, agent_concern: str | None = None,
                  mode: str | None = None, warnings: list | None = None,
-                 reason_given: bool | None = None, adoption_question: bool = False) -> dict:
+                 reason_given: bool | None = None, adoption_question: bool = False,
+                 adopted_from: Mapping | None = None) -> dict:
     """The confirmation record of ``proposal`` (plan §3.2, §9 bis).
 
     ``user_words`` is the user's verbatim reply to the proposal's restatement.
@@ -973,6 +1012,8 @@ def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, r
         record['reason_given'] = bool(reason_given)
     if adoption_question:
         record['adoption_question'] = True
+    if adopted_from is not None:
+        record['adopted_from'] = {k: adopted_from.get(k) for k in ADOPTED_FROM_KEYS}
     problems = _confirmation_problems(record, 'confirmation')
     if problems:
         raise StudyError('invalid_confirmation', 'The confirmation is incomplete.',
@@ -1007,10 +1048,13 @@ def confirmation_basis(c: Any) -> str:
 
 def basis_class(basis: str | None) -> str | None:
     """``own_words`` for a decision taken in the junior's words (``explicit``, ``endorsed``,
-    ``restated``), ``delegated`` for a delegation; None stays None. The conclusion's credit
+    ``restated``), ``delegated`` for a delegation, ``automatic`` for the automatic mode (L9);
+    None stays None. The conclusion's credit
     line depends on this class only (:func:`dependencies.outdates_conclusion`)."""
     if basis is None:
         return None
+    if basis == AUTOMATIC:       # L9 (R20): neither the junior's words nor a delegation
+        return 'automatic'
     return 'delegated' if basis == DELEGATED_DEFAULT else 'own_words'
 
 
@@ -1039,9 +1083,23 @@ def _confirmation_problems(c: Any, path: str) -> list[dict]:
         elif confirmation_basis(c) != DELEGATED_DEFAULT:
             problems.append({'path': f'{path}.delegation_scope',
                              'problem': 'must be null unless the basis is delegated_default'})
+    automatic = confirmation_basis(c) == AUTOMATIC
     for key in ('user_words', 'proposal_id', 'restatement', 'actor', 'time'):
+        if key == 'user_words' and automatic:
+            # L9 (R20): an automatic decision has no words of the junior.
+            if c[key] is not None:
+                problems.append({'path': f'{path}.{key}',
+                                 'problem': 'must be null for an automatic confirmation'})
+            continue
         if not _text(c[key]):
             problems.append({'path': f'{path}.{key}', 'problem': 'must be a non-empty string'})
+    if 'adopted_from' in present and (
+            not isinstance(c['adopted_from'], dict)
+            or set(c['adopted_from']) != set(ADOPTED_FROM_KEYS)
+            or c['adopted_from'].get('basis') != AUTOMATIC or automatic):
+        problems.append({'path': f'{path}.adopted_from',
+                         'problem': 'must be {basis: automatic, proposal_id, revision} on a '
+                                    'confirmation in the junior\'s words'})
     if c['authenticated'] is not False:
         problems.append({'path': f'{path}.authenticated',
                          'problem': 'must be false: user words are not authenticated'})
@@ -1180,6 +1238,8 @@ def validate_state(state: Any) -> list[dict]:
     if 'case_l10n' in present:
         from . import l10n
         problems.extend(l10n.state_problems(state))
+    if 'automation' in present:
+        problems.extend(automation_problems(state['automation']))
     if 'exploration_order' in present and state['exploration_order'] not in EXPLORATION_ORDERS:
         problems.append({'path': 'exploration_order',
                          'problem': f'must be one of {", ".join(EXPLORATION_ORDERS)}'})
@@ -1189,12 +1249,24 @@ def validate_state(state: Any) -> list[dict]:
             problems.append({'path': 'mode_history', 'problem': 'must be a list'})
         else:
             for i, change in enumerate(history):
-                if _keys(change, f'mode_history.{i}', MODE_CHANGE_KEYS, problems) \
+                extra = tuple(k for k in MODE_CHANGE_OPTIONAL_KEYS
+                              if isinstance(change, dict) and k in change)
+                end = change.get('automation') if extra else None
+                if extra and not (isinstance(end, dict) and set(end) == set(AUTOMATION_END_KEYS)
+                                  and end.get('previous') in AUTOMATION_MODES
+                                  and end.get('reason') in AUTOMATION_END_REASONS):
+                    problems.append({'path': f'mode_history.{i}.automation',
+                                     'problem': 'must be {previous, reason} of an automation '
+                                                'that ended'})
+                # L9: the automatic mode ending when its run reached what it covers needs no
+                # words (it makes the study stricter); stopping it midway needs them.
+                reached = isinstance(end, dict) and end.get('reason') == 'reached_end'
+                if _keys(change, f'mode_history.{i}', MODE_CHANGE_KEYS + extra, problems) \
                         and (change['mode'] not in MODES or change['previous'] not in MODES
                              or not (_text(change['user_words'])
                                      or (change['user_words'] is None
-                                         and raises_strictness(change['previous'],
-                                                               change['mode'])))):
+                                         and (reached or raises_strictness(
+                                             change['previous'], change['mode']))))):
                     problems.append({'path': f'mode_history.{i}',
                                      'problem': "needs a known mode and the user's words "
                                                 "(optional only when the change raises the "
@@ -1441,6 +1513,10 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
     4. the current step needs a proposal or a result;
     5. otherwise the plan is finished.
 
+    L9 (R20): in an automatic study, between 2 and 3, a decision the automatic mode recorded
+    is reviewed (:func:`review_action`) once the mode ended or wherever it does not cover the
+    action 3 to 5 would give.
+
     Step 0 (WP-A4) comes first in the plan: while the study holds no proposal, the next
     action is ``show_data_card`` (informational, nothing to confirm).
     """
@@ -1463,6 +1539,19 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
             # Review round 6 (area E): once proposed again, the junior's words are awaited
             # on that proposal (a ``reconfirm`` named again would only propose once more).
             return decision_action(state, decision_id)
+    # L9 (R20): the review of an automatic study. While the automatic mode runs, the plan is
+    # followed as it covers it; once it ended, or where it stops (the final test in
+    # ``until_final_test``, ``done`` in ``full_demo``), each decision it recorded is
+    # reviewed in the plan's order before anything else, in the junior's own words.
+    queue = [d for d in review_queue(state) if state['decisions'][d]['status'] == 'confirmed']
+    planned = _planned_action(state)
+    if queue and not action_covered(state, planned):
+        return review_action(state, queue[0])
+    return planned
+
+
+def _planned_action(state: dict) -> dict:
+    """Steps 3 to 5 of :func:`next_action`: an open proposal, the current step, ``done``."""
     pending = sorted(open_proposals(state), key=lambda p: (p['revision'], p['proposal_id']))
     from . import assurance
     if assurance.profile(state) == 'review-v1':
@@ -1729,6 +1818,139 @@ def delegated_decisions(state: dict) -> list[str]:
     return out
 
 
+# --- automatic mode (owner session 2026-10-26, L9, R20; ADR 0005 and 0006 amendments) ------
+
+def automation_record(mode: str, revision: int) -> dict:
+    """The ``state.automation`` record ``init --automation MODE`` writes."""
+    return {'mode': mode, 'status': AUTOMATION_RUNNING, 'started_revision': revision,
+            'ended': None}
+
+
+def automation_problems(record: Any) -> list[dict]:
+    """Schema problems of ``state.automation`` (empty when valid)."""
+    path = 'automation'
+    if not isinstance(record, dict) or set(record) != set(AUTOMATION_KEYS):
+        return [{'path': path, 'problem': 'must be {' + ', '.join(AUTOMATION_KEYS) + '}'}]
+    problems = []
+    if record['mode'] not in AUTOMATION_MODES:
+        problems.append({'path': f'{path}.mode',
+                         'problem': f'must be one of {", ".join(AUTOMATION_MODES)}'})
+    if record['status'] not in AUTOMATION_STATUSES:
+        problems.append({'path': f'{path}.status',
+                         'problem': f'must be one of {", ".join(AUTOMATION_STATUSES)}'})
+    ended = record['ended']
+    if record['status'] == AUTOMATION_RUNNING and ended is not None:
+        problems.append({'path': f'{path}.ended', 'problem': 'a running automation has none'})
+    if record['status'] == AUTOMATION_ENDED and (
+            not isinstance(ended, dict) or set(ended) != set(AUTOMATION_ENDED_KEYS)
+            or ended.get('reason') not in AUTOMATION_END_REASONS
+            or (ended.get('reason') == 'stopped' and not _text(ended.get('user_words')))):
+        problems.append({'path': f'{path}.ended',
+                         'problem': 'an ended automation records {' + ', '.join(
+                             AUTOMATION_ENDED_KEYS) + '}; stopping it needs the words'})
+    return problems
+
+
+def automation_of(state: Mapping | None) -> dict | None:
+    """The automatic mode chosen at ``init``, or None (a study without one)."""
+    record = (state or {}).get('automation') if isinstance(state, Mapping) else None
+    return record if isinstance(record, Mapping) else None
+
+
+def automation_in_force(state: Mapping | None) -> str | None:
+    """The automatic mode while it runs (``until_final_test`` or ``full_demo``), else None:
+    no automation, or one that ended (one way)."""
+    record = automation_of(state)
+    if record is None or record.get('status') != AUTOMATION_RUNNING:
+        return None
+    return record.get('mode')
+
+
+def automation_covers(state: Mapping, decision_id: str | None) -> bool:
+    """Whether the automatic mode in force records ``decision_id``: ``until_final_test``
+    every decision before the final test, ``full_demo`` also the final test and the
+    conclusion (ADR 0005 and 0006 amendments, 2026-10-26)."""
+    mode = automation_in_force(state)
+    if mode is None or decision_id not in decision_ids(state):
+        return False
+    return mode == FULL_DEMO or decision_id not in DEMO_ONLY_DECISIONS
+
+
+def action_covered(state: Mapping, action: Mapping | None) -> bool:
+    """Whether the automatic mode in force carries out ``action`` (a ``next_action``) by
+    itself: a run (the final evaluation only in ``full_demo``), the data card, and the
+    proposal, confirmation or reconfirmation of a decision it covers. Never a hold, an
+    interruption, a blocked step, a review, or ``done``."""
+    if not action or automation_in_force(state) is None or action.get('review'):
+        return False
+    kind = action.get('kind')
+    if kind == 'run':
+        return action.get('activity') not in ('final_test.evaluation',) \
+            or automation_in_force(state) == FULL_DEMO
+    if kind == 'show_data_card':
+        return True
+    if kind in ('propose', 'reconfirm', 'await_user_words'):
+        return automation_covers(state, action.get('decision'))
+    return False
+
+
+def review_queue(state: Mapping) -> list[str]:
+    """Decisions whose current confirmation is ``automatic`` (confirmed, or waiting to be
+    confirmed again), in the plan's order: each one waits for the junior's review, adopted or
+    changed in their own words. Empty in a study without automation."""
+    out = []
+    for d in decision_ids(state):
+        dec = state['decisions'][d]
+        if dec['status'] in ('confirmed', 'reconfirm_required') \
+                and isinstance(dec.get('confirmation'), Mapping) \
+                and confirmation_basis(dec['confirmation']) == AUTOMATIC:
+            out.append(d)
+    return out
+
+
+def opened_automatically(state: Mapping) -> bool:
+    """Whether the final test was opened by the automatic mode (``full_demo``): the opening
+    record carries ``basis: automatic``. Permanent: the opening cannot be redone."""
+    opening = ((state.get('partition') or {}).get('opening') or {}) \
+        if isinstance(state, Mapping) else {}
+    return opening.get('basis') == AUTOMATIC
+
+
+def reviews_automatic_opening(state: Mapping, value: Any) -> bool:
+    """L9 (ADR 0006 amendment): the junior's review of a final test the demo mode opened.
+    The final test was opened automatically, its decision still holds the automatic
+    confirmation, and ``value`` is the configuration it opened: confirming it in the junior's
+    own words adopts the opening; nothing is opened or measured again."""
+    if not final_test_opened(state) or not opened_automatically(state):
+        return False
+    decision = (state.get('decisions') or {}).get(FINAL_TEST) or {}
+    conf = decision.get('confirmation')
+    if decision.get('status') != 'confirmed' or not isinstance(conf, Mapping) \
+            or confirmation_basis(conf) != AUTOMATIC:
+        return False
+    from . import records as rec
+    return rec.canonical(value) == rec.canonical(decision.get('value'))
+
+
+def review_action(state: dict, decision_id: str) -> dict:
+    """The review of one automatic decision (L9): the junior's words awaited on its open
+    proposal, else the decision proposed again with the value automation recorded, for the
+    junior to adopt or change in their own words. ``review: true`` marks it."""
+    pending = sorted((p for p in open_proposals(state) if p['decision_id'] == decision_id),
+                     key=lambda p: (p['revision'], p['proposal_id']))
+    if pending:
+        action = _await_action(state, pending[-1])
+    else:
+        action = {'kind': 'reconfirm', 'decision': decision_id,
+                  'default_value': copy.deepcopy(state['decisions'][decision_id]['value']),
+                  'message': f'Decision {decision_id} was recorded by the automatic mode, '
+                             'not in the junior\'s words. Propose it again as it stands, then '
+                             'ask the junior whether they adopt it in their own words or '
+                             'what they change.'}
+    action['review'] = True
+    return action
+
+
 def cited_stale_results(state: Mapping) -> list[dict]:
     """v0.3 (WP-A, R34): ``[{result_id, decision_id, proposal_id}]`` for each stale result a
     decision value (confirmed, to reconfirm, or proposed) or an open proposal names."""
@@ -1955,6 +2177,22 @@ def not_yet_defensible(state: dict) -> list[dict]:
         items.append({'id': 'delegated_decisions', 'decisions': delegated,
                       'text': 'Decided by delegation to the assistant\'s default, not by the '
                               'junior\'s own judgment: ' + ', '.join(delegated) + '.'})
+    automatic = review_queue(state)
+    if automatic:
+        # L9 (R20): an automatic study is not defensible until each automatic decision is
+        # reviewed (adopted or changed) in the junior's own words.
+        items.append({'id': 'automatic_decisions_to_review', 'decisions': automatic,
+                      'text': 'Automatic study: not defensible until reviewed. Recorded by the '
+                              'automatic mode chosen at launch, not in the junior\'s words: '
+                              + ', '.join(automatic) + '. The junior adopts or changes each '
+                              'one in their own words.'})
+    if opened_automatically(state):
+        # L9 (ADR 0006 amendment): permanent; the opening cannot be redone.
+        items.append({'id': 'final_test_opened_automatically',
+                      'text': 'The final test was opened automatically by the demonstration '
+                              'mode, not by the junior\'s decision. Its one evaluation stands '
+                              'and the opening cannot be redone; any change made since is '
+                              'marked as made after the final test.'})
     current_stale = sorted(rid for rid in state['stale']
                            if rid != state.get('current', {}).get('policy.inspection'))
     if current_stale:

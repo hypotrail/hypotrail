@@ -99,7 +99,7 @@ A tab or control of a later stage is **absent** from the DOM, not merely disable
 ┌ header: logo · "Hypotrail · <case id>" · [final-test chip, WP-A7] · [regression] · badge "Experimental · feature flag on"
 │         [Reviewer, read-only] · study switcher (v1) · "revision N" · "read from CLI · <age>" · [Refresh]
 ├ tabs:   Overview · EDA (v2) · Decisions [count] · Evidence (v2) · What if? (v2) · Learn & hand off (v3)
-├ alert strip (only when present, every tab except Overview; WP-A5): sources changed · execution with unknown outcome · integrity error
+├ alert strip (only when present, every tab except Overview; WP-A5): sources changed · execution with unknown outcome · integrity error · (L9, R20) automatic study to review · final test opened automatically
 ├ recap strip (every tab except Overview, collapsible, remembered per panel in vscode.setState; collapsed by default since v0.3, WP-E2):
 │         Goal / Decided / Now / Next / Limit: summary.recap_junior (WP-A5), its Decided line in the panel's words
 ├ main: the tab

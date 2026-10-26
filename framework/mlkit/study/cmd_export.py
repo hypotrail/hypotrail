@@ -83,7 +83,10 @@ BASIS_WORDS = {st.EXPLICIT: "the junior's own decision",
                st.ENDORSED: "the junior's own decision (an explicit endorsement)",
                st.RESTATED: "the junior's own decision (restated in their words)",
                st.DELEGATED_DEFAULT: "delegated by the junior to the assistant's recommended "
-                                     'default'}
+                                     'default',
+               # L9 (R20): neither the junior's words nor a delegation.
+               st.AUTOMATIC: 'recorded by the automatic mode chosen at launch, not yet '
+                             "reviewed by the junior"}
 NOT_AUTHENTICATED = 'Recorded words, not an authenticated signature.'
 CLOSING = ('This pack records a study made for learning and review. It does not authorise '
            'production use: the validation rows were used to choose, the decisions are '
@@ -254,7 +257,8 @@ def _decisions(view: Mapping, lang: str = EN) -> tuple[list[dict], list[str]]:
         if dec['status'] in ('confirmed', 'reconfirm_required'):
             lines += _value_lines(d, dec['value'])
         if conf:
-            lines.append(f'- The junior\'s words: "{conf["user_words"]}"')
+            if conf.get('user_words') is not None:
+                lines.append(f'- The junior\'s words: "{conf["user_words"]}"')
             if conf.get('reason_given') is False:    # v0.3 (WP-B, R27)
                 lines.append('- No reason given')
             basis = BASIS_WORDS.get(conf['basis'], conf['basis'])

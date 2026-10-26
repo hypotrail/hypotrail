@@ -76,6 +76,9 @@ OPENED = 'opened'
 # the execution was interrupted: the final test is consumed either way).
 OPENING_KEYS = ('revision', 'execution_id', 'proposal_id', 'user_words', 'model', 'rule',
                 'time', 'result_id')
+# L9 (R20; ADR 0006 amendment of 2026-10-26): an opening by the demonstration's automatic
+# mode also records ``basis: automatic`` (no words); an opening by the junior has no basis.
+OPENING_OPTIONAL_KEYS = ('basis',)
 # Decisions whose confirmation after the opening makes a result "after the final test", and
 # the result slots whose recomputation after it does.
 AFTER_DECISIONS = ('prediction_time', 'feature_availability', 'split', 'success_criterion',
@@ -651,6 +654,10 @@ def changed_after(state: Mapping, started: Mapping | None = None) -> list[str]:
         if not dec:
             continue
         conf = dec.get('confirmation') or {}
+        if dec.get('status') == 'confirmed' and conf.get('adopted_from'):
+            # L9 (R20): the junior's review adopted an automatic decision with the same
+            # value; nothing changed after the final test.
+            continue
         later = isinstance(conf.get('revision'), int) and conf['revision'] > since
         if dec.get('status') == 'reconfirm_required' or (dec.get('status') == 'confirmed'
                                                           and later):
@@ -686,11 +693,16 @@ def final_test_status(state: Mapping, started: Mapping | None = None) -> dict:
 
 
 def open_record(*, revision: int, execution_id: str, proposal_id: str | None,
-                user_words: str | None, model: str, rule: str | None, time: str) -> dict:
-    """The ``opening`` record (WP-B1), its ``result_id`` null until the promotion."""
-    return {'revision': revision, 'execution_id': execution_id, 'proposal_id': proposal_id,
-            'user_words': user_words, 'model': model, 'rule': rule, 'time': time,
-            'result_id': None}
+                user_words: str | None, model: str, rule: str | None, time: str,
+                basis: str | None = None) -> dict:
+    """The ``opening`` record (WP-B1), its ``result_id`` null until the promotion;
+    ``basis`` (L9) only for an automatic opening."""
+    record = {'revision': revision, 'execution_id': execution_id, 'proposal_id': proposal_id,
+              'user_words': user_words, 'model': model, 'rule': rule, 'time': time,
+              'result_id': None}
+    if basis is not None:
+        record['basis'] = basis
+    return record
 
 
 def validate(part: Any) -> list[dict]:
@@ -725,7 +737,9 @@ def validate(part: Any) -> list[dict]:
                          'problem': 'must equal the development and final-test rows'})
     opening = part.get('opening')
     if part['status'] == OPENED and (not isinstance(opening, dict)
-                                     or set(opening) != set(OPENING_KEYS)):
+                                     or set(opening) - set(OPENING_OPTIONAL_KEYS)
+                                     != set(OPENING_KEYS)
+                                     or opening.get('basis', 'automatic') != 'automatic'):
         problems.append({'path': f'{path}.opening',
                          'problem': 'an opened final test has its opening record '
                                     '{' + ', '.join(OPENING_KEYS) + '}'})

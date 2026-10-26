@@ -77,6 +77,16 @@ delegated: Déléguée au choix recommandé par l'assistant
 delegated_words: Vos mots déléguant le choix
 delegated_note: Décidé par délégation au choix par défaut de l'assistant, et non par votre propre jugement. Confirmez-le vous-même quand vous le pourrez.
 delegated_restatement: Choix recommandé que vous avez délégué
+# Owner session 2026-10-26 (L9, R20) : le mode automatique, relu à la fin.
+automatic: Enregistrée par le mode automatique, à relire
+automatic_note: Décidé par le mode automatique choisi au lancement, avec la valeur du moteur, et non avec vos mots. Adoptez-la ou changez-la avec vos propres mots avant que l'étude soit défendable.
+automatic_restatement: Ce que le mode automatique a enregistré
+adopted_note: Adoptée avec vos propres mots après son enregistrement par le mode automatique.
+automation_banner_review: "Étude automatique : à relire, pas encore défendable."
+automation_banner_review_detail: Chaque décision marquée comme automatique a été prise par le mode automatique choisi au lancement ; relisez-la avec vos propres mots.
+automation_banner_opened: Le test final a été ouvert automatiquement.
+automation_banner_opened_detail: Le mode démonstration l'a ouvert, et non votre décision. Son unique évaluation est conservée ; l'ouverture ne peut pas être refaite.
+credit_automatic: "Enregistré par le mode automatique, pas encore relu par l'analyste :"
 not_authenticated: Mots enregistrés, pas une signature authentifiée.
 restatement: Reformulation à laquelle vous avez répondu
 proposal_waiting: En attente de votre réponse
@@ -192,6 +202,7 @@ basis:
   restated: Reformulée dans vos mots
   endorsed: Approuvée dans vos mots
   delegated_default: Déléguée à l'assistant
+  automatic: Automatique, à relire
 recorded_at: Enregistrée à la révision
 looks:
   summary: Regards sur le résultat dans les lignes de développement

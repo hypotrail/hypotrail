@@ -675,6 +675,11 @@ def outdates_conclusion(state: Mapping, decision_id: str, *, was_confirmed: bool
         what = 'it was confirmed after the conclusion'
     elif rec.canonical(old) != rec.canonical(new):
         what = 'its value changed after the conclusion was confirmed'
+    elif st.basis_class(old_basis) != st.basis_class(new_basis) and st.confirmation_basis(
+            state['decisions'][CONCLUSION].get('confirmation')) == st.AUTOMATIC:
+        # L9 (R20): an automatic conclusion is itself in the review queue, reviewed last; the
+        # review of the decisions before it does not ask for it once per decision.
+        return None
     elif st.basis_class(old_basis) != st.basis_class(new_basis):
         # ADR 0005: ``explicit``, ``endorsed`` and ``restated`` are all the junior's own
         # words; only a change between them and a delegation changes the credit line.

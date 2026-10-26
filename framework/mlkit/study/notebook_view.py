@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from . import cite, guard, read, render_html, texts, view as view_model
+from . import state as st
 from .errors import StudyError
 
 e = html.escape
@@ -92,10 +93,15 @@ def banner_html(study: read.Study, generated_revision: int, result_ids: Mapping[
     current = study.revision == generated_revision and not moved
     text = labels['banner_current'] if current else labels['banner_stale']
     status = 'current' if current else 'stale'
+    # L9 (R20): the automatic study's banners, read from the study at run time (the
+    # generated source is unchanged).
+    with texts.report_language_context(language):
+        automatic = render_html.automation_banner(view_model.build(study)) \
+            if st.automation_of(state) is not None else ''
     return (f'<div class="notice" data-notebook-banner="{status}"><strong>{words["generated"]} '
             f'<span data-literal="revision">{generated_revision}</span></strong>; '
             f'{words["study_at"]} <span data-literal="revision">{study.revision}</span>. '
-            f'{e(text)} {e(labels["read_only"])}</div>')
+            f'{e(text)} {e(labels["read_only"])}</div>{automatic}')
 
 
 def step_html(cited: cite.Citer, result_ids: Mapping[str, str], slots: list[str],
@@ -136,7 +142,12 @@ def decision_html(study: read.Study, decision_id: str) -> str:
     d = view_model.build(study)['decisions'][decision_id]
     out = (f'<p><strong>{WORDS[language]["decision"]}</strong> '
            f'{e(labels["decision_status"][d["status"]])}')
-    if d['confirmation'] and d['status'] == 'confirmed':
+    if d['confirmation'] and d['status'] == 'confirmed' \
+            and d['confirmation'].get('basis') == st.AUTOMATIC:
+        # L9 (R20): no words; recorded by the automatic mode, to review.
+        out += (f' — <em data-basis="automatic">{e(labels["automatic"])}. '
+                f'{e(labels["automatic_note"])}</em>')
+    elif d['confirmation'] and d['status'] == 'confirmed':
         delegated = d['confirmation'].get('basis') == 'delegated_default'
         label = labels['delegated_words'] if delegated else labels['user_words']
         out += (f' — {e(label)}: <q data-literal="user_words">'

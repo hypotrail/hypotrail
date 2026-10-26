@@ -243,6 +243,7 @@
           // ADR 0005: endorsed and restated are the junior's own words, like explicit.
           if (['explicit', 'endorsed', 'restated'].includes(step.basis)) return c.pauseWords(p);
           if (step.basis === 'delegated_default') return c.pauseDelegated(p);
+          if (step.basis === 'automatic') return c.pauseAutomatic(p);     // L9 (R20)
         }
         return '';
       case 'reopened': return p !== null ? c.pauseReopened(p) : c.reopened;
@@ -440,7 +441,8 @@
       el('dt', { text: c.decided }),
       el('dd', {}, [decided.length ? el('ul', { className: 'ov-decided', 'data-decided': true }, decided.map(s => {
         const d = model.decisions[s.id];
-        const tag = d.status === 'reconfirm_required' ? c.toConfirmAgain : d.basis === 'delegated_default' ? c.delegated : null;
+        const tag = d.status === 'reconfirm_required' ? c.toConfirmAgain : d.basis === 'delegated_default' ? c.delegated
+          : d.basis === 'automatic' ? c.automatic : null;
         return el('li', { 'data-decided-item': s.id }, [
           el('span', { className: 'ov-decided-name', text: `${J().decisionName(s.id, task)}: ` }),
           valueNode(s.id, d.value, task),

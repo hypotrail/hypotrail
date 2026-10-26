@@ -33,6 +33,8 @@ Do not reset existing `.pilot`, `.osml`, `.local`, or other study state to insta
 
 Structured persistent state is authoritative. A proposal, example, or quiz response is not a confirmed human decision. Retain valid confirmations, reread state before mutation, reject stale revisions and conflicting duplicate requests, and preserve notebook annotations.
 
+One exception, on the owner's explicit request (R20; [ADR 0005](docs/decisions/0005-confirmation-modes.md) and [ADR 0006](docs/decisions/0006-final-test-partition.md) amendments of 2026-10-26): a study created with `init --automation` may record decisions with the basis `automatic`, through the engine's own commands and refusals. An automatic decision is never the junior's words nor a delegation; it stays in the review queue, and the study stays not defensible, until the junior adopts or changes it in their own words. Automation is chosen at launch only and ends one way. Only its `full_demo` variant opens the final test automatically, a demonstration marked as such for good; a delegation never opens it.
+
 Distinguish structural inspection, training-partition EDA, validation-based selection, and final evidence. Track exposed data. Changing a split does not make previously explored observations unseen. Do not access historical holdouts or reactivate suspended production certification. Temporary synthetic data created by tests is allowed.
 
 ## Execution and verification

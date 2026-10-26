@@ -1,5 +1,16 @@
 # Implementation handoff (v0.2)
 
+## Owner-session batch, wave W3: lot L9, the automatic mode (26 October 2026)
+
+Lot L9 (R20) of the [2026-10-26 plan](../plans/OWNER-SESSION-2026-10-26-PLAN.md), on branch `w3-l9`, not yet integrated (unit, walker and in-process CLI tests; **no Copilot session**):
+
+- **Launch** (ADR 0005 amendment of 2026-10-26): `init --automation until_final_test|full_demo`; nothing else sets it. Studies created without the flag, or before L9, are unchanged (`view.automation` null, `view.review_queue` empty).
+- **Run**: `hypotrail automation run [--progress]` follows `next_action` exactly as given, records each covered decision with the basis `automatic` (no words, `actor: assistant`; never the junior's words nor a delegation) and the engine's `auto_value` (draft or recommendation; else the one-standard-error pick, the scenario share, the conclusion from the criterion judged on the final test), runs each activity, stops at the first refusal or at anything only the junior answers, and ends the mode one way where it stops covering the plan. `automation stop --user-words` ends it midway.
+- **Review**: `next_action` (`review: true`) walks every automatic decision in the plan's order; the junior adopts (`adopted_from`, no invalidation) or changes it; in `until_final_test` the junior opens the final test only after the review (`automatic_decisions_reviewed`).
+- **Demo** (ADR 0006 amendment): `full_demo` also opens the final test (`basis: automatic` on the opening record; a delegation still never opens it) and concludes; "The final test was opened automatically" stays for good; changes during its review are marked as made after the final test.
+- **Surfaces**: `not_yet_defensible` ids `automatic_decisions_to_review` and `final_test_opened_automatically`, first in the summary; report and notebook banners in English and French; the panel shows them in its alert strip and an "automatic, to review" basis chip (read only, no new write). AGENTS.md carries the owner-approved exception.
+- Agent text: [proposals/L9-agent-text.md](../plans/proposals/L9-agent-text.md) (one rule-4 bullet, +63 words) for the integrator; panel fixtures and baselines not recaptured.
+
 ## Owner-session batch, wave W2 (26 October 2026)
 
 Lots L3, L5 and L6 of the [2026-10-26 plan](../plans/OWNER-SESSION-2026-10-26-PLAN.md), integrated over wave W1 (unit, walker, simulated-browser and real-CLI tests; **no Copilot session yet**):

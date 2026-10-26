@@ -62,6 +62,8 @@ An optional teaching question can illuminate a consequential choice. It must not
 
 Within an accepted plan, perform routine authorized work, update outputs, and continue. Pause for an invalidating ambiguity, scope change, or uncovered cost rather than every intermediate task. Silence is never a human confirmation of a business fact.
 
+**Automatic mode, reviewed at the end** (owner session 2026-10-26, L9, R20; ADR 0005 and ADR 0006 amendments). A study may be created with `init --automation until_final_test` (or `full_demo` for a demonstration that also opens the final test and concludes). The engine then records each decision with its own value, labelled `automatic`, through the same commands and refusals, and the junior reviews every one at the end: they adopt it in their own words or change it, before they open the final test themselves (`until_final_test`). Until the last one is reviewed the report, the notebook and the panel say "Automatic study: not defensible until reviewed"; after a demonstration they also say, for good, that the final test was opened automatically. An automatic decision is never the junior's words and never a delegation (CLI-CONTRACT §5.5).
+
 ## Useful EDA
 
 Start with a few findings that affect the next decision and make detail available:

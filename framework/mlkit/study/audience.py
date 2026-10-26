@@ -288,6 +288,15 @@ def _junior_next(action: Mapping, lang: str = EN) -> tuple[str, str]:
         return AGENT, (f'{named} was interrupted and its outcome is unknown. It does not '
                        'restart by itself; you will be asked before it is recorded as '
                        'interrupted.')
+    if action.get('review') and kind in ('reconfirm', 'await_user_words'):
+        # L9 (R20): the review of a decision the automatic mode recorded.
+        words = decision_words(action.get('decision'), lang)
+        if fr:
+            return AGENT, (f'La décision sur {words} a été prise par le mode automatique, sans '
+                           'vos mots. Relisez-la : adoptez-la avec vos propres mots, ou dites '
+                           'ce que vous changez.')
+        return AGENT, (f'The decision on {words} was made by the automatic mode, without your '
+                       'words. Review it: adopt it in your own words, or say what you change.')
     if kind == 'reconfirm' and action.get('decision') == 'final_test':
         # Review round 4 (E4-1): a final test confirmed but not opened, whose basis changed.
         if fr:
@@ -401,6 +410,15 @@ def _junior_limit(item: Mapping, lang: str = EN) -> str | None:
         named = join(decision_words(d) for d in item.get('decisions') or [])
         return (f'You delegated these to the assistant\'s recommended default, so they are not '
                 f'your own judgment: {named}.')
+    if kind == 'automatic_decisions_to_review':
+        named = join(decision_words(d) for d in item.get('decisions') or [])
+        return ('Automatic study: not defensible until reviewed. The automatic mode decided '
+                f'these without your words; adopt or change each one in your own words: '
+                f'{named}.')
+    if kind == 'final_test_opened_automatically':
+        return ('The final test was opened automatically, by the demonstration mode, not by '
+                'your decision. Its one evaluation stands and the opening cannot be redone; '
+                'anything changed since is marked as made after the final test.')
     if kind == 'stale_results':
         return 'Some results are out of date and are computed again before they are cited.'
     if kind == 'adopted_rule_not_evaluated':
@@ -413,7 +431,9 @@ def _junior_limit(item: Mapping, lang: str = EN) -> str | None:
 
 # The limits whose English ``text`` is written for the agent (their junior variant differs).
 AGENT_LIMITS = ('unconfirmed_decisions', 'open_holds', 'conclusion_outdated',
-                'delegated_decisions', 'stale_results', 'adopted_rule_not_evaluated')
+                'delegated_decisions', 'stale_results', 'adopted_rule_not_evaluated',
+                # L9 (R20): written about the junior; their variants speak to them.
+                'automatic_decisions_to_review', 'final_test_opened_automatically')
 
 
 def limit(item: Mapping, lang: str = EN) -> dict:

@@ -25,7 +25,10 @@ const ARTIFACT_LABELS = { report: 'Report', notebook: 'Generated notebook',
   editable: 'Editable study notebook', workbench: 'Workbench' };
 const PROPOSAL_ID = /^p_[0-9]+$/;
 // The items of `not_yet_defensible.top` that the frame's alert strip shows (§4.1).
-const ALERT_IDS = ['sources_changed', 'interrupted_executions', 'result_integrity'];
+const ALERT_IDS = ['sources_changed', 'interrupted_executions', 'result_integrity',
+  // L9 (owner session 2026-10-26, R20): the banners of an automatic study, read only
+  // (`not_yet_defensible`, CLI-CONTRACT §4): decisions to review, and a demo's opening.
+  'automatic_decisions_to_review', 'final_test_opened_automatically'];
 // The pause of each decision when the summary has no `pauses` (v0 summaries).
 const DECISION_PAUSE = { prediction_time: 1, feature_availability: 1, split: 2, policy: 3, model_choice: 3, conclusion: 3 };
 const SUMMARY_KEYS = ['study', 'revision', 'task', 'recap', 'goal', 'currentStep', 'plan', 'moments', 'pauses',

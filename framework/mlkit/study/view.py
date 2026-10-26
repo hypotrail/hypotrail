@@ -64,6 +64,10 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              'model_selection', 'model_families', 'assurance',
              # reliability roadmap J2: one derived evaluator, never persisted.
              'requirements', 'completion', 'claim_eligibility', 'presentation',
+             # Owner session 2026-10-26 (L9, R20): the automatic mode chosen at launch
+             # (``state.automation``, or ``null``) and the decisions it recorded that wait
+             # for the junior's review (``[]`` in a study without automation).
+             'automation', 'review_queue',
              # L3 (owner session 2026-10-26, R4; D4 A, D4b): the case's statements in both
              # languages from its translation sidecar (``l10n.case_texts``), or ``null``.
              'case_texts')
@@ -90,7 +94,10 @@ CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'prop
                           # L3 (owner session 2026-10-26, R4): the confirmed proposal's
                           # restatement in the study language (``state.label_of``; the
                           # English ``restatement`` when the agent gave none in it).
-                          'label')
+                          'label',
+                          # L9 (R20): the automatic confirmation the junior's review adopted
+                          # with the same value (``null`` otherwise).
+                          'adopted_from')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created',
                       # ADR 0005: the restatement per language (``null`` when none was
@@ -136,8 +143,13 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 'language')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
+# L9 (R20): one item of ``view.review_queue``.
+REVIEW_QUEUE_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'revision')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
-SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds',
+SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions',
+                    # L9 (R20): the banners of an automatic study come first.
+                    'automatic_decisions_to_review', 'final_test_opened_automatically',
+                    'open_holds',
                     # v0.2b (WP-B1): the final test no longer measures what the study holds.
                     'changed_after_final_test', 'final_test_opening_interrupted',
                     # v0.2a (WP-A4): an adopting verdict against the success criterion.
@@ -1442,11 +1454,28 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     if notice:
         out['next_action']['junior_digest'] += ' ' + notice
         # The existing summary and plan both carry next_action; no second scope model.
+    # L9 (R20): the value the automatic mode records, while it runs and covers the action.
+    from . import automation
+    automation.annotate(out, state)
     from . import guidance
     out['next_action']['pause'] = guidance.pause(out)
     from . import presentation
     out['presentation'] = presentation.build(out)
+    record = st.automation_of(state)
+    out['automation'] = dict(record) if record is not None else None
+    out['review_queue'] = review_queue(state)
     out['case_texts'] = out.pop('case_texts')          # the last key (VIEW_KEYS order)
+    return out
+
+
+def review_queue(state: Mapping) -> list[dict]:
+    """L9 (R20): ``view.review_queue``, every decision whose current confirmation is
+    ``automatic``, in the plan's order (:func:`state.review_queue`)."""
+    out = []
+    for d in st.review_queue(state):
+        dec = state['decisions'][d]
+        out.append({'decision_id': d, 'status': dec['status'], 'value': dec['value'],
+                    'proposal_id': dec['proposal_id'], 'revision': dec['revision']})
     return out
 
 
@@ -2295,6 +2324,7 @@ def _text(t: _Texts, item: dict, *, again: bool, state: dict, full: dict | None,
             main += ' ' + t.data['templates']['superseding']
     elif kind == 'confirmed':
         name = ('confirmed_delegated' if item['basis'] == st.DELEGATED_DEFAULT
+                else 'confirmed_automatic' if item['basis'] == st.AUTOMATIC
                 else 'confirmed_again' if again else 'confirmed')
         main = template(name, channel=item['channel'])
     elif kind == 'withdrawn':

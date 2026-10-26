@@ -104,7 +104,8 @@
     const b = str(basis) || 'explicit';
     const label = b === 'delegated_default' ? c.basis(b, scope) : (c.basisChip[b] || b);
     return el('span', { className: 'dc-basis-cell' }, [
-      el('span', { className: `ht-status dc-basis ${b === 'delegated_default' ? 'ht-st-stale dc-delegated' : 'ht-st-ok'}`,
+      // L9 (R20): an automatic decision waits for the junior's review, like a delegation.
+      el('span', { className: `ht-status dc-basis ${['delegated_default', 'automatic'].includes(b) ? 'ht-st-stale dc-delegated' : 'ht-st-ok'}`,
         'data-basis': b, title: c.basisHelp[b] || null, text: label }),
       channel ? el('span', { className: 'muted dc-channel', 'data-channel': channel, text: ` ${c.channelWords(channel)}` }) : null,
     ]);

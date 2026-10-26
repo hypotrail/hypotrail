@@ -1,6 +1,6 @@
 # ADR 0006: A final test sealed at `init`
 
-- Status: accepted and implemented in v0.2a (WP-A3); amended and implemented in v0.2b (WP-B1): the opening ritual and cross-validation (see the amendment below). Diagnostics (WP-B4): on out-of-fold predictions before the opening, on the final test after it (CLI-CONTRACT §13). The "one variant" of the WP-B1 amendment (decision 4) is replaced in v0.3 by up to three variants within a trial budget, nested tuning and model families ([ADR 0007](0007-trial-budget-and-model-families.md)).
+- Status: accepted and implemented in v0.2a (WP-A3); amended and implemented in v0.2b (WP-B1): the opening ritual and cross-validation (see the amendment below). Diagnostics (WP-B4): on out-of-fold predictions before the opening, on the final test after it (CLI-CONTRACT §13). The "one variant" of the WP-B1 amendment (decision 4) is replaced in v0.3 by up to three variants within a trial budget, nested tuning and model families ([ADR 0007](0007-trial-budget-and-model-families.md)). Amended on 2026-10-26 (lot L9, R20): the demonstration's automatic opening (last amendment).
 - Date: 19 October 2026
 - Sources: [V0.2-REVIEW-SYNTHESIS.md](../plans/V0.2-REVIEW-SYNTHESIS.md) §3 and §4 (owner decision 6, "holdout assigned and sealed at `init`"), [V0.2-IMPLEMENTATION-PLAN.md](../plans/V0.2-IMPLEMENTATION-PLAN.md) WP-A3
 - Contracts: [CLI-CONTRACT.md](../specs/CLI-CONTRACT.md) §4.1, [CASE-CONTRACT.md](../specs/CASE-CONTRACT.md) §Order
@@ -150,3 +150,22 @@ Each fold's out-of-fold scores come from a model fitted without that fold. Under
 - Policy figures under cross-validation describe what a team acting on each period's best rows would have found; the spread across folds is visible, not averaged away.
 - Results computed before this amendment are stale through the code fingerprint and recomputed on the next run; nothing is migrated.
 - A configuration chosen on optimistic development figures can be met or not met on the final test; the verdict card shows one judged status and explains a difference.
+
+## Amendment (owner session 2026-10-26, lot L9, remark R20): the demonstration's automatic opening
+
+- Date: 26 October 2026
+- Sources: owner request R20 and decision D17e of [OWNER-SESSION-2026-10-26-PLAN.md](../plans/OWNER-SESSION-2026-10-26-PLAN.md); the ADR 0005 amendment of the same day
+- Contract: [CLI-CONTRACT.md](../specs/CLI-CONTRACT.md) §5.5
+
+### Decision
+
+1. **The demo variant only.** "Opened once, in the junior's own words, never by delegation" (WP-B1 decision 5) gains one exception: a study created with `init --automation full_demo` opens its final test by the automatic mode, with `--basis automatic`, while that mode runs. In `until_final_test` and in every other study the opening stays the junior's own act, and `--basis delegated_default` stays refused for `final_test` in every case (`delegation_not_allowed`).
+2. **Everything else is unchanged.** The opening runs the same reservation, preconditions (every result it rests on current, the capture loadable), single evaluation, exposure and sealing as a junior's; it is consumed once, interrupted or not.
+3. **Marked for good.** The opening record carries `basis: "automatic"` (`user_words: null`); `not_yet_defensible` holds `final_test_opened_automatically` and the report, the notebook and the panel say "The final test was opened automatically", whatever the review does later: the opening cannot be redone.
+4. **Its review.** The junior reviews the opening like any automatic decision: proposing the opened configuration again is accepted (`state.reviews_automatic_opening`), and confirming it in their own words adopts the opening without opening or measuring anything again. A decision changed during the review is marked as made after the final test (`changed_after`, `changed_after_final_test`); an adoption with the same value is not.
+5. **Opening the final test in the default variant.** In `until_final_test` the junior opens the final test only once every automatic decision is reviewed (`precondition_missing`, requirement `automatic_decisions_reviewed`): the opening measures the junior's decisions, not the engine's.
+
+### Consequences
+
+- A demonstration shows the whole path, final evidence included, at the price of a final test no junior chose to open; it is never defensible as a study of the junior's own and says so.
+- The guarantees of this ADR (assigned at `init`, one choke point, opened once, consumed even when interrupted) hold in both variants.
