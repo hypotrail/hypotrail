@@ -289,3 +289,19 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   starter cell. Adding a family remains framework development (k-NN or a small neural
   network would be more useful for teaching than a kernel SVM, which is slow on 32 000 rows
   with nested CV and needs calibration for probabilities).
+- **R16. The chat waits for an answer while the panel says nothing waits.** At the
+  conclusion, after the final test (development AUC 0.807 → final 0.783, recall 30.2 % →
+  21.6 %, cancellation share 25.9 % → 35.3 %), the chat asks "Que concluez-vous parmi ces trois
+  options ?" (adopt the rule, keep the baseline, do not conclude), while the panel's
+  Decisions tab says "En attente de votre réponse — Rien n'attend votre réponse. L'assistant
+  propose les décisions dans le chat." Cause: when `recommended` is null (conclusion, model
+  choice) the agent asks the junior to choose before any proposal exists, so the engine has
+  no open proposal and the panel shows nothing pending. To fix: the panel shows the step
+  that waits for the junior's choice even before a proposal ("La conclusion : l'assistant
+  vous demande de choisir dans le chat", with the engine's allowed verdicts from
+  `next_action`), and the panel line names that card.
+- **R2c. No picker at a free choice.** The same conclusion question lists its three options
+  as text bullets and ends without the picker. The R2 fix covers the adopt/change/explain
+  pause; a choice among the engine's options (conclusion verdicts, model choice, variants)
+  should use the picker too, one option per allowed value with the junior's own words, no
+  option marked recommended when `recommended` is null.
