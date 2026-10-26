@@ -265,3 +265,10 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   non-linearity or interactions, draft the tuned penalty plus one readable non-linear family
   (EBM), each with the signal that motivates it; draft the penalty alone only when nothing is
   flagged; say the cost (each variant spends one trial of three and adds selection optimism).
+- **R14 (wording).** The owner asked whether Random Forest or XGBoost should be offered. The
+  engine already has a histogram gradient-boosting family (`hgb`, scikit-learn's
+  HistGradientBoosting, the same algorithm family as XGBoost and LightGBM), but the junior
+  does not recognise it under that name. Name it as such when the variants are offered
+  ("boosting d'arbres, du même type que XGBoost"), and say in one line why a random forest is
+  not offered (usually below tuned boosting on tabular data, and a variant of the same kind
+  spends a trial for little new information).
