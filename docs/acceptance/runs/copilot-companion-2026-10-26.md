@@ -194,3 +194,16 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   and what remains uncertain; a sticky left table of contents that works offline and on a
   narrow screen; the verdict card kept first; `hypotrail check` number tracing kept; the
   annex for raw tables.
+- **R3, third case.** After the preparation is recorded, the turn ends with "La suite consiste
+  à ajuster le modèle de référence, puis le modèle logistique … On lance les modèles ?" in
+  text, no picker.
+- **R1b. The panel line points to an empty place.** Same turn: "Dans le panneau : onglet
+  Décisions." while the Decisions tab shows "En attente de votre réponse — Rien n'attend votre
+  réponse" (the recorded preparation is only in "Historique des décisions", further down).
+  The line must point where there is something to see for this message: after a
+  confirmation, the decision history (name the section) or nothing; before running the
+  models, the tab where their results will appear (Evidence) once they exist. To fix: compute
+  `where` from what the message shows (the result or decision just produced) rather than
+  from the next step's kind alone, name the section, not only the tab ("onglet Décisions,
+  Historique des décisions"), and give no line when nothing new is shown. Check whether the
+  agent used `next_action.panel.where.line` or its own rule-6 mapping here.
