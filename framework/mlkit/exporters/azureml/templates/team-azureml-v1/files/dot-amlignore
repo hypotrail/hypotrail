@@ -17,6 +17,8 @@ mlruns/
 **/__pycache__/
 **/.pytest_cache/
 **/.ipynb_checkpoints/
+# A lint (`ruff check`) writes its cache in the project folder; it is not code.
+.ruff_cache/
 .env
 .env.*
 *.pem

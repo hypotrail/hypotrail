@@ -335,7 +335,7 @@ not_yet_defensible_extra:
   delegated_decisions: Vous avez laissé l'assistant choisir. Le choix est enregistré, mais ses raisons sont celles de l'assistant, pas les vôtres.
   high_cardinality_grouping: Relancez l'exploration avec un --max-groups plus grand pour voir davantage de groupes.
   no_causality: L'étude classe les lignes ; elle ne montre pas qu'agir modifierait le résultat.
-  no_time_or_entity_identifier: Sans colonne temporelle ni identifiant d'entité, la dérive et les entités répétées ne peuvent pas être vérifiées.
+  no_time_or_entity_identifier: Un identifiant d'entité est une colonne qui nomme qui ou quoi une ligne décrit, pour retrouver les entités répétées ; une colonne de temps ou un ordre déclaré dit quand chaque ligne a eu lieu, pour vérifier une dérive.
   open_holds: Vous avez demandé d'attendre. Rien de ce qui est en attente n'est confirmé tant que vos propres mots n'ont pas levé la condition.
   public_data_already_explored: Ces données publiques peuvent déjà avoir été explorées par vous, par d'autres ou par le modèle qui vous assiste.
   small_validation_partition: Avec si peu de lignes de validation, une ou deux lignes peuvent changer un chiffre ; comparez les modèles avec prudence.

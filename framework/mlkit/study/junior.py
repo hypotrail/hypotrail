@@ -318,9 +318,26 @@ def limit_fr(item: Mapping) -> str:
                 'partagées. Le jeu de validation n\'est alors pas indépendant du jeu '
                 "d'entraînement pour ces groupes.")
     if kind == 'no_time_or_entity_identifier':
-        return ("Les données n'ont ni colonne de temps ni identifiant d'entité : l'étude ne "
-                'peut pas vérifier une dérive dans le temps ni des entités répétées entre les '
-                'échantillons.')
+        # L7 (R17): only what is missing; a declared order says what the final test shows.
+        missing = list(item.get('missing') or ('time_column', 'group_column'))
+        if missing == ['time_column']:
+            text = ("Les données n'ont ni colonne de temps ni ordre déclaré : l'étude ne peut "
+                    'pas vérifier une dérive dans le temps.')
+        elif missing == ['group_column']:
+            text = ("Les données n'ont pas d'identifiant d'entité : l'étude ne peut pas "
+                    "vérifier qu'une même entité apparaît dans plusieurs échantillons.")
+        else:
+            text = ("Les données n'ont ni colonne de temps ni identifiant d'entité : l'étude "
+                    'ne peut pas vérifier une dérive dans le temps ni des entités répétées '
+                    'entre les échantillons.')
+        if 'ordered_by' in item:
+            by = item.get('ordered_by')
+            order = ("l'ordre des lignes du fichier" if by in (None, 'line')
+                     else f'la colonne {by}')
+            text += (f' Les lignes suivent un ordre déclaré ({order}) et le test final en '
+                     'contient les dernières : il peut donc montrer un écart entre la période '
+                     'de développement et la période finale, sans en expliquer l\'origine.')
+        return text
     if kind == 'uncertain_features_included':
         return ('Ces variables sont utilisées alors que leur disponibilité au moment de la '
                 f'prédiction est incertaine : {cols}. Vérifiez qu\'elles sont connues à ce '

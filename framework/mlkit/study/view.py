@@ -1388,6 +1388,10 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     # values a confirmation would accept now (``feasibility.accepts``).
     from . import feasibility
     junior.enrich(out, state, case, accepts=feasibility.accepts(study, state))
+    if out['next_action'].get('kind') == 'done':
+        # L7 (D15): what comes after the study, the export offered only when supported.
+        from . import after_study
+        out['next_action']['after_study'] = after_study.build(out, state, case)
     notice = assurance.scope_notice(case, language)
     if assurance.profile(state) == 'review-v1':
         contract = case.document.get('analysis_contract') if case is not None else None

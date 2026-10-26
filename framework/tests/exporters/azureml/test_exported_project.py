@@ -184,3 +184,27 @@ def test_the_project_passes_the_team_lint(project):
     result = subprocess.run([ruff, 'check', 'src', '--no-cache'], cwd=project['root'],
                             capture_output=True, text=True, check=False)
     assert result.returncode == 0, result.stdout[-3000:]
+
+
+def test_a_lint_cache_is_not_uploaded(project, tmp_path):
+    """L7 (known R19 defect): ``ruff check`` without ``--no-cache`` writes ``.ruff_cache/``
+    in the project folder; ``.amlignore`` excludes it, so the project's own upload test and
+    ``validate --offline`` still pass after a lint."""
+    from mlkit.exporters.azureml import transfer
+    ruff = shutil.which('ruff', path=str(Path(sys.executable).parent))
+    if ruff is None:
+        pytest.skip('ruff is not installed (azureml group)')
+    copy = tmp_path / 'linted'
+    shutil.copytree(project['root'], copy)
+    result = subprocess.run([ruff, 'check', 'src'], cwd=copy, capture_output=True, text=True,
+                            check=False)
+    assert result.returncode == 0, result.stdout[-3000:]
+    assert (copy / '.ruff_cache').is_dir()
+    assert '.ruff_cache/' in (copy / '.amlignore').read_text().splitlines()
+    assert not [p for p in transfer.transferable(copy) if '.ruff_cache' in p]
+    own = _run(copy, '-m', 'pytest', '-q', '-p', 'no:cacheprovider',
+               'tests/test_export_contract.py::test_code_upload_holds_only_code', check=False)
+    assert own.returncode == 0, own.stdout[-3000:]
+    report = _json(_run(copy, '-m', 'src.pipeline.utils.project', 'validate', '--offline'))
+    statuses = {c['id']: c['status'] for c in report['checks']}
+    assert statuses['code_upload_content'] == 'passed', report

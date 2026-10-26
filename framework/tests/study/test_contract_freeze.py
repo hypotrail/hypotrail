@@ -625,6 +625,7 @@ def test_next_action_kinds_and_not_yet_defensible_ids_in_source():
     assert set(re.findall(r"'kind': '([a-z_]+)'", source)) == NEXT_ACTION_KINDS
     defensible = (inspect.getsource(st.not_yet_defensible) + inspect.getsource(view.build)
                   + inspect.getsource(st.delayed_labels_limit)
+                  + inspect.getsource(st.structure_limit)     # L7 (R17)
                   + inspect.getsource(view._small_data)
                   + inspect.getsource(view.small_partition_warning)
                   + inspect.getsource(view.capacity_warning)
@@ -1354,3 +1355,22 @@ def test_panel_line_keys_are_frozen_and_documented():
     assert '`{tab, section, label, line}`' in DOC
     for section in set(ce.SECTIONS) - {'eda_card'}:
         assert f'`{section}`' in DOC, section
+
+
+def test_l7_after_study_and_structure_limit_contract():
+    """L7 (owner session 2026-10-26: D15, R17): ``next_action.after_study`` on ``done`` and
+    the ``no_time_or_entity_identifier`` keys; every name is documented in CLI-CONTRACT.md
+    (§3.1, §4, §15)."""
+    from mlkit.study import after_study as aft
+    assert aft.AFTER_STUDY_KEYS == ('handoff', 'azureml', 'cloud_status', 'junior_text')
+    assert aft.AZUREML_KEYS == ('supported', 'reason_id', 'reason', 'plan_command', 'model',
+                                'template')
+    assert aft.REASON_IDS == ('study_before_final_test', 'sources_changed', 'no_model_chosen',
+                              'baseline_chosen', 'family_not_supported', 'no_recipe')
+    assert aft.CLOUD_STATUS == 'not_qualified' and aft.TEMPLATE_ID == 'team-azureml-v1'
+    keys = (set(aft.AFTER_STUDY_KEYS) | set(aft.AZUREML_KEYS) | set(aft.REASON_IDS)
+            | {'after_study', 'not_qualified', 'ordered_by', 'state.missing_structure',
+               'state.declared_order', 'state.structure_limit', 'mlkit.study.after_study',
+               'current_revision', 'study_revision'})
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
+    assert '--expected-revision is required: the study at' in DOC
