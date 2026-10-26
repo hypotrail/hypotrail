@@ -329,3 +329,16 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   study), e.g. "--expected-revision is required: the study is at revision 41; add
   --expected-revision 41". Also: the owner's shell had another project's `VIRTUAL_ENV`
   active, and uv warned and ignored it; harmless, but worth one line in the export docs.
+- **R19. The discovery case cannot be exported.** `export azureml --plan` on the finished Hotel
+  study refuses: "This template does not qualify the binary family 'logistic' with output
+  'binary_score'" (`capability_not_supported`); the support matrix of team-azureml-v1 is
+  regression `linear` only (`AZUREML-EXPORT-V1.md` §10). So the v0.3 discovery case (Hotel,
+  binary) and Bank Marketing cannot reach the export at all; only Auto MPG (regression,
+  linear model chosen) can. Nothing says so before the junior gets there: not the agent at
+  `done`, not the panel, not the README. (My demo instructions also suggested exporting the
+  Hotel study.) To decide: qualify the binary logistic family (output `binary_score`, the
+  rule kept as metadata), then EBM/HGB, or state the matrix up front (agent at `done`, the
+  report, the panel's hand-off tab) and offer the export only when the chosen model is
+  supported. Also seen: running the export on the wrong study (another `$STUDY`) gave
+  "no recipe of a selected model … final test is sealed": correct, but the message could
+  name the study path and its revision so a wrong folder is obvious.
