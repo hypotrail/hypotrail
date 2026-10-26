@@ -1384,7 +1384,10 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         out['claim_eligibility'] = None
     # v0.3 (WP-C): what the agent relays at this pause (``junior_digest``, ``recommended``,
     # ``question``, ``criterion_options``), in the study language.
-    junior.enrich(out, state, case)
+    # Owner session 2026-10-26 (L1, R2c): at a free choice, ``choice_options`` lists the
+    # values a confirmation would accept now (``feasibility.accepts``).
+    from . import feasibility
+    junior.enrich(out, state, case, accepts=feasibility.accepts(study, state))
     notice = assurance.scope_notice(case, language)
     if assurance.profile(state) == 'review-v1':
         contract = case.document.get('analysis_contract') if case is not None else None

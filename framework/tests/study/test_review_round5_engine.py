@@ -606,6 +606,14 @@ def _follow(f, task, review, limit=60):
         else:
             assert kind in ('propose', 'reconfirm'), nxt
             decision = nxt['decision']
+            # Owner session 2026-10-26 (L1, R2c): a free choice lists the values the engine
+            # accepts; at the conclusion they are the verdicts its rule allows.
+            choices = [o['value'] for o in nxt.get('choice_options') or []]
+            if kind == 'propose' and decision in ('conclusion', 'model_choice'):
+                assert choices and nxt['pause']['kind'] == 'choice', nxt
+            if decision == 'conclusion' and kind == 'propose':
+                assert [c['verdict'] for c in choices] == (
+                    nxt.get('verdicts') or [c['verdict'] for c in choices]), nxt
             if decision == 'conclusion':
                 value = {'verdict': (nxt.get('verdicts') or ['inconclusive'])[0],
                          'text': CONCLUSION}
@@ -616,6 +624,8 @@ def _follow(f, task, review, limit=60):
                 if value is None:
                     assert decision in JUNIOR_VALUES, nxt
                     value = _junior_value(f, decision, task, review)
+                if decision == 'model_choice' and kind == 'propose':
+                    assert value in choices, (value, choices)
             p = f.call('decide', 'propose', decision, '--value-json', json.dumps(value),
                        '--restatement', f'You decide the {decision} as stated.', '--rationale',
                        'It fits the scenario.', '--request-id', f.rid(), '--expected-revision',

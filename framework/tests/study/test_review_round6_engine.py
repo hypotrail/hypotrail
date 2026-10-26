@@ -169,12 +169,18 @@ def execute(s: Study, nxt: dict) -> dict:
     raise AssertionError(f'unknown next_action: {nxt}')
 
 
-def walk(s: Study, *, limit: int = 120, hooks=(), log=None) -> tuple[list, dict]:
+def walk(s: Study, *, limit: int = 120, hooks=(), log=None,
+         choices: Path | None = None) -> tuple[list, dict]:
     """Follow ``next_action`` until ``done``; each hook ``(when, apply)`` fires once, the first
     time ``when(next_action, study)`` holds, before that action is executed (the junior or the
     team change something there). Asserts the property: every action accepted, no state seen
     twice (a state is the revision and the action: an action that changes nothing would be
-    named again at the same revision), and ``done`` reached."""
+    named again at the same revision), and ``done`` reached.
+
+    Owner session 2026-10-26 (L1, J-PICK): every pause with options labels each of them, and
+    with ``choices`` (a scratch folder) every ``choice_options`` entry is confirmed on a clone
+    of the study, and every other value of that decision is refused there
+    (:func:`check_choice_options`)."""
     log = [] if log is None else log
     seen: set[tuple[int, str]] = set()
     pending = list(hooks)
@@ -188,6 +194,13 @@ def walk(s: Study, *, limit: int = 120, hooks=(), log=None) -> tuple[list, dict]
                 view = s.view()
                 nxt = view['next_action']
         assert nxt.get('junior_message') and nxt.get('audience') in audience.AUDIENCES, nxt
+        pause = nxt['pause']
+        assert list(pause['option_labels']) == pause['options'], pause
+        assert all(isinstance(t, str) and t.strip() for t in pause['option_labels'].values())
+        if nxt.get('choice_options'):
+            assert pause['kind'] == 'choice' and pause['recommended_option'] is None, pause
+            if choices is not None:
+                check_choice_options(s, nxt, choices / f'r{view["revision"]}')
         state_key = (view['revision'], _key(nxt))
         assert state_key not in seen, ('a state repeats without progress', nxt, log[-6:])
         seen.add(state_key)
@@ -201,6 +214,48 @@ def walk(s: Study, *, limit: int = 120, hooks=(), log=None) -> tuple[list, dict]
         if nxt['kind'] == 'run':
             assert out['status'] == 'promoted', (nxt, out['status'], log[-6:])
     raise AssertionError(f'next_action did not settle: {log[-10:]}')
+
+
+def accepted_on_a_clone(s: Study, folder: Path, decision: str, value) -> bool:
+    """Whether the engine adopts ``value`` for ``decision`` on a copy of the study: proposed,
+    then confirmed with the junior's words, both through the CLI."""
+    import shutil
+    shutil.copytree(s.study, folder)
+    f = fk.Flow(folder, s.case_dir, prefix='clone')
+    if decision == 'conclusion':
+        value = {**value, 'text': CONCLUSION}
+    p = f.call('decide', 'propose', decision, '--value-json', json.dumps(value),
+               '--restatement', f'You decide the {decision} as stated.', '--rationale',
+               'It fits the scenario.', '--request-id', f.rid(), '--expected-revision',
+               f.rev(), '--study', f.study, expect=None)
+    if not p.get('ok'):
+        return False
+    out = f.call('decide', 'confirm', p['result']['proposal_id'], '--user-words',
+                 _words(s, decision), '--request-id', f.rid(), '--expected-revision', f.rev(),
+                 '--study', f.study, expect=None)
+    return bool(out.get('ok'))
+
+
+def candidate_values(state, decision: str) -> list:
+    """Every value of a free choice the engine knows: each verdict of the task; each model
+    slot the study may name, the binary baseline and an undeclared variant slot included."""
+    from mlkit.study import commands as cmd, preconditions, trials
+    if decision == 'conclusion':
+        return [{'verdict': v} for v in preconditions.conclusion_verdicts(state)]
+    slots = list(cmd.model_choices(state))
+    extra = ['fit.baseline'] + [v for v in trials.VARIANT_SLOTS if v not in slots][:1]
+    return slots + [v for v in extra if v not in slots]
+
+
+def check_choice_options(s: Study, nxt: dict, folder: Path) -> None:
+    """J-PICK (L1, R2c): ``choice_options`` lists exactly the values the engine accepts now:
+    each one is adopted on a clone, every other value of the decision is refused there."""
+    decision = nxt['decision']
+    offered = [o['value'] for o in nxt['choice_options']]
+    assert [o['id'] for o in nxt['choice_options']] == nxt['pause']['options']
+    for i, value in enumerate(candidate_values(s.state(), decision)):
+        accepted = accepted_on_a_clone(s, folder / str(i), decision, value)
+        assert accepted == (value in offered), (decision, value, offered)
 
 
 # --- the changes made along the way (the hooks) ---------------------------------------------
@@ -441,9 +496,12 @@ def test_next_action_is_never_refused_and_settles(tmp_path, monkeypatch, base, f
     exactly as given never meets a refusal, never repeats a state without progress, and
     reaches ``done``."""
     s = BASES[base](tmp_path, monkeypatch)
-    hooks = [h for h in factory(monkeypatch, tmp_path)
+    made = factory(monkeypatch, tmp_path)
+    hooks = [h for h in made
              if not h[2].startswith('hold ') or h[2][5:] in s.state()['decisions']]
-    log, last = walk(s, hooks=[(w, a, n) for w, a, n in hooks])
+    # L1 (J-PICK): the scenarios without a change check every free choice on clones.
+    log, last = walk(s, hooks=[(w, a, n) for w, a, n in hooks],
+                     choices=tmp_path / 'choices' if not made else None)
     assert last['kind'] == 'done', log[-6:]
     if any(n in ('confirm', 'capture', 'unloadable', 'code') for _, _, n in hooks) \
             or base == 'review-binary-fr':

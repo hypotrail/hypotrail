@@ -567,11 +567,13 @@ def test_standard_vocabulary_and_no_ids(task):
 
 def test_generated_copilot_instructions_put_what_the_junior_reads_last(study):
     """Copilot folds the text written before a tool call into collapsed reasoning. The
-    instructions ``init`` writes for it never order "message first, then picker" and never
-    announce runs before them; they put the facts, the quoted block and the closed question
-    in the picker question, and the run announcements in the final message. Since the owner
-    session of 2026-10-26 (R2), "explain first" calls the picker again instead of ending the
-    turn in text. The Claude Code copy keeps its own procedure, unchanged."""
+    instructions ``init`` writes for it never order "message first, then picker"; they put the
+    facts, the quoted block and the closed question in the picker question, and what the
+    junior must keep in the final message. Since the owner session of 2026-10-26 (R2),
+    "explain first" calls the picker again instead of ending the turn in text; since its
+    second batch (R9, D13) short progress lines before and between tool calls are allowed
+    with Copilot, what the junior must keep being repeated in the final message or the
+    picker. The Claude Code copy keeps its own procedure, unchanged."""
     target, _ = study
     copilot = Flat((target / '.github/copilot-instructions.md').read_text())
     claude = Flat((target / 'CLAUDE.md').read_text())
@@ -582,8 +584,8 @@ def test_generated_copilot_instructions_put_what_the_junior_reads_last(study):
         assert phrase not in copilot, phrase
         assert phrase in claude, phrase
     for phrase in ('Copilot folds text written before a tool call',
-                   'run announcements go in the final message of the turn, never before a '
-                   'tool call', 'The block is inside the picker question',
+                   'the final message (at a pause, the picker question) repeats what the '
+                   'junior must keep', 'The block is inside the picker question',
                    'call it as the last step of the turn, with one single-select question that '
                    'holds the key facts of the pause, the quoted block, and the closed question',
                    '`next_action.pause.question`',
@@ -608,16 +610,42 @@ def test_generated_copilot_instructions_put_what_the_junior_reads_last(study):
 def test_the_copilot_agent_asks_in_the_study_language():
     """R9UX-2: the picker's question and options are in the study language, the closed
     question taken from ``next_action.pause``; adopt is marked recommended only when the
-    proposal is the engine's recommendation."""
+    proposal is the engine's recommendation. Owner session 2026-10-26 (L1, R3): the option
+    labels come from the engine (``pause.option_labels``), so the agent no longer translates
+    them; their words, and the closed question, are pinned on the engine
+    (:func:`test_the_engine_labels_the_adoption_picker`)."""
     agent = Flat((af.SOURCE / 'copilot-agent.md.in').read_text())
     for phrase in ('one question in the study language', '`next_action.pause.question`',
-                   '"Do you adopt this decision?"', '"Adoptez-vous cette décision ?"',
-                   '"I adopt this decision"', '"J\'adopte cette décision"',
-                   '"Change something"', '"Changer quelque chose"', '"Explain first"',
-                   '"Expliquer d\'abord"',
+                   'Options: `next_action.pause.options`, labelled with `pause.option_labels`',
+                   '"Explain first" ("Expliquer d\'abord": call the picker again)',
                    'recommended only if you proposed `recommended.value`'):
         assert phrase in agent, phrase
     assert '(recommended;' not in agent
+
+
+def test_the_engine_labels_the_adoption_picker():
+    """The words the agent file named before L1, now the engine's: the closed question of a
+    decision pause and the labels of its options, in English and in French; the adopt label
+    is the words ``--channel choice`` records (CLI-CONTRACT §5.4), and the shared rule 4 still
+    names it."""
+    from mlkit.study import guidance
+    view = {'next_action': {'kind': 'await_user_words', 'proposal_id': 'p_1'},
+            'open_proposals': [{'proposal_id': 'p_1', 'restatement': 'You keep X.'}],
+            'revision': 3}
+    for lang, closed, labels in (
+            ('en', 'Do you adopt this decision?',
+             {'adopt': 'I adopt this decision', 'change': 'Change something',
+              'explain': 'Explain first'}),
+            ('fr', 'Adoptez-vous cette décision ?',
+             {'adopt': "J'adopte cette décision", 'change': 'Changer quelque chose',
+              'explain': "Expliquer d'abord"})):
+        pause = guidance.pause({**view, 'language': lang})
+        assert pause['kind'] == 'decision'
+        assert pause['question'].replace('\u00a0', ' ').endswith(closed)
+        assert pause['option_labels'] == labels
+    instructions = _binary('CLAUDE.md.in')
+    for label in ('"I adopt this decision"', '"J\'adopte cette décision"'):
+        assert label in instructions, label
 
 
 def test_the_short_read_asks_for_the_keys_rule_3_reads(study):
@@ -710,7 +738,7 @@ def test_the_r2_fix_leaves_the_claude_code_copy_unchanged(task):
     """R2 is Copilot only: the slots it adds are empty for Claude Code, so the Claude Code
     copy keeps its pause procedure word for word (text before the choice tool, "explain
     first" answered in the chat, the text fallback without a tool)."""
-    for key in ('TEXT_FALLBACK', 'PAUSE_CARRIER', 'PANEL_LINE_PLACE'):
+    for key in ('TEXT_FALLBACK', 'PAUSE_CARRIER', 'PANEL_LINE_PLACE', 'PICKER_RULE'):
         assert af.FLAVOUR_TEXTS[af.CLAUDE][key] == '', key
         assert af.FLAVOUR_TEXTS[af.COPILOT][key].strip(), key
     values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
@@ -729,3 +757,166 @@ def test_the_r2_fix_leaves_the_claude_code_copy_unchanged(task):
         assert phrase in flat, phrase
     assert 'picker' not in claude and 'Copilot this message' not in skill
     assert ('count them before sending. No\nheading, no recap of earlier steps' in skill)
+
+
+# --- Owner session 2026-10-26, second batch: L1 (R3, R2b, R2c) and L4 (R9, R10) -----------
+
+def _copilot_files(task: str) -> dict:
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    return {target: Flat(af.render((af.SOURCE / rel).read_text(), flavour=flavour,
+                                   values=values, source=rel, task=task))
+            for rel in af.templates() for target, flavour in af.targets(rel)
+            if flavour == af.COPILOT}
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_copilot_ends_every_closed_question_with_the_picker(task):
+    """R3 (D1): with Copilot, every turn that ends with a closed question ends with the
+    picker, transitions included ("go on"), its options and labels the engine's
+    (``pause.options``, ``pause.option_labels``), one marked recommended only when
+    ``pause.recommended_option`` names it, and its question holds what the junior must keep;
+    an open question stays without a picker. Rule 3, where the transitions are, carries it."""
+    out = _copilot_files(task)
+    instructions = out['.github/copilot-instructions.md']
+    rule3 = _rule(instructions, 3)
+    for phrase in ('A turn ending with a closed question (go on, explain first, adopt, an '
+                   'engine option) ends with the picker',
+                   'options `next_action.pause.options` labelled by `pause.option_labels`',
+                   'recommended only when `pause.recommended_option` names one',
+                   'its question holding what the junior must keep',
+                   'An open question needs no picker'):
+        assert phrase in rule3, phrase
+    agent = out['.github/agents/hypotrail.agent.md']
+    for phrase in ('so does every turn that ends with another closed question',
+                   'labelled with `pause.option_labels`'):
+        assert phrase in agent, phrase
+    assert 'picker at every closed question' in agent.split('\n---\n', 1)[0]
+    from mlkit.study import guidance
+    assert set(guidance.OPTION_LABELS) == {'adopt', 'change', 'explain', 'continue'}
+    assert 'choice' in guidance.KINDS
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_a_dismissed_picker_is_asked_again(task):
+    """R2b: a picker closed without an answer, or a reply typed instead, is not a failed
+    call; a typed reply is read as the answer; the pause is asked again with the picker,
+    saying that nothing is recorded yet; only a failed call or a missing tool falls back to
+    text. No word blames the junior ("ignorée", "ignored")."""
+    out = _copilot_files(task)
+    instructions = out['.github/copilot-instructions.md']
+    for phrase in ('A picker closed unanswered, or a reply typed instead, is not a failed call',
+                   'read a typed reply as the answer',
+                   'to ask again, say nothing is recorded yet ("Rien n\'est encore '
+                   'enregistré : voici de nouveau la décision.") and call the picker again',
+                   'Without one, ask it in text only when the picker call fails or the tool is '
+                   'missing'):
+        assert phrase in instructions, phrase
+    assert ('Without the picker, ask in text: only if the call fails or the tool is missing'
+            in out['.github/agents/hypotrail.agent.md'])
+    for name, text in out.items():
+        assert not re.search(r'ignor', text, re.I), name
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_a_free_choice_uses_the_picker(task):
+    """R2c (D2): at a free choice (``pause.kind`` ``choice``: the model choice, the
+    conclusion), one option per ``next_action.choice_options``, none recommended; the pick is
+    the junior's choice, not a confirmation (never ``--channel choice``): the value is
+    proposed, then adopted at its own pause."""
+    rule3 = _rule(_copilot_files(task)['.github/copilot-instructions.md'], 3)
+    for phrase in ('When `pause.kind` is `choice`, offer `next_action.choice_options`, none '
+                   'recommended', 'a pick is no confirmation (never `--channel choice`)',
+                   'propose it (a conclusion with its text in `next_action.language`), then ask '
+                   'the adoption question'):
+        assert phrase in rule3, phrase
+    from mlkit.study import junior
+    assert junior.CHOICE_DECISIONS == ('model_choice', 'conclusion')
+    assert junior.CHOICE_OPTION_KEYS == ('id', 'value', 'label')
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_copilot_narrates_the_major_steps(task):
+    """R9 (D13): with Copilot, one short line before each major step and one with its result
+    after it, the steps ticked in the ``todo`` tool (in the agent's tools); what the junior
+    must keep is repeated in the final message or the picker."""
+    out = _copilot_files(task)
+    rule3 = _rule(out['.github/copilot-instructions.md'], 3)
+    for phrase in ('Before each major step write one short line ("Je vais maintenant ajuster '
+                   'le modèle de référence."), after it one line with its result from the '
+                   'output, and tick the step in the `todo` tool',
+                   'Copilot folds text written before a tool call once the turn ends',
+                   'repeats what the junior must keep: what was decided, the results, expected '
+                   'delays, whether the final test stays sealed'):
+        assert phrase in rule3, phrase
+    assert 'never before a tool call' not in out['.github/copilot-instructions.md']
+    assert "'todo'" in out['.github/agents/hypotrail.agent.md'].split('\n---\n', 1)[0]
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_runs_show_progress_and_keep_stderr(task):
+    """R10 (L4): both agents run activities with ``--progress`` (the commands block) and never
+    discard stderr, where the progress lines go; the flag exists on ``hypotrail run``."""
+    from mlkit.study import cmd_run
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    for flavour in (af.CLAUDE, af.COPILOT):
+        text = Flat(af.render((af.SOURCE / 'CLAUDE.md.in').read_text(), flavour=flavour,
+                              values=values, source='CLAUDE.md.in', task=task))
+        assert 'h run ACTIVITY [--column NAME] --progress --request-id ID' in text
+        assert 'Keep stderr: do not add `2>/dev/null`.' in _rule(text, 12)
+    import argparse
+    parser = argparse.ArgumentParser()
+    cmd_run.configure(parser)
+    assert '--progress' in parser._option_string_actions
+
+
+# The Claude Code copy (CLAUDE.md, the skill, the resume command) as rendered before this
+# batch (``a12c23a``), placeholders h/s/g, by task, and the shared lines each lot changes on
+# purpose (new, old). NR-8: any other change to the Claude Code copy fails here; a lot that
+# changes a shared line adds it to this list in the same commit.
+CLAUDE_CODE_DIGESTS = {
+    'binary': '18719e74569e7be56cb9b6b985ae5598fc45c5960dd668a747a9ff3fed9483e5',
+    'regression': 'b4a890b652378d935ad16664ff2232cd1431014062730159a8489d4567d018a2'}
+CLAUDE_CODE_INTENDED_CHANGES = {
+    'L4 (R10): keep stderr': (
+        ' Keep stderr: do not add `2>/dev/null`. Write only what the\n    junior asks for (their '
+        'notes go in `notebooks/workbench.py`); leave `.hypotrail/`,\n    `reports/`, and '
+        '`notebooks/study_generated.py` to the engine.',
+        ' Write only what the junior asks for (their notes go in\n    '
+        '`notebooks/workbench.py`); leave `.hypotrail/`, `reports/`, and\n    '
+        '`notebooks/study_generated.py` to the engine.'),
+    'L4 (R10): run with --progress': (' run ACTIVITY [--column NAME] --progress --request-id',
+                                      ' run ACTIVITY [--column NAME] --request-id'),
+}
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_the_claude_code_copy_changes_only_the_listed_shared_lines(task):
+    """D1b, NR-8: L1 and the R9 narration are Copilot only; the Claude Code copy is byte for
+    byte the one before the batch, except the shared lines listed in
+    :data:`CLAUDE_CODE_INTENDED_CHANGES` (each present exactly once)."""
+    import hashlib
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    digest = hashlib.sha256()
+    found = dict.fromkeys(CLAUDE_CODE_INTENDED_CHANGES, 0)
+    for rel in ('CLAUDE.md.in', 'dot-claude/skills/hypotrail-study/SKILL.md',
+                'dot-claude/commands/hypotrail-resume.md'):
+        text = af.render((af.SOURCE / rel).read_text(), flavour=af.CLAUDE, values=values,
+                         source=rel, task=task)
+        for name, (new, old) in CLAUDE_CODE_INTENDED_CHANGES.items():
+            found[name] += text.count(new)
+            text = text.replace(new, old)
+        digest.update(text.encode('utf-8'))
+    assert found == dict.fromkeys(CLAUDE_CODE_INTENDED_CHANGES, 1), found
+    assert digest.hexdigest() == CLAUDE_CODE_DIGESTS[task]
+
+
+RENDERED_COPILOT_CAP = 4400          # D18: owner decision of 2026-10-26
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_the_rendered_copilot_copy_stays_bounded(task):
+    """D18 (§2.4 of the 2026-10-26 plan): a ``{{SLOT}}`` counts as one word in the raw budget,
+    so the Copilot copy as ``init`` writes it (placeholders h/s/g expanded, header comments
+    included) is capped too, where the junior's agent reads it."""
+    words = sum(len(text.split()) for text in _copilot_files(task).values())
+    assert words <= RENDERED_COPILOT_CAP, words

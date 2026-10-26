@@ -98,6 +98,28 @@ def checked(study, state: Mapping, action: dict | None,
     return action
 
 
+def accepts(study, state: Mapping) -> Callable[[str, object], bool]:
+    """``accepted(decision, value)``: whether ``decide confirm`` would accept ``value`` for
+    ``decision`` now, by the confirmation's own word-independent refusals
+    (:func:`mlkit.study.commands.decision_refusals`, the value's validation and the
+    preconditions, with the store). Owner session 2026-10-26 (L1, R2c): the options of a free
+    choice (``next_action.choice_options``) are the values it accepts. In a read-only process
+    the store is not read (as :func:`checked`): the preconditions are the state's."""
+    from . import commands as cmd
+    store = None
+    if os.environ.get(READ_ONLY_ENV) != '1':
+        from .store import StudyStore
+        store = StudyStore(study.study_dir)
+
+    def accepted(decision: str, value) -> bool:
+        try:
+            found, _ = cmd.decision_refusals(state, store, decision, value)
+        except Exception:          # noqa: BLE001 - the view never fails on its own check
+            return False
+        return not found
+    return accepted
+
+
 def _key(action: Mapping) -> str:
     return json.dumps({k: action.get(k) for k in ('kind', 'activity', 'decision',
                                                   'proposal_id', 'rules', 'options',

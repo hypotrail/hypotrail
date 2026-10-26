@@ -9,6 +9,12 @@ Every product choice that is still open is listed in [§4 Owner decisions](#4-ow
 with a recommendation, and is not decided silently here. File and line references were checked
 against branch `spec-lot` at `ba4819c`; anything not verified is marked **(unverified)**.
 
+Implementation status (wave W1): **L1** (picker at every closed question: `pause.option_labels`,
+`choice_options`, pause kind `choice`, the Copilot `PICKER_RULE`) and **L4 level 1**
+(`run --progress`, the Copilot narration slot, `--progress` and "keep stderr" in both copies)
+are implemented on branch `w1-l1l4`, unit and walker tests only; not yet merged by the
+integrator, not run with Copilot (§5.4 still to do).
+
 **Priority of this batch (owner, 2026-10-26): the workshop journey.** The batch prepares a
 workshop. What matters most is the junior's journey as they live it: visually clear,
 pedagogical, working features, a fluid path. Lots and waves are therefore ordered by their
