@@ -366,3 +366,16 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   reviewed" and every later change marked as made after the final test. This amends ADR 0005
   (confirmation modes) and the rule that the final-test opening is never delegated, for the
   demo variant only.
+
+## Third session (after the batch, `7c0213f`)
+
+- **O5 (positive).** Step 0 now ends with the picker "On regarde ensemble la fiche des
+  données ?", its question holding the data card (groups, the columns of uncertain timing,
+  an example row), and the panel line names the section: "Dans le panneau : Données et EDA →
+  Fiche des données."
+- **R21. The panel line goes first, not last.** The owner prefers the "Dans le panneau : …"
+  line at the beginning of the message (and of the picker question), so the junior looks at
+  the panel while reading, rather than at the end. To change: rule 6 of the agent
+  instructions (`CLAUDE.md.in`, the `PANEL_LINE_PLACE` Copilot slot) says where the line goes;
+  move it to the first line of the message or picker question, keep the text from
+  `next_action.panel.shown.line`, and update the pins in `test_agent_files.py`.
