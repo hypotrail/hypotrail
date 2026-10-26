@@ -18,7 +18,9 @@ from pathlib import Path
 import pytest
 
 import flowkit as fk
-from mlkit.study import automation, notebook_view, read, state as st, view as view_mod
+from mlkit.study import (automation, cmd_export, notebook_view, read, state as st,
+                         view as view_mod)
+from mlkit.study.errors import StudyError
 
 REPO = Path(__file__).resolve().parents[3]
 AUTO_MPG = REPO / 'use-cases' / 'auto-mpg'
@@ -241,6 +243,9 @@ def test_review_queue_adopt_and_change_then_the_junior_opens(until, tmp_path):
     start = f.rev()
     log = _review(f, change={'success_criterion': lambda v: {**v, 'min_share': 0.05}},
                   stop_at_final=True)
+    # After the review, the capture the engine names before the opening (third session of
+    # 2026-10-26) is run as given, then the junior is asked about the final test.
+    assert log[-2:] == [('run', 'predictor.capture', None), ('propose', 'final_test', None)], log
     reviewed = [d for k, d, r in log if r and k == 'await_user_words']
     state = f.state()
     assert reviewed == [d for d in st.decision_ids(state) if d not in ('final_test',
@@ -287,6 +292,29 @@ def test_full_demo_opens_once_and_banners(demo, tmp_path):
     other = {**state['decisions']['final_test']['value'], 'model': 'fit.baseline'}
     again = _propose(f, 'final_test', other, expect=2)
     assert again['error']['code'] == 'final_test_already_opened'
+    # The runner follows the capture the engine names before the opening (third session of
+    # 2026-10-26), with its options as given, so the export carries the evaluated model.
+    order = [(s['kind'], s['decision'] or s['activity']) for s in out['steps']]
+    assert order.index(('run', 'predictor.capture')) < order.index(
+        ('await_user_words', 'final_test')), order
+    capture = v['results']['predictor.capture']
+    assert capture['current'] and capture['params']['role'] == 'final_development_refit'
+    from mlkit.contracts import capture as capture_mod
+    try:
+        capture_mod.require_packager(capture_mod.WORKSHOP_PACKAGER)
+        expected = {'profile': 'workshop'}
+    except StudyError:
+        expected = {}
+    assert view_mod.capture_options(capture['params']) == expected, capture['params']
+    # R22: the French handoff names the automatic basis in French, with no words recorded,
+    # and a French regression pack traces its figures ("pour la moyenne de référence").
+    pack = tmp_path / 'pack'
+    f.call('export', 'handoff', '--out', pack, '--study', f.study)
+    md = (pack / 'handoff.md').read_text(encoding='utf-8')
+    assert md.count(f'- Fondement : {cmd_export.BASIS_WORDS_FR[st.AUTOMATIC]}') == len(
+        st.decision_ids(state))
+    assert 'None' not in md and 'Basis:' not in md
+    assert f.call('check', '--text', pack / 'handoff.md', '--study', f.study)['clean']
 
 
 def test_delegation_still_never_opens(demo, tmp_path):

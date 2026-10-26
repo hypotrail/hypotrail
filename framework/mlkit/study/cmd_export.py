@@ -112,7 +112,10 @@ BASIS_WORDS_FR = {st.EXPLICIT: "la décision de l'analyste",
                   st.ENDORSED: "la décision de l'analyste (une approbation explicite)",
                   st.RESTATED: "la décision de l'analyste (reformulée avec ses mots)",
                   st.DELEGATED_DEFAULT: "déléguée par l'analyste à la valeur par défaut "
-                                        "recommandée par l'assistant"}
+                                        "recommandée par l'assistant",
+                  # L9 (R20): neither the junior's words nor a delegation.
+                  st.AUTOMATIC: 'enregistrée par le mode automatique choisi au lancement, '
+                                "pas encore relue par l'analyste"}
 STATUS_WORDS_FR = {'open': 'ouverte', 'proposed': 'proposée', 'confirmed': 'confirmée',
                    'reconfirm_required': 'à confirmer de nouveau', 'superseded': 'remplacée'}
 AVAILABILITY_WORDS_FR = {'available_at_prediction': 'Disponible au moment de la prédiction',
@@ -283,7 +286,8 @@ def _decision_lines_fr(d: str, dec: Mapping, conf: Mapping | None, task: str) ->
     if dec['status'] in ('confirmed', 'reconfirm_required'):
         lines += _value_lines_fr(d, dec['value'], task)
     if conf:
-        lines.append(f"- Les mots de l'analyste : « {conf['user_words']} »")
+        if conf.get('user_words') is not None:
+            lines.append(f"- Les mots de l'analyste : « {conf['user_words']} »")
         if conf.get('reason_given') is False:
             lines.append('- Sans raison donnée')
         basis = BASIS_WORDS_FR.get(conf['basis'], conf['basis'])
