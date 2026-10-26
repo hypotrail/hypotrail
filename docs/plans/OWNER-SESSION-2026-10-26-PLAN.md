@@ -9,11 +9,11 @@ Every product choice that is still open is listed in [§4 Owner decisions](#4-ow
 with a recommendation, and is not decided silently here. File and line references were checked
 against branch `spec-lot` at `ba4819c`; anything not verified is marked **(unverified)**.
 
-Implementation status (wave W1): **L1** (picker at every closed question: `pause.option_labels`,
-`choice_options`, pause kind `choice`, the Copilot `PICKER_RULE`) and **L4 level 1**
-(`run --progress`, the Copilot narration slot, `--progress` and "keep stderr" in both copies)
-are implemented on branch `w1-l1l4`, unit and walker tests only; not yet merged by the
-integrator, not run with Copilot (§5.4 still to do).
+Implementation status: **wave W1 integrated** on branch `w1-int` (lots L1, L2, L4 level 1, L7;
+L0 integration: the L2 and L7 agent text applied against the word ledger, the wave's contract
+pins in `test_contract_freeze.py`, panel fixtures recaptured, the choice card and
+`after_study` checked end to end on a real study). Unit, walker, simulated-browser and
+real-CLI tests only; not run with Copilot (§5.4 still to do). Later waves are not merged here.
 
 **Priority of this batch (owner, 2026-10-26): the workshop journey.** The batch prepares a
 workshop. What matters most is the junior's journey as they live it: visually clear,
