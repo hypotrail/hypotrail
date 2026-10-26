@@ -180,3 +180,17 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   structural checks (`eda.quality`, distributions without the target) first and decide the
   preparation from them before any target look, then explore the target; or keep the order
   and explain the stamp in one sentence the junior can act on.
+- **R8. `reports/study.html` is not clear enough; it should read as an explanation.** The owner
+  finds the report hard to follow. Asked:
+  - navigation: categories, an index, or a table of contents on the left;
+  - a narrative, explanatory document: read like the notebook of someone who explains the
+    study end to end (the approach and the design choices, in order), built with its evidence
+    inline at the point where each argument needs it, rather than a list of decisions with
+    the evidence gathered further down.
+  To decide when fixing: the narrative order (question and data, framing, how it is
+  evaluated, what the exploration showed, how the variables are prepared and why, the
+  models and their comparison, the rule, the final test, the conclusion and its limits),
+  each section stating the choice, why, the evidence (chart or figure with its result id),
+  and what remains uncertain; a sticky left table of contents that works offline and on a
+  narrow screen; the verdict card kept first; `hypotrail check` number tracing kept; the
+  annex for raw tables.
