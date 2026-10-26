@@ -90,3 +90,13 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   closed (go on / ask a question about the data, and the like) with the picker too, not only
   decision pauses. Whether the picker now appears at the first decision pause (R2) is not
   yet observed.
+- **R4. English text in the French panel.** Decisions tab, card "Pause 1 · cadrage — Définir le
+  moment de la prédiction": the quoted proposal is French, but "En bref :" is followed by
+  the English case text ("When the booking is entered in the hotel's property management
+  system (the start of lead_time). Known then: …"). Source: the case's default value for
+  `prediction_time` in `use-cases/hotel-booking/case.yaml` (line ~100, built by
+  `build_case.py`) has no French form, unlike the column dictionary (`fr:`); the panel
+  (`media/copy-fr/decisions.js`, `proposedValue`) shows it as is. Likely the same for the
+  other case defaults (feature availability, criterion…) and the other cases. To decide: add
+  `fr` to the case's decision values and have the engine pick the study language (with the
+  panel showing it), or have the panel show the junior-language restatement instead.
