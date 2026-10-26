@@ -253,3 +253,15 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   the final test (the latest period) its effect is a guess. The engine or the agent could
   flag calendar-year predictors under a temporal split at the feature-availability or
   preparation step (keep the season, month and week; question the year).
+- **R13. The drafted variant ignores the diagnostics' signals.** By default only the penalised
+  logistic model (penalty by nested CV) is drafted; the EBM was added because the owner chose
+  it after the agent said the engine "juge aussi justifié" a non-linear family. Cause, by
+  design: `trials.draft` always drafts one `tuned` variant (WP-F1, V0.3-DECISIONS F1.1–F1.7:
+  the candidate stays linear, a family change is an optional variant in the budget of three).
+  Issue: with 32 049 rows and a few dozen predictors, tuning the penalty usually changes
+  little (the data dominate the penalty), so the default comparison carries little
+  information, while the diagnostics had just flagged non-linear `lead_time` and behaviour
+  varying by arrival month and meal plan. Proposed: when the diagnostics flag
+  non-linearity or interactions, draft the tuned penalty plus one readable non-linear family
+  (EBM), each with the signal that motivates it; draft the penalty alone only when nothing is
+  flagged; say the cost (each variant spends one trial of three and adds selection optimism).
