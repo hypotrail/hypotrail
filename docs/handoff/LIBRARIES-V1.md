@@ -1028,6 +1028,108 @@ adopting conclusion was confirmed before its final test was opened keeps that co
 (nothing is reset); a new confirmation, or one asked again, follows the new rule. A text that
 `check` accepted may now be refused when it holds one of the forms above.
 
+## Owner session 2026-10-26 (L8)
+
+Lot L8 of [OWNER-SESSION-2026-10-26-PLAN](../plans/OWNER-SESSION-2026-10-26-PLAN.md) bundles
+the engine changes that cannot avoid a fingerprinted module (§2.3), landed before the workshop
+by the owner's decision (D19 changed, risk K3 accepted):
+
+- **R6, per-column rare grouping (D7).** `rare_category_min_rows` is one integer for every
+  categorical feature, as before, or a mapping `{column: min_rows}` (a column it leaves out
+  keeps every category; `governance.check_preprocessing` refuses a key that is not a
+  categorical feature, `governance.rare_min_rows`). `fit.prepare` applies each column's own
+  minimum; a mapping key the model does not use is listed in `ignored`. The recipe
+  (`mlkit.contracts.recipe.recipe_from_fit`) writes the operation `rare_category` in
+  **version 1** for an integer (`min_rows: n`, the bytes of before) and in **version 2** for
+  a mapping (`min_rows: {column: n}`, the features the fit uses with a minimum above 0, in
+  their order). The runtime reads both (`hypotrail_runtime.preprocess.OPERATION_VERSIONS`:
+  `rare_category` 1 and 2, every other operation 1); building the preparation
+  (`preparation_from_recipe`, so every fit, capture and export) refuses any other version, a
+  version-1 `min_rows` that is not a whole number `>= 0`, and a version-2 `min_rows` that is
+  not a non-empty mapping of features to whole numbers `>= 1` (`contract_invalid`,
+  `operation_issues`). The check is in `preprocess.py`, not in `contracts.py`, because the
+  population profile fingerprints `hypotrail_runtime.contracts`: that module is unchanged,
+  so an existing `diagnostics.population` result stays current. The runtime keeps `__version__` `1.0.0` and `RUNTIME_API_VERSION`
+  `1.0` (pre-release; a bundle binds its own wheel byte for byte, so an exported project
+  always runs the runtime that wrote it). The predictor reproduces the engine fold by fold
+  with a per-column recipe within rtol 1e-10, atol 1e-12, binary and regression
+  (`libraries/test_rare_per_column_runtime.py`), and the Azure ML export carries the
+  version-2 step through the project configuration: the moved project validates offline,
+  predicts the captured parity outputs and rebuilds within the evaluated tolerance, binary
+  (R19) and regression (`exporters/azureml/test_rare_per_column_export.py`). The texts say
+  it per column (`view.preprocessing_words`, the report's `value_words` in English and
+  French, the panel's decision line in English and French, the training-mode concept map,
+  the partial refusal of a reply); the generated notebook recomputes the grouping column by
+  column and asserts the engine's inputs.
+- **R5, quality quantiles.** `eda.quality` `ranges` gain `quantiles` (`{"0.01", "0.5",
+  "0.99"}`) and `skewness` (adjusted Fisher-Pearson) per numeric column, additive keys
+  (`eda._shape`).
+- **R10 level 2, detailed progress.** `progress.step` is called at each outer fold
+  (`fit.compute_cv`, `fit.compute_explicit_cv`), each inner grid value (`families.choose`)
+  and each bootstrap replicate (`policy.paired_bootstrap`, `regression.paired_bootstrap`,
+  `objective.paired_row_bootstrap`); it does nothing unless the activity's phase of
+  `run --progress` listens (a context variable), so stdout and every computed value are the
+  same with or without the flag. The development diagnostics have had no bootstrap since
+  WP-J (delta method); their long part is the inner grid of a tuned variant, which the grid
+  steps cover, so `diagnostics.py` is not changed.
+
+**Source compatibility.** Seven fingerprinted modules changed: `governance`, `eda`, `fit`,
+`families`, `policy`, `regression`, `objective` (`activities.py` and `diagnostics.py` did
+not). One set of exact edges in `mlkit.study.code_compat` (`_L8_EVIDENCE`), each from a
+digest the attested engines recorded to the L8 digest, scoped to the activities whose
+fingerprint holds the module, the capture excepted: `governance` `09af3783…` → `9c86f512…`
+(6 activities), `eda` `45d9aea4…` → `9d419bd7…` (the 8 EDA activities that hold it, the
+quality check included on the WP-F1 precedent: an earlier result only lacks the two additive
+keys), `fit` `9ca62f79…` (10c1e70, unchanged since ce82ca9), `d39f3f5b…` (621d607 to 818995c)
+and `28c00840…` (506180a) → `49981afe…` (8 activities), `families` `4e207920…` and
+`2d874879…` → `cc9f13d1…` (`fit.variant`, `final_test.evaluation`), `policy` `5bd07703…` →
+`6b1d0500…` (5), `regression` `3d48d091…` → `c7e0677a…` (7), `objective` `130a6184…` →
+`917cd720…` (8). `governance`, `eda`, `policy`, `regression` and `objective` have the same
+bytes at 506180a, 818995c and 10c1e70 (= ba4819c). `test_code_compat_l8.py` checks the
+digests against the git objects, that each list is exactly the activities holding the module
+but the capture, and that the edges stay exact, directed and scoped; the round-3 test now
+follows the later-change pattern of round 2 (edges from its sources to the current bytes).
+
+Evidence (`code_compat_evidence.py`, extended for L8: a seventh study `bin-prep`, binary
+holdout with `missing: indicator`, an **integer** `rare_category_min_rows: 120`, a cap and
+a signed log, and a tuned variant; and `ADDITIVE`, which compares an `eda.quality` result of
+an engine without the two keys once they are removed from the newer one and reports
+"identical but for the additive keys"). Run for each engine archived with `git archive`
+(10c1e70, 818995c, 506180a) and run with the main environment (the same locked versions):
+for each of the three engines, the same commands on the seven temporary studies (178
+commands, 171 for 506180a, which has no `diagnostics.population`) had identical outcomes, all
+successful; of the 127 attested fresh results, 82 are byte-identical, 38 identical up to the
+ids of their upstream results, and 7 (the `eda.quality` of each study) identical but for the
+two additive keys; the 75 leaf recomputations by the L8 engine inside copies of the old
+studies (upstream ids kept) are all identical (the 7 quality checks but for the additive
+keys); every promoted result is current at the L8 bytes but the never-attested
+`diagnostics.population` (14 results left out for 10c1e70 and 818995c); MATCH. The runs used
+an intermediate L8 tree whose runtime check sat in `hypotrail_runtime/contracts.py`, which
+the population profile fingerprints; with the check moved to `preprocess.py` (final bytes),
+a copy of the 10c1e70 `bin` study reads 19 of 19 promoted results current, the population
+profile included. No attested activity reads either runtime file, so the comparison stands
+for the final bytes. The opt-in tests `test_code_compat_l8.py::test_byte_comparison_with_the_pre_l8_engine`
+and `test_l8_existing_studies.py::test_a_study_of_the_pre_l8_engine_itself` repeat it with
+`HYPOTRAIL_COMPAT_OLD_PYTHON` and `HYPOTRAIL_COMPAT_OLD_ROOT`.
+
+**What existing studies see.** Nothing is reset or migrated; reading a study writes nothing.
+Every result of an attested engine stays current, except, by design:
+
+- `predictor.capture` (never attestable: its ids hash the code fingerprint, and the recipe and
+  the runtime changed; an old bundle also no longer loads, its wheel differs from the
+  installed runtime). Before the opening, `next_action` names `run predictor.capture` (with
+  the options of that capture, R5E-3) and the run captures again; then the opening proceeds.
+  After the opening, the final evaluation read that capture: it is not current (upstream not
+  current, `code_changed` empty) and is never recomputed (`final_test_already_opened`);
+  `next_action` proposes the conclusion with the not-recomputable notice (R5E-8), its
+  figures stay as history, and the Azure ML export is recipe-only (`read_export_source`:
+  predictor not `captured`, `scientific_contracts.source: configuration`). This is risk K3,
+  accepted by the owner (D19). `test_l8_existing_studies.py` shows both on a study made
+  with the pre-L8 fingerprints, and, opt-in, on a study built by the 10c1e70 engine itself.
+- `diagnostics.population`, as before (never attested).
+- An `eda.quality` result of an earlier engine stays current without `quantiles` and
+  `skewness`; running it again adds them.
+
 ## Limits and what is not done
 
 - **Calibration partitions are not created by the engine.** The MAPIE adapters, the

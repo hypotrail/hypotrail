@@ -211,7 +211,11 @@
     } else {
       parts.push(v.missing === 'indicator' ? 'missing values flagged' : 'missing values not flagged');
     }
-    if (v.rare_category_min_rows) parts.push(`categories under ${v.rare_category_min_rows} rows grouped`);
+    if (v.rare_category_min_rows && typeof v.rare_category_min_rows === 'object') {
+      // L8 (R6): a minimum per column.
+      Object.keys(v.rare_category_min_rows).sort().filter(c => v.rare_category_min_rows[c])
+        .forEach(c => parts.push(`categories of ${c} under ${v.rare_category_min_rows[c]} rows grouped`));
+    } else if (v.rare_category_min_rows) parts.push(`categories under ${v.rare_category_min_rows} rows grouped`);
     const caps = v.caps && typeof v.caps === 'object' ? Object.keys(v.caps) : [];
     parts.push(caps.length ? `extreme values capped (${caps.join(', ')})` : 'no capping');
     const logs = Array.isArray(v.log_transform) ? v.log_transform : [];

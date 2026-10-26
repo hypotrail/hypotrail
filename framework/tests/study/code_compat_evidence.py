@@ -12,6 +12,15 @@ the outcome clock leaves no row out), and ``diagnostics.population`` in every st
 old engine has it (818995c, not 506180a). Which of these an engine runs is decided once from
 the old engine's files (:func:`capabilities`), so both engines run the same commands.
 
+Owner session 2026-10-26 (lot L8) adds a seventh study, ``bin-prep``: a binary holdout study
+whose preparation is not the default (missing-value indicators, an *integer* rare-category
+minimum, a cap and a signed log) with a tuned variant, so the per-column grouping, the inner
+grid and the bootstraps are compared on a value an existing study can hold. L8 also adds two
+keys to ``eda.quality`` (``quantiles`` and ``skewness`` of each numeric range): a result of an
+engine without them is compared with the new one once those keys are removed
+(:data:`ADDITIVE`, the WP-F1 precedent of ADR 0007), and reported "identical but for the
+additive keys".
+
 Run it from a checkout of the current engine (temporary folders only; nothing in the
 repository or in a real study is touched)::
 
@@ -54,6 +63,19 @@ STUDIES = {
     'reg-cv': ('regression', 'case-reg', {'method': 'kfold_quantile', 'folds': 5, 'seed': 7},
                [STRONG, EBM], 'floor_area', 'branch_type'),
 }
+# Owner session 2026-10-26 (L8): a non-default integer preparation and a tuned variant (same
+# tuple); the preparation each study confirms (the default for the others).
+PREPARED_STUDIES = {
+    'bin-prep': ('binary', 'case-bin', None, [TUNED], 'visit_band', 'home_branch'),
+}
+PREPROCESSING = {
+    'bin-prep': {'missing': 'indicator', 'rare_category_min_rows': 120,
+                 'caps': {'fines_outstanding': [0.01, 0.99]},
+                 'log_transform': ['membership_days']},
+}
+# L8 (R5): keys a later engine adds to the items of a list of a result's values, by activity:
+# a result without them is compared once they are removed from the newer one.
+ADDITIVE = {'eda.quality': ('ranges', ('quantiles', 'skewness'))}
 # Review round 2: review-v1 studies without training exclusions (same tuple). A review-v1
 # variant declared after scores cites the current diagnostic; the tuned and family variants
 # are left out (their nested plan is not the subject here).
@@ -85,7 +107,25 @@ def capabilities(old_root: Path) -> dict:
 
 
 def studies(caps: dict) -> dict:
-    return {**STUDIES, **(REVIEW_STUDIES if caps.get('review') else {})}
+    return {**STUDIES, **(REVIEW_STUDIES if caps.get('review') else {}), **PREPARED_STUDIES}
+
+
+def without_additive(activity: str, newer, older):
+    """``newer`` values without the keys of :data:`ADDITIVE` that ``older`` lacks, and
+    whether any was removed."""
+    if activity not in ADDITIVE or not isinstance(newer, dict) or not isinstance(older, dict):
+        return newer, False
+    key, extra = ADDITIVE[activity]
+    old_items, new_items = older.get(key), newer.get(key)
+    if not isinstance(old_items, list) or not isinstance(new_items, list):
+        return newer, False
+    missing = {k for k in extra if not any(isinstance(i, dict) and k in i for i in old_items)}
+    if not missing:
+        return newer, False
+    out = dict(newer)
+    out[key] = [{k: v for k, v in i.items() if k not in missing} if isinstance(i, dict) else i
+                for i in new_items]
+    return out, True
 
 
 def canon(value) -> str:
@@ -163,7 +203,7 @@ def drive(root: Path, cases: Path, out: Path, caps: dict | None = None) -> list:
             decide(f, 'success_criterion', REVIEW_CRITERION)
             decide(f, 'preprocessing', dict(governance.DEFAULT_PREPROCESSING))
         else:
-            f.model_decisions()
+            f.model_decisions(preprocessing=PREPROCESSING.get(name))
         run(f, 'split')
         for a in ('eda.target_rate' if binary else 'eda.target_summary', 'eda.special_values',
                   'eda.quality', 'eda.correlation', 'eda.single_feature_signal'):
@@ -242,15 +282,18 @@ def compare_runs(old_run: Path, new_run: Path, caps: dict | None = None) -> list
             return text
         for k in o:
             a, b = o[k], n[k]
+            values, additive = without_additive(a['activity'], b['output']['values'],
+                                                a['output']['values'])
             exact = canon(a['output']['values']) == canon(b['output']['values']) \
                 and a['output']['sha256'] == b['output']['sha256']
             same = (a['activity'] == b['activity'] and a['blobs'] == b['blobs']
                     and canon(a['params']) == canon(b['params'])
                     and a['partition'] == b['partition'] and a['n_rows'] == b['n_rows']
                     and mapped(a['inputs']) == canon(b['inputs'])
-                    and mapped(a['output']['values']) == canon(b['output']['values']))
+                    and mapped(a['output']['values']) == canon(values))
             rows.append({'study': name, 'key': k, 'activity': a['activity'], 'same': same,
-                         'exact': exact and same, 'modules': _changed_modules(a, b)})
+                         'exact': exact and same, 'additive': additive and same,
+                         'modules': _changed_modules(a, b)})
     return rows
 
 
@@ -311,10 +354,16 @@ def recompute_leaves(old_run: Path, work: Path, cli: str,
                              'refused': out['error']['code']})
                 continue
             a, b = entry(d, old_rid), entry(d, out['result_id'])
+            values, additive = without_additive(a['activity'], b['output']['values'],
+                                                a['output']['values'])
+            output = canon(a['output']) == canon(b['output']) or (
+                additive and canon(a['output']['values']) == canon(values)
+                and set(a['output']) == set(b['output']))
             same = all(canon(a[k]) == canon(b[k]) for k in ('params', 'inputs', 'blobs')) \
-                and canon(a['output']) == canon(b['output'])
+                and output
             rows.append({'study': name, 'key': _slot(args), 'activity': a['activity'],
-                         'same': same, 'modules': _changed_modules(a, b)})
+                         'same': same, 'additive': additive and same,
+                         'modules': _changed_modules(a, b)})
     return rows, currency
 
 
@@ -339,8 +388,9 @@ def evidence(old_python: str, old_root: Path, work: Path) -> bool:
         return f'not attested ({text.lower()})' if r.get('activity') in UNATTESTED else text
     for r in fresh:
         print(f"  fresh  {r['study']:<7} {r['key']:<30} "
-              + verdict(r, 'byte-identical' if r['exact'] else 'identical up to upstream ids'
-                        if r['same'] else 'DIFFERENT')
+              + verdict(r, 'byte-identical' if r['exact'] else
+                        'identical but for the additive keys' if r.get('additive') else
+                        'identical up to upstream ids' if r['same'] else 'DIFFERENT')
               + f"  changed modules: {','.join(r['modules'])}")
     leaf, currency = recompute_leaves(work / 'old', work / 'leaves', head_cli, caps)
     for name, info in currency.items():
@@ -348,7 +398,8 @@ def evidence(old_python: str, old_root: Path, work: Path) -> bool:
               f"{info['promoted']} promoted results; not current: {info['not_current']}")
     for r in leaf:
         print(f"  leaf   {r['study']:<7} {r['key']:<30} "
-              + verdict(r, 'byte-identical' if r['same'] else 'DIFFERENT '
+              + verdict(r, 'identical but for the additive keys' if r.get('additive') else
+                        'byte-identical' if r['same'] else 'DIFFERENT '
                         + r.get('refused', '')))
     skipped = sum(r.get('activity') in UNATTESTED for r in fresh + leaf)
     fresh = [r for r in fresh if r.get('activity') not in UNATTESTED]
@@ -356,8 +407,10 @@ def evidence(old_python: str, old_root: Path, work: Path) -> bool:
     ok = ok and all(r['same'] for r in fresh) and all(r['same'] for r in leaf) \
         and not any(set(info['not_current']) - set(UNATTESTED) for info in currency.values())
     print(f"fresh results: {len(fresh)} ({sum(r['exact'] for r in fresh)} byte-identical, "
-          f"{sum(r['same'] and not r['exact'] for r in fresh)} up to upstream ids); leaf "
-          f"recomputations: {sum(r['same'] for r in leaf)} of {len(leaf)} byte-identical; "
+          f"{sum(r['same'] and not r['exact'] and not r.get('additive') for r in fresh)} up to "
+          f"upstream ids, {sum(bool(r.get('additive')) for r in fresh)} but for the additive "
+          f"keys); leaf recomputations: {sum(r['same'] for r in leaf)} of {len(leaf)} "
+          f"identical ({sum(bool(r.get('additive')) for r in leaf)} but for the additive keys); "
           f"{skipped} results of unattested activities left out; "
           f"{'MATCH' if ok else 'MISMATCH'}")
     return ok

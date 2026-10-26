@@ -660,9 +660,17 @@ def test_the_round3_edges_target_the_current_bytes():
     assert code_compat.integrity()
     for module, path in FILES.items():
         now = hashlib.sha256((REPO / path).read_bytes()).hexdigest()
-        assert now == CURRENT[module], (f'{path} changed again: re-run '
-                                        'code_compat_evidence.py against the new bytes and, '
-                                        'only if it matches, add new edges.')
+        if now != CURRENT[module]:
+            # Owner session 2026-10-26 (L8) changed fit.py and families.py again: exact edges
+            # from the bytes of this round and from the earlier ones to the current bytes
+            # must cover the same activities (test_code_compat_l8.py checks their evidence).
+            for source in {CURRENT[module], PREVIOUS[module], BASE[module]}:
+                covered = {a for r in code_compat.ATTESTATIONS if r['module'] == module
+                           and r['from_sha256'] == source and r['to_sha256'] == now
+                           for a in r['activities']}
+                assert covered == set(ATTESTED[module]), (
+                    f'{path} changed again: re-run code_compat_evidence.py against the new '
+                    'bytes and, only if it matches, add new edges.')
         assert read._module_path(module).read_bytes() == (REPO / path).read_bytes()
         holding = {a for a in act.ACTIVITIES if module in act.MODULES[a]
                    or module in act.REGRESSION_MODULES.get(a, ())}

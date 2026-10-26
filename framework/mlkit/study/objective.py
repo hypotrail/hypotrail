@@ -10,6 +10,8 @@ import math
 from collections import defaultdict
 from typing import Any, Mapping, Sequence
 
+from .progress import step     # L8 (R10 level 2): a no-op unless ``run --progress`` listens
+
 TOLERANCE = 1e-12
 DECISION_RULES = ('point_estimate', 'lower_bound')
 BINARY_METRICS = ('precision', 'recall')
@@ -207,7 +209,8 @@ def paired_row_bootstrap(y: Sequence, predictions: Mapping[str, Sequence], evalu
     rng, samples = random.Random(seed), {name: [] for name in names}
     delta_samples = {name: [] for name in names if name != reference}
     undefined = 0
-    for _ in range(replicates):
+    for b in range(replicates):
+        step('replicate', b + 1, replicates)
         positions = [rng.randrange(n) for _ in range(n)]
         yy = [y[i] for i in positions]
         points = {}

@@ -6,7 +6,8 @@ preprocessing, the family, its penalty or tuning grid, the seed) into a recipe w
 complete pipeline (:mod:`hypotrail_runtime.preprocess`) reproduces
 :func:`mlkit.study.fit._fit_predict` on the same rows. Every resolved choice is explicit:
 which columns are read as text, which special values become indicators, which features may
-receive a missing indicator, the rare-category threshold, the caps, the log transforms, the
+receive a missing indicator, the rare-category threshold (one for every column, operation
+``rare_category`` version 1, or one per column, version 2 since L8), the caps, the log transforms, the
 estimator parameters and seeds. A tuned hyperparameter is chosen by the engine's inner
 cross-validation of the rows the recipe is fitted on, before the recipe is written, and
 recorded with its choice. Families the runtime is not qualified for (EBM, histogram
@@ -96,10 +97,17 @@ def recipe_from_fit(case, train, inputs: Mapping, params: Mapping, *,
                       and c not in covered]
         steps.append({'operation': 'missing_indicator', 'version': 1,
                       'parameters': {'columns': candidates}})
-        k = int(pre['rare_category_min_rows'])
-        if k > 0:
+        rare = pre['rare_category_min_rows']
+        if isinstance(rare, Mapping):
+            # L8 (R6): version 2, a minimum per column (the features the fit uses, in their
+            # order; a column the mapping leaves out keeps every category).
+            per_column = {c: int(rare[c]) for c in features if int(rare.get(c, 0) or 0) > 0}
+            if per_column:
+                steps.append({'operation': 'rare_category', 'version': 2,
+                              'parameters': {'min_rows': per_column}})
+        elif int(rare) > 0:
             steps.append({'operation': 'rare_category', 'version': 1,
-                          'parameters': {'min_rows': k}})
+                          'parameters': {'min_rows': int(rare)}})
         caps = {c: [float(q[0]), float(q[1])] for c, q in sorted(pre['caps'].items())
                 if c in features}
         if caps:

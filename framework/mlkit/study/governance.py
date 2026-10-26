@@ -10,7 +10,7 @@ junior's words, its parameters learnt on training rows only and applied to valid
 (and later to every fold). Its value is::
 
     {"missing": "none" | "indicator" | {column: "none" | "indicator"},
-     "rare_category_min_rows": k,          # >= 0 training rows; 0 keeps every category
+     "rare_category_min_rows": k | {column: k},  # >= 0 training rows; 0 keeps every category
      "caps": {column: [q_low, q_high]},     # training quantiles, 0 <= q_low < q_high <= 1
      "log_transform": [column, ...],        # signed log, sign(x) * log(1 + |x|)
      "motivated_by": [result_id, ...],      # optional when proposed: the analyses behind it
@@ -19,7 +19,10 @@ junior's words, its parameters learnt on training rows only and applied to valid
 
 :data:`DEFAULT_PREPROCESSING` is what the models did before the decision existed (no
 missing-value indicator, every category kept, no cap, no transform), so results stay
-comparable. ``data_contingent`` is computed by the engine when the value is proposed: true
+comparable. ``rare_category_min_rows`` (owner session 2026-10-26, L8, R6) is one integer for
+every categorical feature, as before, or a mapping of categorical features to their own
+minimum (a feature it does not name keeps every category), like ``missing``
+(:func:`rare_min_rows`). ``data_contingent`` is computed by the engine when the value is proposed: true
 when any result named in ``motivated_by`` read the target (:func:`uses_target`), or (WP-A9,
 M1) when the study had any target-involving look on training rows before the proposal,
 named or not: ``target_looks_before`` records how many (:func:`ledger`). A decision
@@ -165,9 +168,21 @@ def check_preprocessing(value: Any, case) -> None:
         raise ValueProblem('missing is "none", "indicator", or a mapping of features to one of '
                            'them.', field='missing', strategies=list(MISSING_STRATEGIES))
     k = value['rare_category_min_rows']
-    if isinstance(k, bool) or not isinstance(k, int) or k < 0:
+    if isinstance(k, Mapping):
+        # L8 (R6): a minimum per categorical feature.
+        categorical = sorted(n for n, v in features.items() if v['type'] not in NUMERIC_TYPES)
+        bad = sorted(str(c) for c in k if c not in categorical)
+        wrong = sorted(str(c) for c, n in k.items()
+                       if isinstance(n, bool) or not isinstance(n, int) or n < 0)
+        if bad or wrong:
+            raise ValueProblem('rare_category_min_rows maps categorical features to a whole '
+                               'number of training rows (0 keeps every category).',
+                               field='rare_category_min_rows', not_categorical=bad,
+                               invalid=wrong, categorical_features=categorical)
+    elif isinstance(k, bool) or not isinstance(k, int) or k < 0:
         raise ValueProblem('rare_category_min_rows is a whole number of training rows (0 keeps '
-                           'every category).', field='rare_category_min_rows')
+                           'every category), or a mapping of categorical features to one.',
+                           field='rare_category_min_rows')
     caps = value['caps']
     if not isinstance(caps, Mapping):
         raise ValueProblem('caps maps numeric features to [q_low, q_high].', field='caps',
@@ -255,6 +270,24 @@ def effective_preprocessing(state: Mapping) -> dict | None:
 
 def is_default(value: Any) -> bool:
     return parameters(value) == DEFAULT_PREPROCESSING
+
+
+def rare_min_rows(value: Mapping, column: str) -> int:
+    """L8 (R6): the minimum training rows of a category of ``column`` (0 keeps every
+    category): the one integer of every column, or the column's own entry of a mapping."""
+    k = value.get('rare_category_min_rows', 0)
+    if isinstance(k, Mapping):
+        return int(k.get(column, 0) or 0)
+    return int(k or 0)
+
+
+def rare_grouping(value: Mapping) -> bool:
+    """Whether the value groups the rare categories of at least one column."""
+    k = value.get('rare_category_min_rows', 0) if isinstance(value, Mapping) else 0
+    if isinstance(k, Mapping):
+        return any(isinstance(n, int) and not isinstance(n, bool) and n > 0
+                   for n in k.values())
+    return isinstance(k, int) and not isinstance(k, bool) and k > 0
 
 
 def missing_strategy(value: Mapping, column: str) -> str:

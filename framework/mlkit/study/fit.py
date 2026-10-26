@@ -39,6 +39,7 @@ from typing import Mapping
 
 from . import case as c
 from . import metrics
+from .progress import step     # L8 (R10 level 2): a no-op unless ``run --progress`` listens
 
 SCORE_SEMANTICS = ('Higher means more likely positive. Calibration as a probability is not '
                    'assessed.')
@@ -143,6 +144,8 @@ def prepare(case: c.Case, train, validation, X_train, X_val, features: list,
     named = set(preprocessing['caps']) | set(preprocessing['log_transform'])
     if isinstance(preprocessing['missing'], Mapping):
         named |= set(preprocessing['missing'])
+    if isinstance(preprocessing['rare_category_min_rows'], Mapping):
+        named |= set(preprocessing['rare_category_min_rows'])     # L8 (R6): per column
     fitted['ignored'] = sorted(named - used)
     na_values = {str(v) for v in case.dataset.get('na_values', ())}
     covered = {s['column'] for s in special if str(s['value']) in na_values}
@@ -156,9 +159,10 @@ def prepare(case: c.Case, train, validation, X_train, X_val, features: list,
         X_train[name] = train[column].isna().astype(int).to_numpy()
         X_val[name] = validation[column].isna().astype(int).to_numpy()
         fitted['missing_indicators'].append(name)
-    k = preprocessing['rare_category_min_rows']
-    if k > 0:
-        for column in features:
+    for column in features:
+        # L8 (R6): one minimum for every column, or each column's own.
+        k = governance.rare_min_rows(preprocessing, column)
+        if k > 0:
             if is_numeric_dtype(X_train[column]):
                 continue
             counts = X_train[column].dropna().astype(str).value_counts()
@@ -554,6 +558,7 @@ def compute_cv(activity: str, case: c.Case, frame, folds: Mapping, inputs: Mappi
         if not candidate:
             oof[test] = y.mean() if binary else y[~test].mean()
             continue
+        step('fold', i, k)
         info = {'keep': family == 'hgb'}
         pred, fold_model = _fit_predict(case, frame.loc[[kk for kk, t in zip(keys, ~test) if t]],
                                         frame.loc[[kk for kk, t in zip(keys, test) if t]],
@@ -701,6 +706,7 @@ def compute_explicit_cv(activity: str, case: c.Case, frame, plan: Mapping,
                 # J3: MAE is minimized by the training median in review-v1.
                 pred = np.full(len(test), float(np.median(y_train)))
         else:
+            step('fold', len(per_fold) + 1, len(plan['folds']))
             info = {'keep': family == 'hgb'}
             nested_inputs = {**inputs, 'parent_protocol': {
                 'method': plan['method'], 'fold': fold['id'],

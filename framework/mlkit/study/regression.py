@@ -24,6 +24,8 @@ from typing import Mapping
 
 import numpy as np
 
+from .progress import step     # L8 (R10 level 2): a no-op unless ``run --progress`` listens
+
 METRICS = ('mae', 'rmse')
 QUANTILES = (('q05', 5), ('q25', 25), ('median', 50), ('q75', 75), ('q95', 95))
 RESIDUAL_DEFINITION = ('residual = observed minus predicted; a positive residual means the '
@@ -102,6 +104,7 @@ def paired_bootstrap(y, predictions: Mapping[str, object], B: int, seed: int, *,
     n = len(y)
     samples = {name: np.empty((B, len(METRICS))) for name in names}
     for b in range(B):
+        step('replicate', b + 1, B)
         idx = rng.integers(0, n, n)
         for name in names:
             samples[name][b] = _metric_rows(y, arrays[name], idx)

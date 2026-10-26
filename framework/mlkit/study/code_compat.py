@@ -15,6 +15,14 @@ _SHA256 = re.compile(r'^[0-9a-f]{64}$')
 
 # Destination digests are added only after the complete change is reviewed. A declaration
 # that no longer targets the current bytes is harmless: it simply stops matching.
+# The evidence of the L8 edges (owner session 2026-10-26), shared by each of them.
+_L8_EVIDENCE = ('docs/handoff/LIBRARIES-V1.md#owner-session-2026-10-26-l8: the same commands on '
+                'the seven temporary studies of L8 (the six of round 2 and a binary holdout '
+                'study with a non-default integer preparation and a tuned variant) with the '
+                '10c1e70, 818995c and 506180a engines and the L8 one; every result '
+                'byte-identical, identical up to upstream ids, or (eda.quality only) identical '
+                'but for the additive quantiles and skewness; every leaf recomputed inside the '
+                'old studies identical the same way; every promoted result current.')
 ATTESTATIONS: tuple[dict, ...] = (
     {
         'module': 'mlkit.study.activities',
@@ -303,6 +311,153 @@ ATTESTATIONS: tuple[dict, ...] = (
                    'final-test diagnostics have no coefficients.'),
         'evidence': ['framework/tests/study/test_v03_wp_j_engine.py',
                      'framework/tests/study/test_reliability_j4_j7.py'],
+    },
+    # Owner session 2026-10-26, lot L8 (R6, R5, R10 level 2): per-column rare grouping
+    # (governance, fit), the quantiles and skewness of the quality check (eda) and the progress
+    # steps of a long run (fit, families, policy, regression, objective; progress.step does
+    # nothing unless ``run --progress`` listens). Every value an existing study can hold (an
+    # integer rare_category_min_rows) plans and computes as before; an eda.quality result of
+    # an earlier engine only lacks the two additive keys (the WP-F1 precedent of ADR 0007).
+    # Attested from the digests of the attested engines: those of 10c1e70 (= ba4819c) for
+    # every module, and the earlier fit and families digests of 818995c and 506180a, each
+    # only after the byte comparison of that engine matched (governance, eda, policy,
+    # regression and objective have the same bytes at all three). Not attested:
+    # predictor.capture (its ids hash the code fingerprint, and the recipe and the runtime
+    # changed: an existing capture is no longer current, risk K3 accepted by the owner, D19).
+    {
+        'module': 'mlkit.study.governance',
+        'from_sha256': '09af3783c18fd7947b6f979a24a5266cca85ca576e69c8ee6a233e6e2e6fa413',
+        'to_sha256': '9c86f512c9a3beafe0d37f477a71e669555eb639c4e97b78155223b833ed4c77',
+        'activities': ['fit.logistic', 'fit.linear', 'fit.variant', 'final_test.evaluation',
+                       'diag.binary', 'diag.regression'],
+        'reason': ('L8 (R6) accepts a mapping {column: min_rows} as rare_category_min_rows and '
+                   'adds its readers; an integer, the only form an existing study holds, is '
+                   'checked and read as before.'),
+        'evidence': ['framework/tests/study/test_code_compat_l8.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'framework/tests/study/test_rare_per_column.py',
+                     _L8_EVIDENCE],
+    },
+    {
+        'module': 'mlkit.study.eda',
+        'from_sha256': '45d9aea4b6cb8e83f27025665734a93e0cecf30a37e8903c3ea4b711ce85157e',
+        'to_sha256': '9d419bd785382586e5edd3f8cefbae3edbd6fd5506629a5173816aa884e2539b',
+        'activities': ['eda.target_rate', 'eda.special_values', 'eda.rate_by',
+                       'eda.target_summary', 'eda.mean_by', 'eda.distribution', 'eda.quality',
+                       'eda.single_feature_signal'],
+        'reason': ('L8 (R5) adds the keys quantiles and skewness to each numeric range of '
+                   'eda.quality; every other value of every EDA activity is unchanged, and an '
+                   'earlier quality result only lacks the two additive keys.'),
+        'evidence': ['framework/tests/study/test_code_compat_l8.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'framework/tests/study/test_quality_quantiles.py',
+                     _L8_EVIDENCE],
+    },
+    {
+        'module': 'mlkit.study.fit',
+        'from_sha256': '9ca62f79a0cb335374beb1c8047cd34047bd4456a192f300282e269f1979c8f7',
+        'to_sha256': '49981afe99bb73270f2fd71cb2948b9d44eb22136e9b44b3120358a9656bec98',
+        'activities': ['fit.baseline', 'fit.logistic', 'fit.linear', 'eda.single_feature_signal',
+                       'fit.variant', 'final_test.evaluation', 'diag.binary', 'diag.regression'],
+        'reason': ('L8 applies rare_category_min_rows per column (an integer still to every '
+                   'categorical column) and reports each outer fold to progress.step, a no-op '
+                   'without run --progress; a study of the 10c1e70 engine (fit.py unchanged since '
+                   'ce82ca9) fits and evaluates as before.'),
+        'evidence': ['framework/tests/study/test_code_compat_l8.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'framework/tests/study/libraries/test_rare_per_column_runtime.py',
+                     _L8_EVIDENCE],
+    },
+    {
+        'module': 'mlkit.study.fit',
+        'from_sha256': 'd39f3f5bfbc0927c79af7371b8358b9b4d72892b869c2ed726498a798a744579',
+        'to_sha256': '49981afe99bb73270f2fd71cb2948b9d44eb22136e9b44b3120358a9656bec98',
+        'activities': ['fit.baseline', 'fit.logistic', 'fit.linear', 'eda.single_feature_signal',
+                       'fit.variant', 'final_test.evaluation', 'diag.binary', 'diag.regression'],
+        'reason': ('L8 applies rare_category_min_rows per column (an integer still to every '
+                   'categorical column) and reports each outer fold to progress.step, a no-op '
+                   'without run --progress; a study of the 818995c engine (fit.py of 621d607 to '
+                   '818995c) fits and evaluates as before.'),
+        'evidence': ['framework/tests/study/test_code_compat_l8.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'framework/tests/study/libraries/test_rare_per_column_runtime.py',
+                     _L8_EVIDENCE],
+    },
+    {
+        'module': 'mlkit.study.fit',
+        'from_sha256': '28c00840fe9f9a5c17d0e9a0d483cd7dbdc9ed2cc4d715a8f65073399d989161',
+        'to_sha256': '49981afe99bb73270f2fd71cb2948b9d44eb22136e9b44b3120358a9656bec98',
+        'activities': ['fit.baseline', 'fit.logistic', 'fit.linear', 'eda.single_feature_signal',
+                       'fit.variant', 'final_test.evaluation', 'diag.binary', 'diag.regression'],
+        'reason': ('L8 applies rare_category_min_rows per column (an integer still to every '
+                   'categorical column) and reports each outer fold to progress.step, a no-op '
+                   'without run --progress; a study of the 506180a engine fits and evaluates as '
+                   'before.'),
+        'evidence': ['framework/tests/study/test_code_compat_l8.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'framework/tests/study/libraries/test_rare_per_column_runtime.py',
+                     _L8_EVIDENCE],
+    },
+    {
+        'module': 'mlkit.study.families',
+        'from_sha256': '4e207920618b1a59da54d1a66066a22c771a276795012931a4aa74f9a78a3f00',
+        'to_sha256': 'cc9f13d151e5fe985707a968254bacfa46ba3e538ff7a82ff0d5dfe266833eda',
+        'activities': ['fit.variant', 'final_test.evaluation'],
+        'reason': ('L8 reports each value of an inner tuning grid to progress.step, a no-op '
+                   'without run --progress; in a study of the 10c1e70 engine (families.py '
+                   'unchanged since ce82ca9) the inner cross-validation chooses and fits as '
+                   'before.'),
+        'evidence': ['framework/tests/study/test_code_compat_l8.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     _L8_EVIDENCE],
+    },
+    {
+        'module': 'mlkit.study.families',
+        'from_sha256': '2d8748798498388525c94ef85f8d73779b2a0c5d3145270e32d67cbbfc860e85',
+        'to_sha256': 'cc9f13d151e5fe985707a968254bacfa46ba3e538ff7a82ff0d5dfe266833eda',
+        'activities': ['fit.variant', 'final_test.evaluation'],
+        'reason': ('L8 reports each value of an inner tuning grid to progress.step, a no-op '
+                   'without run --progress; in a study of the 818995c and 506180a engines the '
+                   'inner cross-validation chooses and fits as before.'),
+        'evidence': ['framework/tests/study/test_code_compat_l8.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     _L8_EVIDENCE],
+    },
+    {
+        'module': 'mlkit.study.policy',
+        'from_sha256': '5bd077037ff250399e8058780419caaa3f1488a3cd8025b5d8b3d948ab109ed1',
+        'to_sha256': '6b1d050040a77235b8ce47886c863a0efd02400da7a887662d8bf87c66233c8a',
+        'activities': ['policy.evaluation', 'policy.inspect', 'final_test.evaluation',
+                       'diag.binary', 'diag.final_test'],
+        'reason': ('L8 reports each bootstrap replicate to progress.step, a no-op without run '
+                   '--progress; the resamples and the intervals are unchanged.'),
+        'evidence': ['framework/tests/study/test_code_compat_l8.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     _L8_EVIDENCE],
+    },
+    {
+        'module': 'mlkit.study.regression',
+        'from_sha256': '3d48d0912580fcd8cb0837da51c3bef5dbdc0092267bc9fa6f955e969915db21',
+        'to_sha256': 'c7e0677a68608ad21cb28764cae5dfafc396c5f3c07f6f3f2ff6420e105dfd07',
+        'activities': ['fit.baseline', 'fit.linear', 'evaluate.regression', 'fit.variant',
+                       'final_test.evaluation', 'diag.regression', 'diag.final_test'],
+        'reason': ('L8 reports each bootstrap replicate to progress.step, a no-op without run '
+                   '--progress; the resamples and the intervals are unchanged.'),
+        'evidence': ['framework/tests/study/test_code_compat_l8.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     _L8_EVIDENCE],
+    },
+    {
+        'module': 'mlkit.study.objective',
+        'from_sha256': '130a6184006f915880dfb1451437b5ebe5bf5cc0847105a02befa0f603794318',
+        'to_sha256': '917cd720307df2e0b61c1e5476ce91ff24df95995887bf123606921c0cc47a71',
+        'activities': ['fit.baseline', 'fit.logistic', 'policy.evaluation', 'policy.inspect',
+                       'fit.linear', 'evaluate.regression', 'fit.variant', 'final_test.evaluation'],
+        'reason': ('L8 reports each replicate of the paired row bootstrap to progress.step, a '
+                   'no-op without run --progress; the resamples and the intervals are unchanged.'),
+        'evidence': ['framework/tests/study/test_code_compat_l8.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     _L8_EVIDENCE],
     },
 )
 

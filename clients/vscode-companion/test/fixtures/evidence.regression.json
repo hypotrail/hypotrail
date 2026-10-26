@@ -1383,7 +1383,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 3,
+        "0.5": 5.5,
+        "0.99": 8
+       },
+       "skewness": 0.8
       },
       {
        "column": "displacement",
@@ -1393,7 +1399,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 68,
+        "0.5": 261.5,
+        "0.99": 455
+       },
+       "skewness": 0.8
       },
       {
        "column": "horsepower",
@@ -1403,7 +1415,13 @@
        "n_special": 6,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 46,
+        "0.5": 138.0,
+        "0.99": 230
+       },
+       "skewness": 0.8
       },
       {
        "column": "weight",
@@ -1413,7 +1431,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 1613,
+        "0.5": 3376.5,
+        "0.99": 5140
+       },
+       "skewness": 0.8
       },
       {
        "column": "acceleration",
@@ -1423,7 +1447,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 8.5,
+        "0.5": 16.6,
+        "0.99": 24.8
+       },
+       "skewness": 0.8
       },
       {
        "column": "model_year",
@@ -1433,7 +1463,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 70,
+        "0.5": 76.0,
+        "0.99": 82
+       },
+       "skewness": 0.8
       }
      ],
      "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",

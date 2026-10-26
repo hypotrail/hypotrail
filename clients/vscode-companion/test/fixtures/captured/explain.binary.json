@@ -158,7 +158,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "c67519a84ee46d4d81ffd5a53f51b2fd546d286e864dcf095d61f941f9a956f5",
+       "result_id": "80c0c7169535603c9a5e42355090ba21d341cfdc702654ea2b613c04a8fb7f01",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -194,7 +194,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "7bebaa981ca9328ee83af71c7abbbf05fab26883b12d3a4f7ce64a76c636dd47",
+       "result_id": "9abd65918f72482d5dccd75d48e58bc0253c45bdc4e6c6de0519a60b5e0f22fd",
        "path": "train_rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -268,7 +268,7 @@
       },
       {
        "text": "38.1%",
-       "result_id": "457b8200dbef2e374aeea81d44d328d1d9e471ecca5cd134e3646836c1f1d978",
+       "result_id": "7badf1dfdfc32377b33e9376f05c914cad989474d248eec173bac6b1581b493b",
        "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
        "value": 0.38144329896907214,
        "format": "pct1"
@@ -293,7 +293,7 @@
       },
       {
        "text": "29.6%",
-       "result_id": "457b8200dbef2e374aeea81d44d328d1d9e471ecca5cd134e3646836c1f1d978",
+       "result_id": "7badf1dfdfc32377b33e9376f05c914cad989474d248eec173bac6b1581b493b",
        "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
        "value": 0.296,
        "format": "pct1"
@@ -354,7 +354,7 @@
       },
       {
        "text": "28.3%",
-       "result_id": "457b8200dbef2e374aeea81d44d328d1d9e471ecca5cd134e3646836c1f1d978",
+       "result_id": "7badf1dfdfc32377b33e9376f05c914cad989474d248eec173bac6b1581b493b",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.low",
        "value": 0.2828227931488801,
        "format": "pct1"
@@ -364,7 +364,7 @@
       },
       {
        "text": "47.8%",
-       "result_id": "457b8200dbef2e374aeea81d44d328d1d9e471ecca5cd134e3646836c1f1d978",
+       "result_id": "7badf1dfdfc32377b33e9376f05c914cad989474d248eec173bac6b1581b493b",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.high",
        "value": 0.4783043478260867,
        "format": "pct1"
@@ -1067,7 +1067,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "c67519a84ee46d4d81ffd5a53f51b2fd546d286e864dcf095d61f941f9a956f5",
+       "result_id": "80c0c7169535603c9a5e42355090ba21d341cfdc702654ea2b613c04a8fb7f01",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -1251,7 +1251,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "c67519a84ee46d4d81ffd5a53f51b2fd546d286e864dcf095d61f941f9a956f5",
+       "result_id": "80c0c7169535603c9a5e42355090ba21d341cfdc702654ea2b613c04a8fb7f01",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"

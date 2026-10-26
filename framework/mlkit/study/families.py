@@ -25,6 +25,7 @@ import warnings
 from typing import Mapping
 
 from . import trials
+from .progress import step     # L8 (R10 level 2): a no-op unless ``run --progress`` listens
 
 MAX_SHAPE_POINTS = 40
 MAX_CATEGORY_POINTS = 20
@@ -130,6 +131,7 @@ def choose(case, train, inputs: Mapping, params: Mapping, binary: bool) -> dict:
               inner_folds(y, binary, int(tuning['inner_folds']), int(tuning['seed'])))
     scores = []
     for value in tuning['values']:
+        step('grid', len(scores) + 1, len(tuning['values']), tuning.get('parameter'))
         per_fold, all_y, all_pred, windows = [], [], [], []
         for tr, te in splits:
             pred = fit._fit_predict(case, train.iloc[tr], train.iloc[te], inputs,

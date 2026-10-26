@@ -344,6 +344,7 @@ value_words:
   rare: 'categories with fewer than {k} {rows} grouped'
   rare_rows_cv: rows a model is fitted on
   rare_rows: training rows
+  rare_column: 'categories of {column} with fewer than {k} {rows} grouped'
   caps: 'values capped for {columns}'
   log_transform: 'log transform of {columns}'
   preparation_default: 'Default preparation: nothing added, grouped, capped, or transformed'

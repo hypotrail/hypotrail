@@ -37,6 +37,14 @@ Copilot (§5.4 still to do); the owner has not yet read the report at a rehearsa
 L5 `drafts`, `exploration_order: structural_first` for new studies only, Hotel's
 `calendar: year` waiting for the next case revision ([proposals/L5-agent-text.md](proposals/L5-agent-text.md)).
 
+Implementation status (wave W3, D19 changed, §10): **L8** (R6 per-column rare grouping with
+the recipe operation `rare_category` version 2 and a runtime that reads versions 1 and 2; R5
+`quantiles` and `skewness` in `eda.quality`; R10 level 2 progress steps for folds, inner grids
+and bootstrap replicates; one set of attestation edges with byte-comparison evidence against
+the 10c1e70, 818995c and 506180a engines) is implemented on branch `w3-l8`, unit, process and
+exporter tests only; existing captures stop being current (K3); not yet merged by the
+integrator, not run with Copilot.
+
 **Priority of this batch (owner, 2026-10-26): the workshop journey.** The batch prepares a
 workshop. What matters most is the junior's journey as they live it: visually clear,
 pedagogical, working features, a fluid path. Lots and waves are therefore ordered by their
@@ -1388,3 +1396,7 @@ report is shown to the owner before L6 is implemented; D19 keeps L8 after the wo
 timing (D19).
 2026-10-26 (later): D19 changed by the owner: L8 lands before the workshop, in this batch.
 Existing studies lose their capture (risk K3, accepted); the workshop uses new studies.
+
+2026-10-26 (later): the owner changed D19: L8 lands before the workshop, in this batch (W3),
+accepting that existing captures stop being current (K3: before the opening the junior
+captures again; after it the final evaluation is not current and the export is recipe-only).

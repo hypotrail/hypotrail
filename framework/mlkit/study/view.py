@@ -876,9 +876,13 @@ def preprocessing_words(value: dict) -> str:
         named = sorted(c for c, v in missing.items() if v == 'indicator')
         if named:
             parts.append('missing-value indicators for ' + ', '.join(named))
-    if value.get('rare_category_min_rows'):
-        parts.append(f'categories with fewer than {value["rare_category_min_rows"]} training '
-                     f'rows grouped')
+    rare = value.get('rare_category_min_rows')
+    if isinstance(rare, dict):
+        # L8 (R6): a minimum per column.
+        parts += [f'categories of {column} with fewer than {k} training rows grouped'
+                  for column, k in sorted(rare.items()) if k]
+    elif rare:
+        parts.append(f'categories with fewer than {rare} training rows grouped')
     if value.get('caps'):
         parts.append('caps on ' + ', '.join(sorted(value['caps'])))
     if value.get('log_transform'):

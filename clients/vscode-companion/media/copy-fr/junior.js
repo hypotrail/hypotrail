@@ -148,7 +148,11 @@
     } else {
       parts.push(v.missing === 'indicator' ? 'valeurs manquantes signalées' : 'valeurs manquantes non signalées');
     }
-    if (v.rare_category_min_rows) parts.push(`catégories de moins de ${v.rare_category_min_rows} lignes regroupées`);
+    if (v.rare_category_min_rows && typeof v.rare_category_min_rows === 'object') {
+      // L8 (R6) : un minimum par colonne.
+      Object.keys(v.rare_category_min_rows).sort().filter(c => v.rare_category_min_rows[c])
+        .forEach(c => parts.push(`catégories de ${c} de moins de ${v.rare_category_min_rows[c]} lignes regroupées`));
+    } else if (v.rare_category_min_rows) parts.push(`catégories de moins de ${v.rare_category_min_rows} lignes regroupées`);
     const caps = v.caps && typeof v.caps === 'object' ? Object.keys(v.caps) : [];
     parts.push(caps.length ? `valeurs extrêmes plafonnées (${caps.join(', ')})` : 'pas de plafonnement');
     const logs = Array.isArray(v.log_transform) ? v.log_transform : [];

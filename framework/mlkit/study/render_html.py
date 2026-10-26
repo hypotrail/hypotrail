@@ -1150,10 +1150,14 @@ def value_words(decision_id: str, value: Any, task: str | None) -> str:
             elif isinstance(missing, Mapping) and missing:
                 parts.append(words['missing_some'].format(columns=', '.join(sorted(missing))))
             k = value.get('rare_category_min_rows')
+            # B6c (M3): under cross-validation, the rows each fold's model is fitted on.
+            rows = words['rare_rows_cv'] if texts.is_cv() else words['rare_rows']
             if isinstance(k, int) and k > 0:
-                # B6c (M3): under cross-validation, the rows each fold's model is fitted on.
-                rows = words['rare_rows_cv'] if texts.is_cv() else words['rare_rows']
                 parts.append(words['rare'].format(k=k, rows=rows))
+            elif isinstance(k, Mapping):
+                # L8 (R6): a minimum per column.
+                parts += [words['rare_column'].format(column=column, k=n, rows=rows)
+                          for column, n in sorted(k.items()) if isinstance(n, int) and n > 0]
             if value.get('caps'):
                 parts.append(words['caps'].format(columns=', '.join(sorted(value['caps']))))
             if value.get('log_transform'):

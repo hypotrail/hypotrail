@@ -237,6 +237,7 @@ value_words:
   rare: 'les catégories de moins de {k} {rows} regroupées'
   rare_rows_cv: lignes sur lesquelles un modèle est ajusté
   rare_rows: "lignes d'entraînement"
+  rare_column: 'les catégories de {column} de moins de {k} {rows} regroupées'
   caps: 'des valeurs plafonnées pour {columns}'
   log_transform: 'une transformation logarithmique de {columns}'
   preparation_default: 'Préparation par défaut : rien d''ajouté, de regroupé, de plafonné ni de transformé'

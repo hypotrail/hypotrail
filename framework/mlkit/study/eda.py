@@ -41,7 +41,8 @@ v0.2a (WP-A4, review synthesis §3) adds the EDA governance catalog:
 
 * ``eda.quality``: the structural quality of the **development rows without the target**
   (missing cells and co-missing patterns, repeated rows, cardinality and rare categories,
-  ranges against the ranges the case declares);
+  ranges against the ranges the case declares; since L8, R5, the 1 %, 50 % and 99 %
+  quantiles and the skewness of each numeric column);
 * intervals and counts on every target-related analysis (Wilson for a rate, a t interval
   for a mean) and a permutation null band per ``eda.rate_by`` / ``eda.mean_by`` chart
   (:data:`NULL_SHUFFLES` shuffles of the target, seed :data:`NULL_SEED`);
@@ -698,6 +699,25 @@ def _with_null_band(out: dict, labels, y, statistic, band_key: str) -> dict:
     return out
 
 
+# Owner session 2026-10-26 (L8, R5): the quantiles and the skewness of every numeric column of
+# the quality check, so a preparation can be drafted without one distribution run per column.
+QUALITY_QUANTILES = (0.01, 0.5, 0.99)
+
+
+def _shape(ordinary) -> dict:
+    """``{"quantiles": {"0.01", "0.5", "0.99"}, "skewness"}`` of the ordinary values of a
+    numeric column (special values and missing cells left out): pandas' linear quantiles, and
+    the sample skewness (adjusted Fisher-Pearson, pandas ``Series.skew``), None with fewer
+    than three values or no spread."""
+    import math
+    values = ordinary.astype(float)
+    quantiles = {str(q): (float(values.quantile(q)) if len(values) else None)
+                 for q in QUALITY_QUANTILES}
+    skew = float(values.skew()) if len(values) >= 3 and float(values.std()) > 0 else None
+    return {'quantiles': quantiles,
+            'skewness': skew if skew is not None and math.isfinite(skew) else None}
+
+
 def quality(case: c.Case, frame) -> dict:
     """The structural quality of the development rows, **without the target** (the caller
     drops the target column): missing cells by column and their co-missing patterns,
@@ -759,6 +779,7 @@ def quality(case: c.Case, frame) -> dict:
                     'declared': ({'min': low, 'max': high} if declared else None),
                     'n_below': int((ordinary < low).sum()) if low is not None else None,
                     'n_above': int((ordinary > high).sum()) if high is not None else None}
+            item.update(_shape(ordinary))           # L8 (R5): additive keys
             ranges.append(item)
     return {'partition': 'development', 'n_rows': n, 'n_columns': len(columns),
             'target_read': False, 'missing': missing,

@@ -665,7 +665,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 19,
+        "0.5": 53.0,
+        "0.99": 87
+       },
+       "skewness": 0.8
       },
       {
        "column": "balance",
@@ -675,7 +681,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": -3313,
+        "0.5": 33937.5,
+        "0.99": 71188
+       },
+       "skewness": 0.8
       },
       {
        "column": "day",
@@ -685,7 +697,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 1,
+        "0.5": 16.0,
+        "0.99": 31
+       },
+       "skewness": 0.8
       },
       {
        "column": "duration",
@@ -695,7 +713,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 4,
+        "0.5": 1514.5,
+        "0.99": 3025
+       },
+       "skewness": 0.8
       },
       {
        "column": "campaign",
@@ -705,7 +729,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 1,
+        "0.5": 25.5,
+        "0.99": 50
+       },
+       "skewness": 0.8
       },
       {
        "column": "pdays",
@@ -715,7 +745,13 @@
        "n_special": 2962,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 1,
+        "0.5": 436.0,
+        "0.99": 871
+       },
+       "skewness": 0.8
       },
       {
        "column": "previous",
@@ -725,7 +761,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 0,
+        "0.5": 12.5,
+        "0.99": 25
+       },
+       "skewness": 0.8
       }
      ],
      "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",

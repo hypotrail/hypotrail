@@ -556,8 +556,10 @@ def preparation_steps(values: Mapping) -> str | None:
         lines += [f'# Missing-value indicator for {column}: 1 where the cell is empty.',
                   f'X_train[{q(name)}] = train[{q(column)}].isna().astype(int).to_numpy()',
                   f'X_validation[{q(name)}] = validation[{q(column)}].isna().astype(int).to_numpy()']
-    k = value.get('rare_category_min_rows')
+    rare = value.get('rare_category_min_rows')
     for column in fitted.get('rare_categories') or {}:
+        # L8 (R6): one minimum for every column, or the column's own.
+        k = rare.get(column, 0) if isinstance(rare, Mapping) else rare
         lines += [f'# Categories of {column} with fewer than {k} training rows are grouped as '
                   f'"(rare)" (a category unseen in training too).',
                   f'_counts = X_train[{q(column)}].dropna().astype(str).value_counts()',
