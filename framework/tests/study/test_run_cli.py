@@ -93,7 +93,8 @@ def test_the_activity_flow_through_processes(tmp_path, work, cases, name):
     cli.decide('model_variant', {'kind': 'regularisation', 'strength': 'strong'},
                'Yes, compare it with the more strongly regularised variant')
     payloads = {}
-    for args in (('split',), ('eda.target_rate',), ('eda.special_values',),
+    # Owner session 2026-10-26 (L5): the structural check is a step of a new study's plan.
+    for args in (('split',), ('eda.quality',), ('eda.target_rate',), ('eda.special_values',),
                  ('fit.baseline',), ('fit.logistic',), ('fit.variant',),
                  ('policy.evaluate', '--rule', 'threshold:0.5', '--rule', 'capacity:100')):
         payload = cli.run(*args)

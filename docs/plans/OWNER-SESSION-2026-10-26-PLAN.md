@@ -33,6 +33,19 @@ following them, the report and notebook in the study language, J-LANG automated 
 [proposals/L3-agent-text.md](proposals/L3-agent-text.md); not yet merged by the integrator,
 not run with Copilot.
 
+Implementation status (wave W2, L5): **L5** (recommendations that read the evidence: the
+structural-first plan for new studies, `exploration_order` and step `structural_eda`; the
+preparation drafted from the target-free results with `recommended.reasons` and
+`alternatives`; `data_contingent_reason.junior_text` and the glossary term `target_look`; the
+EBM drafted when the diagnostics flag a pattern; `model_families` `junior_words` and
+`not_offered`; the teaching refusal of a family outside the catalogue; the `calendar: year`
+case declaration and its advisory, Hotel's declaration waiting for the next case revision; the
+acceptance scenario S15) is implemented on branch `w2-l5` in `mlkit.study.drafts` and the
+non-fingerprinted view, state, junior and command modules, with unit, walker and Hotel
+structural tests; agent wording proposed in
+[proposals/L5-agent-text.md](proposals/L5-agent-text.md). Not merged by the integrator, not
+run with Copilot.
+
 **Priority of this batch (owner, 2026-10-26): the workshop journey.** The batch prepares a
 workshop. What matters most is the junior's journey as they live it: visually clear,
 pedagogical, working features, a fluid path. Lots and waves are therefore ordered by their

@@ -62,12 +62,14 @@ MOMENTS = (('frame', 'Frame the change'), ('evidence', 'Prepare evidence'),
 # v0.2a (WP-A4): step 0 and the success criterion frame the change; the preprocessing is
 # prepared with the evidence. A moment lists only the steps of its study.
 # WP-B1: the variant is compared with the models, the final test opened before concluding.
+# Owner session 2026-10-26 (L5, D5): a study created by ``init`` checks the structure, then
+# decides the preparation, then explores the target (the plan order of its moment).
 MOMENT_STEPS = {
     'binary': (('discover_data', 'prediction_time', 'feature_availability', 'split',
-                'success_criterion'), ('train_eda', 'preprocessing'),
+                'success_criterion'), ('structural_eda', 'preprocessing', 'train_eda'),
                ('models', 'model_variant', 'policy'), ('final_test', 'conclusion')),
     'regression': (('discover_data', 'prediction_time', 'feature_availability', 'split',
-                    'success_criterion'), ('train_eda', 'preprocessing'),
+                    'success_criterion'), ('structural_eda', 'preprocessing', 'train_eda'),
                    ('models', 'model_variant', 'model_choice'), ('final_test', 'conclusion')),
 }
 PAUSE_KEYS = ('pause', 'decisions', 'status', 'confirmed')

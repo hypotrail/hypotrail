@@ -391,6 +391,63 @@ def _models_after_decisions(step: dict) -> dict:
     return dict(step, requires=('split', SUCCESS_CRITERION, PREPROCESSING))
 
 
+# Owner session 2026-10-26 (lot L5, R5, R7, owner decision D5). A study created by ``init``
+# since then writes ``exploration_order: "structural_first"``: its plan checks the structure of
+# the development rows without the target (``eda.quality``, step ``structural_eda``) and
+# decides the preparation from it **before** any look at the target; the target exploration
+# (``train_eda``) follows the preparation. The view drafts the preparation from the
+# target-free results and the variants from the diagnostics (:mod:`mlkit.study.drafts`) only
+# in such a study. A study without the key keeps its plan, its drafts and its open proposals
+# (never migrated). The WP-A9 M1 rule is unchanged: a preparation proposed after a look at the
+# target is still stamped data-contingent.
+EXPLORATION_ORDER_KEY = 'exploration_order'
+STRUCTURAL_FIRST = 'structural_first'
+EXPLORATION_ORDERS = (STRUCTURAL_FIRST,)
+STRUCTURAL_EDA = 'structural_eda'
+STRUCTURAL_EDA_STEP = {
+    'id': STRUCTURAL_EDA, 'pause': None, 'decision': None, 'activities': ('eda.quality',),
+    'requires': ('split',),
+    'title': 'Check the structure of the data',
+    'question': 'Which columns have missing cells, rare categories, or values outside their '
+                'possible range? This check reads the development rows without the target, so '
+                'the preparation decided from it comes before any look at the target.',
+    'expected_output': 'A current quality overview of the development rows, read without the '
+                       'target.',
+    'completion': 'The quality overview is current.'}
+# The target exploration once the preparation is decided (structural-first plan), by task and
+# by evaluation scheme (``True``: cross-validation).
+STRUCTURAL_TRAIN_EDA_TEXTS = {
+    (BINARY, True): {
+        'title': 'Explore the target on the development rows',
+        'question': 'What do the development rows show about the outcome and the special '
+                    'values? Each of these analyses is a look at the target: it reads the '
+                    'variable to predict, and every look is counted. The preparation is already '
+                    'decided, before these looks.'},
+    (BINARY, False): {
+        'title': 'Explore the target on the training rows',
+        'question': 'What do the training rows show about the outcome and the special values? '
+                    'Each of these analyses is a look at the target: it reads the variable to '
+                    'predict, and every look is counted. The preparation is already decided, '
+                    'before these looks.'},
+    (REGRESSION, True): {
+        'title': 'Explore the target on the development rows',
+        'question': 'What do the development rows show about the distribution of the target '
+                    'and the special values? Each of these analyses is a look at the target: it '
+                    'reads the variable to predict, and every look is counted. The preparation '
+                    'is already decided, before these looks.'},
+    (REGRESSION, False): {
+        'title': 'Explore the target on the training rows',
+        'question': 'What do the training rows show about the distribution of the target and '
+                    'the special values? Each of these analyses is a look at the target: it '
+                    'reads the variable to predict, and every look is counted. The preparation '
+                    'is already decided, before these looks.'},
+}
+STRUCTURAL_PREPROCESSING_QUESTION = (
+    'How should the model treat missing values, rare categories, extreme values and skewed '
+    'variables? The draft reads the quality check, which does not read the target; every '
+    'parameter is learnt only on the rows each model is fitted on.')
+
+
 FULL_STEPS = (DISCOVER_STEP, STEPS[0], STEPS[1], STEPS[2], SUCCESS_STEP, STEPS[3],
               PREPROCESSING_STEP, _models_after_decisions(STEPS[4]), STEPS[5], STEPS[6])
 FULL_REGRESSION_STEPS = (DISCOVER_STEP, REGRESSION_STEPS[0], REGRESSION_STEPS[1],
@@ -577,7 +634,11 @@ TOP_KEYS = ('schema', 'revision', 'created', 'updated', 'case', 'dataset', 'fact
 # recorded at ``init`` (``{path, sha256}``, :mod:`mlkit.study.l10n`); a study whose case has
 # none, or created before it existed, has no ``case_l10n`` and shows the case's English.
 TOP_OPTIONAL_KEYS = ('task', 'notes', 'partition', 'mode', 'language', 'mode_history',
-                     'exploration', 'understanding', 'case_l10n')
+                     'exploration', 'understanding', 'case_l10n',
+                     # Owner session 2026-10-26 (L5, D5): the plan generation that checks the
+                     # structure before the target (``structural_first``), written by
+                     # ``init``; absent in a study created before.
+                     'exploration_order')
 DECISION_KEYS = ('status', 'value', 'proposal_id', 'confirmation', 'depends_on', 'revision',
                  'reason')
 PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale', 'revision',
@@ -702,15 +763,49 @@ def _wp_f1_steps(state: Mapping | str | None, out: tuple) -> tuple:
     return tuple(result)
 
 
+def structural_first(state: Mapping | str | None) -> bool:
+    """Owner session 2026-10-26 (L5, D5): whether a study follows the structural-first plan
+    (``exploration_order: "structural_first"``, written by ``init``). A study without the key
+    (created before) keeps its plan; a task name or ``None`` is not a study."""
+    return isinstance(state, Mapping) \
+        and state.get(EXPLORATION_ORDER_KEY) == STRUCTURAL_FIRST \
+        and has_wp_b1_decisions(state)
+
+
+def _structural_order(state: Mapping, out: tuple) -> tuple:
+    """L5 (D5): the structural check, then the preparation (which requires it), then the
+    target exploration; every other step keeps its place and its requirements."""
+    cv = uses_cross_validation(state)
+    texts = STRUCTURAL_TRAIN_EDA_TEXTS[(task_of(state), cv)]
+    by_id = {s['id']: s for s in out}
+    result = []
+    for step in out:
+        if step['id'] == 'train_eda':
+            continue
+        if step['id'] == PREPROCESSING:
+            result.append(STRUCTURAL_EDA_STEP)
+            result.append(dict(step, requires=tuple(step['requires']) + (STRUCTURAL_EDA,),
+                               question=STRUCTURAL_PREPROCESSING_QUESTION))
+            if 'train_eda' in by_id:
+                result.append(dict(by_id['train_eda'], **texts))
+            continue
+        result.append(step)
+    return tuple(result)
+
+
 def steps(state: Mapping | str | None = None) -> tuple[dict, ...]:
     """The plan steps of a study's task. A study created before WP-A4 has the step "Discover
-    the data" and its own five decisions' steps (the models then need the split only)."""
+    the data" and its own five decisions' steps (the models then need the split only). A
+    structural-first study (L5) checks the structure, then decides the preparation, then
+    explores the target (:func:`structural_first`)."""
     if has_wp_b1_decisions(state):
         out = (B2_BINARY_STEPS if has_explicit_binary_model_choice(state)
                else B1_STEPS_BY_TASK[task_of(state)])
         if uses_cross_validation(state):
             texts = CV_STEP_TEXTS_BY_TASK[task_of(state)]
             out = tuple(dict(s, **texts.get(s['id'], {})) for s in out)
+        if structural_first(state):
+            out = _structural_order(state, out)
         return _wp_f1_steps(state, out)
     full = FULL_STEPS_BY_TASK[task_of(state)]
     if has_wp_a4_decisions(state):
@@ -730,6 +825,10 @@ def step_ids(state: Mapping | str | None = None) -> tuple[str, ...]:
 
 def activity_slots(state: Mapping | str | None = None) -> tuple[str, ...]:
     if has_wp_b1_decisions(state):
+        if structural_first(state):
+            base = (B2_BINARY_STEPS if has_explicit_binary_model_choice(state)
+                    else B1_STEPS_BY_TASK[task_of(state)])
+            return tuple(a for s in _structural_order(state, base) for a in s['activities'])
         if has_explicit_binary_model_choice(state):
             return tuple(a for s in B2_BINARY_STEPS for a in s['activities'])
         return B1_ACTIVITY_SLOTS_BY_TASK[task_of(state)]
@@ -1081,6 +1180,9 @@ def validate_state(state: Any) -> list[dict]:
     if 'case_l10n' in present:
         from . import l10n
         problems.extend(l10n.state_problems(state))
+    if 'exploration_order' in present and state['exploration_order'] not in EXPLORATION_ORDERS:
+        problems.append({'path': 'exploration_order',
+                         'problem': f'must be one of {", ".join(EXPLORATION_ORDERS)}'})
     if 'mode_history' in present:
         history = state['mode_history']
         if not isinstance(history, list):

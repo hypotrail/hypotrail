@@ -621,10 +621,18 @@ def validate_variant(state: Mapping, value: Any) -> None:
             and trials.variants_of(value)[0]['kind'] not in VARIANT_KEYS:
         problem = 'A variant of kind tuned or family is declared in a list, with its question.'
     if problem is not None:
+        # Owner session 2026-10-26 (L5, R15, D11): a family outside the catalogue gets a
+        # refusal that teaches (same code; the closest family, why the catalogue is closed,
+        # the workbench for a personal exploration that is not study evidence).
+        from . import drafts
+        asked = drafts.unknown_family(value)
+        extra = (drafts.family_refusal(asked, st.language_of(state))
+                 if asked is not None else {})
         raise _invalid(problem + ' model_variant is {"variants": [{"kind": ..., "question": '
                        '...}, ...]} (at most three).', kinds=list(st.VARIANT_KINDS),
                        strengths=list(st.VARIANT_STRENGTHS), groups=sorted(groups),
-                       families=list(trials.VARIANT_FAMILIES), max=trials.MAX_VARIANTS)
+                       families=list(trials.VARIANT_FAMILIES), max=trials.MAX_VARIANTS,
+                       **extra)
     from . import assurance
     if assurance.profile(state) == 'review-v1':
         items = trials.variants_of(value)
@@ -1246,7 +1254,13 @@ def data_contingency(store, state: Mapping, decision_id: str,
                 diag = registry.get(store, rid)['output']['values']
             except StudyError:
                 diag = None
-        return trials.data_contingency(value, diag, rid)
+        contingent, why = trials.data_contingency(value, diag, rid)
+        if why is not None:
+            # Owner session 2026-10-26 (L5, R7): the stamp in the junior's words.
+            from . import drafts
+            why = {**why, 'junior_text': drafts.variant_contingency_text(
+                list(why.get('families') or []), st.language_of(state))}
+        return contingent, why
     if decision_id != st.PREPROCESSING or not isinstance(value, Mapping):
         return None, None
     contingent = bool(value.get('data_contingent'))
@@ -1273,9 +1287,15 @@ def data_contingency(store, state: Mapping, decision_id: str,
     text = ('This preprocessing is data-contingent: ' + '; '.join(parts) + '. Say so to the '
             'junior before presenting it: a choice made after looking at the outcome makes '
             'the development figures more optimistic.')
+    from . import drafts
     return True, {'target_looks_before': looks['target_looks'],
                   'looks_by_activity': looks['by_activity'], 'look_results': looks['results'],
-                  'motivating_results_reading_target': motivating, 'text': text}
+                  'motivating_results_reading_target': motivating, 'text': text,
+                  # Owner session 2026-10-26 (L5, R7): the stamp in the junior's words, in the
+                  # study language: the term first, this study's looks, why it is recorded.
+                  'junior_text': drafts.contingency_text(
+                      looks['target_looks'], looks['by_activity'], len(motivating),
+                      st.language_of(state))}
 
 
 def _confirm(ctx: Context) -> Handler:
@@ -2031,6 +2051,10 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
     state = st.initial_state(case, language=language, reliability_profile=reliability_profile)
     if sidecar is not None:
         state[l10n.STATE_KEY] = {'path': sidecar['path'], 'sha256': sidecar['sha256']}
+    # Owner session 2026-10-26 (L5, D5): a new study checks the structure of its data and
+    # decides the preparation before any look at the target. A study created before keeps its
+    # plan (no key, never migrated).
+    state[st.EXPLORATION_ORDER_KEY] = st.STRUCTURAL_FIRST
     study_dir.mkdir(parents=True, exist_ok=True)
     dev_sha = store.put_blob(rec.row_keys_bytes(assigned['development']))
     final_sha = store.put_blob(rec.row_keys_bytes(assigned['final_test']))

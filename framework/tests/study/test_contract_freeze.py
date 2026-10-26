@@ -248,6 +248,13 @@ B1_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availability', 'spli
 B2_BINARY_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availability', 'split',
                       'success_criterion', 'train_eda', 'preprocessing', 'models',
                       'model_variant', 'model_choice', 'policy', 'final_test', 'conclusion')
+# Owner session 2026-10-26 (L5, D5): a binary study created by ``init`` since L5 checks the
+# structure before the target (``exploration_order: structural_first``); a study created
+# before keeps ``B2_BINARY_STEP_IDS``.
+STRUCTURAL_FIRST_BINARY_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availability',
+                                    'split', 'success_criterion', 'structural_eda',
+                                    'preprocessing', 'train_eda', 'models', 'model_variant',
+                                    'model_choice', 'policy', 'final_test', 'conclusion')
 CV_METHODS = ('kfold_stratified', 'kfold_quantile', 'temporal_folds',
               'forward_chaining', 'ordered_retrospective', 'group_disjoint')
 TRIALS_KEYS = ('count', 'results', 'note')
@@ -552,7 +559,7 @@ def test_status_summary_keys(flow):
     assert view.SUMMARY_KEYS == SUMMARY_PAYLOAD_KEYS[6:]
     assert tuple(payload['goal']) == SUMMARY_GOAL_KEYS
     assert [tuple(step) for step in payload['plan']] == [('id', 'title', 'status')] * len(
-        B2_BINARY_STEP_IDS)
+        STRUCTURAL_FIRST_BINARY_STEP_IDS)
     # New binary studies choose the model and its policy separately; legacy B1 stays stable.
     assert tuple(payload['decisions']) == st.B2_DECISION_IDS == B2_DECISION_IDS
     assert all(tuple(d) == SUMMARY_DECISION_KEYS for d in payload['decisions'].values())
@@ -612,7 +619,7 @@ def test_view_model_keys(flow):
         == LIVENESS_VALUES
     assert not [k for k in (*EXECUTION_VIEW_KEYS, *LIVENESS_VALUES, 'liveness')
                 if k not in DOC_TOKENS]
-    assert [s['id'] for s in v['plan']] == list(B2_BINARY_STEP_IDS)
+    assert [s['id'] for s in v['plan']] == list(STRUCTURAL_FIRST_BINARY_STEP_IDS)
     assert all(tuple(s) == STEP_KEYS for s in v['plan'])
     assert {'kind', 'message'} <= set(v['next_action'])
     assert {x['id'] for x in v['not_yet_defensible']} <= NOT_YET_DEFENSIBLE_IDS
@@ -673,7 +680,9 @@ def test_notes_hold_a_decision_until_the_junior_resolves_them(tmp_path, syntheti
     assert st.TOP_OPTIONAL_KEYS == ('task', 'notes', 'partition', 'mode', 'language',
                                     'mode_history', 'exploration', 'understanding',
                                     # L3 (D4 A): the case's translation sidecar of ``init``.
-                                    'case_l10n')
+                                    'case_l10n',
+                                    # L5 (D5): the structural-first plan generation.
+                                    'exploration_order')
     assert st.NOTE_KEYS == NOTE_STATE_KEYS and st.NOTE_RESOLUTION_KEYS == NOTE_RESOLUTION_KEYS
     assert st.NOTE_KINDS == ('hold', 'correction') and st.NOTE_STATUSES == NOTE_STATUSES
     assert view.NOTE_VIEW_KEYS == NOTE_VIEW_KEYS
@@ -1470,3 +1479,45 @@ def test_w1_next_action_key_order(tmp_path, synthetic_case_dir, monkeypatch):
     assert list(action)[-1] == 'panel'
     for key in NEXT_ACTION_TAIL:
         assert f'`{key}`' in DOC, key
+
+
+def test_l5_contract_constants(tmp_path, synthetic_case_dir):
+    """Owner session 2026-10-26 (L5): the structural-first generation, the drafts' keys and
+    rules, the refusal details of a family outside the catalogue, the calendar declaration;
+    every name documented in CLI-CONTRACT."""
+    from mlkit.study import case as c, drafts
+    assert (st.EXPLORATION_ORDER_KEY, st.STRUCTURAL_FIRST, st.EXPLORATION_ORDERS,
+            st.STRUCTURAL_EDA) == ('exploration_order', 'structural_first',
+                                   ('structural_first',), 'structural_eda')
+    assert st.STRUCTURAL_EDA_STEP['activities'] == ('eda.quality',)
+    assert drafts.REASON_KEYS == ('parameter', 'column', 'rule', 'evidence', 'text')
+    assert drafts.ALTERNATIVE_KEYS == ('value', 'label', 'why')
+    assert drafts.NOT_OFFERED_KEYS == ('name', 'words', 'why')
+    assert drafts.RULES == ('rare_categories', 'missing_indicator', 'cap_declared_range',
+                            'signed_log')
+    assert (drafts.RARE_MIN_DISTINCT, drafts.RARE_MIN_SHARE, drafts.MISSING_MIN_SHARE,
+            drafts.CAP_QUANTILES, drafts.MAX_DISTRIBUTION_RUNS, drafts.SPAN_RATIO) == (
+        20, 0.01, 0.05, [0.005, 0.995], 3, 10)
+    assert drafts.WORKBENCH == 'notebooks/workbench.py'
+    assert c.CALENDAR_UNITS == ('year',) and 'calendar' in c.VARIABLE_OPTIONAL
+    study = tmp_path / 'study'
+    _run('init', '--case', synthetic_case_dir, '--study', study)
+    assert read.open(study).state['exploration_order'] == 'structural_first'
+    refused = _run('decide', 'propose', 'model_variant', '--value-json',
+                   json.dumps({'variants': [{'kind': 'family', 'family': 'svm',
+                                             'question': 'x?'}]}),
+                   '--restatement', 'x', '--rationale', 'x', '--request-id', 'l5',
+                   '--expected-revision', 1, '--study', study)
+    assert refused.payload['error']['code'] == 'invalid_value'
+    assert {'reason', 'asked', 'closest_family', 'workbench', 'junior_message'} <= set(
+        refused.payload['error']['details'])
+    keys = ({st.EXPLORATION_ORDER_KEY, st.STRUCTURAL_FIRST, st.STRUCTURAL_EDA,
+             'alternatives', 'reasons', 'junior_text', 'junior_words', 'not_offered',
+             'family_not_in_catalogue', 'closest_family', 'workbench', 'calendar',
+             'drafts.preprocessing_draft', 'drafts.variant_draft', 'drafts.screened_columns',
+             'drafts.family_refusal', 'drafts.calendar_advisory', 'drafts.contingency_text',
+             'target_look'}
+            | set(drafts.REASON_KEYS) | set(drafts.ALTERNATIVE_KEYS) | set(drafts.RULES)
+            | set(STRUCTURAL_FIRST_BINARY_STEP_IDS))
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
+

@@ -390,6 +390,7 @@ def _legacy_at_policy(tmp_path, language='en'):
     f.call('init', '--case', case_dir, '--study', f.study, '--lang', language)
     f.pauses()
     f.run('split')
+    f.run('eda.quality')            # owner session 2026-10-26 (L5): a step of a new study
     f.run('fit.baseline')
     f.run('fit.logistic')
     f.variant()

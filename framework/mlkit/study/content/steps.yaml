@@ -42,6 +42,14 @@ steps:
     method: A stratified random split with a recorded seed. The rows read are recorded as exposure.
     interpretation: "Training rows: {{slot:split:partitions.train.n_rows|int}}, of which {{slot:split:partitions.train.rate|pct1}} are positive. Validation rows: {{slot:split:partitions.validation.n_rows|int}}, of which {{slot:split:partitions.validation.rate|pct1}} are positive: stratification keeps the share close."
     consequence: Changing the split refits both models and recomputes the exploration; rows already explored stay exposed.
+  # Owner session 2026-10-26 (L5, D5): the structural check of a structural-first study,
+  # before the preparation and before any look at the target.
+  structural_eda:
+    concept: target_look
+    context: The quality check reads the development rows without the target, so the preparation decided from it comes before any look at the target.
+    method: Missing cells by column, repeated rows, the categories of each categorical column with their rare ones, and the range of each numeric column against the range the case declares. The rows read are recorded as a structural inspection.
+    interpretation: The drafted preparation cites what this check found; it is not data-contingent while no look at the target came before it.
+    consequence: A preparation proposed after a look at the target is still stamped data-contingent.
   train_eda:
     concept: base_rate
     context: "The outcome is: {{fact:target|not stated by the case}}. Exploration reads training rows only."
@@ -131,7 +139,7 @@ moments:
   - id: evidence
     title: Prepare evidence
     title_fr: Préparer les preuves
-    steps: [train_eda, preprocessing]
+    steps: [structural_eda, train_eda, preprocessing]
   - id: compare
     title: Work and compare
     title_fr: Travailler et comparer

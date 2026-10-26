@@ -162,6 +162,7 @@ task: binary
 | `group` | Optional (v0.2a, WP-A4): the group the data card (`hypotrail data`) shows the variable in, for example `Client` or `Last contact of this campaign` |
 | `labels` | Optional (v0.2a, WP-A4): the description in another language, `{fr: "..."}` (languages `en`, `fr`); the data card shows `labels.fr` next to the description |
 | `range` | Optional (v0.2a, WP-A4), numeric or integer variables only: `{min, max, status, source}`, the possible values (either bound may be `null`, not both); `eda.quality` counts the ordinary values outside it |
+| `calendar` | Optional (owner session 2026-10-26, L5, R12, owner decision D8), a numeric or integer feature only: `year` (the only value, `case.CALENDAR_UNITS`) when the column holds a calendar year. Under an evaluation that follows time, the engine advises on a kept calendar-year feature (a year term can only extrapolate; keep the month and the week; CLI-CONTRACT §3.1). The engine never infers it from a column name. Adding it to a committed case changes the case's bytes, so it ships with a case revision the owner accepts (every study on the previous bytes reports `sources_changed`): Hotel's `arrival_date_year` waits for the next Hotel revision |
 | `description` | What the value means. For a variable that describes an event close to the outcome, say so: for example "last contact of the current campaign" |
 | `status`, `source` | Epistemic status of the description |
 | `availability` | `{value, status, source}`, see below |

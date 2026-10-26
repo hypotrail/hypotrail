@@ -82,12 +82,24 @@ def _review(base: Path, task: str, language: str, monkeypatch, delay: int = 0) -
     return Study(f, task, True)
 
 
+def _previous(base: Path, task: str, language: str) -> Study:
+    """Owner session 2026-10-26 (L5): a study of the generation before the structural-first
+    plan (no ``exploration_order``): it explores the target before the preparation and keeps
+    the earlier drafts."""
+    s = _legacy(base, task, language)
+    fk.previous_generation(s.study)
+    return s
+
+
 BASES = {'legacy-binary-en': lambda b, m: _legacy(b, 'binary', 'en'),
          'legacy-binary-fr': lambda b, m: _legacy(b, 'binary', 'fr'),
          'legacy-regression-fr': lambda b, m: _legacy(b, 'regression', 'fr'),
          'review-binary-fr': lambda b, m: _review(b, 'binary', 'fr', m, delay=2),
          'review-binary-en': lambda b, m: _review(b, 'binary', 'en', m),
-         'review-regression-en': lambda b, m: _review(b, 'regression', 'en', m)}
+         'review-regression-en': lambda b, m: _review(b, 'regression', 'en', m),
+         # L5: every base above is structural-first (``init`` writes it); these two are not.
+         'previous-binary-en': lambda b, m: _previous(b, 'binary', 'en'),
+         'previous-regression-fr': lambda b, m: _previous(b, 'regression', 'fr')}
 
 
 # --- the walker: every next_action executed exactly as given --------------------------------
@@ -277,9 +289,11 @@ def _note(s: Study, decision: str) -> None:
 
 def _interrupt(s: Study) -> None:
     """A real process killed right after its reservation: an execution whose outcome is
-    unknown (``eda.quality`` needs no decision)."""
+    unknown (``eda.correlation`` needs no decision; owner session 2026-10-26, L5: not
+    ``eda.quality``, which a structural-first study has already run as a plan step, so its
+    run would be ``already_current`` and reserve nothing)."""
     env = fk.env(HYPOTRAIL_TEST_HOOKS='1', HYPOTRAIL_FAULT='run_after_reserve')
-    subprocess.run([sys.executable, '-m', 'mlkit.study.cli', 'run', 'eda.quality',
+    subprocess.run([sys.executable, '-m', 'mlkit.study.cli', 'run', 'eda.correlation',
                     '--request-id', f'kill{s.rev()}', '--expected-revision', str(s.rev()),
                     '--study', str(s.study)], env=env, capture_output=True, text=True,
                    timeout=600)
@@ -487,7 +501,24 @@ def _scenarios():
         lambda m, t: [(at_conclusion, change_model, 'model')])
     add('opened-then-hold', ['review-regression-en'],
         lambda m, t: [(at_conclusion, lambda s: _note(s, 'conclusion'), 'hold')])
+    # Owner session 2026-10-26 (L5): the structural-first plan and its drafts. A look at the
+    # target before the drafted preparation (the stamp, not a refusal); a hold on the
+    # preparation and a changed preparation under a policy proposal in the previous
+    # generation too.
+    add('target-look-before-preparation', ['legacy-binary-fr', 'review-regression-en'],
+        lambda m, t: [(at_propose('preprocessing'), _look_at_target, 'look')])
+    add('held-before-preprocessing', ['previous-binary-en'],
+        lambda m, t: [(at_propose('preprocessing'), lambda s: _note(s, 'preprocessing'),
+                       'hold')])
+    add('policy-proposal-then-preprocessing', ['previous-binary-en'],
+        lambda m, t: [(at_await('policy'), change_preprocessing, 'preprocessing')])
     return out
+
+
+def _look_at_target(s: Study) -> None:
+    activity = 'eda.target_rate' if s.task == 'binary' else 'eda.target_summary'
+    out = _run(s, activity, expect=0)
+    assert out['status'] == 'promoted', out
 
 
 @pytest.mark.parametrize('base,factory', _scenarios())

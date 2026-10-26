@@ -423,8 +423,10 @@ def _cv(study: Path, case_dir: Path, task: str) -> Path:
     f.decide('split', f.view()['next_action']['default_value'])
     f.model_decisions()
     f.run('split')
-    for a in (('eda.target_summary', 'eda.special_values') if task == 'regression'
-              else ('eda.target_rate', 'eda.special_values')):
+    # Owner session 2026-10-26 (L5): a new study's plan checks the structure first.
+    for a in (('eda.quality', 'eda.target_summary', 'eda.special_values')
+              if task == 'regression'
+              else ('eda.quality', 'eda.target_rate', 'eda.special_values')):
         f.run(a)
     f.run('fit.baseline')
     f.run('fit.linear' if task == 'regression' else 'fit.logistic')

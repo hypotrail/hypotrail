@@ -91,10 +91,13 @@ def test_a_new_study_has_explicit_model_choice_and_drafts_cross_validation(tmp_p
     assert st.decision_ids(state) == st.B2_DECISION_IDS == (
         'prediction_time', 'feature_availability', 'split', 'success_criterion',
         'preprocessing', 'model_variant', 'model_choice', 'policy', 'final_test', 'conclusion')
-    assert [s['id'] for s in flow.view()['plan']] == list(st.B2_BINARY_STEP_IDS) == [
+    assert list(st.B2_BINARY_STEP_IDS) == [
         'discover_data', 'prediction_time', 'feature_availability', 'split',
         'success_criterion', 'train_eda', 'preprocessing', 'models', 'model_variant',
         'model_choice', 'policy', 'final_test', 'conclusion']
+    # Owner session 2026-10-26 (L5, D5): a new study checks the structure first; a study
+    # created before keeps the steps above.
+    assert [s['id'] for s in flow.view()['plan']] == list(fk.STRUCTURAL_FIRST_BINARY_STEP_IDS)
     flow.decide('prediction_time', 'when the record is created, before the outcome')
     flow.decide('feature_availability', fk.availability(case_dir))
     action = flow.view()['next_action']

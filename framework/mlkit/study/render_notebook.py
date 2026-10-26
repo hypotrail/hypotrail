@@ -203,7 +203,7 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
         cells.append(('recompute_imports', guard + code_cells.imports(task)))
     for index, step in enumerate(view['plan'], start=1):
         content = texts.step(step['id'])
-        slots = render_html.slots_of_step(step['id'], view['results'], task)
+        slots = render_html.slots_of_step(step['id'], view['results'], task, view['plan'])
         has_result = any(s in rids for s in slots)
         # WP-A4: step 0 is informational; it is never "not executed".
         pending = not has_result and not step['decision'] and step['id'] != 'discover_data'

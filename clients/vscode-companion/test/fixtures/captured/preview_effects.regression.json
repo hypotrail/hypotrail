@@ -28,12 +28,12 @@
   "stale_slots": [],
   "kept_slots": [
    "split",
+   "eda.quality",
    "eda.target_summary",
    "eda.special_values",
    "eda.correlation",
    "eda.distribution:weight",
    "eda.mean_by:model_year",
-   "eda.quality",
    "eda.single_feature_signal",
    "fit.baseline",
    "fit.linear",

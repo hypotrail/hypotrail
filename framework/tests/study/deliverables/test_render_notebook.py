@@ -320,7 +320,8 @@ def test_pending_steps_say_not_executed_yet(tmp_path, synthetic_case_dir):
     b = fx.build(tmp_path / 'study', synthetic_case_dir, upto='split')
     render(b.study)
     source = _generated(b.study).read_text()
-    assert source.count('_Not executed yet._') == 2           # train_eda and models
+    # structural_eda (owner session 2026-10-26, L5: a step of a new study), train_eda, models
+    assert source.count('_Not executed yet._') == 3
     assert '"split"' in source and 'fit.logistic' not in source.split('RESULT_IDS')[1].split('}')[0]
     proc = _run([sys.executable, str(_generated(b.study))], cwd=b.study.parent)
     assert proc.returncode == 0, proc.stderr

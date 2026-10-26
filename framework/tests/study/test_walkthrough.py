@@ -125,6 +125,24 @@ class Chat:
         return self('run', activity, *options, '--request-id', self.rid(f'run-{activity}'),
                     '--expected-revision', self.rev(), expect=expect, extra_env=extra_env)
 
+def _structural_preparation(chat) -> dict:
+    """Owner session 2026-10-26 (L5, D5, D6): the structural check of a new study, the
+    screened distributions ``next_action`` names, then the drafted preparation, proposed and
+    confirmed before any look at the target (not data-contingent)."""
+    assert chat.run('eda.quality')['status'] == 'promoted'
+    action = chat.status()['view']['next_action']
+    while action['kind'] == 'run' and action['activity'] == 'eda.distribution':
+        chat.run('eda.distribution', '--column', action['options']['column'])
+        action = chat.status()['view']['next_action']
+    assert (action['kind'], action['decision']) == ('propose', 'preprocessing'), action
+    value = action['default_value']
+    p = chat.propose('preprocessing', value, 'You adopt the preparation drafted from the '
+                                             'quality check of the columns.')
+    chat.confirm(p, 'I confirm this preparation.')
+    recorded = chat.status()['view']['decisions']['preprocessing']['value']
+    assert recorded['data_contingent'] is False and recorded['target_looks_before'] == 0
+    return value
+
 
 class Tags(HTMLParser):
     def __init__(self):
@@ -189,14 +207,12 @@ def test_walkthrough(name, cases, tmp_path, capsys):
                      'least 5 points at the rule you adopt.')
     chat.confirm(p, 'I confirm: at least 5 points over the baseline.')
 
-    # 4-5. authorised work between pauses: training EDA, the preprocessing, then both fits
+    # 4-5. authorised work between pauses: the structural check and the preparation drafted
+    # from it (owner session 2026-10-26, L5), then the training EDA, then both fits
+    _structural_preparation(chat)
     target = chat.run('eda.target_rate')['values']
     specials = chat.run('eda.special_values')['values']
     rate_by = chat.run('eda.rate_by', '--column', junior['rate_by'])
-    default = chat.status()['view']['next_action']['default_value']
-    p = chat.propose('preprocessing', default, 'You keep the default preparation of the '
-                                               'variables: nothing added, nothing grouped.')
-    chat.confirm(p, 'I confirm the default preparation.')
     assert rate_by['result']['slot'] == f'eda.rate_by:{junior["rate_by"]}'
     assert target['n_rows'] == parts['train']['n_rows']
     baseline = chat.run('fit.baseline')

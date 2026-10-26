@@ -262,6 +262,12 @@ terms:
     term_fr: "bande nulle par permutation"
     definition: The range of a chart's figures after shuffling the outcome among the training rows several times with a fixed seed, which breaks any real link between the variable and the outcome. A pattern that stays inside the band is what chance alone draws; one above every shuffle is unlikely to be chance alone. For example, if the rates by job group differ less than they do after shuffling who subscribed, the differences are not evidence of anything.
     definition_fr: "L'étendue des chiffres d'un graphique après avoir mélangé plusieurs fois le résultat entre les lignes d'entraînement avec une graine fixe, ce qui casse tout lien réel entre la variable et le résultat. Un motif qui reste dans la bande est ce que le hasard seul produit ; un motif au-dessus de chaque mélange a peu de chances de venir du seul hasard. Par exemple, si les taux par métier diffèrent moins qu'après avoir mélangé qui a souscrit, les écarts ne prouvent rien."
+  # Owner session 2026-10-26 (L5, R7): the term the stamp of a preparation rests on.
+  target_look:
+    term: Look at the target
+    term_fr: "regard sur la cible"
+    definition: An analysis that read the variable to predict, such as its rate or its distribution, the special values read with it, or a summary of it by group. Each one is counted. The more looks, the more a pattern found among them can be chance. For example, the quality check of the columns reads no target and is not a look; the distribution of the variable to predict is one.
+    definition_fr: "Une analyse qui a lu la variable à prédire, comme son taux ou sa distribution, les valeurs spéciales lues avec elle, ou un résumé par groupe. Chacune est comptée. Plus il y a de regards, plus une forme trouvée parmi eux peut être due au hasard. Par exemple, le contrôle de qualité des colonnes ne lit pas la cible et n'est pas un regard ; la distribution de la variable à prédire en est un."
   data_contingent_decision:
     term: Data-contingent decision
     term_fr: "décision dépendante des données"

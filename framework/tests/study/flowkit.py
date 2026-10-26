@@ -227,6 +227,27 @@ class Flow:
         return read.open(self.study).state
 
 
+def previous_generation(study: Path) -> Path:
+    """The study as ``init`` wrote it before owner session 2026-10-26 (L5): without
+    ``exploration_order``, so its plan explores the target before the preparation and its
+    drafts are the earlier ones. The state bytes are rewritten with their digest, as a study
+    of that generation holds them (a test helper; never applied to a real study)."""
+    from mlkit.study import state as st
+    home = Path(study) / '.hypotrail'
+    state = json.loads((home / 'state.json').read_text())
+    state.pop(st.EXPLORATION_ORDER_KEY, None)
+    data = st.dumps(state)
+    (home / 'state.json').write_bytes(data)
+    (home / 'state.sha256').write_text(st.sha_line(st.digest(data)))
+    return Path(study)
+
+
+STRUCTURAL_FIRST_BINARY_STEP_IDS = (
+    'discover_data', 'prediction_time', 'feature_availability', 'split', 'success_criterion',
+    'structural_eda', 'preprocessing', 'train_eda', 'models', 'model_variant', 'model_choice',
+    'policy', 'final_test', 'conclusion')
+
+
 def prepare(case_dir: Path, study: Path, upto: str = 'fits') -> Path:
     """Create a study and take it to ``upto``: ``pauses``, ``split``, ``eda``, ``fits``."""
     flow = Flow(study, case_dir, prefix='prep')

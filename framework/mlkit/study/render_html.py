@@ -145,15 +145,24 @@ def _concept(term_id: str | None) -> str:
     return f'<p{attr}><strong class="term">{e(term)}.</strong> {e(definition)}</p>'
 
 
-def slots_of_step(step_id: str, results: Mapping, task: str | None = None) -> list[str]:
-    """Result slots shown with a step: its activities, plus extra slots of the same family."""
-    step = next(s for s in st.steps(task) if s['id'] == step_id)
+def slots_of_step(step_id: str, results: Mapping, task: str | None = None,
+                  plan: list | None = None) -> list[str]:
+    """Result slots shown with a step: its activities, plus extra slots of the same family.
+    ``plan`` (the view's plan) gives the study's own steps; owner session 2026-10-26 (L5): the
+    structural check of a structural-first study shows ``eda.quality``, which the target
+    exploration then leaves out."""
+    steps = plan if plan is not None else st.steps(task)
+    step = next((s for s in steps if s['id'] == step_id), None)
+    if step is None:
+        return []
     slots = list(step['activities'])
     family = {'train_eda': 'eda.', 'models': 'fit.', 'policy': 'policy.',
               'model_variant': 'fit.variant',      # v0.3 (WP-F1): every variant
               'model_choice': 'evaluate.'}.get(step_id)
     if family:
-        slots += sorted(s for s in results if s.startswith(family) and s not in slots)
+        owned = {a for s in steps if s['id'] == st.STRUCTURAL_EDA for a in s['activities']}
+        slots += sorted(s for s in results if s.startswith(family) and s not in slots
+                        and s not in owned)
     return slots
 
 
@@ -627,7 +636,7 @@ def why_step(view: Mapping, citer: cite.Citer, step: Mapping) -> str:
         parts.append(f'<p>{citer.expand(content["context"])}</p>')
     if content.get('method'):
         parts.append(f'<p><strong>{e(words["method"])}</strong> {e(content["method"])}</p>')
-    slots = slots_of_step(step['id'], view['results'], view.get('task'))
+    slots = slots_of_step(step['id'], view['results'], view.get('task'), view['plan'])
     interp = content.get('interpretation')
     if interp and citer.ready(interp) and (not slots or any(
             citer.slot_rid(s) for s in slots)):

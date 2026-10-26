@@ -77,7 +77,7 @@ The four moments of JUNIOR-WORKFLOW.md, as a list of exactly four items, in orde
 | `compare` | `Work and compare` | `models`, `policy` | `models`, `model_choice` |
 | `conclude` | `Conclude and hand over` | `conclusion` | `conclusion` |
 
-The mapping is engine data: `content/steps.yaml`, key `moments`, with a `regression_moments` overlay. The mockup's step labels ("Problem framing", "Evaluation design") are not used. A client shows the plan's step `title`s.
+The mapping is engine data: `content/steps.yaml`, key `moments`, with a `regression_moments` overlay. Owner session 2026-10-26 (L5): `evidence` also lists `structural_eda` (the structural check of a study created since then, CLI-CONTRACT §3.1), and a moment lists its steps in the study's plan order (`structural_eda`, `preprocessing`, `train_eda` in such a study; `train_eda`, `preprocessing` in a study created before). The mockup's step labels ("Problem framing", "Evaluation design") are not used. A client shows the plan's step `title`s.
 
 ### 1.2 `pauses`
 

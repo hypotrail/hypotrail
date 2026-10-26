@@ -1575,6 +1575,20 @@ def _runnable(study: read.Study, state: Mapping, action: dict | None) -> dict | 
         # Round 5 (review E, R5E-8): after the opening, a decision proposed while the final
         # evaluation is not current says so too (E4-2 for the runs).
         action = _with_final_test_notice(study, state, action)
+    if kind == 'propose' and st.structural_first(state) \
+            and action.get('decision') in (st.PREPROCESSING, st.MODEL_VARIANT):
+        # Owner session 2026-10-26 (L5, R5, R13; D6, D9): the drafts read the evidence. The
+        # preparation is drafted from the target-free results (the screened distributions are
+        # run first); the variants add the EBM when the diagnostics flag a pattern.
+        from . import drafts
+        language = st.language_of(state)
+        if action.get('decision') == st.PREPROCESSING:
+            run = drafts.distribution_run(study, state, action, language)
+            if run is not None:
+                return run
+            action = drafts.with_preprocessing_draft(study, state, action, language)
+        else:
+            action = drafts.with_variant_draft(study, state, action, language)
     if kind == 'propose' and action.get('decision') == 'policy':
         # R5E-4: the policy proposal carries the rule to propose (``default_value``).
         default = _policy_default(study, state, action)
@@ -1864,9 +1878,13 @@ def _wp_f1(state: dict, results: dict) -> dict:
         document = None
     diag = results.get(st.DIAG_SLOT[task]) or {}
     values = diag.get('values') if diag.get('integrity') == 'ok' else None
+    # Owner session 2026-10-26 (L5, R14, D10): each family in the junior's words, and why no
+    # random forest (additive keys ``families[].junior_words``, ``not_offered``).
+    from . import drafts
     return {'model_selection': tr.selection(results, state, task),
-            'model_families': tr.shortlist(document, values, task, st.language_of(state),
-                                           diag.get('result_id'))}
+            'model_families': drafts.with_junior_words(
+                tr.shortlist(document, values, task, st.language_of(state),
+                             diag.get('result_id')), st.language_of(state))}
 
 
 # WP-B1: the activities whose runs are model configurations (the baseline is not a trial),
@@ -2039,10 +2057,14 @@ def moments(task: str, state: dict | None = None) -> list[dict]:
 
     data = texts.load('steps')
     overlay = data.get('regression_moments', {}) if task == st.REGRESSION else {}
-    ids = set(st.step_ids(state if state is not None else task))
+    order = st.step_ids(state if state is not None else task)
+    ids = set(order)
     french = st.language_of(state) == audience.FR if state is not None else False
+    # Owner session 2026-10-26 (L5): the steps of a moment in the study's plan order (a
+    # structural-first study checks the structure, then the preparation, then the target).
     return [{'id': m['id'], 'title': m.get('title_fr', m['title']) if french else m['title'],
-             'steps': [s for s in overlay.get(m['id'], m['steps']) if s in ids]}
+             'steps': sorted((s for s in overlay.get(m['id'], m['steps']) if s in ids),
+                             key=order.index)}
             for m in data['moments']]
 
 

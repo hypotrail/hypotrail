@@ -295,9 +295,11 @@ def _flow(tmp_path, task='binary', n_rows=300, split=CV3) -> Flow:
     flow.decide('split', split)
     flow.model_decisions()
     flow.run('split')
-    explore = next(s for s in st.steps(flow.state()) if s['id'] == 'train_eda')
-    for activity in explore['activities']:
-        flow.run(activity)
+    # Owner session 2026-10-26 (L5): a new study's plan checks the structure first.
+    for step in st.steps(flow.state()):
+        if step['id'] in (st.STRUCTURAL_EDA, 'train_eda'):
+            for activity in step['activities']:
+                flow.run(activity)
     return flow
 
 
@@ -335,7 +337,12 @@ def test_three_variants_are_compared_chosen_and_opened(tmp_path):
     assert view['model_families']['recommendation'] in ('stay_linear', 'compare_nonlinear')
     action = view['next_action']
     assert action['decision'] == 'model_variant'
-    assert action['default_value'] == trials.draft('binary')
+    if view['model_families']['recommendation'] == 'compare_nonlinear':
+        # Owner session 2026-10-26 (L5, D9): the flagged diagnostics draft the EBM too.
+        assert action['default_value']['variants'][0] == trials.draft('binary')['variants'][0]
+        assert [v.get('family') for v in action['default_value']['variants']] == [None, 'ebm']
+    else:
+        assert action['default_value'] == trials.draft('binary')
     value = {'variants': [TUNED, HGB, STRONG]}
     proposed = _propose(flow, 'model_variant', value)['result']
     assert proposed['data_contingent'] in (True, False)

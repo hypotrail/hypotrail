@@ -239,7 +239,8 @@ def test_teaching_texts_are_data_without_digits():
     from mlkit.study import state as st
     # WP-A4: the step texts cover every step of a new study (discover_data, success_criterion
     # and preprocessing added to the v0.1 steps).
-    assert set(steps) == set(st.FULL_STEP_IDS)
+    # Owner session 2026-10-26 (L5): and the structural check of a structural-first study.
+    assert set(steps) == set(st.FULL_STEP_IDS) | {st.STRUCTURAL_EDA}
     for s in steps.values():
         assert texts.glossary(s['concept']), s['concept']
     for slot, spec in texts.load('activities')['activities'].items():

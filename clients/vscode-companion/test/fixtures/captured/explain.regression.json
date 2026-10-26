@@ -395,6 +395,16 @@
     "language": "en"
    },
    {
+    "id": "target_look",
+    "term": "Look at the target",
+    "definition": "An analysis that read the variable to predict, such as its rate or its distribution, the special values read with it, or a summary of it by group. Each one is counted. The more looks, the more a pattern found among them can be chance. For example, the quality check of the columns reads no target and is not a look; the distribution of the variable to predict is one.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "structural_eda"
+    ]
+   },
+   {
     "id": "data_contingent_decision",
     "term": "Data-contingent decision",
     "definition": "A decision chosen after looking at the outcome in the data. It is allowed, but it is recorded with the analyses that motivated it, because a choice adapted to the training rows makes the validation figures slightly optimistic. For example, capping a variable because a chart of the outcome looked odd at its extremes is a data-contingent preparation.",
@@ -906,6 +916,82 @@
     },
     "text_status": "shown"
    },
+   "structural_eda": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Look at the target"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The quality check reads the development rows without the target, so the preparation decided from it comes before any look at the target."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Missing cells by column, repeated rows, the categories of each categorical column with their rare ones, and the range of each numeric column against the range the case declares. The rows read are recorded as a structural inspection."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "The drafted preparation cites what this check found; it is not data-contingent while no look at the target came before it."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "A preparation proposed after a look at the target is still stamped data-contingent."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "preprocessing": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Data-contingent decision"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The exploration of the training rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Missing-value indicators, the minimum rows of a category, caps at training quantiles, and log transforms are learnt on training rows only and applied unchanged to the validation rows. The default changes nothing."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "A preparation chosen after looking at the target is stamped data-contingent; the validation errors may then be slightly optimistic."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Changing it refits the linear model and asks for the model choice and the conclusion again; the exploration is unchanged."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
    "train_eda": {
     "concept": {
      "segments": [
@@ -959,44 +1045,6 @@
      "segments": [
       {
        "text": "A missing-value marker on a numeric variable becomes an indicator and an imputed value in the model, never an ordinary number."
-      }
-     ]
-    },
-    "text_status": "shown"
-   },
-   "preprocessing": {
-    "concept": {
-     "segments": [
-      {
-       "text": "Data-contingent decision"
-      }
-     ]
-    },
-    "context": {
-     "segments": [
-      {
-       "text": "The exploration of the training rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it."
-      }
-     ]
-    },
-    "method": {
-     "segments": [
-      {
-       "text": "Missing-value indicators, the minimum rows of a category, caps at training quantiles, and log transforms are learnt on training rows only and applied unchanged to the validation rows. The default changes nothing."
-      }
-     ]
-    },
-    "interpretation": {
-     "segments": [
-      {
-       "text": "A preparation chosen after looking at the target is stamped data-contingent; the validation errors may then be slightly optimistic."
-      }
-     ]
-    },
-    "consequence": {
-     "segments": [
-      {
-       "text": "Changing it refits the linear model and asks for the model choice and the conclusion again; the exploration is unchanged."
       }
      ]
     },

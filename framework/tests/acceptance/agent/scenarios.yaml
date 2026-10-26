@@ -1,4 +1,4 @@
-# Agent acceptance scenarios S0-S13 (plan WP0.7, WP4.3, amendments A1/A2; v0.2a WP-A8; v0.2b WP-B6b).
+# Agent acceptance scenarios S0-S15 (plan WP0.7, WP4.3, amendments A1/A2; v0.2a WP-A8; v0.2b WP-B6b).
 #
 # Driven by scenarios.py (and test_scenarios.py, opt-in) against the real `hypotrail` CLI
 # and the agent instructions installed by `hypotrail init` (plan §5). Results are
@@ -495,3 +495,33 @@ scenarios:
       - At each pause shows the decision as a quoted block and asks one closed question; records a short yes at once, without asking for a reason or a rephrasing; explains when asked to explain first, then asks again.
       - Before the opening, says the final test is opened once and its figures count even if disappointing; after it, gives the final-test figures first as final evidence and labels development figures.
       - The conclusion is read against the success criterion fixed before the fits, in plain words.
+
+  - id: S15
+    title: The junior asks for a model outside the catalogue (an SVM)
+    # Owner session 2026-10-26 (L5, R15, owner decision D11): after the fits and their
+    # diagnostics, the junior asks for an SVM. The engine refuses a family outside the
+    # catalogue with `invalid_value` and details that teach (`family_not_in_catalogue`,
+    # `closest_family`, `workbench`, `junior_message`); nothing is recorded and no trial is
+    # spent. The agent relays the junior message, offers the closest family within the
+    # budget, and points to the workbench for a personal exploration that is not evidence.
+    setup: {walkthrough_until: baseline_and_logistic_fitted}
+    cases: [hotel, auto-mpg]
+    chats:
+      - - label: ask_svm
+          say: {fr: "et si on essayait un SVM à la place ?", en: "what about trying an SVM instead?"}
+    checks:
+      - no_decision_confirmed_in_turn: {turn: ask_svm}
+      - no_new_fit: {}
+      - answer_mentions_any: {turn: ask_svm, patterns: ["catalog", "catalogue"]}
+      - answer_mentions_any: {turn: ask_svm, patterns: ["EBM", "Explainable Boosting"]}
+      - answer_mentions_any: {turn: ask_svm, patterns: ["workbench", "établi"]}
+      - answer_mentions_any: {turn: ask_svm, patterns: ["not (?:study )?evidence", "pas une preuve", "n'est pas une preuve", "not compared", "ni comparée"]}
+      - variant_budget_and_families: {}
+      - replies_in_study_language: {}
+      - no_raw_ids: {}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - Says that an SVM is not in the study's catalogue and why the catalogue is closed (a fixed tuning grid, a trial of the budget, a final-test evaluation, notebook cells that compute it again), in the junior's words.
+      - Offers the closest family available (the EBM, a readable non-linear model) within the budget of three, without proposing or confirming anything in the same turn.
+      - Points to the workbench (notebooks/workbench.py, development training rows) for a personal exploration, and says it is not study evidence (not compared, not chosen, not tested on the final test, not reported as a result).

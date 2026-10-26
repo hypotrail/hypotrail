@@ -65,13 +65,18 @@
     "status": "done"
    },
    {
-    "id": "train_eda",
-    "title": "Explore the training partition",
+    "id": "structural_eda",
+    "title": "Check the structure of the data",
     "status": "done"
    },
    {
     "id": "preprocessing",
     "title": "Decide how the model prepares the variables",
+    "status": "done"
+   },
+   {
+    "id": "train_eda",
+    "title": "Explore the target on the training rows",
     "status": "done"
    },
    {
@@ -118,8 +123,8 @@
     "revision": 38,
     "position": {
      "step_id": "model_choice",
-     "completed": 9,
-     "total": 12
+     "completed": 10,
+     "total": 13
     },
     "learned": [],
     "limitations": [

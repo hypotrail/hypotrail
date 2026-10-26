@@ -27,6 +27,7 @@ from typing import Any, Mapping
 
 from . import audience
 from . import assurance
+from . import drafts
 from . import state as st
 
 EN, FR = 'en', 'fr'
@@ -208,6 +209,45 @@ def _steps_fr() -> dict[str, str]:
                                          'de la moyenne de référence, dans l\'unité de la '
                                          'cible, pour être adopté, compte tenu des intervalles '
                                          'appariés et des résidus ?',
+        # Owner session 2026-10-26 (L5, D5): the structural-first plan.
+        st.STRUCTURAL_EDA_STEP['title']: 'Vérifier la structure des données',
+        st.STRUCTURAL_EDA_STEP['question']: 'Quelles colonnes ont des cellules manquantes, des '
+                                            'catégories rares ou des valeurs hors de leur plage '
+                                            'possible ? Ce contrôle lit les lignes de '
+                                            "l'échantillon de développement sans la cible : la "
+                                            "préparation décidée d'après lui vient avant tout "
+                                            'regard sur la cible.',
+        st.STRUCTURAL_PREPROCESSING_QUESTION: 'Comment le modèle doit-il traiter les valeurs '
+                                              'manquantes, les catégories rares, les valeurs '
+                                              'extrêmes et les variables asymétriques ? La '
+                                              'proposition lit le contrôle de qualité, qui ne '
+                                              'lit pas la cible ; chaque paramètre est appris '
+                                              'seulement sur les lignes sur lesquelles chaque '
+                                              'modèle est ajusté.',
+        st.STRUCTURAL_TRAIN_EDA_TEXTS[(st.BINARY, True)]['title']:
+            "Explorer la cible sur l'échantillon de développement",
+        st.STRUCTURAL_TRAIN_EDA_TEXTS[(st.BINARY, False)]['title']:
+            "Explorer la cible sur le jeu d'entraînement",
+        st.STRUCTURAL_TRAIN_EDA_TEXTS[(st.BINARY, True)]['question']:
+            "Que montre l'échantillon de développement sur le résultat et les valeurs "
+            'spéciales ? Chacune de ces analyses est un regard sur la cible : elle lit la '
+            'variable à prédire, et chaque regard est compté. La préparation est déjà décidée, '
+            'avant ces regards.',
+        st.STRUCTURAL_TRAIN_EDA_TEXTS[(st.BINARY, False)]['question']:
+            "Que montre le jeu d'entraînement sur le résultat et les valeurs spéciales ? "
+            'Chacune de ces analyses est un regard sur la cible : elle lit la variable à '
+            'prédire, et chaque regard est compté. La préparation est déjà décidée, avant ces '
+            'regards.',
+        st.STRUCTURAL_TRAIN_EDA_TEXTS[(st.REGRESSION, True)]['question']:
+            "Que montre l'échantillon de développement sur la distribution de la cible et les "
+            'valeurs spéciales ? Chacune de ces analyses est un regard sur la cible : elle lit '
+            'la variable à prédire, et chaque regard est compté. La préparation est déjà '
+            'décidée, avant ces regards.',
+        st.STRUCTURAL_TRAIN_EDA_TEXTS[(st.REGRESSION, False)]['question']:
+            "Que montre le jeu d'entraînement sur la distribution de la cible et les valeurs "
+            'spéciales ? Chacune de ces analyses est un regard sur la cible : elle lit la '
+            'variable à prédire, et chaque regard est compté. La préparation est déjà décidée, '
+            'avant ces regards.',
     }
 
 
@@ -232,6 +272,11 @@ def all_step_texts() -> list[str]:
     for task, steps in st.B1_STEPS_BY_TASK.items():
         texts = st.CV_STEP_TEXTS_BY_TASK[task]
         groups.append(tuple(dict(s, **texts.get(s['id'], {})) for s in steps))
+    # Owner session 2026-10-26 (L5): the structural-first plan of every task and scheme.
+    structural = [st.STRUCTURAL_EDA_STEP,
+                  dict(st.PREPROCESSING_STEP, question=st.STRUCTURAL_PREPROCESSING_QUESTION)]
+    structural += [dict(st.STEPS[3], **texts) for texts in st.STRUCTURAL_TRAIN_EDA_TEXTS.values()]
+    groups.append(tuple(structural))
     out: list[str] = []
     for g in groups:
         for s in g:
@@ -523,9 +568,15 @@ def _context(view: Mapping, state: Mapping, case) -> dict:
     if folds is None:
         default = st.b1_default_value(state, 'split') if isinstance(state, Mapping) else None
         folds = (default or {}).get('folds')
+    availability = ((view.get('decisions') or {}).get('feature_availability') or {})
+    kept = availability.get('value') if isinstance(availability.get('value'), Mapping) else None
     return {'dev': dev, 'holdout': holdout, 'target': target, 'positive': positive,
             'unit': unit, 'folds': folds, 'cv': st.uses_cross_validation(state),
-            'state': state}
+            'state': state,
+            # Owner session 2026-10-26 (L5, R12, D8): a declared calendar year kept under a
+            # temporal evaluation.
+            'calendar': (drafts.calendar_advisory(case, state, kept, view.get('language') or EN)
+                         if isinstance(state, Mapping) else None)}
 
 
 def _fact(view: Mapping, fact_id: str):
@@ -568,6 +619,12 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
         return _recommended_criterion(action, lang)
     if value is None:
         return None
+    drafted = action.get('recommended')
+    if decision in (st.PREPROCESSING, st.MODEL_VARIANT) and isinstance(drafted, Mapping) \
+            and drafted.get('value') == value:
+        # Owner session 2026-10-26 (L5, R5, R13): the view drafted it from the evidence
+        # (:mod:`mlkit.study.drafts`), with its why (and, for the preparation, its reasons).
+        return copy.deepcopy(dict(drafted))
     if decision == 'policy':
         return {'value': copy.deepcopy(value),
                 'why': POLICY_WHY[_policy_source(value, view, state)][lang == FR]}
@@ -788,10 +845,17 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
                                        'make the model worth using?',
                                  'Quelle réduction minimale de l\'erreur de référence rendrait '
                                  'le modèle utile ?')),
-        'preprocessing': _t(lang, 'Do you keep the default preparation, or change one '
-                                  'parameter for a reason you can state?',
-                            'Gardez-vous la préparation par défaut, ou changez-vous un '
-                            'paramètre pour une raison que vous pouvez énoncer ?'),
+        'preprocessing': (_t(lang, 'Do you keep this preparation, drafted from the quality '
+                                   'check, or the default, or change one parameter for a '
+                                   'reason you can state?',
+                             "Gardez-vous cette préparation, établie d'après le contrôle de "
+                             'qualité, ou la préparation par défaut, ou changez-vous un '
+                             'paramètre pour une raison que vous pouvez énoncer ?')
+                          if action.get('alternatives') else
+                          _t(lang, 'Do you keep the default preparation, or change one '
+                                   'parameter for a reason you can state?',
+                             'Gardez-vous la préparation par défaut, ou changez-vous un '
+                             'paramètre pour une raison que vous pouvez énoncer ?')),
         'model_variant': _t(lang, 'Which variants, at most three, should be compared with '
                                   'the candidate, and which question does each answer?',
                             'Quelles variantes, trois au plus, comparer au candidat, et à '
@@ -824,6 +888,21 @@ def _criterion_status_words(view: Mapping, lang: str) -> str | None:
                              'incertain (son intervalle de confiance contient 0)')}[status]
     return _t(lang, f'The success criterion is {words} {where}.',
               f'Le critère de succès est {words} {where}.')
+
+
+def _looks_sentence(view: Mapping, lang: str) -> str:
+    """Owner session 2026-10-26 (L5, R7): the data-contingent stamp of a preparation in the
+    junior's words: the term "look at the target" first, then this study's looks (none: the
+    preparation is not data-contingent; some: why it is recorded, not a mistake)."""
+    looks = view.get('eda_looks') or {}
+    count = looks.get('target_looks') or 0
+    if not count:
+        return _t(lang, 'Look at the target: an analysis that reads the variable to predict. '
+                        'None has come before this preparation, so it is not data-contingent.',
+                  'Regard sur la cible : une analyse qui lit la variable à prédire. Aucun '
+                  "n'a précédé cette préparation : elle n'est donc pas dépendante des "
+                  'données.')
+    return drafts.contingency_text(count, looks.get('by_activity') or {}, 0, lang)
 
 
 def _digest_propose(decision: str, view: Mapping, ctx: dict, lang: str,
@@ -930,12 +1009,10 @@ def _digest_propose(decision: str, view: Mapping, ctx: dict, lang: str,
                    f'valeurs manquantes, les catégories rares, les valeurs extrêmes et les '
                    f'variables asymétriques. Chaque paramètre est appris sur {where} '
                    f'seulement.'),
-                _t(lang, 'A choice made after looking at the outcome is a data-contingent '
-                         'decision: allowed, but recorded, because it makes the development '
-                         'figures slightly optimistic.',
-                   'Un choix fait après avoir regardé le résultat est une décision dépendante '
-                   'des données : permise, mais enregistrée, car elle rend les chiffres de '
-                   'développement un peu optimistes.')]
+                # Owner session 2026-10-26 (L5, R5): what the fixed pipeline already does.
+                drafts.PIPELINE_SENTENCE[FR if lang == FR else EN],
+                # L5 (R7): the stamp explained, the term "look at the target" first.
+                _looks_sentence(view, lang)]
     if decision == 'model_variant':
         trials = (view.get('trials') or {}).get('count')
         families = (view.get('model_families') or {})
@@ -952,6 +1029,10 @@ def _digest_propose(decision: str, view: Mapping, ctx: dict, lang: str,
                    'comparé sous la même évaluation ; trois au plus, chacune avec sa question. '
                    'Chaque configuration comparée sur les mêmes lignes est un essai ; plus il y '
                    'a d\'essais, plus le meilleur peut devoir au hasard.'),
+                # Owner session 2026-10-26 (L5, R14, R12): the families as the junior knows
+                # them, why no random forest, and the calendar-year advisory.
+                drafts.families_sentence(lang) if families else '',
+                ctx.get('calendar') or '',
                 shortlist or '',
                 _t(lang, f'Trials so far: {trials}.', f'Essais jusqu\'ici : {trials}.')
                 if isinstance(trials, int) else '']
@@ -1088,6 +1169,10 @@ def _digest(action: Mapping, view: Mapping, state: Mapping, ctx: dict, lang: str
                  ', sur les règles : ' + ' ; '.join(rules)) if len(rules) > 1 else
               _t(lang, f', on the rule: {rules[0]}', f', sur la règle : {rules[0]}')
               if rules else '')
+        column = (action.get('options') or {}).get('column')
+        if column and ':' not in str(activity):
+            # L5: a per-column run names its column ("the distribution of a column (adr)").
+            activity = f'{activity}:{column}'
         lead = _t(lang, f'Next: {audience.activity_words(activity)}, run without asking '
                         f'you{on}.',
                   f'Ensuite : {audience.activity_words(activity, FR)}, lancé sans vous '
@@ -1207,7 +1292,15 @@ def enrich(view: dict, state: Mapping, case=None, *, accepts=None) -> dict:
             and getattr(case, 'task', None) == 'regression' else None)
     ctx = _context(view, state, case)
     action['language'] = lang
-    action['recommended'] = _recommended(action, view, state, lang)
+    recommended = _recommended(action, view, state, lang)
+    if recommended and decision == 'feature_availability' and isinstance(state, Mapping):
+        # Owner session 2026-10-26 (L5, R12, D8): a declared calendar year kept under a
+        # temporal evaluation.
+        advisory = drafts.calendar_advisory(case, state, recommended.get('value'), lang)
+        if advisory:
+            recommended['why'] = f'{recommended["why"]} {advisory}'
+    action.pop('recommended', None)
+    action['recommended'] = recommended
     action['question'] = _question(action, view, lang, ctx['cv'])
     action['junior_digest'] = _digest(action, view, state, ctx, lang)
     choices = choice_options(action, state, lang, accepts)
