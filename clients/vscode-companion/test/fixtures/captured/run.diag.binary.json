@@ -2589,8 +2589,8 @@
    "started_revision": 46,
    "invalidation": null,
    "exposure_ids": [
-    "x_6f59fa65a87f4b298c1933f6a6c101bd",
-    "x_444d2e51fe4c43d1ac5bda09dab34c73"
+    "x_760b4dbba8254b96b7b9386dd7e02d55",
+    "x_3647c05a5fac47349bb1575b620df9c3"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2684,6 +2684,10 @@
      "continue",
      "explain"
     ],
+    "option_labels": {
+     "continue": "Let's continue",
+     "explain": "Explain first"
+    },
     "question": "Do you open the holdout (final test) now, once?",
     "evidence_refs": [],
     "detail_topics": [

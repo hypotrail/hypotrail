@@ -138,6 +138,10 @@
      "continue",
      "explain"
     ],
+    "option_labels": {
+     "continue": "Let's continue",
+     "explain": "Explain first"
+    },
     "question": "Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
     "evidence_refs": [],
     "detail_topics": [

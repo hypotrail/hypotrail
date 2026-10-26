@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"",
    "revision": 50,
-   "updated": "2026-10-25T15:42:16.655635+00:00",
+   "updated": "2026-10-26T11:57:48.705141+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -325,6 +325,11 @@
       "change",
       "explain"
      ],
+     "option_labels": {
+      "adopt": "I adopt this decision",
+      "change": "Change something",
+      "explain": "Explain first"
+     },
      "question": "Call the 100 clients with the highest scores.\n\nDo you adopt this decision?",
      "evidence_refs": [],
      "detail_topics": [
@@ -341,7 +346,7 @@
      "restatement": "Call the 100 clients with the highest scores.",
      "rationale": "The team can make 100 calls per wave.",
      "revision": 50,
-     "created": "2026-10-25T15:42:16.655582+00:00",
+     "created": "2026-10-26T11:57:48.705095+00:00",
      "labels": null,
      "label": "Call the 100 clients with the highest scores.",
      "origin": {
@@ -365,7 +370,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-25T15:41:42.378019+00:00",
+      "time": "2026-10-26T11:55:56.512555+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -412,7 +417,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-25T15:41:43.423305+00:00",
+      "time": "2026-10-26T11:55:59.213475+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -461,7 +466,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-25T15:41:44.964351+00:00",
+      "time": "2026-10-26T11:56:03.090890+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -492,7 +497,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-25T15:41:46.705648+00:00",
+      "time": "2026-10-26T11:56:06.110802+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -528,7 +533,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-25T15:41:48.346445+00:00",
+      "time": "2026-10-26T11:56:10.002095+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -559,7 +564,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 37,
-      "time": "2026-10-25T15:42:06.708816+00:00",
+      "time": "2026-10-26T11:57:25.161230+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -594,7 +599,7 @@
       "restatement": "You decide the model_choice as stated.",
       "proposal_id": "p_7",
       "revision": 43,
-      "time": "2026-10-25T15:42:10.578421+00:00",
+      "time": "2026-10-26T11:57:34.747571+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -629,7 +634,7 @@
       "restatement": "You decide the policy as stated.",
       "proposal_id": "p_8",
       "revision": 45,
-      "time": "2026-10-25T15:42:12.346263+00:00",
+      "time": "2026-10-26T11:57:38.464531+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -3371,7 +3376,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_6ed23e1b9a8128024e723b74",
-     "exposure_id": "x_444d2e51fe4c43d1ac5bda09dab34c73",
+     "exposure_id": "x_3647c05a5fac47349bb1575b620df9c3",
      "started_revision": 46,
      "integrity": "ok"
     },
@@ -4517,7 +4522,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_dc60c4ca476066179e139318",
-     "exposure_id": "x_5628f35cb0b843cdb4fc061071d8e20d",
+     "exposure_id": "x_a1c7aaa369c2403882ce4d9c39146dcf",
      "started_revision": 30,
      "integrity": "ok"
     },
@@ -4667,7 +4672,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_17bb42fe2af6771b4815132d",
-     "exposure_id": "x_aefa9b9a589f4e64a21531ae56789596",
+     "exposure_id": "x_0c38ec592574430a98857812c32fb368",
      "started_revision": 24,
      "integrity": "ok"
     },
@@ -4807,7 +4812,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
-     "exposure_id": "x_985c43f1275240e7a60c464f3b8edef6",
+     "exposure_id": "x_1a38c7d3789948b0be90107af2612441",
      "started_revision": 26,
      "integrity": "ok"
     },
@@ -4979,7 +4984,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_9bfea10e1d03fc0af5aa162b",
-     "exposure_id": "x_25017533c45a45eb94507c34bf503cc4",
+     "exposure_id": "x_8b369d2239fd419aae34b2c8e441418e",
      "started_revision": 28,
      "integrity": "ok"
     },
@@ -5274,7 +5279,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_1cc8ff5e6aa02f9fae196751",
-     "exposure_id": "x_952f9580342043fc9ff98a7ee4de2084",
+     "exposure_id": "x_de0f02c6d42540a896cc6895bb2e29e8",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -5560,7 +5565,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_3b7e9da2df5de95232824246",
-     "exposure_id": "x_8bb86a1b2dda42ca9a3f9543776bcd16",
+     "exposure_id": "x_3307dfd167764cd4928a4658af671a4d",
      "started_revision": 22,
      "integrity": "ok"
     },
@@ -5799,7 +5804,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_40d674998c07527b12a31e29",
-     "exposure_id": "x_9616899687194eaf9d55dc7271073c75",
+     "exposure_id": "x_83160261f0a44a96b418ea5eda2ae3f8",
      "started_revision": 20,
      "integrity": "ok"
     },
@@ -6109,7 +6114,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_76bdb563530c997e6fdf55cc",
-     "exposure_id": "x_8021833a49fe4f0a8276d7a782121d4a",
+     "exposure_id": "x_ea23abd14e264a0189d9c1c5e99ea08a",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -6168,7 +6173,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8651b2bcef1776e9ebffd170",
-     "exposure_id": "x_b8cad9a9815349b19da5ccc910a7a249",
+     "exposure_id": "x_4d9153de769f44d281c799cebda5a0c6",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -6240,7 +6245,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_056df3f4fa8f8aaf96fa6c38",
-     "exposure_id": "x_e635a5bf90db4c13aec1a85b446be41a",
+     "exposure_id": "x_39bd7cb2fbbe472594e20681fda478b9",
      "started_revision": 32,
      "integrity": "ok"
     },
@@ -6447,7 +6452,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_c4ffa7146bc75b1b1b3352d5",
-     "exposure_id": "x_1dbfecfe03ab40a390b2afd14b6325d1",
+     "exposure_id": "x_9d1212beb25d4eb6894efd391359e142",
      "started_revision": 34,
      "integrity": "ok"
     },
@@ -6666,7 +6671,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_fd2d4cab3d29a091ff558cfa",
-     "exposure_id": "x_bb9be41d7586409bba0dd6608a47825a",
+     "exposure_id": "x_34b4144ee62f4f71a89e7554c2e10548",
      "started_revision": 38,
      "integrity": "ok"
     },
@@ -7262,7 +7267,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_405ea565bcf4773f753be1e0",
-     "exposure_id": "x_c11db7ae09144838bc6e3436d9fd0563",
+     "exposure_id": "x_4be7ed79e7694faf9311d149ccacc8c0",
      "started_revision": 48,
      "integrity": "ok"
     },
@@ -7331,7 +7336,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8101d16893f3425fbb4ff727",
-     "exposure_id": "x_210a948b69024a05a57925b9e0a5c55a",
+     "exposure_id": "x_89db576dcab249aabd61410edfda78b9",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -7428,7 +7433,7 @@
       "last_ok_revision": 50,
       "path": "reports/study.html",
       "revision": 50,
-      "sha256": "fdba812082b39b74ce62ec722488856eba3e14cdd80457ac5d073e44dd624d74",
+      "sha256": "e1ed68084d21a43f6920a668881ae824d318e5b3ab46c41116c84cf1e0f3f9f3",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -8117,6 +8122,11 @@
       "change",
       "explain"
      ],
+     "option_labels": {
+      "adopt": "I adopt this decision",
+      "change": "Change something",
+      "explain": "Explain first"
+     },
      "question": "Call the 100 clients with the highest scores.\n\nDo you adopt this decision?",
      "evidence_refs": [],
      "detail_topics": [

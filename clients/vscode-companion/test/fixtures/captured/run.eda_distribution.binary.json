@@ -142,7 +142,7 @@
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_aefa9b9a589f4e64a21531ae56789596"
+    "x_0c38ec592574430a98857812c32fb368"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -226,6 +226,10 @@
      "continue",
      "explain"
     ],
+    "option_labels": {
+     "continue": "Let's continue",
+     "explain": "Explain first"
+    },
     "question": "How much does a simple model improve on a constant baseline on validation?",
     "evidence_refs": [],
     "detail_topics": [

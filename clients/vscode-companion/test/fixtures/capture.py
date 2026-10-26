@@ -216,6 +216,19 @@ def _killed_run(study: Path, rev: int) -> None:
 
 
 OPEN_WORDS = 'Yes, I open the final test now, because the model and the rule are fixed'
+CONCLUSION_TEXT = ('The development evidence and the final test, opened once, are what the study '
+                   'can cite; it does not show future performance or a causal effect.')
+
+
+def _run_pending(flow) -> dict:
+    """Run the activities ``next_action`` asks for, as given, until it asks something else;
+    that next action."""
+    for _ in range(10):
+        nxt = flow.view()['next_action']
+        if nxt['kind'] != 'run':
+            return nxt
+        flow.run(nxt['activity'])
+    raise AssertionError(nxt)
 
 
 def cross_validated(cap: Capture) -> None:
@@ -278,6 +291,23 @@ def cross_validated(cap: Capture) -> None:
              json.dumps(st.b1_default_value(flow.state(), 'final_test')), '--restatement',
              'You open the final test again.', '--rationale', 'x', '--request-id', 'v-again',
              '--expected-revision', flow.rev(), '--json', expect=(2,))
+    # Owner session 2026-10-26, captured last so the payloads above keep their state. L1 (R2c),
+    # L2 (R16): once the pending activities have run, the conclusion is a choice the chat asks
+    # before any proposal: the summary carries the engine's options (``choice_options``).
+    nxt = _run_pending(flow)
+    assert nxt['kind'] == 'propose' and nxt['decision'] == 'conclusion', nxt
+    conclusion = cap.read('summary.binary.cv.conclusion', 'binary', study, 'status', '--summary', '--digest',
+                          '--json', note='Bank, cross-validation, final test opened, rule changed after it: the '
+                                         'conclusion is a choice the chat asks (next_action.choice_options).')
+    assert conclusion['next_action'].get('choice_options'), conclusion['next_action']
+    # L7 (D15): the conclusion adopted from the engine's options; at ``done`` the summary says
+    # what comes after the study (``next_action.after_study``).
+    option = nxt['choice_options'][0]
+    flow.decide('conclusion', {**option['value'], 'text': CONCLUSION_TEXT})
+    done = cap.read('summary.binary.cv.done', 'binary', study, 'status', '--summary', '--digest', '--json',
+                    note='Bank, cross-validation, the conclusion adopted: every step is done '
+                         '(next_action.after_study).')
+    assert done['next_action']['kind'] == 'done' and done['next_action'].get('after_study'), done['next_action']
 
 
 FAMILY_VARIANTS = {'variants': [

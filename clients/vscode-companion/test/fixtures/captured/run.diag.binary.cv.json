@@ -2617,7 +2617,7 @@
    "started_revision": 31,
    "invalidation": null,
    "exposure_ids": [
-    "x_0e0457d31f7b4dee8b404d28fcd98aab"
+    "x_846007cec6b44e12bccbbce3e2148ba9"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2702,6 +2702,11 @@
      "change",
      "explain"
     ],
+    "option_labels": {
+     "adopt": "I adopt this decision",
+     "change": "Change something",
+     "explain": "Explain first"
+    },
     "question": "You open the sealed final test once, for the chosen configuration.\n\nDo you adopt this decision?",
     "evidence_refs": [],
     "detail_topics": [

@@ -2694,8 +2694,8 @@
    "started_revision": 39,
    "invalidation": null,
    "exposure_ids": [
-    "x_5f20026ce50f4863835b6a5288b2cad5",
-    "x_acc6ab98c7e845e88d4ab6c303464a9e"
+    "x_ee5b4f13d98b42d09419eea8719db0d6",
+    "x_81a94dad9c474b588383b0cb4ac2fa38"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2780,6 +2780,11 @@
      "change",
      "explain"
     ],
+    "option_labels": {
+     "adopt": "I adopt this decision",
+     "change": "Change something",
+     "explain": "Explain first"
+    },
     "question": "Adopt the linear model.\n\nDo you adopt this decision?",
     "evidence_refs": [],
     "detail_topics": [

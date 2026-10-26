@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-families",
    "revision": 33,
-   "updated": "2026-10-25T15:43:55.979777+00:00",
+   "updated": "2026-10-26T12:02:23.932012+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -328,6 +328,10 @@
       "continue",
       "explain"
      ],
+     "option_labels": {
+      "continue": "Let's continue",
+      "explain": "Explain first"
+     },
      "question": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
      "evidence_refs": [],
      "detail_topics": [
@@ -353,7 +357,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-25T15:43:08.170963+00:00",
+      "time": "2026-10-26T12:00:14.687558+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -400,7 +404,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-25T15:43:09.277708+00:00",
+      "time": "2026-10-26T12:00:17.177932+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -449,7 +453,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-25T15:43:10.770331+00:00",
+      "time": "2026-10-26T12:00:20.389670+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -480,7 +484,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-25T15:43:12.438512+00:00",
+      "time": "2026-10-26T12:00:24.474614+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -516,7 +520,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-25T15:43:14.148496+00:00",
+      "time": "2026-10-26T12:00:28.411592+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -562,7 +566,7 @@
       "restatement": "You compare three variants of the candidate, each with its question.",
       "proposal_id": "p_6",
       "revision": 23,
-      "time": "2026-10-25T15:43:21.844828+00:00",
+      "time": "2026-10-26T12:01:00.409951+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -6284,7 +6288,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_b8734faf726d77e6af0ae94a",
-     "exposure_id": "x_8cb925d764784a2b8eaebcaa3428c95a",
+     "exposure_id": "x_bbebbf0b1e1b4437b8df162c10cfe466",
      "started_revision": 32,
      "integrity": "ok"
     },
@@ -6343,7 +6347,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_a8274014a4c678f4a2a235d2",
-     "exposure_id": "x_6d81381937a54292a504d9057ced43f2",
+     "exposure_id": "x_7e17b0be863648c88e5f0169e460435a",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -6478,7 +6482,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_eff39ccb2204a33ff345cb41",
-     "exposure_id": "x_cb26010e20c24fa6bac69bfb834943d5",
+     "exposure_id": "x_e724b89bcaa0473ebd2c78853f8b0f38",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -6748,7 +6752,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
-     "exposure_id": "x_5eec6feb1b774a38adfa3913471503f4",
+     "exposure_id": "x_7d1a6c64e3b24809972241f82049bba6",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -7030,7 +7034,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_60b0cfe62d69e0ed78f7ce7e",
-     "exposure_id": "x_d429234d5d8b496ea453824b5f65b230",
+     "exposure_id": "x_4bd889b1c3104e35af30d9c06f0af9b7",
      "started_revision": 24,
      "integrity": "ok"
     },
@@ -8344,7 +8348,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_46ed3fd080ad3849123b1718",
-     "exposure_id": "x_2854d25aeb2c4d0cac586f6a438a4e53",
+     "exposure_id": "x_c58340b446cd40ac8e0a173344c58105",
      "started_revision": 26,
      "integrity": "ok"
     },
@@ -8859,7 +8863,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_5c3f9f2dbbc0a17a1254423f",
-     "exposure_id": "x_960a79ca01f3427b8aa4eca6e6cc97fa",
+     "exposure_id": "x_4e7cb3e5cfd946c5b79363b7b2e88c28",
      "started_revision": 28,
      "integrity": "ok"
     },
@@ -10543,7 +10547,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_b98236d8cafd383b17becb1c",
-     "exposure_id": "x_71db989fb9244d1493f4e94cc76c062e",
+     "exposure_id": "x_cf9d771450504073bc7f48449a4efc94",
      "started_revision": 30,
      "integrity": "ok"
     },
@@ -10648,7 +10652,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_bb85e451e092b31aedb250d1",
-     "exposure_id": "x_aae9dfb218fa40d8a6fd8afab27d2b3f",
+     "exposure_id": "x_37351af142cd457e803439edbc7861d9",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -10775,7 +10779,7 @@
       "last_ok_revision": 33,
       "path": "reports/study.html",
       "revision": 33,
-      "sha256": "f5f0b503fe8b4fcb1ed5b3b76b0901103d31ed0be4d312cbd9a48ffb3c7354a9",
+      "sha256": "40bd9d93ab59a18a6bb74a0d7ac3c20e34a3560c64e7065a85354c50af59d0fe",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -11644,6 +11648,10 @@
       "continue",
       "explain"
      ],
+     "option_labels": {
+      "continue": "Let's continue",
+      "explain": "Explain first"
+     },
      "question": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
      "evidence_refs": [],
      "detail_topics": [
