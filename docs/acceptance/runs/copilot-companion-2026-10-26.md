@@ -150,3 +150,14 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   the default as the comparison option; and say what the fixed pipeline already does.
   Also: the restatement "choisie après avoir regardé la cible" reads as a reproach; it is the
   `data_contingent` stamp and needs an explanation, not a bare clause.
+- **R2b. After a picker left unanswered, the agent falls back to text for good.** At step 5
+  the picker was not answered (closed, or the owner typed in the chat instead); the next turn
+  opens with "Rien n'est encore enregistré pour la préparation des variables, puisque la
+  question a été ignorée.", repeats the whole pause (quality findings, recommendation,
+  quoted block, "Adoptez-vous cette décision ?", panel line) and ends in text, without the
+  picker. The agent read the dismissed picker as "the call fails", which the R2 fix allows
+  as the text fallback. To fix: a dismissed or unanswered picker is not a failed call; when
+  the junior writes instead, read the reply (it may answer the question), and when the pause
+  must be asked again, call the picker again. Only a tool error or a missing tool falls back
+  to text. Also: "la question a été ignorée" reads as a reproach; say nothing was recorded
+  and ask again.
