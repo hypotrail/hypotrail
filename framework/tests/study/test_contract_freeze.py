@@ -170,7 +170,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # languages from its translation sidecar, or null.
              'case_texts')
 # L3: the tables of ``view.case_texts`` (``mlkit.study.l10n.case_texts``).
-CASE_TEXTS_KEYS = ('facts', 'special_values', 'groups', 'availability', 'row_unit')
+CASE_TEXTS_KEYS = ('facts', 'special_values', 'groups', 'availability', 'row_unit',
+                   # W2 integration: the case declares the glossary's examples its own.
+                   'glossary_examples')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals',
                       # v0.2a (WP-A1): per-feature basis of a feature availability value.

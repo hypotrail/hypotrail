@@ -44,7 +44,9 @@ STATE_KEYS = ('path', 'sha256')
 # The languages a sidecar may translate into (English is the case's own language).
 TARGET_LANGUAGES = (FR,)
 TOP_KEYS = ('schema', 'case')
-TOP_OPTIONAL = ('facts', 'structure', 'special_values', 'variables')
+# ``glossary_examples`` (wave W2 integration): true when the engine glossary's "For example"
+# sentences describe this case; the case says so, the engine names no dataset.
+TOP_OPTIONAL = ('facts', 'structure', 'special_values', 'variables', 'glossary_examples')
 CASE_KEYS = ('id', 'sha256')
 STRUCTURE_KEYS = ('row_unit',)
 VARIABLE_KEYS = ('group', 'availability')
@@ -117,6 +119,8 @@ def validate(document: Any, case_document: Mapping, case_sha256: str) -> list[di
         return problems
     if document['schema'] != SCHEMA:
         problems.append({'path': 'schema', 'problem': f'must be "{SCHEMA}"'})
+    if 'glossary_examples' in document and not isinstance(document['glossary_examples'], bool):
+        problems.append({'path': 'glossary_examples', 'problem': 'must be true or false'})
     if _keys(document['case'], 'case', CASE_KEYS, (), problems):
         if document['case']['id'] != case_document.get('id'):
             problems.append({'path': 'case.id', 'problem': 'must be the id of the case'})
@@ -235,6 +239,7 @@ class Translations:
         # The case document (or a function that reads it), read only to name the groups.
         self._case_document = case_document
         self.facts = {k: dict(v) for k, v in (doc.get('facts') or {}).items()}
+        self.glossary_examples = doc.get('glossary_examples') is True
         self.structure = {k: dict(v) for k, v in (doc.get('structure') or {}).items()}
         self.variables = copy.deepcopy(doc.get('variables') or {})
         self.specials = {(str(s['column']), str(s['value'])): dict(s['meaning'])
@@ -321,7 +326,8 @@ def case_texts(state: Mapping | None, case_document: Mapping | None = None) -> d
     each in both languages (``{en, fr}``), by where they are: ``facts`` (by fact id),
     ``special_values`` (``"column=value"``), ``groups`` (by the case's English group name),
     ``availability`` (the availability source, by variable) and ``row_unit``; only the
-    statements the recorded sidecar translates. None when the study has no current sidecar."""
+    statements the recorded sidecar translates; and ``glossary_examples``, whether the
+    glossary's own examples describe this case. None when the study has no current sidecar."""
     tr = translations(state, case_document)
     if not tr:
         return None
@@ -332,7 +338,7 @@ def case_texts(state: Mapping | None, case_document: Mapping | None = None) -> d
         except Exception:                              # noqa: BLE001
             return None
     out: dict[str, Any] = {'facts': {}, 'special_values': {}, 'groups': {}, 'availability': {},
-                           'row_unit': None}
+                           'row_unit': None, 'glossary_examples': tr.glossary_examples}
     for f in case_document.get('facts') or []:
         french = tr.fact(f['id'], FR)
         if french:

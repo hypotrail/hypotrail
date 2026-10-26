@@ -5,6 +5,7 @@ schema: hypotrail.case_l10n/1
 case:
   id: uci-bank-marketing-full-v1
   sha256: 5483728e21e7f54c97c1c80d8df228758154b5f66c88b29fdd35c5c9d92c9166
+glossary_examples: true
 facts:
   target:
     fr: 'y : souscription observée à un dépôt à terme (yes/no)'

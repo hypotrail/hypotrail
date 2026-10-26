@@ -344,14 +344,6 @@ terms:
 # Regression study (M3). A regression study hides the binary-only terms below and reads
 # ``regression_terms`` where its definitions differ or are new (mlkit.study.texts).
 binary_only: [base_rate, class_imbalance, stratified_split, logistic_regression, score, policy, threshold, capacity, precision, recall, volume, tie_at_cut, auc, average_precision, lift, calibration, wilson_interval, confusion_matrix, gain_curve, roc_curve, brier_score]
-# L3 (owner session 2026-10-26, remark R4): the cases the "For example" sentences of the
-# definitions above speak of, by task. In a study of another case a surface shows the
-# definition without them (mlkit.study.texts.examples_apply); the study's own figures
-# (``cited_example``) give the contextual example there. A case id is named without its
-# version suffix.
-example_cases:
-  binary: [uci-bank-marketing, uci-bank-marketing-full]
-  regression: [uci-auto-mpg]
 regression_terms:
   forward_chaining:
     term: Forward-chaining cross-validation

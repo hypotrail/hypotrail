@@ -339,17 +339,24 @@ def test_the_glossary_examples_speak_only_of_their_own_case():
     """R4: "glossary examples about bank clients in a Hotel study". The glossary's examples
     speak of the canonical case of each task; a study of another case reads the definition
     without them (its own figures give the example)."""
-    for case_id, task, kept in (('uci-bank-marketing-full-v1', 'binary', True),
-                                ('hotel-booking-resort-v1', 'binary', False),
-                                ('uci-online-shoppers-v1', 'binary', False),
-                                ('uci-auto-mpg-v1', 'regression', True),
-                                ('synthetic-regression', 'regression', False)):
-        with texts.study_context({'task': task, 'case': {'id': case_id}}):
+    # The case declares it in its translation sidecar (``glossary_examples``; the engine
+    # names no dataset); a case without a sidecar reads the definitions without them.
+    for case, task, kept in (('bank-marketing-full', 'binary', True),
+                             ('bank-marketing', 'binary', True),
+                             ('hotel-booking', 'binary', False),
+                             ('online-shoppers', 'binary', False),
+                             ('auto-mpg', 'regression', True),
+                             (None, 'regression', False)):
+        sidecar = (yaml.safe_load((CASES / case / l10n.FILE).read_text(encoding='utf-8'))
+                   if case else None)
+        case_texts = ({'glossary_examples': sidecar.get('glossary_examples') is True}
+                      if sidecar else None)
+        with texts.study_context({'task': task, 'case_texts': case_texts}):
             for lang in ('en', 'fr'):
                 with texts.report_language_context(lang):
                     _, definition, _ = texts.concept('auc' if task == 'binary' else 'leakage')
                     assert (('For example' in definition or 'Par exemple' in definition)
-                            == kept), (case_id, lang, definition)
+                            == kept), (case, lang, definition)
                     assert 'client' not in definition or kept, definition
     # Outside a study the glossary is as written (the agent's copy, the tests of WP-A9).
     assert 'For example' in texts.glossary('auc')['definition']

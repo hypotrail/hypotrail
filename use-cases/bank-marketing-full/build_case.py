@@ -307,6 +307,8 @@ def l10n_document(data: bytes, case_text: str) -> dict:
     return {'schema': 'hypotrail.case_l10n/1',
             'case': {'id': document['id'],
                      'sha256': hashlib.sha256(case_text.encode('utf-8')).hexdigest()},
+            # Like the Bank case, the engine glossary's examples describe this one.
+            'glossary_examples': sample['glossary_examples'],
             'facts': {f['id']: facts[f['id']] for f in document['facts']},
             'structure': sample['structure'],
             'special_values': sample['special_values'],

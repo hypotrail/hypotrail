@@ -97,38 +97,46 @@ def report_language() -> str:
     return _REPORT_LANGUAGE.get()
 
 
-# L3 (owner session 2026-10-26, remark R4): the case of the study a surface is written for
-# (``study_context`` sets it from the view). The glossary's "For example" sentences speak of
-# the canonical case of each task (``example_cases`` of ``content/glossary.yaml``); in a
-# study of another case they would explain the term with somebody else's data, so a surface
-# shows the definition without them there, and the study's own figures (``cited_example``)
-# give the contextual example.
-_CASE_ID = contextvars.ContextVar('hypotrail_texts_case_id', default=None)
-
-
-def example_cases(task: str | None = None) -> tuple[str, ...]:
-    """The case ids (without their version suffix) the glossary's own examples speak of."""
-    cases = load('glossary').get('example_cases') or {}
-    return tuple(cases.get(current_task(task)) or ())
+# L3 (owner session 2026-10-26, remark R4): whether the glossary's "For example" sentences
+# describe the case of the study a surface is written for (``study_context`` sets it from the
+# view). They speak of the canonical case of each task; in a study of another case they would
+# explain the term with somebody else's data, so a surface shows the definition without them
+# there, and the study's own figures (``cited_example``) give the contextual example. The
+# case declares it in its translation sidecar (``glossary_examples``, read as
+# ``view.case_texts.glossary_examples``): the engine names no dataset (wave W2 integration;
+# ``test_synthetic_case.py::test_study_engine_contains_no_dataset_specific_names``). A study
+# without a current sidecar reads the definitions without them. ``None``: outside a study.
+_EXAMPLES = contextvars.ContextVar('hypotrail_texts_examples', default=None)
 
 
 _EXAMPLE_SENTENCE = re.compile(r'\s*(?:For example|Par exemple),.*?\.(?=\s|$)', re.S)
 
 
 @contextlib.contextmanager
-def case_context(case_id: str | None):
-    token = _CASE_ID.set(case_id)
+def examples_context(apply: bool | None):
+    token = _EXAMPLES.set(apply)
     try:
         yield
     finally:
-        _CASE_ID.reset(token)
+        _EXAMPLES.reset(token)
+
+
+def glossary_examples_of(view) -> bool:
+    """Whether the glossary's own examples describe the case of ``view`` (a view, or a
+    state): what its case's translation sidecar declares, false without one."""
+    if not isinstance(view, dict):
+        return False
+    if 'case_texts' in view:
+        return bool((view.get('case_texts') or {}).get('glossary_examples'))
+    from . import l10n
+    return l10n.translations(view).glossary_examples if view.get(l10n.STATE_KEY) else False
 
 
 def examples_apply(task: str | None = None) -> bool:
     """Whether the glossary's own examples speak of this study's case (always true outside
     a study context)."""
-    case_id = _CASE_ID.get()
-    return case_id is None or re.sub(r'-v\d+$', '', case_id) in example_cases(task)
+    apply = _EXAMPLES.get()
+    return apply is None or apply
 
 
 def without_examples(text: str) -> str:
@@ -180,9 +188,9 @@ def is_forward() -> bool:
 def study_context(view):
     """The task and the evaluation scheme of a view (or a state): both contexts at once
     (and whether its plan chains forward in time, E4-5)."""
-    case_id = ((view or {}).get('case') or {}).get('id') if isinstance(view, dict) else None
     with task_context(view.get('task')), scheme_context(scheme_of(view)), \
-            forward_context(split_method_of(view) in FORWARD_METHODS), case_context(case_id):
+            forward_context(split_method_of(view) in FORWARD_METHODS), \
+            examples_context(glossary_examples_of(view)):
         yield
 
 

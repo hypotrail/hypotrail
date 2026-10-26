@@ -284,6 +284,7 @@ would make each of them `sources_changed`, CLI-CONTRACT §4).
 ```yaml
 schema: hypotrail.case_l10n/1
 case: {id: hotel-booking-resort-v1, sha256: <sha256 of the exact case.yaml it translates>}
+glossary_examples: false                  # optional: true only for a case the engine glossary's examples describe
 facts:                                    # optional: by fact id
   prediction_time: {fr: "Quand la réservation est saisie ..."}
 structure:                                # optional
@@ -300,6 +301,7 @@ variables:                                # optional: by variable name
 |---|---|
 | `schema` | `hypotrail.case_l10n/1` |
 | `case` | `{id, sha256}`: the case's `id` and the sha256 of the `case.yaml` file it translates; a sidecar written for other bytes of the case file is not used |
+| `glossary_examples` | Optional boolean (wave W2 integration of the 2026-10-26 batch): `true` when the engine glossary's "For example" sentences describe this case (`bank-marketing`, `bank-marketing-full`, `auto-mpg`). The engine names no dataset; a study whose case does not declare it, or that has no current sidecar, reads the glossary's definitions without those sentences, its own figures giving the example (`view.case_texts.glossary_examples`, `texts.examples_apply`) |
 | `facts.<id>` | The fact's `value` in each target language, `{fr: text}` |
 | `structure.row_unit` | The row unit's `value`, `{fr: text}` |
 | `special_values[]` | `{column, value, meaning: {fr: text}}`, one per special value of the case (at most once) |
