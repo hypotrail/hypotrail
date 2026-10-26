@@ -14,6 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import advkit as rkit  # noqa: E402,F401
 from advkit import U, ukit, custom_flow  # noqa: E402
+import flowkit as fk  # noqa: E402
 
 import pytest  # noqa: E402
 
@@ -79,6 +80,12 @@ def run_pair(u, tmp_path, label):
 def test_no_extension_same_handoff_bytes_as_before(tmp_path):
     u = U(tmp_path, repo=False)
     assert 'understanding' not in u.state()
+    # The reference engine predates the structural-first plan generation (owner session
+    # 2026-10-26, L5), whose ``exploration_order`` key it refuses as outside its schema (an
+    # older engine refusing a newer state is correct). Both engines therefore export a study
+    # of the previous generation, as ``init`` wrote it before L5 (``flowkit``).
+    fk.previous_generation(u.study)
+    assert 'exploration_order' not in u.state()
     a, b, new, old = run_pair(u, tmp_path, 'plain')
     assert new == old
     assert a == b
