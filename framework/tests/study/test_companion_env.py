@@ -353,27 +353,49 @@ CHOICE = {'kind': 'propose', 'step': 'conclusion', 'decision': 'conclusion',
                               'label': 'Garder la référence'}]}
 
 
-@pytest.mark.parametrize('produced', [
-    {'command': 'decide', 'action': 'decide.confirm', 'opening': {'status': 'promoted'}},
-    {'command': 'run', 'activity': 'diag.final_test', 'status': 'promoted'},
-    {'command': 'status'}, None])
+# What a command produced, and the section it names whatever the next action is (D3).
+PRODUCED_FOR_CHOICE = [
+    ({'command': 'decide', 'action': 'decide.confirm', 'opening': {'status': 'promoted'}},
+     'final_test'),
+    ({'command': 'run', 'activity': 'diag.final_test', 'status': 'promoted'}, 'final_test'),
+    ({'command': 'run', 'activity': 'fit.variant', 'slot': 'fit.variant', 'status': 'promoted'},
+     'development'),
+    ({'command': 'decide', 'action': 'decide.confirm', 'opening': None}, 'history')]
+# Commands that produced nothing the panel shows: a read, a failed run, an acknowledgement.
+NOTHING_FOR_CHOICE = [{'command': 'status'}, None,
+                      {'command': 'run', 'activity': 'fit.variant', 'status': 'failed'},
+                      {'command': 'run', 'activity': 'fit.variant', 'status': 'acknowledged'}]
+
+
+@pytest.mark.parametrize('produced', NOTHING_FOR_CHOICE)
 def test_shown_names_the_choice_card_when_the_chat_asks_a_choice(produced):
-    """R16 (D20): when the next action is a choice the chat asks (``choice_options``), the
-    message ends with that question, and from v1 the panel shows it as a read-only card under
-    "Waiting for your answer": the line names it, after a write and on a read alike."""
+    """R16 (D20): when the next action is a choice the chat asks (``choice_options``) and the
+    command produced nothing the panel shows (a read, a failed run, an acknowledgement), the
+    line names the read-only card the panel shows from v1 under "Waiting for your answer"."""
+    assert ce.shown_section(produced, CHOICE) is None
     for stage_id in ('v1', 'v2', 'v3'):
         found = ce.shown(produced, CHOICE, stage_id, 'fr')
         assert found == {'tab': 'decisions', 'section': 'choice',
                          'label': 'En attente de votre réponse',
                          'line': 'Dans le panneau : Décisions → En attente de votre réponse.'}
-    # v0 is one page without the card: what the command produced, or nothing.
-    base = ce.shown_section(produced, CHOICE)
-    v0 = ce.shown(produced, CHOICE, 'v0', 'fr')
-    assert (v0 is None) == (base is None)
-    assert v0 is None or v0['section'] != 'choice'
+    # v0 is one page without the card: nothing.
+    assert ce.shown(produced, CHOICE, 'v0', 'fr') is None
     # An empty list is no choice.
-    assert ce.shown(produced, {**CHOICE, 'choice_options': []}, 'v3', 'en') == (
-        ce.shown(produced, {'kind': 'propose'}, 'v3', 'en'))
+    assert ce.shown(produced, {**CHOICE, 'choice_options': []}, 'v3', 'en') is None
+
+
+@pytest.mark.parametrize('stage_id', ce.STAGES)
+@pytest.mark.parametrize('produced, section', PRODUCED_FOR_CHOICE)
+def test_a_write_names_what_it_produced_even_before_a_choice(produced, section, stage_id):
+    """D3 (wave W1 integration, coordinator ruling): the line names what the message shows.
+    A command that produced something names its own section even when the next action is a
+    choice the chat asks: the opening's confirmation names the final test, a variant fit the
+    development evidence, a confirmation the history; never the choice card."""
+    assert ce.shown_section(produced, CHOICE) == section
+    found = ce.shown(produced, CHOICE, stage_id, 'fr')
+    assert found == ce.shown(produced, {'kind': 'propose', 'decision': 'conclusion'}, stage_id,
+                             'fr')
+    assert found is not None and found['section'] != 'choice'
 
 
 def test_the_section_labels_cover_both_languages():

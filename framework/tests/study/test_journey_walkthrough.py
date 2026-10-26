@@ -133,8 +133,9 @@ def journey_flow(base: Path, case: str, lang: str) -> tuple[fk.Flow, str, dict]:
     return f, task, init
 
 
-# Which sections a write may name, by its label.
-EXPECTED = {'propose': {'waiting', 'choice'}, 'confirm': {'history', 'final_test', 'choice'},
+# Which sections a write may name, by its label. D3 (wave W1 integration): a write names what
+# it produced, never the choice card the next action may ask (only a read names that).
+EXPECTED = {'propose': {'waiting'}, 'confirm': {'history', 'final_test'},
             'note:hold': {'holds'}, 'note:resolve': {'waiting'}}
 
 
@@ -146,14 +147,14 @@ def _expected(label: str) -> set:
         return EXPECTED[head]
     assert head == 'run', label
     if activity == 'eda.quality':
-        return {'quality', 'choice'}
+        return {'quality'}
     if activity.startswith('eda.'):
-        return {activity, 'choice'}
+        return {activity}
     if activity in ('final_test.evaluation', 'diag.final_test'):
-        return {'final_test', 'choice'}
+        return {'final_test'}
     if activity in ('diag.binary', 'diag.regression'):
-        return {'diagnostics', 'choice'}
-    return {'development', 'choice'}
+        return {'diagnostics'}
+    return {'development'}
 
 
 @pytest.mark.parametrize('case', ['synthetic', 'auto-mpg'])
@@ -167,7 +168,7 @@ def test_j_panel_every_write_names_a_section_and_every_read_none(tmp_path, monke
     monkeypatch.setenv(ce.STAGE_ENV, 'v3')
     f, task, init = journey_flow(tmp_path, case, lang)
     assert init['next_action']['panel']['shown']['section'] == 'data_card'
-    seen, reads = [], []
+    seen, reads, choices = [], [], []
 
     def on_write(label, payload):
         shown = payload['next_action']['panel']['shown']
@@ -191,28 +192,25 @@ def test_j_panel_every_write_names_a_section_and_every_read_none(tmp_path, monke
             assert shown['section'] == 'data_card'
         elif action.get('choice_options'):
             assert shown['section'] == 'choice'
+            choices.append(action['decision'])
         else:
             assert shown is None, (label, shown)
         reads.append(label)
 
     writes = walk(f, task, on_write=on_write, on_read=on_read)
     assert len(writes) > 15 and reads
-    # W1 integration (L1 + L2): the opening's confirmation is followed by the conclusion, a
-    # choice the chat asks (``choice_options``), so by CLI-CONTRACT §3.2 its line names the
-    # choice card ("after any command"); what the write produced is still the final test.
+    # W1 integration (L1 + L2, D3): the opening's confirmation is followed by the conclusion, a
+    # choice the chat asks; the write names the final test it produced, and the read before
+    # the conclusion names the choice card.
     opening = [p for label, p in writes if label == 'confirm:final_test']
     assert len(opening) == 1
     action = opening[0]['next_action']
     assert action['decision'] == 'conclusion' and action['choice_options'], action
     assert action['recommended'] is None and action['pause']['kind'] == 'choice'
-    assert action['panel']['shown']['section'] == 'choice'
-    produced = {'command': 'decide', 'action': 'decide.confirm',
-                'opening': opening[0]['result']['opening']}
-    assert ce.shown_section(produced, action) == 'final_test'
-    seen.append('final_test')
-    for section in ('waiting', 'history', 'holds', 'development', 'diagnostics', 'final_test',
-                    'choice'):
+    assert action['panel']['shown']['section'] == 'final_test'
+    for section in ('waiting', 'history', 'holds', 'development', 'diagnostics', 'final_test'):
         assert section in seen, (section, [w for w, _ in writes], seen)
+    assert {'model_choice', 'conclusion'} <= set(choices), choices
     if lang == 'fr':
         assert all('Dans le panneau : ' in p['next_action']['panel']['shown']['line']
                    for _, p in writes)

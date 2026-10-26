@@ -339,18 +339,21 @@ def shown(produced: Mapping | None, action: Mapping | None, stage_id: str,
     """``{tab, section, label, line}`` (``SHOWN_KEYS``): where the panel at ``stage_id``
     shows what the command produced (R1b), or None when it produced nothing the panel shows.
 
-    When the next action is a choice the chat asks (``choice_options``, R16), the message
-    ends with that question, and from v1 the Decisions tab shows it as a read-only card
-    under "Waiting for your answer": that card is named. A section of a later stage reads as
-    the closest tab the stage has (``FALLBACK``, no section); at v0 the panel is one page,
-    named by its title (with the section when the page shows it)."""
+    D3 (wave W1 integration, coordinator ruling): the line names what the message shows. A
+    command that produced something the panel shows names that section, even when the next
+    action is a choice the chat asks (the opening's confirmation names the final test, a fit
+    the development evidence). When the command produced nothing the panel shows (a read, a
+    failed run, an acknowledgement) and the next action is a choice the chat asks
+    (``choice_options``, R16), the line names that choice, which the Decisions tab shows
+    from v1 as a read-only card under "Waiting for your answer". A section of a later stage
+    reads as the closest tab the stage has (``FALLBACK``, no section); at v0 the panel is one
+    page, named by its title (with the section when the page shows it)."""
     lang = lang if lang in TAB_LABELS else 'en'
     rank = STAGES.index(stage_id)
-    section = None
-    if (action or {}).get('choice_options') and rank >= STAGES.index(SECTIONS['choice'][1]):
+    section = shown_section(produced, action)
+    if (section is None and (action or {}).get('choice_options')
+            and rank >= STAGES.index(SECTIONS['choice'][1])):
         section = 'choice'
-    if section is None:
-        section = shown_section(produced, action)
     if section is None:
         return None
     tab, since = _section_of(section)

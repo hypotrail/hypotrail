@@ -7,8 +7,8 @@ the study panel on at stage v3 and, on the payloads it really emits:
 
 * at the conclusion (and the model choice), with no recommendation, the summary carries
   ``choice_options``, the pause is of kind ``choice``, ``panel.shown`` names the choice card
-  (after the write that led there and on a read), the panel's summary model holds the same
-  options, and the Decisions tab renders them as the read-only card;
+  on a read while the write that led there names what it produced (D3), the panel's summary
+  model holds the same options, and the Decisions tab renders them as the read-only card;
 * HO-3: at ``done``, the summary carries ``after_study``; Overview ("Your next move") and the
   Learn & hand off tab show its junior text read only, and the export plan line only when
   the engine says the model is supported; no new write control appears.
@@ -81,10 +81,15 @@ def test_w1_choice_card_and_after_study_on_a_real_study(tmp_path, monkeypatch, o
         assert action['pause']['kind'] == 'choice'
         assert action['pause']['options'] == [o['id'] for o in options]
         assert action['pause']['option_labels'] == {o['id']: o['label'] for o in options}
-        # L2 (R16): the line names the choice card, on the read and after the write before it.
+        # L2 (R16): a read names the choice card; D3: the write that led there names what it
+        # produced (the opening: the final test; a fit or the diagnostics: the evidence).
         assert action['panel']['shown'] == CHOICE_SHOWN[lang]
         label, write = seen['write']
-        assert write['next_action']['panel']['shown'] == CHOICE_SHOWN[lang], label
+        shown = write['next_action']['panel']['shown']
+        expected = ({'final_test'} if label == 'confirm:final_test'
+                    else {'development', 'diagnostics'})
+        assert label.startswith(('run:', 'confirm:')) and shown['section'] in expected, \
+            (label, shown)
         # The panel's summary model holds the same options, labels verbatim; a conclusion's
         # value reads as its verdict, never as raw JSON.
         raw = seen['summary']
