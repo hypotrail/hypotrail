@@ -161,3 +161,22 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   must be asked again, call the picker again. Only a tool error or a missing tool falls back
   to text. Also: "la question a été ignorée" reads as a reproach; say nothing was recorded
   and ask again.
+- **O4 (positive).** After "Changer quelque chose", the owner asked "regrouper les catégories de
+  agent et company sous 30 lignes, log de lead_time, plafonner adults". The new proposal came
+  with the picker, said plainly what the engine cannot do as asked, chose a cap value and said
+  it can be changed, and disclosed that the choice comes after two looks at the target.
+- **R6. Rare grouping is global, not per column.** `rare_category_min_rows` is one integer for
+  every kept categorical column (`governance.PREPROCESSING_KEYS`), so "group the rare codes of
+  `agent` and `company`" becomes "every categorical column"; caps are per column, the log is
+  per column. To decide: a per-column form (e.g. `{column: min_rows}`), as for caps and
+  logs, so a junior's targeted choice can be recorded as asked.
+- **R7. The preparation is stamped "after looking at the target" because of the EDA order.**
+  The proposal says "Ce choix vient après 2 regards sur la cible. Il peut rendre les chiffres
+  de développement un peu optimistes". The owner's choice is motivated by the quality check
+  (target-free), but WP-A9 M1 stamps `data_contingent` whenever any target-involving look
+  preceded the proposal, and the default exploration starts with two target looks
+  (`eda.target_summary`, `eda.special_values` with outcome rates). So every study's
+  preparation is data-contingent by construction. Linked to R5: run the target-free
+  structural checks (`eda.quality`, distributions without the target) first and decide the
+  preparation from them before any target look, then explore the target; or keep the order
+  and explain the stamp in one sentence the junior can act on.
