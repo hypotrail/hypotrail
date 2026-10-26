@@ -32,6 +32,9 @@
     evidenceTitle: 'Evidence',
     evidenceChip: (activity, rid8) => `${activity} · result ${rid8}…`,
     evidenceChipWords: name => `See ${name} →`,
+    // Third session of 2026-10-26: the result slots a chip or an effect names, in words, in
+    // the panel language (the view held them in English: "Voir the decision-rule evaluation").
+    slotWords: { split: 'the split', 'policy.evaluation': 'the decision-rule evaluation', 'evaluate.regression': 'the model comparison' },
     precisionDelta: (point, low, high) => `Share of successes among the cases picked, against the baseline: ${point} (interval ${low} to ${high})`,
     explore: task => (regression(task) ? 'explore the errors →' : 'try other rules →'),
     holdOpen: 'On hold in your words: ',

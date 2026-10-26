@@ -27,6 +27,7 @@
     evidenceTitle: 'Preuves',
     evidenceChip: (activity, rid8) => `${activity} · résultat ${rid8}…`,
     evidenceChipWords: name => `Voir ${name} →`,
+    slotWords: { split: 'le découpage', 'policy.evaluation': "l'évaluation de la règle de décision", 'evaluate.regression': 'la comparaison des modèles' },
     precisionDelta: (point, low, high) => `Part de succès parmi les cas retenus, face à la référence : ${point} (intervalle ${low} à ${high})`,
     explore: task => (regression(task) ? 'explorer les erreurs →' : "essayer d'autres règles →"),
     holdOpen: 'En suspens, avec vos mots : ',

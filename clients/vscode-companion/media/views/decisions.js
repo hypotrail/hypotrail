@@ -68,11 +68,12 @@
       title: words && str(raw) ? `${J().nextMove.engineLabel}: ${str(raw)}` : null, ...(attrs || {}), text: words || str(raw) });
   }
 
-  /** Slot names of the engine in words (fit.logistic -> the logistic model). */
+  /** Slot names of the engine in words (fit.logistic -> the logistic model), in the panel
+   * language (third session of 2026-10-26: the copy's `slotWords`, never English in French). */
   function slotWords(ctx, slot) {
     const s = str(slot);
     if (s.startsWith('fit.')) return J().modelName(s, taskOf(ctx));
-    const words = { split: 'the split', 'policy.evaluation': 'the decision-rule evaluation', 'evaluate.regression': 'the model comparison' };
+    const words = copyOf(ctx).slotWords || {};
     return words[s] || s.replace(/[._:]/g, ' ');
   }
 

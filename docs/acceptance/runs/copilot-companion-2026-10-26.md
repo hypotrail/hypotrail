@@ -414,3 +414,8 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   The Azure ML export was not written either; its own refusal message was not captured in the
   session (to check: whether the agent chained it after the handoff failure, or the export
   itself refused, e.g. `artifact_status` not `packaged`).
+- **Mixed-language label in the Decisions tab (fix pass).** A French panel showed "Voir the
+  decision-rule evaluation →" on the evidence chip of the rule card: the view held the result
+  slots' words in English. Fixed: the words are the copy's `slotWords` (EN "See the
+  decision-rule evaluation →", FR "Voir l'évaluation de la règle de décision →"), pinned in
+  `decisions.test.js`.

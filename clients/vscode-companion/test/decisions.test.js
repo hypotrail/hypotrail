@@ -378,3 +378,29 @@ test('DC-13 (W1 integration): a conclusion option from the engine has the value 
   assert.deepEqual(m.nextAction.choiceOptions.map(o => o.value), ['keep_baseline', 'inconclusive']);
   assert.ok(!m.nextAction.choiceOptions.some(o => o.value.includes('{')));
 });
+
+test('evidence chip (third session of 2026-10-26): the result slot reads in the panel language, never "Voir the …"', () => {
+  const saved = globalThis.Hypotrail;
+  globalThis.Hypotrail = { copy: {}, format: { number: x => String(x) } };
+  let en, fr;
+  try {
+    for (const dir of ['copy', 'copy-fr']) {
+      const file = path.join(__dirname, '..', 'media', dir, 'decisions.js');
+      delete require.cache[require.resolve(file)];
+      require(file);
+    }
+    en = globalThis.Hypotrail.copy.decisions;
+    fr = globalThis.Hypotrail.copyFr.decisions;
+  } finally {
+    globalThis.Hypotrail = saved;
+  }
+  assert.equal(en.evidenceChipWords(en.slotWords['policy.evaluation']), 'See the decision-rule evaluation →');
+  assert.equal(fr.evidenceChipWords(fr.slotWords['policy.evaluation']), "Voir l'évaluation de la règle de décision →");
+  assert.equal(fr.evidenceChipWords(fr.slotWords['evaluate.regression']), 'Voir la comparaison des modèles →');
+  assert.equal(fr.slotWords.split, 'le découpage');
+  assert.deepEqual(Object.keys(fr.slotWords).sort(), Object.keys(en.slotWords).sort());
+  const source = fs.readFileSync(path.join(__dirname, '..', 'media', 'views', 'decisions.js'), 'utf8');
+  assert.ok(!source.includes("'the decision-rule evaluation'") && !source.includes("'the model comparison'"),
+    'the view holds no English slot words');
+  assert.match(source, /copyOf\(ctx\)\.slotWords/);
+});
