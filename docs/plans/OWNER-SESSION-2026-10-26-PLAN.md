@@ -1358,3 +1358,5 @@ report is shown to the owner before L6 is implemented; D19 keeps L8 after the wo
 (R20) including the AGENTS.md wording it needs (D17). L6 proceeds from the mockup
 (`docs/plans/mockups/report-narrative-hotel-fr.html`). L8 awaits the owner's answer on its
 timing (D19).
+2026-10-26 (later): D19 changed by the owner: L8 lands before the workshop, in this batch.
+Existing studies lose their capture (risk K3, accepted); the workshop uses new studies.
