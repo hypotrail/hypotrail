@@ -264,6 +264,30 @@ def _verdict(snapshot: Snapshot) -> str:
     return 'no conclusion is recorded; nothing here establishes a result.'
 
 
+def _output_sentence(recipe: Mapping) -> str:
+    """What the model returns, term first (README)."""
+    output = recipe['output_contract']
+    column = (output.get('columns') or ['prediction'])[0]
+    if output.get('kind') == 'binary_score':
+        return (f'`{column}` (`binary_score`): a score between 0 and 1, the estimated '
+                f'probability that `{recipe["target"]["name"]}` is '
+                f'`{output.get("positive_label")}`, the positive label the study recorded. '
+                '`predict` and the MLflow package return this score, never a class.')
+    unit = output.get('unit')
+    return (f'`{column}` (`{output.get("kind")}`): the predicted value of '
+            f'`{recipe["target"]["name"]}`' + (f', in {unit}.' if unit else '.'))
+
+
+def _decision_rule_item(rule) -> str:
+    """The README item of the adopted decision rule (R19): metadata, never applied."""
+    if not isinstance(rule, Mapping):
+        return '- Decision rule: none; a regression study adopts no decision rule.'
+    model = f' for the model `{rule["model"]}`' if rule.get('model') else ''
+    return (f'- Decision rule adopted by the study{model}: `{rule["rule"]}`. {rule["meaning"]} '
+            'It is carried as metadata only (`decision_rule` in '
+            '`data/hypotrail/contracts/deployment-snapshot.json` and `readiness.json`).')
+
+
 def context(snapshot: Snapshot, normal: Mapping, missing: list, template: layout.Template,
             identities: Mapping) -> dict:
     recipe, contract, plan = snapshot.recipe, snapshot.data_contract, snapshot.plan
@@ -285,6 +309,13 @@ def context(snapshot: Snapshot, normal: Mapping, missing: list, template: layout
     if not predictor:
         limitations.append('No captured model: the evaluated model is not in this export; '
                            'the recipe is, and run-local builds a new candidate from it.')
+    rule = doc.get('decision_rule')
+    if isinstance(rule, Mapping):
+        limitations.append(f'The decision rule `{rule["rule"]}` is metadata: the model, '
+                           '`predict` and the MLflow package return the positive-class score '
+                           'only. Acting on rows (comparing a score with a threshold, or ranking '
+                           'a batch for a capacity or a share) is a separate step outside this '
+                           'export, not qualified here.')
     limitations.append('Azure ML execution is not qualified by this export: it needs an '
                        'authorised recipe run in a workspace.')
     final = plan['final_test']
@@ -334,6 +365,8 @@ def context(snapshot: Snapshot, normal: Mapping, missing: list, template: layout
         'seeds': recipe['seeds'], 'output_contract': recipe['output_contract'],
         'target': target, 'target_name': target['name'],
         'target_unit_suffix': f' (in {unit})' if unit else '',
+        'output_sentence': _output_sentence(recipe),
+        'decision_rule_item': _decision_rule_item(doc.get('decision_rule')),
         'metrics': snapshot.metrics,
         'selection_decision': recipe['selection_reference'].get('decision_id'),
         'selection_reference': recipe['selection_reference'],
@@ -444,7 +477,7 @@ def _target_yaml(normal: Mapping, missing: list) -> bytes:
 
 def readiness(snapshot: Snapshot, missing: list, identities: Mapping) -> dict:
     predictor = snapshot.predictor
-    return {
+    out = {
         'schema_version': READINESS_SCHEMA,
         'export_id': identities['export_id'],
         'snapshot_id': identities['snapshot_id'],
@@ -460,6 +493,13 @@ def readiness(snapshot: Snapshot, missing: list, identities: Mapping) -> dict:
         'production_authorisation': 'outside_scope',
         'azure_qualification': 'not_qualified',
     }
+    rule = snapshot.document.get('decision_rule')
+    if isinstance(rule, Mapping):
+        # R19 (binary only): the adopted rule, as metadata; never applied in the model output.
+        out['decision_rule'] = {'rule': rule['rule'], 'kind': rule['kind'],
+                                'applied_in_model_output': False,
+                                'needs_batch_ranking': rule['needs_batch_ranking']}
+    return out
 
 
 def identities(snapshot: Snapshot, normal: Mapping, template: layout.Template) -> dict:

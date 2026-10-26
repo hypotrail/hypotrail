@@ -276,6 +276,24 @@ def check_evaluated(data_dir: Path, snapshot: dict, predictor_id: str | None = N
         _compare(predictor_id, expected, "The evaluated model is not the predictor the snapshot names.", EVALUATED)
 
 
+def decision_rule(snapshot: dict) -> dict | None:
+    """Return the binary study's adopted decision rule, as metadata, or None (regression).
+
+    The rule is carried by the snapshot (bound by ``hypotrail.snapshot_id``) and never applied:
+    the model output is the positive-class score; a capacity or share rule needs a whole batch
+    ranked, which a row-wise endpoint cannot do.
+    """
+    rule = snapshot.get("decision_rule")
+    if not isinstance(rule, dict):
+        return None
+    return {
+        "rule": rule.get("rule"),
+        "kind": rule.get("kind"),
+        "applied_in_model_output": False,
+        "needs_batch_ranking": bool(rule.get("needs_batch_ranking")),
+    }
+
+
 @dataclass(frozen=True)
 class Contracts:
     """The verified contracts of the export."""

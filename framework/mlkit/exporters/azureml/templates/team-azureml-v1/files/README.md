@@ -38,6 +38,8 @@ comes from the study's recorded decisions, not from a notebook.
 
 - Task: @@text:task@@; target `@@text:target_name@@`@@text:target_unit_suffix@@.
 - Model: `@@text:family@@` with parameters `@@text:parameters_inline@@`.
+- Output: @@text:output_sentence@@
+@@text:decision_rule_item@@
 - Features, in order: @@text:features_inline@@.
 - Development rows: @@text:n_development_rows@@ (protocol `@@text:protocol_id@@`). The final
   test is not in this folder: neither its rows nor its labels.
@@ -97,6 +99,12 @@ python -m src.pipeline.utils.project preflight              # prints read-only a
 python -m src.pipeline.utils.project submit                 # prints the az commands; --execute writes to Azure
 ```
 
+`predict` writes the model output only (a prediction, or for a binary study the
+positive-class score). A decision rule adopted by the study (a threshold, a capacity or a
+share) is metadata in the snapshot and `readiness.json`: it is never applied inside the model,
+`predict` or the MLflow package. A capacity or a share selects the highest scores of a whole
+batch of rows, which a row-by-row endpoint cannot do; applying any rule is a separate step.
+
 `run-local` trains a **new candidate** (`rebuilt_candidate`) on the authorised development
 rows. It does not inherit the study's verdict: only the evaluated model in
 `data/hypotrail/models/evaluated/` is the object the study evaluated.
@@ -138,8 +146,10 @@ separate function with the step's logic (`src/pipeline/utils/hypotrail/steps.py`
    contract; no statistic is learnt and no row is dropped.
 2. `data_splitting`: materialises the recorded partitions; it never draws a new split.
 3. `training`: fits a new candidate with the recorded recipe through `hypotrail_runtime`.
-4. `evaluation`: technical checks of that candidate (reload, MLflow parity); it never reads
-   the study's final test.
+4. `evaluation`: technical checks of that candidate (reload, MLflow parity, and for a
+   binary score that every score is a probability); it never reads the study's final test
+   and computes no metric (no MAE, ROC AUC, Brier score or log loss): its parity rows carry
+   no label, and values on its own training rows would not be generalisation evidence.
 
 ### Hydra Configuration and Running Options
 

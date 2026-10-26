@@ -28,6 +28,7 @@ step. A generated folder is not a cloud run, and a cloud run is not a deployed e
    Hydra freeze, Azure YAML graph, code upload content, credentials, model parity.
 4. Run `python -m src.pipeline.utils.project predict --parity --output outputs/predictions.json`:
    the evaluated model predicts the parity rows without the target. @@text:predict_sentence@@
+   Output: @@text:output_sentence@@ A decision rule the study adopted is not applied here.
 5. Azure, optional and explained separately: `preflight` (read-only) then `submit --execute`
    (creates the assets, submits one pipeline job). The trainer may show a recipe run that is
    labelled as such. The job's model is a `rebuilt_candidate`: a new object.

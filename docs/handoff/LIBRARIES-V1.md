@@ -1042,6 +1042,16 @@ adopting conclusion was confirmed before its final test was opened keeps that co
 - **Exported families**: linear and ridge regression (Auto MPG), logistic regression
   (synthetic tests). EBM and histogram boosting are refused for capture; a study that chose
   one cannot capture (its final test keeps the historical refit if never captured).
+  R19 (2026-10-26): the runtime needed no change for the Azure ML export of a binary
+  logistic study (the predictor output and the MLflow pyfunc both return the positive-class
+  score, `score`; parity checked natively and through the pyfunc; `PACKAGER_VERSION` stays
+  `4`, no packaged byte changed). `read_export_source` now names such a family before any
+  other reason: a study whose chosen model is EBM or histogram boosting gets the limitation
+  "No recipe: the <family> family is not qualified ..." and
+  `scientific_contracts.unsupported_family`, instead of "capture the predictor to export its
+  recipe" (a capture that would be refused too); the exporter refuses it with
+  `capability_not_supported`, `details.reason: family_not_supported`
+  (`AZUREML-EXPORT-V1.md`, R19).
 - **Trusted local pickle** only; no third-party bundle should be loaded.
 - **Marimo**: the generated notebook does not show the capture or the population
   diagnostics (the HTML report's annex and the CLI do).

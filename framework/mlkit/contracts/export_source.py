@@ -199,6 +199,15 @@ def _contracts(store, state, predictor: dict, limitations: list) -> dict:
     except Exception:                    # noqa: BLE001 - the baseline: no fitted predictor
         limitations.append('The chosen model is the constant baseline: no recipe.')
         return {'source': 'none'}
+    family = model_params.get('family') or 'linear'
+    if family != 'linear':
+        # R19: a family the runtime is not qualified for (EBM, histogram boosting) has no
+        # recipe at all, tuned or not; say so before any other reason, so the exporter
+        # refuses on the family and never suggests a capture that would be refused too.
+        limitations.append(f'No recipe: the {family} family is not qualified for the '
+                           'predictor runtime v1; the chosen model is kept and its export is '
+                           'unavailable.')
+        return {'source': 'none', 'unsupported_family': family}
     if model_params.get('tuning') and model_params.get('tuned_value') is None:
         limitations.append('The chosen model has a tuned hyperparameter, whose value exists '
                            'only after a fit: capture the predictor to export its recipe.')

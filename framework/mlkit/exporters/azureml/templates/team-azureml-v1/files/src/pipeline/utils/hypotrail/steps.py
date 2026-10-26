@@ -9,9 +9,11 @@
    on every authorised development row, through ``hypotrail_runtime``, and captures it with
    its MLflow package (the packager hook) before any check. Nothing is registered.
 4. :func:`evaluate`: technical checks of that candidate (bundle verification, reload,
-   native/MLflow parity) and its observed deviation from the evaluated model on the parity
-   rows. It reads no final-test row and computes no generalisation metric: the candidate
-   does not inherit the study's verdict.
+   native/MLflow parity, and for a binary score that every score is a probability) and its
+   observed deviation from the evaluated model on the parity rows. It reads no final-test row
+   and computes no metric (the parity rows carry no label; ROC AUC, Brier score or log loss on
+   the training rows would not be generalisation): the candidate does not inherit the
+   study's verdict. A binary study's decision rule is reported as metadata, never applied.
 """
 
 from __future__ import annotations
@@ -105,10 +107,43 @@ def prepare(frozen: dict) -> dict:
         "learnt_statistics": [],
         "dropped_rows": 0,
     }
+    encoding = target_encoding(found.recipe, typed)
+    if encoding is not None:
+        report["target_encoding"] = encoding
     _write_json(out_dir / "validation-report.json", report)
     write_frozen(frozen, out_dir)
     logging.info("Prepared %d development rows", len(keys))
     return report
+
+
+def target_encoding(recipe: dict, rows: pd.DataFrame) -> dict | None:
+    """Return how a binary study's target is encoded, or None for a regression.
+
+    The positive label is the one the study recorded (``target.positive_label``); a row is 1
+    when its target is that label and 0 otherwise, by the runtime's own encoding. Rows of a
+    single class are refused here, before any fit.
+    """
+    if recipe["task"] != "binary":
+        return None
+    target = recipe["target"]
+    encode = runtime_bridge.positive_indicator()
+    positives = int(encode(rows[target["name"]], target["positive_label"]).sum())
+    negatives = len(rows) - positives
+    if positives == 0 or negatives == 0:
+        raise ProjectError(
+            "data_identity_mismatch",
+            "The development rows hold one class of the target only.",
+            path=target["name"],
+            remediation="Materialise the study's development rows from its original dataset file.",
+            details={"positive_label": target["positive_label"], "n_positive": positives, "n_negative": negatives},
+        )
+    return {
+        "target": target["name"],
+        "positive_label": target["positive_label"],
+        "rule": "1 when the target is the positive label the study recorded, else 0 (hypotrail_runtime)",
+        "n_positive": positives,
+        "n_negative": negatives,
+    }
 
 
 # --- 2. data splitting -----------------------------------------------------------------
@@ -216,6 +251,15 @@ def parity_features(found: contracts.Contracts, rows: pd.DataFrame, rt: ModuleTy
     return rows[features].head(PARITY_FALLBACK_ROWS).reset_index(drop=True), "development_rows"
 
 
+def _output_fields(found: contracts.Contracts) -> dict:
+    """Return the output kind and, for a binary study, its decision rule (never applied)."""
+    out = {"output_kind": found.recipe["output_contract"]["kind"]}
+    rule = contracts.decision_rule(found.snapshot)
+    if rule is not None:
+        out["decision_rule"] = rule
+    return out
+
+
 def train(frozen: dict) -> dict:
     """Fit and capture a rebuilt candidate; write ``hypotrail-run.json`` next to it."""
     config = frozen["config"]
@@ -301,6 +345,7 @@ def train(frozen: dict) -> dict:
         "parity_origin": parity_origin,
         "mlflow_package": bool(manifest_doc.get("optional_packages")),
         "registered": False,
+        **_output_fields(found),
     }
     _write_json(models / "hypotrail-run.json", record)
     write_frozen(frozen, models)
@@ -313,6 +358,26 @@ def train(frozen: dict) -> dict:
 def _load_bundle(rt: ModuleType, bundle_dir: Path) -> object:
     """Load the predictor of a bundle, trusted by its absolute folder (a relative root is refused)."""
     return rt.load_predictor(bundle_dir, trusted_roots=[bundle_dir.resolve()])
+
+
+def output_checks(recipe: dict, outputs: pd.DataFrame) -> list[dict]:
+    """Return the checks of the model output: for a binary score, every score is a probability.
+
+    A score is a probability when it is finite and between 0 and 1; a regression prediction
+    has no such check.
+    """
+    if recipe["output_contract"]["kind"] != "binary_score":
+        return []
+    values = outputs.to_numpy(dtype=float).ravel()
+    outside = int(sum(1 for v in values if not 0.0 <= v <= 1.0))
+    return [
+        {
+            "id": "candidate_scores_are_probabilities",
+            "status": "passed" if outside == 0 else "failed",
+            "rows": len(values),
+            "outside_unit_interval": outside,
+        },
+    ]
 
 
 def evaluate(frozen: dict) -> dict:
@@ -343,7 +408,10 @@ def evaluate(frozen: dict) -> dict:
     native = mp.batch_frame(_load_bundle(rt, bundle_dir).predict(features.copy()))
     expected = mp.read_table(mp.inside(bundle_dir, spec.expected_outputs_path, "parity.expected_outputs_path"))
     reload = mp.compare(native, expected, spec.rtol, spec.atol)
-    checks.append({"id": "candidate_reload_parity", "status": "passed" if reload["equal"] else "failed", **reload})
+    checks += [
+        {"id": "candidate_reload_parity", "status": "passed" if reload["equal"] else "failed", **reload},
+        *output_checks(found.recipe, native),
+    ]
     packages = [p for p in bundle.get("optional_packages") or [] if p.get("format") == mp.FORMAT]
     if packages:
         result = mp.ArtifactPackager(rt).verify(bundle_dir, bundle_dir / packages[0]["relative_path"])
@@ -389,6 +457,7 @@ def evaluate(frozen: dict) -> dict:
         "scientific_verdict": "not_inherited",
         "generalisation_metrics": None,
         "generalisation_metrics_reason": "No final-test row is read here; training-row metrics are not generalisation.",
+        **_output_fields(found),
         "checks": checks,
         "deviation_from_evaluated_model": deviation,
         "registered": False,

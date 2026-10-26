@@ -342,6 +342,20 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   supported. Also seen: running the export on the wrong study (another `$STUDY`) gave
   "no recipe of a selected model … final test is sealed": correct, but the message could
   name the study path and its revision so a wrong folder is obvious.
+  **Fixed (2026-10-26, branch `r19`)**: team-azureml-v1 now qualifies binary `logistic`
+  with output `binary_score` (the positive-class score), locally: native and MLflow pyfunc
+  parity on a synthetic binary study taken through the engine (a regularised variant
+  chosen, rule `capacity:40@fit.variant`, `predictor.capture --profile workshop`, final
+  test opened), then `export azureml --plan` and `--out`, and in the moved project
+  `validate --offline`, `predict`, `materialize`, `run-local`, its pytest and ruff
+  (`framework/tests/exporters/azureml/test_binary_logistic.py`). A tuned, regularised or
+  drop-group logistic variant is still `logistic`; EBM and histogram boosting stay refused
+  (`capability_not_supported`, `details.reason: family_not_supported`). The adopted rule is
+  carried as metadata (snapshot, `readiness.json`, README) and never applied in the model
+  output. **Azure itself is still not qualified** (no job, no endpoint), and the Hotel and
+  Bank studies themselves were not exported in that change. Not addressed here: stating the
+  matrix up front (agent at `done`, report, panel) and naming the study path in the
+  wrong-study message ([AZUREML-EXPORT-V1](../../handoff/AZUREML-EXPORT-V1.md), R19).
 - **R20. A fully automatic mode, reviewed at the end (owner request).** The owner wants a
   mode where the assistant makes every choice and the junior reviews them at the end.
   Owner decision (2026-10-26): both variants, chosen at launch: "auto until the final test"

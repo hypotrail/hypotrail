@@ -307,10 +307,27 @@ def _evidence_status(study: Any, binding: str) -> str:
 
 
 def _refuse_without_recipe(source, predictor_status: str | None,
-                           final_status: str | None) -> None:
+                           final_status: str | None, template_capabilities: list) -> None:
     """Refuse an export whose source describes no recipe, with a remediation the junior can
     follow (or the reason none exists)."""
     limitations = [str(x) for x in (field(source, 'limitations', None) or [])]
+    contracts = field(source, 'scientific_contracts', None)
+    family = contracts.get('unsupported_family') if isinstance(contracts, Mapping) else None
+    if isinstance(family, str):
+        # R19: the chosen family (EBM, histogram boosting) is outside the support matrix;
+        # the model is kept, never replaced by a qualified family, and no capture helps.
+        raise ExportError('capability_not_supported',
+                          f'The selected model is of the {family} family, which neither the '
+                          'predictor runtime v1 nor this template qualifies; the selected '
+                          'model is kept and not replaced, and nothing was written.',
+                          path='model_recipe.family',
+                          remediation='Keep the study as it is: its chosen model has no '
+                                      'exportable recipe. Only a study whose selected model is '
+                                      'in the template support matrix (details.supported) can '
+                                      'be exported; a new choice would be a new study.',
+                          details={'reason': 'family_not_supported', 'family': family,
+                                   'supported': template_capabilities,
+                                   'limitations': limitations})
     if predictor_status == 'not_applicable':
         remediation = ('This study was created before the final test and the model capture '
                        'existed: it has no selected model to export. Start a new study with '
@@ -480,6 +497,52 @@ def _check_training_rows(plan: dict, predictor: Mapping) -> dict:
     return {'id': 'plan_rows_are_training_rows', 'status': 'passed'}
 
 
+RULE = re.compile(r'(threshold|capacity|share):([0-9]+(?:\.[0-9]+)?)\Z')
+RULE_MEANING = {
+    'threshold': ('A threshold rule acts on every row whose score is at least {amount} '
+                  '(inclusive). The model output stays the score: the comparison is the '
+                  "consumer's step and is not applied by the model, predict or an endpoint."),
+    'capacity': ('A capacity rule acts on the {amount} rows with the highest scores among the '
+                 'rows scored together (the study shares ties at the cut pro rata). It needs '
+                 'the whole batch ranked, so a row-by-row endpoint cannot apply it; the model '
+                 'output is the score only.'),
+    'share': ('A share rule acts on the share {amount} of the rows scored together that have '
+              'the highest scores (floor(share x n + 0.5) rows, at least one). It needs the '
+              'whole batch ranked, so a row-by-row endpoint cannot apply it; the model output '
+              'is the score only.'),
+}
+
+
+def _decision_rule(source, recipe: dict, confirmed: Mapping) -> dict | None:
+    """R19: the decision rule the binary study adopted, carried as metadata only. The model
+    output is the positive-class score (``binary_score``); the rule is never applied inside
+    the model, ``predict`` or the MLflow package. None for a regression study."""
+    if recipe['task'] != 'binary':
+        return None
+    plan = field(source, 'development_plan', None)
+    config = plan.get('configuration') if isinstance(plan, Mapping) else None
+    rule = config.get('rule') if isinstance(config, Mapping) else None
+    match = RULE.fullmatch(rule) if isinstance(rule, str) else None
+    if match is None:
+        raise ExportError('contract_invalid', 'The binary study names no adopted decision rule '
+                          'for its selected model; nothing was written.',
+                          path='development_plan.configuration.rule',
+                          remediation='Confirm the decision rule (the policy) in the chat, then '
+                                      'export.',
+                          details={'reason': 'decision_rule_missing', 'rule': rule})
+    kind, amount = match.groups()
+    policy = confirmed.get('policy') or {}
+    return {'decision_id': 'policy' if policy else None,
+            'policy_value': policy.get('value'),
+            'rule': rule, 'kind': kind, 'amount': amount,
+            'model': config.get('model'),
+            'score_column': (recipe['output_contract'].get('columns') or [None])[0],
+            'positive_label': recipe['target'].get('positive_label'),
+            'applied_in_model_output': False,
+            'needs_batch_ranking': kind in ('capacity', 'share'),
+            'meaning': RULE_MEANING[kind].format(amount=amount)}
+
+
 def _key_order(key: str):
     digits = key[1:] if key[:1].isalpha() else key
     return (0, int(digits), key) if digits.isdigit() else (1, 0, key)
@@ -530,7 +593,7 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
                                    'capture_result_id': field(descriptor, 'capture_result_id',
                                                               None)})
     if not isinstance(contracts, Mapping) or contracts.get('model_recipe') is None:
-        _refuse_without_recipe(source, predictor_status, final_status)
+        _refuse_without_recipe(source, predictor_status, final_status, template_capabilities)
     recipe = _require(field(contracts, 'model_recipe'), RECIPE_KEYS, RECIPE_SCHEMA,
                       'model_recipe')
     contract = _require(field(contracts, 'data_contract'), DATA_CONTRACT_KEYS,
@@ -677,6 +740,10 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
             'evidence_status': predictor['evidence_status'],
             'artifact_status': predictor['artifact_status']},
     }
+    rule = _decision_rule(source, recipe, confirmed)
+    if rule is not None:
+        # Binary only: a regression snapshot keeps its exact bytes and id.
+        document['decision_rule'] = rule
     try:
         document = cj.normalise(document, 'snapshot')
     except cj.CanonicalError as error:

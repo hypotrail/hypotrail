@@ -209,7 +209,7 @@ single place, to be confirmed or adjusted once with chantier A (not changed unil
 | Module of `read_export_source` | `mlkit.study.export_source` | `snapshot.SOURCE_MODULE` |
 | `ExportSource` field names | `study_id`, `revision`, `scientific_contracts.{model_recipe,data_contract}`, `decisions[{decision_id,status,value}]`, `results[{result_id,activity,current}]`, `validity`, `development_plan{protocol_id,partitions[{id,role,row_keys,membership_sha256,exposure_status}],final_test{status,n_rows}}`, `predictor{bundle_dir}`, `limitations`; optional `case`, `metrics`, `conclusion`, `development_data` | `snapshot.build` |
 | Bundle document file name | `predictor_bundle.json` at the bundle root | `mlflow_packaging.BUNDLE_DOCUMENT` |
-| Family id of the qualified model | `linear` (task `regression`, output `regression_point`) | `template.json` `capabilities` |
+| Family ids of the qualified models | `linear` (task `regression`, output `regression_point`); since R19 `logistic` (task `binary`, output `binary_score`) | `template.json` `capabilities` |
 | DataContract `parser` keys | `encoding`, `delimiter` (`whitespace` or a character), `header`, `quotechar`, `na_values` | project `contracts.py`, `project.py materialize` |
 | Positional row key | `L<physical line>`, prefix `row_identity.prefix` (default `L`) | `project.py materialize` |
 | Parity tables | `.csv` (header), `.json` records or `.parquet`; expected outputs named by `output_contract.columns` | `mlflow_packaging.read_table` |
@@ -341,9 +341,17 @@ credentials, none of which this work had.
 
 ## 10. Limits
 
-- Support matrix: regression `linear` only (with output `regression_point`); everything
-  else is refused with `capability_not_supported`, never substituted. Binary
-  classification, other families and calibrated (MAPIE) capabilities are refused.
+- Support matrix (`template.json` `capabilities`):
+
+  | Task | Family | Output | Qualification |
+  |---|---|---|---|
+  | regression | `linear` | `regression_point` | local: native and MLflow pyfunc parity on synthetic and Auto MPG-like fixtures; Azure: not qualified |
+  | binary | `logistic` | `binary_score` | local (R19): native and MLflow pyfunc parity of the positive-class score on synthetic binary and Bank/Hotel-like fixtures; the decision rule is metadata, never applied in the model output; Azure: not qualified |
+
+  Everything else is refused with `capability_not_supported`, never substituted: ridge
+  regression (a tuned or penalised regression variant), EBM and histogram boosting (no
+  recipe: `details.reason: family_not_supported`), and calibrated (MAPIE) capabilities. A
+  binary study's decision rule is never applied inside the model output (see R19 below).
 - Replay mode `rebuild_final_candidate` only; `development_evaluation` is refused.
 - Materialisation supports positional row keys only (`source_position`).
 - `submit --execute` reuses an existing asset of the same name and version on an "already
@@ -659,3 +667,65 @@ path `scientific_projection.feature_types._target_`). Hydra's other instantiatio
 `override` were exported as column names and validated: they compose and freeze as plain
 keys and are not refused. Of the generated project's files, only `contracts.py`, `steps.py`,
 `project.py`, the four step `main.py` files and the copied `mlflow_packaging.py` changed.
+
+## R19: binary logistic
+
+Owner request R19 ([acceptance run of 26 October 2026](../acceptance/runs/copilot-companion-2026-10-26.md)):
+the discovery case (Hotel booking, binary) and Bank Marketing could not reach the export,
+whose support matrix was regression `linear` only. The template now qualifies `{"task":
+"binary", "family": "logistic", "output_kind": "binary_score"}` locally, end to end, with the
+regression guarantees. Regression tests:
+`framework/tests/exporters/azureml/test_binary_logistic.py` (a temporary synthetic binary
+study through the engine's real commands; synthetic test words; temporary folders only).
+
+- **Which models are `logistic`.** The engine writes every binary candidate and every
+  variant that is not another family as `logistic` (`mlkit.contracts.recipe._family`): the
+  candidate, a stronger or weaker penalty and a tuned penalty (parameter `C`, the tuning
+  recorded in `extensions["hypotrail.tuning"]`), and a dropped feature group (fewer
+  features). They are all supported. A variant of another family (`ebm`, `hgb`) is not:
+  the runtime cannot capture it, `read_export_source` names it
+  (`scientific_contracts.unsupported_family`, limitation "No recipe: the <family> family is
+  not qualified ...") before the tuned-value reason that used to suggest a capture, and the
+  export refuses with `capability_not_supported`, `details.reason: family_not_supported`,
+  `details.family`, `details.supported` and path `model_recipe.family`; nothing is written
+  and the logistic candidate is never offered instead.
+- **Runtime.** Nothing changed: `fit_predictor` encodes the target with the recorded
+  positive label (1 for that label, numerically for a numeric label and column, as text
+  otherwise), `Predictor.predict` returns `predict_proba` of that class as `score`
+  (`binary_score`), and the MLflow pyfunc returns the same column. `PACKAGER_VERSION` stays
+  `4`; no packaged byte changed.
+- **The four steps.** `data_preparation` adds `target_encoding` to its validation report
+  (target, positive label, the rule, positive and negative counts, by the runtime's own
+  encoding function) and refuses development rows of one class
+  (`data_identity_mismatch`); `data_splitting` is unchanged; `training` fits the rebuilt
+  candidate with the recorded recipe (`C`, solver, tolerance, seed) and records
+  `output_kind` and the decision rule in `hypotrail-run.json`; `evaluation` adds the check
+  `candidate_scores_are_probabilities` (every score of the parity rows finite and in
+  [0, 1]) to the reload, MLflow and evaluated-tolerance parity checks (all on scores), and
+  reports `output_kind` and the decision rule. Like the regression evaluation it computes
+  no metric: the parity rows carry no label, and a ROC AUC, Brier score or log loss on the
+  candidate's own training rows would not be generalisation evidence;
+  `generalisation_metrics` stays null and the verdict `not_inherited`.
+- **The decision rule.** The rule the study adopted (the confirmed policy:
+  `threshold:t`, `capacity:k` or `share:p`, possibly for a variant, `capacity:40@fit.variant`)
+  is carried as metadata only: the snapshot's `decision_rule` (`rule`, `kind`, `amount`,
+  `model`, `policy_value`, `score_column`, `positive_label`, `applied_in_model_output:
+  false`, `needs_batch_ranking`, `meaning`), bound by `hypotrail.snapshot_id` like the rest
+  of the snapshot (R9AB-1); `readiness.json` `decision_rule`; the README ("What the study
+  selected" and Limits) and `docs/pages/deployment.md`; `predict`'s document and the
+  technical report. It is never applied inside the model, `predict` or the MLflow package:
+  a threshold is a comparison the consumer makes, and a capacity or a share selects the
+  highest scores of a whole batch of rows, which a row-wise endpoint cannot do. A binary
+  recipe without a parsable adopted rule is refused (`contract_invalid`,
+  `details.reason: decision_rule_missing`). A regression snapshot has no `decision_rule`
+  key, so its bytes and id are unchanged; its README gains an "Output" line and "Decision
+  rule: none".
+- **Unchanged guarantees.** The plan, snapshot and evaluated-model bindings of round 9, the
+  recorded package ids, the YAML quoting and the Hydra key rules apply as for regression;
+  the project's own pytest and the team's ruff rules pass on a binary export.
+- **Not covered.** Azure is not qualified (no job, no endpoint, no Azure call). The Hotel
+  and Bank cases themselves were not run through the export in this change (the test
+  study is synthetic, with the same task, family, rule kinds and capture profile). Ruff
+  writes `.ruff_cache/` in the project folder unless run with `--no-cache`, and `.amlignore`
+  does not exclude it, so a lint before the project's tests makes
+  `test_code_upload_holds_only_code` fail (pre-existing, not changed here).

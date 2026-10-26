@@ -48,3 +48,13 @@ def mlflow() -> ModuleType:
             path="mlflow",
             remediation="Create the environment from environment.yml.",
         ) from error
+
+
+def positive_indicator() -> object:
+    """Return the runtime's target encoding of a binary study (1 for the positive label).
+
+    It is the function ``fit_predictor`` applies, so the project reports the classes exactly
+    as the fit sees them; it is never reimplemented here.
+    """
+    runtime()
+    return importlib.import_module("hypotrail_runtime.predictor").positive_indicator

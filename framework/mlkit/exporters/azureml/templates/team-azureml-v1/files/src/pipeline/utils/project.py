@@ -366,6 +366,11 @@ def predict(args: argparse.Namespace) -> int:
         "columns": list(frame.columns),
         "rows": json.loads(frame.to_json(orient="records")),
     }
+    if (manifest.get("output_contract") or {}).get("kind") == "binary_score":
+        # R19: the rows hold the positive-class score; the study's decision rule is metadata
+        # (the export's snapshot), never applied to these rows.
+        snapshot = contracts.load_json(DATA_DIR / contracts.FILES["snapshot"])
+        document["decision_rule"] = contracts.decision_rule(snapshot)
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(canonical.pretty_bytes(document))
