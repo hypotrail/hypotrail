@@ -891,7 +891,11 @@
       const base = ctx.copy.eda[task];
       const cv = Boolean(data && data.model && data.model.rowsSeen && data.model.rowsSeen.scope === 'development');
       const c = cv ? { ...base, ...base.cv, eyebrows: { ...base.eyebrows, ...(base.cv.eyebrows || {}) } } : base;
-      const out = [el('h2', { text: c.heading }), dataSection(ctx, c, task)];
+      // R1b (owner session 2026-10-26): the data card and the quality check carry the section
+      // headings the engine's panel line names ("Data & EDA → Data card", "→ Data quality").
+      const out = [el('h2', { text: c.heading }),
+        el('h3', { className: 'ht-section eda-part-title', 'data-section': 'data_card', text: c.data.cardTitle }),
+        dataSection(ctx, c, task)];
       if (!data) {
         if (error) {
           out.push(el('div', { className: 'card alert', role: 'alert', 'data-eda-error': true }, [
@@ -911,7 +915,9 @@
       const cards = arr(data.model.cards);
       // The structural quality check reads the development rows without the target: it
       // belongs with the data card, before the training-row exploration.
-      cards.filter(k => k.kind === 'quality').forEach((card, i) => out.push(qualityCard(ctx, c, card, i)));
+      const quality = cards.filter(k => k.kind === 'quality');
+      if (quality.length) out.push(el('h3', { className: 'ht-section eda-part-title', 'data-section': 'quality', text: c.qualityTitle }));
+      quality.forEach((card, i) => out.push(qualityCard(ctx, c, card, i)));
       const gallery = cards.filter(k => k.kind !== 'quality');
       out.push(el('h3', { className: 'ht-section eda-section-title', text: c.explorationTitle }));
       out.push(banner(ctx, c, data, model));

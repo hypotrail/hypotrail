@@ -126,6 +126,16 @@ function finalTestModel(raw) {
   };
 }
 
+/**
+ * R16: `next_action.choice_options` as `[{id, value, label}]` (the value as shown text);
+ * entries without an id or a label are dropped, so a malformed list reads as no choice.
+ */
+function choiceOptionsOf(raw) {
+  return list(raw).filter(o => o && typeof o === 'object' && typeof o.id === 'string' && o.id
+    && typeof o.label === 'string' && o.label.trim())
+    .map(o => ({ id: o.id, value: showValue(o.value), label: o.label }));
+}
+
 function taskOf(summary, plan) {
   if (summary.task === 'binary' || summary.task === 'regression') return summary.task;
   if (plan.some(s => s.id === 'model_choice')) return 'regression';
@@ -290,7 +300,11 @@ function toSummaryModel(summary) {
     nextAction: { kind: str(next.kind), message: str(next.message), proposalId: strOrNull(next.proposal_id),
       decision: strOrNull(next.decision), executionId: strOrNull(next.execution_id),
       step: strOrNull(next.step), activity: strOrNull(next.activity),
-      audience: audienceOf(next.audience), juniorMessage: juniorOf(next.message, next.audience, next.junior_message) },
+      audience: audienceOf(next.audience), juniorMessage: juniorOf(next.message, next.audience, next.junior_message),
+      // R16 (owner session 2026-10-26): a choice the chat asks before any proposal exists
+      // (the conclusion, the model choice): the values the engine accepts now, labelled in
+      // the study language (`next_action.choice_options`, CLI-CONTRACT §3.1). Read only.
+      choiceOptions: choiceOptionsOf(next.choice_options) },
     artifacts,
     artifactsStatus: str(summary.artifacts && summary.artifacts.status),
     proposals,
@@ -336,5 +350,5 @@ const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary'
 // v0 name, kept for the migrated tests and older callers.
 const toModel = toSummaryModel;
 
-module.exports = { toSummaryModel, toModel, currencyOf, juniorOf, CRITERION_STATUSES, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
+module.exports = { toSummaryModel, toModel, currencyOf, juniorOf, choiceOptionsOf, CRITERION_STATUSES, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
   SUMMARY_KEYS, ALERT_IDS, GENERATED, FIXTURES };

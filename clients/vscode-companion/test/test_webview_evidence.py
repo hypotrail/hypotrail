@@ -267,3 +267,108 @@ def test_evidence_controls_are_named_and_reviewer_mode_keeps_the_reads(open_pane
       .filter(b => !(b.textContent.trim() || b.getAttribute('aria-label') || (b.labels && b.labels.length))).length""")
     assert unnamed == 0
     assert page.locator('#panel-evidence [tabindex]:not([tabindex="0"]):not([tabindex="-1"])').count() == 0
+
+
+# --- EV-15 (owner session 2026-10-26, R11): one card per compared variant ---------------------
+
+def _families(open_panel, model, payload, lang='en', raw=None):
+    from panel_cases import load_views, open_case
+    views = load_views(model, payload)
+    if raw is not None:
+        views['evidence.families'] = model('evidence', raw)
+    panel = open_case(open_panel, views, case='families', lang=lang)
+    panel.page.locator('[role="tab"][data-tab="evidence"]').click()
+    return panel, views['evidence.families']
+
+
+@pytest.mark.parametrize('lang', ['en', 'fr'])
+def test_ev15_every_compared_variant_has_its_own_card(open_panel, model, payload, lang):
+    """R11: the penalised variant, the EBM and the boosting each have a card, in slot order,
+    after the selection card: what it changes, its figures over the folds beside the
+    candidate's (cited to the evaluation), and its own analysis (coefficients cited to the
+    development diagnostics, the value chosen in each fold, the family's own diagnostics)."""
+    panel, ev = _families(open_panel, model, payload, lang=lang)
+    page = panel.page
+    cards = page.locator('[data-variant-card]')
+    assert cards.evaluate_all('cs => cs.map(c => c.dataset.variantCard)') == \
+        ['fit.variant', 'fit.variant:2', 'fit.variant:3']
+    # Next to the selection card, in the order of the cards.
+    order = page.locator('[data-ev="selection"], [data-variant-card]').evaluate_all(
+        'cs => cs.map(c => c.dataset.ev)')
+    assert order == ['selection', 'variant-fit', 'family-fit', 'family-fit']
+    selection = ev['selection']['resultId']
+    for i, v in enumerate(ev['variantCards']):
+        card = cards.nth(i)
+        assert 'fit.variant · ' in card.locator('.ht-src').inner_text()
+        table = card.locator(f'[data-variant-comparison="{v["slot"]}"]')
+        assert table.locator('tbody tr').count() == 2           # the candidate, then the variant
+        cited = table.locator('data[data-result-id]').evaluate_all(
+            'ds => ds.map(d => [d.dataset.resultId, d.dataset.path])')
+        assert all(rid == selection for rid, _ in cited)
+        cmp = v['comparison']
+        assert [p for _, p in cited] == [cmp['candidate']['mean']['path'], cmp['variant']['mean']['path'],
+                                         cmp['difference']['mean']['path']]
+        assert card.locator('[data-variant-noise]').count() == 1
+    reg = page.locator('[data-variant-card="fit.variant"]')
+    assert reg.get_attribute('data-ev') == 'variant-fit'
+    coef = reg.locator('[data-coefficients]')
+    assert coef.count() == 1
+    diag = next(d for d in ev['diagnostics'] if d['slot'] == 'diag.binary')['resultId']
+    assert coef.locator('data[data-result-id]').first.get_attribute('data-result-id') == diag
+    assert coef.locator('data[data-result-id]').first.get_attribute('data-path') == \
+        'models.[fit.variant].coefficients.terms.0.value'
+    ebm = page.locator('[data-variant-card="fit.variant:2"]')
+    assert ebm.get_attribute('data-family-fit') == 'ebm'
+    tuning = ebm.locator('[data-variant-tuning]')
+    assert tuning.get_attribute('data-variant-tuning') == '5'
+    assert tuning.locator('data[data-path="tuning.per_fold.0.value"]').get_attribute('data-result-id') == \
+        ev['variantCards'][1]['resultId']
+    assert ebm.locator('[data-family-importance]').count() == 1
+    if lang == 'en':
+        assert reg.locator('h3').inner_text() == 'What does this penalty change in the model?'
+        assert reg.locator('[data-variant-changes]').inner_text() == \
+            'The candidate with more regularisation: a stronger penalty on its coefficients.'
+        assert ebm.locator('h3').inner_text() == \
+            'Which terms carry the explainable boosting model, and with what shape?'
+        assert ebm.locator('[data-variant-changes]').inner_text() == 'Another model family: Explainable boosting.'
+    else:
+        assert reg.locator('h3').inner_text() == 'Que change cette pénalité dans le modèle ?'
+        assert "Valeur du nombre de termes d'interaction choisie dans chaque pli externe" in tuning.inner_text()
+    assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
+
+
+def test_ev15_a_tuned_variant_and_a_variant_the_diagnostics_miss(open_panel, model, payload):
+    """A tuned variant shows the penalty chosen in each outer fold (cited to its fit); a
+    variant the current development diagnostics do not cover says they are not run yet."""
+    import copy
+    raw = copy.deepcopy(payload('captured/evidence.binary.families'))
+    find = lambda slot: next(r for r in raw['results'] if r['slot'] == slot and r['promoted'] and r['current'])
+    first = find('fit.variant')
+    first['values']['variant'] = {'kind': 'tuned'}
+    first['values']['tuning'] = {'parameter': 'C', 'values': [0.01, 0.1, 1], 'inner_folds': 3,
+                                 'metric': 'roc_auc', 'meaning': 'inverse penalty strength',
+                                 'per_fold': [{'fold': k, 'value': 0.1 if k % 2 else 1} for k in range(1, 6)],
+                                 'development': {'value': 0.1}}
+    second = find('fit.variant:2')
+    second['values']['variant'] = {'kind': 'drop_group', 'group': 'campaign'}
+    del second['values']['family_diagnostics']
+    del find('diag.binary')['values']['models']['fit.variant:2']
+    panel, ev = _families(open_panel, model, payload, raw=raw)
+    page = panel.page
+    tuned = page.locator('[data-variant-card="fit.variant"]')
+    assert tuned.get_attribute('data-variant-kind') == 'tuned'
+    assert tuned.locator('h3').inner_text() == 'Which penalty does each fold choose, and with what result?'
+    assert tuned.locator('[data-variant-tuning] tbody tr').count() == 5
+    assert 'Value of the inverse penalty strength chosen in each outer fold' in tuned.inner_text()
+    dev = tuned.locator('[data-variant-tuning-development] data[data-result-id]')
+    assert dev.get_attribute('data-path') == 'tuning.development.value'
+    assert tuned.locator('[data-coefficients]').count() == 1
+    drop = page.locator('[data-variant-card="fit.variant:2"]')
+    assert drop.get_attribute('data-ev') == 'variant-fit'
+    assert drop.locator('[data-variant-changes]').inner_text() == \
+        'The candidate without the group of variables "campaign".'
+    assert drop.locator('[data-variant-diagnostics="not_run"]').inner_text().startswith(
+        'Diagnostics not yet run for this variant')
+    assert drop.locator('[data-coefficients]').count() == 0
+    assert page.locator('[data-variant-card]').count() == 3
+    assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())

@@ -225,6 +225,9 @@
       lead: "Son issue est inconnue. Elle n'est pas en cours et ne redémarre pas toute seule." },
     propose: { title: step => `Étape suivante : ${step}`, action: null,
       lead: "Rien ne vous attend ici. L'assistant propose cette étape dans le chat." },
+    // R16 (session du 2026-10-26, D20) : un choix que le chat demande avant toute proposition.
+    choice: { title: name => `Choisir ${name}, dans le chat`, action: 'Voir les options',
+      lead: "L'assistant vous demande de choisir dans le chat, parmi les options que le moteur accepte maintenant. Répondez là-bas : ce panneau n'enregistre aucun choix." },
     run: { title: step => `Étape suivante : ${step}`, action: null,
       lead: "Rien ne vous attend ici. L'assistant mène cette étape dans le chat." },
     blocked: { title: step => `Étape suivante : ${step}`, action: null,

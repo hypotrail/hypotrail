@@ -318,3 +318,47 @@ test('refusals (v0.3, WP-B): the delegated final-test opening has its own explan
   assert.equal(d.reason, 'delegation_not_allowed');
   assert.match(d.human, /never delegated/);
 });
+
+// --- R16 (owner session 2026-10-26, D20): a choice the chat waits for -------------------------
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { toSummaryModel } = require('../lib/models/summary');
+
+/** The captured binary summary with the conclusion as a choice the chat asks (L1's key). */
+function choiceSummary(options) {
+  const raw = JSON.parse(JSON.stringify(payload('captured/summary.binary.cv.opening')));
+  raw.next_action = { kind: 'propose', step: 'conclusion', decision: 'conclusion', message: 'Propose the conclusion.',
+    audience: 'agent', junior_message: 'The assistant asks you to choose the conclusion.', choice_options: options };
+  return raw;
+}
+
+test('DC-13: the summary carries the choice the chat asks, labels verbatim, malformed options dropped', () => {
+  const options = [
+    { id: 'adopt_policy', value: 'adopt_policy', label: 'Adopter la règle' },
+    { id: 'keep_baseline', value: 'keep_baseline', label: 'Garder la référence' },
+    { id: 'inconclusive', value: 'inconclusive', label: 'Ne pas conclure (non concluant)' },
+    { id: '', value: 'x', label: 'no id' }, { id: 'no_label', value: 'y' }, 'adopt', null,
+  ];
+  const m = toSummaryModel(choiceSummary(options));
+  assert.deepEqual(m.nextAction.choiceOptions, options.slice(0, 3));
+  assert.equal(m.nextAction.decision, 'conclusion');
+  // A model choice value is shown as text (a slot), never parsed; no choice reads as [].
+  const slot = toSummaryModel(choiceSummary([{ id: 'fit.variant:2', value: 'fit.variant:2', label: 'La deuxième variante' }]));
+  assert.deepEqual(slot.nextAction.choiceOptions.map(o => o.value), ['fit.variant:2']);
+  assert.deepEqual(toSummaryModel(payload('captured/summary.binary.cv')).nextAction.choiceOptions, []);
+  // The badge still counts the open proposals only: a choice is answered in the chat.
+  assert.equal(m.waitingCount, toSummaryModel(payload('captured/summary.binary.cv.opening')).waitingCount);
+});
+
+test('DC-13: the choice card is read only: no write control, no words field, only the copy-only ask button', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'media', 'views', 'decisions.js'), 'utf8');
+  const start = source.indexOf('function choiceCard(');
+  const body = source.slice(start, source.indexOf('\n  }\n', start));
+  assert.ok(start > 0 && body.includes("ctx.atLeast('v1')"), 'from v1 only (D20)');
+  for (const forbidden of ['data-write', 'wordsArea', 'textarea', 'HT.send', 'ctx.send', "type: 'button'", 'onclick']) {
+    assert.ok(!body.includes(forbidden), forbidden);
+  }
+  assert.match(body, /HT\.askButton\([^)]*\{ kind: 'decision', id \}/);
+  assert.match(body, /direct: true/);
+});

@@ -2073,7 +2073,7 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
                     'plan': st.derive_plan(snapshot),
                     'next_action': companion_env.annotate(
                         audience.next_action(st.next_action(snapshot), st.language_of(snapshot)),
-                        study_dir, st.language_of(snapshot)),
+                        study_dir, st.language_of(snapshot), produced={'command': 'init'}),
                     'agent_instructions': agent,
                     'ignored_sources': ignored,
                     'note': 'Companion files next to the case are not read: their statuses are '
@@ -2099,8 +2099,10 @@ def status(study_dir, since: int | None = None, summary: bool = False,
     leases = lock.probe_leases(study_dir)
     study = read.open(study_dir)
     built = view.build(study, leases=leases)
-    # R1 (2026-10-26): where the study panel shows this step, only when the panel is on.
-    companion_env.annotate(built['next_action'], study.study_dir, built.get('language'))
+    # R1 (2026-10-26): where the study panel shows this step, only when the panel is on;
+    # R1b: a read shows nothing new (``panel.shown``), except the data card at step 0.
+    companion_env.annotate(built['next_action'], study.study_dir, built.get('language'),
+                           produced={'command': 'status'})
     if summary:
         out = view.summary(built)
         if digest:
@@ -2143,7 +2145,8 @@ def plan(study_dir) -> Outcome:
     return Outcome({'schema': SCHEMAS['plan'], 'ok': True, 'study': str(study.study_dir),
                     'revision': study.revision, 'steps': steps,
                     'current_step': next((s['id'] for s in steps if s['current']), None),
-                    'next_action': _with_panel(view.build(study), study.study_dir)})
+                    'next_action': _with_panel(view.build(study), study.study_dir,
+                                               {'command': 'plan'})})
 
 
 def apply(study_dir, *, action: str, params: dict, request_id: str, expected_revision: int,
@@ -2187,28 +2190,37 @@ def apply(study_dir, *, action: str, params: dict, request_id: str, expected_rev
             payload['artifacts'] = artifacts
             if any(a.get('status') in ('stale', 'failed') for a in artifacts.values()):
                 code = EXIT_ARTIFACT_STALE
-    payload['next_action'] = refreshed_next_action(store.study_dir)
+    # R1b (2026-10-26): what this write produced, for ``next_action.panel.shown``.
+    produced = {'command': 'decide', 'action': action,
+                'opening': payload['result'].get('opening')
+                if isinstance(payload['result'], dict) else None,
+                'kind': params.get(NOTE_KIND_PARAM, st.HOLD)}
+    payload['next_action'] = refreshed_next_action(store.study_dir, produced)
     return Outcome(payload, code)
 
 
-def refreshed_next_action(study_dir) -> dict | None:
+def refreshed_next_action(study_dir, produced: Mapping | None = None) -> dict | None:
     """v0.3 (WP-J): the study's ``next_action`` after a write, as ``status`` gives it (its
     junior-ready keys included), so the agent needs no ``status`` call between a write and
-    the next pause. None when the view cannot be built (the write itself stands)."""
+    the next pause. None when the view cannot be built (the write itself stands).
+    ``produced`` describes the write (R1b, ``companion_env.shown_section``)."""
     from . import view
     try:
         leases = lock.probe_leases(study_dir)
-        return _with_panel(view.build(read.open(study_dir), leases=leases), study_dir)
+        return _with_panel(view.build(read.open(study_dir), leases=leases), study_dir,
+                           produced)
     except Exception:                     # noqa: BLE001 - a read never undoes a write
         return None
 
 
-def _with_panel(built: dict, study_dir) -> dict | None:
+def _with_panel(built: dict, study_dir, produced: Mapping | None = None) -> dict | None:
     """R1 (2026-10-26): the view's ``next_action`` with ``panel`` (where the study panel
-    shows this step) when the panel is on (:mod:`mlkit.study.companion_env`); unchanged
-    otherwise. Added by the command surfaces only, never by the view the deliverables are
-    rendered from, so they do not depend on the environment."""
-    return companion_env.annotate(built['next_action'], study_dir, built.get('language'))
+    shows this step and, R1b, what the command ``produced``) when the panel is on
+    (:mod:`mlkit.study.companion_env`); unchanged otherwise. Added by the command surfaces
+    only, never by the view the deliverables are rendered from, so they do not depend on
+    the environment."""
+    return companion_env.annotate(built['next_action'], study_dir, built.get('language'),
+                                  produced=produced)
 
 
 OPENING_KEYS = ('status', 'execution_id', 'result_id', 'revision', 'error')

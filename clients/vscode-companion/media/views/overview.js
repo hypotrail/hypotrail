@@ -142,7 +142,11 @@
     const N = J().nextMove;
     const task = taskOf(model, ctx);
     const next = model.nextAction || {};
-    const kind = N[next.kind] ? next.kind : 'other';
+    // R16 (owner session 2026-10-26, D20): a choice the chat asks before any proposal (the
+    // conclusion, the model choice) waits for the junior: "answer in the chat", and from v1
+    // a button to its read-only card in Decisions.
+    const choice = next.kind === 'propose' && arr(next.choiceOptions).length > 0;
+    const kind = choice ? 'choice' : N[next.kind] ? next.kind : 'other';
     const step = arr(model.plan).find(s => s.id === (next.decision || next.step));
     // WP-B5: the opening of the final test is a chat act: its own words, and no action.
     const opening = (next.decision || next.step) === 'final_test';
@@ -153,7 +157,7 @@
       ? arr(model.proposals).find(p => p.proposalId === next.proposalId) || arr(model.proposals)[0] || null : null;
     const decision = next.decision || (proposal && proposal.decisionId) || null;
     const name = decision ? J().decisionName(decision, task) : '';
-    const title = opening ? spec.title() : kind === 'await_user_words' || kind === 'reconfirm' ? spec.title(name)
+    const title = opening ? spec.title() : kind === 'await_user_words' || kind === 'reconfirm' || kind === 'choice' ? spec.title(name)
       : kind === 'propose' || kind === 'run' || kind === 'blocked' ? spec.title(step ? str(step.title) : c.nextStep) : spec.title();
     const eyebrow = [N.eyebrow, pause ? c.pause(pause, task) : null].filter(Boolean).join(' · ');
     // v0.3 (WP-E3, R23): the answer is given in the chat; only the training mode asks for the
@@ -186,6 +190,7 @@
     const target = opening ? null
       : kind === 'await_user_words' && proposal ? { tab: 'decisions', kind: 'proposal', id: proposal.proposalId }
       : kind === 'reconfirm' && decision ? { tab: 'decisions', kind: 'decision', id: decision }
+      : kind === 'choice' && decision && ctx.atLeast('v1') ? { tab: 'decisions', kind: 'decision', id: decision }
         : (kind === 'outcome_unknown' || kind === 'acknowledge_interruption') && next.executionId && ctx.atLeast('v1')
           ? { tab: 'overview', kind: 'execution', id: next.executionId } : null;
     if (target && spec.action) {

@@ -215,3 +215,92 @@ test('go to a result: one match navigates; none, several, or a failed read only 
   assert.match(f.posted.at(-1).text, /^The results of this study could not be read: /);
   assert.ok(f.runCli.calls.every(x => x.tail[0] === 'evidence'), 'reads only');
 });
+
+// --- R11 (owner session 2026-10-26): one card per compared variant (EV-15) --------------------
+
+const { VARIANT_SLOTS } = require('../lib/models/evidence');
+
+const promotedRaw = (raw, slot) => raw.results.find(r => r.slot === slot && r.promoted && r.current);
+
+test('EV-15: every compared variant has its own card, in slot order, with its figures cited', () => {
+  const raw = payload('captured/evidence.binary.families');
+  const m = toEvidenceModel(raw);
+  assert.deepEqual(m.variantCards.map(v => [v.slot, v.kind, v.family]),
+    [['fit.variant', 'regularisation', null], ['fit.variant:2', 'family', 'ebm'], ['fit.variant:3', 'family', 'hgb']]);
+  const selection = promotedRaw(raw, 'policy.evaluation');
+  const stored = selection.values.model_selection.configurations;
+  for (const [i, v] of m.variantCards.entries()) {
+    assert.equal(v.resultId, promotedRaw(raw, VARIANT_SLOTS[i]).result_id);
+    const k = stored.findIndex(c => c.slot === v.slot);
+    // Beside the candidate's, cited from the stored `model_selection` of the evaluation.
+    assert.equal(v.comparison.resultId, selection.result_id);
+    assert.equal(v.comparison.variant.mean.value, stored[k].mean);
+    assert.equal(v.comparison.variant.mean.path, `model_selection.configurations.${k}.mean`);
+    assert.equal(v.comparison.difference.mean.value, stored[k].difference.mean);
+    assert.equal(v.comparison.candidate.slot, 'fit.logistic');
+    assert.equal(v.comparison.candidate.mean.value, stored.find(c => c.kind === 'candidate').mean);
+    assert.equal(v.question, stored[k].question);
+  }
+  // The penalised variant: its coefficients from the current development diagnostics.
+  const diag = promotedRaw(raw, 'diag.binary');
+  const [reg, ebm, hgb] = m.variantCards;
+  assert.equal(reg.diagnostics, 'current');
+  assert.equal(reg.diagnosticsId, diag.result_id);
+  assert.equal(reg.coefficients.terms[0].value, diag.values.models['fit.variant'].coefficients.terms[0].value);
+  assert.equal(reg.coefficients.terms[0].path, 'models.[fit.variant].coefficients.terms.0.value');
+  assert.equal(reg.analysis, null);
+  assert.equal(reg.tuning, null);
+  // The families: their own diagnostics (the cards of EV-14), and the tuning of each fold.
+  assert.equal(ebm.analysis.kind, 'ebm_terms');
+  assert.equal(hgb.analysis.kind, 'permutation_importance');
+  assert.deepEqual(ebm.analysis, m.familyFits[0]);
+  const tuning = promotedRaw(raw, 'fit.variant:2').values.tuning;
+  assert.equal(ebm.tuning.parameter, tuning.parameter);
+  assert.deepEqual(ebm.tuning.perFold.map(f => [f.fold, f.value]), tuning.per_fold.map(f => [f.fold, f.value]));
+  assert.equal(ebm.tuning.perFold[2].path, 'tuning.per_fold.2.value');
+  assert.equal(ebm.tuning.development.value, tuning.development.value);
+});
+
+test('EV-15: a tuned and a drop-group variant get their card; a variant the diagnostics miss says so', () => {
+  const raw = JSON.parse(JSON.stringify(payload('captured/evidence.binary.families')));
+  const first = promotedRaw(raw, 'fit.variant');
+  first.values.variant = { kind: 'tuned' };
+  first.values.tuning = { parameter: 'C', values: [0.01, 0.1, 1], inner_folds: 3, metric: 'roc_auc',
+    meaning: 'inverse penalty strength', per_fold: [1, 2, 3, 4, 5].map(fold => ({ fold, value: fold % 2 ? 0.1 : 1 })),
+    development: { value: 0.1 } };
+  const second = promotedRaw(raw, 'fit.variant:2');
+  second.values.variant = { kind: 'drop_group', group: 'campaign' };
+  delete second.values.family_diagnostics;
+  delete second.values.family;
+  // The development diagnostics cover the candidate and the first variant only.
+  const diag = promotedRaw(raw, 'diag.binary');
+  for (const slot of ['fit.variant:2', 'fit.variant:3']) delete diag.values.models[slot];
+  const [tuned, drop, hgb] = toEvidenceModel(raw).variantCards;
+  assert.equal(tuned.kind, 'tuned');
+  assert.deepEqual(tuned.tuning.perFold.map(f => f.value), [0.1, 1, 0.1, 1, 0.1]);
+  assert.equal(tuned.tuning.perFold[0].path, 'tuning.per_fold.0.value');
+  assert.equal(tuned.tuning.development.value, 0.1);
+  assert.equal(tuned.diagnostics, 'current');
+  assert.ok(tuned.coefficients.terms.length > 0);
+  assert.deepEqual([drop.kind, drop.group, drop.analysis, drop.diagnostics, drop.coefficients], ['drop_group', 'campaign', null, 'not_run', null]);
+  assert.equal(hgb.diagnostics, 'not_run');
+  assert.equal(hgb.analysis.kind, 'permutation_importance');
+  // No current development diagnostic at all: every variant says it is not run yet.
+  diag.current = false;
+  assert.deepEqual(toEvidenceModel(raw).variantCards.map(v => v.diagnostics), ['not_run', 'not_run', 'not_run']);
+  // INV-7: a stale variant fit gets no card; a stale evaluation leaves the figures out.
+  second.current = false;
+  promotedRaw(raw, 'policy.evaluation').current = false;
+  const cards = toEvidenceModel(raw).variantCards;
+  assert.deepEqual(cards.map(v => v.slot), ['fit.variant', 'fit.variant:3']);
+  assert.ok(cards.every(v => v.comparison === null));
+});
+
+test('EV-15: a study with one variant and no selection keeps one card; none without a variant', () => {
+  const cv = toEvidenceModel(payload('captured/evidence.binary.cv'));
+  assert.deepEqual(cv.variantCards.map(v => v.slot), ['fit.variant']);
+  assert.equal(toEvidenceModel(payload('evidence.binary')).variantCards.length, 0);
+  const regression = toEvidenceModel(payload('captured/evidence.regression.diag'));
+  assert.deepEqual(regression.variantCards.map(v => [v.slot, v.diagnostics]), [['fit.variant', 'current']]);
+  assert.equal(regression.variantCards[0].coefficients.terms[0].path, 'models.[fit.variant].coefficients.terms.0.value');
+});

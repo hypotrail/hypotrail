@@ -552,3 +552,95 @@ def test_navigate_to_a_decision_focuses_its_open_card(open_panel, binary):
     panel.send({'type': 'navigate', 'tab': 'decisions', 'kind': 'decision', 'id': 'policy'})
     assert panel.page.evaluate('document.activeElement.id') == 'title-p_5'
     assert_clean(panel)
+
+
+# --- DC-13 (owner session 2026-10-26, R16, D20): the choice the chat waits for ----------------
+
+CHOICES = [{'id': 'adopt_policy', 'value': 'adopt_policy', 'label': 'Adopt the rule'},
+           {'id': 'keep_baseline', 'value': 'keep_baseline', 'label': 'Keep the baseline'},
+           {'id': 'inconclusive', 'value': 'inconclusive', 'label': 'Do not conclude (inconclusive)'}]
+
+
+def choice_summary(model, payload, options=CHOICES):
+    raw = copy.deepcopy(payload('captured/summary.binary.cv.opening'))
+    raw['open_proposals'] = []
+    raw['next_action'] = {'kind': 'propose', 'step': 'conclusion', 'decision': 'conclusion',
+                          'message': 'Propose the conclusion.', 'audience': 'agent',
+                          'junior_message': 'Choose the conclusion in the chat.',
+                          'choice_options': options}
+    return model('summary', raw)
+
+
+@pytest.mark.parametrize('stage', ['v1', 'v2', 'v3'])
+def test_dc13_a_choice_the_chat_waits_for_is_a_read_only_card(open_panel, model, payload, stage):
+    """DC-13 (R16): at the conclusion the chat asks to choose before any proposal exists; the
+    waiting section shows that choice with the engine's options, "Answer in the chat" and the
+    copy-only ask button. No control, no field, no write; "nothing waits" is not shown."""
+    panel = opened(open_panel, choice_summary(model, payload), stage=stage)
+    page = panel.page
+    c = page.locator('[data-choice-card="conclusion"]')
+    assert c.count() == 1
+    assert c.locator('h3').inner_text() == 'The conclusion: the assistant asks you to choose in the chat'
+    assert c.locator('[data-choice-option]').all_inner_texts() == [o['label'] for o in CHOICES]
+    assert c.locator('[data-choice-option="keep_baseline"]').get_attribute('title') == 'keep_baseline'
+    assert page.locator('[data-nothing-waiting]').count() == 0
+    # Under "Waiting for your answer", first.
+    waiting = page.locator('section[aria-labelledby="h-proposals"]')
+    assert waiting.locator('h2').inner_text() == 'Waiting for your answer'
+    assert waiting.locator('[data-choice-card]').count() == 1
+    note = c.locator('[data-answer-in-chat="conclusion"]')
+    assert note.get_attribute('role') == 'note' and note.locator('.title').inner_text() == 'Answer in the chat'
+    assert 'This panel records no choice.' in note.inner_text()
+    assert c.locator('textarea, input, select, [data-write]').count() == 0
+    assert c.locator('button').count() == 1
+    ask = c.locator('[data-ask-choice="conclusion"]')
+    assert ask.get_attribute('data-ask-direct') == 'true'
+    ask.click()
+    assert page.locator('[role="dialog"]').count() == 0
+    assert panel.posted()[-1] == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'decision', 'id': 'conclusion'},
+                                  'question': 'Can you explain these options and what each one would mean for my study?',
+                                  'mode': 'copy'}
+    assert not any(m['type'] in ('confirm', 'withdraw', 'propose', 'run') for m in panel.posted())
+    assert_clean(panel)
+
+
+def test_dc13_at_v0_the_next_move_says_answer_in_the_chat_and_no_card(open_panel, model, payload):
+    """D20: v0 is one page without Decisions tab: no choice card; "Your next move" says to
+    choose in the chat, with no button. From v1 the next move leads to the card."""
+    summary = choice_summary(model, payload)
+    panel = opened(open_panel, summary, stage='v0')
+    page = panel.page
+    assert page.locator('[data-choice-card]').count() == 0
+    hero = page.locator('[data-ov="hero"]')
+    assert hero.get_attribute('data-hero') == 'choice'
+    assert hero.locator('[data-hero-title]').inner_text() == 'Choose the conclusion, in the chat'
+    assert 'this panel records no choice' in hero.locator('[data-hero-lead]').inner_text()
+    assert hero.locator('[data-hero-action]').count() == 0
+    assert_clean(panel)
+    panel = opened(open_panel, summary, stage='v1')
+    page = panel.page
+    page.locator('[role="tab"][data-tab="overview"]').click()
+    action = page.locator('[data-hero-action="decision:conclusion"]')
+    assert action.inner_text() == 'See the options'
+    action.click()
+    assert page.locator('[role="tab"][data-tab="decisions"]').get_attribute('aria-selected') == 'true'
+    assert page.locator('[data-choice-card="conclusion"]').is_visible()
+
+
+def test_dc13_the_choice_card_in_french_and_for_the_model_choice(open_panel, model, payload):
+    """The card's words follow the panel language; the options keep the engine's labels."""
+    options = [{'id': 'fit.logistic', 'value': 'fit.logistic', 'label': 'Le modèle logistique'},
+               {'id': 'fit.variant:2', 'value': 'fit.variant:2', 'label': 'La deuxième variante · boosting explicable'}]
+    raw = copy.deepcopy(payload('captured/summary.binary.cv.opening'))
+    raw['open_proposals'] = []
+    raw['next_action'] = {'kind': 'propose', 'step': 'model_choice', 'decision': 'model_choice',
+                          'message': 'Propose the model choice.', 'audience': 'agent',
+                          'junior_message': 'Choisissez le modèle dans le chat.', 'choice_options': options}
+    panel = opened(open_panel, model('summary', raw), stage='v3')
+    page = panel.page
+    page.locator('[data-language="fr"]').click()
+    c = page.locator('[data-choice-card="model_choice"]')
+    assert c.locator('h3').inner_text() == "Le choix du modèle : l'assistant vous demande de choisir dans le chat"
+    assert c.locator('[data-choice-option]').all_inner_texts() == [o['label'] for o in options]
+    assert c.locator('[data-answer-in-chat] .title').inner_text() == 'Répondre dans le chat'
+    assert_clean(panel)

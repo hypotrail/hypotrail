@@ -11,6 +11,8 @@
     uncertain_excluded: 'uncertain, left out', not_available: 'not available',
   };
   const data = task => ({
+    // R1b (owner session 2026-10-26): the heading of the data card's section.
+    cardTitle: 'Data card',
     eyebrow: 'The data · structural reading',
     structural: task === 'regression' ? 'no target figure' : 'no outcome read',
     oneRowIs: unit => `One row: ${unit}`,

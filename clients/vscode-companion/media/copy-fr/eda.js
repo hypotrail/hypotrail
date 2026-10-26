@@ -9,6 +9,8 @@
     uncertain_excluded: 'incertaine, retirée', not_available: 'non disponible',
   };
   const data = task => ({
+    // R1b (owner session 2026-10-26): the heading of the data card's section.
+    cardTitle: 'Fiche des données',
     eyebrow: 'Les données · lecture structurelle',
     structural: task === 'regression' ? 'aucun chiffre de la cible' : 'résultat non lu',
     oneRowIs: unit => `Une ligne : ${unit}`,

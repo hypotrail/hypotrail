@@ -471,8 +471,11 @@ def _outcome(store: StudyStore, payload: dict, *, render: bool,
             if code == cmd.EXIT_OK and any(a.get('status') in ('stale', 'failed')
                                            for a in artifacts.values()):
                 code = cmd.EXIT_ARTIFACT_STALE
-    # v0.3 (WP-J): the next action after the run, as ``status`` gives it.
-    payload['next_action'] = cmd.refreshed_next_action(store.study_dir)
+    # v0.3 (WP-J): the next action after the run, as ``status`` gives it; R1b (2026-10-26):
+    # with what the run produced, for ``next_action.panel.shown``.
+    produced = {'command': 'run', 'action': payload['action'], 'activity': payload['activity'],
+                'slot': (payload['result'] or {}).get('slot'), 'status': payload['status']}
+    payload['next_action'] = cmd.refreshed_next_action(store.study_dir, produced)
     return cmd.Outcome(payload, code)
 
 

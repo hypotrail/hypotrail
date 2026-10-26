@@ -1339,3 +1339,18 @@ def test_understanding_contract_is_frozen():
     assert '--author' in out.payload['error']['message']
     assert '--reason' in out.payload['error']['message']
 
+
+
+def test_panel_line_keys_are_frozen_and_documented():
+    """Owner session 2026-10-26 (R1, R1b): ``next_action.panel`` when the study panel is on;
+    ``shown`` is the additive last key (CLI-CONTRACT §3.2), its sections documented."""
+    from mlkit.study import companion_env as ce
+    assert ce.PANEL_KEYS == ('stage', 'title', 'tabs', 'where', 'shown')
+    assert ce.WHERE_KEYS == ('tab', 'label', 'line')
+    assert ce.SHOWN_KEYS == ('tab', 'section', 'label', 'line')
+    assert tuple(ce.SECTIONS) == ('data_card', 'quality', 'eda_card', 'waiting', 'holds', 'choice',
+                                  'history', 'mode', 'development', 'diagnostics', 'final_test')
+    assert '`{stage, title, tabs, where, shown}`' in DOC
+    assert '`{tab, section, label, line}`' in DOC
+    for section in set(ce.SECTIONS) - {'eda_card'}:
+        assert f'`{section}`' in DOC, section

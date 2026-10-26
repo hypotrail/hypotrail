@@ -294,6 +294,9 @@
       lead: 'Its outcome is unknown. It is not in progress and does not restart by itself.' },
     propose: { title: step => `Next step: ${step}`, action: null,
       lead: 'Nothing waits for you here. The assistant proposes this step in the chat.' },
+    // R16 (owner session 2026-10-26, D20): a choice the chat asks before any proposal.
+    choice: { title: name => `Choose ${name}, in the chat`, action: 'See the options',
+      lead: 'The assistant asks you to choose in the chat, among the options the engine accepts now. Answer there: this panel records no choice.' },
     run: { title: step => `Next step: ${step}`, action: null,
       lead: 'Nothing waits for you here. The assistant runs this step in the chat.' },
     blocked: { title: step => `Next step: ${step}`, action: null,
