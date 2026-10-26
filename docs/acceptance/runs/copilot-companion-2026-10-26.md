@@ -414,6 +414,23 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   The Azure ML export was not written either; its own refusal message was not captured in the
   session (to check: whether the agent chained it after the handoff failure, or the export
   itself refused, e.g. `artifact_status` not `packaged`).
+  Fixed (Azure ML export, reproduced): a small French binary logistic study walked to `done`
+  along `next_action` never captured its model, since no step named the capture, and a capture
+  is possible only before the opening; `export azureml --plan` and `--out` then succeeded but
+  exported the recipe only (`artifact_status: missing`, `predictor_captured: missing`). The
+  journey now captures the chosen model right before the opening is proposed, when the
+  template supports it (`view._capture_first`: `run predictor.capture` with `options`
+  `{"profile": "workshop"}` when MLflow is installed, a `junior_message` in the study
+  language; the final test is still opened once, in the junior's words). Rule 1 of the agent
+  instructions passes a run's `rules` and `options` as given. The export at `done` is then
+  `packaged`. A study opened without a capture (the owner's existing study) is told so at
+  `done`: `after_study.junior_text` says the export carries the recipe, not the evaluated
+  model. Tests: `exporters/azureml/test_after_study.py::test_the_journey_captures_the_chosen_model_so_the_export_carries_it`
+  (walker, plan and `--out` packaged, one opening) and
+  `::test_a_model_opened_without_a_capture_is_said_to_export_as_its_recipe`;
+  `test_journey_walkthrough.py` (the capture write shows nothing in the panel). Known, not
+  changed: a workshop capture writes MLflow warnings and a progress bar on stderr (the
+  packaging module is fingerprinted).
 - **Mixed-language label in the Decisions tab (fix pass).** A French panel showed "Voir the
   decision-rule evaluation →" on the evidence chip of the rule card: the view held the result
   slots' words in English. Fixed: the words are the copy's `slotWords` (EN "See the

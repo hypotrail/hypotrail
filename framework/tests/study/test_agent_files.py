@@ -463,6 +463,10 @@ def test_the_agent_relays_the_engine_payloads(task):
     assert {'model_families', 'model_selection'} <= set(view.VIEW_KEYS)
     # v0.3 (WP-J): a write returns the next action, so no status after it; a short read
     # asks for keys, and the JSON is never piped into a program (S14: 6 of 104 runs did).
+    # Third session: a run's rules and options are passed as given (the capture before the
+    # opening carries ``--profile workshop``, ``view._capture_first``).
+    assert "a `run`'s `rules` and `options` (pass each: `--rule R`, `--<option> <value>`)" \
+        in rule1
     for phrase in ('at most four tool calls per pause', 'ends with the refreshed `next_action`',
                    'no `status` is needed after a write',
                    '`status --summary --fields next_action,criterion`'):
@@ -927,6 +931,14 @@ CLAUDE_CODE_INTENDED_CHANGES = {
         '`notebooks/study_generated.py` to the engine.'),
     'L4 (R10): run with --progress': (' run ACTIVITY [--column NAME] --progress --request-id',
                                       ' run ACTIVITY [--column NAME] --request-id'),
+    # Third session (Azure ML export at done): a capture before the opening carries
+    # ``options`` (``--profile workshop``); the agent passes a run's rules and options.
+    'Third session: pass a run\'s rules and options': (
+        "   propose), a `run`'s `rules` and `options` (pass each: `--rule R`, `--<option> "
+        "<value>`),\n   and at the success criterion `criterion_options`. Relay them; do not "
+        "rewrite\n",
+        '   propose), and at the success criterion `criterion_options`. Relay them; do not '
+        'rewrite\n'),
     # Third session (R21): the panel line comes first, in rule 6 and in the skill's pause
     # order; applied before the L2 entry, which then restores the text before the batch.
     'R21: the panel line first (rule 6)': (

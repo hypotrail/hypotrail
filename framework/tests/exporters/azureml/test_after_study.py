@@ -147,3 +147,54 @@ def test_the_matrix_read_at_done_is_the_exporter_s():
         == {('regression', 'linear', 'regression_point'),
             ('binary', 'logistic', 'binary_score')}
     assert json.loads(after_study.TEMPLATE_FILE.read_text())['id'] == after_study.TEMPLATE_ID
+
+
+def test_the_journey_captures_the_chosen_model_so_the_export_carries_it(tmp_path):
+    """Third session of 2026-10-26 (the owner's French binary study did not export): a study
+    walked to ``done`` along ``next_action`` opened its final test without a capture, so the
+    export at ``done`` was the recipe only (``artifact_status: missing``), and a capture is
+    possible only before the opening. The journey now captures the chosen model (the
+    workshop profile, MLflow package) right before the opening is proposed; the export plan
+    and the export run as given carry the evaluated, packaged model, and the final test is
+    still opened once."""
+    import flowkit as fk
+    from mlkit.study import state as st
+    from test_review_round5_engine import _follow, _legacy_flow
+    flow = _legacy_flow(tmp_path, 'binary', 'fr')
+    log, last = _follow(flow, 'binary', False)
+    assert last['kind'] == 'done', log[-5:]
+    steps = [what for _, what in log]
+    assert steps.index('predictor.capture') < steps.index('final_test'), log
+    assert steps.count('predictor.capture') == 1 and steps.count('final_test') == 1
+    state = flow.state()
+    assert st.final_test_opened(state) and state['current'].get('predictor.capture')
+    opened = [r for r in fk.exposure_records(flow.study) if r.get('partition') == 'final_test'
+              and r.get('purpose') == 'final_evaluation']
+    assert len(opened) == 1, opened
+    after = last['after_study']
+    assert after['azureml']['supported'] is True
+    assert "Il n'a pas été capturé" not in after['junior_text']
+    plan = _run_command(after['azureml']['plan_command'])
+    assert plan['ok'] and plan['artifact_status'] == 'packaged', plan['checks']
+    out = tmp_path / 'export'
+    written = flow.call('export', 'azureml', '--out', out, '--expected-revision', flow.rev(),
+                        '--study', flow.study)
+    assert written['ok'] and written['artifact_status'] == 'packaged' and out.is_dir()
+
+
+def test_a_model_opened_without_a_capture_is_said_to_export_as_its_recipe(tmp_path):
+    """A study opened before the journey captured (the owner's existing study): the export is
+    still offered, and the junior text says it carries the recipe, not the evaluated
+    model."""
+    from mlkit.study import after_study, read, view
+    from test_review_round5_engine import _chosen, _open
+    flow = _chosen(tmp_path, 'binary', 'fr')
+    _open(flow)
+    study = read.open(flow.study)
+    built = view.build(study)
+    out = after_study.build(built, study.state, view._case_or_none(study.state))
+    assert out['azureml']['supported'] is True
+    assert ("Il n'a pas été capturé avant l'ouverture du test final : l'export en emporte la "
+            'recette, pas le modèle évalué.') in out['junior_text']
+    plan = _run_command(out['azureml']['plan_command'])
+    assert plan['ok'] and plan['artifact_status'] == 'missing'

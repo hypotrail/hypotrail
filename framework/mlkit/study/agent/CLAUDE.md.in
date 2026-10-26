@@ -17,7 +17,8 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    pause. Its `next_action` is written for you to relay: `junior_digest` (the explanation,
    term first, in the study language), `recommended` (`value` and `why`: your
    recommendation), `question` (the one question to ask), `default_value` (the value to
-   propose), and at the success criterion `criterion_options`. Relay them; do not rewrite
+   propose), a `run`'s `rules` and `options` (pass each: `--rule R`, `--<option> <value>`),
+   and at the success criterion `criterion_options`. Relay them; do not rewrite
    them at length. Every `decide` and `run` output ends with the refreshed `next_action`
    and its `revision`: read them there; no `status` is needed after a write. For a short
    read, ask for keys only: `status --summary --fields next_action,criterion` (after the

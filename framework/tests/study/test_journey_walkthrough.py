@@ -178,10 +178,17 @@ def test_j_panel_every_write_names_a_section_and_every_read_none(tmp_path, monke
     monkeypatch.setenv(ce.STAGE_ENV, 'v3')
     f, task, init = journey_flow(tmp_path, case, lang)
     assert init['next_action']['panel']['shown']['section'] == 'data_card'
-    seen, reads, choices = [], [], []
+    seen, reads, choices, captures = [], [], [], []
 
     def on_write(label, payload):
         shown = payload['next_action']['panel']['shown']
+        if label == 'run:predictor.capture':
+            # Third session of 2026-10-26: the capture the journey runs before the opening
+            # (the export at done carries the evaluated model) shows nothing in the panel
+            # (``companion_env._run_section``), so the agent writes no panel line.
+            assert shown is None, shown
+            captures.append(label)
+            return
         assert shown is not None, label
         assert list(shown) == list(ce.SHOWN_KEYS)
         section = shown['section']
@@ -221,6 +228,7 @@ def test_j_panel_every_write_names_a_section_and_every_read_none(tmp_path, monke
     for section in ('waiting', 'history', 'holds', 'development', 'diagnostics', 'final_test'):
         assert section in seen, (section, [w for w, _ in writes], seen)
     assert {'model_choice', 'conclusion'} <= set(choices), choices
+    assert len(captures) == 1, captures
     if lang == 'fr':
         assert all('Dans le panneau : ' in p['next_action']['panel']['shown']['line']
-                   for _, p in writes)
+                   for label, p in writes if label != 'run:predictor.capture')

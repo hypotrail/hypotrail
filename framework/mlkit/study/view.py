@@ -1487,7 +1487,7 @@ def _opening_not_current(study: read.Study, state: Mapping, action: dict | None)
         # environment) is captured again first; proposing the opening would be refused.
         problem = _capture_unloadable(study, state)
         if problem is None:
-            return action
+            return _capture_first(state, action)
         out = {'kind': 'run', 'step': action.get('step'), 'activity': CAPTURE_SLOT,
                'not_current': [CAPTURE_SLOT],
                'message': ('Run predictor.capture again before opening the final test: the '
@@ -1510,6 +1510,54 @@ def _opening_not_current(study: read.Study, state: Mapping, action: dict | None)
 
 
 CAPTURE_SLOT = 'predictor.capture'
+CAPTURE_FIRST_MESSAGE = (
+    'Run predictor.capture before proposing to open the final test: the export template '
+    'supports the chosen model, and only a model captured before the opening is exported as '
+    'the evaluated model (afterwards the Azure ML export carries the recipe only). The final '
+    'test stays sealed.')
+CAPTURE_FIRST_JUNIOR = (
+    'Before the final test is opened, the engine captures the chosen model: it fits it once '
+    'on every development row, reloads it and checks that it gives the same predictions, so '
+    'that the Azure ML export carries the evaluated model. No final-test row is read.',
+    "Avant l'ouverture du test final, le moteur capture le modèle choisi : il l'ajuste une "
+    'fois sur toutes les lignes de développement, le recharge et vérifie qu\'il donne les '
+    "mêmes prédictions, pour que l'export Azure ML emporte le modèle évalué. Aucune ligne du "
+    'test final n\'est lue.')
+
+
+def _capture_first(state: Mapping, action: dict) -> dict:
+    """Third session of 2026-10-26 (the Azure ML export at ``done``): the proposal to open
+    the final test comes after a capture of the chosen model when the export template
+    supports it (:func:`mlkit.study.after_study.chosen_model`, its support matrix), so that
+    the export at ``done`` carries the evaluated model, not the recipe only: a capture is
+    possible only before the opening. The action is ``run predictor.capture`` with
+    ``options`` ``{"profile": "workshop"}`` (the MLflow package the template announces) when
+    its packager can be imported, else none (a native bundle). Only a study without a
+    capture, at the ``propose`` of the final test, outside a read-only process; the final
+    test is still opened once, in the junior's words."""
+    from . import guard
+    if action.get('kind') != 'propose' or state['current'].get(CAPTURE_SLOT) \
+            or guard.read_only():
+        return action
+    from . import after_study
+    model, _ = after_study.chosen_model(state, _case_or_none(state))
+    if model is None or not any(
+            c['task'] == model['task'] and c['family'] == model['family']
+            and c['output_kind'] == model['output_kind'] for c in after_study.capabilities()):
+        return action
+    from mlkit.contracts import capture
+    if capture.missing(state):
+        return action
+    try:
+        capture.require_packager(capture.WORKSHOP_PACKAGER)
+        options = {'profile': 'workshop'}
+    except StudyError:
+        options = {}
+    lang = st.language_of(state)
+    out = {'kind': 'run', 'step': action.get('step'), 'activity': CAPTURE_SLOT,
+           'message': CAPTURE_FIRST_MESSAGE, 'audience': audience.AGENT,
+           'junior_message': CAPTURE_FIRST_JUNIOR[1 if lang == 'fr' else 0]}
+    return {**out, 'options': options} if options else out
 
 
 def capture_options(params: Mapping | None) -> dict:

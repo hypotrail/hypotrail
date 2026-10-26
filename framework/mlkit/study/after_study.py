@@ -158,19 +158,29 @@ def build(view: Mapping, state: Mapping, case) -> dict:
                'model': ({k: model[k] for k in ('task', 'family', 'output_kind')}
                          if model is not None else None),
                'template': TEMPLATE_ID}
+    # Third session of 2026-10-26: a model the export supports but that was not captured
+    # before the opening is exported as its recipe only; the junior text says so.
+    recipe_only = supported and st.final_test_opened(state) and not (
+        (view.get('results') or {}).get('predictor.capture') or {}).get('current')
     out = {'handoff': handoff, 'azureml': azureml, 'cloud_status': CLOUD_STATUS,
-           'junior_text': junior_text(supported, reason, words, lang)}
+           'junior_text': junior_text(supported, reason, words, lang, recipe_only)}
     return {k: out[k] for k in AFTER_STUDY_KEYS}
 
 
-def junior_text(supported: bool, reason: str | None, words: str | None, lang: str) -> str:
-    """What comes next, for the junior, in the study language: no command, id or revision."""
+def junior_text(supported: bool, reason: str | None, words: str | None, lang: str,
+                recipe_only: bool = False) -> str:
+    """What comes next, for the junior, in the study language: no command, id or revision.
+    ``recipe_only``: the model was not captured before the final test was opened, so the
+    export carries its recipe, not the evaluated model."""
     if lang == 'fr':
         head = ('Et ensuite : le dossier de passation rassemble vos décisions, les résultats '
                 'cités et les limites, pour une relecture.')
         if supported:
             mid = (f' Le modèle choisi, {words}, peut aussi être exporté en projet Azure ML : '
                    "le plan d'export liste d'abord les fichiers et n'écrit rien.")
+            if recipe_only:
+                mid += (" Il n'a pas été capturé avant l'ouverture du test final : l'export "
+                        "en emporte la recette, pas le modèle évalué.")
         else:
             mid = f" L'export Azure ML n'est pas possible pour cette étude : {reason}."
         tail = (" Aucun job ni point de terminaison Azure n'a jamais été lancé à partir de ces "
@@ -181,6 +191,9 @@ def junior_text(supported: bool, reason: str | None, words: str | None, lang: st
     if supported:
         mid = (f' The chosen model, {words}, can also be exported as an Azure ML project: the '
                'export plan lists the files first and writes nothing.')
+        if recipe_only:
+            mid += (' It was not captured before the final test was opened, so the export '
+                    'carries its recipe, not the evaluated model.')
     else:
         mid = f' The Azure ML export is not available for this study: {reason}.'
     tail = (' No Azure job or endpoint has ever been run from these exports: they are checked '
