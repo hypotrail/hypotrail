@@ -1574,14 +1574,10 @@ def _capture_first(state: Mapping, action: dict) -> dict:
             c['task'] == model['task'] and c['family'] == model['family']
             and c['output_kind'] == model['output_kind'] for c in after_study.capabilities()):
         return action
-    from mlkit.contracts import capture
-    if capture.missing(state):
+    from . import capture_check
+    options = capture_check.capture_first_options(state)
+    if options is None:
         return action
-    try:
-        capture.require_packager(capture.WORKSHOP_PACKAGER)
-        options = {'profile': 'workshop'}
-    except StudyError:
-        options = {}
     lang = st.language_of(state)
     out = {'kind': 'run', 'step': action.get('step'), 'activity': CAPTURE_SLOT,
            'message': CAPTURE_FIRST_MESSAGE, 'audience': audience.AGENT,

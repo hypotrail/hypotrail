@@ -439,7 +439,14 @@ def _cv(study: Path, case_dir: Path, task: str) -> Path:
         f.decide('policy', 'capacity:100', 'Yes, call the top 100 because the desk has 100 slots')
     # v0.3 (WP-F1, R28): the plan runs the diagnostics before the opening is drafted.
     f.run('diag.regression' if task == 'regression' else 'diag.binary')
-    value = f.view()['next_action']['default_value']
+    nxt = f.view()['next_action']
+    if nxt['kind'] == 'run' and nxt['activity'] == 'predictor.capture':
+        # Third session of 2026-10-26: the journey captures the chosen model, with the
+        # options it names, before the opening is proposed (``view._capture_first``).
+        f.run('predictor.capture', *[x for k, v in (nxt.get('options') or {}).items()
+                                     for x in (f'--{k}', str(v))])
+        nxt = f.view()['next_action']
+    value = nxt['default_value']
     p = f.call('decide', 'propose', 'final_test', '--value-json', json.dumps(value),
                '--restatement', 'You open the sealed final test once for the chosen configuration.',
                '--rationale', 'The choice is fixed.', '--request-id', f.rid(),

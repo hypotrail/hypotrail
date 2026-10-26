@@ -38,3 +38,19 @@ def unloadable(study, state: Mapping) -> dict | None:
         return capture.loading_problem_of(study.home, state, entry)
     except Exception:          # noqa: BLE001 - the confirmation reports what it refuses
         return None
+
+
+def capture_first_options(state: Mapping) -> dict | None:
+    """Third session of 2026-10-26 (``view._capture_first``): the ``run predictor.capture``
+    options that capture the chosen model before the opening, or None when the study cannot
+    capture it (:func:`mlkit.contracts.capture.missing`). ``{"profile": "workshop"}`` when the
+    workshop packager (MLflow) can be imported, else ``{}`` (a native bundle). Here, not in
+    the view, so that the notebook's read side imports nothing outside ``mlkit.study``."""
+    from mlkit.contracts import capture
+    if capture.missing(state):
+        return None
+    try:
+        capture.require_packager(capture.WORKSHOP_PACKAGER)
+    except StudyError:
+        return {}
+    return {'profile': 'workshop'}
