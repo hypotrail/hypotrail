@@ -77,3 +77,16 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   contract: CLI-CONTRACT §3.2; ADR 0004 amendment note 10. Tests:
   `framework/tests/study/test_companion_env.py`,
   `clients/vscode-companion/test/test_panel_labels.py`.
+
+## Second session (after the fixes, `748bd8b`)
+
+- **O2 (R1 works).** The step-0 message (data card) ends with "Dans le panneau : onglet
+  Données et EDA.", the agent being Hypotrail with the panel flag on.
+- **R3. No picker at step 0 either.** The data-card message ends with an open question in
+  text: "La prochaine étape consiste à définir le moment de la prédiction. On y passe ?".
+  Step 0 is not a decision pause (no proposal in that message, by design), so the R2 fix
+  does not cover it; the owner expects a picker for every question that asks the junior to
+  choose or go on. To decide: with Copilot, end every turn that asks the junior something
+  closed (go on / ask a question about the data, and the like) with the picker too, not only
+  decision pauses. Whether the picker now appears at the first decision pause (R2) is not
+  yet observed.
