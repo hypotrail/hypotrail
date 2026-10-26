@@ -226,3 +226,17 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   change so far (step 0, after framing, after preparation, after the fits) ends this way:
   R3 is systematic at transitions. The same message also says "Il y a eu 3 regards sur la
   cible." with no explanation of what that means for the junior (see R7).
+- **R10. Long runs show no progress at all.** In the terminal the agent runs
+  `hypotrail run fit.variant:2 --request-id … --expected-revision 32 --study … 2>/dev/null`
+  and nothing appears until it ends. The owner wants slow work to be visibly progressing
+  (fold by fold, variant by variant), more informative during training, without
+  uninteresting technical detail.
+  Causes: the engine writes no progress while it computes (only the final JSON on stdout;
+  `executions.py` has no progress reporting), and the agent hides stderr with `2>/dev/null`
+  (not asked by the instructions, which never mention stderr).
+  To fix: the engine reports progress on stderr in plain words, one line per unit of work
+  (for example "Modèle logistique · pli 2/5 · 14 s", "Variante 2/3 · recherche de la pénalité
+  3/8"), with a progress bar when the terminal is interactive (tqdm, or the same lines when
+  not), never mixed into the stdout JSON; the agent instructions say not to discard stderr;
+  the agent relays the major steps in chat (R9). Check the panel's CLI calls ignore stderr
+  progress cleanly.
