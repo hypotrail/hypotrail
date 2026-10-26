@@ -221,3 +221,8 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   the pause, the question) is repeated in the final message or the picker. Also consider the
   `todo` tool (already in the agent's tool list): a visible checklist of the turn's major
   steps (baseline, logistic model, diagnostics) updated as each one finishes.
+- **R3, fourth case.** After the fits and diagnostics, the turn ends with "Prochaine étape :
+  choisir les variantes à comparer … On passe à ce choix ?" in text, no picker. Every step
+  change so far (step 0, after framing, after preparation, after the fits) ends this way:
+  R3 is systematic at transitions. The same message also says "Il y a eu 3 regards sur la
+  cible." with no explanation of what that means for the junior (see R7).
