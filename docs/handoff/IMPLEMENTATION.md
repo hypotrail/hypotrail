@@ -1,15 +1,16 @@
 # Implementation handoff (v0.2)
 
-## Owner-session batch, wave W3: lot L9, the automatic mode (26 October 2026)
+## Owner-session batch, wave W3: L8, the fix pass and L9, integrated (26 October 2026)
 
-Lot L9 (R20) of the [2026-10-26 plan](../plans/OWNER-SESSION-2026-10-26-PLAN.md), on branch `w3-l9`, not yet integrated (unit, walker and in-process CLI tests; **no Copilot session**):
+Lots L8 and L9 and the third-session fix pass (R21, R22, capture before the opening) of the [2026-10-26 plan](../plans/OWNER-SESSION-2026-10-26-PLAN.md), integrated on branch `w3-int` (unit, walker, simulated-browser and real-CLI tests, the full gate once; **no Copilot session**). The L9 details:
 
 - **Launch** (ADR 0005 amendment of 2026-10-26): `init --automation until_final_test|full_demo`; nothing else sets it. Studies created without the flag, or before L9, are unchanged (`view.automation` null, `view.review_queue` empty).
 - **Run**: `hypotrail automation run [--progress]` follows `next_action` exactly as given, records each covered decision with the basis `automatic` (no words, `actor: assistant`; never the junior's words nor a delegation) and the engine's `auto_value` (draft or recommendation; else the one-standard-error pick, the scenario share, the conclusion from the criterion judged on the final test), runs each activity, stops at the first refusal or at anything only the junior answers, and ends the mode one way where it stops covering the plan. `automation stop --user-words` ends it midway.
 - **Review**: `next_action` (`review: true`) walks every automatic decision in the plan's order; the junior adopts (`adopted_from`, no invalidation) or changes it; in `until_final_test` the junior opens the final test only after the review (`automatic_decisions_reviewed`).
 - **Demo** (ADR 0006 amendment): `full_demo` also opens the final test (`basis: automatic` on the opening record; a delegation still never opens it) and concludes; "The final test was opened automatically" stays for good; changes during its review are marked as made after the final test.
 - **Surfaces**: `not_yet_defensible` ids `automatic_decisions_to_review` and `final_test_opened_automatically`, first in the summary; report and notebook banners in English and French; the panel shows them in its alert strip and an "automatic, to review" basis chip (read only, no new write). AGENTS.md carries the owner-approved exception.
-- Agent text: [proposals/L9-agent-text.md](../plans/proposals/L9-agent-text.md) (one rule-4 bullet, +63 words) for the integrator; panel fixtures and baselines not recaptured.
+- Agent text: the rule-4 bullet of [proposals/L9-agent-text.md](../plans/proposals/L9-agent-text.md) applied; raw budget 3,977 / 3,936 words (binary / regression, cap 4,000), rendered Copilot copy 4,392 / 4,351 (cap 4,400).
+- Integration fixes: a French handoff words the `automatic` basis, and a French regression pack traces its baseline MAE; the capture before the opening runs without MLflow noise on stderr; the full-demo runner follows that capture with its options. Panel fixtures recaptured; pixel baselines unchanged (the 12 environment failures are identical before and after L9; the batch's visual changes await the owner's review).
 
 ## Owner-session batch, wave W2 (26 October 2026)
 

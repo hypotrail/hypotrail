@@ -366,6 +366,14 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   reviewed" and every later change marked as made after the final test. This amends ADR 0005
   (confirmation modes) and the rule that the final-test opening is never delegated, for the
   demo variant only.
+  Fixed (lot L9, integrated on `w3-int`): `init --automation until_final_test|full_demo`,
+  the basis `automatic` (never the junior's words nor a delegation), `hypotrail automation
+  run [--progress]` that follows `next_action` through the engine's own commands (the
+  capture before the opening included, with its options) and honours every refusal, the
+  review walked by `next_action` (`review: true`), `automation stop --user-words`, the
+  banners in the report, the notebook and the panel; ADR 0005 and 0006 amendments,
+  CLI-CONTRACT §5.5. Rule 4 of the agent instructions has the automatic-mode bullet. Unit,
+  walker and in-process CLI tests on Auto MPG; not run with Copilot (J-A to rehearse).
 
 ## Third session (after the batch, `7c0213f`)
 
@@ -411,6 +419,10 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   (1,200 development rows, `check --text handoff.md` clean) and
   `::test_an_english_pack_keeps_its_words_and_number_forms`. Contracts: CLI-CONTRACT-COMPANION
   §7 (`handoff.md` in the study language), CLI-CONTRACT (exempting words).
+  At the integration (`w3-int`): a French regression pack refused the export too ("7,16 mpg
+  pour le modèle de référence (la moyenne)" put the baseline word beyond the number
+  tracer's window); the French headline is now "pour la moyenne de référence", and an
+  automatic decision's basis is worded in French (`test_automation.py`).
   The Azure ML export was not written either; its own refusal message was not captured in the
   session (to check: whether the agent chained it after the handoff failure, or the export
   itself refused, e.g. `artifact_status` not `packaged`).
@@ -429,8 +441,10 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   (walker, plan and `--out` packaged, one opening) and
   `::test_a_model_opened_without_a_capture_is_said_to_export_as_its_recipe`;
   `test_journey_walkthrough.py` (the capture write shows nothing in the panel). Known, not
-  changed: a workshop capture writes MLflow warnings and a progress bar on stderr (the
-  packaging module is fingerprinted).
+  changed then: a workshop capture writes MLflow warnings and a progress bar on stderr (the
+  packaging module is fingerprinted). Fixed at the integration: `executions.run` silences
+  them around the capture and the final evaluation (NR-17, `test_walkthrough.py` in real
+  processes).
 - **Mixed-language label in the Decisions tab (fix pass).** A French panel showed "Voir the
   decision-rule evaluation →" on the evidence chip of the rule card: the view held the result
   slots' words in English. Fixed: the words are the copy's `slotWords` (EN "See the

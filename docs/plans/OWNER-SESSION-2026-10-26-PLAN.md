@@ -62,6 +62,22 @@ text in [proposals/L9-agent-text.md](proposals/L9-agent-text.md) for the integra
 walker and in-process CLI tests on Auto MPG and synthetic cases; not merged by the integrator,
 panel fixtures not recaptured, not run with Copilot (J-A still to rehearse).
 
+Implementation status: **batch integrated** on branch `w3-int` (W1, W2, L8, the third-session
+fix pass: R21 panel line first, R22 French handoff, capture before the opening, the panel
+label; then L9 cherry-picked). L0 integration of W3: the L9 bullet applied in rule 4 (the
+optional Commands line skipped; "only the runner passes `--basis automatic`", so no new
+"never"), words freed from text the engine states itself; raw 3,977 / 3,936 words
+(binary / regression, cap 4,000), rendered Copilot copy 4,392 / 4,351 (cap 4,400). Found at
+integration and fixed: the French handoff words the `automatic` basis and a French
+regression pack traces its baseline MAE ("pour la moyenne de référence"); the capture check
+leaves the notebook's read side (`capture_check`); a capture or final evaluation writes
+nothing on stderr (MLflow noise silenced around the computation, NR-17); walkers follow the
+capture step. Panel fixtures recaptured. Full gate once, in chunks: all green apart from the
+12 `test_webview_gate` pixel cases, which fail by environment with diffs identical to the
+pre-L9 commit `277a738` (none from L9 or L0; the batch's own visual changes still need the
+owner's review of `.local/baseline-diff/` before any baseline update). Not run with Copilot
+(§5.4 rehearsal, J-A still to do).
+
 **Priority of this batch (owner, 2026-10-26): the workshop journey.** The batch prepares a
 workshop. What matters most is the junior's journey as they live it: visually clear,
 pedagogical, working features, a fluid path. Lots and waves are therefore ordered by their
