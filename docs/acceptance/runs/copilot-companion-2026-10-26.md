@@ -272,3 +272,20 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   ("boosting d'arbres, du même type que XGBoost"), and say in one line why a random forest is
   not offered (usually below tuned boosting on tabular data, and a variant of the same kind
   spends a trial for little new information).
+- **R15. A model outside the catalogue (SVM, k-NN, a neural network…) gets a bare refusal.**
+  The owner asked what happens when the junior asks for a really different model. The engine
+  refuses a `family` variant outside `trials.VARIANT_FAMILIES` (`ebm`, `hgb`) with
+  `invalid_value` "family is one of ebm, hgb (the linear model is the candidate)"
+  (`framework/mlkit/study/trials.py` ~268); nothing is recorded and no trial is spent. The
+  catalogue is closed on purpose: each family needs a fixed nested-CV grid, a trial in the
+  budget, a code fingerprint and attestation, notebook cells that recompute it, one final-test
+  evaluation, and export packaging.
+  Missing for the junior: the refusal should say why the catalogue is closed (in their words,
+  not the code's), offer the closest family that is available and why, and point to the
+  workbench (`notebooks/workbench.py`, development training rows only) for a personal
+  exploration that is not study evidence (not compared, not chosen, not final-tested, not in
+  the report as a result). Never walked end to end: add an acceptance scenario (the junior
+  asks for an SVM) and check the agent's answer, the engine's message, and the workbench
+  starter cell. Adding a family remains framework development (k-NN or a small neural
+  network would be more useful for teaching than a kernel SVM, which is slow on 32 000 rows
+  with nested CV and needs calibration for probabilities).
