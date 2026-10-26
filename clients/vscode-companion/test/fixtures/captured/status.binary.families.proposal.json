@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-families",
    "revision": 22,
-   "updated": "2026-10-26T16:04:42.640247+00:00",
+   "updated": "2026-10-26T16:38:00.927421+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -393,7 +393,7 @@
      "restatement": "You compare three variants of the candidate, each with its question.",
      "rationale": "One penalty change and two model families, inside the budget of three.",
      "revision": 22,
-     "created": "2026-10-26T16:04:42.639073+00:00",
+     "created": "2026-10-26T16:38:00.926334+00:00",
      "labels": null,
      "label": "You compare three variants of the candidate, each with its question.",
      "origin": {
@@ -417,7 +417,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-26T16:04:29.382526+00:00",
+      "time": "2026-10-26T16:37:49.106697+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -465,7 +465,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-26T16:04:30.462682+00:00",
+      "time": "2026-10-26T16:37:50.177456+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -515,7 +515,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-26T16:04:32.121137+00:00",
+      "time": "2026-10-26T16:37:51.653127+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -547,7 +547,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-26T16:04:33.664600+00:00",
+      "time": "2026-10-26T16:37:53.117873+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -584,7 +584,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-26T16:04:35.455742+00:00",
+      "time": "2026-10-26T16:37:54.740485+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -2265,7 +2265,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_e3011a6950ece5ea44c0419c",
-     "exposure_id": "x_95cb6865d98e4efd85f23517d7f531a6",
+     "exposure_id": "x_d6c049a8ead24de29bf61c0172b2d374",
      "started_revision": 20,
      "integrity": "ok"
     },
@@ -2324,7 +2324,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_a8274014a4c678f4a2a235d2",
-     "exposure_id": "x_be39e312c3ad4098bb3249b847eb3c41",
+     "exposure_id": "x_0b934cf17d674a75bd6493b683d677a9",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -2459,7 +2459,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_eff39ccb2204a33ff345cb41",
-     "exposure_id": "x_544480dd73a54c9ab26906885e7ea25f",
+     "exposure_id": "x_6a8d26cdf7d7456cb4c7aed0fd11ca8f",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -2729,7 +2729,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
-     "exposure_id": "x_a5ccacb4b9734aaeb0aaa78ccf043c74",
+     "exposure_id": "x_3304fe29e5ef403fba53cd54f679bf58",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -2834,7 +2834,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_bb85e451e092b31aedb250d1",
-     "exposure_id": "x_9c061e7fd1084f1aa960259f365daaa2",
+     "exposure_id": "x_1072f8dbc09744a8a0588fdb1deec637",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -3834,7 +3834,8 @@
     "row_unit": {
      "en": "A customer contacted during a telephone campaign",
      "fr": "Un client contacté pendant une campagne téléphonique"
-    }
+    },
+    "glossary_examples": true
    }
   }
  }

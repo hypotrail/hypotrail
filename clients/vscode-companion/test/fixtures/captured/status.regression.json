@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/auto mpg",
    "revision": 38,
-   "updated": "2026-10-26T16:05:35.485471+00:00",
+   "updated": "2026-10-26T16:38:52.462297+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
@@ -348,7 +348,7 @@
      "restatement": "Adopt the linear model.",
      "rationale": "Lower error on later years.",
      "revision": 38,
-     "created": "2026-10-26T16:05:35.485425+00:00",
+     "created": "2026-10-26T16:38:52.462266+00:00",
      "labels": null,
      "label": "Adopt the linear model.",
      "origin": {
@@ -372,7 +372,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-26T16:05:20.537610+00:00",
+      "time": "2026-10-26T16:38:38.229686+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -410,7 +410,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-26T16:05:21.254176+00:00",
+      "time": "2026-10-26T16:38:38.935405+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -450,7 +450,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-26T16:05:22.361069+00:00",
+      "time": "2026-10-26T16:38:39.966084+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -482,7 +482,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-26T16:05:23.496126+00:00",
+      "time": "2026-10-26T16:38:41.027868+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -519,7 +519,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-26T16:05:24.589196+00:00",
+      "time": "2026-10-26T16:38:42.190507+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -551,7 +551,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 33,
-      "time": "2026-10-26T16:05:32.851257+00:00",
+      "time": "2026-10-26T16:38:50.326117+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -954,7 +954,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_284db43c31758f9aef75cd0b",
-     "exposure_id": "x_aa073ab9b8c746948e52472130763e65",
+     "exposure_id": "x_5f470023c4ac4c729f35863046de4deb",
      "started_revision": 26,
      "integrity": "ok"
     },
@@ -1104,7 +1104,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_622dd0c704d6af123eea761a",
-     "exposure_id": "x_f5a8c5b82eca4366aed4742fbc188df1",
+     "exposure_id": "x_aac213344053441ba328ee6de2754f1c",
      "started_revision": 24,
      "integrity": "ok"
     },
@@ -1342,7 +1342,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_5f95a7d242e4ea751ed82afb",
-     "exposure_id": "x_4fd25e002cd84f3b9390afdc97cbb430",
+     "exposure_id": "x_0738414c76214560b9cb12d32c2be408",
      "started_revision": 22,
      "integrity": "ok"
     },
@@ -2550,7 +2550,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_808e66ec55e19cf01a72e71c",
-     "exposure_id": "x_bb9a486c8920426e8111ca7c8d68d3c8",
+     "exposure_id": "x_14513856cdac40609488e71e35afc413",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -2676,7 +2676,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_75c47b1ef767a30eb39cdb4d",
-     "exposure_id": "x_37d5e03a89d24740aaecd627841bffde",
+     "exposure_id": "x_512c2e4b564f4d0a937bcd38d3040469",
      "started_revision": 20,
      "integrity": "ok"
     },
@@ -2746,7 +2746,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_305370681065d9971a93f227",
-     "exposure_id": "x_9a0e76d042464073bc139118ded2bb27",
+     "exposure_id": "x_42df84246cc947d99ec291ec98496add",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -2812,7 +2812,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_f37508d21e9ebda7c2ebce28",
-     "exposure_id": "x_739ba6c3d23b46ee85cbcae5ff332226",
+     "exposure_id": "x_8458694b02a240408ecd1fccdaa166a8",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -3162,7 +3162,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_952532c3c79c0a600a6ca16b",
-     "exposure_id": "x_5dce08c077c04e6eb8beda9dc4174d78",
+     "exposure_id": "x_0ff2b427aaf9444eb7017e5b015d040c",
      "started_revision": 36,
      "integrity": "ok"
     },
@@ -3242,7 +3242,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_aa1477c41bc44c975f9888ce",
-     "exposure_id": "x_3bde1c04617d4c1b85c5556ada9893dc",
+     "exposure_id": "x_1444bc7722c345b6a0cdae2675721206",
      "started_revision": 28,
      "integrity": "ok"
     },
@@ -3387,7 +3387,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_2033db067e905124ef78ea82",
-     "exposure_id": "x_08e8ce79e4d04528964366fb8c6260d2",
+     "exposure_id": "x_ac8a050d3a024724bdcc5176e4ea300f",
      "started_revision": 30,
      "integrity": "ok"
     },
@@ -3542,7 +3542,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_9ef87905207eafeced71da38",
-     "exposure_id": "x_132ab0bfa20348c0a13de9b191fafb6d",
+     "exposure_id": "x_3a3a12f616a24e1d8287226d85add409",
      "started_revision": 34,
      "integrity": "ok"
     },
@@ -3635,7 +3635,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ea1ff066194e9ce5fbc1533b",
-     "exposure_id": "x_06e3ca90c4bd4b4fbbec3ac289f53f3e",
+     "exposure_id": "x_6e7aa845e0e745c2a0f36fb5f2c3262d",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -4275,7 +4275,8 @@
     "row_unit": {
      "en": "A vehicle model for a model year",
      "fr": "Un modèle de véhicule pour une année de modèle"
-    }
+    },
+    "glossary_examples": true
    }
   }
  }

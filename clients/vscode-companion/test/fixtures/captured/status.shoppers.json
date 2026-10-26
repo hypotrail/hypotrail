@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/tmp/capture/shoppers",
    "revision": 1,
-   "updated": "2026-10-26T16:05:19.906855+00:00",
+   "updated": "2026-10-26T16:38:37.572488+00:00",
    "case": {
     "id": "uci-online-shoppers-v1",
     "path": "/hypotrail/use-cases/online-shoppers/case.yaml",
@@ -1179,7 +1179,8 @@
     "row_unit": {
      "en": "One browsing session",
      "fr": "Une session de navigation"
-    }
+    },
+    "glossary_examples": false
    }
   }
  }
