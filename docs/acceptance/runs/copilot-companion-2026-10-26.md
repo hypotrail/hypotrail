@@ -379,3 +379,19 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   instructions (`CLAUDE.md.in`, the `PANEL_LINE_PLACE` Copilot slot) says where the line goes;
   move it to the first line of the message or picker question, keep the text from
   `next_action.panel.shown.line`, and update the pins in `test_agent_files.py`.
+- **R22 (blocker). The handoff pack cannot be exported from a French study.** Asked to export to
+  `~/studies/hotel-demo3-aml-export` and then the handoff pack, the agent answers "Aucun des
+  deux exports n'a été écrit" and explains that the handoff summary writes integers with a comma
+  thousands separator ("32,049" development rows, "8,011" final-test rows) that the number check
+  refuses, so nothing is written.
+  Cause (verified in the code): `cmd_export.build` writes `handoff.md` in English with
+  `cite.fmt_number` (`f'{n:,}'` → "32,049", `cite.py:187/195`), then checks it with
+  `cmd_check.check_text(view, md, …)`, which reads numbers in the study language: in French
+  "32,049" is the decimal 32.049, untraceable → `untraceable_number`, nothing written. Every
+  French study with a count ≥ 1000 in its summary is affected. To fix: check `handoff.md` in
+  the language it is written in (English), or write it in the study language with French
+  number forms (narrow no-break space thousands, comma decimals, as `junior._int` does); add a
+  French handoff export test.
+  The Azure ML export was not written either; its own refusal message was not captured in the
+  session (to check: whether the agent chained it after the handoff failure, or the export
+  itself refused, e.g. `artifact_status` not `packaged`).
