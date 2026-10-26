@@ -269,13 +269,13 @@ def test_preprocessing_draft_rule_rare_categories(monkeypatch, synthetic, n_dist
     quality = _quality(cardinality=[_rare('home_branch', n_distinct, rare_rows)])
     draft, study, _ = _draft(monkeypatch, synthetic, quality)
     assert draft['drafted'] is fires
-    assert draft['value']['rare_category_min_rows'] == (30 if fires else 0)
+    assert draft['value']['rare_category_min_rows'] == ({'home_branch': 30} if fires else 0)
     if fires:
         (reason,) = draft['reasons']
         assert (reason['parameter'], reason['column'], reason['rule']) == (
             'rare_category_min_rows', 'home_branch', 'rare_categories')
         assert _resolves(study, reason) == quality['cardinality'][0]['rare']
-        assert 'every categorical column' in reason['text']
+        assert 'in this column only' in reason['text']
 
 
 @pytest.mark.parametrize('n_missing,fires', [(50, True), (49, False)])
@@ -653,7 +653,11 @@ def test_hotel_quality_before_any_target_look_and_a_drafted_preparation(tmp_path
     assert set(runs[2:]) <= {'eda.distribution'}
     assert not _target_records(f) and f.view()['eda_looks']['target_looks'] == 0
     value = nxt['default_value']
-    assert value['rare_category_min_rows'] == 30
+    # L8 hook: per-column grouping, a signed log for lead_time, a cap for adults.
+    assert set(value['rare_category_min_rows']) >= {'agent', 'company'}
+    assert set(value['rare_category_min_rows'].values()) == {30}
+    assert 'lead_time' in value['log_transform']
+    assert 'adults' in value['caps']
     reasons = nxt['recommended']['reasons']
     assert {'agent', 'company'} <= {r['column'] for r in reasons
                                     if r['rule'] == 'rare_categories'}

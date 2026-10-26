@@ -66,6 +66,10 @@ RARE_MIN_DISTINCT = 20
 RARE_MIN_SHARE = 0.01
 MISSING_MIN_SHARE = 0.05
 CAP_QUANTILES = [0.005, 0.995]
+# L8 hook: a max above this multiple of the 99th percentile is an extreme tail (capped);
+# a quality-check skewness at or above SKEW_LOG_MIN drafts a signed log.
+EXTREME_TAIL_RATIO = 3
+SKEW_LOG_MIN = 1.0
 MAX_DISTRIBUTION_RUNS = 3
 SPAN_RATIO = 10
 QUALITY_SLOT = 'eda.quality'
@@ -215,7 +219,8 @@ def preprocessing_draft(study, state: Mapping, lang: str) -> dict | None:
     value = copy.deepcopy(governance.DEFAULT_PREPROCESSING)
     reasons: list[dict] = []
     motivated = [qid]
-    # 1. rare categories (global until L8).
+    # 1. rare categories, per column (L8 mapping {column: min_rows}).
+    rare_map = {}
     for i, item in enumerate(quality.get('cardinality') or []):
         column = item.get('column')
         if column not in keep or not n:
@@ -224,18 +229,18 @@ def preprocessing_draft(study, state: Mapping, lang: str) -> dict | None:
         threshold = int(item.get('rare_rows') or 0)
         if item.get('n_distinct', 0) >= RARE_MIN_DISTINCT and threshold > 0 \
                 and rare_rows / n >= RARE_MIN_SHARE:
-            value['rare_category_min_rows'] = threshold
+            rare_map[column] = threshold
             reasons.append(_reason(
                 'rare_category_min_rows', column, 'rare_categories', qid,
                 f'cardinality.{i}.rare',
                 _t(lang, f'{column} has {item["n_distinct"]} distinct values, and its '
                          f'categories with fewer than {threshold} rows hold a noticeable share '
-                         'of the rows: they are grouped (the setting applies to every '
-                         'categorical column).',
+                         'of the rows: they are grouped, in this column only.',
                    f'{column} compte {item["n_distinct"]} valeurs distinctes, et ses '
                    f'catégories de moins de {threshold} lignes regroupent une part notable des '
-                   'lignes : elles sont regroupées (le réglage vaut pour toutes les colonnes '
-                   'catégorielles).')))
+                   'lignes : elles sont regroupées, dans cette colonne seulement.')))
+    if rare_map:
+        value['rare_category_min_rows'] = rare_map
     # 2. missing values.
     indicators = {}
     for i, item in enumerate(quality.get('missing') or []):
@@ -257,9 +262,25 @@ def preprocessing_draft(study, state: Mapping, lang: str) -> dict | None:
     for i, item in enumerate(quality.get('ranges') or []):
         column = item.get('column')
         outside = int(item.get('n_above') or 0) + int(item.get('n_below') or 0)
-        if column not in keep or not _numeric(case, column) or outside <= 0:
+        if column not in keep or not _numeric(case, column):
+            continue
+        q99 = (item.get('quantiles') or {}).get('0.99')
+        top = item.get('max')
+        tail = (outside <= 0 and q99 is not None and top is not None and q99 > 0
+                and top > EXTREME_TAIL_RATIO * q99)
+        if outside <= 0 and not tail:
             continue
         caps[column] = list(CAP_QUANTILES)
+        if tail:
+            reasons.append(_reason(
+                'caps', column, 'cap_extreme_tail', qid, f'ranges.{i}.max',
+                _t(lang, f'{column} goes up to {top:g} while 99 % of the rows are at or below '
+                         f'{q99:g}: a few extreme values are capped at the training quantiles '
+                         '0.005 and 0.995.',
+                   f'{column} monte jusqu\'à {top:g} alors que 99 % des lignes sont à {q99:g} '
+                   'ou moins : quelques valeurs extrêmes sont plafonnées aux quantiles 0,005 et '
+                   "0,995 des lignes d'entraînement.")))
+            continue
         path = f'ranges.{i}.n_above' if item.get('n_above') else f'ranges.{i}.n_below'
         reasons.append(_reason(
             'caps', column, 'cap_declared_range', qid, path,
@@ -270,7 +291,22 @@ def preprocessing_draft(study, state: Mapping, lang: str) -> dict | None:
     if caps:
         value['caps'] = caps
     logs = []
+    for i, item in enumerate(quality.get('ranges') or []):
+        column = item.get('column')
+        skew = item.get('skewness')
+        if column not in keep or not _numeric(case, column) or skew is None \
+                or skew < SKEW_LOG_MIN or column in caps:
+            continue
+        logs.append(column)
+        reasons.append(_reason(
+            'log_transform', column, 'signed_log', qid, f'ranges.{i}.skewness',
+            _t(lang, f'The distribution of {column} is strongly skewed (a long tail of large '
+                     'values): a signed log brings its scale closer to the others.',
+               f'La distribution de {column} est très asymétrique (une longue traîne de grandes '
+               'valeurs) : un log signé rapproche son échelle de celle des autres.')))
     for column in keep:
+        if column in logs:
+            continue
         if not _numeric(case, column):
             continue
         rid, dist = current_values(study, state, distribution_slot(column))
