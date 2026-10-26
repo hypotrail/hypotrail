@@ -119,3 +119,11 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   l'échantillon de développement… On continue ?" in text, with no picker (then the panel
   line). Same pattern as step 0: a transition between moments, not a decision pause. So R3
   covers every closed "go on?" question at a step change, not only step 0.
+- **R4, EDA card.** Data & EDA tab, panel in French: the card "Valeurs spéciales · lignes de
+  développement" has an English question as its title ("How many development rows carry each
+  special value, and how does the outcome look among them?"; engine text,
+  `framework/mlkit/study/eda.py` ~587-598, the per-activity questions, English only), while
+  the chart title and the table headers are French (panel copy). The table's "Sens" column
+  shows the case's English `meaning` of each special value (`case.yaml` ~404-411, e.g. "No meal
+  package. The dictionary groups…"), with no French form, unlike the column dictionary.
+  Probably every EDA card's question and every special-value meaning, in every case.
