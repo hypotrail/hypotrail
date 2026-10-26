@@ -245,7 +245,7 @@ def _tuning(view: Mapping, citer: cite.Citer, lab: Mapping) -> str:
             + _table(lab['tuning_cols'], rows, 'tuning') + '</details>')
 
 
-def _families(view: Mapping, citer: cite.Citer, lab: Mapping) -> str:
+def _families(view: Mapping, citer: cite.Citer, lab: Mapping, lang: str = 'en') -> str:
     parts = []
     for slot in trials.VARIANT_SLOTS:
         rid = citer.slot_rid(slot)
@@ -254,7 +254,8 @@ def _families(view: Mapping, citer: cite.Citer, lab: Mapping) -> str:
         fd = (citer.results[rid].values or {}).get('family_diagnostics')
         if not isinstance(fd, Mapping):
             continue
-        words = audience.model_words(slot)
+        # Wave W2 integration (J-LANG): the variant named in the study language.
+        words = audience.model_words(slot, lang)
         if fd.get('kind') == 'ebm_terms':
             rows = []
             for i, t in enumerate((fd.get('terms') or [])[:MAX_TERMS]):
@@ -293,6 +294,6 @@ def section(view: Mapping, citer: cite.Citer) -> str:
     parts.append(_shortlist(view, citer, lab, lang))
     parts.append(_selection(view, citer, lab, lang))
     parts.append(_tuning(view, citer, lab))
-    parts.append(_families(view, citer, lab))
+    parts.append(_families(view, citer, lab, lang))
     parts.append('</section>')
     return ''.join(p for p in parts if p)

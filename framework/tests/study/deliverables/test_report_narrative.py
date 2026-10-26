@@ -211,6 +211,49 @@ def test_a_chapter_not_reached_says_not_executed_yet(tmp_path, synthetic_case_di
     assert f'<span class="sr">{words["chapter_status"]["pending"]}</span>' in toc
 
 
+def test_chapter_four_checks_the_structure_before_the_target(tmp_path, synthetic_case_dir):
+    """Wave W2 integration (L5 in L6): in a structural-first study, chapter four explains the
+    structural check (``structural_eda``: ``eda.quality``) before the looks at the target, its
+    evidence labelled structural before the development evidence of the looks; before the
+    check has run, its quality evidence is announced as pending."""
+    import flowkit as fk
+    early = fx.build(tmp_path / 'early', synthetic_case_dir, upto='split')
+    ch4 = chapter_html(render_html.build(view.build(early.study))[0], 'ch4')
+    assert 'data-step="structural_eda"' in ch4
+    assert re.search(r'data-evidence-class="pending" data-for-slot="eda\.quality"', ch4)
+    f = fk.Flow(tmp_path / 'study', synthetic_case_dir, prefix='n')
+    f.init()
+    for _ in range(40):
+        nxt = f.view()['next_action']
+        if nxt['kind'] == 'run' and nxt['activity'].startswith('fit.'):
+            break
+        if nxt['kind'] == 'show_data_card':
+            nxt = {'kind': 'propose', 'decision': 'prediction_time',
+                   'default_value': 'when the record is created, before the outcome'}
+        if nxt['kind'] == 'run':
+            options = [x for k, v in (nxt.get('options') or {}).items()
+                       for x in (f'--{k}', str(v))]
+            f.run(nxt['activity'], *options)
+        else:
+            assert nxt['kind'] == 'propose', nxt
+            value = nxt.get('default_value')
+            if value is None:
+                value = (nxt.get('recommended') or {}).get('value')
+            f.decide(nxt['decision'], value)
+    v = view.build(f.study)
+    ids = [s['id'] for s in v['plan']]
+    assert ids.index('structural_eda') < ids.index('preprocessing') < ids.index('train_eda')
+    ch4 = chapter_html(render_html.build(v)[0], 'ch4')
+    steps = re.findall(r'data-step="([a-z_]+)"', ch4)
+    assert steps.index('structural_eda') < steps.index('train_eda')
+    blocks = re.findall(r'data-evidence-class="([a-z]+)" data-for-slot="([^"]+)"', ch4)
+    assert blocks[0] == ('structural', 'eda.quality'), blocks
+    assert ('development', 'eda.target_rate') in blocks
+    classes = [cls for cls, _ in blocks]
+    assert classes.index('development') > max(i for i, c in enumerate(classes)
+                                              if c == 'structural')
+
+
 def test_an_open_proposal_a_stale_result_and_a_delegation_show_where_they_belong(
         tmp_path, synthetic_case_dir):
     b = fx.build(tmp_path / 'study', synthetic_case_dir, upto='models',

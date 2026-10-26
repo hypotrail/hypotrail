@@ -173,6 +173,32 @@ EXACT = {
         "fermée à gauche.",
     'rows read) on the axis; the count of rows at the end of each bar.':
         "lignes lues) sur l'axe ; l'effectif de lignes au bout de chaque barre.",
+    # Wave W2 integration (J-LANG): the distribution note as one text node (its sentences
+    # follow the cited row count), and the notes the variant fits record (``families``,
+    # fingerprinted: translated where they are shown).
+    'rows read) on the axis; the count of rows at the end of each bar. The outcome is not '
+    'read.':
+        "lignes lues) sur l'axe ; l'effectif de lignes au bout de chaque barre. Le résultat "
+        "n'est pas lu.",
+    'rows read) on the axis; the count of rows at the end of each bar. The column is skewed: '
+    'its exact zeros are counted apart and its positive values are binned on a logarithmic '
+    'scale, each bin closed on the left. The outcome is not read.':
+        "lignes lues) sur l'axe ; l'effectif de lignes au bout de chaque barre. La colonne est "
+        "asymétrique : ses zéros exacts sont comptés à part et ses valeurs positives sont "
+        "réparties en classes sur une échelle logarithmique, chaque classe fermée à gauche. "
+        "Le résultat n'est pas lu.",
+    "Shape functions of the EBM fitted on every development row: how the model's score moves "
+    'with each feature, the others held as they are. Associations, not effects.':
+        "Fonctions de forme de l'EBM ajustée sur toutes les lignes de développement : comment "
+        "le score du modèle varie avec chaque variable, les autres restant telles quelles. Des "
+        "associations, pas des effets.",
+    "Measured, fold by fold, on the rows each fold's model did not see, and weighted by the "
+    "rows of each fold. A column the model leans on loses more when shuffled; correlated "
+    'columns share their importance.':
+        "Mesurée pli par pli, sur les lignes que le modèle de chaque pli n'a pas vues, et "
+        "pondérée par les lignes de chaque pli. Une colonne sur laquelle le modèle s'appuie "
+        "perd davantage quand on la mélange ; des colonnes corrélées se partagent leur "
+        "importance.",
     'Association between each pair of predictors': 'Association entre chaque paire de prédicteurs',
     'Positive association': 'Association positive',
     'Negative association': 'Association négative',

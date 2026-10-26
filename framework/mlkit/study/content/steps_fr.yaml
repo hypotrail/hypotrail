@@ -37,6 +37,11 @@ steps:
     method: Un découpage aléatoire stratifié avec une graine enregistrée. Les lignes lues sont enregistrées comme exposition.
     interpretation: "Lignes d'entraînement : {{slot:split:partitions.train.n_rows|int}}, dont {{slot:split:partitions.train.rate|pct1}} sont positives. Lignes de validation : {{slot:split:partitions.validation.n_rows|int}}, dont {{slot:split:partitions.validation.rate|pct1}} sont positives : la stratification garde des parts proches."
     consequence: Changer le découpage réajuste les deux modèles et recalcule l'exploration ; les lignes déjà explorées restent exposées.
+  structural_eda:
+    context: Le contrôle de qualité lit les lignes de développement sans la cible ; la préparation décidée à partir de lui vient donc avant tout regard sur la cible.
+    method: Les cellules manquantes par colonne, les lignes répétées, les catégories de chaque colonne catégorielle avec les plus rares, et l'étendue de chaque colonne numérique comparée à celle que déclare le cas. Les lignes lues sont enregistrées comme une inspection de structure.
+    interpretation: La préparation proposée cite ce que ce contrôle a trouvé ; elle n'est pas dépendante des données tant qu'aucun regard sur la cible ne l'a précédée.
+    consequence: Une préparation proposée après un regard sur la cible reste marquée dépendante des données.
   train_eda:
     context: "Le résultat est : {{fact:target|non indiqué par le cas}}. L'exploration lit seulement les lignes d'entraînement."
     method: Le taux de la cible et les valeurs spéciales sont calculés sur la partition d'entraînement, avec leurs dénominateurs.

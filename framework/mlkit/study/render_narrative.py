@@ -157,7 +157,9 @@ def _chapter_slots(view: Mapping, cid: str, steps: list[Mapping]) -> list[str]:
     task = view.get('task') or 'binary'
     out: list[str] = []
     for step in steps:
-        for slot in rh.slots_of_step(step['id'], view['results'], task):
+        # The study's own plan (L5: a structural-first study's ``structural_eda`` owns
+        # ``eda.quality``, which the target exploration then leaves out).
+        for slot in rh.slots_of_step(step['id'], view['results'], task, view['plan']):
             if _slot_chapter(slot, task) == cid and slot not in out:
                 out.append(slot)
     for slot in sorted(view['results']):
