@@ -127,3 +127,26 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   shows the case's English `meaning` of each special value (`case.yaml` ~404-411, e.g. "No meal
   package. The dictionary groups…"), with no French form, unlike the column dictionary.
   Probably every EDA card's question and every special-value meaning, in every case.
+- **R5. The preprocessing recommendation ignores what the quality check found.** Step 5: the
+  agent recommends "la préparation par défaut, sans transformation" (no missing indicator,
+  no rare grouping, no cap, no log) although the quality overview it shows reports skew and
+  extreme values (`lead_time` 0 to 737 days, very high `adults` and `stays_in_week_nights`)
+  and many rare categories in `agent` and `company`; and the quality overview (`eda.quality`,
+  target-free) ran only because the owner asked for it.
+  Why, in the code: `state._propose_action` always drafts `governance.DEFAULT_PREPROCESSING`
+  (`{'missing': 'none', 'rare_category_min_rows': 0, 'caps': {}, 'log_transform': []}`),
+  "what the models did before the decision existed, so results stay comparable"; nothing
+  reads the quality results to draft a value. The fixed pipeline under it (median imputation
+  and scaling of numbers, most-frequent imputation and one-hot encoding of categories,
+  `code_cells.py`) is never shown as "what already happens". The default EDA runs only
+  `eda.target_summary` and `eda.special_values`, not `eda.quality`.
+  Why it matters: one-hot on thousands of rare `agent`/`company` codes, an untransformed
+  heavy-tailed `lead_time`, and implausible extremes are exactly what a junior should learn
+  to treat; a recommendation that ignores the check it just showed teaches the opposite.
+  Proposed: run `eda.quality` by default before the preprocessing pause (target-free, so the
+  draft is not data-contingent on the target); draft a recommendation from it (rare grouping
+  for high-cardinality columns, signed log for strongly skewed positive numbers, caps for
+  implausible extremes), each with its reason and `motivated_by` the quality result; keep
+  the default as the comparison option; and say what the fixed pipeline already does.
+  Also: the restatement "choisie après avoir regardé la cible" reads as a reproach; it is the
+  `data_contingent` stamp and needs an explanation, not a bare clause.
