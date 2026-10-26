@@ -109,3 +109,8 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   engine gives each junior text in both languages (or the panel asks the CLI for its
   language), and the restatement, written by the agent in the junior's language, is labelled
   as the junior's language rather than translated.
+- **O3 (R2 works).** The picker appears at pause 1 (prediction moment) and pause 2 (split).
+- **R4, update.** The mixed languages are not systematic: some cards are right, some are not.
+  To check when fixing: which texts come from the case (English only), which from the engine
+  in the study language, which from the agent (junior's language), so each card's mix can be
+  explained and fixed rather than sampled.
