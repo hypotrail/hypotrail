@@ -1347,3 +1347,10 @@ Not verified:
   `code_compat.py`'s round-2 comment and CLI-CONTRACT §15; to be proven by a test in L8).
 - The failure of the top-level legacy tests (stated by the coordinator; not re-run).
 - What R19 changes exactly (implemented in parallel; only its integration is specified).
+
+## 10. Owner decisions log
+
+2026-10-26: the owner accepted every recommendation of §4 (D1–D20, D1b, D4b) as written,
+and asked to start the implementation. Reserved: D17 (R20, L9) still needs the owner's
+approval of the AGENTS.md wording before L9 lands; D14 (R8, L6) means a Hotel mockup of the
+report is shown to the owner before L6 is implemented; D19 keeps L8 after the workshop.
