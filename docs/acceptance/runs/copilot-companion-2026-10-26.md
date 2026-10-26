@@ -240,3 +240,16 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   not), never mixed into the stdout JSON; the agent instructions say not to discard stderr;
   the agent relays the major steps in chat (R9). Check the panel's CLI calls ignore stderr
   progress cleanly.
+- **R11. Only the last variant's analysis appears in the panel.** Two variants were chosen and
+  fitted: a penalised logistic model (penalty chosen by nested cross-validation) and an EBM.
+  Evidence shows "Deuxième variante · Boosting explicable" (term importances, the shape of
+  `lead_time`) but no analysis of the first variant. To check: whether the engine keeps
+  variant 1's result current after variant 2 is fitted, or the panel's Evidence model shows
+  only the last variant slot; every compared variant needs its own card (coefficients or
+  terms, its CV figures beside the logistic model's).
+- **R12 (modelling, to discuss).** The EBM ranks `arrival_date_year` among its terms (0.200)
+  under a temporal split. With temporal folds the validation years are later than the training
+  years, so a year term can only extrapolate (or learn a trend the future may not follow); on
+  the final test (the latest period) its effect is a guess. The engine or the agent could
+  flag calendar-year predictors under a temporal split at the feature-availability or
+  preparation step (keep the season, month and week; question the year).
