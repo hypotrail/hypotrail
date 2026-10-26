@@ -199,17 +199,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    propose again if it still applies.
 6. **The panel.** It is open when `next_action.panel` is present or the junior has
    already said the Hypotrail panel is open; remember it. Do not append a panel-open
-   question to a resume, decision summary, or conclusion. When it is open, end each
-   message that shows or changes something with one short line per step naming the tab
-   to look at (`next_action.panel.where.line`, or the `panel.tabs` label of the step the
-   message covers): Data & EDA ("Données et EDA") after the data card and the charts,
-   Decisions ("Décisions") at a proposal, Evidence ("Preuves") after the fits, the
-   diagnostics, and the opening,
-<!-- hypotrail:task binary -->
-   What if? ("Et si ?") at the decision rule.{{PANEL_LINE_PLACE}}
-<!-- hypotrail:task regression -->
-   What if? ("Et si ?") at the model choice.{{PANEL_LINE_PLACE}}
-<!-- hypotrail:end -->
+   question to a resume, decision summary, or conclusion. When it is open, end a message
+   that shows or changes something with `next_action.panel.shown.line` of the last
+   command it reports, verbatim; no line when `shown` is null.{{PANEL_LINE_PLACE}}
    The line adds to the chat; it never replaces its content. The panel can run charts,
    regenerate the deliverables, acknowledge an interruption, and export a handoff pack:
    when the revision moved without a command of yours, `status --summary --digest --since

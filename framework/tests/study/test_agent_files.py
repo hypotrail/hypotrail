@@ -475,28 +475,29 @@ def test_the_agent_relays_the_engine_payloads(task):
 @pytest.mark.parametrize('task', af.TASKS)
 def test_the_panel_rule(task):
     """WP-D, R13, R20, R35: remember an already-open panel without interrupting resumes;
-    one line per step names the tab; panel actions are said as such. Owner session
-    2026-10-26 (R1): the panel is open when the engine says so (``next_action.panel``) or
-    the junior said it, and each message that shows or changes something ends with the
-    line ``next_action.panel.where.line`` names (with Copilot, the picker's last line)."""
+    panel actions are said as such. Owner session 2026-10-26 (R1): the panel is open when
+    the engine says so (``next_action.panel``) or the junior said it. L2 (R1b, D3): a message
+    that shows or changes something ends with the engine's line for what the command it
+    reports produced (``next_action.panel.shown.line``), none when ``shown`` is null; the
+    template's own tab-by-step mapping is gone (the behaviour moved to the engine, tested
+    in ``test_companion_env.py`` and ``test_journey_walkthrough.py``). With Copilot, the
+    line is the picker's last line."""
     text = Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task))
     rule6 = _rule(text, 6)
     for phrase in ('It is open when `next_action.panel` is present or the junior has already '
                    'said the Hypotrail panel is open; remember it', 'Do not append a panel-open',
-                   'end each message that shows or changes something with one short line per '
-                   'step naming the tab', '(`next_action.panel.where.line`, or the `panel.tabs` '
-                   'label of the step the message covers)', 'Data & EDA ("Données et EDA")',
-                   'after the data card and the charts', 'Decisions ("Décisions") at a proposal',
-                   'Evidence ("Preuves") after the fits, the diagnostics, and the opening',
-                   'What if? ("Et si ?")', 'it never replaces its content',
+                   'end a message that shows or changes something with '
+                   '`next_action.panel.shown.line` of the last command it reports, verbatim',
+                   'no line when `shown` is null', 'it never replaces its content',
                    '`status --summary --digest', '`channel` `webview`',
                    '"you ran these charts from the panel"'):
         assert phrase in rule6, phrase
-    assert ('at the decision rule' in rule6) == (task == 'binary')
+    assert 'Data & EDA' not in rule6 and 'where.line' not in rule6     # the mapping is gone
     assert 'If the junior works in VS Code' not in rule6           # the trigger before R1
     from mlkit.study import companion_env as ce, view
     assert 'channel' in view.DIGEST_ITEM_KEYS
     assert {'tabs', 'where'} <= set(ce.PANEL_KEYS) and 'line' in ce.WHERE_KEYS
+    assert 'shown' in ce.PANEL_KEYS and ce.SHOWN_KEYS == ('tab', 'section', 'label', 'line')
     values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
     source = (af.SOURCE / 'CLAUDE.md.in').read_text()
     claude, copilot = (Flat(_rule(af.render(source, flavour=f, values=values,
@@ -752,7 +753,7 @@ def test_the_r2_fix_leaves_the_claude_code_copy_unchanged(task):
                    'explain first. Without one, ask it in text. Adopt picked:',
                    'Explain first: explain, show the block again, ask again. A reason is optional',
                    'The block is in the chat message itself, directly above the question',
-                   'What if? ("Et si ?") at the',
+                   'with `next_action.panel.shown.line` of the last command it reports',
                    'Before runs, visibly state what was decided'):
         assert phrase in flat, phrase
     assert 'picker' not in claude and 'Copilot this message' not in skill
@@ -869,6 +870,27 @@ def test_runs_show_progress_and_keep_stderr(task):
     assert '--progress' in parser._option_string_actions
 
 
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_the_conclusion_says_what_comes_after_the_study(task):
+    """L7 (D15): at ``done`` the agent relays the engine's ``next_action.after_study`` text,
+    offers the handoff pack, offers the Azure ML export plan only when the engine says the
+    chosen model is supported, and never claims a cloud run. Both agents, both tasks."""
+    from mlkit.study import after_study
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    rel = 'dot-claude/skills/hypotrail-study/SKILL.md'
+    for flavour in (af.CLAUDE, af.COPILOT):
+        skill = Flat(af.render((af.SOURCE / rel).read_text(), flavour=flavour, values=values,
+                               source=rel, task=task))
+        conclusion = skill.split('## The conclusion', 1)[1].split('\n## ', 1)[0]
+        for phrase in ('At `done`, relay `next_action.after_study.junior_text`',
+                       'only when `after_study.azureml.supported`, the export plan',
+                       'Never say an Azure job or endpoint ran'):
+            assert phrase in conclusion, (flavour, phrase)
+    assert {'junior_text', 'azureml'} <= set(after_study.AFTER_STUDY_KEYS)
+    assert {'supported', 'plan_command'} <= set(after_study.AZUREML_KEYS)
+    assert after_study.CLOUD_STATUS == 'not_qualified'
+
 # The Claude Code copy (CLAUDE.md, the skill, the resume command) as rendered before this
 # batch (``a12c23a``), placeholders h/s/g, by task, and the shared lines each lot changes on
 # purpose (new, old). NR-8: any other change to the Claude Code copy fails here; a lot that
@@ -886,6 +908,25 @@ CLAUDE_CODE_INTENDED_CHANGES = {
         '`notebooks/study_generated.py` to the engine.'),
     'L4 (R10): run with --progress': (' run ACTIVITY [--column NAME] --progress --request-id',
                                       ' run ACTIVITY [--column NAME] --request-id'),
+    # L2 (R1b, D3): rule 6 relays the engine's line instead of its own tab-by-step mapping;
+    # the old text differed by task, so ``old`` is given per task.
+    'L2 (R1b): rule 6 relays panel.shown.line': (
+        'conclusion. When it is open, end a message\n   that shows or changes something with '
+        '`next_action.panel.shown.line` of the last\n   command it reports, verbatim; no line '
+        'when `shown` is null.\n',
+        {task: 'conclusion. When it is open, end each\n   message that shows or changes '
+               'something with one short line per step naming the tab\n   to look at '
+               '(`next_action.panel.where.line`, or the `panel.tabs` label of the step the\n'
+               '   message covers): Data & EDA ("Données et EDA") after the data card and the '
+               'charts,\n   Decisions ("Décisions") at a proposal, Evidence ("Preuves") after '
+               'the fits, the\n   diagnostics, and the opening,\n   What if? ("Et si ?") at '
+               f'the {place}.\n'
+         for task, place in (('binary', 'decision rule'), ('regression', 'model choice'))}),
+    # L7 (D15): the skill's conclusion says what comes after the study.
+    'L7 (D15): at done, relay after_study': (
+        '\nAt `done`, relay `next_action.after_study.junior_text`, then offer the handoff pack '
+        'and, only when `after_study.azureml.supported`, the export plan (its `plan_command`, '
+        'prefix as in Commands). Never say an Azure job or endpoint ran.\n', ''),
 }
 
 
@@ -903,6 +944,7 @@ def test_the_claude_code_copy_changes_only_the_listed_shared_lines(task):
         text = af.render((af.SOURCE / rel).read_text(), flavour=af.CLAUDE, values=values,
                          source=rel, task=task)
         for name, (new, old) in CLAUDE_CODE_INTENDED_CHANGES.items():
+            old = old[task] if isinstance(old, dict) else old
             found[name] += text.count(new)
             text = text.replace(new, old)
         digest.update(text.encode('utf-8'))
