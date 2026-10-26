@@ -1411,8 +1411,9 @@ CHOICE_DECISIONS = ('model_choice', 'conclusion')
 # The order of the keys the view and the command surfaces append to ``next_action`` (each
 # present only when it applies): the junior-ready keys (v0.3), then ``choice_options`` (L1),
 # ``after_study`` (L7), ``pause`` (J5) and, with the panel on, ``panel`` last (R1, L2).
-NEXT_ACTION_TAIL = ('language', 'recommended', 'question', 'junior_digest', 'choice_options',
-                    'after_study', 'pause', 'panel')
+# Wave W2 (L5): ``alternatives`` at a drafted preparation, before the junior-ready keys.
+NEXT_ACTION_TAIL = ('alternatives', 'language', 'recommended', 'question', 'junior_digest',
+                    'choice_options', 'after_study', 'pause', 'panel')
 
 
 def test_w1_pause_and_choice_contract():
@@ -1521,3 +1522,51 @@ def test_l5_contract_constants(tmp_path, synthetic_case_dir):
             | set(STRUCTURAL_FIRST_BINARY_STEP_IDS))
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
 
+
+# --- Owner session 2026-10-26, wave W2 (lots L3, L5, L6): the integrator's contract commit
+# (plan §1.3). Each lot pinned its own names (L3: ``VIEW_KEYS``, ``CONFIRMATION_VIEW_KEYS``,
+# ``TOP_OPTIONAL_KEYS``, the companion key lists; L5: ``test_l5_contract_constants``); this
+# test pins what the wave adds across lots: the ``next_action`` key order with L5's
+# ``alternatives``, L3's sidecar and ``case_texts`` tables, L6's report chapters and the
+# chapter of every step of every plan generation (L5's ``structural_eda`` included).
+
+def test_w2_contract(tmp_path):
+    from mlkit.study import drafts, junior, l10n, render_html, render_narrative as rn
+    # L5 + W1 order: the drafts amend the runnable action before ``junior.enrich``, which
+    # re-adds ``recommended`` after ``language`` (a drafted ``recommended`` is moved there).
+    runnable = inspect.getsource(view._runnable)
+    assert 'drafts.with_preprocessing_draft' in runnable
+    enrich = inspect.getsource(junior.enrich)
+    assert (enrich.index("action['language'] = lang") < enrich.index("action.pop('recommended'")
+            < enrich.index("action['recommended'] = recommended"))
+    assert 'alternatives' in inspect.getsource(drafts.with_preprocessing_draft)
+    # L3: the translation sidecar and the view's tables of case statements.
+    assert (l10n.SCHEMA, l10n.FILE, l10n.STATE_KEY, l10n.STATE_KEYS) == (
+        'hypotrail.case_l10n/1', 'case.l10n.yaml', 'case_l10n', ('path', 'sha256'))
+    assert view.LANGUAGE_TEXT_KEYS == ('plan', 'moments', 'next_action', 'choice_options',
+                                       'limits', 'artifacts', 'recap', 'digest', 'goal',
+                                       'proposals')
+    auto = REPO / 'use-cases' / 'auto-mpg'
+    study = tmp_path / 'auto'
+    assert _run('init', '--case', auto, '--study', study, '--lang', 'fr').exit_code == 0
+    state = read.open(study).state
+    assert tuple(state[l10n.STATE_KEY]) == l10n.STATE_KEYS
+    payload = _run('status', '--study', study).payload
+    assert tuple(payload['view']['case_texts']) == CASE_TEXTS_KEYS
+    assert state[st.EXPLORATION_ORDER_KEY] == st.STRUCTURAL_FIRST
+    # L6: the narrative report and the chapter of every step of every plan generation.
+    assert render_html.TEMPLATE_VERSION == 3
+    assert rn.CHAPTERS == tuple(f'ch{i}' for i in range(1, 10))
+    assert rn.EVIDENCE_CLASSES == ('none', 'structural', 'development', 'final')
+    steps = {s['id'] for group in (st.STEPS, st.REGRESSION_STEPS, st.FULL_STEPS,
+                                   st.FULL_REGRESSION_STEPS, st.B1_STEPS, st.B2_BINARY_STEPS,
+                                   st.B1_REGRESSION_STEPS) for s in group}
+    steps |= {st.STRUCTURAL_EDA} | {s['id'] for s in st.steps(state)}
+    assert steps <= set(rn.STEP_CHAPTER) and steps <= set(rn.REGRESSION_STEP_CHAPTER)
+    assert rn.STEP_CHAPTER[st.STRUCTURAL_EDA] == rn.STEP_CHAPTER['train_eda'] == 'ch4'
+    for name in ('render_narrative.STEP_CHAPTER', 'REGRESSION_STEP_CHAPTER',
+                 'render_narrative.LIMIT_CHAPTER', 'mlkit.study.render_narrative',
+                 'case_l10n', 'case_texts', 'question_junior', 'alternatives'):
+        assert name in DOC_TOKENS, name
+    for cls in rn.EVIDENCE_CLASSES:
+        assert f'`{cls}`' in DOC, cls

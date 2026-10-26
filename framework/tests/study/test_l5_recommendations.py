@@ -658,6 +658,11 @@ def test_hotel_quality_before_any_target_look_and_a_drafted_preparation(tmp_path
     assert {'agent', 'company'} <= {r['column'] for r in reasons
                                     if r['rule'] == 'rare_categories'}
     assert nxt['alternatives'][0]['label'] == 'Sans transformation'
+    # Wave W2 key order (CLI-CONTRACT §3.1): ``alternatives`` before the junior-ready keys.
+    keys = list(nxt)
+    assert (keys.index('junior_message') < keys.index('alternatives')
+            < keys.index('language') < keys.index('recommended')
+            < keys.index('question') < keys.index('junior_digest'))
     assert nxt['recommended']['why'].startswith("Établie d'après le contrôle de qualité")
     assert drafts.PIPELINE_SENTENCE['fr'] in nxt['junior_digest']
     study = read.open(f.study)
