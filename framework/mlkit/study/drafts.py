@@ -52,7 +52,6 @@ temporal evaluation gets an advisory (:func:`calendar_advisory`).
 from __future__ import annotations
 
 import copy
-import math
 import re
 from typing import Any, Mapping
 

@@ -24,6 +24,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -617,6 +618,19 @@ def test_j_lang_hotel_french_structural_steps(tmp_path, monkeypatch):
     assert quality['question_junior'].startswith('Y a-t-il des cellules manquantes')
     assert quality['texts']['en']['question'] == quality['values']['question']
     assert quality['texts']['fr']['question'] == quality['question_junior']
+
+
+@pytest.mark.skipif(os.environ.get('HYPOTRAIL_JOURNEY_HOTEL') != '1'
+                    or not (CASES / 'hotel-booking' / 'data' / 'hotel-resort.csv').is_file(),
+                    reason='heavy (fits and variants on Hotel, minutes): HYPOTRAIL_JOURNEY_HOTEL=1')
+def test_j_lang_hotel_french_to_done(tmp_path, monkeypatch):
+    """J-LANG on the workshop case (plan §5.3, opt-in): a French Hotel study walked from
+    ``init`` to ``done`` (the drafted EBM variant included) shows no English sentence in the
+    junior-facing fields of its payloads, its report or its notebook headings."""
+    found, flow = _walk_and_scan(tmp_path, 'hotel-booking', 'fr', monkeypatch)
+    assert found == [], found[:12]
+    assert _report_sentences(flow, 'fr') == []
+    assert not [h for h in _notebook_headings(flow, 'fr') if g.foreign_sentences(h, 'fr', 5)]
 
 
 def test_the_report_phrases_are_french_and_say_vous():

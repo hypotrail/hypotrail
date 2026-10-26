@@ -22,6 +22,7 @@ from mlkit.study import companion_env as ce
 
 REPO = Path(__file__).resolve().parents[3]
 AUTO_MPG = REPO / 'use-cases' / 'auto-mpg'
+HOTEL = REPO / 'use-cases' / 'hotel-booking'
 CONCLUSION = ('The development evidence is all the study can cite: the final test was opened '
               'once.')
 # The words of a test junior (a test choice, as in the round-5 walker).
@@ -128,10 +129,13 @@ def walk(f: fk.Flow, task: str, on_write: Callable[[str, dict], None] | None = N
 
 
 def journey_flow(base: Path, case: str, lang: str) -> tuple[fk.Flow, str, dict]:
-    """A new study on ``case`` (``synthetic`` binary or ``auto-mpg``) in ``lang``; its init."""
+    """A new study on ``case`` (``synthetic`` binary, ``auto-mpg``, or ``hotel-booking``, the
+    heavy opt-in one) in ``lang``; its init."""
     if case == 'synthetic':
         case_dir = fk.make_case(base / 'case', n_rows=300, task='binary')['case'].parent
         task = 'binary'
+    elif case == 'hotel-booking':
+        case_dir, task = HOTEL, 'binary'
     else:
         case_dir, task = AUTO_MPG, 'regression'
     f = fk.Flow(base / f'study-{case}-{lang}', case_dir, prefix='j')
