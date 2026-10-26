@@ -36,17 +36,17 @@ A pause message has at most 150 words; aim for 120 and count them before sending
 heading, no recap of earlier steps, no list of options the engine did not give. In this
 order:
 
-1. **Where we are**: the step title and what was just confirmed, in one line; what you
+1. **The panel line**, first, when the panel is open (CLAUDE.md rule 6).
+2. **Where we are**: the step title and what was just confirmed, in one line; what you
    propose next is never written as done.
-2. **The explanation**: `next_action.junior_digest`, cut to two or three sentences, never
+3. **The explanation**: `next_action.junior_digest`, cut to two or three sentences, never
    extended with figures it does not hold.
-3. **The recommendation**: `recommended.value` with its `why`, in one sentence. When
+4. **The recommendation**: `recommended.value` with its `why`, in one sentence. When
    `recommended` is null (the model choice, the conclusion), present the options and let
    the junior choose.
-4. **The decision**: the quoted restatement, in the present tense, then the closed
+5. **The decision**: the quoted restatement, in the present tense, then the closed
    question (CLAUDE.md rule 4). Never skip the block, even to stay under 150 words: cut
    the explanation instead.
-5. **The panel line**, when the panel is open (CLAUDE.md rule 6).
 
 Ask only questions whose answer changes the study: `next_action.question`, a legitimacy
 doubt, a condition. Work the plan covers is done, not asked about. If a reply decides

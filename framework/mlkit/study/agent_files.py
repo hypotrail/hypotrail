@@ -136,9 +136,11 @@ FLAVOUR_TEXTS: dict[str, dict[str, str]] = {
         'TEXT_FALLBACK': ' only when the picker call fails or the tool is missing',
         'PAUSE_CARRIER': ' With GitHub Copilot this message is the question of the '
                          '`#tool:vscode/askQuestions` call that ends the pause turn.',
-        'PANEL_LINE_PLACE': ' At a pause it is the last line of the picker question, '
-                            'after the closed question; otherwise the last line of your '
-                            'final message.',
+        # Owner session 2026-10-26, third session (R21): the line comes first, so the
+        # junior looks at the panel while reading the picker question.
+        'PANEL_LINE_PLACE': ' At a pause it is the first line of the picker question, '
+                            'before the facts; otherwise the first line of your final '
+                            'message.',
     },
 }
 

@@ -480,14 +480,16 @@ def test_the_panel_rule(task):
     that shows or changes something ends with the engine's line for what the command it
     reports produced (``next_action.panel.shown.line``), none when ``shown`` is null; the
     template's own tab-by-step mapping is gone (the behaviour moved to the engine, tested
-    in ``test_companion_env.py`` and ``test_journey_walkthrough.py``). With Copilot, the
-    line is the picker's last line."""
+    in ``test_companion_env.py`` and ``test_journey_walkthrough.py``). Third session (R21):
+    the line comes first, the message's first line and, with Copilot, the picker question's
+    first line, never its last."""
     text = Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task))
     rule6 = _rule(text, 6)
     for phrase in ('It is open when `next_action.panel` is present or the junior has already '
                    'said the Hypotrail panel is open; remember it', 'Do not append a panel-open',
-                   'end a message that shows or changes something with '
-                   '`next_action.panel.shown.line` of the last command it reports, verbatim',
+                   'start a message that shows or changes something with '
+                   '`next_action.panel.shown.line` of the last command it reports, verbatim, '
+                   'as its first line',
                    'no line when `shown` is null', 'it never replaces its content',
                    '`status --summary --digest', '`channel` `webview`',
                    '"you ran these charts from the panel"'):
@@ -503,8 +505,15 @@ def test_the_panel_rule(task):
     claude, copilot = (Flat(_rule(af.render(source, flavour=f, values=values,
                                             source='CLAUDE.md.in', task=task), 6))
                        for f in (af.CLAUDE, af.COPILOT))
-    place = 'At a pause it is the last line of the picker question, after the closed question'
+    place = 'At a pause it is the first line of the picker question, before the facts'
     assert place in copilot and place not in claude
+    assert 'otherwise the first line of your final message' in copilot
+    for flat in (rule6, claude, copilot):                          # R21: never the last line
+        assert 'end a message that shows' not in flat and 'last line' not in flat
+    skill = (af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text()
+    order = skill.split('## One pause, one message', 1)[1].split('\n## ', 1)[0]
+    assert '\n1. **The panel line**, first, when the panel is open (CLAUDE.md rule 6).' in order
+    assert order.index('**The panel line**') < order.index('**Where we are**')
 
 
 @pytest.mark.parametrize('task', af.TASKS)
@@ -918,6 +927,33 @@ CLAUDE_CODE_INTENDED_CHANGES = {
         '`notebooks/study_generated.py` to the engine.'),
     'L4 (R10): run with --progress': (' run ACTIVITY [--column NAME] --progress --request-id',
                                       ' run ACTIVITY [--column NAME] --request-id'),
+    # Third session (R21): the panel line comes first, in rule 6 and in the skill's pause
+    # order; applied before the L2 entry, which then restores the text before the batch.
+    'R21: the panel line first (rule 6)': (
+        'conclusion. When it is open, start a message\n   that shows or changes something with '
+        '`next_action.panel.shown.line` of the last\n   command it reports, verbatim, as its first '
+        'line, so the junior looks at the panel while\n   reading; no line when `shown` is null.\n',
+        'conclusion. When it is open, end a message\n   that shows or changes something with '
+        '`next_action.panel.shown.line` of the last\n   command it reports, verbatim; no line '
+        'when `shown` is null.\n'),
+    'R21: the panel line first (skill pause order)': (
+        '1. **The panel line**, first, when the panel is open (CLAUDE.md rule 6).\n'
+        '2. **Where we are**: the step title and what was just confirmed, in one line; what you\n'
+        '   propose next is never written as done.\n'
+        '3. **The explanation**',
+        '1. **Where we are**: the step title and what was just confirmed, in one line; what you\n'
+        '   propose next is never written as done.\n'
+        '2. **The explanation**'),
+    'R21: the panel line first (skill renumbering)': (
+        '\n4. **The recommendation**', '\n3. **The recommendation**'),
+    'R21: the panel line first (skill, last item)': (
+        '\n5. **The decision**: the quoted restatement, in the present tense, then the closed\n'
+        '   question (CLAUDE.md rule 4). Never skip the block, even to stay under 150 words: cut\n'
+        '   the explanation instead.\n',
+        '\n4. **The decision**: the quoted restatement, in the present tense, then the closed\n'
+        '   question (CLAUDE.md rule 4). Never skip the block, even to stay under 150 words: cut\n'
+        '   the explanation instead.\n'
+        '5. **The panel line**, when the panel is open (CLAUDE.md rule 6).\n'),
     # L2 (R1b, D3): rule 6 relays the engine's line instead of its own tab-by-step mapping;
     # the old text differed by task, so ``old`` is given per task.
     'L2 (R1b): rule 6 relays panel.shown.line': (

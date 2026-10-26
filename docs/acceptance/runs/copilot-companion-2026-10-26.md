@@ -379,6 +379,13 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   instructions (`CLAUDE.md.in`, the `PANEL_LINE_PLACE` Copilot slot) says where the line goes;
   move it to the first line of the message or picker question, keep the text from
   `next_action.panel.shown.line`, and update the pins in `test_agent_files.py`.
+  Fixed: rule 6 of `CLAUDE.md.in` now starts a message that shows or changes something with
+  `next_action.panel.shown.line`, verbatim, as its first line; the Copilot slot
+  `PANEL_LINE_PLACE` makes it the first line of the picker question ("before the facts"),
+  otherwise the first line of the final message; the skill's pause order lists the panel line
+  first. Pinned in `test_agent_files.py::test_the_panel_rule` (no "last line" left) and listed
+  in `CLAUDE_CODE_INTENDED_CHANGES`; raw budget 3,943 words (binary), rendered Copilot copy
+  4,358 (cap 4,400).
 - **R22 (blocker). The handoff pack cannot be exported from a French study.** Asked to export to
   `~/studies/hotel-demo3-aml-export` and then the handoff pack, the agent answers "Aucun des
   deux exports n'a été écrit" and explains that the handoff summary writes integers with a comma
