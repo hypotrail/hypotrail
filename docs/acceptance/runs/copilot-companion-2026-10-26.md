@@ -37,3 +37,15 @@ Copilot agent **Hypotrail** in VS Code, panel flag on at stage v3, branch
   calls the picker at all (agent file and `copilot-instructions.md`), whether the step-0 turn
   ends the pause in text by design, whether the tool was enabled in the chat tools picker, and
   whether the Hypotrail agent (not the default Agent mode) was selected.
+  Update: this is general, not only the first decision. At the prediction-moment pause
+  (second message) the agent again ended in text: the term, its explanation, the quoted
+  decision block, then "Adoptez-vous cette décision ? Vous pouvez l'adopter, changer quelque
+  chose ou me demander d'abord une explication." No picker appears at any pause; typing is
+  the only option. The content itself is right and visible (not collapsed).
+  Lead: the earlier session at `0065fcd` did call the picker (its text was folded above it,
+  the bug that commit fixed), so this is probably a regression from the round-9 rewrite
+  (R9UX-1/R9UX-2, `90e89e4`): the agent now takes the "Without the picker, ask in text"
+  fallback, or the text-ending "explain first" path, at every pause. Check the generated
+  `.github/agents/hypotrail.agent.md` and `.github/copilot-instructions.md` for wording that
+  makes the text form look like the default, and confirm the tool is still offered to the
+  agent in that session (chat tools picker).
