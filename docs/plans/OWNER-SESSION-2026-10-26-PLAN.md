@@ -13,38 +13,29 @@ Implementation status: **wave W1 integrated** on branch `w1-int` (lots L1, L2, L
 L0 integration: the L2 and L7 agent text applied against the word ledger, the wave's contract
 pins in `test_contract_freeze.py`, panel fixtures recaptured, the choice card and
 `after_study` checked end to end on a real study). Unit, walker, simulated-browser and
-real-CLI tests only; not run with Copilot (§5.4 still to do). Later waves are not merged here.
+real-CLI tests only; not run with Copilot (§5.4 still to do).
 
-Implementation status (wave W2): **L6** (R8, the narrative report after the approved D14
-mockup: verdict first, nine chapters with the choice, why, the evidence and what remains
-uncertain, a sticky table of contents folded into a top menu below 600 px, evidence
-classes in words, a compact results annex, two charts drawn from recorded values: the
-fold-by-fold comparison and the non-linearity by range; `render_html.TEMPLATE_VERSION` 3,
-`render_narrative`) is implemented on branch `w2-l6`, unit and simulated-browser tests
-only (`test_report_narrative.py`); not yet merged by the integrator, not read by the owner
-at a rehearsal (§5.4 step 16 still to do). The Hotel report of the mockup study goes from
-about 4.0 MB to about 0.76 MB, `check` clean.
-
-Implementation status (wave W2): **L3** (one language per study: the `init` plan localized,
-EDA texts in French at read time, the case translation sidecar `case.l10n.yaml` of D4 A for
-the five workshop cases, `texts` in both languages for the panel (D4b) and the panel's switch
-following them, the report and notebook in the study language, J-LANG automated in
-`test_l3_language.py`) is implemented on branch `w2-l3`; agent wording in
-[proposals/L3-agent-text.md](proposals/L3-agent-text.md); not yet merged by the integrator,
-not run with Copilot.
-
-Implementation status (wave W2, L5): **L5** (recommendations that read the evidence: the
-structural-first plan for new studies, `exploration_order` and step `structural_eda`; the
-preparation drafted from the target-free results with `recommended.reasons` and
-`alternatives`; `data_contingent_reason.junior_text` and the glossary term `target_look`; the
-EBM drafted when the diagnostics flag a pattern; `model_families` `junior_words` and
-`not_offered`; the teaching refusal of a family outside the catalogue; the `calendar: year`
-case declaration and its advisory, Hotel's declaration waiting for the next case revision; the
-acceptance scenario S15) is implemented on branch `w2-l5` in `mlkit.study.drafts` and the
-non-fingerprinted view, state, junior and command modules, with unit, walker and Hotel
-structural tests; agent wording proposed in
-[proposals/L5-agent-text.md](proposals/L5-agent-text.md). Not merged by the integrator, not
-run with Copilot.
+Implementation status: **wave W2 integrated** on branch `w2-int` (lots L6, L3, L5 cherry-picked
+in that order over W1; L0 integration: the L3 and L5 agent text applied against the word
+ledger, raw 3,929 / 3,888 words (binary / regression, cap 4,000), rendered Copilot copy 4,345 /
+4,304 (cap 4,400); one contract commit for the wave (`next_action` key order with
+`alternatives`, `test_w2_contract`); panel fixtures recaptured; L5's `structural_eda` shown in
+chapter four of the narrative report before the looks at the target, and in the panel's
+journey bar ("Quality" / "Qualité"); the case, not the engine, now declares that the
+glossary's examples describe it (`glossary_examples` in its translation sidecar), so the
+engine names no dataset). Journey checks on the integrated engine: **J-LANG** (no English
+sentence in the payloads, the report or the notebook headings of French studies walked to
+`done`: synthetic and Auto MPG in the gate, Hotel in the opt-in
+`test_j_lang_hotel_french_to_done`, `HYPOTRAIL_JOURNEY_HOTEL=1`), **J-REC** (Hotel FR: the quality check and three screened distributions before any
+look at the target, the preparation drafted from them and not data-contingent, the EBM drafted
+beside the tuned penalty from the diagnostics' flags, boosting named as the junior knows it,
+an SVM refused with a teaching message), **J-REPORT** (nine chapters, `check` clean, Hotel
+report about 0.5 MB). Unit, walker, simulated-browser and real-CLI tests only; not run with
+Copilot (§5.4 still to do); the owner has not yet read the report at a rehearsal (§5.4 step
+16). Each lot's details: L6 `render_narrative` (`TEMPLATE_VERSION` 3); L3 `l10n`,
+`l10n_report`, case sidecars `case.l10n.yaml` ([proposals/L3-agent-text.md](proposals/L3-agent-text.md));
+L5 `drafts`, `exploration_order: structural_first` for new studies only, Hotel's
+`calendar: year` waiting for the next case revision ([proposals/L5-agent-text.md](proposals/L5-agent-text.md)).
 
 **Priority of this batch (owner, 2026-10-26): the workshop journey.** The batch prepares a
 workshop. What matters most is the junior's journey as they live it: visually clear,

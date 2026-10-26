@@ -1,5 +1,15 @@
 # Implementation handoff (v0.2)
 
+## Owner-session batch, wave W2 (26 October 2026)
+
+Lots L3, L5 and L6 of the [2026-10-26 plan](../plans/OWNER-SESSION-2026-10-26-PLAN.md), integrated over wave W1 (unit, walker, simulated-browser and real-CLI tests; **no Copilot session yet**):
+
+- **One language per study** (L3): `init` and `plan` give the step texts in the study language; EDA questions, notes and warnings are translated at read time (`question_junior`); the case's statements come in French from a translation sidecar `case.l10n.yaml` (five workshop cases; recorded with its digest at `init`, never `sources_changed`; it also declares `glossary_examples` for the cases the glossary's examples describe, so other studies read the definitions without them); `status --summary --digest` adds `texts {en, fr}` so the panel's EN/FR switch changes the engine's texts too; the report and the notebook follow the study language.
+- **Drafts that read the evidence** (L5), new studies only (`exploration_order: structural_first`; an existing study keeps its plan and drafts): step `structural_eda` (`eda.quality`, then at most three screened `eda.distribution` runs, no target read) before the preparation; the preparation drafted with `recommended.reasons` and the default as `alternatives`, not data-contingent when only target-free results motivate it; `data_contingent_reason.junior_text` and the term "look at the target"; the EBM drafted beside the tuned penalty when the diagnostics flag a pattern; `junior_words` and `not_offered` for families; a family outside the catalogue refused with a teaching `junior_message`. Hotel's `calendar: year` declaration waits for a case revision.
+- **Narrative report** (L6): verdict, nine chapters (choice, why, evidence with its class, what remains uncertain), a table of contents, a compact annex; the structural check is chapter four's first part. `TEMPLATE_VERSION` 3.
+- Agent instructions: raw budget 3,929 / 3,888 words (binary / regression, cap 4,000); rendered Copilot copy 4,345 / 4,304 (cap 4,400).
+- Journey checks: J-LANG automated on French synthetic and Auto MPG studies (gate) and on Hotel (opt-in, `HYPOTRAIL_JOURNEY_HOTEL=1`); J-REC on Hotel's structural steps (gate); J-REPORT structural and browser tests (gate).
+
 ## Owner-session batch, wave W1 (26 October 2026)
 
 Lots L1, L2, L4 (level 1) and L7 of the [2026-10-26 plan](../plans/OWNER-SESSION-2026-10-26-PLAN.md), integrated on one branch (unit, walker, simulated-browser and real-CLI tests; **no Copilot session yet**, §5.4 rehearsal to do):
