@@ -86,8 +86,9 @@ def test_report_works_offline_without_decision_controls(browser, full_study):
         rules = view.build(full_study)['results']['policy.evaluation']['values']['rules']
         assert page.locator('#policy table.metrics tbody tr').count() == sum(
             len(r['models']) for r in rules.values()) == 4
-        # status is written in words, not shown by colour alone
-        assert 'Confirmed decision' in page.inner_text('#decisions')
+        # status is written in words, not shown by colour alone (L6: each decision sits in
+        # the chapter of its step; the framing is chapter two)
+        assert 'Confirmed decision' in page.inner_text('#ch2')
         body = page.locator('body')
         assert 'dark' not in (body.get_attribute('class') or '')
         page.click('button[data-theme-toggle]')

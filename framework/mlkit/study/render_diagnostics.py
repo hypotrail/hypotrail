@@ -645,9 +645,9 @@ def _opening_note(view: Mapping, item: Mapping | None) -> str:
             f'{e(lab["after_opening"] if after else lab["before_opening"])}</p>')
 
 
-def section(view: Mapping, citer: cite.Citer) -> str:
-    """The "Model diagnostics" section (empty parts say what is missing)."""
-    labels = texts.report()
+def development_part(view: Mapping, citer: cite.Citer) -> str:
+    """The development part (``#diagnostics-development``): labelled development evidence,
+    with when it was computed relative to the opening; says so when nothing is computed."""
     lab = _labels()
     task = view.get('task') or 'binary'
     slot = DEVELOPMENT_SLOTS[task]
@@ -655,14 +655,17 @@ def section(view: Mapping, citer: cite.Citer) -> str:
     dev = _part(view, citer, slot, task, final=False)
     if not dev:
         dev = f'<p class="muted">{e(lab["pending"])}</p>'
-    parts = [f'<section class="card diagnostics" id="diagnostics">'
-             f'<h2>{e(labels["sections"]["diagnostics"])}</h2><p>{e(lab["intro"])}</p>',
-             f'<h3 id="diagnostics-development">{_badge("confirmed", lab["development"])}</h3>'
-             f'<p class="notice">{e(lab["development_note"])}</p>'
-             f'{_opening_note(view, dev_item)}{dev}']
-    final = view.get('final_test') or {}
-    status = final.get('status')
-    parts.append(f'<h3 id="diagnostics-final">{_badge("final", lab["final"])}</h3>')
+    return (f'<h3 id="diagnostics-development">{_badge("confirmed", lab["development"])}</h3>'
+            f'<p class="notice">{e(lab["development_note"])}</p>'
+            f'{_opening_note(view, dev_item)}{dev}')
+
+
+def final_part(view: Mapping, citer: cite.Citer) -> str:
+    """The final part (``#diagnostics-final``): only once the final test is opened."""
+    lab = _labels()
+    task = view.get('task') or 'binary'
+    parts = [f'<h3 id="diagnostics-final">{_badge("final", lab["final"])}</h3>']
+    status = (view.get('final_test') or {}).get('status')
     if status in (None, 'absent'):
         parts.append(f'<p class="muted">{e(lab["final_absent"])}</p>')
     elif status == 'sealed':
@@ -671,5 +674,19 @@ def section(view: Mapping, citer: cite.Citer) -> str:
         body = _part(view, citer, FINAL_SLOT, task, final=True)
         parts.append(f'<p class="notice">{e(lab["final_note"])}</p>' + body if body else
                      f'<p class="muted" data-final="pending">{e(lab["final_pending"])}</p>')
+    return ''.join(parts)
+
+
+def section(view: Mapping, citer: cite.Citer, *, final: bool = True) -> str:
+    """The "Model diagnostics" section (empty parts say what is missing). L6: the narrative
+    report places the development part with the models (``final=False``) and the final part
+    in the chapter of the final test (:func:`final_part`)."""
+    labels = texts.report()
+    lab = _labels()
+    parts = [f'<section class="card diagnostics" id="diagnostics">'
+             f'<h2>{e(labels["sections"]["diagnostics"])}</h2><p>{e(lab["intro"])}</p>',
+             development_part(view, citer)]
+    if final:
+        parts.append(final_part(view, citer))
     parts.append('</section>')
     return ''.join(parts)

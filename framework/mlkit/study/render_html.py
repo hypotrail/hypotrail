@@ -12,7 +12,12 @@ A deterministic, offline, stdlib-only renderer fed by :func:`mlkit.study.view.bu
   other number in a text node as untraceable.
 * The page holds **no decision control**: the only button is the theme toggle, and
   there is no input, form, select, or slider (plan §6, ADR 0002 rule 4).
-* Offline: styles and the theme script are inline; no URL is loaded.
+* Offline: styles and the scripts (theme, annex anchor, current chapter) are inline; no
+  URL is loaded; the page reads fully without script and follows the system theme.
+* L6 (R8): the body is a narrative in chapters with a table of contents
+  (:mod:`mlkit.study.render_narrative`); this module keeps the building blocks (verdict,
+  data card, decision cards, step texts, result blocks, policy and model comparisons,
+  limits, compact annex).
 * ``<!--hypotrail:banner--><!--/hypotrail:banner-->`` marks where a stale banner is
   injected into the previous file when a later render fails (:func:`inject_banner`).
 
@@ -28,12 +33,13 @@ import re
 from importlib import resources
 from typing import Any, Mapping
 
-from . import audience, cite, render_charts, render_diagnostics, render_trials, texts
+from . import audience, cite, render_charts, render_diagnostics, texts
 from . import state as st
 
 BANNER_START = '<!--hypotrail:banner-->'
 BANNER_END = '<!--/hypotrail:banner-->'
-TEMPLATE_VERSION = 2
+# L6 (R8): the narrative report (chapters and a table of contents).
+TEMPLATE_VERSION = 3
 # ``structure``: a count recorded in the study state rather than computed by an activity
 # (the sealed final test, the dataset rows); ``data_row``: a cell of the five development
 # rows shown as recorded in the file; ``axis``: a chart tick, exempt only inside an SVG
@@ -51,12 +57,12 @@ def lit(kind: str, text: Any, tag: str = 'span') -> str:
 
 
 def _css() -> str:
+    from .render_narrative import CSS as NARRATIVE_CSS
     base = (resources.files('mlkit') / 'assets' / 'design.css').read_text(encoding='utf-8')
-    return base + REPORT_CSS + render_charts.CHART_CSS + render_diagnostics.CSS
+    return base + REPORT_CSS + render_charts.CHART_CSS + render_diagnostics.CSS + NARRATIVE_CSS
 
 
 REPORT_CSS = '''
-.report main{max-width:1040px!important}
 .report h2{scroll-margin-top:16px}
 data{font-variant-numeric:tabular-nums;font-weight:650;border-bottom:1px dotted var(--muted);color:var(--ink)}
 .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.02em;border:1px solid var(--line);border-radius:6px;padding:2px 8px;margin-right:8px;background:var(--soft);color:var(--ink)}
@@ -74,7 +80,7 @@ q[data-literal]{font-style:italic;color:var(--ink)}
 .muted{color:var(--muted)}
 dl.figures{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 18px;max-width:640px}
 dl.figures dt{color:var(--muted)}dl.figures dd{margin:0;text-align:right}
-.page-footer{max-width:1040px;margin:0 auto 40px;padding:20px 28px 0}
+.page-footer{max-width:1300px;margin:0 auto 40px;padding:20px 28px 0}
 .card.verdict{border-left:4px solid var(--accent)!important}
 dl.facts{display:grid;grid-template-columns:minmax(0,200px) minmax(0,1fr);gap:4px 18px;max-width:none}
 dl.facts dt{color:var(--muted)}dl.facts dd{margin:0;color:var(--ink)}
@@ -99,8 +105,11 @@ details>summary{cursor:pointer}
 @media (max-width:640px){.scroll-hint{display:block}.dictionary th,.dictionary td{padding:10px}.dictionary td:nth-child(2){min-width:150px}.dictionary td{overflow-wrap:anywhere}}
 '''
 
+# L6: the page follows the system theme by default (also without script, through the
+# ``prefers-color-scheme`` rule of the report's CSS); the toggle records an explicit choice,
+# written as ``dark`` or ``light`` on the body so that the CSS rule yields to it.
 THEME_SCRIPT = '''(function(){var b=document.body,k="hypotrail-theme",t=document.querySelector("[data-theme-toggle]");
-function set(d){b.classList.toggle("dark",d);if(t){t.setAttribute("aria-pressed",d?"true":"false");}}
+function set(d){b.classList.toggle("dark",d);b.classList.toggle("light",!d);if(t){t.setAttribute("aria-pressed",d?"true":"false");}}
 var s=null;try{s=window.localStorage.getItem(k);}catch(x){}
 set(s?s==="dark":!!(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches));
 if(t){t.addEventListener("click",function(){var d=!b.classList.contains("dark");set(d);try{window.localStorage.setItem(k,d?"dark":"light");}catch(x){}});}})();'''
@@ -371,50 +380,84 @@ def _step_titles(task: str | None) -> dict:
             if s['decision']}
 
 
-def _decisions(view: Mapping, variables: list[dict]) -> str:
+def decision_card(view: Mapping, did: str, variables: list[dict],
+                  titles: Mapping | None = None) -> str:
+    """One decision as the report shows it (L6: placed in the chapter of its step): its
+    title and status in words, the value in words (the raw value in ``data-value``), the
+    availability table, the motivation of a preparation, the confirmation with its basis
+    chip, the reason, the junior's notes, and the open proposals."""
     labels = _labels()
-    titles = _step_titles(view.get('task'))
-    cards = []
-    for did, d in view['decisions'].items():
-        status = d['status']
-        parts = [f'<h3>{e(titles.get(did, did))} {_badge(status, labels["decision_status"][status])}</h3>']
-        if d['value'] is not None and did != 'feature_availability':
-            if did == 'conclusion' and isinstance(d['value'], dict):
-                verdict = labels['verdict'].get(d['value'].get('verdict'), d['value'].get('verdict'))
-                parts.append(f'<p><strong>{e(verdict)}.</strong> '
-                             f'{lit("decision_value", d["value"].get("text", ""), "q")}</p>')
-                parts.append(_credit(view, titles))
-            else:
-                parts.append(f'<p data-value="{e(_value_text(d["value"]))}">'
-                             f'{lit("decision_value", value_words(did, d["value"], view.get("task")))}'
-                             f'</p>')
-        if did == 'feature_availability':
-            parts.append(_availability_table(view, variables))
-        if did == 'preprocessing' and isinstance(d['value'], Mapping):
-            parts.append(_motivation(view, d['value']))
-        if d['confirmation'] and status in ('confirmed', 'reconfirm_required'):
-            parts.append(_confirmation(d['confirmation']))
-        if d['reason']:
-            parts.append(f'<p class="notice">'
-                         f'{lit("message", audience.reason_words(d["reason"]))}</p>')
-        for n in view.get('notes') or []:
-            if n['decision_id'] == did:
-                parts.append(_note(n))
-        for p in view['open_proposals']:
-            if p['decision_id'] == did:
-                # C9: a proposal started in the companion says so (its stored origin).
-                origin = p.get('origin') if isinstance(p.get('origin'), Mapping) else {}
-                companion = (f'<span class="small" data-origin="webview">'
-                             f'{e(labels["companion_origin"])}'
-                             f'</span> ' if origin.get('channel') == 'webview' else '')
-                parts.append(f'<div class="feedback" data-proposal="{e(p["proposal_id"])}">'
-                             f'{_badge("proposed", labels["proposal_waiting"])}'
-                             f'{companion}{lit("proposal", p["restatement"])}<br><span class="small">'
-                             f'{lit("proposal", p["rationale"])}</span></div>')
-        cards.append(f'<article data-decision="{e(did)}" data-status="{e(status)}">'
-                     f'{"".join(parts)}</article>')
-    return (f'<section id="decisions"><h2>{e(labels["sections"]["decisions"])}</h2>'
-            f'{_concept("confirmed_decision")}{_concept("proposal")}{"".join(cards)}</section>')
+    titles = titles if titles is not None else _step_titles(view.get('task'))
+    d = view['decisions'][did]
+    status = d['status']
+    parts = [f'<h3>{e(titles.get(did, did))} {_badge(status, labels["decision_status"][status])}</h3>']
+    if d['value'] is not None and did != 'feature_availability':
+        if did == 'conclusion' and isinstance(d['value'], dict):
+            verdict = labels['verdict'].get(d['value'].get('verdict'), d['value'].get('verdict'))
+            parts.append(f'<p><strong>{e(verdict)}.</strong> '
+                         f'{lit("decision_value", d["value"].get("text", ""), "q")}</p>')
+            parts.append(_credit(view, titles))
+        else:
+            parts.append(f'<p class="choice-value" data-value="{e(_value_text(d["value"]))}">'
+                         f'{lit("decision_value", value_words(did, d["value"], view.get("task")))}'
+                         f'</p>')
+    if did == 'feature_availability':
+        parts.append(_availability_summary(view, variables))
+        table = _availability_table(view, variables)
+        if table:
+            parts.append(f'<details class="availability-detail"><summary>'
+                         f'{e(labels["narrative"]["availability_detail"])}</summary>{table}'
+                         f'</details>')
+    if did == 'preprocessing' and isinstance(d['value'], Mapping):
+        parts.append(_motivation(view, d['value']))
+    if d['confirmation'] and status in ('confirmed', 'reconfirm_required'):
+        parts.append(_confirmation(d['confirmation']))
+    if d['reason']:
+        parts.append(f'<p class="notice">'
+                     f'{lit("message", audience.reason_words(d["reason"]))}</p>')
+    for n in view.get('notes') or []:
+        if n['decision_id'] == did:
+            parts.append(_note(n))
+    for p in view['open_proposals']:
+        if p['decision_id'] == did:
+            # C9: a proposal started in the companion says so (its stored origin).
+            origin = p.get('origin') if isinstance(p.get('origin'), Mapping) else {}
+            companion = (f'<span class="small" data-origin="webview">'
+                         f'{e(labels["companion_origin"])}'
+                         f'</span> ' if origin.get('channel') == 'webview' else '')
+            parts.append(f'<div class="feedback" data-proposal="{e(p["proposal_id"])}">'
+                         f'{_badge("proposed", labels["proposal_waiting"])}'
+                         f'{companion}{lit("proposal", p["restatement"])}<br><span class="small">'
+                         f'{lit("proposal", p["rationale"])}</span></div>')
+    return (f'<article class="decision" data-decision="{e(did)}" data-status="{e(status)}">'
+            f'{"".join(parts)}</article>')
+
+
+def _availability_summary(view: Mapping, variables: list[dict]) -> str:
+    """L6: the feature availability in a few lines, one per status, the variables named."""
+    labels = _labels()
+    value = view['decisions']['feature_availability']['value']
+    if not isinstance(value, Mapping) or not value:
+        return ''
+    order = [v['name'] for v in variables if v.get('role') == 'feature'] or sorted(value)
+    groups: dict[str, list[str]] = {}
+    for name in order + sorted(set(value) - set(order)):
+        status = value.get(name)
+        if status:
+            groups.setdefault(status, []).append(name)
+    items = []
+    for status in ('available_at_prediction', 'uncertain_included', 'uncertain_excluded',
+                   'not_available'):
+        names = groups.pop(status, [])
+        if names:
+            items.append(f'<li data-availability="{e(status)}"><strong>'
+                         f'{e(labels["availability"].get(status, status))}</strong> '
+                         f'({lit("decision_value", len(names))}): '
+                         f'{", ".join(lit("identifier", n, "code") for n in names)}</li>')
+    for status, names in sorted(groups.items()):
+        items.append(f'<li data-availability="{e(status)}"><strong>{e(status)}</strong>: '
+                     f'{", ".join(lit("identifier", n, "code") for n in names)}</li>')
+    return f'<ul class="availability-summary">{"".join(items)}</ul>'
 
 
 def _capital(text: str) -> str:
@@ -547,39 +590,35 @@ def _result_block(view: Mapping, citer: cite.Citer, slot: str) -> str:
             f'{_figures(citer, item["result_id"], spec)}</div>')
 
 
-def _evidence(view: Mapping, citer: cite.Citer) -> str:
+def why_step(view: Mapping, citer: cite.Citer, step: Mapping) -> str:
+    """L6: the "why" of one step, from ``content/steps.yaml``: its question, the term first
+    (glossary), the context (cited numbers), the method, the interpretation once its results
+    are current, and the consequence. The anchor ``step-<id>`` is kept."""
     labels = _labels()
-    articles = []
-    for index, step in enumerate(view['plan'], start=1):
-        content = texts.step(step['id'])
-        status = labels['step_status'].get(step['status'], step['status'])
-        parts = [f'<h3>{lit("ordinal", index)}. {e(step["title"])} {_badge(step["status"], status)}</h3>',
-                 f'<p><strong>Question.</strong> {e(step["question"])}</p>',
-                 _concept(content.get('concept')),
-                 f'<p>{citer.expand(content["context"])}</p>'
-                 if content.get('context') and citer.ready(content['context']) else '',
-                 f'<p><strong>Method.</strong> {e(content.get("method", ""))}</p>']
-        slots = slots_of_step(step['id'], view['results'], view.get('task'))
-        parts += [_result_block(view, citer, slot) for slot in slots]
-        if step['id'] == 'train_eda':
-            parts.append(_looks(view))
-        if step['decision']:
-            d = view['decisions'][step['decision']]
-            parts.append(f'<p><strong>Decision.</strong> '
-                         f'{_badge(d["status"], labels["decision_status"][d["status"]])}</p>')
-        interp = content.get('interpretation')
-        if interp and citer.ready(interp) and (not slots or any(
-                citer.slot_rid(s) for s in slots)):
-            parts.append(f'<p><strong>Interpretation.</strong> {citer.expand(interp)}</p>')
-        elif interp:
-            parts.append(f'<p class="muted"><strong>Interpretation.</strong> '
-                         f'{e(texts.load("steps")["pending"])}</p>')
-        if content.get('consequence'):
-            parts.append(f'<p><strong>Consequence.</strong> {e(content["consequence"])}</p>')
-        articles.append(f'<article id="step-{e(step["id"])}" data-step="{e(step["id"])}">'
-                        f'{"".join(parts)}</article>')
-    return (f'<section id="evidence"><h2>{e(labels["sections"]["evidence"])}</h2>'
-            f'{"".join(articles)}</section>')
+    words = labels['narrative']['step_words']
+    content = texts.step(step['id'])
+    status = labels['step_status'].get(step['status'], step['status'])
+    parts = [f'<h3>{e(step["title"])} {_badge(step["status"], status)}</h3>',
+             f'<p><strong>{e(words["question"])}</strong> {e(step["question"])}</p>',
+             _concept(content.get('concept'))]
+    if content.get('context') and citer.ready(content['context']):
+        parts.append(f'<p>{citer.expand(content["context"])}</p>')
+    if content.get('method'):
+        parts.append(f'<p><strong>{e(words["method"])}</strong> {e(content["method"])}</p>')
+    slots = slots_of_step(step['id'], view['results'], view.get('task'))
+    interp = content.get('interpretation')
+    if interp and citer.ready(interp) and (not slots or any(
+            citer.slot_rid(s) for s in slots)):
+        parts.append(f'<p><strong>{e(words["interpretation"])}</strong> '
+                     f'{citer.expand(interp)}</p>')
+    elif interp:
+        parts.append(f'<p class="muted"><strong>{e(words["interpretation"])}</strong> '
+                     f'{e(texts.load("steps")["pending"])}</p>')
+    if content.get('consequence'):
+        parts.append(f'<p><strong>{e(words["consequence"])}</strong> '
+                     f'{e(content["consequence"])}</p>')
+    return (f'<div class="why-step" id="step-{e(step["id"])}" data-step="{e(step["id"])}">'
+            f'{"".join(parts)}</div>')
 
 
 def _tied(citer: cite.Citer, rid: str, prefix: list[str], model: Mapping) -> str:
@@ -888,52 +927,70 @@ ANNEX_SKIPPED = 'scatter'
 
 
 def _annex(view: Mapping, citer: cite.Citer) -> str:
+    """The results annex, a ``<details id="annex">`` closed by default: one entry per result
+    with its anchor ``r-<result_id>`` (C10), its identity, and how many of its values the
+    report cites.
+
+    L6 (R8): the annex no longer lists every recorded value (more than three megabytes on a
+    Hotel study, mostly the diagnostics). Every number of the report is a ``<data>`` element
+    that names its result and path, which ``hypotrail check`` resolves against the registry;
+    ``hypotrail evidence --result`` shows every recorded value. Each current result still
+    cites one value here (its rows, else its first number), so the report consumes every
+    current result even when no chapter quotes it. Must run after the chapters."""
     labels = _labels()
+    words = labels['narrative']['annex']
+    cited: dict[str, set] = {}
+    for c in citer.cited:
+        cited.setdefault(c['result_id'], set()).add(c['path'])
     blocks = []
     anchored: set[str] = set()
     for slot in sorted(view['results']):
         item = view['results'][slot]
         rid = item['result_id']
-        head = (f'<summary>{lit("identifier", slot, "code")} · {lit("identifier", item["activity"] or "")}'
+        spec = texts.activity(slot)
+        title = spec.get('label') or labels.get('slot_labels', {}).get(slot, slot)
+        head = (f'<summary>{lit("identifier", slot, "code")} · {e(title)}'
                 f' · result {lit("identifier", rid[:12], "code")}</summary>')
         if not citer.citable(rid):
             state = 'stale' if item['integrity'] == 'ok' else item['integrity']
             blocks.append(f'<details data-slot="{e(slot)}" data-state="stale">{head}<p>'
                           f'{_badge("stale", labels["not_cited"])}{lit("message", state)}</p></details>')
             continue
-        rows = []
+        n_cited = len(cited.get(rid, ()))
         if item['n_rows'] is not None and cite.is_number(item['n_rows']):
-            rows.append(f'<tr><td>{lit("identifier", "n_rows", "code")}</td>'
-                        f'<td>{citer.num(rid, "@n_rows", "int")}</td></tr>')
-        for segments, _ in cite.leaves(item['values']):
-            if ANNEX_SKIPPED in segments:
-                continue        # WP-B4: chart points are drawn, not shown as figures
-            path = cite.format_path(segments)
-            rows.append(f'<tr><td>{lit("identifier", path, "code")}</td>'
-                        f'<td>{citer.num(rid, path, "auto")}</td></tr>')
+            anchor_value = (f'{e(labels["narrative"]["annex"]["rows"])}: '
+                            f'{citer.num(rid, "@n_rows", "int")}')
+        else:
+            first = next((segments for segments, _ in cite.leaves(item['values'])
+                          if ANNEX_SKIPPED not in segments), None)
+            anchor_value = (f'{lit("identifier", cite.format_path(first), "code")}: '
+                            f'{citer.num(rid, cite.format_path(first), "auto")}'
+                            if first is not None else '')
         env = item['environment'] or {}
         meta = (f'<p class="small">Full id {lit("identifier", rid, "code")}; partition '
                 f'{lit("identifier", item["partition"] or "not recorded")}; parameters '
                 f'{lit("parameter", _value_text(item["params"]), "code")}; code fingerprint '
                 f'{lit("identifier", (item["code_fingerprint"] or "")[:12], "code")}; environment '
                 f'{lit("environment", "Python " + str(env.get("python", "unknown")))}.</p>')
+        uses = (f'<p class="small" data-cited-values="{n_cited}">{anchor_value}. '
+                f'{lit("structure", n_cited)} {e(words["cited"])}. {e(words["all_values"])} '
+                f'{lit("identifier", "hypotrail evidence --result " + rid, "code")}</p>')
         # C10: one anchor per cited result (``#r-<result_id>``); an anchor only, never a
         # link to an editor or a control (CLI-CONTRACT-COMPANION §10, §11).
         anchor = f' id="r-{e(rid)}"' if rid not in anchored else ''
         anchored.add(rid)
         blocks.append(f'<details{anchor} data-slot="{e(slot)}" data-state="current">{head}{meta}'
-                      f'<div class="scroll"><table><thead><tr><th>Value path</th><th>Value</th></tr>'
-                      f'</thead><tbody>{"".join(rows)}</tbody></table></div></details>')
+                      f'{uses}</details>')
     exposure = view['exposure']
     purposes = sorted(p for p, n in (exposure.get('by_purpose') or {}).items() if n)
     used = bool(exposure.get('validation_rows_used_for_selection'))
     exp = (f'<h3>{e(texts.glossary("exposure")["term"])}</h3>{_concept("exposure")}'
            f'<p>Purposes recorded: {", ".join(lit("identifier", p, "code") for p in purposes) or "none"}. '
            f'Validation rows used for selection: {"yes" if used else "no"}.</p>')
-    return (f'<section class="annex-section"><details class="annex" id="annex"><summary>'
+    return (f'<details class="annex" id="annex"><summary>'
             f'{e(labels["sections"]["annex"])}</summary>'
-            f'<p class="small">{e(labels["annex_note"])}</p>{"".join(blocks)}{exp}</details>'
-            f'</section>')
+            f'<p class="small">{e(labels["annex_note"])} {e(words["results_note"])}</p>'
+            f'{"".join(blocks)}{exp}</details>')
 
 
 def _history(view: Mapping) -> str:
@@ -1166,23 +1223,11 @@ def _regression_figures(citer: cite.Citer, chosen: str = 'fit.linear') -> list[t
     return rows
 
 
-def _verdict(view: Mapping, citer: cite.Citer) -> str:
-    labels = _labels()
-    card = labels['verdict_card']
+def criterion_rows(view: Mapping) -> list[tuple[str, str]]:
+    """The success criterion row of the verdict card (also in the conclusion chapter): the
+    criterion in words and its judged status, or "no criterion fixed yet"."""
+    card = _labels()['verdict_card']
     task = view.get('task') or 'binary'
-    conclusion = view['decisions']['conclusion']
-    parts = [f'<h2>{e(labels["sections"]["verdict"])}</h2>']
-    value = conclusion.get('value') if isinstance(conclusion.get('value'), Mapping) else None
-    if conclusion['status'] == 'confirmed' and value:
-        verdict = labels['verdict'].get(value.get('verdict'), value.get('verdict'))
-        parts.append(f'<p class="conclusion" data-verdict="{e(str(value.get("verdict")))}">'
-                     f'<strong>{e(verdict)}.</strong></p>'
-                     f'{lit("decision_value", value.get("text", ""), "q")}')
-    else:
-        waiting = any(p['decision_id'] == 'conclusion' for p in view['open_proposals'])
-        parts.append(f'<p class="conclusion" data-verdict="none"><strong>'
-                     f'{e(card["not_concluded"])}</strong>'
-                     f'{" " + e(card["proposed"]) if waiting else ""}</p>')
     rows = []
     criterion = view.get('criterion')
     if criterion is not None:
@@ -1209,6 +1254,28 @@ def _verdict(view: Mapping, citer: cite.Citer) -> str:
                              f'{_badge(status, card["status"].get(status, status))}'))
         else:
             rows.append((card['criterion'], e(card['criterion_none'])))
+    return rows
+
+
+def _verdict(view: Mapping, citer: cite.Citer) -> str:
+    labels = _labels()
+    card = labels['verdict_card']
+    task = view.get('task') or 'binary'
+    conclusion = view['decisions']['conclusion']
+    parts = [f'<h2>{e(labels["sections"]["verdict"])}</h2>']
+    value = conclusion.get('value') if isinstance(conclusion.get('value'), Mapping) else None
+    if conclusion['status'] == 'confirmed' and value:
+        verdict = labels['verdict'].get(value.get('verdict'), value.get('verdict'))
+        parts.append(f'<p class="conclusion" data-verdict="{e(str(value.get("verdict")))}">'
+                     f'<strong>{e(verdict)}.</strong></p>'
+                     f'{lit("decision_value", value.get("text", ""), "q")}')
+    else:
+        waiting = any(p['decision_id'] == 'conclusion' for p in view['open_proposals'])
+        parts.append(f'<p class="conclusion" data-verdict="none"><strong>'
+                     f'{e(card["not_concluded"])}</strong>'
+                     f'{" " + e(card["proposed"]) if waiting else ""}</p>')
+    rows = criterion_rows(view)
+    criterion = view.get('criterion')
     decision = 'model_choice' if task == 'regression' else 'policy'
     adopted = view['decisions'].get(decision) or {}
     if adopted.get('status') == 'confirmed':
@@ -1254,6 +1321,9 @@ def _verdict(view: Mapping, citer: cite.Citer) -> str:
                      + ''.join(f'<li>{lit("message", t)}</li>' for t in limits)
                      + f'</ul><p class="small"><a href="#not-yet-defensible">'
                        f'{e(card["all_limits"])}</a></p>')
+    # L6: the verdict comes first; the reasoning follows, chapter by chapter.
+    parts.append(f'<p class="next"><a href="#ch1">{e(labels["narrative"]["read_from_start"])}'
+                 f' <span aria-hidden="true">→</span></a></p>')
     return f'<section class="card verdict" id="verdict">{"".join(parts)}</section>'
 
 
@@ -1347,22 +1417,23 @@ def _fact_value(view: Mapping, fact_id: str):
 
 
 def _objective(view: Mapping) -> str:
+    """L6: the starting point of the study, as the case states it (chapter one's choice):
+    the decision it supports and the intended use, never a decision of the junior."""
     labels = _labels()
+    narrative = labels['narrative']
     items = []
-    for fid, name in (('decision', 'Decision the study supports'),
-                      ('intended_use', 'Intended use')):
+    for fid in ('decision', 'intended_use'):
         f = _fact_value(view, fid)
         if f:
-            items.append(f'<dt>{e(name)}</dt><dd>{lit("case", f["value"])}</dd>')
-    pt = view['decisions'].get('prediction_time') or {}
-    if pt.get('status') == 'confirmed':
-        items.append(f'<dt>Prediction moment</dt><dd>'
-                     f'{lit("decision_value", value_words("prediction_time", pt["value"], view.get("task")))}'
-                     f'</dd>')
+            items.append(f'<dt>{e(narrative["objective"][fid])}</dt>'
+                         f'<dd>{lit("case", f["value"])}</dd>')
     if not items:
         return ''
-    return (f'<section class="card" id="objective"><h2>{e(labels["sections"]["objective"])}</h2>'
-            f'<dl class="facts">{"".join(items)}</dl></section>')
+    return (f'<section class="card choice case" id="objective">'
+            f'<h3>{e(labels["sections"]["objective"])}</h3>'
+            f'<dl class="facts">{"".join(items)}</dl>'
+            f'<p class="basis"><span class="chip case">{e(narrative["case_basis"])}</span></p>'
+            f'</section>')
 
 
 def _who_decided(view: Mapping, name: str) -> tuple[str, str, str]:
@@ -1442,6 +1513,10 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
     for v in variables:
         groups.setdefault(v.get('group') or ds['ungrouped'], []).append(v)
     head = ds['head']
+    # L6: the data card (the grouped dictionary and the example rows) is folded under the
+    # summary; it stays in chapter one.
+    parts.append(f'<details class="data-card"><summary>{e(ds["dictionary"])}, '
+                 f'{e(_lower_first(ds["rows"]))}</summary>')
     # WP-A9 (M6): a narrow screen scrolls the tables sideways; say so where it shows.
     parts.append(f'<p class="small scroll-hint" data-scroll-hint>{e(ds["scroll_hint"])}</p>')
     for group, items in groups.items():
@@ -1494,6 +1569,7 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
                      f'<p class="small">{e(ds["rows_note"])}</p>')
     else:
         parts.append(f'<p class="muted">{e(ds["rows_missing"])}</p>')
+    parts.append('</details>')
     return f'<section class="card" id="data">{"".join(parts)}</section>'
 
 
@@ -1502,10 +1578,14 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
 MAX_CHARTS = 7          # v0.3 (WP-J): with a distribution and the correlation matrix
 
 
-def _charts(view: Mapping, citer: cite.Citer) -> str:
-    labels = _labels()
+def chart_map(view: Mapping, citer: cite.Citer) -> dict[str, list[str]]:
+    """``{slot: [figure html]}``: the charts of the report (at most :data:`MAX_CHARTS`, in
+    the order of v0.2a WP-A6 and v0.3 WP-J), each placed by L6 next to the result it draws:
+    the target, the first rate or mean by group, one distribution (a skewed one first), the
+    correlation matrix, the single-feature signal, then the positives found at each rule
+    (binary) or the residuals (regression)."""
     task = view.get('task') or 'binary'
-    out = []
+    out: list[tuple[str, str]] = []
 
     def values(slot):
         rid = citer.slot_rid(slot)
@@ -1514,17 +1594,17 @@ def _charts(view: Mapping, citer: cite.Citer) -> str:
     if task == 'regression':
         rid, v = values('eda.target_summary')
         if rid:
-            out.append(render_charts.target_distribution(citer, rid, v))
+            out.append(('eda.target_summary', render_charts.target_distribution(citer, rid, v)))
         group_slots = sorted(s for s in view['results'] if s.startswith('eda.mean_by:'))
     else:
         rid, v = values('eda.target_rate')
         if rid:
-            out.append(render_charts.target_balance(citer, rid, v))
+            out.append(('eda.target_rate', render_charts.target_balance(citer, rid, v)))
         group_slots = sorted(s for s in view['results'] if s.startswith('eda.rate_by:'))
     for slot in group_slots[:1]:
         rid, v = values(slot)
         if rid:
-            out.append(render_charts.by_group(citer, rid, v, rate=task != 'regression'))
+            out.append((slot, render_charts.by_group(citer, rid, v, rate=task != 'regression')))
     # v0.3 (WP-J, R17): one column's distribution, a skewed one first (its zeros apart, log
     # bins), as the study panel draws it.
     dist = []
@@ -1532,29 +1612,30 @@ def _charts(view: Mapping, citer: cite.Citer) -> str:
         rid, v = values(slot)
         if rid and isinstance(v, Mapping):
             dist.append((not (v.get('numeric') or {}).get('skewed'), slot, rid, v))
-    for _, _, rid, v in sorted(dist, key=lambda d: d[:2])[:1]:
-        out.append(render_charts.distribution(citer, rid, v))
+    for _, slot, rid, v in sorted(dist, key=lambda d: d[:2])[:1]:
+        out.append((slot, render_charts.distribution(citer, rid, v)))
     # v0.3 (WP-J, R28): the predictor correlation matrix with its collinearity flags.
     rid, v = values('eda.correlation')
     if rid:
-        out.append(render_charts.correlation(citer, rid, v))
+        out.append(('eda.correlation', render_charts.correlation(citer, rid, v)))
     rid, v = values('eda.single_feature_signal')
     if rid:
-        out.append(render_charts.signal(citer, rid, v))
+        out.append(('eda.single_feature_signal', render_charts.signal(citer, rid, v)))
     if task == 'regression':
         rid, v = values('evaluate.regression')
         if rid:
-            out.append(render_charts.residuals(citer, rid, v))
-            out.append(render_charts.residuals_by(citer, rid, v))
+            out.append(('evaluate.regression', render_charts.residuals(citer, rid, v)))
+            out.append(('evaluate.regression', render_charts.residuals_by(citer, rid, v)))
     else:
         rid, v = values('policy.evaluation')
         if rid:
             model = (view.get('criterion') or {}).get('model') or 'fit.logistic'
-            out.append(render_charts.selection(citer, rid, v, rule_words, model))
-    figures = [f for f in out if f][:MAX_CHARTS]
-    body = ''.join(figures) if figures else f'<p class="muted">{e(labels["charts_none"])}</p>'
-    return (f'<section class="card charts" id="charts"><h2>{e(labels["sections"]["charts"])}'
-            f'</h2><p>{e(labels["charts_intro"])}</p>{body}</section>')
+            out.append(('policy.evaluation',
+                        render_charts.selection(citer, rid, v, rule_words, model)))
+    placed: dict[str, list[str]] = {}
+    for slot, figure in [(s, f) for s, f in out if f][:MAX_CHARTS]:
+        placed.setdefault(slot, []).append(figure)
+    return placed
 
 
 def _looks(view: Mapping) -> str:
@@ -1586,12 +1667,15 @@ def build(view: Mapping, *, surfaces: Mapping | None = None,
     by :mod:`mlkit.study.cmd_render`). Raises ``untraceable_number`` when a cited number
     cannot be traced.
 
-    Order (v0.2a, WP-A6): the verdict card, the objective, the data, the charts, the
-    plan, the decisions, the evidence by step, the comparison, the limits, the case
-    statements, the surfaces, and the annex (collapsed). ``understanding`` (ADR 0008) is the
-    separate section of the understanding review, already escaped
-    (:func:`mlkit.study.understanding.render.section`); empty when the review was never
-    enabled, so such a report is unchanged.
+    Order (L6, R8; :mod:`mlkit.study.render_narrative`): the verdict card first, a short
+    "how to read" note, then nine chapters in the order of the study (the question and the
+    data; the framing; how it is evaluated; the exploration; the preparation; the models; the
+    decision rule or, in regression, the model choice; the final test; the conclusion and
+    its limits), each with the choice, why, the evidence and what remains uncertain, then
+    the annex (the results, the plan, the case statements, the history, the surfaces), with
+    a table of contents. ``understanding`` (ADR 0008) is the separate section of the
+    understanding review, already escaped (:func:`mlkit.study.understanding.render.section`),
+    placed after the conclusion; empty when the review was never enabled.
     """
     with texts.study_context(view), texts.report_language_context(view.get('language')):
         return _build(view, surfaces=surfaces, variables=variables, sample=sample,
@@ -1600,19 +1684,16 @@ def build(view: Mapping, *, surfaces: Mapping | None = None,
 
 def _build(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | None,
            sample: Mapping | None = None, understanding: str = '') -> tuple[str, list[str]]:
+    from . import render_narrative as narrative
+
     labels = _labels()
+    words = labels['narrative']
     citer = cite.Citer.from_view(view)
     surfaces = dict(surfaces or {})
     surfaces.setdefault('report', {'status': 'ok', 'revision': view['revision']})
-    comparison = (_model_comparison(view, citer) if view.get('task') == 'regression'
-                  else _policy(view, citer))
-    body = ''.join([
-        _verdict(view, citer), _objective(view), _data(view, citer, variables or [], sample),
-        _charts(view, citer), _plan(view), _decisions(view, variables or []),
-        _evidence(view, citer), comparison, render_trials.section(view, citer),
-        render_diagnostics.section(view, citer),
-        _not_yet_defensible(view), understanding, _facts(view), _history(view),
-        _surfaces(view, surfaces), _annex(view, citer)])
+    mobile, side, body = narrative.body(view, citer, surfaces=surfaces,
+                                        variables=variables or [], sample=sample,
+                                        understanding=understanding)
 
     consumed = sorted({c['result_id'] for c in citer.cited})
     snapshot_json = json.dumps(view.get('presentation'), sort_keys=True,
@@ -1621,18 +1702,21 @@ def _build(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | N
     page = (
         f'<!doctype html>\n<html lang="{e(view.get("language", "en"))}"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<meta name="color-scheme" content="light dark">'
         f'<meta name="hypotrail-revision" content="{view["revision"]}">'
         f'<meta name="hypotrail-template-version" content="{TEMPLATE_VERSION}">'
         f'<title>{e(labels["title"])}</title><style>{_css()}</style></head>\n'
         f'<body class="report" data-revision="{view["revision"]}">{BANNER_START}{BANNER_END}\n'
+        f'<a class="skip" href="#verdict">{e(words["skip"])}</a>'
         f'<header><span class="brand">Hypotrail</span>'
         f'<span>{e(labels["title"])} · {lit("case", case.get("id", ""))}</span>'
         f'<button type="button" data-theme-toggle aria-pressed="false">{e(labels["theme_toggle"])}</button>'
-        f'</header>\n<main><p class="lead">{e(labels["subtitle"])}</p>{body}</main>\n'
+        f'</header>\n{mobile}<div class="layout">{side}'
+        f'<main><p class="lead">{e(labels["subtitle"])}</p>{body}</main></div>\n'
         f'<footer class="page-footer">{e(labels["generated_by_for_revision"])} '
         f'{lit("revision", view["revision"])}. {e(labels["no_controls"])}</footer>\n'
         f'<script type="application/json" id="hypotrail-presentation">{snapshot_json}</script>'
-        f'<script>{THEME_SCRIPT}\n{ANCHOR_SCRIPT}</script></body></html>\n')
+        f'<script>{THEME_SCRIPT}\n{ANCHOR_SCRIPT}\n{narrative.SCRIPT}</script></body></html>\n')
     return page, consumed
 
 

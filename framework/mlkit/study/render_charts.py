@@ -701,3 +701,83 @@ def correlation(citer: cite.Citer, rid: str, values: Mapping) -> str:
              'asks whether both predictors are needed.')
     return figure('correlation', values.get('question') or
                   'Which predictors carry nearly the same information?', svg, lg, note)
+
+
+# --- L6 (R8): two charts of the narrative report, drawn from recorded values only ----------
+
+def fold_scores(citer: cite.Citer, rid: str, selection: Mapping, names: list[str],
+                words: Mapping) -> str:
+    """The out-of-fold score of each fold, one row per configuration compared
+    (``model_selection.configurations.<i>.per_fold``), with the mean of the folds cited.
+    ``names`` are the configurations' names in the study language; ``words`` the labels of
+    ``narrative.charts``. Empty when fewer than two configurations have their folds."""
+    configs = [(i, c) for i, c in enumerate(selection.get('configurations') or [])
+               if isinstance(c, Mapping) and isinstance(c.get('per_fold'), list)
+               and c['per_fold'] and all(_num(v) for v in c['per_fold']) and _num(c.get('mean'))]
+    if len(configs) < 2:
+        return ''
+    fmt = 'f3' if selection.get('metric') == 'roc_auc' else 'f2'
+    every = [v for _, c in configs for v in c['per_fold']]
+    pad = (max(every) - min(every)) * 0.08 or 0.01
+    scale = Scale(min(every) - pad, max(every) + pad, x1=WIDTH - RIGHT - 10)
+    body, y = [], TOP
+    for row, (i, c) in enumerate(configs):
+        cy = y + 11
+        body.append(lit('category', short(names[row] if row < len(names) else c.get('slot')),
+                        LEFT - 8, cy + 4, 'end'))
+        for j, v in enumerate(c['per_fold']):
+            cls = 'pt m' if row == 0 else 'pt'
+            body.append(f'<circle class="{cls}" cx="{scale(v):.1f}" cy="{cy}" r="5"/>')
+        mx = scale(c['mean'])
+        body.append(f'<line class="median" x1="{mx:.1f}" y1="{cy - 11}" x2="{mx:.1f}" '
+                    f'y2="{cy + 11}"/>')
+        body.append(citer.svg_num(rid, f'model_selection.configurations.{i}.mean', fmt,
+                                  x=WIDTH - RIGHT + 4, y=cy + 4))
+        y += ROW + 8
+    body.insert(0, scale.axis(TOP - 8, y + 2))
+    svg = _svg(y + AXIS, ''.join(body), words['folds_label'])
+    lg = legend(('pt', words['folds_point']), ('outline', words['folds_mean']))
+    return figure('fold_scores', words['folds_question'], svg, lg, e(words['folds_note']))
+
+
+def nonlinearity(citer: cite.Citer, rid: str, index: int, check: Mapping, words: Mapping,
+                 *, binary: bool) -> str:
+    """The gap between the observed outcome and the mean prediction in each range of one
+    feature (``linear_checks.nonlinearity.<index>.bins``), with plus or minus two standard
+    errors drawn: the shape a linear model does not follow. Binary gaps are shown in
+    percentage points (``pts1``), regression gaps in the target's unit."""
+    bins = [(j, b) for j, b in enumerate(check.get('bins') or [])
+            if isinstance(b, Mapping) and _num(b.get('gap')) and _num(b.get('se'))]
+    if len(bins) < 2:
+        return ''
+    k = 100 if binary else 1          # the binary gap is drawn in percentage points
+    reach = max(abs(b['gap']) + 2 * b['se'] for _, b in bins) * k * 1.1 or 0.01
+    scale = Scale(-reach, reach, x1=WIDTH - RIGHT - 10)
+    fmt = 'pts1' if binary else 'f2'
+    feature = str(check.get('feature', ''))
+    body, y = [], TOP
+    x0 = scale(0)
+    for j, b in bins:
+        cy = y + 11
+        low, high = b.get('low'), b.get('high')
+        label = (words['range'].format(low=_tick_text(low, False), high=_tick_text(high, False))
+                 if _num(low) and _num(high) else str(b.get('bin', '')))
+        body.append(lit('category', short(label), LEFT - 8, cy + 4, 'end'))
+        gap, se = b['gap'] * k, b['se'] * k
+        xa, xb = sorted((x0, scale(gap)))
+        body.append(f'<rect class="m" x="{xa:.1f}" y="{cy - 7}" width="{max(1.0, xb - xa):.1f}" '
+                    f'height="14" rx="3"/>')
+        body.append(f'<line class="ci" x1="{scale(gap - 2 * se):.1f}" y1="{cy}" '
+                    f'x2="{scale(gap + 2 * se):.1f}" y2="{cy}"/>')
+        base = f'linear_checks.nonlinearity.{index}.bins.{j}.gap'
+        body.append(citer.svg_num(rid, base, fmt, x=WIDTH - RIGHT + 4, y=cy + 4))
+        y += ROW
+    body.append(f'<line class="zero" x1="{x0:.1f}" y1="{TOP - 8}" x2="{x0:.1f}" y2="{y}"/>')
+    body.insert(0, scale.axis(TOP - 8, y + 2))
+    svg = _svg(y + AXIS, ''.join(body), words['nonlinearity_label'].format(feature=feature))
+    bar = f'{words["nonlinearity_bar"]} ({words["points"]})' if binary \
+        else words['nonlinearity_bar']
+    lg = legend(('m', bar), ('ci', words['nonlinearity_ci']))
+    return figure(f'nonlinearity:{feature}',
+                  words['nonlinearity_question'].format(feature=feature), svg, lg,
+                  e(words['nonlinearity_note']))

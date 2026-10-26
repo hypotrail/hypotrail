@@ -314,6 +314,7 @@ class _Page(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.stack, self.order, self.prose, self.svg_numbers = [], [], [], []
         self.figures = 0
+        self.charts = []
         self.annex_open = None
 
     def handle_starttag(self, tag, attrs):
@@ -324,6 +325,7 @@ class _Page(HTMLParser):
             self.order.append(a['id'])
         if tag == 'figure':
             self.figures += 1
+            self.charts.append(a.get('data-chart') or '')
         if tag == 'details' and a.get('id') == 'annex':
             self.annex_open = 'open' in a
 
@@ -349,8 +351,17 @@ def test_report_layout_and_traceability(studies, name):
     page = (study / mf.ARTIFACTS['report']).read_text(encoding='utf-8')
     p = _Page()
     p.feed(page)
-    assert p.order[:4] == ['verdict', 'objective', 'data', 'charts']
-    assert 3 <= p.figures <= 7      # v0.3 (WP-J): a distribution and the correlation matrix too
+    # L6 (R8): the verdict first, then the chapters in the order of the study, then the
+    # annex; the data card is in chapter one.
+    assert p.order[:3] == ['verdict', 'howto', 'ch1']
+    chapters = [x for x in p.order if x.startswith('ch') or x == 'appendix']
+    assert chapters == [f'ch{i}' for i in range(1, 10)] + ['appendix']
+    assert p.order.index('objective') < p.order.index('data') < p.order.index('ch2')
+    # v0.3 (WP-J): a distribution and the correlation matrix too. L6 adds two charts drawn
+    # from recorded values, outside that count: the fold-by-fold comparison and the shape a
+    # linear model does not follow.
+    added = [c for c in p.charts if c == 'fold_scores' or c.startswith('nonlinearity:')]
+    assert 3 <= p.figures - len(added) <= 7
     assert p.annex_open is False
     # every number drawn in a chart is a cited label or an axis tick
     for text, ancestors in p.svg_numbers:

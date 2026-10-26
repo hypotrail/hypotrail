@@ -252,6 +252,129 @@ rows_label:
   development: lignes de développement
   final_test: lignes du test final
   all: toutes les lignes
+narrative:
+  availability_detail: Colonne par colonne, avec qui a décidé chaque statut
+  contents: Sommaire
+  skip: Aller au contenu
+  read_from_start: Lire le raisonnement depuis le début
+  howto: Ce rapport raconte l'étude dans l'ordre où elle a été menée. Chaque chapitre donne le choix, pourquoi il a été fait, la preuve à l'endroit où l'argument en a besoin, et ce qui reste incertain. Chaque nombre cite un résultat enregistré ; survolez-le pour voir lequel, et l'annexe liste tous les résultats.
+  howto_label: Comment lire ce rapport
+  where: "Où en est l'étude :"
+  legend: 'Chaque preuve indique quelles lignes elle a lues :'
+  parts:
+    choice: Le choix
+    why: Pourquoi
+    evidence: La preuve
+    uncertain: Ce qui reste incertain
+  chapter_status:
+    done: Exécuté
+    in_progress: En cours
+    pending: Pas encore exécuté
+    absent: Hors du plan de cette étude
+  evidence_class:
+    none: Aucune donnée lue
+    structural: Lecture structurelle, la cible n'est pas lue
+    development: Preuve de développement, a servi à choisir, donc optimiste
+    final: Preuve finale, le test scellé ouvert une fois
+  evidence_short:
+    none: Aucune donnée lue
+    structural: Lecture structurelle
+    development: Preuve de développement
+    final: Preuve finale
+  result_link: Résultat enregistré, en annexe
+  step_words:
+    question: Question.
+    method: Méthode.
+    interpretation: Lecture.
+    consequence: Conséquence.
+  choice_none: Pas encore décidé.
+  case_basis: Énoncé du cas, hypothèse du scénario. Rien n'est décidé à cette étape.
+  objective:
+    decision: Décision que l'étude éclaire
+    intended_use: Usage prévu
+  sealing_basis: Automatique, à la création de l'étude
+  sealing_note: La méthode et la part viennent du cas ; rien n'a été lu avant.
+  exploration_choice: Les explorations menées. Aucune décision n'est prise à cette étape ; chaque regard sur la cible est compté.
+  exploration_none: Aucune exploration n'a encore été menée.
+  structural_heading: La structure, sans lire la cible
+  structural_note: Ces lectures ne regardent pas le résultat ; elles ne peuvent donc pas orienter un choix vers ce qui marche sur ces lignes.
+  target_heading: Les regards sur la cible
+  signal_note: Un contrôle fait pendant l'exploration, après le cadrage, qui demande si une variable seule prédit le résultat si bien qu'il faut se demander si elle est vraiment connue au moment de la prédiction.
+  motivation_heading: Les lectures qui ont motivé cette préparation
+  motivation_none: Aucune lecture n'est enregistrée comme motif de cette préparation.
+  uncertain_none: Rien de particulier n'est enregistré pour ce chapitre. Les limites de toute l'étude sont listées dans la conclusion.
+  pending_chapter: Pas encore exécuté. Ce chapitre se remplit quand ses étapes sont menées.
+  absent_chapter: Le plan de cette étude n'a pas d'étape pour ce chapitre.
+  uncertain_features: 'Variables dont la disponibilité au moment de la prédiction est incertaine :'
+  looks_limit: Plus il y a de regards sur la cible, plus un motif trouvé parmi eux peut être dû au seul hasard ; l'étude les compte.
+  looks_count: regards sur la cible jusqu'ici
+  conclusion_evidence: Les chiffres qui fondent cette conclusion sont dans le verdict et dans le chapitre du test final.
+  next_step: "Et ensuite : le paquet de transmission (hypotrail export handoff) rassemble la conclusion, les choix et ces limites pour l'équipe qui reprend l'étude."
+  versus:
+    heading: Preuve de développement et preuve finale, côte à côte
+    measure: Mesure
+    rows: Lignes
+    base_rate: Taux de positifs, la précision du modèle de référence
+    precision: Précision du modèle à la règle
+    gain: Gain sur le modèle de référence, en points de pourcentage
+    recall: Rappel du modèle à la règle
+    auc: Aire sous la courbe ROC
+    mae: Erreur absolue moyenne du modèle
+    mae_baseline: Erreur absolue moyenne du modèle de référence
+  chapters:
+    verdict: Verdict
+    ch1:
+      title: La question et les données
+      lede: Ce que l'étude doit aider à décider, ce que décrit une ligne, et quelles lignes restent scellées.
+    ch2:
+      title: 'Le cadrage : quand prédit-on, avec quoi ?'
+      lede: Le moment où la prédiction est faite, et les colonnes connues à ce moment.
+    ch3:
+      title: Comment on évalue
+      lede: Comment les lignes servent à comparer les modèles, et le critère de succès fixé avant tout modèle.
+    ch4:
+      title: Ce que l'exploration a montré
+      lede: D'abord la structure, sans lire la cible ; ensuite les regards sur la cible, chacun compté.
+    ch5:
+      title: Comment les variables sont préparées, et pourquoi
+      lede: La préparation des variables et les lectures qui l'ont motivée.
+    ch6:
+      title: Les modèles et leur comparaison
+      lede: Le modèle de référence, le modèle candidat, ce que ses diagnostics ont signalé, et les variantes comparées sur les mêmes lignes.
+    ch7:
+      title: La règle de décision
+      lede: Comment les scores deviennent des actions, et ce que chaque règle trouve par rapport au modèle de référence.
+    ch8:
+      title: Le test final
+      lede: Les lignes scellées, ouvertes une fois pour la configuration choisie ; la seule preuve indépendante de l'étude.
+    ch9:
+      title: La conclusion et ses limites
+      lede: La conclusion dans vos mots, et ce que l'étude ne permet pas de dire.
+    understanding: Compréhension et transmission
+    annex: Annexe
+  annex:
+    intro: Pour vérifier un chiffre ; la lecture du raisonnement n'en a pas besoin.
+    results_note: Chaque résultat cité par le rapport, avec son identité. Survolez un nombre du rapport pour voir son résultat et son chemin ; hypotrail evidence avec --result et l'identifiant du résultat montre toutes ses valeurs enregistrées.
+    cited: valeurs de ce résultat sont citées dans ce rapport
+    rows: Lignes lues
+    all_values: 'Toutes les valeurs enregistrées :'
+    plan: Où en est l'étude
+    facts: Ce que dit le cas
+    history: Historique
+    revision: Révision et livrables
+  charts:
+    folds_question: Une configuration classe-t-elle mieux les lignes que le candidat, pli par pli ?
+    folds_label: Score hors pli de chaque pli, par configuration
+    folds_point: Un pli
+    folds_mean: Moyenne des plis
+    folds_note: Chaque point est le score hors pli d'un pli ; le trait est la moyenne des plis. Les configurations sont comparées sur les mêmes plis ; une configuration plus basse sur chaque pli classe moins bien les lignes.
+    nonlinearity_question: Le modèle suit-il la forme de {feature}, ou se trompe-t-il de façon systématique d'une tranche de valeurs à l'autre ?
+    nonlinearity_label: Taux observé moins score moyen, par tranche de {feature}
+    nonlinearity_bar: Taux observé moins score moyen
+    nonlinearity_ci: Plus ou moins deux erreurs types
+    nonlinearity_note: Une barre à droite signifie que le modèle prédit trop peu de lignes positives dans cette tranche ; à gauche, trop. Une forme signalée est une forme que le modèle linéaire ne suit pas.
+    points: points de pourcentage
+    range: '{low} à {high}'
 regression:
   sections:
     policy: Comparaison des modèles
@@ -264,6 +387,11 @@ regression:
     inconclusive: Non concluant
   chosen_model: Modèle choisi
   proposed_model: Modèle proposé
+  narrative:
+    chapters:
+      ch7:
+        title: Le choix du modèle
+        lede: Les modèles comparés sur les mêmes lignes, leurs résidus, et le modèle choisi.
   model_missing: Aucune comparaison actuelle de modèles.
   model_note: Les erreurs sont calculées sur les lignes de validation après un choix fait sur elles, dans l'unité de la cible. Elles sont optimistes et ne prédisent pas l'erreur sur de futures lignes.
   model_note_oof: Les erreurs sont des prédictions hors pli sur les lignes de développement, après un choix fait sur elles, dans l'unité de la cible. Ce sont des preuves de développement optimistes ; seul le test final, ouvert une fois, est indépendant.
@@ -328,6 +456,7 @@ roles:
   group_id: Identifiant de groupe, pas une variable du modèle
   id: Identifiant de ligne, pas une variable du modèle
 slot_labels:
+  eda.correlation: Associations entre les variables explicatives (sans lire la cible)
   eda.quality: Qualité des lignes de développement (sans lire la cible)
   eda.single_feature_signal: Signal de chaque variable seule sur les lignes d'entraînement
 not_yet_defensible_extra:

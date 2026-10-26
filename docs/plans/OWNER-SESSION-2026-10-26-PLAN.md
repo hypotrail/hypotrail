@@ -15,6 +15,16 @@ pins in `test_contract_freeze.py`, panel fixtures recaptured, the choice card an
 `after_study` checked end to end on a real study). Unit, walker, simulated-browser and
 real-CLI tests only; not run with Copilot (§5.4 still to do). Later waves are not merged here.
 
+Implementation status (wave W2): **L6** (R8, the narrative report after the approved D14
+mockup: verdict first, nine chapters with the choice, why, the evidence and what remains
+uncertain, a sticky table of contents folded into a top menu below 600 px, evidence
+classes in words, a compact results annex, two charts drawn from recorded values: the
+fold-by-fold comparison and the non-linearity by range; `render_html.TEMPLATE_VERSION` 3,
+`render_narrative`) is implemented on branch `w2-l6`, unit and simulated-browser tests
+only (`test_report_narrative.py`); not yet merged by the integrator, not read by the owner
+at a rehearsal (§5.4 step 16 still to do). The Hotel report of the mockup study goes from
+about 4.0 MB to about 0.76 MB, `check` clean.
+
 **Priority of this batch (owner, 2026-10-26): the workshop journey.** The batch prepares a
 workshop. What matters most is the junior's journey as they live it: visually clear,
 pedagogical, working features, a fluid path. Lots and waves are therefore ordered by their
