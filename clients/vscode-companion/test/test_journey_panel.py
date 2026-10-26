@@ -85,18 +85,25 @@ def test_j_panel_the_named_section_shows_at_least_one_item(tmp_path, monkeypatch
     monkeypatch.setenv(ce.ENV_VAR, '1')
     monkeypatch.setenv(ce.STAGE_ENV, 'v3')
     f, task, _ = journey.journey_flow(tmp_path, case, lang)
-    reads = []
+    reads, captures = [], []
 
     def read(*args):
         return f.call(*args, '--json', '--study', f.study)
 
     def on_write(label, payload):
+        if label == 'run:predictor.capture':
+            # Third session of 2026-10-26: the capture before the opening shows nothing in
+            # the panel (``shown`` null, no panel line), as test_journey_walkthrough checks.
+            assert payload['next_action']['panel']['shown'] is None
+            captures.append(label)
+            return
         reads.append({'label': label, 'shown': payload['next_action']['panel']['shown'],
                       'summary': read('status', '--summary', '--digest'),
                       'decisions': read('decisions'), 'evidence': read('evidence'),
                       'data': read('data')})
 
     journey.walk(f, task, on_write=on_write)
+    assert len(captures) == 1, captures
     models = json.loads(subprocess.run([NODE, '-e', PROJECT], input=json.dumps(reads),
                                        capture_output=True, text=True, check=True, cwd=CLIENT,
                                        timeout=300).stdout)
