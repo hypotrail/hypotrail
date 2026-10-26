@@ -319,3 +319,13 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   status). See the answer in the session; to decide whether the agent should offer the
   Azure ML export (`hypotrail export azureml --plan`) at `done`, with the honest status
   (no Azure job or endpoint has ever been run).
+- **R18. `export azureml` without `--expected-revision` gives an unclear refusal.**
+  `hypotrail export azureml --study … --plan --format text` answers "refused
+  (invalid_arguments): --expected-revision must be a revision number." with remediation "Read
+  the revision with hypotrail status first." The flag is required by contract (§15: the export
+  reads exactly one revision), but the message reads as if a value were malformed, and the
+  user has to run another command to find the number. To fix: say the flag is required, and
+  name the current revision in the message and in `details` (the command already reads the
+  study), e.g. "--expected-revision is required: the study is at revision 41; add
+  --expected-revision 41". Also: the owner's shell had another project's `VIRTUAL_ENV`
+  active, and uv warned and ignored it; harmless, but worth one line in the export docs.
