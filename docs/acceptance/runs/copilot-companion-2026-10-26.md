@@ -305,3 +305,17 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   pause; a choice among the engine's options (conclusion verdicts, model choice, variants)
   should use the picker too, one option per allowed value with the junior's own words, no
   option marked recommended when `recommended` is null.
+- **R17. A wrong limit in the closing message.** After the conclusion the agent lists the
+  report's limits, among them "Ni colonne de temps ni identifiant d'entité : l'étude ne peut
+  pas vérifier une dérive dans le temps, ni des entités répétées entre les échantillons." The
+  Hotel study has a time order: its final test is temporal (`init`: `"method": "temporal"`)
+  and its split uses temporal folds; the final test even shows the period effect
+  (cancellation share 25.9 % → 35.3 %). To check: which `not_yet_defensible` item says this
+  (probably the limit keyed on `structure.time_column` being absent while the case declares
+  an order instead), and make it follow the case's declared order; the entity part may be
+  right (no guest identifier).
+- **Next step asked by the owner: "comment lancer le déploiement".** The closing message
+  does not say what comes after the study (export, capture with packaging, deployment
+  status). See the answer in the session; to decide whether the agent should offer the
+  Azure ML export (`hypotrail export azureml --plan`) at `done`, with the honest status
+  (no Azure job or endpoint has ever been run).
