@@ -355,7 +355,7 @@ def test_instructions_carry_the_v0_2a_rules():
         # the pauses and EDA governance
         for phrase in ('**success criterion**', 'before any model is fitted',
                        '**preprocessing**', '`next_action.default_value`', '`motivated_by`',
-                       '`data_contingent`', '`values.question`', '`null_band`',
+                       '`data_contingent`', '`question_junior`', '`null_band`',
                        '`eda.single_feature_signal` only raises a legitimacy question',
                        'its score keeps or drops no feature', '`eda_looks`'):
             assert phrase in rule3, (task, phrase)
@@ -533,8 +533,18 @@ def test_diagnostics_variants_and_r32(task):
     assert {'one_se', 'advice'} <= set(trials.SELECTION_KEYS)
     pre = Flat(rule3.split('**Preprocessing.**', 1)[1].split('**Variants', 1)[0])
     for phrase in ('`decide propose` returns `data_contingent`',
-                   "say that reason's `text` before you present the proposal"):
+                   # L5 (R5, R7): the engine drafts the preparation and explains the stamp
+                   # (test_l5_recommendations.py pins the behaviour that moved there).
+                   'say `data_contingent_reason.junior_text` before you present the proposal',
+                   'drafted from the quality check', '`recommended.reasons`',
+                   '`alternatives` is the comparison'):
         assert phrase in pre, phrase
+    variants = Flat(rule3.split('**Variants and model families**', 1)[1])
+    # L5 (R13, R14, R15): the drafted EBM, the families' junior words, the refusal that teaches.
+    for phrase in ('with the EBM when the diagnostics flag a pattern',
+                   'Name families by `junior_words`', 'relay `not_offered`',
+                   "a refused family's `details.junior_message`"):
+        assert phrase in variants, phrase
 
 
 @pytest.mark.parametrize('task', af.TASKS)
@@ -927,6 +937,51 @@ CLAUDE_CODE_INTENDED_CHANGES = {
         '\nAt `done`, relay `next_action.after_study.junior_text`, then offer the handoff pack '
         'and, only when `after_study.azureml.supported`, the export plan (its `plan_command`, '
         'prefix as in Commands). Never say an Azure job or endpoint ran.\n', ''),
+    # L3 (R4): the exploration question in the study language (proposals/L3-agent-text.md).
+    'L3 (R4): say question_junior': (
+        "   **Exploration.** Say each result's `question_junior` before its figure, with the count\n",
+        "   **Exploration.** Say each result's `values.question` before its figure, with the count\n"),
+    # L5 (R5, R7, R13, R14, R15; proposals/L5-agent-text.md): the engine drafts the
+    # preparation and the variants and explains the stamp; the template relays them.
+    'L5 (R5, R7): relay the drafted preparation and the stamp': (
+        '   **Preprocessing.** Propose `next_action.default_value`, drafted from the quality check\n'
+        '   (`recommended.reasons`; `alternatives` is the comparison), unless a result motivates a\n'
+        '   change, named in `motivated_by`. `decide propose` returns `data_contingent`: when it is\n'
+        '   true, say `data_contingent_reason.junior_text` before you present the proposal.\n',
+        '   **Preprocessing.** Propose `next_action.default_value` unless a result motivates a\n'
+        '   change, named in `motivated_by`. `decide propose` returns `data_contingent` and\n'
+        "   `data_contingent_reason`: when it is true, say that reason's `text` before you present\n"
+        '   the proposal, and say in the restatement that it was chosen after looking at the target\n'
+        '   (the development figures may be slightly optimistic).\n'),
+    'L5 (R13, R14, R15): relay the drafted variants and families': (
+        '   **Variants and model families** (ADR 0007). Propose the drafted `default_value` (the\n'
+        '   tuned penalty, with the EBM when the diagnostics flag a pattern) unless the junior wants\n'
+        '   another variant: **regularisation**, dropping one feature group, or another family.\n'
+        '   Offer a family (`ebm`, `hgb`) only when `model_families.recommendation` is\n'
+        '   `compare_nonlinear` and you have shown the junior the diagnostic flags behind it. Name\n'
+        "   families by `junior_words`; relay `not_offered`, and a refused family's\n"
+        '   `details.junior_message`. Otherwise relay that the linear model stays. At most',
+        '   **Variants and model families** (ADR 0007). Propose the drafted `default_value` (the\n'
+        '   penalty tuned by nested cross-validation) unless the junior wants another variant:\n'
+        '   **regularisation**, dropping one feature group, or another family. Offer a family\n'
+        '   (`ebm`, `hgb`) only when `model_families.recommendation` is `compare_nonlinear` and you\n'
+        '   have shown the junior the diagnostic flags behind it. In the demo, ask “Pourquoi le\n'
+        '   moteur envisage-t-il une famille non linéaire ?” Answer with the flags, uncertainty,\n'
+        '   limits, why they justify exploration rather than adoption, and the same-protocol\n'
+        '   comparison. Otherwise relay that the linear\n'
+        '   model stays. At most'),
+    'L5: a shorter decision list': (
+        "Decisions, proposed with the drafted `default_value` where there is one (a refusal's\n"
+        '`details` give the accepted shape): `prediction_time` (text), `feature_availability`\n'
+        '(`{feature: status}`), `split`, `success_criterion` (from `criterion_options`),\n'
+        '`preprocessing`, `model_variant` (each variant with its `question`),\n',
+        'Decisions, proposed with the drafted `default_value` where there is one:\n'
+        '`prediction_time` (text), `feature_availability` (`{feature: status}`:\n'
+        '`available_at_prediction`, `not_available`, `uncertain_excluded`, `uncertain_included`),\n'
+        '`split`, `success_criterion` (from `criterion_options`), `preprocessing` (`{"missing",\n'
+        '"rare_category_min_rows", "caps", "log_transform", "motivated_by"}`), `model_variant`\n'
+        '(`{"variants": [{"kind": "tuned" | "regularisation" | "drop_group" | "family", ...,\n'
+        '"question"}]}`),\n'),
 }
 
 

@@ -77,27 +77,24 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    for one action ("update the report", "explain the split") does only that action: do it,
    name the next planned step, and stop.{{PICKER_RULE}}
 
-   **Exploration.** Say each result's `values.question` before its figure, with the count
+   **Exploration.** Say each result's `question_junior` before its figure, with the count
    of rows and the interval; read a rate or mean by group against its `null_band`.
    `eda.single_feature_signal` only raises a legitimacy question (its `questions[].text`):
    its score keeps or drops no feature. Each look at the target is counted in `eda_looks`:
    say so once.
 
-   **Preprocessing.** Propose `next_action.default_value` unless a result motivates a
-   change, named in `motivated_by`. `decide propose` returns `data_contingent` and
-   `data_contingent_reason`: when it is true, say that reason's `text` before you present
-   the proposal, and say in the restatement that it was chosen after looking at the target
-   (the development figures may be slightly optimistic).
+   **Preprocessing.** Propose `next_action.default_value`, drafted from the quality check
+   (`recommended.reasons`; `alternatives` is the comparison), unless a result motivates a
+   change, named in `motivated_by`. `decide propose` returns `data_contingent`: when it is
+   true, say `data_contingent_reason.junior_text` before you present the proposal.
 
    **Variants and model families** (ADR 0007). Propose the drafted `default_value` (the
-   penalty tuned by nested cross-validation) unless the junior wants another variant:
-   **regularisation**, dropping one feature group, or another family. Offer a family
-   (`ebm`, `hgb`) only when `model_families.recommendation` is `compare_nonlinear` and you
-   have shown the junior the diagnostic flags behind it. In the demo, ask “Pourquoi le
-   moteur envisage-t-il une famille non linéaire ?” Answer with the flags, uncertainty,
-   limits, why they justify exploration rather than adoption, and the same-protocol
-   comparison. Otherwise relay that the linear
-   model stays. At most three variants ever (`trials` in the summary); each has a
+   tuned penalty, with the EBM when the diagnostics flag a pattern) unless the junior wants
+   another variant: **regularisation**, dropping one feature group, or another family.
+   Offer a family (`ebm`, `hgb`) only when `model_families.recommendation` is
+   `compare_nonlinear` and you have shown the junior the diagnostic flags behind it. Name
+   families by `junior_words`; relay `not_offered`, and a refused family's
+   `details.junior_message`. Otherwise relay that the linear model stays. At most three variants ever (`trials` in the summary); each has a
    question. After the evaluation, relay `model_selection`: the **one-standard-error
    rule** (`one_se`, the simplest configuration within one standard error of the best),
    the selection optimism, and `advice.text`; when `advice.stop` is true, recommend
@@ -283,13 +280,10 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 {{HYPOTRAIL}} render --study {{STUDY}}
 ```
 
-Decisions, proposed with the drafted `default_value` where there is one:
-`prediction_time` (text), `feature_availability` (`{feature: status}`:
-`available_at_prediction`, `not_available`, `uncertain_excluded`, `uncertain_included`),
-`split`, `success_criterion` (from `criterion_options`), `preprocessing` (`{"missing",
-"rare_category_min_rows", "caps", "log_transform", "motivated_by"}`), `model_variant`
-(`{"variants": [{"kind": "tuned" | "regularisation" | "drop_group" | "family", ...,
-"question"}]}`),
+Decisions, proposed with the drafted `default_value` where there is one (a refusal's
+`details` give the accepted shape): `prediction_time` (text), `feature_availability`
+(`{feature: status}`), `split`, `success_criterion` (from `criterion_options`),
+`preprocessing`, `model_variant` (each variant with its `question`),
 <!-- hypotrail:task binary -->
 `model_choice` (`"fit.logistic"` or a declared variant slot such as `"fit.variant"`, not
 `fit.baseline`), `policy` (`threshold:T`, `capacity:K` or `share:P`, evaluated first;
