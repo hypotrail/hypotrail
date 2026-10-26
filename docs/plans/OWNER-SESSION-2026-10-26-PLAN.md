@@ -1354,3 +1354,7 @@ Not verified:
 and asked to start the implementation. Reserved: D17 (R20, L9) still needs the owner's
 approval of the AGENTS.md wording before L9 lands; D14 (R8, L6) means a Hotel mockup of the
 report is shown to the owner before L6 is implemented; D19 keeps L8 after the workshop.
+2026-10-26 (later): the owner asked to run every lot to the end autonomously, and approved L9
+(R20) including the AGENTS.md wording it needs (D17). L6 proceeds from the mockup
+(`docs/plans/mockups/report-narrative-hotel-fr.html`). L8 awaits the owner's answer on its
+timing (D19).
