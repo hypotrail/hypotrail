@@ -292,7 +292,15 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     chat.run('diag.binary')
 
     # 8b. WP-B1: the final test, opened once in the junior's words (a reason is optional
-    # since v0.3, WP-B; a condition is still refused)
+    # since v0.3, WP-B; a condition is still refused). Third session of 2026-10-26: the
+    # chosen model is captured first, with the options next_action names, so the Azure ML
+    # export at done carries the evaluated model; no final-test row is read.
+    nxt = chat.status()['view']['next_action']
+    assert (nxt['kind'], nxt['activity']) == ('run', 'predictor.capture'), nxt
+    capture = chat.run('predictor.capture', *[x for k, v in (nxt.get('options') or {}).items()
+                                              for x in (f'--{k}', str(v))])
+    assert capture['status'] == 'promoted'
+    assert fk.read.open(study).state['partition']['status'] == 'sealed'
     value = chat.status()['view']['next_action']['default_value']
     assert value == {'model': 'fit.logistic', 'rule': CAPACITY}
     p = chat.propose('final_test', value, 'You open the sealed final test once, for the model '

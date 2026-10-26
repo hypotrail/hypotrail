@@ -45,7 +45,12 @@ This module imports neither pandas nor scikit-learn; the computation does, lazil
 """
 from __future__ import annotations
 
+import contextlib
 import hashlib
+import io
+import logging
+import os
+import warnings
 from pathlib import Path
 from typing import Callable, Mapping, TextIO
 
@@ -529,6 +534,39 @@ def _store(study_dir) -> StudyStore:
 Hook = Callable[[dict], None]
 
 
+# Third session of 2026-10-26: the journey now captures the chosen model (with the MLflow
+# workshop package) before the opening, so a CLI run of ``predictor.capture`` or of the
+# final evaluation that loads it wrote MLflow's warnings, log lines and download progress
+# bars on stderr, where a handled outcome writes nothing (CLI-CONTRACT, NR-17) and the
+# junior's agent reads ``--progress`` lines. The packaging module is fingerprinted, so the
+# noise is silenced here, around the computation only: Python warnings, the ``mlflow``
+# loggers, the artifact progress bar, and stray writes to ``sys.stderr``. The ``--progress``
+# reporter keeps the stream it was given; a failure is still raised and recorded.
+QUIET_ACTIVITIES = (act.CAPTURE, act.FINAL)
+_PROGRESS_BAR_ENV = 'MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR'
+
+
+@contextlib.contextmanager
+def _quiet_packaging(activity: str):
+    if activity not in QUIET_ACTIVITIES:
+        yield
+        return
+    logger = logging.getLogger('mlflow')
+    level, previous = logger.level, os.environ.get(_PROGRESS_BAR_ENV)
+    os.environ[_PROGRESS_BAR_ENV] = 'false'
+    logger.setLevel(logging.ERROR)
+    try:
+        with warnings.catch_warnings(), contextlib.redirect_stderr(io.StringIO()):
+            warnings.simplefilter('ignore')
+            yield
+    finally:
+        logger.setLevel(level)
+        if previous is None:
+            os.environ.pop(_PROGRESS_BAR_ENV, None)
+        else:
+            os.environ[_PROGRESS_BAR_ENV] = previous
+
+
 def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
         expected_revision: int, hooks: Mapping[str, Hook] | None = None,
         render: bool = True, channel: str | None = None, progress: TextIO | None = None,
@@ -583,7 +621,8 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
     try:
         if 'after_reserve' in hooks:
             hooks['after_reserve'](plan)
-        with progress_mod.phase_of(reporter, 'activity', requested):
+        with progress_mod.phase_of(reporter, 'activity', requested), \
+                _quiet_packaging(activity):
             output = act.compute(store, plan)
             if 'during_compute' in hooks:
                 hooks['during_compute'](plan)
