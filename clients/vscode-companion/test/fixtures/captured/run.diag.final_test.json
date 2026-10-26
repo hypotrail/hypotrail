@@ -859,7 +859,7 @@
    "started_revision": 36,
    "invalidation": null,
    "exposure_ids": [
-    "x_15a018f5c8b44f15ad5c531ef8fa29c0"
+    "x_86daa7ddb4d24b29ac14188f7d890ada"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -943,6 +943,10 @@
      "continue",
      "explain"
     ],
+    "option_labels": {
+     "continue": "Let's continue",
+     "explain": "Explain first"
+    },
     "question": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
     "evidence_refs": [],
     "detail_topics": [

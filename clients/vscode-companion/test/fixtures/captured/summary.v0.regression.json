@@ -144,6 +144,11 @@
      "change",
      "explain"
     ],
+    "option_labels": {
+     "adopt": "I adopt this decision",
+     "change": "Change something",
+     "explain": "Explain first"
+    },
     "question": "Adopt the linear model.\n\nDo you adopt this decision?",
     "evidence_refs": [],
     "detail_topics": [

@@ -1697,6 +1697,61 @@ def delayed_labels_limit(state: Mapping) -> dict | None:
                      f'at that moment.')}
 
 
+def declared_order(state: Mapping) -> dict | None:
+    """L7 (R17): the row order the study's final test follows, ``{by}`` (``line`` or a
+    column), when the case declares an order and the sealed final test is temporal (the last
+    rows in that order); None otherwise (no order, or a study created before the final
+    test)."""
+    part = state.get('partition') or {}
+    if part.get('method') != 'temporal':
+        return None
+    return {'by': (part.get('order') or {}).get('by')}
+
+
+def missing_structure(state: Mapping) -> list[str]:
+    """L7 (R17): what the ``no_time_or_entity_identifier`` limit names as missing, in this
+    order: ``time_column`` when the case declares neither a time column nor an order (a
+    declared order makes the final test temporal), ``group_column`` when it declares no
+    entity identifier."""
+    structure = state['structure']
+    out = []
+    if structure['time_column']['value'] is None and declared_order(state) is None:
+        out.append('time_column')
+    if structure['group_column']['value'] is None:
+        out.append('group_column')
+    return out
+
+
+def order_words(by) -> str:
+    """How the declared order is named in a limit: the file's lines, or a column."""
+    return "the order of the file's lines" if by in (None, 'line') else f'the column {by}'
+
+
+def structure_limit(state: Mapping, missing: list[str]) -> dict:
+    """L7 (R17): the ``no_time_or_entity_identifier`` limit, naming only what is missing;
+    with a declared order, a second sentence says what the temporal final test can show (a
+    shift between periods, not its cause). ``ordered_by`` is the order's ``by`` then, else
+    absent."""
+    if missing == ['time_column', 'group_column']:
+        text = ('The data have no time column or entity identifier, so the study cannot check '
+                'drift over time or repeated entities across partitions.')
+    elif missing == ['time_column']:
+        text = ('The data have no time column and no declared order, so the study cannot '
+                'check drift over time.')
+    else:
+        text = ('The data have no entity identifier, so the study cannot check whether the '
+                'same entity appears in several partitions.')
+    item = {'id': 'no_time_or_entity_identifier', 'missing': list(missing), 'text': text}
+    order = declared_order(state)
+    if order is not None:
+        item['ordered_by'] = order['by']
+        item['text'] += (f' The rows follow a declared order ({order_words(order["by"])}) and '
+                         'the final test holds the last rows in it, so the final test can show '
+                         'a shift between the development period and the final period, not its '
+                         'cause.')
+    return item
+
+
 def not_yet_defensible(state: dict) -> list[dict]:
     """What the study cannot claim yet, from state only (plan §6)."""
     items = []
@@ -1734,7 +1789,7 @@ def not_yet_defensible(state: dict) -> list[dict]:
                               'are not unseen.',
                       'sources': [p['source'] for p in state['prior_exposure']]})
     structure = state['structure']
-    missing = [k for k in ('time_column', 'group_column') if structure[k]['value'] is None]
+    missing = missing_structure(state)
     group = structure['group_column']['value']
     if group is not None and is_cv_split(split_value):
         # B6c (M3): the same limit in the words of the folds.
@@ -1754,10 +1809,7 @@ def not_yet_defensible(state: dict) -> list[dict]:
                               f'Validation rows of a shared group are not independent of the '
                               f'training rows.'})
     if missing:
-        items.append({'id': 'no_time_or_entity_identifier', 'missing': missing,
-                      'text': 'The data have no time column or entity identifier, so the study '
-                              'cannot check drift over time or repeated entities across '
-                              'partitions.'})
+        items.append(structure_limit(state, missing))
     availability = state['decisions']['feature_availability']['value'] or {}
     uncertain = sorted(f for f, v in availability.items() if v == 'uncertain_included')
     if uncertain:

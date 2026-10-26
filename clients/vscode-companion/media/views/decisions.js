@@ -379,6 +379,38 @@
     return v1 ? el('div', { className: 'dc-card-wrap', 'data-nav': `decision:${str(p.decisionId)}` }, [card]) : card;
   }
 
+  // --- R16: a choice the chat waits for, before any proposal (v1, read only) ----------------
+
+  /**
+   * Owner session 2026-10-26, R16 (D20): when the chat asks the junior to choose (the
+   * conclusion, the model choice) before any proposal exists, `next_action.choice_options`
+   * lists the values the engine accepts now. From v1 the waiting section shows them as a
+   * read-only card: no control, no write; "Answer in the chat" and the copy-only "Ask the
+   * agent about this" (ADR 0004 decision 8).
+   */
+  function choiceCard(model, ctx, c) {
+    const next = model.nextAction || {};
+    const options = arr(next.choiceOptions);
+    if (!ctx.atLeast('v1') || next.kind !== 'propose' || !options.length) return null;
+    const id = str(next.decision || next.step);
+    const name = c.decisionNames(taskOf(ctx))[id] || id;
+    return el('article', { className: 'card dc-card dc-choice', 'data-choice-card': id, 'data-nav': `decision:${id}`,
+      'aria-labelledby': `choice-${id}` }, [
+      el('h3', { id: `choice-${id}`, text: c.choiceTitle(name) }),
+      el('p', { className: 'muted', text: c.choiceOptions }),
+      el('ul', { className: 'dc-choice-options', 'data-choice-options': String(options.length) },
+        options.map(o => el('li', { 'data-choice-option': o.id, title: o.value || null, text: o.label }))),
+      el('div', { className: 'dc-answer', role: 'note', 'data-answer-in-chat': id }, [
+        el('p', { className: 'title', text: c.answerInChat }),
+        el('p', { className: 'muted', text: c.choiceHint }),
+      ]),
+      el('div', { className: 'dc-actions' }, [
+        HT.askButton(ctx, { kind: 'decision', id }, c.askAbout(name),
+          { label: c.ask, attrs: { 'data-ask-choice': id }, question: c.choiceAskQuestion, stage: 'v1', direct: true }),
+      ]),
+    ]);
+  }
+
   // --- reconfirmation queue and history (v1, from `decisions`) ---------------------------------
 
   function queueSection(data, ctx, c) {
@@ -494,6 +526,9 @@
       if (ctx.atLeast('v2') && proposals.some(p => str(p.decisionId) === 'model_variant')) ensureLoad(ctx, 'trials');
       const cards = proposals.map(p => proposalCard(p, model, ctx, c));
       const articles = cards.map(n => (n.matches('[data-proposal-card]') ? n : n.querySelector('[data-proposal-card]')));
+      // R16: the choice the chat waits for comes first; it is not a proposal (no preview).
+      const choice = choiceCard(model, ctx, c);
+      if (choice) cards.unshift(choice);
       const out = [
         section('h-proposals', c.waitingTitle, cards.length ? cards
           : [el('p', { className: 'muted', 'data-nothing-waiting': true, text: v1 ? c.nothingWaiting : c.nothingWaitingV0 })])];

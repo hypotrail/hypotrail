@@ -64,6 +64,11 @@
     supersedesOpen: 'Elle remplace la proposition ouverte en ce moment.',
     blockedTitle: 'Si vous la confirmez maintenant dans le chat, le moteur la refusera :',
     effectsMissing: "L'aperçu de l'impact n'est pas disponible.",
+    // R16 (session du 2026-10-26) : un choix que le chat demande avant toute proposition.
+    choiceTitle: name => `${name.charAt(0).toUpperCase()}${name.slice(1)} : l'assistant vous demande de choisir dans le chat`,
+    choiceOptions: 'Les options que le moteur accepte maintenant :',
+    choiceHint: "Choisissez dans le chat avec votre assistant : il propose ensuite votre choix, et vous l'adoptez là-bas. Ce panneau n'enregistre aucun choix.",
+    choiceAskQuestion: "Pouvez-vous m'expliquer ces options et ce que chacune signifierait pour mon étude ?",
     answerInChat: 'Répondre dans le chat',
     answerInChatHint: "Confirmez, modifiez ou retirez cette proposition dans le chat avec votre assistant. Ce panneau n'enregistre aucune décision.",
     ask: "Interroger l'agent à ce sujet",

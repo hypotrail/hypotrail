@@ -225,12 +225,19 @@
       lead: "Son issue est inconnue. Elle n'est pas en cours et ne redémarre pas toute seule." },
     propose: { title: step => `Étape suivante : ${step}`, action: null,
       lead: "Rien ne vous attend ici. L'assistant propose cette étape dans le chat." },
+    // R16 (session du 2026-10-26, D20) : un choix que le chat demande avant toute proposition.
+    choice: { title: name => `Choisir ${name}, dans le chat`, action: 'Voir les options',
+      lead: "L'assistant vous demande de choisir dans le chat, parmi les options que le moteur accepte maintenant. Répondez là-bas : ce panneau n'enregistre aucun choix." },
     run: { title: step => `Étape suivante : ${step}`, action: null,
       lead: "Rien ne vous attend ici. L'assistant mène cette étape dans le chat." },
     blocked: { title: step => `Étape suivante : ${step}`, action: null,
       lead: "Cette étape attend une étape antérieure. L'assistant vous guide dans le chat." },
     done: { title: () => 'Toutes les étapes sont faites', action: null,
       lead: "Le rapport et le notebook portent l'étude. Relisez-les avant de les transmettre." },
+    // L7 (session du 2026-10-26, D15) : la suite de l'étude, en lecture seule. Le texte est
+    // celui du moteur (`next_action.after_study.junior_text`) ; le plan se demande dans le chat.
+    afterStudyTitle: "Après l'étude",
+    exportPlanInChat: "Le plan d'export Azure ML est disponible pour ce modèle : demandez-le à l'assistant dans le chat. Ce panneau n'exporte que le dossier de passation.",
     other: { title: () => 'Continuer dans le chat', action: null, lead: "L'assistant guide l'étape suivante dans le chat." },
     finalTest: {
       await: { title: () => 'Ouvrir le test final, dans le chat', action: null,
@@ -273,7 +280,7 @@
     validation_is_not_independent: "Les lignes de validation ont servi à choisir : leurs chiffres ne sont pas une preuve indépendante.",
     delayed_labels_excluded: "Une étiquette tardive est un résultat connu seulement un certain temps après la prédiction. Certaines lignes de développement n'ont eu leur résultat qu'après le début du test final : elles sont écartées du découpage, des regards sur le résultat et de chaque ajustement.",
     public_data_already_explored: "Les données ont été publiées et explorées auparavant ; leurs lignes ne sont pas inédites.",
-    no_time_or_entity_identifier: "Les données n'ont ni date ni identifiant d'entité : la dérive et les entités répétées ne peuvent pas être vérifiées.",
+    no_time_or_entity_identifier: "Il manque aux données un ordre dans le temps ou un identifiant d'entité : certaines vérifications ne sont pas possibles ; le rapport dit lesquelles.",
     no_causality: "L'étude montre des associations ; elle ne mesure pas l'effet d'une action.",
     workbench_not_tracked: "Votre établi n'est pas suivi : rien de ce qu'il contient ne compte comme preuve.",
     final_test_sealed: "Le test final est encore scellé : chaque chiffre jusqu'ici vient des lignes de développement qui ont servi à choisir.",

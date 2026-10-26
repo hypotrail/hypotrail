@@ -120,3 +120,5 @@ against the success criterion (`criterion`), and the next action
 Write it in `next_action.language` and check it before proposing it:
 
     {{HYPOTRAIL}} check --text - --study {{STUDY}}
+
+At `done`, relay `next_action.after_study.junior_text`, then offer the handoff pack and, only when `after_study.azureml.supported`, the export plan (its `plan_command`, prefix as in Commands). Never say an Azure job or endpoint ran.

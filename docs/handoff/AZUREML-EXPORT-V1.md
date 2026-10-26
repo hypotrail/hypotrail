@@ -265,6 +265,13 @@ python -m src.pipeline.utils.project submit               # prints; --execute wr
 pytest
 ```
 
+`--expected-revision` is required by `hypotrail export azureml` (the export reads exactly one
+revision); without it the refusal names the study folder and its current revision ("the
+study at <path> is at revision 41; add --expected-revision 41", L7/R18, CLI-CONTRACT §15).
+If the shell has another project's virtual environment active (`VIRTUAL_ENV`), `uv run
+--project framework` warns that it does not match and ignores it: harmless, the command
+runs in the framework's own environment (owner session of 26 October 2026, R18).
+
 ## 6. Acceptance criteria (integration spec §15)
 
 Status words: **met (local, test double)**: passing tests on synthetic fixtures with the
@@ -727,5 +734,68 @@ study through the engine's real commands; synthetic test words; temporary folder
   and Bank cases themselves were not run through the export in this change (the test
   study is synthetic, with the same task, family, rule kinds and capture profile). Ruff
   writes `.ruff_cache/` in the project folder unless run with `--no-cache`, and `.amlignore`
-  does not exclude it, so a lint before the project's tests makes
-  `test_code_upload_holds_only_code` fail (pre-existing, not changed here).
+  did not exclude it, so a lint before the project's tests made
+  `test_code_upload_holds_only_code` fail: fixed by L7 (below).
+
+## L7: hand-over, refusals, and the R19 deep validation (NR-19)
+
+Owner session of 26 October 2026 ([plan](../plans/OWNER-SESSION-2026-10-26-PLAN.md) §3 L7,
+§6.2 NR-19; decisions D15, D16).
+
+- **What comes after the study (D15).** At `done`, `next_action.after_study` names the
+  handoff pack and offers `export azureml --plan` only when the chosen model is in this
+  template's support matrix (read from `template.json` `capabilities`, matched on task,
+  family and output as the exporter matches them), otherwise says why
+  (`family_not_supported`, `no_recipe`, `baseline_chosen`, ...); `cloud_status` is always
+  `not_qualified` (CLI-CONTRACT §3.1; `mlkit.study.after_study`). Tests:
+  `framework/tests/study/test_after_study.py`,
+  `framework/tests/exporters/azureml/test_after_study.py` (a binary and a regression study
+  followed to `done`, the offered plan command run as given; HGB and EBM told why and
+  refused by the export).
+- **R18.** `--expected-revision` missing: `invalid_arguments`, "--expected-revision is
+  required: the study at <path> is at revision <n>; add --expected-revision <n>.",
+  `details.reason: missing`, `current_revision`, `study` (read-only read of the revision).
+  Malformed: the message is unchanged, `details.reason: malformed` and `current_revision`
+  added. The refusals `model_not_captured` and `capability_not_supported` from the study's
+  source end with "(Study: <path>, revision <n>.)" and carry `details.study` and
+  `details.study_revision` (CLI-CONTRACT §15). Tests in `test_export_command.py`.
+- **`.ruff_cache/` in `.amlignore`.** A lint without `--no-cache` no longer puts the lint
+  cache in the code upload; the project's own `test_code_upload_holds_only_code` and
+  `validate --offline` (`code_upload_content`) pass after `ruff check src`
+  (`test_exported_project.py::test_a_lint_cache_is_not_uploaded`). The template store's
+  digest changes (an `added` file), so export ids differ from earlier exports of the same
+  study; no preserved template file changed.
+- **NR-19 deep validation of R19** (local only, real runtime; `HYPOTRAIL_EXPORT_REAL_RUNTIME`
+  is no longer read, the suites always use the real runtime):
+  1. the full `framework/tests/exporters` and `framework/tests/study/libraries` suites,
+     with the `azureml` group and the `diagnostics` and `uncertainty` extras;
+  2. the template lint: the exported project's `ruff check src` with ruff 0.4.5 and its own
+     pytest, on regression and binary exports;
+  3. MLflow pyfunc parity on a **Bank-like** study (the committed Bank Marketing case, text
+     target `yes`) and a **Hotel-like** study (a temporary case of every tenth Hotel booking,
+     arrival order kept, target `1`, temporal final test): native bundle vs expected
+     outputs vs pyfunc in a fresh isolated process, `rtol 1e-10`, `atol 1e-12`, never
+     relaxed; the pyfunc returns `score` only and the rule stays metadata
+     (`test_binary_case_parity.py`). Before L7 the qualification text of `template.json`
+     named "Bank/Hotel-like fixtures" that no test held; it now has them;
+  4. EBM and HGB chosen: `capability_not_supported`, `details.reason:
+     family_not_supported`, nothing written, the logistic model never offered instead
+     (`test_after_study.py`, `test_binary_logistic.py`);
+  5. the R9AB-1 probes on a binary export: a plan given the final-test rows, relabelled
+     roles, an evaluated model from another bundle (the study's earlier capture), the
+     snapshot rewritten to name it, a rewritten decision rule, identity overrides and a
+     model added to a recipe-only export, all refused (`test_review_round9_binary.py`);
+  6. not run here: the export of a real, full Hotel study (heavy, opt-in) and of the
+     owner's existing Hotel study (manual; captured before R19, so possibly recipe-only,
+     risk K3);
+  7. the regression path (Auto MPG-like): `test_end_to_end_real.py`,
+     `test_exported_project.py`, unchanged.
+- **Results (cloud session, Linux, Python 3.13.16, 26 October 2026).**
+  `framework/tests/exporters framework/tests/study/libraries`: **872 passed, 6 skipped**
+  (31 min); the skips are by design (chantier A's reader present; the opt-in extras matrix;
+  an integer beyond the JSON reader's digit limit). Before L7's tests: 853 passed, 6
+  skipped. The new NR-19 tests alone: Bank-like and Hotel-like parity 4 passed (3.4 min),
+  the binary R9AB-1 probes and `after_study` 11 passed (3.7 min).
+- **Still not qualified.** No Azure job, endpoint or Azure call; the cloud status stays
+  `not_qualified`.
+

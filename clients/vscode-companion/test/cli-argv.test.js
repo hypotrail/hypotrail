@@ -80,3 +80,22 @@ test('run: no shell, the buffer, and every failure is a message (never a rejecti
   assert.equal(res.exitCode, 2);
   assert.match(res.failure, /did not print one JSON document/);
 });
+
+test('no builder passes --progress: the panel stays silent on stderr (owner session 2026-10-26, L4)', () => {
+  // `hypotrail run --progress` writes progress lines on stderr for the chat agent's terminal;
+  // the panel never asks for them, so its processes keep the contract "nothing on stderr".
+  const argvs = [
+    cli.statusArgv(AGENT, { digest: true, since: 0 }), cli.decisionsArgv(AGENT), cli.viewArgv(AGENT),
+    cli.previewEffectsArgv(AGENT, { proposalId: 'p_7' }), cli.evidenceArgv(AGENT, { resultId: RID }),
+    cli.previewPolicyArgv(AGENT, { rules: ['capacity:100'], intervals: true }),
+    cli.previewProposalArgv(AGENT, { decisionId: 'policy', value: 'capacity:100' }), cli.checkArgv(AGENT),
+    cli.explainArgv(AGENT), cli.sessionReportArgv(AGENT), cli.dataArgv(AGENT),
+    cli.WRITES.W4(AGENT, { activity: 'eda.distribution', column: 'age', requestId: ID, expectedRevision: 3 }),
+    cli.WRITES.W5(AGENT),
+    cli.WRITES.W6(AGENT, { executionId: 'e_4c1d', words: 'I know it stopped.', requestId: ID, expectedRevision: 3 }),
+    cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26 }),
+  ];
+  for (const argv of argvs) assert.ok(!argv.some(token => String(token).includes('--progress')), argv.join(' '));
+  const source = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'lib', 'cli.js'), 'utf8');
+  assert.ok(!source.includes('--progress'));
+});

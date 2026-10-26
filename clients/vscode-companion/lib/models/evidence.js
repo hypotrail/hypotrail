@@ -714,6 +714,71 @@ function familyFitsOf(rawResults) {
   }).filter(Boolean);
 }
 
+// --- Owner session 2026-10-26, R11: one card per compared variant ---------------------------
+//
+// Every current variant fit (`fit.variant`, `fit.variant:2`, `fit.variant:3`), in slot order,
+// gets its own card, whatever it changes (a penalty, a group left out, a tuned penalty, a
+// family): what it changes; its cross-validation figures beside the candidate's, cited from
+// the `model_selection` the current evaluation stored; its own analysis: the coefficients
+// with their intervals from the current development diagnostics when they cover the slot,
+// the value chosen in each outer fold for a tuned variant (the fit's `tuning`), and the
+// family's own diagnostics for a family. A variant the diagnostics do not cover says so.
+
+const DEV_DIAG_SLOTS = ['diag.binary', 'diag.regression'];
+
+function tuningOf(raw) {
+  const t = obj(raw);
+  if (!Object.keys(t).length) return null;
+  const at = (...parts) => pathOf('tuning', ...parts);
+  const dev = obj(t.development);
+  return {
+    parameter: strOrNull(t.parameter), meaning: strOrNull(t.meaning), metric: strOrNull(t.metric),
+    innerFolds: int(t.inner_folds), note: strOrNull(t.note), method: strOrNull(t.method),
+    grid: list(t.values).map(num).filter(x => x !== null),
+    perFold: list(t.per_fold).map((f, i) => ({ fold: int(f && f.fold), ...cell(f && f.value, at('per_fold', i, 'value')) }))
+      .filter(f => f.fold !== null && f.value !== null),
+    development: num(dev.value) === null ? null : cell(dev.value, at('development', 'value')),
+  };
+}
+
+function variantCardsOf(rawResults) {
+  const selection = selectionOf(rawResults);
+  const configs = selection && selection.available ? selection.configurations : [];
+  const candidate = configs.find(c => c.kind === 'candidate') || null;
+  const rawSelection = selection ? obj(obj(rawResults.find(r => r && r.result_id === selection.resultId).values).model_selection) : {};
+  const diag = rawResults.find(r => r && r.promoted === true && DEV_DIAG_SLOTS.includes(str(r.slot)) && citable(r)) || null;
+  const diagModels = diag ? obj(obj(diag.values).models) : {};
+  const families = Object.fromEntries(familyFitsOf(rawResults).map(f => [f.slot, f]));
+  return VARIANT_SLOTS.map(slot => promotedOf(rawResults, slot)).filter(Boolean).map(r => {
+    const slot = str(r.slot);
+    const v = obj(r.values);
+    const spec = obj(v.variant);
+    const cfg = configs.find(c => c.slot === slot) || null;
+    const stored = list(rawSelection.configurations).find(c => c && c.slot === slot) || {};
+    const covered = Object.prototype.hasOwnProperty.call(diagModels, slot);
+    const coef = covered ? coefficientsOf(obj(obj(diagModels[slot]).coefficients), (...parts) => pathOf('models', slot, ...parts)) : null;
+    const family = families[slot] || null;
+    return {
+      slot, resultId: str(r.result_id),
+      kind: strOrNull(spec.kind), family: strOrNull(spec.family) || strOrNull(v.family),
+      strength: strOrNull(spec.strength), group: strOrNull(spec.group),
+      question: strOrNull(stored.question),
+      comparison: cfg ? {
+        resultId: selection.resultId, metric: selection.metric, direction: selection.direction, folds: selection.folds,
+        candidate: candidate ? { slot: candidate.slot, mean: candidate.mean, se: candidate.se } : null,
+        variant: { mean: cfg.mean, se: cfg.se }, difference: cfg.difference, kept: Boolean(selection.oneSe && selection.oneSe.pick === slot),
+      } : null,
+      // `current`: the development diagnostics cover this variant; `not_run`: none is current,
+      // or the current one does not cover it (a variant fitted after them).
+      diagnostics: covered ? 'current' : 'not_run',
+      diagnosticsId: covered ? str(diag.result_id) : null,
+      coefficients: coef && coef.terms.length ? coef : null,
+      tuning: tuningOf(v.tuning),
+      analysis: family,
+    };
+  });
+}
+
 function toEvidenceModel(payload) {
   const p = expectSchema(payload, SCHEMA);
   if (!Number.isInteger(p.revision)) throw new ModelError(`The CLI did not return a ${SCHEMA} document.`);
@@ -757,6 +822,8 @@ function toEvidenceModel(payload) {
     diagnostics: diagnosticsOf(rawResults, task),
     selection: selectionOf(rawResults),
     familyFits: familyFitsOf(rawResults),
+    // R11 (owner session 2026-10-26): one card per compared variant, in slot order.
+    variantCards: variantCardsOf(rawResults),
   });
 }
 
@@ -764,4 +831,4 @@ const FIXTURES = ['evidence.binary', 'evidence.binary.detail', 'evidence.regress
   'captured/evidence.binary.cv', 'captured/evidence.binary.cv.sealed', 'captured/evidence.regression.diag',
   'captured/evidence.binary.families'];
 
-module.exports = { toEvidenceModel, chainFor, uncertaintyOf, side, citable, gainOf, pathOf, DIAG_SLOTS, FIXTURES, SCHEMA };
+module.exports = { toEvidenceModel, chainFor, uncertaintyOf, side, citable, gainOf, pathOf, DIAG_SLOTS, VARIANT_SLOTS, FIXTURES, SCHEMA };

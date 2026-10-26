@@ -1,10 +1,33 @@
-"""Compact, localized pause payloads derived from one already-built view (J5)."""
+"""Compact, localized pause payloads derived from one already-built view (J5).
+
+Owner session 2026-10-26 (L1, R3, R2c): every pause with options carries
+``option_labels`` (``{option_id: label}``, in the study language), so a client's picker
+shows the engine's words instead of the agent's translation; a free choice among the
+values the engine accepts now (``next_action.choice_options``, the model choice and the
+conclusion when ``recommended`` is null) is the kind ``choice``, one option per value and
+none recommended.
+"""
 from __future__ import annotations
 
 from typing import Mapping
 
 SCHEMA = 'hypotrail.pause/1'
-KINDS = ('decision', 'action', 'explanation', 'blocked', 'complete')
+KINDS = ('decision', 'action', 'explanation', 'blocked', 'complete', 'choice')
+# The labels of the fixed options, (English, French). ``adopt``, ``change`` and ``explain``
+# are the labels the agent instructions fix for the adoption picker (``--channel choice``
+# records the adopt label verbatim, CLI-CONTRACT §5.4).
+OPTION_LABELS = {'adopt': ('I adopt this decision', "J'adopte cette décision"),
+                 'change': ('Change something', 'Changer quelque chose'),
+                 'explain': ('Explain first', "Expliquer d'abord"),
+                 'continue': ("Let's continue", 'On continue')}
+
+
+def option_labels(options, language: str, choices=()) -> dict:
+    """``{option_id: label}`` for ``options`` in ``language``: a fixed option's label from
+    :data:`OPTION_LABELS`, a choice's from its ``choice_options`` entry."""
+    own = {c['id']: c['label'] for c in choices or ()}
+    fr = language == 'fr'
+    return {o: own[o] if o in own else OPTION_LABELS[o][fr] for o in options}
 
 
 def pause(view: Mapping) -> dict:
@@ -20,6 +43,8 @@ def pause(view: Mapping) -> dict:
         kind = 'blocked'
     elif source_kind == 'explain':
         kind = 'explanation'
+    elif action.get('choice_options'):
+        kind = 'choice'
     else:
         kind = 'action'
     language = view.get('language', 'en')
@@ -44,6 +69,11 @@ def pause(view: Mapping) -> dict:
         question = action.get('question') or action.get('junior_message')
         options = ['continue', 'explain']
         recommended = 'continue'
+    elif kind == 'choice':
+        # The junior's own choice (R2c): no option is the engine's recommendation, and a
+        # pick is proposed, then adopted at its own pause (never a confirmation).
+        question = action.get('question') or action.get('junior_message')
+        options = [c['id'] for c in action['choice_options']]
     nonlinear = ((view.get('model_families') or {}).get('recommendation')
                  == 'compare_nonlinear')
     topics = ['metric', 'uncertainty']
@@ -57,6 +87,8 @@ def pause(view: Mapping) -> dict:
         'learned': [], 'limitations': limitations,
         'proposal_id': proposal['proposal_id'] if proposal is not None else None,
         'proposal_text': proposal_text,
-        'recommended_option': recommended, 'options': options, 'question': question,
+        'recommended_option': recommended, 'options': options,
+        'option_labels': option_labels(options, language, action.get('choice_options')),
+        'question': question,
         'evidence_refs': [], 'detail_topics': topics,
     }

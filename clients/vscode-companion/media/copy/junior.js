@@ -294,12 +294,19 @@
       lead: 'Its outcome is unknown. It is not in progress and does not restart by itself.' },
     propose: { title: step => `Next step: ${step}`, action: null,
       lead: 'Nothing waits for you here. The assistant proposes this step in the chat.' },
+    // R16 (owner session 2026-10-26, D20): a choice the chat asks before any proposal.
+    choice: { title: name => `Choose ${name}, in the chat`, action: 'See the options',
+      lead: 'The assistant asks you to choose in the chat, among the options the engine accepts now. Answer there: this panel records no choice.' },
     run: { title: step => `Next step: ${step}`, action: null,
       lead: 'Nothing waits for you here. The assistant runs this step in the chat.' },
     blocked: { title: step => `Next step: ${step}`, action: null,
       lead: 'This step waits for an earlier one. The assistant guides you in the chat.' },
     done: { title: () => 'Every step is done', action: null,
       lead: 'The report and the notebook carry the study. Read them again before you hand them over.' },
+    // L7 (owner session 2026-10-26, D15): what comes after the study, read only. The text
+    // is the engine's (`next_action.after_study.junior_text`); the plan is asked for in the chat.
+    afterStudyTitle: 'After the study',
+    exportPlanInChat: 'The Azure ML export plan is available for this model: ask the assistant for it in the chat. This panel exports only the handoff pack.',
     other: { title: () => 'Continue in the chat', action: null, lead: 'The assistant guides the next step in the chat.' },
     // WP-B5: the opening of the final test is a chat act. The panel explains it and points
     // to the chat; it never offers a control that opens it.
@@ -368,7 +375,8 @@
     validation_is_not_independent: 'The validation rows were used to choose, so their figures are not independent evidence.',
     delayed_labels_excluded: 'A delayed label is an outcome known only some time after the prediction. Some development rows had their outcome only after the start of the final test, so they are left out of the split, the looks at the outcome and every fit.',
     public_data_already_explored: 'The data were published and explored before; its rows are not unseen.',
-    no_time_or_entity_identifier: 'The data have no date or entity identifier, so drift and repeated entities cannot be checked.',
+    // L7 (R17): "more" ids carry no text, so this line holds whatever is missing.
+    no_time_or_entity_identifier: 'The data lack a time order or an entity identifier, so some checks across time or entities cannot be made; the report says which.',
     no_causality: 'The study shows associations; it does not measure the effect of an action.',
     workbench_not_tracked: 'Your workbench is not tracked, so nothing in it counts as evidence.',
     // WP-B5.

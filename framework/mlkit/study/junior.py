@@ -318,9 +318,26 @@ def limit_fr(item: Mapping) -> str:
                 'partagées. Le jeu de validation n\'est alors pas indépendant du jeu '
                 "d'entraînement pour ces groupes.")
     if kind == 'no_time_or_entity_identifier':
-        return ("Les données n'ont ni colonne de temps ni identifiant d'entité : l'étude ne "
-                'peut pas vérifier une dérive dans le temps ni des entités répétées entre les '
-                'échantillons.')
+        # L7 (R17): only what is missing; a declared order says what the final test shows.
+        missing = list(item.get('missing') or ('time_column', 'group_column'))
+        if missing == ['time_column']:
+            text = ("Les données n'ont ni colonne de temps ni ordre déclaré : l'étude ne peut "
+                    'pas vérifier une dérive dans le temps.')
+        elif missing == ['group_column']:
+            text = ("Les données n'ont pas d'identifiant d'entité : l'étude ne peut pas "
+                    "vérifier qu'une même entité apparaît dans plusieurs échantillons.")
+        else:
+            text = ("Les données n'ont ni colonne de temps ni identifiant d'entité : l'étude "
+                    'ne peut pas vérifier une dérive dans le temps ni des entités répétées '
+                    'entre les échantillons.')
+        if 'ordered_by' in item:
+            by = item.get('ordered_by')
+            order = ("l'ordre des lignes du fichier" if by in (None, 'line')
+                     else f'la colonne {by}')
+            text += (f' Les lignes suivent un ordre déclaré ({order}) et le test final en '
+                     'contient les dernières : il peut donc montrer un écart entre la période '
+                     'de développement et la période finale, sans en expliquer l\'origine.')
+        return text
     if kind == 'uncertain_features_included':
         return ('Ces variables sont utilisées alors que leur disponibilité au moment de la '
                 f'prédiction est incertaine : {cols}. Vérifiez qu\'elles sont connues à ce '
@@ -1090,11 +1107,75 @@ def _run_follow_up(action: Mapping, view: Mapping, junior_message: str, lang: st
               f'Il répond à cette question : {junior_message}')
 
 
-def enrich(view: dict, state: Mapping, case=None) -> dict:
+# --- free choices (owner session 2026-10-26, L1, R2c) -------------------------------------
+
+CHOICE_DECISIONS = ('model_choice', 'conclusion')
+CHOICE_OPTION_KEYS = ('id', 'value', 'label')
+# The verdicts in the junior's words, (English, French); ``keep_baseline`` of a regression
+# study keeps the mean baseline.
+VERDICT_LABELS = {'adopt_policy': ('Adopt the rule', 'Adopter la règle'),
+                  'adopt_model': ('Adopt the chosen model', 'Adopter le modèle choisi'),
+                  'keep_baseline': ('Keep the baseline', 'Garder le modèle de référence'),
+                  'inconclusive': ('Do not conclude (inconclusive)',
+                                   'Ne pas conclure (non concluant)')}
+REGRESSION_KEEP_LABEL = ('Keep the mean baseline', 'Garder la moyenne de référence')
+_ORDINAL_VARIANTS = {EN: ('The first variant', 'The second variant', 'The third variant'),
+                     FR: ('La première variante', 'La deuxième variante',
+                          'La troisième variante')}
+
+
+def _model_label(slot: str, state: Mapping, lang: str) -> str:
+    """A model slot in the junior's words; a variant with what it changes ("La deuxième
+    variante · une Explainable Boosting Machine (EBM)")."""
+    from . import trials
+    if not trials.is_variant_slot(slot):
+        words = audience.model_words(slot, lang)
+        return words[:1].upper() + words[1:]
+    variants = trials.variants_of(trials.confirmed_value(state))
+    index = trials.variant_index(slot)
+    head = (_ORDINAL_VARIANTS[lang if lang == FR else EN][index - 1] if len(variants) > 1
+            else _t(lang, 'The variant', 'La variante'))
+    if index <= len(variants):
+        return f'{head} · {trials.variant_words(variants[index - 1], lang)}'
+    return head
+
+
+def choice_options(action: Mapping, state: Mapping, lang: str, accepts) -> list[dict] | None:
+    """The values the engine accepts now at a free choice, ``[{id, value, label}]`` in the
+    study language, or None: on the ``propose`` of the model choice or the conclusion when
+    the engine recommends nothing (``recommended`` null). ``accepts(decision, value)`` is the
+    engine's own check of a confirmation of that value
+    (:func:`mlkit.study.feasibility.accepts`), so no option is one the engine refuses and no
+    accepted value is missing. A conclusion's ``value`` is ``{"verdict"}``: its text is the
+    junior's, written when it is proposed."""
+    decision = action.get('decision')
+    if action.get('kind') != 'propose' or decision not in CHOICE_DECISIONS \
+            or action.get('recommended') is not None or accepts is None:
+        return None
+    from . import commands as cmd, preconditions
+    out = []
+    fr = lang == FR
+    if decision == 'conclusion':
+        regression = st.task_of(state) == st.REGRESSION
+        for verdict in preconditions.conclusion_verdicts(state):
+            if accepts(decision, {'verdict': verdict, 'text': verdict}):
+                label = (REGRESSION_KEEP_LABEL if regression and verdict == 'keep_baseline'
+                         else VERDICT_LABELS[verdict])[fr]
+                out.append({'id': verdict, 'value': {'verdict': verdict}, 'label': label})
+    else:
+        for slot in cmd.model_choices(state):
+            if accepts(decision, slot):
+                out.append({'id': slot, 'value': slot,
+                            'label': _model_label(slot, state, lang)})
+    return out or None
+
+
+def enrich(view: dict, state: Mapping, case=None, *, accepts=None) -> dict:
     """Add the junior-ready keys to ``view['next_action']`` in place (and return it):
     ``language``, ``junior_digest``, ``recommended``, ``question``; ``criterion_options`` at
     the success criterion; the case's availability as ``default_value`` at the feature
-    availability."""
+    availability; ``choice_options`` at a free choice (:func:`choice_options`, with the
+    view's ``accepts``)."""
     action = view.get('next_action')
     if not isinstance(action, dict):
         return view
@@ -1116,8 +1197,12 @@ def enrich(view: dict, state: Mapping, case=None) -> dict:
     action['recommended'] = _recommended(action, view, state, lang)
     action['question'] = _question(action, view, lang, ctx['cv'])
     action['junior_digest'] = _digest(action, view, state, ctx, lang)
+    choices = choice_options(action, state, lang, accepts)
+    if choices:
+        action['choice_options'] = choices
     return view
 
 
 __all__ = ['step_text', 'all_step_texts', 'limit_fr', 'LIMIT_IDS_FR', 'enrich',
-           'availability_draft', 'final_test_line', 'duplicates_line', 'MAX_DIGEST_WORDS']
+           'availability_draft', 'final_test_line', 'duplicates_line', 'MAX_DIGEST_WORDS',
+           'choice_options', 'CHOICE_OPTION_KEYS']

@@ -301,6 +301,32 @@
         dataContingent: 'A family proposed now is a data-contingent trial: it is chosen after seeing these checks, and the report says so.',
         why: 'A flag is evidence that another family might follow the data more closely, not proof. The linear model stays the default; a non-linear family is compared as one variant, inside the budget.',
       },
+      // R11 (owner session 2026-10-26): one card per compared variant.
+      card: {
+        titles: {
+          regularisation: 'What does this penalty change in the model?',
+          drop_group: 'What does the model lose without this group?',
+          tuned: 'Which penalty does each fold choose, and with what result?',
+          other: 'What does this variant change?',
+        },
+        changes: (kind, strength, group, name) => (kind === 'regularisation'
+          ? (strength === 'weak' ? 'The candidate with less regularisation: a weaker penalty on its coefficients.'
+            : 'The candidate with more regularisation: a stronger penalty on its coefficients.')
+          : kind === 'drop_group' ? `The candidate without the group of variables "${group}".`
+            : kind === 'tuned' ? 'The candidate with its penalty chosen inside each fold by an inner cross-validation (nested cross-validation).'
+              : kind === 'family' ? `Another model family: ${name}.` : 'The variant changes one thing in the candidate.'),
+        cvTitle: (metric, folds) => `${metric} over the ${folds} folds, beside the candidate`,
+        differenceLead: 'Against the candidate, the paired difference is ',
+        withinNoise: 'which stays within the noise between folds: the two could be equally good.',
+        beyondNoise: 'which goes beyond the noise between folds.',
+        // The tuned setting in words (`tuning.parameter` of trials.GRIDS), with "of" (the French needs "du").
+        tuningParams: { C: 'of the inverse penalty strength', alpha: 'of the penalty strength',
+          interactions: 'of the number of interaction terms', max_depth: 'of the depth of each tree', other: 'of the tuned setting' },
+        tuningTitle: words => `Value ${words} chosen in each outer fold`,
+        tuningColumns: { fold: 'Fold', value: 'Chosen value' },
+        tuningAll: 'Chosen on all development rows: ',
+        noDiagnostics: 'Diagnostics not yet run for this variant: its coefficients appear once the assistant runs them in the chat.',
+      },
       family: {
         eyebrow: (slot, name) => `${slot} · ${name}`,
         ebmTitle: 'Which terms carry the explainable boosting model, and with what shape?',

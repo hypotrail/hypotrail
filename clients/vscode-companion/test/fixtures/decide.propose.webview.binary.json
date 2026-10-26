@@ -81,6 +81,7 @@
     "proposal_text": "Call the 100 clients with the highest scores.",
     "recommended_option": "adopt",
     "options": ["adopt", "change", "explain"],
+    "option_labels": {"adopt": "I adopt this decision", "change": "Change something", "explain": "Explain first"},
     "question": "Do you adopt this decision?",
     "evidence_refs": [],
     "detail_topics": ["metric", "uncertainty"]

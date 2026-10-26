@@ -75,7 +75,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    pauses: do it without asking permission (exploration, fits, diagnostics, evaluations),
    say what you are doing, and stop at the next pause. It confirms no decision. A request
    for one action ("update the report", "explain the split") does only that action: do it,
-   name the next planned step, and stop.
+   name the next planned step, and stop.{{PICKER_RULE}}
 
    **Exploration.** Say each result's `values.question` before its figure, with the count
    of rows and the interval; read a rate or mean by group against its `null_band`.
@@ -199,17 +199,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    propose again if it still applies.
 6. **The panel.** It is open when `next_action.panel` is present or the junior has
    already said the Hypotrail panel is open; remember it. Do not append a panel-open
-   question to a resume, decision summary, or conclusion. When it is open, end each
-   message that shows or changes something with one short line per step naming the tab
-   to look at (`next_action.panel.where.line`, or the `panel.tabs` label of the step the
-   message covers): Data & EDA ("Données et EDA") after the data card and the charts,
-   Decisions ("Décisions") at a proposal, Evidence ("Preuves") after the fits, the
-   diagnostics, and the opening,
-<!-- hypotrail:task binary -->
-   What if? ("Et si ?") at the decision rule.{{PANEL_LINE_PLACE}}
-<!-- hypotrail:task regression -->
-   What if? ("Et si ?") at the model choice.{{PANEL_LINE_PLACE}}
-<!-- hypotrail:end -->
+   question to a resume, decision summary, or conclusion. When it is open, end a message
+   that shows or changes something with `next_action.panel.shown.line` of the last
+   command it reports, verbatim; no line when `shown` is null.{{PANEL_LINE_PLACE}}
    The line adds to the chat; it never replaces its content. The panel can run charts,
    regenerate the deliverables, acknowledge an interruption, and export a handoff pack:
    when the revision moved without a command of yours, `status --summary --digest --since
@@ -267,9 +259,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
     verbatim (`term`, or `term_fr` in French), never a home-made translation. Show no result,
     proposal, request, or execution id and no revision number unless the junior asks.
 12. **Stay inside the study.** Write no file outside this folder and no copy of an output
-    (no `>`, `tee`, or `/tmp`). Write only what the junior asks for (their notes go in
-    `notebooks/workbench.py`); leave `.hypotrail/`, `reports/`, and
-    `notebooks/study_generated.py` to the engine.
+    (no `>`, `tee`, or `/tmp`). Keep stderr: do not add `2>/dev/null`. Write only what the
+    junior asks for (their notes go in `notebooks/workbench.py`); leave `.hypotrail/`,
+    `reports/`, and `notebooks/study_generated.py` to the engine.
 
 ## Commands
 
@@ -281,7 +273,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 {{HYPOTRAIL}} decide confirm --proposal PROPOSAL_ID --user-words "<the junior's reply, verbatim>" [--adoption-question | --channel choice] [--agent-concern TEXT] [--basis delegated_default --delegation-scope this_decision|standing] --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide withdraw PROPOSAL_ID --reason TEXT --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide note (--about DECISION [--kind correction] | --resolve NOTE_ID | --withdraw NOTE_ID) --text "<the junior's words>" --request-id ID --expected-revision REV --study {{STUDY}}
-{{HYPOTRAIL}} run ACTIVITY [--column NAME] --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} run ACTIVITY [--column NAME] --progress --request-id ID --expected-revision REV --study {{STUDY}}
 <!-- hypotrail:task binary -->
 {{HYPOTRAIL}} run policy.evaluate --rule threshold:T|capacity:K|share:P [--rule ...] --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} preview policy --rule capacity:K [--intervals] --study {{STUDY}}

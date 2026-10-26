@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/tmp/capture/shoppers",
    "revision": 1,
-   "updated": "2026-10-25T15:43:57.933776+00:00",
+   "updated": "2026-10-26T12:02:29.009259+00:00",
    "case": {
     "id": "uci-online-shoppers-v1",
     "path": "/hypotrail/use-cases/online-shoppers/case.yaml",
@@ -338,6 +338,10 @@
       "continue",
       "explain"
      ],
+     "option_labels": {
+      "continue": "Let's continue",
+      "explain": "Explain first"
+     },
      "question": "Shall we look at the data card together?",
      "evidence_refs": [],
      "detail_topics": [
@@ -970,6 +974,10 @@
       "continue",
       "explain"
      ],
+     "option_labels": {
+      "continue": "Let's continue",
+      "explain": "Explain first"
+     },
      "question": "Shall we look at the data card together?",
      "evidence_refs": [],
      "detail_topics": [

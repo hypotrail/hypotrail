@@ -47,7 +47,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import Callable, Mapping
+from typing import Callable, Mapping, TextIO
 
 from mlkit import reliability
 from mlkit.reliability import CommandRefused, Handler
@@ -55,7 +55,7 @@ from mlkit.reliability import CommandRefused, Handler
 from . import activities as act
 from . import commands as cmd
 from . import dependencies as dep
-from . import exposure, guard, lock, partition, registry
+from . import exposure, guard, lock, partition, progress as progress_mod, registry
 from . import records as rec
 from . import state as st
 from .errors import StudyError
@@ -460,17 +460,22 @@ def _payload(store: StudyStore, *, action: str, request_id: str, replayed: bool,
             'values': values, 'result': result, 'artifacts': None}
 
 
-def _outcome(store: StudyStore, payload: dict, *, render: bool) -> cmd.Outcome:
+def _outcome(store: StudyStore, payload: dict, *, render: bool,
+             reporter: progress_mod.Reporter | None = None) -> cmd.Outcome:
     code = cmd.EXIT_UNKNOWN_OUTCOME if payload['status'] == 'interrupted_unknown' else cmd.EXIT_OK
     if render and not payload['replayed']:
-        artifacts = cmd.after_commit(store.study_dir, payload)
+        with progress_mod.phase_of(reporter, 'deliverables'):
+            artifacts = cmd.after_commit(store.study_dir, payload)
         if artifacts is not None:
             payload['artifacts'] = artifacts
             if code == cmd.EXIT_OK and any(a.get('status') in ('stale', 'failed')
                                            for a in artifacts.values()):
                 code = cmd.EXIT_ARTIFACT_STALE
-    # v0.3 (WP-J): the next action after the run, as ``status`` gives it.
-    payload['next_action'] = cmd.refreshed_next_action(store.study_dir)
+    # v0.3 (WP-J): the next action after the run, as ``status`` gives it; R1b (2026-10-26):
+    # with what the run produced, for ``next_action.panel.shown``.
+    produced = {'command': 'run', 'action': payload['action'], 'activity': payload['activity'],
+                'slot': (payload['result'] or {}).get('slot'), 'status': payload['status']}
+    payload['next_action'] = cmd.refreshed_next_action(store.study_dir, produced)
     return cmd.Outcome(payload, code)
 
 
@@ -518,16 +523,22 @@ Hook = Callable[[dict], None]
 
 def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
         expected_revision: int, hooks: Mapping[str, Hook] | None = None,
-        render: bool = True, channel: str | None = None) -> cmd.Outcome:
+        render: bool = True, channel: str | None = None, progress: TextIO | None = None,
+        progress_interval: float = progress_mod.HEARTBEAT_SECONDS) -> cmd.Outcome:
     """Run one activity (reserve, compute, promote) and describe the outcome.
 
     ``hooks`` (tests only) maps ``after_reserve`` and ``before_promote`` to callables
     that receive the plan. ``render`` False leaves the deliverables to the caller (the
     opening of the final test renders once, after the confirmation it follows).
+    ``progress`` (``run --progress``: stderr) receives the progress lines of the computation
+    and of the deliverables, in the study language (:mod:`mlkit.study.progress`); nothing is
+    written to it otherwise, and the returned payload is the same.
     """
     act.guard_read_only()
     hooks = dict(hooks or {})
     store = _store(study_dir)
+    requested = activity if ':' in str(activity) or not (options or {}).get('column') \
+        else f'{activity}:{options["column"]}'
     activity, options = act.resolve(activity, options)    # v0.3 (WP-F1): fit.variant:2
     activity = act.canonical(activity)
     options = act.normalize_options(activity, options)
@@ -558,10 +569,16 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
             raise
         plan = _PLANS.pop(eid)
         _history(store, eid, state['executions']['active'][eid])
+        reporter = (progress_mod.Reporter(progress, st.language_of(state),
+                                          interval=progress_interval)
+                    if progress is not None else None)
     try:
         if 'after_reserve' in hooks:
             hooks['after_reserve'](plan)
-        output = act.compute(store, plan)
+        with progress_mod.phase_of(reporter, 'activity', requested):
+            output = act.compute(store, plan)
+            if 'during_compute' in hooks:
+                hooks['during_compute'](plan)
         if 'before_promote' in hooks:
             hooks['before_promote'](plan)
     except Exception as exc:
@@ -615,7 +632,7 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
         payload = _payload(store, action='run', request_id=request_id, replayed=False,
                            revision=state['revision'], activity=activity, eid=eid,
                            status=result['status'], result_id=put['result_id'], result=result)
-    return _outcome(store, payload, render=render)
+    return _outcome(store, payload, render=render, reporter=reporter)
 
 
 def capture_options(store, state: Mapping) -> dict:

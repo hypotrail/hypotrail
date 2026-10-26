@@ -13,6 +13,7 @@ statuses and missing fields without writing. Without a complete profile the proj
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Callable
 
@@ -48,6 +49,62 @@ def _next_commands(configured: bool, artifact_status: str) -> list[dict]:
     return out
 
 
+def current_revision(study) -> int | None:
+    """The revision of the study at ``study``, read-only (no lock, nothing written), or None
+    when the folder holds no readable study."""
+    from mlkit.study import read
+    from mlkit.study.errors import StudyError
+    try:
+        revision = read.load_state(study).get('revision')
+    except (StudyError, OSError, ValueError):
+        return None
+    return revision if type(revision) is int else None
+
+
+def _revision_refusal(study, value) -> ExportError:
+    """R18 (L7, D16): ``--expected-revision`` missing or malformed. The flag is required
+    (the export reads exactly one revision); the refusal names the study and its current
+    revision, so the user can pass it without another command."""
+    study = os.path.abspath(study)
+    current = current_revision(study)
+    if value is None:
+        if current is None:
+            message = (f'--expected-revision is required, and {study} holds no readable study: '
+                       'check the --study folder.')
+        else:
+            message = (f'--expected-revision is required: the study at {study} is at revision '
+                       f'{current}; add --expected-revision {current}.')
+        reason = 'missing'
+    else:
+        message = '--expected-revision must be a revision number.'
+        reason = 'malformed'
+    remediation = (f'Add --expected-revision {current} (the revision read now; a later change '
+                   'is refused as stale_revision).' if current is not None else
+                   'Check the --study folder, then read its revision with hypotrail status.')
+    return ExportError('invalid_arguments', message, path='expected_revision',
+                       remediation=remediation,
+                       details={'reason': reason, 'current_revision': current,
+                                'study': study})
+
+
+# R18 (L7): the refusals that a wrong --study folder produces name the folder and revision.
+NAMED_STUDY_CODES = ('model_not_captured', 'capability_not_supported')
+
+
+def _naming_the_study(error: ExportError, study, revision: int) -> ExportError:
+    """``error`` with the study path and revision in its message and details when it is a
+    refusal of :data:`NAMED_STUDY_CODES`; unchanged otherwise (code, path and remediation
+    are kept)."""
+    if error.code not in NAMED_STUDY_CODES:
+        return error
+    details = {k: v for k, v in error.details.items() if k not in ('path', 'remediation')}
+    study = os.path.abspath(study)
+    details.update(study=study, study_revision=revision)
+    return ExportError(error.code, f'{error.message} (Study: {study}, revision {revision}.)',
+                       path=error.details.get('path'),
+                       remediation=error.details.get('remediation'), details=details)
+
+
 def export_azureml(study, *, expected_revision, out=None, profile_path=None,
                    template_id: str = DEFAULT_TEMPLATE, plan: bool = False,
                    require_configured: bool = False,
@@ -57,9 +114,7 @@ def export_azureml(study, *, expected_revision, out=None, profile_path=None,
         raise ExportError('read_only', f'{guard.ENV}=1: a read-only process writes no file.',
                           path='out', remediation='Use --plan, or unset the variable.')
     if type(expected_revision) is not int or expected_revision < 0:
-        raise ExportError('invalid_arguments', '--expected-revision must be a revision number.',
-                          path='expected_revision',
-                          remediation='Read the revision with hypotrail status first.')
+        raise _revision_refusal(study, expected_revision)
     template = layout.load(template_id)
     normal, missing = pf.validate(pf.load(profile_path) if profile_path else None)
     if require_configured and missing:
@@ -71,8 +126,11 @@ def export_azureml(study, *, expected_revision, out=None, profile_path=None,
     study_dir = Path(study)
     destination = None if plan else writer.target(out, study_dir)
     source = sn.read_source(study_dir, expected_revision, reader)
-    snap = sn.build(source, template_capabilities=template.document['capabilities'],
-                    verify_predictor=artifact.verify_predictor)
+    try:
+        snap = sn.build(source, template_capabilities=template.document['capabilities'],
+                        verify_predictor=artifact.verify_predictor)
+    except ExportError as error:
+        raise _naming_the_study(error, study_dir, expected_revision) from None
     files, summary = render.render(snap, normal, missing, template)
     if not plan:
         writer.publish(files, template.document['directories'], destination, template)

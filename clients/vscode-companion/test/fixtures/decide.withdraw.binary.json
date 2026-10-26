@@ -85,6 +85,7 @@
     "proposal_text": null,
     "recommended_option": "continue",
     "options": ["continue", "explain"],
+    "option_labels": {"continue": "Let's continue", "explain": "Explain first"},
     "question": "Do you open the holdout (final test) now, once?",
     "evidence_refs": [],
     "detail_topics": ["metric", "uncertainty"]

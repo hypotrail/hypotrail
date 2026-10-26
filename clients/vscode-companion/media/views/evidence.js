@@ -866,11 +866,9 @@
     return box;
   }
 
-  function familyFitCard(ctx, fit, task) {
+  /** A family's own diagnostics (EV-14): the body and the "Why?" of its card. */
+  function familyBody(ctx, fit) {
     const t = T().family;
-    const k = T().configs;
-    const name = k.family[fit.family] || k.variant;
-    const slot = cap1(fitLabel(task, fit.slot));
     const imp = x => ctx.format.number(x, 'f3');
     const body = [];
     if (fit.kind === 'ebm_terms') {
@@ -899,16 +897,115 @@
       fit.kind === 'ebm_terms' && fit.importance ? ctx.components.engineText(fit.importance, { lang: 'en', tag: 'p' }) : null,
       fit.kind === 'ebm_terms' && fit.scoreScale ? ctx.components.engineText(fit.scoreScale, { lang: 'en', tag: 'p' }) : null,
       fit.kind !== 'ebm_terms' && fit.definition ? ctx.components.engineText(fit.definition, { lang: 'en', tag: 'p' }) : null];
+    return { body, why };
+  }
+
+  // R11 (owner session 2026-10-26): one card per compared variant, in slot order, after the
+  // selection card: what it changes, its question, its figures over the folds beside the
+  // candidate's (cited from the stored `model_selection`), and its own analysis: the value
+  // chosen in each fold (a tuned variant), the coefficients from the current development
+  // diagnostics, or the family's own diagnostics. Read only, like every Evidence card.
+
+  /** Its cross-validation figures beside the candidate's (cited to the evaluation). */
+  function variantComparison(ctx, v, name, task) {
+    const t = T();
+    const vc = t.card;
+    const cmp = v.comparison;
+    if (!cmp) return ctx.el('p', { className: 'muted', 'data-variant-comparison': 'none', text: t.noEvaluation });
+    const f3 = x => ctx.format.number(x, task === 'regression' ? 'f2' : 'f3');
+    const sgn = x => `${x > 0 ? '+' : ''}${f3(x)}`;
+    const cite = (text, c) => ctx.components.cited(text, { resultId: cmp.resultId, path: c.path, value: c.value });
+    const metric = metricName(cmp.metric);
+    const rows = [];
+    if (cmp.candidate && cmp.candidate.mean.value !== null) {
+      rows.push({ configuration: `${configName(task, { kind: 'candidate', slot: cmp.candidate.slot })} (${t.candidate})`,
+        mean: { text: `${f3(cmp.candidate.mean.value)} ± ${f3(cmp.candidate.se.value)}`,
+          cited: { resultId: cmp.resultId, path: cmp.candidate.mean.path, value: cmp.candidate.mean.value } }, difference: '—' });
+    }
+    const d = cmp.difference;
+    rows.push({ configuration: `${name}${cmp.kept ? ` · ${t.kept}` : ''}`,
+      mean: cmp.variant.mean.value === null ? '' : { text: `${f3(cmp.variant.mean.value)} ± ${f3(cmp.variant.se.value)}`,
+        cited: { resultId: cmp.resultId, path: cmp.variant.mean.path, value: cmp.variant.mean.value } },
+      difference: !d || d.mean.value === null ? '—' : { text: `${sgn(d.mean.value)} ± ${f3(d.se.value)}`,
+        cited: { resultId: cmp.resultId, path: d.mean.path, value: d.mean.value } } });
+    const table = ctx.components.valuesTable(null, { caption: vc.cvTitle(metric, int(ctx, cmp.folds)),
+      columns: [{ key: 'configuration', label: t.columns.configuration }, { key: 'mean', label: t.columns.mean },
+        { key: 'difference', label: t.columns.difference }], rows });
+    table.setAttribute('data-variant-comparison', v.slot);
+    const out = [table];
+    if (d && d.mean.value !== null) {
+      out.push(ctx.el('p', { 'data-variant-noise': d.withinNoise ? 'within' : 'beyond' }, [
+        vc.differenceLead, cite(sgn(d.mean.value), d.mean), ', ', d.withinNoise ? vc.withinNoise : vc.beyondNoise]));
+    }
+    return ctx.el('div', {}, out);
+  }
+
+  /** A tuned variant: the value chosen inside each outer fold, then on all development rows. */
+  function variantTuning(ctx, v) {
+    const vc = T().card;
+    const tu = v.tuning;
+    if (!tu || !tu.perFold.length) return null;
+    const f = x => ctx.format.number(x, Number.isInteger(x) ? 'int' : 'f3');
+    // The setting in words, never its identifier (C7): `max_depth` reads "the depth of each tree".
+    const words = vc.tuningParams[tu.parameter] || vc.tuningParams.other;
+    const table = ctx.components.valuesTable(null, { caption: vc.tuningTitle(words),
+      columns: [{ key: 'fold', label: vc.tuningColumns.fold }, { key: 'value', label: vc.tuningColumns.value }],
+      rows: tu.perFold.map(x => ({ fold: T().fold(int(ctx, x.fold)),
+        value: { text: f(x.value), cited: { resultId: v.resultId, path: x.path, value: x.value } } })) });
+    table.setAttribute('data-variant-tuning', String(tu.perFold.length));
+    const kids = [table];
+    if (tu.development) {
+      kids.push(ctx.el('p', { 'data-variant-tuning-development': true }, [vc.tuningAll,
+        ctx.components.cited(f(tu.development.value), { resultId: v.resultId, path: tu.development.path, value: tu.development.value }), '.']));
+    }
+    return ctx.el('div', {}, kids);
+  }
+
+  function variantCard(ctx, v, task) {
+    const t = T();
+    const vc = t.card;
+    const isFamily = Boolean(v.analysis);
+    const name = configName(task, { kind: v.kind, strength: v.strength, group: v.group, family: v.family, slot: v.slot });
+    const slotName = cap1(fitLabel(task, v.slot));
+    const trials = ctx.data('trials');
+    const question = (trials && trials.model && trials.model.questions && trials.model.questions[v.slot]) || v.question;
+    const body = [ctx.el('p', { 'data-variant-changes': v.kind || 'variant' }, [vc.changes(v.kind, v.strength, v.group, name)])];
+    if (question) {
+      body.push(ctx.el('p', { 'data-variant-own-question': v.slot }, [ctx.el('span', { className: 'muted', text: t.question }),
+        ctx.el('q', { 'data-quoted': true, text: question })]));
+    }
+    body.push(variantComparison(ctx, v, name, task));
+    const tuning = variantTuning(ctx, v);
+    if (tuning) body.push(tuning);
+    let why = [];
+    if (isFamily) {
+      const fam = familyBody(ctx, v.analysis);
+      body.push(...fam.body);
+      why = fam.why;
+    } else if (v.coefficients) {
+      body.push(diagCoefficients(ctx, { resultId: v.diagnosticsId }, { coefficients: v.coefficients }));
+    } else {
+      body.push(ctx.el('p', { className: 'muted', 'data-variant-diagnostics': v.diagnostics, text: vc.noDiagnostics }));
+    }
+    if (v.tuning) {
+      why = [...why, v.tuning.meaning ? ctx.components.engineText(v.tuning.meaning, { lang: 'en', tag: 'p' }) : null,
+        v.tuning.note ? ctx.components.engineText(v.tuning.note, { lang: 'en', tag: 'p' }) : null];
+    }
+    const slug = v.slot.replace(/[^a-z0-9]/g, '-');
     return ctx.components.card({
-      eyebrow: t.eyebrow(slot, name), title: fit.kind === 'ebm_terms' ? t.ebmTitle : t.hgbTitle, titleId: `ht-ev-fam-${fit.slot.replace(/[^a-z0-9]/g, '-')}`,
-      body, why, source: { activity: 'fit.variant', id: fit.resultId },
-      className: 'ht-ev-family-fit', attrs: { 'data-ev': 'family-fit', 'data-family-fit': fit.family || '', 'data-slot': fit.slot },
+      eyebrow: t.family.eyebrow(slotName, name),
+      title: isFamily ? (v.analysis.kind === 'ebm_terms' ? t.family.ebmTitle : t.family.hgbTitle) : vc.titles[v.kind] || vc.titles.other,
+      titleId: isFamily ? `ht-ev-fam-${slug}` : `ht-ev-var-${slug}`,
+      body, why, source: { activity: 'fit.variant', id: v.resultId },
+      className: isFamily ? 'ht-ev-family-fit ht-ev-variant-card' : 'ht-ev-variant-card',
+      attrs: { 'data-ev': isFamily ? 'family-fit' : 'variant-fit', 'data-family-fit': isFamily ? v.family || '' : null,
+        'data-slot': v.slot, 'data-variant-card': v.slot, 'data-variant-kind': v.kind || '' },
     });
   }
 
   function trialCards(ctx, model, task) {
     return [selectionCard(ctx, model, task), familiesCard(ctx, model, task),
-      ...(model.familyFits || []).map(fit => familyFitCard(ctx, fit, task))].filter(Boolean);
+      ...(model.variantCards || []).map(v => variantCard(ctx, v, task))].filter(Boolean);
   }
 
   // --- diagnostics (WP-B4; CLI-CONTRACT §13, CLI-CONTRACT-COMPANION §14) ------------------

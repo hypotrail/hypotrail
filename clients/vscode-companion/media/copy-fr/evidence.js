@@ -288,6 +288,32 @@
         dataContingent: "Une famille proposée maintenant est un essai dépendant des données : elle est choisie après avoir vu ces contrôles, et le rapport le dit.",
         why: "Un signal indique qu'une autre famille pourrait suivre les données de plus près, sans le prouver. Le modèle linéaire reste le défaut ; une famille non linéaire se compare comme une variante, dans le budget.",
       },
+      // R11 (session du 2026-10-26) : une carte par variante comparée.
+      card: {
+        titles: {
+          regularisation: 'Que change cette pénalité dans le modèle ?',
+          drop_group: 'Que perd le modèle sans ce groupe ?',
+          tuned: 'Quelle pénalité chaque pli choisit-il, et avec quel résultat ?',
+          other: 'Que change cette variante ?',
+        },
+        changes: (kind, strength, group, name) => (kind === 'regularisation'
+          ? (strength === 'weak' ? 'Le candidat moins régularisé : une pénalité plus faible sur ses coefficients.'
+            : 'Le candidat plus régularisé : une pénalité plus forte sur ses coefficients.')
+          : kind === 'drop_group' ? `Le candidat sans le groupe de variables « ${group} ».`
+            : kind === 'tuned' ? 'Le candidat avec sa pénalité choisie dans chaque pli par une validation croisée interne (validation croisée imbriquée).'
+              : kind === 'family' ? `Une autre famille de modèles : ${name}.` : 'La variante change une seule chose dans le candidat.'),
+        cvTitle: (metric, folds) => `${metric} sur les ${folds} plis, à côté du candidat`,
+        differenceLead: "Face au candidat, l'écart apparié est de ",
+        withinNoise: 'ce qui reste dans le bruit entre les plis : les deux pourraient être aussi bons.',
+        beyondNoise: 'ce qui dépasse le bruit entre les plis.',
+        // Le réglage en mots (`tuning.parameter` de trials.GRIDS), avec « de » contracté.
+        tuningParams: { C: "de l'inverse de la force de la pénalité", alpha: 'de la force de la pénalité',
+          interactions: "du nombre de termes d'interaction", max_depth: 'de la profondeur de chaque arbre', other: 'du réglage' },
+        tuningTitle: words => `Valeur ${words} choisie dans chaque pli externe`,
+        tuningColumns: { fold: 'Pli', value: 'Valeur choisie' },
+        tuningAll: 'Choisie sur toutes les lignes de développement : ',
+        noDiagnostics: "Diagnostics pas encore calculés pour cette variante : ses coefficients apparaissent quand l'assistant les lance dans le chat.",
+      },
       family: {
         eyebrow: (slot, name) => `${slot} · ${name}`,
         ebmTitle: 'Quels termes portent le modèle de boosting explicable, et avec quelle forme ?',

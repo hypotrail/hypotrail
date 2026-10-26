@@ -225,6 +225,25 @@
     ]);
   }
 
+  /**
+   * L7 (owner session 2026-10-26, D15): at `done`, what comes after the study, read only:
+   * the engine's junior text (`next_action.after_study.junior_text`) and, when the chosen
+   * model is supported, that the Azure ML export plan is asked for in the chat. No control:
+   * the only write here stays the handoff pack (W7).
+   */
+  function afterStudy(ctx, snap) {
+    const c = L();
+    const { el } = ctx;
+    const next = (snap && snap.nextAction) || {};
+    const after = next.kind === 'done' ? next.afterStudy : null;
+    if (!after || !after.juniorText) return null;
+    return el('div', { className: 'ht-after-study', 'data-after-study': after.exportPlanAvailable ? 'export_plan' : 'handoff' }, [
+      el('h4', { text: c.afterStudyTitle }),
+      el('p', { text: after.juniorText }),
+      after.exportPlanAvailable ? el('p', { className: 'muted', 'data-after-study-export': true, text: c.exportPlanInChat }) : null,
+    ]);
+  }
+
   function handoff(ctx, snap) {
     const c = L();
     const { el } = ctx;
@@ -232,6 +251,7 @@
     return el('section', { className: 'ht-handoff', 'data-handoff': true, 'aria-labelledby': 'learn-handoff-title' }, [
       el('h3', { id: 'learn-handoff-title', text: c.handoffTitle }),
       el('p', { text: c.handoffIntro }),
+      afterStudy(ctx, snap),
       el('button', { type: 'button', 'data-write': 'export', disabled: ctx.busy ? true : null, 'aria-busy': running ? 'true' : null,
         'aria-describedby': 'learn-export-hint', text: running ? HT.copy.core.working : c.exportButton,
         onclick: () => ctx.send({ type: 'export_handoff', revision: snap.revision }) }),

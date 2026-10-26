@@ -72,6 +72,11 @@
     blockedTitle: 'If you confirm it in the chat now, the engine will refuse it:',
     effectsMissing: 'The impact preview is not available.',
     // WP-E1 (R23, ADR 0004 amendment): decisions are made in the chat only.
+    // R16 (owner session 2026-10-26): a choice the chat asks before any proposal exists.
+    choiceTitle: name => `${name.charAt(0).toUpperCase()}${name.slice(1)}: the assistant asks you to choose in the chat`,
+    choiceOptions: 'The options the engine accepts now:',
+    choiceHint: 'Choose in the chat with your assistant: it then proposes your choice, and you adopt it there. This panel records no choice.',
+    choiceAskQuestion: 'Can you explain these options and what each one would mean for my study?',
     answerInChat: 'Answer in the chat',
     answerInChatHint: 'Confirm, change, or withdraw this proposal in the chat with your assistant. This panel records no decision.',
     ask: 'Ask the agent about this',

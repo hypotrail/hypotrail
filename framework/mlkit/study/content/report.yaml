@@ -135,7 +135,7 @@ not_cited: Not cited
 annex_note: Every number in this report is a cited registry value. Hover a number to see its result id and path.
 not_yet_defensible_extra:
   validation_is_not_independent: A threshold or capacity chosen on validation rows makes the validation figures optimistic.
-  no_time_or_entity_identifier: Without a time column or an entity identifier, drift and repeated entities cannot be checked.
+  no_time_or_entity_identifier: An entity identifier is a column that names who or what a row describes, so repeated entities can be found; a time column or a declared order says when each row happened, so drift can be checked.
   public_data_already_explored: Public data may have been explored by you, by others, or by the model that assists you.
   uncertain_features_included: Uncertain variables included in the model may carry information from after the prediction time.
   no_causality: The study ranks rows; it does not show that acting would change the outcome.

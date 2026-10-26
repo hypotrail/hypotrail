@@ -150,17 +150,22 @@ PICKER = {'en': ('Do you adopt this decision?', ADOPT_EN, 'Change something', 'E
 @pytest.mark.parametrize('lang', sorted(PICKER))
 def test_the_copilot_picker_labels_work_in_the_study_language(tmp_path, synthetic_case_dir,
                                                               lang):
+    # Owner session 2026-10-26 (L1, R3): the agent takes the labels from the engine's
+    # ``pause.option_labels`` instead of translating them itself; they are these words, and
+    # the ones the choice channel accepts or refuses below.
     from mlkit.study import agent_files as af
     agent = ' '.join((af.SOURCE / 'copilot-agent.md.in').read_text().split())
     question, adopt, change, explain = PICKER[lang]
-    for text in PICKER[lang]:
-        assert f'"{text}"' in agent, text
+    assert 'labelled with `pause.option_labels`' in agent
+    assert f'"{explain}"' in agent
     flow = Flow(tmp_path / 'study', synthetic_case_dir, prefix='l')
     flow.call('init', '--case', synthetic_case_dir, '--study', flow.study, '--lang', lang)
     pid = _propose(flow, 'prediction_time', PT, PT_RESTATEMENT)
     pause = flow.call('status', '--summary', '--study', flow.study)['next_action']['pause']
     closed = pause['question'].replace('\N{NO-BREAK SPACE}', ' ').rsplit('\n\n', 1)[-1]
     assert pause['language'] == lang and closed == question
+    assert pause['options'] == ['adopt', 'change', 'explain']
+    assert pause['option_labels'] == {'adopt': adopt, 'change': change, 'explain': explain}
     rev = flow.rev()
     for label in (change, explain):
         out = _confirm(flow, pid, label, '--channel', 'choice', expect=2)
