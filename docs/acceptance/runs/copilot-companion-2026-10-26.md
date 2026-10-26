@@ -114,3 +114,8 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   To check when fixing: which texts come from the case (English only), which from the engine
   in the study language, which from the agent (junior's language), so each card's mix can be
   explained and fixed rather than sampled.
+- **R3, second case.** After the four framing decisions, the recap turn ("Les quatre décisions
+  de cadrage sont enregistrées…") ends with "La prochaine étape est l'exploration de
+  l'échantillon de développement… On continue ?" in text, with no picker (then the panel
+  line). Same pattern as step 0: a transition between moments, not a decision pause. So R3
+  covers every closed "go on?" question at a step change, not only step 0.
