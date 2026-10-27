@@ -485,3 +485,23 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   (the decision pause's options, with the restated value as the quoted block), never mark
   "continue" as recommended, and its position should name the reviewed decision, not
   `final_test`.
+- **R25. Report in the lesson style (owner request).** The owner wants `reports/study.html` to
+  take the design, structure, pedagogical depth and visual interest of the reference lesson
+  page ("tableau noir v5" charter: board, index cards, graph-paper figures, sticky TOC, notions
+  with term → contextual example → foldable Exemple / Pourquoi ça tient / Code / Où ça casse,
+  résumé, "Dites-le à voix haute"). Mockup for approval:
+  `docs/plans/mockups/report-lesson-style-mpg-fr.html` (Auto MPG FR, automatic mode, real
+  numbers from the owner's report; invented figures stamped "illustratif (maquette)"). A panel
+  mockup in the same charter, adapted to the construction journey, follows.
+- **R26. Defects the mockup work found in the current French regression report.**
+  Classification wording in a regression study ("taux observé moins score moyen", "trop peu de
+  lignes positives", "une configuration plus basse classe moins bien" while lower MAE is
+  better); English left in the French report ("Development rows", "Linear model", "Mean
+  baseline", "Rows read", "Unit", "Scale", "Intervals", "Case", yes/no, "the second variant"…);
+  contradictory labels (automatic decisions shown as both "Décision confirmée" and
+  "Automatique, à relire"; chapter 2 marked executed while its evidence says "pas encore
+  exécuté"; the EBM titled "Variante du modèle linéaire, la deuxième"); and an unflagged tension:
+  the one-standard-error rule keeps the linear model while the paired difference shows the EBM
+  better by 0.30 mpg with an interval excluding zero. Also: the regression final test is drawn by
+  target bins across all years (no declared order), so it cannot show the drift towards recent
+  cars (residual +5.27 mpg for 1981–82).
