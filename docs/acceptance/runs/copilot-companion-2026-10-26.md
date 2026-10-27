@@ -633,3 +633,10 @@ batch.
   overlap at any panel width (wrap, shorten, or show only the current step's label and a tooltip
   on the others) and phase titles must stay readable; add a simulated-browser check at a narrow
   width in both languages. Noted only, not fixed.
+- **R33. A theme toggle for the panel only.** Following the VS Code theme by default is right,
+  but the owner wants a button in the panel header (next to EN/FR) that switches the panel
+  between the dark board and the light paper, without changing the VS Code theme. Three states
+  to decide: follow VS Code (default), dark, light; the choice is a per-viewer convenience kept
+  in the webview state (`vscode.setState`), not study state, and is not a write (no CLI call,
+  outside W4/W5/W7). Add a simulated-browser check that the toggle switches the tokens and
+  survives a refresh. Noted only, not fixed.
