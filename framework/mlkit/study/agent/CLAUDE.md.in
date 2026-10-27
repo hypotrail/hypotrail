@@ -203,7 +203,8 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    that shows or changes something with `next_action.panel.shown.line` of the last
    command it reports, verbatim, as its first line, so the junior looks at the panel while
    reading; no line when `shown` is null.{{PANEL_LINE_PLACE}}
-   The line adds to the chat; it never replaces its content. The panel can run charts,
+   The line names a place of the one page, not a tab; it only adds to the chat.
+   The panel can run charts,
    regenerate the deliverables, and export a handoff pack:
    when the revision moved without a command of yours, `status --summary --digest --since
    <your last revision>` lists them in `digest.channel_actions` (`channel` `webview`); say

@@ -1,13 +1,13 @@
-"""Journey check J-PANEL, engine part (owner session 2026-10-26, plan §5.3; R1b, R16).
+"""Journey check J-PANEL, engine part (owner session 2026-10-26, plan §5.3; R1b, R16;
+contract P1, CLI-CONTRACT §17.1).
 
 A scripted walkthrough drives a study from ``init`` to ``done`` through the CLI's own code path
 (``cli.run``, as the agent's terminal does) with the study panel on (``HYPOTRAIL_COMPANION=1``,
 stage v3), in English and in French, on the synthetic binary case and on Auto MPG (regression).
-At every write, ``next_action.panel.shown`` names the tab and the section that show what the
-write produced; at every read after step 0 it is null. ``walk`` is shared with the panel side
-of the check (``clients/vscode-companion/test/test_journey_panel.py``), which feeds the panel's
-own reads at each write to the panel models and asserts that the named section shows at least
-one item. This is not a Copilot session: the agent's words are a test script.
+At every write, ``next_action.panel.shown`` names the anchor of the one page that shows what
+the write produced; at every read after step 0 it is null. ``walk`` is shared with the panel
+side of the check (``clients/vscode-companion/test/test_journey_panel.py``) and with
+``test_l3_language.py``. This is not a Copilot session: the agent's words are a test script.
 """
 from __future__ import annotations
 
@@ -143,92 +143,86 @@ def journey_flow(base: Path, case: str, lang: str) -> tuple[fk.Flow, str, dict]:
     return f, task, init
 
 
-# Which sections a write may name, by its label. D3 (wave W1 integration): a write names what
-# it produced, never the choice card the next action may ask (only a read names that).
-EXPECTED = {'propose': {'waiting'}, 'confirm': {'history', 'final_test'},
-            'note:hold': {'holds'}, 'note:resolve': {'waiting'}}
-
-
-def _expected(label: str) -> set:
-    if label in EXPECTED:
-        return EXPECTED[label]
-    head, _, activity = label.partition(':')
-    if head in EXPECTED:
-        return EXPECTED[head]
-    assert head == 'run', label
-    if activity == 'eda.quality':
-        return {'quality'}
-    if activity.startswith('eda.'):
-        return {activity}
-    if activity in ('final_test.evaluation', 'diag.final_test'):
-        return {'final_test'}
-    if activity in ('diag.binary', 'diag.regression'):
-        return {'diagnostics'}
-    return {'development'}
+def _plan(f: fk.Flow) -> list[dict]:
+    return f.call('plan', '--study', f.study)['steps']
 
 
 @pytest.mark.parametrize('case', ['synthetic', 'auto-mpg'])
 @pytest.mark.parametrize('lang', ['en', 'fr'])
-def test_j_panel_every_write_names_a_section_and_every_read_none(tmp_path, monkeypatch, case,
+def test_j_panel_every_write_names_its_place_and_every_read_none(tmp_path, monkeypatch, case,
                                                                  lang):
-    """J-PANEL (engine): after every write of the walkthrough, ``panel.shown`` names a tab and
-    a section of stage v3 in the study language, the one that shows what the write produced;
-    after every read past step 0 it is null (or the choice card the chat asks)."""
+    """J-PANEL (engine), contract P1 (CLI-CONTRACT §17.1; rewritten from the tab form, whose
+    sections no longer exist): along the walkthrough at stage v3, the next step is always in
+    Now (``where``); after every write ``shown`` names the place of the one page that shows
+    what it produced, in the study language: a proposal or a held condition in Now, a
+    confirmation its step in the path, the opening the final test result, a chart in Now when
+    its step is the current one and in its step's detail otherwise; after every read past
+    step 0, nothing (or the choice the chat asks)."""
     monkeypatch.setenv(ce.ENV_VAR, '1')
     monkeypatch.setenv(ce.STAGE_ENV, 'v3')
     f, task, init = journey_flow(tmp_path, case, lang)
-    assert init['next_action']['panel']['shown']['section'] == 'data_card'
-    seen, reads, choices, captures = [], [], [], []
+    assert init['next_action']['panel']['shown']['anchor'] == 'now'          # the data card
+    prefix = 'Dans le panneau : ' if lang == 'fr' else 'In the panel: '
+    seen, choices, captures = [], [], []
+
+    def place_ok(found):
+        assert list(found) == list(ce.SHOWN_KEYS) and ce.ANCHOR_RE.fullmatch(found['anchor'])
+        assert found['line'].startswith(prefix) and found['label'] == found['line'][len(prefix):-1]
 
     def on_write(label, payload):
-        shown = payload['next_action']['panel']['shown']
+        plan = _plan(f)                                 # the plan as the write left it
+        action = payload['next_action']
+        panel = action['panel']
+        assert panel['version'] == 2 and list(action)[-1] == 'panel'
+        assert panel['where']['anchor'] == 'now', (label, panel['where'])
+        shown = panel['shown']
+        head, _, rest = label.partition(':')
         if label == 'run:predictor.capture':
-            # Third session of 2026-10-26: the capture the journey runs before the opening
-            # (the export at done carries the evaluated model) shows nothing in the panel
-            # (``companion_env._run_section``), so the agent writes no panel line.
-            assert shown is None, shown
+            assert shown is None, shown                     # a capture draws nothing
             captures.append(label)
             return
-        assert shown is not None, label
-        assert list(shown) == list(ce.SHOWN_KEYS)
-        section = shown['section']
-        expected = _expected(label)
-        assert section in expected or (section.startswith('eda.') and
-                                       label.startswith(f'run:{section.split(":")[0]}')), \
-            (label, shown)
-        assert shown['tab'] == ce.SECTIONS['eda_card' if section.startswith('eda.')
-                                           else section][0]
-        assert shown['label'] == ce.section_label(section, lang)
-        assert shown['line'] == ce.SHOWN_LINES[lang]['tab'].format(
-            tab=ce.TAB_LABELS[lang][shown['tab']], section=shown['label'])
-        seen.append(section)
+        place_ok(shown)
+        anchor = shown['anchor']
+        if head in ('propose', 'note'):
+            assert anchor == 'now', (label, shown)
+        elif label == 'confirm:final_test':
+            assert anchor == 'path:final_test/final_test.evaluation', shown
+        elif head == 'confirm':
+            assert anchor == f'path:{ce.decision_step(rest, plan)}', (label, shown)
+        else:
+            from mlkit.study import executions
+            slot = payload['result']['slot']
+            step = ce.step_of(payload['activity'], slot, plan,
+                              executions._target_read(payload))
+            if anchor == 'now':
+                assert step == ce.current_step(action, plan), (label, shown)
+            else:
+                assert anchor == f'path:{step}/{slot}', (label, shown)
+        seen.append(anchor)
 
     def on_read(label, action):
         shown = action['panel']['shown']
         if action['kind'] == 'show_data_card':
-            assert shown['section'] == 'data_card'
+            assert shown['anchor'] == 'now'
         elif action.get('choice_options'):
-            assert shown['section'] == 'choice'
+            assert shown['anchor'] == 'now' and shown['label'].endswith(
+                ce.CONTENT_LABELS[lang]['choice'])
             choices.append(action['decision'])
         else:
             assert shown is None, (label, shown)
-        reads.append(label)
 
     writes = walk(f, task, on_write=on_write, on_read=on_read)
-    assert len(writes) > 15 and reads
+    assert len(writes) > 15
     # W1 integration (L1 + L2, D3): the opening's confirmation is followed by the conclusion, a
-    # choice the chat asks; the write names the final test it produced, and the read before
-    # the conclusion names the choice card.
+    # choice the chat asks; the write names the final test result it produced.
     opening = [p for label, p in writes if label == 'confirm:final_test']
     assert len(opening) == 1
     action = opening[0]['next_action']
     assert action['decision'] == 'conclusion' and action['choice_options'], action
     assert action['recommended'] is None and action['pause']['kind'] == 'choice'
-    assert action['panel']['shown']['section'] == 'final_test'
-    for section in ('waiting', 'history', 'holds', 'development', 'diagnostics', 'final_test'):
-        assert section in seen, (section, [w for w, _ in writes], seen)
+    for anchor in ('now', 'path:split', 'path:prediction_time',
+                   'path:final_test/final_test.evaluation'):
+        assert anchor in seen, (anchor, seen)
+    assert any(a.startswith('path:') and '/' in a and 'final_test' not in a for a in seen), seen
     assert {'model_choice', 'conclusion'} <= set(choices), choices
     assert len(captures) == 1, captures
-    if lang == 'fr':
-        assert all('Dans le panneau : ' in p['next_action']['panel']['shown']['line']
-                   for label, p in writes if label != 'run:predictor.capture')

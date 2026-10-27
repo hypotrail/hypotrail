@@ -1604,7 +1604,7 @@ The one page shows the step of every next action in Now (a run as "computing, no
 
 #### 17.1.3 `shown`: what the command produced
 
-`companion_env.shown_anchor(produced, action, plan)` computes the anchor before the stage is considered (`produced` as in §3.2: `{command, action?, activity?, slot?, status?, opening?, kind?}`); "the current step" is the step of the new `next_action` (its `step`, else the step of its `decision`).
+`companion_env.shown_anchor(produced, action, plan)` computes the anchor before the stage is considered (`produced` as in §3.2: `{command, action?, activity?, slot?, status?, opening?, kind?}`, plus `decision_id?`, the decision a `decide` command recorded, and `target_read?`, whether a run's result read the target); "the current step" is the step of the new `next_action` (its `step`, else the step of its `decision`).
 
 | Command and result | `shown.anchor` |
 |---|---|
@@ -1631,7 +1631,7 @@ D3 of §3.2 holds: a command that produced something names it, even when the nex
 | `now` with content `data_card` or `figure:<slot>` | v0, v1 (Now has no figures) | `now` with content `question` |
 | `path:<step>/<slot>` | v0, v1 | `path:<step>` |
 | `todo:checks` | v0 | `tools:deliverables` |
-| `tools:data`, `tools:whatif` | v0, v1 | `now` |
+| `tools:data`, `tools:whatif` | v0, v1 | `now` with content `question` |
 | `tools:notions` | v0 to v2 | `null` |
 
 #### 17.1.4 Labels and the line

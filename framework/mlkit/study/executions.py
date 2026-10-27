@@ -484,12 +484,26 @@ def _outcome(store: StudyStore, payload: dict, *, render: bool,
     # v0.3 (WP-J): the next action after the run, as ``status`` gives it; R1b (2026-10-26):
     # with what the run produced, for ``next_action.panel.shown``.
     produced = {'command': 'run', 'action': payload['action'], 'activity': payload['activity'],
-                'slot': (payload['result'] or {}).get('slot'), 'status': payload['status']}
+                'slot': (payload['result'] or {}).get('slot'), 'status': payload['status'],
+                # Contract P1 (§17.1.1): a chart that read no target is filed under the
+                # structural step.
+                'target_read': _target_read(payload)}
     payload['next_action'] = cmd.refreshed_next_action(store.study_dir, produced)
     from . import l10n
     payload['question_junior'] = l10n.question_junior(
         payload['values'], (payload['next_action'] or {}).get('language') or l10n.EN)
     return cmd.Outcome(payload, code)
+
+
+def _target_read(payload: Mapping) -> bool | None:
+    """Whether a run's result read the target: its ``target_read`` value, or for a
+    distribution whether its column is the target; None when the result does not say."""
+    values = payload.get('values') if isinstance(payload.get('values'), Mapping) else {}
+    if isinstance(values.get('target_read'), bool):
+        return values['target_read']
+    if str(payload.get('activity') or '') == 'eda.distribution' and values.get('role'):
+        return values['role'] == 'target'
+    return None
 
 
 def describe(store: StudyStore, state: Mapping, request_id: str, *,

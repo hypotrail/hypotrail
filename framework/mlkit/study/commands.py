@@ -2343,7 +2343,7 @@ def status(study_dir, since: int | None = None, summary: bool = False,
     # R1 (2026-10-26): where the study panel shows this step, only when the panel is on;
     # R1b: a read shows nothing new (``panel.shown``), except the data card at step 0.
     companion_env.annotate(built['next_action'], study.study_dir, built.get('language'),
-                           produced={'command': 'status'})
+                           produced={'command': 'status'}, plan=built['plan'])
     if summary:
         out = view.summary(built)
         if digest:
@@ -2443,10 +2443,11 @@ def apply(study_dir, *, action: str, params: dict, request_id: str, expected_rev
             if any(a.get('status') in ('stale', 'failed') for a in artifacts.values()):
                 code = EXIT_ARTIFACT_STALE
     # R1b (2026-10-26): what this write produced, for ``next_action.panel.shown``.
-    produced = {'command': 'decide', 'action': action,
-                'opening': payload['result'].get('opening')
-                if isinstance(payload['result'], dict) else None,
-                'kind': params.get(NOTE_KIND_PARAM, st.HOLD)}
+    result = payload['result'] if isinstance(payload['result'], dict) else {}
+    produced = {'command': 'decide', 'action': action, 'opening': result.get('opening'),
+                'kind': params.get(NOTE_KIND_PARAM, st.HOLD),
+                # Contract P1 (§17.1.3): a confirmation or a withdrawal names its step.
+                'decision_id': result.get('decision_id') or params.get('decision_id')}
     payload['next_action'] = refreshed_next_action(store.study_dir, produced)
     return Outcome(payload, code)
 
@@ -2472,7 +2473,7 @@ def _with_panel(built: dict, study_dir, produced: Mapping | None = None) -> dict
     only, never by the view the deliverables are rendered from, so they do not depend on
     the environment."""
     return companion_env.annotate(built['next_action'], study_dir, built.get('language'),
-                                  produced=produced)
+                                  produced=produced, plan=built.get('plan'))
 
 
 OPENING_KEYS = ('status', 'execution_id', 'result_id', 'revision', 'error')

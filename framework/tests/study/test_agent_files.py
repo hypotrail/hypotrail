@@ -494,16 +494,20 @@ def test_the_panel_rule(task):
                    'start a message that shows or changes something with '
                    '`next_action.panel.shown.line` of the last command it reports, verbatim, '
                    'as its first line',
-                   'no line when `shown` is null', 'it never replaces its content',
+                   'no line when `shown` is null',
+                   # Contract P1 (ADR 0004 decision 13): places of the one page, never a tab.
+                   'The line names a place of the one page, not a tab; it only adds to the '
+                   'chat',
                    '`status --summary --digest', '`channel` `webview`',
                    '"you ran these charts from the panel"'):
         assert phrase in rule6, phrase
     assert 'Data & EDA' not in rule6 and 'where.line' not in rule6     # the mapping is gone
     assert 'If the junior works in VS Code' not in rule6           # the trigger before R1
+    assert 'the {' not in rule6 and ' tab.' not in rule6 and 'tabs' not in rule6
     from mlkit.study import companion_env as ce, view
     assert 'channel' in view.DIGEST_ITEM_KEYS
-    assert {'tabs', 'where'} <= set(ce.PANEL_KEYS) and 'line' in ce.WHERE_KEYS
-    assert 'shown' in ce.PANEL_KEYS and ce.SHOWN_KEYS == ('tab', 'section', 'label', 'line')
+    assert ce.PANEL_KEYS == ('version', 'stage', 'title', 'where', 'shown')
+    assert ce.SHOWN_KEYS == ce.WHERE_KEYS == ('anchor', 'label', 'line')
     values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
     source = (af.SOURCE / 'CLAUDE.md.in').read_text()
     claude, copilot = (Flat(_rule(af.render(source, flavour=f, values=values,
@@ -922,6 +926,12 @@ CLAUDE_CODE_DIGESTS = {
     'binary': '18719e74569e7be56cb9b6b985ae5598fc45c5960dd668a747a9ff3fed9483e5',
     'regression': 'b4a890b652378d935ad16664ff2232cd1431014062730159a8489d4567d018a2'}
 CLAUDE_CODE_INTENDED_CHANGES = {
+    # Contract P1 (ADR 0004 decision 13, CLI-CONTRACT §17.1): the panel is one page, so the
+    # line names a place of it, never a tab (six more words: the D18 caps still hold).
+    'P1: rule 6 names a place of the one page': (
+        '   The line names a place of the one page, not a tab; it only adds to the chat.\n'
+        '   The panel can run charts,\n',
+        '   The line adds to the chat; it never replaces its content. The panel can run charts,\n'),
     'L4 (R10): keep stderr': (
         ' Keep stderr: do not add `2>/dev/null`. Write only what the\n    junior asks for (their '
         'notes go in `notebooks/workbench.py`); leave `.hypotrail/`,\n    `reports/`, and '

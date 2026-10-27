@@ -1393,18 +1393,71 @@ def test_understanding_contract_is_frozen():
 
 
 def test_panel_line_keys_are_frozen_and_documented():
-    """Owner session 2026-10-26 (R1, R1b): ``next_action.panel`` when the study panel is on;
-    ``shown`` is the additive last key (CLI-CONTRACT §3.2), its sections documented."""
+    """Owner session 2026-10-26 (R1, R1b) and contract P1 (CLI-CONTRACT §17.1, ADR 0004
+    decision 13): ``next_action.panel`` version 2 when the study panel is on, an anchor of
+    the one page in ``where`` and ``shown``. The declared switch from version 1 (the tab form
+    of §3.2: ``tabs``, ``where.tab``, ``shown.tab``, ``shown.section``), which this test
+    pinned before: there is no dual emission (§17.1.5)."""
     from mlkit.study import companion_env as ce
-    assert ce.PANEL_KEYS == ('stage', 'title', 'tabs', 'where', 'shown')
-    assert ce.WHERE_KEYS == ('tab', 'label', 'line')
-    assert ce.SHOWN_KEYS == ('tab', 'section', 'label', 'line')
-    assert tuple(ce.SECTIONS) == ('data_card', 'quality', 'eda_card', 'waiting', 'holds', 'choice',
-                                  'history', 'mode', 'development', 'diagnostics', 'final_test')
-    assert '`{stage, title, tabs, where, shown}`' in DOC
-    assert '`{tab, section, label, line}`' in DOC
-    for section in set(ce.SECTIONS) - {'eda_card'}:
-        assert f'`{section}`' in DOC, section
+    assert ce.PANEL_CONTRACT == 2
+    assert ce.PANEL_KEYS == ('version', 'stage', 'title', 'where', 'shown')
+    assert ce.WHERE_KEYS == ce.SHOWN_KEYS == ('anchor', 'label', 'line')
+    assert ce.TODO_KINDS == ('execution', 'deliverables', 'checks', 'sources', 'integrity')
+    assert ce.DRAWERS == ('data', 'whatif', 'notions', 'deliverables')
+    assert ce.ANCHOR_RE.pattern == (
+        r'now|todo:(?:execution|deliverables|checks|sources|integrity)|path'
+        r'|path:[a-z][a-z0-9_]*(?:/\S+)?|tools:(?:data|whatif|notions|deliverables)')
+    assert not hasattr(ce, 'tabs') and not hasattr(ce, 'SECTIONS')
+    assert '`{version, stage, title, where, shown}`' in ' '.join(DOC.split()) or \
+        'Keys** (`companion_env.PANEL_KEYS`, version 2): `version`, `stage`, `title`, `where`, ' \
+        '`shown`' in ' '.join(DOC.split())
+    assert '`{anchor, label, line}`' in DOC
+    for name in ('PANEL_CONTRACT', 'ANCHOR_RE', 'step_of', 'shown_anchor', 'at_stage',
+                 'ANCHOR_LABELS'):
+        assert f'companion_env.{name}' in DOC, name
+    for name in ('CONTENT_LABELS', 'DRAWER_LABELS', 'STEP_LABELS', 'FIGURE_LABELS'):
+        assert name in DOC and hasattr(ce, name), name
+    for kind in ce.TODO_KINDS:
+        assert f'`todo:{kind}`' in DOC, kind
+    for drawer in ce.DRAWERS:
+        assert f'`tools:{drawer}`' in DOC, drawer
+    for content in ce.CONTENTS:
+        assert f'`{content}`' in DOC, content
+
+
+def test_panel_contract_p1_digest_keys(tmp_path, synthetic_case_dir):
+    """Contract P1 (CLI-CONTRACT §17.2): the digest keys after ``texts``, in order, the keys
+    inside existing structures (``--digest`` only), the ``texts`` additions; the plain summary
+    (without ``--digest``) keeps exactly its keys."""
+    import companion_contract as cc
+    from mlkit.study import audience, panel_digest as pd
+    assert view.DIGEST_SUMMARY_KEYS[-8:] == ('panel_contract', 'automation', 'review_queue',
+                                             'defensibility', 'ledger', 'sample', 'headlines',
+                                             'criterion_configurations')
+    assert view.LANGUAGE_TEXT_KEYS[10:] == ('question', 'options', 'options_note',
+                                            'junior_digest', 'headlines', 'data_contingent',
+                                            'sample_note')
+    for name in ('SUMMARY_AUTOMATION_KEYS', 'SUMMARY_REVIEW_KEYS', 'SUMMARY_DEFENSIBILITY_KEYS',
+                 'SUMMARY_LEDGER_KEYS', 'SUMMARY_SAMPLE_KEYS', 'HEADLINE_KEYS',
+                 'SUMMARY_CRITERION_CONFIG_KEYS', 'CRITERION_BOUND_KEYS',
+                 'CRITERION_CONFIGURATION_KEYS'):
+        assert getattr(pd, name) == getattr(cc, name), name
+    assert audience.SEVERITIES == ('blocking', 'caveat', 'not_final', 'context')
+    for key in view.DIGEST_SUMMARY_KEYS[-8:] + view.LANGUAGE_TEXT_KEYS[10:]:
+        assert f'`{key}`' in DOC, key
+    study = tmp_path / 'study'
+    assert _run('init', '--case', synthetic_case_dir, '--study', study).exit_code == 0
+    plain = _run('status', '--summary', '--study', study).payload
+    assert tuple(plain) == cc.SUMMARY_KEYS
+    assert all('channel' not in r for r in plain['results'].values())
+    full = _run('status', '--summary', '--digest', '--study', study).payload
+    assert tuple(full) == cc.DIGEST_SUMMARY_KEYS
+    assert full['panel_contract'] == cc.PANEL_CONTRACT
+    assert tuple(full['ledger']) == cc.SUMMARY_LEDGER_KEYS
+    assert tuple(full['sample']) == cc.SUMMARY_SAMPLE_KEYS
+    assert tuple(full['defensibility']) == cc.SUMMARY_DEFENSIBILITY_KEYS
+    for lang in ('en', 'fr'):
+        assert tuple(full['texts'][lang]) == cc.LANGUAGE_TEXT_KEYS
 
 
 def test_l7_after_study_and_structure_limit_contract():
