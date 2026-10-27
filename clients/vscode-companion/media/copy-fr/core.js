@@ -7,6 +7,7 @@
     title: 'Étude Hypotrail',
     product: 'Hypotrail',
     experimental: 'Expérimental · option activée',
+    stage: s => `étape ${s}`,
     regression: 'régression',
     reviewer: 'Relecteur, lecture seule',
     switchStudy: name => `Étude : ${name} ▾`,
@@ -73,7 +74,6 @@
     done: {
       W4: 'Lancé sur les lignes d’entraînement.',
       W5: 'Rapport et notebook régénérés.',
-      W6: 'Pris acte avec vos mots.',
       W7: 'Dossier de passation exporté.',
     },
     modalCancel: 'Annuler',

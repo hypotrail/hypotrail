@@ -156,7 +156,7 @@ function choiceOptionsOf(raw) {
  * Owner session 2026-10-26 (L7, D15): `next_action.after_study` on `done`, read only: the
  * engine's junior text (the study language; no command, id or revision) and whether the
  * Azure ML export plan is available from the chat (`azureml.supported`). The commands it
- * carries are the agent's and are not kept: the panel offers no new write (W4-W7 only).
+ * carries are the agent's and are not kept: the panel offers no new write (W4, W5, W7 only).
  * Null when absent or without a junior text.
  */
 function afterStudyOf(raw) {

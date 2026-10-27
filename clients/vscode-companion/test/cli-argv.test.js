@@ -40,16 +40,14 @@ test('reads: exact argv (§5)', () => {
   }
 });
 
-test('writes: exact argv of W4-W7 (§7); W1-W3 are withdrawn (v0.3 narrowing)', () => {
-  // ADR 0004 amendment (R23, I2): the panel has no confirm, withdraw, or propose builder.
-  assert.deepEqual(Object.keys(cli.WRITES), ['W4', 'W5', 'W6', 'W7']);
-  for (const name of ['confirmArgv', 'withdrawArgv', 'proposeArgv']) assert.equal(cli[name], undefined, name);
+test('writes: exact argv of W4, W5, W7 (§7); W1-W3 and W6 are withdrawn (v0.3 narrowing, R31)', () => {
+  // ADR 0004 amendments (R23, I2; R31, 2026-10-27): the panel has no confirm, withdraw,
+  // propose, or acknowledgement builder.
+  assert.deepEqual(Object.keys(cli.WRITES), ['W4', 'W5', 'W7']);
+  for (const name of ['confirmArgv', 'withdrawArgv', 'proposeArgv', 'acknowledgeArgv']) assert.equal(cli[name], undefined, name);
   assert.deepEqual(cli.WRITES.W4(AGENT, { activity: 'eda.distribution', column: '-age', requestId: ID, expectedRevision: 3 }),
     [...A, 'run', 'eda.distribution', '--column=-age', '--channel=webview', '--request-id', ID, '--expected-revision', '3', ...T]);
   assert.deepEqual(cli.WRITES.W5(AGENT), [...A, 'render', '--channel=webview', ...T]);
-  assert.deepEqual(cli.WRITES.W6(AGENT, { executionId: 'e_4c1d', words: 'I know it stopped.', requestId: ID, expectedRevision: 3 }),
-    [...A, 'run', '--acknowledge-interruption', 'e_4c1d', '--user-words=I know it stopped.', '--channel=webview', '--request-id', ID,
-      '--expected-revision', '3', ...T]);
   // CR.6: the export names the revision the junior saw, so the engine refuses a stale one;
   // there is no form without the option (an unknown `legacy` flag changes nothing).
   assert.deepEqual(cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26 }),
@@ -60,7 +58,7 @@ test('writes: exact argv of W4-W7 (§7); W1-W3 are withdrawn (v0.3 narrowing)', 
 
 test('timeouts and buffer (§7, §11)', () => {
   assert.equal(cli.MAX_BUFFER, 16 * 1024 * 1024);
-  assert.deepEqual({ ...cli.TIMEOUTS }, { read: 30000, W4: 300000, W5: 120000, W6: 120000, W7: 120000 });
+  assert.deepEqual({ ...cli.TIMEOUTS }, { read: 30000, W4: 300000, W5: 120000, W7: 120000 });
 });
 
 test('run: no shell, the buffer, and every failure is a message (never a rejection)', async () => {
@@ -92,7 +90,6 @@ test('no builder passes --progress: the panel stays silent on stderr (owner sess
     cli.explainArgv(AGENT), cli.sessionReportArgv(AGENT), cli.dataArgv(AGENT),
     cli.WRITES.W4(AGENT, { activity: 'eda.distribution', column: 'age', requestId: ID, expectedRevision: 3 }),
     cli.WRITES.W5(AGENT),
-    cli.WRITES.W6(AGENT, { executionId: 'e_4c1d', words: 'I know it stopped.', requestId: ID, expectedRevision: 3 }),
     cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26 }),
   ];
   for (const argv of argvs) assert.ok(!argv.some(token => String(token).includes('--progress')), argv.join(' '));

@@ -1,7 +1,9 @@
 // Horizontal bars (COMPANION-ADVANCED §6.3, §6.5). Signature (frozen by WP-0, extended):
 //   bars(container, {items: [{label, sub?, value, valueText, small, tone?, interval?, band?,
 //                    cited: {resultId, path, value} | null}], max, rule: {value, label} | null,
-//                    title, unit, ticks?: [{value, text}], point?: bool})
+//                    title, unit, ticks?: [{value, text}], point?: bool, guide?})
+// Lesson style (R30): the figure carries the guided reading of the bars (lesson.js), with the
+// conclusion drawn from the values below and the view's `guide` (question, frame, rows, model).
 // v0.3 (WP-E2): an HTML grid, fluid at every width (no sideways scroll): a label column, a
 // track, and a value column. Geometry only (INV-14): a bar's length is value / max of the
 // track, set as the custom property --v through CSSOM. A `small` bar is hatched AND carries
@@ -25,7 +27,35 @@
     return HT.components.cited(item.valueText, item.cited);
   }
 
-  function bars(container, { items, max, rule = null, title, unit = '', ticks = null, point = false, showTitle = true }) {
+  /**
+   * Lesson style (R30): what the bars say, from the values they draw: the largest and the
+   * smallest (rows too small to be read alone apart), the groups outside the grey band, the
+   * dashed line. Texts are the panel's copy; figures are the chart's own value texts.
+   */
+  function conclusion(items, { point, rule }) {
+    const R = HT.copy.lesson && HT.copy.lesson.concl;
+    if (!R) return null;
+    const q = i => HT.components.quote(i.valueText, i.cited);
+    const read = items.filter(i => ok(Number(i.value)) && !i.small);
+    const out = [];
+    if (read.length === 1) out.push(R.one(read[0].label, q(read[0])));
+    else if (read.length > 1) {
+      const hi = read.reduce((a, b) => (Number(b.value) > Number(a.value) ? b : a));
+      const lo = read.reduce((a, b) => (Number(b.value) < Number(a.value) ? b : a));
+      out.push(point ? R.points(hi.label, q(hi), lo.label, q(lo)) : R.bars(hi.label, q(hi), lo.label, q(lo)));
+    }
+    const banded = items.filter(i => i.band && ok(i.band.low) && ok(i.band.high) && ok(Number(i.value)));
+    if (banded.length) {
+      const outside = banded.filter(i => Number(i.value) < i.band.low || Number(i.value) > i.band.high).length;
+      out.push(R.outsideBand(HT.format.number(outside, 'int'), HT.format.number(banded.length, 'int')));
+    }
+    if (rule && rule.label) out.push(R.rule(rule.label));
+    const small = items.filter(i => i.small).map(i => i.label);
+    if (small.length) out.push(R.small(small.join(', ')));
+    return out.length ? out : null;
+  }
+
+  function bars(container, { items, max, rule = null, title, unit = '', ticks = null, point = false, showTitle = true, guide = null }) {
     const top = max > 0 ? max : Math.max(0, ...items.map(i => Math.max(Number(i.value) || 0,
       i.interval && ok(i.interval.high) ? i.interval.high : 0))) || 1;
     const small = HT.copy.core.small;
@@ -66,8 +96,11 @@
     if (items.some(i => i.band)) legend.push(['band', HT.copy.core.legendBand]);
     if (rule && rule.label) legend.push(['line', rule.label]);
     if (items.some(i => i.small)) legend.push([point ? 'hollow' : 'hatch', HT.copy.core.legendSmall]);
+    const R = HT.copy.lesson && HT.copy.lesson.steps;
     return HT.components.figure(container, {
-      title, chart, legend, showTitle,
+      title, chart, legend, showTitle, guide,
+      reading: { kind: point ? 'points' : 'bars', concl: conclusion(items, { point, rule }),
+        steps: R && rule && rule.label ? [R.rule(rule.label)] : null },
       columns: [{ key: 'label', label: '' }, { key: 'value', label: unit || '' }, { key: 'small', label: '' }],
       rows: items.map(i => ({ label: i.label, value: { text: i.valueText, cited: i.cited || null },
         small: i.small ? small : '' })),

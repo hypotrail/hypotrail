@@ -392,7 +392,11 @@ def test_ov10_the_opening_of_the_final_test_is_a_chat_act(open_panel, views, sta
     hero = page.locator('[data-ov="hero"]')
     assert hero.locator('[data-hero-title]').inner_text() == 'Open the final test, in the chat'
     assert hero.locator('[data-hero-chat="final_test"]').count() == 1
-    assert hero.locator('button, [data-write]').count() == 0
+    # No control opens it; the one button copies a ready question for the chat (lesson style,
+    # 2026-10-27: the next move's only action), which writes nothing.
+    assert hero.locator('[data-write]').count() == 0
+    assert hero.locator('button:not([data-copy-question])').count() == 0
+    assert hero.locator('[data-copy-question]').inner_text() == 'Copy the question'
     assert 'once' in hero.locator('[data-hero-why]').inner_text()
     clean(panel)
     shot(page, f'overview-opening-{stage}-light-900')

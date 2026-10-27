@@ -5,11 +5,12 @@
 // confirmation must stay their own): no example reply, no quotation, no wording to copy.
 //
 // v0 table, extended by WP-U2 with `export_target_exists` (CLI-CONTRACT-COMPANION §12) and
-// the refusal contexts of W4 (run an EDA request), W6 (acknowledge an interruption), and
-// W7 (export). The context comes from the payload's `command`, so the frozen
-// `describe(payload)` signature of the controller is unchanged. The confirmation reasons
-// stay: the engine's preview of a confirmation (`preview effects`) can name them. The
-// `propose` context went with W3 (v0.3 narrowing, ADR 0004 amendment).
+// the refusal contexts of W4 (run an EDA request) and W7 (export). The context comes from
+// the payload's `command`, so the frozen `describe(payload)` signature of the controller is
+// unchanged. The confirmation reasons stay: the engine's preview of a confirmation
+// (`preview effects`) can name them. The `propose` context went with W3 (v0.3 narrowing,
+// ADR 0004 amendment); the `acknowledge` context went with W6 (owner decision R31,
+// 2026-10-27): an interrupted execution is acknowledged in the chat, not in the panel.
 
 const NOTHING = 'Nothing was recorded.';
 
@@ -59,7 +60,7 @@ const BY_CODE = {
   literal_number_in_text: 'The engine found a number in the proposal text that it cannot trace to a current result.',
   causal_or_forecast_wording: 'The engine found causal or forecast wording in the proposal text.',
   misattributed_delegation: 'The engine found a recommended default credited to the analyst in the proposal text.',
-  interrupted_execution_pending: 'An execution has an unknown outcome, so the engine runs nothing until it is acknowledged in your words (Overview, Health).',
+  interrupted_execution_pending: 'An execution has an unknown outcome, so the engine runs nothing until you acknowledge it in your words, in the chat (Overview, Needs attention).',
   execution_in_progress: 'The same computation is already running.',
   unknown_execution: 'The engine does not list this execution as interrupted any more.',
   invalid_request: 'The engine refused the form of this request.',
@@ -74,21 +75,13 @@ const BY_CODE = {
   final_test_already_opened: 'The final test was already opened. It is opened only once: a later change is shown as made after it and is never measured on it again.',
 };
 
-// Explanations that depend on the write that was refused (the payload's `command`). A
-// `run` refusal about an execution (ambiguous words, unknown execution) is an
-// acknowledgement (W6); any other `run` refusal is an EDA request (W4).
+// Explanations that depend on the write that was refused (the payload's `command`). A `run`
+// refusal is an EDA request (W4): the panel sends no other `run` since W6 was withdrawn (R31).
 const BY_CONTEXT = {
   run: {
     stale_revision: 'The study changed after the panel showed it. The panel has been refreshed: look at the list again before asking for a chart.',
     precondition_missing: 'An earlier step of the plan must be done before this chart can be computed.',
     invalid_value: 'The engine does not accept this column for this chart.',
-  },
-  acknowledge: {
-    stale_revision: 'The study changed after the panel showed it. The panel has been refreshed: read the execution again before acknowledging it.',
-    missing_user_words: 'Your acknowledgement was empty.',
-    bare_acknowledgement: 'Your reply only acknowledged the interruption; it did not say, in your words, what you know about it.',
-    negative_reply: 'Your reply reads as a refusal or a hesitation, so it was not taken as an acknowledgement.',
-    unrelated_reply: 'Your reply shares no word with the interrupted execution, so it cannot be read as an acknowledgement of it.',
   },
   export: {
     read_only: 'This process is read-only (HYPOTRAIL_READ_ONLY=1), so the engine exported nothing.',
@@ -149,7 +142,7 @@ const BY_CODE_FR = {
   literal_number_in_text: "Le moteur a trouvé dans le texte de la proposition un nombre qu'il ne peut relier à aucun résultat à jour.",
   causal_or_forecast_wording: 'Le moteur a trouvé dans le texte de la proposition une formulation causale ou de prévision.',
   misattributed_delegation: "Le moteur a trouvé dans le texte de la proposition un défaut recommandé attribué à l'analyste.",
-  interrupted_execution_pending: "Une exécution a une issue inconnue : le moteur ne lance plus rien tant que vous n'en avez pas pris acte avec vos mots (Vue d'ensemble, Santé).",
+  interrupted_execution_pending: "Une exécution a une issue inconnue : le moteur ne lance plus rien tant que vous n'en avez pas pris acte avec vos mots, dans le chat (Vue d'ensemble, À traiter).",
   execution_in_progress: 'Le même calcul est déjà en cours.',
   unknown_execution: 'Le moteur ne liste plus cette exécution comme interrompue.',
   invalid_request: 'Le moteur a refusé la forme de cette requête.',
@@ -165,13 +158,6 @@ const BY_CONTEXT_FR = {
     stale_revision: "L'étude a changé après l'affichage du panneau. Le panneau a été actualisé : regardez de nouveau la liste avant de demander un graphique.",
     precondition_missing: 'Une étape précédente du plan doit être faite avant que ce graphique puisse être calculé.',
     invalid_value: "Le moteur n'accepte pas cette colonne pour ce graphique.",
-  },
-  acknowledge: {
-    stale_revision: "L'étude a changé après l'affichage du panneau. Le panneau a été actualisé : relisez l'exécution avant d'en prendre acte.",
-    missing_user_words: "Votre prise d'acte était vide.",
-    bare_acknowledgement: "Votre réponse prenait seulement acte de l'interruption ; elle ne disait pas, avec vos mots, ce que vous en savez.",
-    negative_reply: "Votre réponse se lit comme un refus ou une hésitation, elle n'a donc pas été prise pour une prise d'acte.",
-    unrelated_reply: "Votre réponse n'a aucun mot en commun avec l'exécution interrompue : elle ne peut pas se lire comme une prise d'acte.",
   },
   export: {
     read_only: "Ce processus est en lecture seule (HYPOTRAIL_READ_ONLY=1), le moteur n'a donc rien exporté.",
@@ -189,15 +175,11 @@ function olderEngineExport(context, code, message) {
   return context === 'export' && code === 'invalid_arguments' && /--expected-revision/.test(message);
 }
 
-/** The refusal context of a payload: run, acknowledge, export, or null. */
-function contextOf(payload, code, reason, details) {
+/** The refusal context of a payload: run, export, or null. */
+function contextOf(payload) {
   const command = typeof (payload && payload.command) === 'string' ? payload.command : '';
   if (command.startsWith('export')) return 'export';
-  if (command === 'run') {
-    const aboutExecution = code === 'ambiguous_confirmation' || code === 'unknown_execution' ||
-      (typeof details.execution_id === 'string' && code !== 'execution_in_progress');
-    return aboutExecution ? 'acknowledge' : 'run';
-  }
+  if (command === 'run') return 'run';
   return null;
 }
 
@@ -207,7 +189,7 @@ function describe(payload) {
   const code = typeof error.code === 'string' ? error.code : 'unknown_error';
   const details = error.details && typeof error.details === 'object' ? error.details : {};
   const reason = typeof details.reason === 'string' ? details.reason : null;
-  const where = contextOf(payload, code, reason, details);
+  const where = contextOf(payload);
   const older = olderEngineExport(where, code, String(error.message || ''));
   const explain = (byContext, byReason, byCode, olderText, refused) => {
     const context = byContext[where] || {};

@@ -293,7 +293,7 @@
     reconfirm: { title: name => `Confirm ${name} again`, action: 'Open in Decisions',
       lead: 'Something it rests on changed, so your earlier answer no longer holds until you confirm it again.' },
     acknowledge_interruption: { title: () => 'A run stopped before it finished', action: 'Go to the run',
-      lead: 'Its outcome is unknown. Say in your own words that you know this; nothing restarts by itself.' },
+      lead: 'Its outcome is unknown. Say in the chat, in your own words, that you know this; nothing restarts by itself, and this panel records nothing.' },
     outcome_unknown: { title: () => 'A run stopped before it finished', action: 'Go to the run',
       lead: 'Its outcome is unknown. It is not in progress and does not restart by itself.' },
     propose: { title: step => `Next step: ${step}`, action: null,

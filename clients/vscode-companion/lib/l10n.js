@@ -52,10 +52,6 @@ const EN = {
   noTerminal: 'This host cannot open a terminal. Nothing was started.',
   terminalReused: (terminal, rel) => `The terminal "${terminal}" already runs ${rel}; it is shown again.`,
   terminalStarted: (mode, rel, terminal) => `Started "marimo ${mode}" for ${rel} in the terminal "${terminal}". Stop it with Ctrl+C in that terminal.`,
-  // handlers/overview.js (W6, the acknowledgement of an interrupted execution)
-  ackEmpty: 'Type your own reply first. Nothing was recorded.',
-  ackTooLong: max => `Your reply is longer than ${max} characters. Nothing was recorded.`,
-  ackNotWaiting: 'This execution is not waiting for an acknowledgement any more. Nothing was recorded.',
   // handlers/eda.js (W4, a chart of the engine's catalog)
   edaUnread: 'The list of charts could not be read, so nothing was run.',
   edaMoved: 'The study changed since this list of charts was shown. Read it again; nothing was run.',
@@ -115,9 +111,6 @@ const FR = {
   noTerminal: "Cet hôte ne peut pas ouvrir de terminal. Rien n'a été lancé.",
   terminalReused: (terminal, rel) => `Le terminal « ${terminal} » exécute déjà ${rel} ; il est affiché de nouveau.`,
   terminalStarted: (mode, rel, terminal) => `« marimo ${mode} » a été lancé pour ${rel} dans le terminal « ${terminal} ». Arrêtez-le avec Ctrl+C dans ce terminal.`,
-  ackEmpty: "Écrivez d'abord votre propre réponse. Rien n'a été enregistré.",
-  ackTooLong: max => `Votre réponse dépasse ${max} caractères. Rien n'a été enregistré.`,
-  ackNotWaiting: "Cette exécution n'attend plus de prise d'acte. Rien n'a été enregistré.",
   edaUnread: "La liste des graphiques n'a pas pu être lue : rien n'a été lancé.",
   edaMoved: "L'étude a changé depuis l'affichage de cette liste de graphiques. Relisez-la ; rien n'a été lancé.",
   edaNotInCatalog: "Ce graphique n'est pas dans le catalogue d'EDA du moteur pour cette étude. Rien n'a été lancé.",

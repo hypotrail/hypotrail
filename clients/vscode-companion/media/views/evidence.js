@@ -346,7 +346,7 @@
       detail.reportAnchor ? null : ctx.el('p', { id: 'ht-ev-not-in-report', className: 'muted', text: c.notInReport }),
       detail.notebookHint ? ctx.el('p', { id: 'ht-ev-notebook-hint', className: 'muted',
         text: c.notebookHint(detail.notebookHint.search, detail.notebookHint.path) }) : null,
-      detail.current ? uncertainty(ctx, detail.uncertainty, task) : null,
+      detail.current ? withGuide({ frame: L().frames.development }, () => uncertainty(ctx, detail.uncertainty, task)) : null,
     ]);
   }
 
@@ -1224,11 +1224,12 @@
     const chosen = d.model || (/^fit\./.test(choice) ? choice : null);
     const order = [...d.models].sort((a, b) => (b.fit === chosen) - (a.fit === chosen));
     const [first, ...rest] = order;
-    if (first) kids.push(diagModel(ctx, d, first, task));
+    const forModel = m => withGuide({ model: fitLabel(task, m.fit) }, () => diagModel(ctx, d, m, task));
+    if (first) kids.push(forModel(first));
     if (rest.length) {
       kids.push(ctx.el('details', { className: 'ht-details', 'data-diag-also': true }, [
         ctx.el('summary', { text: c.also(rest.map(m => fitLabel(task, m.fit)).join(', ')) }),
-        ...rest.map(m => diagModel(ctx, d, m, task))]));
+        ...rest.map(forModel)]));
     }
     return ctx.el('div', { className: 'ht-ev-diag', 'data-diag': d.slot, 'data-diag-evidence': d.evidence, 'data-result-ref': d.resultId }, kids);
   }
@@ -1243,14 +1244,73 @@
     const kids = [ctx.el('p', { className: 'muted', text: c.diagnosticsLead })];
     kids.push(ctx.el('div', { className: 'ht-ev-diag-group', 'data-diag-evaluation': 'development' }, [
       ctx.el('h4', { text: c.diagnosticsWhere.development }),
-      ...(dev.length ? dev.map(d => diagResult(ctx, d, summary, task)) : [ctx.el('p', { className: 'muted', text: c.diag.noneDevelopment })])]));
+      ...(dev.length ? dev.map(d => withGuide(diagGuide(ctx, d), () => diagResult(ctx, d, summary, task)))
+        : [ctx.el('p', { className: 'muted', text: c.diag.noneDevelopment })])]));
     kids.push(ctx.el('div', { className: 'ht-ev-diag-group', 'data-diag-evaluation': 'final' }, [
       ctx.el('h4', { text: c.diagnosticsWhere.final }),
-      ...(fin.length ? fin.map(d => diagResult(ctx, d, summary, task))
+      ...(fin.length ? fin.map(d => withGuide(diagGuide(ctx, d), () => diagResult(ctx, d, summary, task)))
         : [ctx.el('p', { className: 'muted', 'data-diag-final': state || 'none',
           text: state === 'sealed' ? c.diag.finalSealed : state === 'absent' ? c.finalAbsent : c.diag.finalPending })])]));
     return ctx.el('section', { className: 'card ht-ev-diagnostics', 'aria-labelledby': 'ht-ev-diag-h', 'data-ev': 'diagnostics' }, [
       ctx.el('h3', { id: 'ht-ev-diag-h', text: c.diagnosticsTitle }), ...kids]);
+  }
+
+  // --- lesson style (R30): the frame of the charts, the notions of the step --------------------
+
+  const withGuide = (guide, fn) => HT.components.withGuide(guide, fn);
+  const L = () => HT.copy.lesson;
+
+  /** The frame and the rows of a diagnostic's charts (development or final evidence). */
+  function diagGuide(ctx, d) {
+    const rows = C().diag.rows[d.evaluation];
+    return { frame: d.evidence === 'final' ? L().frames.final : L().frames.development,
+      rows: rows && d.n !== null ? rows(int(ctx, d.n)) : null };
+  }
+
+  function outOfFoldNotion(ctx, model) {
+    const N = L().notions.outOfFold;
+    const cv = model.crossValidation;
+    if (!cv) return null;
+    const scheme = C().scheme[cv.method];
+    return ctx.components.notion({ id: 'out_of_fold', term: N.term, tag: 'tool', definition: N.definition,
+      here: scheme ? scheme(int(ctx, cv.folds)) : null, folds: [{ kind: 'why', body: N.why }, { kind: 'casse', body: N.casse }], keep: N.keep });
+  }
+
+  function pairedNotion(ctx, model, task) {
+    const N = L().notions.paired;
+    const u = model.uncertainty;
+    if (!u) return null;
+    const metrics = u.kind === 'policy' ? ((u.rules || [])[0] || {}).metrics || [] : u.metrics || [];
+    const m = metrics.find(x => x && x.delta && x.delta.point !== null && x.delta.low !== null && x.delta.high !== null);
+    if (!m) return null;
+    const d = m.delta;
+    const f = x => `${x > 0 ? '+' : ''}${ctx.format.number(x, task === 'regression' ? 'f2' : 'f3')}`;
+    const reps = u.bootstrap && u.bootstrap.replicates !== null ? int(ctx, u.bootstrap.replicates) : null;
+    return ctx.components.notion({ id: 'paired', term: N.term, tag: 'tool', definition: N.definition,
+      here: N.here(fitLabel(task, d.fit), fitLabel(task, u.reference), HT.components.quote(`${f(d.point)} [${f(d.low)}, ${f(d.high)}]`), reps),
+      folds: [{ kind: 'why', body: N.why }, { kind: 'casse', body: N.casse }], keep: N.keep });
+  }
+
+  function oneSeNotion(ctx, model, task) {
+    const N = L().notions.oneSe;
+    const s = model.selection;
+    if (!s || !s.oneSe || !s.available) return null;
+    const best = s.configurations.find(cfg => cfg.slot === (s.oneSe.best || s.best));
+    const kept = s.configurations.find(cfg => cfg.slot === s.oneSe.pick);
+    if (!best || !kept || best.mean.value === null || s.oneSe.seOfBest.value === null || s.oneSe.bound.value === null) return null;
+    const f = x => ctx.format.number(x, task === 'regression' ? 'f2' : 'f3');
+    const q = (x, c) => HT.components.quote(f(x), { resultId: s.resultId, path: c.path });
+    return ctx.components.notion({ id: 'one_se', term: N.term, tag: 'tool', definition: N.definition,
+      here: N.here(configName(task, best), q(best.mean.value, best.mean), q(s.oneSe.seOfBest.value, s.oneSe.seOfBest),
+        q(s.oneSe.bound.value, s.oneSe.bound), configName(task, kept)),
+      folds: [{ kind: 'why', body: N.why }, { kind: 'casse', body: N.casse }], keep: N.keep });
+  }
+
+  /** Acronyms and abbreviations of the evidence (R30), for the study's task. */
+  function abbreviations(ctx, task) {
+    const M = L().more;
+    const list = [...M.abbr.common, ...(task === 'regression' ? M.abbr.regression : M.abbr.binary)];
+    return ctx.components.more('abbr', M.abbrTitle, [ctx.el('ul', {}, list.map(t => ctx.el('li', { text: t })))]);
   }
 
   // --- the tab -----------------------------------------------------------------------------
@@ -1284,15 +1344,27 @@
     if (stale) root.appendChild(ctx.el('p', { className: 'muted', role: 'status', 'data-updating': true, text: c.updating }));
     // WP-B5: the final test and the ledger first, development and final evidence apart.
     // v0.3 (WP-K): the variants compared, the family shortlist, each family's diagnostics.
-    const first = [finalTestCard(summary, model, ctx), ledger(ctx, model), developmentSection(ctx, model, task),
-      ...trialCards(ctx, model, task),
-      finalEvidenceSection(ctx, model, summary, task), diagnosticsSection(ctx, model, summary, task)].filter(Boolean);
+    // Lesson style (R30): every chart of a section is framed (development or final evidence),
+    // the notions of the step follow the comparison, and the abbreviations close the tab.
+    const dev = { frame: L().frames.development };
+    const fe = model.finalEvaluation;
+    const final = { frame: L().frames.final, rows: fe && fe.n !== null && fe.n !== undefined ? L().finalRows(int(ctx, fe.n)) : null };
+    const ledgerCard = ledger(ctx, model);
+    const exposure = L().more;
+    const first = [finalTestCard(summary, model, ctx), ledgerCard,
+      ledgerCard ? ctx.components.more('exposure', exposure.exposureTitle, exposure.exposure) : null,
+      withGuide(dev, () => developmentSection(ctx, model, task)),
+      ...withGuide(dev, () => trialCards(ctx, model, task)),
+      ctx.components.notions([outOfFoldNotion(ctx, model), pairedNotion(ctx, model, task), oneSeNotion(ctx, model, task)],
+        { 'data-evidence-notions': true }),
+      withGuide(final, () => finalEvidenceSection(ctx, model, summary, task)), diagnosticsSection(ctx, model, summary, task)].filter(Boolean);
     for (const node of first) root.appendChild(node);
     root.appendChild(ctx.el('div', { className: `ht-ev-grid${stale ? ' ht-pending' : ''}` }, [
       registry(ctx, model, sel),
       detailSection(ctx, model, sel, task),
     ]));
     root.appendChild(lineage(ctx, model, sel));
+    root.appendChild(abbreviations(ctx, task));
     return root;
   }
 

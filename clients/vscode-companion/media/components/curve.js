@@ -21,11 +21,18 @@
   const M = { left: 52, right: 26, top: 28, bottom: 44 };
 
   function curve(container, { title, points, xDomain = [0, 1], yDomain = [0, 1], xTicks = [], yTicks = [], xLabel = '',
-    yLabel = '', diagonal = null, marks = [], columns, rows, legend = [] }) {
+    yLabel = '', diagonal = null, marks = [], columns, rows, legend = [], guide = null }) {
     const draw = W => draw1(W, { points, xDomain, yDomain, xTicks, yTicks, xLabel, yLabel, diagonal, marks });
     const host = HT.components.fluid(draw, W0);
     const svg = host.firstChild;
-    const node = HT.components.figure(container, { title, chart: svg, columns, rows, legend });
+    // Lesson style (R30): the guided reading; a curve's conclusion is the view's (`guide`),
+    // else the first and the last of its labelled points.
+    const R = HT.copy.lesson && HT.copy.lesson.concl;
+    const ok = v => typeof v === 'number' && Number.isFinite(v);
+    const named = points.filter(p => ok(p.x) && ok(p.y) && p.label).sort((a, b) => a.x - b.x);
+    const concl = R && named.length > 1 ? R.curve(HT.format.number(named.length, 'int'), named[0].label, named[named.length - 1].label) : null;
+    const node = HT.components.figure(container, { title, chart: svg, columns, rows, legend, guide,
+      reading: { kind: 'curve', concl, steps: diagonal && diagonal.label && HT.copy.lesson ? [HT.copy.lesson.steps.diagonal(diagonal.label)] : null } });
     node.replaceChild(host, svg);
     host.appendChild(svg);
     return node;

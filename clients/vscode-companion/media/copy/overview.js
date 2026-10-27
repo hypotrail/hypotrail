@@ -1,6 +1,6 @@
 // Copy of the Overview view (COMPANION-ADVANCED §6.1, §15): panel-owned English strings.
 // They hold no digit outside placeholders filled from models, never suggest the words of
-// an acknowledgement or a confirmation, and use none of the vocabulary of a decision rule
+// an acknowledgement or a confirmation (both are said in the chat: R23, R31), and use none of the vocabulary of a decision rule
 // (INV-12), so one table serves a binary and a regression study. Owned by WP-U1.
 (function (HT) {
   'use strict';
@@ -95,7 +95,7 @@
       lead: 'This panel reads the study through the hypotrail command line and shows it. It keeps nothing of its own: the chat, the report and the notebook stay complete without it.',
       points: [
         'Decisions are proposed, confirmed or withdrawn in the chat only. Here you read them, and a button copies a ready question for the chat.',
-        'The panel can run an exploration chart of the engine, regenerate the report and notebook, acknowledge a run that stopped, and export a handoff pack. Nothing else.',
+        'The panel can run an exploration chart of the engine, regenerate the report and notebook, and export a handoff pack. Nothing else: a run that stopped is acknowledged in the chat.',
         'Every figure is an engine value; hover a number to see where it comes from. "Why?" opens the reasons and caveats behind a sentence.',
         'The language toggle at the top changes the panel only; the study is not touched.',
       ],
@@ -176,11 +176,9 @@
     noExecutions: 'No execution has an unknown outcome or a late result.',
     unknownOutcome: activity => `${activity}: the outcome is unknown. Nothing will be restarted.`,
     lateResult: activity => `${activity}: a result was computed for a state that no longer holds; it is stored, not used.`,
-    reply: 'Your reply, in your own words',
-    replyHint: 'Say that you know this run was interrupted and its outcome is unknown. \'ok\' alone is not enough.',
-    acknowledge: 'Acknowledge in my words',
-    rerunInChat: 'To run it again, ask the agent in the chat.',
-    acknowledgedEarlier: 'Acknowledgements',
+    // R31 (owner decision 2026-10-27): the acknowledgement is made in the chat, not here.
+    ackInChat: 'Acknowledging this interruption is done in the chat, in your own words: say there that you know this run was interrupted and that its outcome is unknown. \'ok\' alone is not enough. This panel records nothing.',
+    rerunInChat: 'Ask in the chat, to acknowledge it or to run it again.',
     checksTitle: 'Checks of the deliverables',
     checksRunning: 'Running the checks...',
     checksClean: 'clean',

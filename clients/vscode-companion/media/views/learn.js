@@ -262,7 +262,7 @@
     const c = L();
     const { el } = ctx;
     const running = ctx.busy && ctx.busyOp === 'W7';
-    return el('section', { className: 'ht-handoff', 'data-handoff': true, 'aria-labelledby': 'learn-handoff-title' }, [
+    return el('section', { className: 'card ht-handoff', 'data-handoff': true, 'aria-labelledby': 'learn-handoff-title' }, [
       el('h3', { id: 'learn-handoff-title', text: c.handoffTitle }),
       el('p', { text: c.handoffIntro }),
       afterStudy(ctx, snap),
@@ -319,6 +319,18 @@
     return details;
   }
 
+  /** The handoff pack as a notion, then the acronyms and abbreviations (R30). */
+  function lessonNotes(ctx, snap) {
+    const T = HT.copy.lesson;
+    const N = T.notions.handoff;
+    const notion = ctx.components.notion({ id: 'handoff', term: N.term, tag: 'tool', definition: N.definition,
+      here: Number.isInteger(snap.revision) ? N.here(ctx.format.number(snap.revision, 'int')) : null,
+      folds: [{ kind: 'why', body: N.why }, { kind: 'casse', body: N.casse }], keep: N.keep });
+    const list = [...T.more.abbr.common, ...(snap.task === 'regression' ? T.more.abbr.regression : T.more.abbr.binary)];
+    return ctx.el('div', { 'data-learn-lesson': true }, [ctx.components.notions([notion]),
+      ctx.components.more('abbr', T.more.abbrTitle, [ctx.el('ul', {}, list.map(t => ctx.el('li', { text: t })))])]);
+  }
+
   HT.register('learn', {
     tab: 'learn',
     stage: 'v3',
@@ -331,6 +343,8 @@
         el('h2', { text: L().title }),
         ctx.learningLayer ? layer(ctx, model) : null,
         handoff(ctx, model),
+        // Lesson style (R30): the notion of this step and the abbreviations of the study.
+        lessonNotes(ctx, model),
         report(ctx),
       ]);
     },

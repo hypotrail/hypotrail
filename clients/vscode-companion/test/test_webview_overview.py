@@ -81,7 +81,11 @@ def overview_text(page) -> str:
 def test_ov0_the_next_move_is_the_first_block_and_answers_in_decisions(open_panel, binary, scheme):
     panel = opened(open_panel, binary, scheme=scheme)
     page = panel.page
-    assert page.locator('#panel-overview [data-ov]').first.get_attribute('data-ov') == 'hero'
+    # Lesson style (2026-10-27): the next move is the board callout of the band, above the tabs,
+    # after the journey rail; it is not repeated in the tab.
+    assert page.locator('[data-band] > *').evaluate_all('ns => ns.map(n => n.dataset.ov || (n.dataset.rail ? "rail" : ""))') == ['rail', 'hero']
+    assert page.evaluate('() => !!(document.querySelector("[data-band]").compareDocumentPosition(document.querySelector("[role=tablist]")) & Node.DOCUMENT_POSITION_FOLLOWING)')
+    assert page.locator('#panel-overview [data-ov="hero"]').count() == 0
     hero = page.locator('[data-ov="hero"]')
     assert hero.get_attribute('data-hero') == 'await_user_words'
     assert hero.locator('[data-hero-eyebrow]').inner_text().upper() == 'YOUR NEXT MOVE · PAUSE 3 · BUSINESS TRADE-OFF'
@@ -96,6 +100,13 @@ def test_ov0_the_next_move_is_the_first_block_and_answers_in_decisions(open_pane
     assert agent not in hero.inner_text()
     assert agent in hero.locator('[data-hero-details]').text_content()
     assert 'p_5' not in hero.inner_text() and 'capacity:100' not in hero.inner_text()
+    # Its one action copies a ready question for the chat; the way to the card stays beside it.
+    copy_button = hero.locator('[data-copy-question="await_user_words"]')
+    assert copy_button.inner_text() == 'Copy the question' and copy_button.get_attribute('data-write') is None
+    copy_button.click()
+    assert panel.posted()[-1] == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'proposal', 'id': 'p_5'}, 'mode': 'copy',
+                                  'question': ('I am reading the proposal on the decision rule. Could you restate it so that '
+                                               'I adopt it or change it in my own words?')}
     hero.locator('[data-hero-action="proposal:p_5"]').click()
     assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'decisions'
     assert page.evaluate('document.activeElement.closest("[data-nav]").dataset.nav') == 'proposal:p_5'
@@ -396,7 +407,10 @@ def test_ov8_regenerate_success_lists_each_message(open_panel, health, payload):
 # --- Health (§6.1.5) -------------------------------------------------------------------------
 
 @pytest.mark.parametrize('scheme', THEMES)
-def test_he1_he2_execution_cards_empty_reply_disabled_until_typed_and_no_rerun(open_panel, health, scheme):
+def test_he1_he2_execution_cards_are_read_only_ask_in_the_chat_and_copy_a_question(open_panel, health, scheme):
+    """R31 (owner decision 2026-10-27, ADR 0004 amendment): the acknowledgement of an
+    interrupted execution is made in the chat. The card says so, explains why words and not an
+    "ok" button, and copies a ready question; it has no words field and no write."""
     panel = opened(open_panel, health, scheme=scheme)
     page = panel.page
     cards = page.locator('[data-execution-card]')
@@ -404,30 +418,30 @@ def test_he1_he2_execution_cards_empty_reply_disabled_until_typed_and_no_rerun(o
     card = page.locator(f'[data-execution-card="{INTERRUPTED}"]')
     # WP-I: the engine names the activity policy.evaluation (policy.evaluate is the CLI alias).
     assert card.locator('h4').inner_text() == 'policy.evaluation: the outcome is unknown. Nothing will be restarted.'
-    area = card.get_by_label('Your reply, in your own words')
-    assert area.input_value() == '', 'INV-5: never pre-filled'
-    hint = card.locator(f'#ack-hint-{INTERRUPTED}')
-    assert area.get_attribute('aria-describedby') == f'ack-hint-{INTERRUPTED}'
-    assert hint.inner_text() == ("Say that you know this run was interrupted and its outcome is unknown. "
-                                 "'ok' alone is not enough.")
-    button = card.get_by_role('button', name='Acknowledge in my words')
-    assert button.get_attribute('data-write') == 'acknowledge'
-    assert button.is_disabled()
-    area.fill('  \n ')
-    assert button.is_disabled()
-    words = 'I know the policy run was cut off and nobody knows what it did.'
-    area.fill(words)
-    assert button.is_enabled()
-    # CR.3: a draft is the junior's words and the revision at which they started typing.
-    assert panel.state()['ackDrafts'] == {INTERRUPTED: {'text': words, 'revision': health['revision']}}, 'the junior\'s own draft only'
-    button.click()
-    assert panel.posted()[-1] == {'v': 2, 'type': 'acknowledge', 'executionId': INTERRUPTED, 'words': words,
-                                  'revision': 26}
+    assert card.locator('textarea').count() == 0, 'no words field: the panel takes no words'
+    assert page.locator('[data-write="acknowledge"]').count() == 0
+    assert page.get_by_role('button', name='Acknowledge in my words').count() == 0
+    assert card.locator('[data-ack-in-chat]').inner_text() == (
+        'Acknowledging this interruption is done in the chat, in your own words: say there that you know this run '
+        "was interrupted and that its outcome is unknown. 'ok' alone is not enough. This panel records nothing.")
+    more = card.locator('details[data-more="ack"]')
+    assert more.locator('summary').inner_text().endswith('Why words, and not an "ok" button?')
+    more.locator('summary').click()
+    assert 'only copies the question' in more.inner_text()
     # HE-2: no restart and no run control; the line points to the chat.
-    assert card.locator('[data-rerun]').inner_text() == 'To run it again, ask the agent in the chat.'
+    assert card.locator('[data-rerun]').inner_text() == 'Ask in the chat, to acknowledge it or to run it again.'
     names = page.locator('#panel-overview button').all_inner_texts()
     assert not [n for n in names if re.match(r'(Restart|Run|Rerun)\b', n)], names
     assert page.locator('[data-write="run_eda"], [data-write="propose"]').count() == 0
+    # The one control copies a ready question for the chat (the agent bridge, not a write).
+    copy_button = card.locator(f'[data-ask-execution="{INTERRUPTED}"]')
+    assert copy_button.inner_text() == 'Copy the question' and copy_button.get_attribute('data-write') is None
+    copy_button.click()
+    assert panel.posted()[-1] == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'execution', 'id': INTERRUPTED},
+                                  'question': ('A run stopped before it finished and its outcome is unknown: what do we do? '
+                                               'I want to acknowledge it in my own words, or run it again.'),
+                                  'mode': 'copy'}
+    assert not [m for m in panel.posted() if m['type'] == 'acknowledge']
     late = page.locator('[data-late-item]')
     assert late.inner_text() == ('eda.rate_by: a result was computed for a state that no longer holds; '
                                  'it is stored, not used.')
@@ -435,45 +449,15 @@ def test_he1_he2_execution_cards_empty_reply_disabled_until_typed_and_no_rerun(o
     assert_clean(panel)
 
 
-def test_he1_refusal_of_a_bare_ok_is_shown_verbatim_in_the_card(open_panel, health, node):
-    refusal = __import__('json').loads(node(
-        "const {describe}=require('./lib/refusals');const {payload}=require('./test/fixture-cli');"
-        "process.stdout.write(JSON.stringify(describe(payload('error.bare_acknowledgement'))))"))
+def test_r31_an_acknowledgement_outcome_of_an_older_extension_is_dropped(open_panel, health):
+    """W6 is no write id any more (protocol `WRITE_OPS`): its outcome is not shown."""
     panel = opened(open_panel, health)
     page = panel.page
-    card = page.locator(f'[data-execution-card="{INTERRUPTED}"]')
-    card.get_by_label('Your reply, in your own words').fill('ok')
-    card.get_by_role('button', name='Acknowledge in my words').click()
-    panel.send({'type': 'outcome', 'op': 'W6', 'kind': 'refused', 'target': INTERRUPTED, 'exitCode': 2, 'refusal': refusal})
-    alert = card.locator('[data-outcome="refused"]')
-    assert alert.get_attribute('role') == 'alert'
-    assert alert.get_attribute('data-code') == 'ambiguous_confirmation'
-    assert alert.get_attribute('data-reason') == 'bare_acknowledgement'
-    assert alert.locator('[data-engine-message]').inner_text() == refusal['engineMessage']
-    assert alert.locator('[data-human]').inner_text().endswith('Nothing was recorded.')
-    assert card.get_by_label('Your reply, in your own words').input_value() == 'ok', 'kept for the junior to edit'
-    assert page.locator('#outcome [data-outcome]').count() == 0
-    assert_clean(panel)
-
-
-def test_he1_success_drops_the_draft_and_keeps_the_recorded_words_visible(open_panel, health):
-    panel = opened(open_panel, health)
-    page = panel.page
-    words = 'I know the policy run was cut off and nobody knows what it did.'
-    card = page.locator(f'[data-execution-card="{INTERRUPTED}"]')
-    card.get_by_label('Your reply, in your own words').fill(words)
-    card.get_by_role('button', name='Acknowledge in my words').click()
     panel.send({'type': 'outcome', 'op': 'W6', 'kind': 'ok', 'target': INTERRUPTED, 'exitCode': 0, 'revision': 28,
-                'recorded': {'userWords': words, 'status': 'acknowledged'}})
-    page.locator(f'[data-execution-card="{INTERRUPTED}"] [data-outcome="ok"]').wait_for()
-    assert panel.state().get('ackDrafts') == {}, 'the draft is dropped after a successful acknowledgement'
-    after = copy.deepcopy(health)
-    after['revision'] = 28
-    after['executions']['interrupted'] = []
-    panel.snapshot(after)
-    assert page.locator(f'[data-execution-card="{INTERRUPTED}"]').count() == 0
-    done = page.locator('[data-acknowledged] [data-outcome="ok"]')
-    assert done.locator('q').inner_text() == words
+                'recorded': {'userWords': 'I know it stopped.', 'status': 'acknowledged'}})
+    assert page.locator('[data-outcome]').count() == 0
+    assert page.evaluate('() => globalThis.Hypotrail.diagnostics.ignored') >= 1
+    assert page.locator(f'[data-execution-card="{INTERRUPTED}"]').count() == 1
     assert_clean(panel)
 
 
@@ -611,8 +595,10 @@ def test_v0_shows_the_v0_subset_only(open_panel, health):
     panel = opened(open_panel, health, stage='v0')
     page = panel.page
     # WP-A5: v0 has the next move, the plan, where we are, the limits, and the deliverables.
+    # Lesson style: the next move is in the band above (every stage); the tab has the rest.
+    assert page.locator('[data-band] [data-ov]').evaluate_all('ss => ss.map(s => s.dataset.ov)') == ['hero']
     assert page.locator('#panel-overview [data-ov]').evaluate_all('ss => ss.map(s => s.dataset.ov)') == \
-        ['hero', 'map', 'where', 'limits', 'deliverables', 'guide']
+        ['map', 'where', 'limits', 'deliverables', 'guide']
     assert page.locator('[data-recap-details] li').count() == 5
     for hook in ['[data-digest]', '[data-check]', '[data-write="render"]', '[data-ov="health"]',
                  '[data-write="acknowledge"]', '[data-stage]']:
@@ -647,9 +633,11 @@ def test_a11y_names_labels_headings_and_tabindex(open_panel, health, scheme):
         }).map(e => e.outerHTML)""")
     assert unnamed == []
     assert page.locator('#panel-overview [tabindex]:not([tabindex="-1"]):not([tabindex="0"])').count() == 0
-    # v0.3 (WP-E2): section titles are uppercase captions in CSS; the text is unchanged.
+    # Lesson style (2026-10-27): section titles are chalk headings; the next move's title is in
+    # the band above the tabs, so the tab starts with what needs attention.
+    assert page.locator('[data-band] h2').all_text_contents() == ['A run stopped before it finished']
     assert page.locator('#panel-overview h2').all_text_contents() == [
-        'A run stopped before it finished', 'Needs attention', 'The journey', 'Since your last session',
+        'Needs attention', 'The journey', 'Since your last session',
         'What you cannot claim yet', 'Where we are', 'Your deliverables', 'How this panel works']
     assert page.locator('#panel-overview section[aria-labelledby]').count() >= 5
     button = page.get_by_role('button', name='Open the report in the browser')

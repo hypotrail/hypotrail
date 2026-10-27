@@ -6,16 +6,17 @@
 //                   notebook at the line that names a result, an editor at a finding's line
 //   load: check     the Health section's "Checks of the deliverables" (cached per revision)
 //   render          W5, "Regenerate the report and notebook"
-//   acknowledge     W6, "Acknowledge in my words" for an interrupted execution
 //   switch_study    the header's study switcher (§6.1.6): the extension's quick pick
 //
 // `ready`, `refresh`, and `load: summary` belong to the controller. Reviewer refusals and
 // the stage gate are the controller's too; the pre-checks below are the ones of §7.
+// Owner decision R31 (2026-10-27, ADR 0004 amendment): there is no acknowledgement of an
+// interrupted execution here any more (the former W6). The panel takes no words of the
+// junior; the Overview copies a question for the chat, where the acknowledgement is made.
 
 const fs = require('fs');
 const { ARTIFACT_PATHS } = require('../models/summary');
 const { toCheckModel } = require('../models/check');
-const { MAX_WORDS } = require('../cli');
 const launch = require('../launch');
 
 // The W5 outcome and busy state carry this target, so the Overview renders them in place.
@@ -60,39 +61,6 @@ async function render(_message, ctx) {
     target: RENDER_TARGET,
     argv: () => ctx.cli.renderArgv(ctx.agent),
     record: null,
-  });
-}
-
-/** The executions the panel showed that an acknowledgement may name (§7, W6). */
-function acknowledgeable(snapshot) {
-  if (!snapshot || !snapshot.executions) return [];
-  return [...(snapshot.executions.interrupted || []), ...(snapshot.executions.suspected || [])].map(e => e.executionId);
-}
-
-/** W6: `run --acknowledge-interruption <eid> --user-words=<words> ...` after the §7 pre-checks. */
-async function acknowledge(message, ctx) {
-  const { executionId, words, revision } = message;
-  if (!words.trim()) {
-    ctx.invalid('W6', ctx.say('ackEmpty'), executionId);
-    return;
-  }
-  if (words.length > MAX_WORDS) {
-    ctx.invalid('W6', ctx.say('ackTooLong', MAX_WORDS), executionId);
-    return;
-  }
-  if (!acknowledgeable(ctx.snapshot()).includes(executionId)) {
-    ctx.invalid('W6', ctx.say('ackNotWaiting'), executionId);
-    await ctx.refresh();
-    return;
-  }
-  await ctx.write('W6', {
-    target: executionId,
-    argv: requestId => ctx.cli.acknowledgeArgv(ctx.agent, { executionId, words, requestId, expectedRevision: revision }),
-    record: p => {
-      const r = (p && p.result) || {};
-      return { userWords: typeof r.user_words === 'string' ? r.user_words : null,
-        status: typeof r.status === 'string' ? r.status : (typeof p.status === 'string' ? p.status : null) };
-    },
   });
 }
 
@@ -150,12 +118,11 @@ async function switchStudy(_message, ctx) {
 }
 
 module.exports = {
-  types: { open_artifact: openArtifact, open_marimo: openMarimo, render, acknowledge, switch_study: switchStudy },
+  types: { open_artifact: openArtifact, open_marimo: openMarimo, render, switch_study: switchStudy },
   loads: {
     check: { stage: 'v1', key: () => 'check', argv: (cli, agent) => cli.checkArgv(agent), model: toCheckModel },
   },
   RENDER_TARGET,
-  acknowledgeable,
   lineOf,
   deliverablesOf,
 };

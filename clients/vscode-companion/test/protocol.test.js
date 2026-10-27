@@ -24,7 +24,6 @@ const TO_EXTENSION = {
   draft: [{ decisionId: 'policy', value: 'capacity:100', revision: 3 }, ['decisionId', 'split']],
   run_eda: [{ activity: 'eda.distribution', column: 'age', revision: 3 }, ['activity', 'fit.logistic']],
   render: [{}, null],
-  acknowledge: [{ executionId: 'e_1a2b', words: 'I know it was interrupted.', revision: 3 }, ['executionId', 'e 1']],
   open_artifact: [{ artifact: 'report', resultId: RID }, ['artifact', '../etc/passwd']],
   open_marimo: [{ artifact: 'workbench' }, ['artifact', 'report']],
   navigate_external: [{ kind: 'reveal_export', path: '/tmp/x/revision-3' }, ['kind', 'open']],
@@ -38,9 +37,9 @@ const TO_WEBVIEW = {
   snapshot: [{ revision: 3, model: MODEL }, ['model', []]],
   view_data: [{ view: 'decisions', revision: 3, model: MODEL }, ['view', 'nope']],
   load_error: [{ view: null, message: 'm', detail: '' }, ['detail', null]],
-  busy: [{ busy: true, op: 'W6', target: 'e_1' }, ['busy', 'yes']],
-  outcome: [{ op: 'W6', kind: 'refused', target: 'e_1', exitCode: 2, refusal: { code: 'ambiguous_confirmation',
-    reason: 'bare_acknowledgement', engineMessage: 'e', human: 'h', details: [] } }, ['kind', 'confirmed']],
+  busy: [{ busy: true, op: 'W4', target: 'eda.distribution:age' }, ['busy', 'yes']],
+  outcome: [{ op: 'W4', kind: 'refused', target: 'eda.distribution:age', exitCode: 2, refusal: { code: 'stale_revision',
+    reason: null, engineMessage: 'e', human: 'h', details: [] } }, ['kind', 'confirmed']],
   preview_policy_result: [{ seq: 3, revision: 3, model: MODEL }, ['seq', -1]],
   effects: [{ proposalId: 'p_1', revision: 3, model: MODEL }, ['proposalId', 1]],
   draft_result: [{ decisionId: 'policy', value: 'capacity:100', revision: 3, model: MODEL }, ['decisionId', 'conclusion']],
@@ -67,21 +66,26 @@ test('webview -> extension: every type validates, an extra field or a wrong type
   for (const bad of [null, [], 'ready', { v: 2 }, { v: 2, type: 'eval' }, { v: 2, type: 'toString' }]) {
     assert.equal(protocol.validateIncoming(bad), null);
   }
-  // v0.3 narrowing (ADR 0004 amendment, R23, I2): no message confirms, withdraws, or proposes.
-  for (const type of ['confirm', 'withdraw', 'propose']) assert.equal(protocol.TO_EXTENSION[type], undefined, type);
+  // v0.3 narrowing (ADR 0004 amendment, R23, I2): no message confirms, withdraws, or proposes;
+  // R31 (amendment of 2026-10-27): none acknowledges an interrupted execution either.
+  for (const type of ['confirm', 'withdraw', 'propose', 'acknowledge']) assert.equal(protocol.TO_EXTENSION[type], undefined, type);
   assert.equal(protocol.validateIncoming({ v: 2, type: 'confirm', proposalId: 'p_1', words: 'Yes.', revision: 3 }), null);
-  assert.deepEqual(protocol.WRITE_OPS, ['W4', 'W5', 'W6', 'W7']);
+  assert.equal(protocol.validateIncoming({ v: 2, type: 'acknowledge', executionId: 'e_1', words: 'I know.', revision: 3 }), null);
+  assert.deepEqual(protocol.WRITE_OPS, ['W4', 'W5', 'W7']);
   assert.equal(protocol.validateOutgoing({ v: 2, type: 'busy', busy: true, op: 'W1', target: 'p_1' }), null);
+  assert.equal(protocol.validateOutgoing({ v: 2, type: 'busy', busy: true, op: 'W6', target: 'e_1' }), null);
 });
 
 test('extension -> webview: every type validates, an extra field or a wrong type is dropped', () => {
   cases(protocol.TO_WEBVIEW, protocol.validateOutgoing, TO_WEBVIEW);
 });
 
-test('field rules: words, rules, load, learn_set', () => {
+test('field rules: questions, rules, load, learn_set', () => {
   const ok = m => protocol.validateIncoming({ v: 2, ...m }) !== null;
-  assert.ok(ok({ type: 'acknowledge', executionId: 'e_1', words: 'x'.repeat(4000), revision: 1 }));
-  assert.ok(!ok({ type: 'acknowledge', executionId: 'e_1', words: 'x'.repeat(4001), revision: 1 }));
+  // R31: the only free text the webview sends is the copied question (at most 2,000 characters).
+  const about = { kind: 'execution', id: 'e_1' };
+  assert.ok(ok({ type: 'ask_agent', about, question: 'x'.repeat(2000), mode: 'copy' }));
+  assert.ok(!ok({ type: 'ask_agent', about, question: 'x'.repeat(2001), mode: 'copy' }));
   for (const rule of ['threshold:0', 'threshold:1', 'threshold:1.00', 'threshold:0.35', 'capacity:1', 'capacity:9999999']) {
     assert.ok(ok({ type: 'preview_policy', rules: [rule], intervals: false, seq: 0 }), rule);
   }
@@ -113,7 +117,7 @@ test('stages: every incoming type has one; field stages raise it; writes carry t
     assert.ok(protocol.STAGES.includes(entry.stage), type);
     if (entry.write) writes[type] = entry.write;
   }
-  assert.deepEqual(writes, { run_eda: 'W4', render: 'W5', acknowledge: 'W6', export_handoff: 'W7' });
+  assert.deepEqual(writes, { run_eda: 'W4', render: 'W5', export_handoff: 'W7' });
   // WP-E1: the agent bridge copies a question at every stage (the read-only proposal card).
   assert.equal(protocol.TO_EXTENSION.ask_agent.stage, 'v0');
   assert.equal(protocol.stageOf({ v: 2, type: 'open_artifact', artifact: 'report' }), 'v0');

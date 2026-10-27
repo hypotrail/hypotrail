@@ -224,7 +224,7 @@
     reconfirm: { title: name => `Confirmer de nouveau ${name}`, action: 'Ouvrir dans Décisions',
       lead: "Quelque chose sur quoi elle repose a changé : votre réponse précédente ne vaut plus tant que vous ne la confirmez pas de nouveau." },
     acknowledge_interruption: { title: () => "Une exécution s'est arrêtée avant la fin", action: "Aller à l'exécution",
-      lead: "Son issue est inconnue. Dites avec vos mots que vous le savez ; rien ne redémarre tout seul." },
+      lead: "Son issue est inconnue. Dites dans le chat, avec vos mots, que vous le savez ; rien ne redémarre tout seul, et ce panneau n'enregistre rien." },
     outcome_unknown: { title: () => "Une exécution s'est arrêtée avant la fin", action: "Aller à l'exécution",
       lead: "Son issue est inconnue. Elle n'est pas en cours et ne redémarre pas toute seule." },
     propose: { title: step => `Étape suivante : ${step}`, action: null,
