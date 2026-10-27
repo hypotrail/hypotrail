@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panel allégé : trois maquettes</title>
+<style>
+/* Charte « tableau noir / papier millimétré » v5 (tokens repris de panel-lesson-style-fr.html). */
+:root{
+  --board:#20312C; --board2:#1A2925; --chalk:#EDE8DA; --chalk2:#C9C4B6; --dust:rgba(237,232,218,.55);
+  --ink:#EDE8DA; --faint:#8F9A93; --line:rgba(237,232,218,.14); --line2:rgba(237,232,218,.3);
+  --yellow:#F0D178; --mint:#B9E2C4; --violet:#C8B6F5; --blue:#A7CCEB; --coral:#F3A28F;
+  --card:#F5F1E6; --cardink:#22302B; --cardmuted:#4E5A55; --cardline:rgba(34,48,43,.14); --cardsoft:#ECE7D8;
+  --pen:#1E4E9E; --ochre:#B07418; --leaf:#1F7A44; --orange:#C2571A;
+  --serif:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --sans:"Avenir Next",Avenir,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--board);color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.05),transparent 55%)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+.eyebrow{font:600 .72rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow)}
+.chalk{font-family:var(--serif);font-weight:400;color:var(--chalk)}
+
+/* ===== page de la maquette ===== */
+.page{max-width:1240px;margin:0 auto;padding:20px 16px 60px}
+.page>h1{font:400 2rem/1.15 var(--serif);margin:6px 0 8px}
+.lede{color:var(--chalk2);max-width:72ch}
+.diag{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin:18px 0 6px}
+.diag div{border:1px solid var(--line);border-radius:4px;padding:10px 12px;background:rgba(0,0,0,.08)}
+.diag b{display:block;color:var(--coral);font-weight:600;margin-bottom:2px}
+.diag span{color:var(--chalk2);font-size:.92rem}
+.controls{position:sticky;top:0;z-index:20;background:var(--board);border-bottom:1px solid var(--line2);
+  display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:10px 0;margin-top:18px}
+.seg{display:inline-flex;border:1.5px solid var(--line2);border-radius:4px;overflow:hidden}
+.seg button{background:transparent;border:0;color:var(--ink);padding:6px 12px;font-size:.88rem}
+.seg button+button{border-left:1px solid var(--line2)}
+.seg button[aria-pressed="true"]{background:var(--yellow);color:var(--cardink);font-weight:600}
+.ctl-label{font-size:.8rem;color:var(--faint);margin-right:4px}
+.stage{display:grid;grid-template-columns:minmax(0,600px) minmax(0,1fr);gap:28px;margin-top:20px;align-items:start}
+@media (max-width:960px){.stage{grid-template-columns:1fr}}
+.notes h2{font:400 1.5rem var(--serif);margin-bottom:4px}
+.notes .tag{display:inline-block;font-size:.75rem;border:1px solid var(--yellow);color:var(--yellow);border-radius:3px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.notes h3{font:600 .72rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);margin:16px 0 4px}
+.notes ul{padding-left:18px;color:var(--chalk2)} .notes li{margin:3px 0}
+.notes .chatline{font-family:var(--mono);font-size:.85rem;background:rgba(0,0,0,.2);border-left:3px solid var(--yellow);padding:8px 10px;color:var(--chalk)}
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:10px} .pc div{border:1px solid var(--line);border-radius:4px;padding:8px 10px}
+.pc b{font-size:.8rem;color:var(--mint)} .pc div+div b{color:var(--coral)}
+.map{width:100%;border-collapse:collapse;margin-top:10px;font-size:.9rem}
+.map th,.map td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+.map th{color:var(--yellow);font-weight:600;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase}
+.map td:first-child{color:var(--chalk);white-space:nowrap}
+.map td{color:var(--chalk2)}
+.tablewrap{overflow-x:auto}
+section.block{margin-top:44px}
+section.block>h2{font:400 1.6rem var(--serif);margin-bottom:6px}
+
+/* ===== panneau simulé (VS Code) ===== */
+.vsc{position:relative;border:1px solid #0d1512;border-radius:6px;overflow:hidden;box-shadow:0 18px 40px -20px rgba(0,0,0,.7)}
+.vsc-bar{background:#151d1a;color:#9aa59f;font:12px var(--sans);padding:6px 10px;display:flex;gap:8px;align-items:center}
+.vsc-bar i{width:9px;height:9px;border-radius:50%;background:#3a4540;display:inline-block}
+/* Le thème du panneau seul (R33) : les tokens sont redéfinis sur .pane, pas sur la page. */
+.pane{--p-bg:#20312C;--p-bg2:#1A2925;--p-ink:#EDE8DA;--p-soft:#C9C4B6;--p-faint:#8F9A93;--p-line:rgba(237,232,218,.14);--p-line2:rgba(237,232,218,.3);
+  --p-acc:#F0D178;--p-ok:#B9E2C4;--p-seal:#C8B6F5;--p-warn:#F3A28F;--p-card:#F5F1E6;--p-cardink:#22302B;--p-cardmuted:#4E5A55;--p-cardline:rgba(34,48,43,.14);
+  background:var(--p-bg);color:var(--p-ink);height:720px;overflow:auto;position:relative;font-size:14px;line-height:1.5}
+.pane.light{--p-bg:#F1F3F1;--p-bg2:#E4E8E4;--p-ink:#1E2A36;--p-soft:#3E4A57;--p-faint:#6E7A86;--p-line:rgba(30,42,54,.12);--p-line2:rgba(30,42,54,.3);
+  --p-acc:#946010;--p-ok:#1F7A44;--p-seal:#6B46C1;--p-warn:#B8322A;--p-card:#FFFFFF}
+.pane.host{height:auto;overflow:visible;position:static;background:none}
+.pane .in{padding:14px 16px 18px}
+/* en-tête minimal */
+.ph{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--p-line)}
+.ph .name{font:400 1.25rem var(--serif);color:var(--p-ink)}
+.ph .seal{font-size:.78rem;color:var(--p-seal);border:1px solid var(--p-seal);border-radius:12px;padding:1px 8px;white-space:nowrap}
+.ph .sp{flex:1}
+.ib{background:transparent;border:1px solid var(--p-line2);color:var(--p-ink);border-radius:4px;padding:3px 8px;font-size:.8rem;white-space:nowrap}
+.ib:hover{border-color:var(--p-acc);color:var(--p-acc)}
+.menu{position:absolute;right:12px;top:46px;z-index:5;background:var(--p-bg2);border:1px solid var(--p-line2);border-radius:5px;padding:8px 0;min-width:240px;box-shadow:0 10px 24px -10px rgba(0,0,0,.6)}
+.menu div{padding:5px 14px;font-size:.85rem;color:var(--p-soft)}
+.menu div b{color:var(--p-ink);font-weight:500}
+.menu hr{border:0;border-top:1px solid var(--p-line);margin:6px 0}
+/* progression en quatre segments : pas de libellés d'étape côte à côte (R32) */
+.prog{padding:12px 16px 10px;border-bottom:1px solid var(--p-line)}
+.bars{display:grid;grid-template-columns:5fr 3fr 3fr 2fr;gap:6px}
+.bar{height:6px;border-radius:3px;background:var(--p-line2);position:relative;overflow:hidden}
+.bar>span{position:absolute;inset:0 auto 0 0;background:var(--p-ok)}
+.bar.cur>span{background:linear-gradient(90deg,var(--p-ok),var(--p-acc))}
+.plabels{display:grid;grid-template-columns:5fr 3fr 3fr 2fr;gap:6px;margin-top:4px;font-size:.72rem;color:var(--p-faint);letter-spacing:.03em}
+.plabels span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plabels .cur{color:var(--p-acc);font-weight:600}
+.where{margin-top:8px;display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline}
+.where b{font-weight:600}
+.where .rest{color:var(--p-faint);font-size:.85rem}
+/* fiches papier */
+.card{background:var(--p-card);color:var(--p-cardink);border-radius:4px;padding:12px 14px;margin-top:12px;box-shadow:0 8px 18px -12px rgba(0,0,0,.55)}
+.card .k{font:600 .7rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ochre)}
+.card h3{font:400 1.12rem/1.3 var(--serif);margin:3px 0 6px}
+.card p{color:var(--p-cardink)} .card .m{color:var(--p-cardmuted);font-size:.86rem}
+.opts{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
+.opts span{border:1px solid var(--p-cardline);background:#ECE7D8;border-radius:3px;padding:3px 8px;font-size:.85rem}
+.copy{margin-top:6px;background:transparent;border:1.5px solid var(--pen);color:var(--pen);border-radius:3px;padding:4px 10px;font-size:.84rem;font-weight:600}
+.concl{border-left:3px solid var(--leaf);padding:4px 0 4px 10px;margin:8px 0}
+details.f{margin-top:6px;border-top:1px solid var(--p-cardline)}
+details.f>summary{list-style:none;cursor:pointer;padding:6px 0;font-size:.86rem;color:var(--p-cardmuted)}
+details.f>summary::before{content:"▸ ";color:var(--ochre)}
+details.f[open]>summary::before{content:"▾ "}
+details.f>div{padding:0 0 8px;font-size:.88rem}
+details.f ol{padding-left:18px}
+.limit{margin-top:12px;font-size:.86rem;color:var(--p-soft);display:flex;gap:8px;align-items:baseline}
+.limit::before{content:"🔒";font-size:.8rem}
+/* plié/déplié sur l'ardoise */
+details.d{border-top:1px solid var(--p-line)}
+details.d>summary{list-style:none;cursor:pointer;padding:9px 0;display:flex;gap:8px;align-items:baseline}
+details.d>summary::-webkit-details-marker,details.f>summary::-webkit-details-marker{display:none}
+details.d>summary::before{content:"▸";color:var(--p-acc);width:10px}
+details.d[open]>summary::before{content:"▾"}
+details.d>summary .c{color:var(--p-faint);font-size:.82rem;margin-left:auto}
+details.d>div{padding:0 0 12px 18px;color:var(--p-soft);font-size:.9rem}
+.drawer{margin-top:18px}
+.drawer>.t{font:600 .7rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--p-faint);margin-bottom:2px}
+.act{display:inline-block;margin:4px 6px 0 0;border:1px solid var(--p-line2);border-radius:3px;padding:2px 8px;font-size:.8rem;color:var(--p-ink)}
+/* onglets (B) */
+.tabs{display:flex;border-bottom:1px solid var(--p-line);padding:0 12px}
+.tabs button{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--p-faint);padding:9px 10px 7px;font-size:.9rem}
+.tabs button[aria-selected="true"]{color:var(--p-ink);border-bottom-color:var(--p-acc);font-weight:600}
+.tabs .badge{display:inline-block;min-width:16px;height:16px;border-radius:8px;background:var(--p-acc);color:#22302B;font-size:.68rem;line-height:16px;text-align:center;margin-left:4px;font-weight:700}
+/* frise verticale (B Parcours, C Carnet) */
+.tl{list-style:none;position:relative;margin-top:6px}
+.tl::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--p-line)}
+.tl>li{position:relative;padding-left:26px}
+.tl>li::before{content:"";position:absolute;left:1px;top:13px;width:14px;height:14px;border-radius:50%;background:var(--p-bg);border:2px solid var(--p-ok)}
+.tl>li.done::before{background:var(--p-ok)}
+.tl>li.cur::before{border-color:var(--p-acc);box-shadow:0 0 0 4px rgba(240,209,120,.18);background:var(--p-acc)}
+.tl>li.later::before{border-style:dashed;border-color:var(--p-faint)}
+.tl>li.later{color:var(--p-faint)}
+.tl .row{display:flex;gap:8px;align-items:baseline;padding:9px 0}
+.tl .row .s{font-weight:600;white-space:nowrap}
+.tl .row .v{color:var(--p-soft);font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.tl .row .b{font-size:.72rem;color:var(--p-ok);white-space:nowrap}
+.tl details.d{border-top:0} .tl details.d>summary{padding:9px 0}
+.tl .ph-head{font:600 .68rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--p-faint);padding:12px 0 0 0;margin-left:-26px;padding-left:26px}
+.tl .ph-head::before{display:none}
+.tl>li.ph-head::before{display:none}
+.sticky{position:sticky;top:0;z-index:3;background:var(--p-bg)}
+.toolbar{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--p-line);position:sticky;bottom:0;background:var(--p-bg2)}
+.toolbar button{flex:1;min-width:110px;background:transparent;border:1px solid var(--p-line2);color:var(--p-ink);border-radius:4px;padding:6px 6px;font-size:.82rem}
+.toolbar button:hover{border-color:var(--p-acc);color:var(--p-acc)}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:60%;overflow:auto;background:var(--p-bg2);border-top:2px solid var(--p-acc);padding:14px 16px;z-index:6;box-shadow:0 -14px 30px -10px rgba(0,0,0,.6)}
+.sheet h4{font:400 1.1rem var(--serif);margin-bottom:6px;display:flex;justify-content:space-between}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:.86rem}
+.mini{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:6px}
+.mini td,.mini th{border-bottom:1px solid var(--p-cardline);padding:3px 4px;text-align:left}
+.mini th{color:var(--p-cardmuted);font-weight:600}
+.num{font-variant-numeric:tabular-nums}
+svg text{font-family:var(--sans)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="eyebrow">Maquette · panel d'étude · proposition 2026-10-27</div>
+  <h1>Un panel qui ne disperse pas l'attention</h1>
+  <p class="lede">Trois réorganisations du panel, montrées sur la même étude Auto MPG, à deux moments : le début (étape 1) et le moment le plus chargé (étape 11, choix du modèle). Chiffres illustratifs : la plupart viennent de la maquette précédente, quelques-uns sont inventés pour la démonstration. La recommandation est en bas de page.</p>
+
+  <div class="diag" aria-label="Diagnostic du panel actuel">
+    <div><b>Rangé par type d'objet, pas par tâche</b><span>Au choix du modèle, la question est dans Décisions, les chiffres dans Preuves, l'essai dans Et si ?. Il faut trois onglets pour une seule réponse.</span></div>
+    <div><b>Huit signaux avant le contenu</b><span>Les badges Expérimental, étape v3 et régression, la révision, « lu par la CLI », Actualiser, le sceau, le bloc « En savoir plus », le rail de 13 étapes et la légende.</span></div>
+    <div><b>La même chose dite deux fois</b><span>« Votre prochaine action » répète la question du chat, et le récapitulatif du moteur répète le plan.</span></div>
+    <div><b>Un rail de 13 étapes qui ne tient pas</b><span>Les libellés se chevauchent (R32), alors que ce qui compte est la phase en cours et ce qui reste.</span></div>
+    <div><b>Six onglets de même poids</b><span>Rien ne dit lequel regarder maintenant. La ligne « Dans le panneau : … » du chat compense ce défaut au lieu de le corriger.</span></div>
+  </div>
+
+  <div class="controls">
+    <span><span class="ctl-label">Maquette</span>
+      <span class="seg" id="segV"><button data-v="A" aria-pressed="true">A · Focus</button><button data-v="B">B · Trois onglets</button><button data-v="C">C · Carnet</button></span></span>
+    <span><span class="ctl-label">Moment</span>
+      <span class="seg" id="segM"><button data-m="s11" aria-pressed="true">Étape 11 · Choix</button><button data-m="s1">Étape 1 · Données</button></span></span>
+  </div>
+
+  <div class="stage">
+    <div class="vsc">
+      <div class="vsc-bar"><i></i><i></i><i></i><span>HYPOTRAIL : ÉTUDE</span></div>
+      <div class="pane" id="pane"></div>
+      <div id="sheetHost"></div>
+    </div>
+    <aside class="notes" id="notes"></aside>
+  </div>
+
+  <section class="block">
+    <h2>Où va chaque contenu du panel actuel</h2>
+    <p class="lede">Rien n'est supprimé : tout est déplacé, plié ou mis dans un menu. Les écritures restent W4, W5 et W7, sans aucune nouvelle commande.</p>
+    <div class="tablewrap"><table class="map">
+      <thead><tr><th>Aujourd'hui</th><th>A · Focus</th><th>B · Trois onglets</th><th>C · Carnet</th></tr></thead>
+      <tbody>
+        <tr><td>En-tête : Expérimental, étape v3, régression, révision, « lu par la CLI », Actualiser, étude ▾</td><td colspan="3">Menu ⋯ (une ligne « relu il y a … » n'apparaît que si la lecture date de plus de 5 min ou a échoué). Seuls le nom de l'étude et le sceau du test final restent visibles.</td></tr>
+        <tr><td>Rail de 13 étapes, légende, « Que veulent dire ces repères ? »</td><td colspan="3">Quatre segments de phase, puis une ligne « Étape 11 sur 13 · Choisir le modèle · reste : … ». La légende disparaît : chaque marque se lit dans son texte (« fait », « vous attend »).</td></tr>
+        <tr><td>Votre prochaine action, question du chat</td><td colspan="3">Une seule fiche, « Le chat vous demande », avec les options et « Copier la question ».</td></tr>
+        <tr><td>Preuves (résultats, incertitude, plis)</td><td>Le graphique utile à la question dans la fiche « Pour répondre », le reste plié dessous</td><td>Maintenant (graphique utile) et Parcours (sous l'étape qui l'a produit)</td><td>Dans la cellule de l'étape qui l'a produit</td></tr>
+        <tr><td>Décisions (en attente, historique, ce qui compte comme réponse)</td><td>Tiroir « Décisions prises (10) »</td><td>Onglet Parcours : une ligne par étape, avec sa décision et sa base</td><td>La ligne repliée de chaque étape</td></tr>
+        <tr><td>Données et EDA, autre graphique (W4)</td><td>Tiroir « Les données » et « + Un autre graphique »</td><td>Ressources › Données</td><td>Barre d'outils › Données</td></tr>
+        <tr><td>Et si ?</td><td>Tiroir « Essayer sans décider »</td><td>Ressources › Essayer</td><td>Barre d'outils › Essayer</td></tr>
+        <tr><td>Apprendre et transmettre (notions, passation W7, rapport de session)</td><td>Tiroirs « Notions » et « Livrables » (W5, W7)</td><td>Ressources › Notions, Livrables</td><td>Barre d'outils › Notions, Livrables. Une notion s'ouvre aussi au survol d'un terme.</td></tr>
+        <tr><td>Récapitulatif du moteur, « ce que vous ne pouvez pas encore affirmer »</td><td colspan="3">Une ligne 🔒 sous la fiche en cours. La formulation du moteur est pliée.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="block">
+    <h2>Recommandation : C, le Carnet, avec la fiche en cours de A</h2>
+    <ul class="lede" style="padding-left:18px">
+      <li><b>Un seul modèle mental.</b> Le panel suit les chapitres du rapport et du notebook : chaque étape est une cellule, dans l'ordre. Quand le junior passe au rapport, il retrouve la même structure.</li>
+      <li><b>Rien à choisir pour savoir où regarder.</b> La cellule en cours est dépliée et le panel y défile tout seul. La ligne du chat devient « Dans le panneau : étape 11, la figure des trois configurations ». Elle pointe vers une figure, plus vers un onglet.</li>
+      <li><b>Le passé reste à portée sans encombrer.</b> Chaque étape faite tient en une ligne (décision et base). Elle se déplie sur les preuves qui l'ont justifiée, ce qui remplace Décisions et Preuves.</li>
+      <li><b>Les outils sortent du flux.</b> Données, Essayer, Notions et Livrables sont dans une barre d'outils fixe, et chacun s'ouvre en volet par-dessus, puis se ferme.</li>
+      <li><b>A est plus simple, mais trop pauvre en fin d'étude.</b> Le tiroir « Tout le reste » redevient un fourre-tout. B reste lisible, mais retombe à moitié dans le défaut actuel : deux onglets à consulter pour une décision.</li>
+      <li><b>Coût.</b> Il faut réécrire les vues du panel et la table de `companion_env.py` qui fait correspondre chaque étape à un onglet et une section. Elle ferait correspondre chaque étape à une figure. Il faut aussi refaire les références d'images du panel, de toute façon à revoir. Le moteur, la CLI et les écritures W4, W5 et W7 ne changent pas.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(function(){
+'use strict';
+const STEPS=[['Données','Découvrir les données'],['Moment','Moment de la prédiction'],['Variables','Variables disponibles'],['Découpage','Découpage'],['Critère','Critère de succès'],
+ ['Qualité','Contrôle de qualité'],['Préparation','Préparation'],['Exploration','Exploration'],
+ ['Modèles','Modèles'],['Variantes','Variantes'],['Choix','Choisir le modèle'],['Test final','Test final'],['Conclusion','Conclusion']];
+const PHASES=[['Cadrer',5],['Préparer les preuves',3],['Comparer',3],['Conclure',2]];
+const DEC=[ // décision de chaque étape faite, base, preuve dépliable
+ ['Fiche lue : 398 voitures, 9 colonnes, 80 lignes scellées','vos mots','318 lignes de développement · <i>horsepower</i> a 6 valeurs « ? ».'],
+ ['Avant la mise en vente, sur la fiche technique','vos mots','Seules les colonnes connues avant la vente peuvent servir.'],
+ ['Toutes sauf <i>car_name</i> (identifiant)','vos mots','Un nom de modèle ne se généralise pas à une voiture nouvelle.'],
+ ['5 blocs dans l\'ordre du temps','vos mots','Chaque pli valide sur des années postérieures à celles qui l\'entraînent.'],
+ ['MAE au moins 10 % sous la moyenne : barre 6,44 mpg','vos mots','Fixé avant de voir les résultats.'],
+ ['6 « ? » de <i>horsepower</i> traités comme manquants','vos mots','Lecture structurelle, sans la cible.'],
+ ['Imputation par la médiane, log de <i>horsepower</i>','vos mots','Asymétrie 1,1 : une traîne de valeurs hautes.'],
+ ['Poids et mpg : Spearman −0,86','vos mots','mpg moyen 19,45 (1970–72) contre 32,04 (1980–82).'],
+ ['Linéaire : MAE hors pli 3,69 contre 7,16','vos mots','Écart apparié −3,47 [−3,97 ; −2,96] : le gain tient.'],
+ ['Pénalité 3,69, EBM 3,40','vos mots','Budget de 2 variantes, utilisé.']];
+
+let V='A',M='s11',theme='auto',sheet=null,menu=false,tabB='now';
+const cur=()=>M==='s11'?11:1;
+
+function head(){
+  return `<div class="ph"><span class="name">mpg-A</span><span class="seal" title="80 lignes mises de côté à la création ; aucun graphique ni ajustement ne les lit.">🔒 test final scellé</span><span class="sp"></span>
+  <button class="ib" data-act="theme" title="Thème du panneau seul (R33)">${{auto:'◐ Auto',dark:'● Sombre',light:'○ Clair'}[theme]}</button>
+  <button class="ib" data-act="lang">FR</button><button class="ib" data-act="menu" aria-expanded="${menu}">⋯</button></div>
+  ${menu?`<div class="menu"><div>Étude : <b>mpg-A ▾</b></div><div>Régression · révision 14</div><div>Relu par la CLI il y a 2 min · <b>Actualiser</b></div><hr><div>Expérimental · option activée · étape v3</div><div>Comment fonctionne ce panneau</div></div>`:''}`;
+}
+function prog(){
+  const c=cur();let i=0;
+  const bars=PHASES.map(([n,k])=>{const a=i;i+=k;const done=Math.max(0,Math.min(k,c-1-a));const isCur=c-1>=a&&c-1<a+k;
+    return `<div class="bar${isCur?' cur':''}"><span style="width:${(done+(isCur?.5:0))/k*100}%"></span></div>`}).join('');
+  i=0;const labels=PHASES.map(([n,k])=>{const a=i;i+=k;return `<span class="${c-1>=a&&c-1<a+k?'cur':''}">${n}</span>`}).join('');
+  const rest=STEPS.slice(c).map(s=>s[0]);
+  return `<div class="prog"><div class="bars">${bars}</div><div class="plabels">${labels}</div>
+  <div class="where"><b>Étape ${c} sur 13 · ${STEPS[c-1][1]}</b><span class="rest">reste : ${rest.length>3?rest.slice(0,2).join(', ')+' et '+(rest.length-2)+' de plus':rest.join(', ')}</span></div></div>`;
+}
+function ask(){
+  if(M==='s11')return `<div class="card"><div class="k">Le chat vous demande</div><h3>Quelle configuration garder ?</h3>
+   <div class="opts"><span>Le modèle linéaire (règle d'une erreur type)</span><span>L'EBM (plus petite erreur)</span><span>La pénalité</span><span>Expliquer d'abord</span></div>
+   <p class="m">Aucune option n'est recommandée. Vous répondez dans le chat, avec vos mots.</p><button class="copy">Copier la question</button></div>`;
+  return `<div class="card"><div class="k">Le chat vous demande</div><h3>Ces données décrivent-elles bien ce que vous voulez prédire : la consommation (mpg) d'une voiture ?</h3>
+   <div class="opts"><span>Oui, on continue</span><span>Une colonne m'étonne</span><span>Expliquer d'abord</span></div><button class="copy">Copier la question</button></div>`;
+}
+function chart11(){
+  // MAE hors pli ± erreur type, échelle 2,5 → 4,6 mpg
+  const x=v=>40+(v-2.5)/(4.6-2.5)*300,rows=[['Linéaire',3.70,.68,1],['Pénalité',3.69,.69,0],['EBM',3.40,.61,0]];
+  let s=`<svg viewBox="0 0 360 132" width="100%" role="img" aria-label="MAE hors pli des trois configurations avec leur erreur type ; barre à 4,01 mpg">`;
+  [2.5,3,3.5,4,4.5].forEach(t=>s+=`<line x1="${x(t)}" x2="${x(t)}" y1="10" y2="104" stroke="rgba(34,48,43,.1)"/><text x="${x(t)}" y="118" font-size="10" text-anchor="middle" fill="#4E5A55">${String(t).replace('.',',')}</text>`);
+  s+=`<line x1="${x(4.01)}" x2="${x(4.01)}" y1="6" y2="104" stroke="#B07418" stroke-width="1.6" stroke-dasharray="4 3"/><text x="${x(4.01)+4}" y="14" font-size="10" fill="#B07418">barre 4,01</text>`;
+  rows.forEach(([n,v,se,k],i)=>{const y=30+i*28;s+=`<text x="0" y="${y+4}" font-size="11" fill="#22302B" font-weight="${k?700:400}">${n}</text>
+   <line x1="${x(v-se)}" x2="${x(v+se)}" y1="${y}" y2="${y}" stroke="${k?'#1E4E9E':'#4E5A55'}" stroke-width="2"/><circle cx="${x(v)}" cy="${y}" r="4.5" fill="${k?'#1E4E9E':'#22302B'}"/>
+   <text x="${x(v)}" y="${y-8}" font-size="10" text-anchor="middle" fill="#22302B">${String(v.toFixed(2)).replace('.',',')}</text>`});
+  return s+`<text x="190" y="130" font-size="10" text-anchor="middle" fill="#4E5A55">MAE hors pli (mpg), ± une erreur type · 318 lignes de développement</text></svg>`;
+}
+function look(){
+  if(M==='s11')return `<div class="card"><div class="k">Pour répondre, regardez</div><h3>Les trois configurations sont-elles vraiment différentes ?</h3>${chart11()}
+   <p class="concl">Les trois sont sous la barre de 4,01 (la meilleure, 3,40, plus son erreur type 0,61) : à précision comparable, la règle garde la plus simple, le modèle linéaire. L'EBM gagne 0,3 mpg en moyenne : à vous de dire si cela compte.</p>
+   <details class="f"><summary>Comment le lire</summary><div><ol><li>Chaque point est l'erreur moyenne hors pli d'une configuration.</li><li>Le trait couvre ± une erreur type : la variation d'un pli à l'autre.</li><li>Le pointillé ocre est la barre : la meilleure moyenne plus son erreur type.</li></ol></div></details>
+   <details class="f"><summary>Attention</summary><div>Deux traits qui se chevauchent ne prouvent pas que deux modèles se valent. L'écart apparié, pli par pli, le dit mieux.</div></details>
+   <details class="f"><summary>Pli par pli, et l'écart apparié EBM − linéaire</summary><div>Écart moyen −0,30 mpg [−0,62 ; +0,04] : l'intervalle touche zéro.</div></details></div>`;
+  return `<div class="card"><div class="k">Pour répondre, regardez</div><h3>La fiche des données</h3>
+   <div class="grid2"><span><b class="num">398</b> voitures, de 1970 à 1982</span><span><b class="num">9</b> colonnes, cible : <i>mpg</i></span><span><b class="num">80</b> lignes scellées pour le test final</span><span><b class="num">318</b> lignes de développement</span></div>
+   <p class="concl">Une seule anomalie de structure : <i>horsepower</i> contient 6 « ? ». Ce n'est pas encore une décision, elle viendra au contrôle de qualité.</p>
+   <details class="f"><summary>Les 9 colonnes</summary><div><table class="mini"><tr><th>Colonne</th><th>Type</th><th>Manquants</th></tr>
+   <tr><td><i>mpg</i> (cible)</td><td>nombre</td><td>0</td></tr><tr><td>cylinders</td><td>entier</td><td>0</td></tr><tr><td>displacement</td><td>nombre</td><td>0</td></tr><tr><td>horsepower</td><td>texte → nombre</td><td>6 « ? »</td></tr><tr><td>weight</td><td>nombre</td><td>0</td></tr><tr><td>acceleration</td><td>nombre</td><td>0</td></tr><tr><td>model_year</td><td>entier</td><td>0</td></tr><tr><td>origin</td><td>catégorie (3)</td><td>0</td></tr><tr><td>car_name</td><td>texte</td><td>0</td></tr></table></div></details>
+   <details class="f"><summary>Cinq lignes d'exemple</summary><div class="m">Cinq lignes, telles quelles, la cible d'abord.</div></details>
+   <details class="f"><summary>Pourquoi regarder la structure avant la cible</summary><div>On décrit les colonnes sans regarder ce qu'on prédit : un regard sur la cible orienterait les choix suivants, et l'étude le compterait comme exploré.</div></details></div>`;
+}
+function limit(){
+  return `<div class="limit"><span>${M==='s11'?'Vous ne pouvez pas encore affirmer la précision sur des voitures nouvelles : le test final est scellé. Les chiffres ci-dessus ont servi à choisir.':'Rien n\'est encore mesuré : aucune ligne n\'a été lue au-delà de la structure.'}</span></div>`;
+}
+function decList(n,from=0){
+  return DEC.slice(from,from+n).map((d,j)=>{const i=from+j;return 0||`<details class="d"><summary><span><b>${STEPS[i][0]}</b> · ${d[0]}</span><span class="c">${d[1]}</span></summary><div>${d[2]}</div></details>`}).join('');
+}
+function drawer(){
+  const n=cur()-1;
+  return `<div class="drawer"><div class="t">Le reste, si besoin</div>
+   <details class="d"><summary>Les données<span class="c">fiche, graphiques</span></summary><div>Fiche, qualité, graphiques sur les lignes d'entraînement.<br><span class="act">+ Un autre graphique (W4)</span></div></details>
+   <details class="d"><summary>Décisions prises<span class="c">${n}</span></summary><div>${n?decList(n):'Aucune pour l\'instant.'}</div></details>
+   <details class="d"><summary>Essayer sans décider<span class="c">Et si ?</span></summary><div>Rejouer un modèle ou une règle sur les chiffres déjà calculés. Rien n'est enregistré.</div></details>
+   <details class="d"><summary>Notions<span class="c">${M==='s11'?'7':'2'}</span></summary><div>${M==='s11'?'Erreur absolue moyenne (MAE) · hors pli · erreur type · règle d\'une erreur type · écart apparié · EBM · test final':'Variable cible · test final'}</div></details>
+   <details class="d"><summary>Livrables<span class="c">rapport, notebook, passation</span></summary><div>Ouvrir le rapport · Ouvrir le notebook<br><span class="act">Régénérer (W5)</span><span class="act">Exporter la passation (W7)</span></div></details></div>`;
+}
+function timeline(expandCur){
+  const c=cur();let html='<ol class="tl">',i=0;
+  PHASES.forEach(([p,k])=>{
+    // Carnet : une phase entièrement faite se replie en une ligne (les étapes restent dépliables dedans).
+    if(expandCur&&i+k<=c-1){html+=`<li class="done"><details class="d"><summary><span class="s">${p}</span>&nbsp;<span class="v">${k} étapes faites</span><span class="c">vos mots</span></summary><div>${decList(k,i)}</div></details></li>`;i+=k;return;}
+    html+=`<li class="ph-head">${p}</li>`;
+    for(let j=0;j<k;j++,i++){const st=i<c-1?'done':i===c-1?'cur':'later';
+      if(st==='done')html+=`<li class="done"><details class="d"><summary><span class="s">${STEPS[i][0]}</span>&nbsp;<span class="v">${DEC[i][0]}</span><span class="c">${DEC[i][1]}</span></summary><div>${DEC[i][2]}<br><span class="act">Voir la preuve</span></div></details></li>`;
+      else if(st==='cur')html+=`<li class="cur" id="curStep"><div class="row"><span class="s">${STEPS[i][1]}</span><span class="b" style="color:var(--p-acc)">vous attend</span></div>${expandCur?ask()+look()+limit():''}</li>`;
+      else html+=`<li class="later"><div class="row"><span class="s" style="font-weight:400">${STEPS[i][0]}</span><span class="v"></span><span class="b" style="color:var(--p-faint)">après</span></div></li>`;}
+  });
+  return html+'</ol>';
+}
+function sheetHtml(){
+  const t={data:['Les données',`Fiche · qualité · graphiques sur les lignes d'entraînement (318).<br><span class="act">+ Un autre graphique (W4)</span>`],
+   try:['Essayer sans décider','Rejouer un modèle ou une règle sur les chiffres déjà calculés. Rien n\'est enregistré ni décidé.'],
+   learn:['Notions','Erreur absolue moyenne (MAE) · hors pli · erreur type · règle d\'une erreur type · écart apparié · EBM · test final'],
+   out:['Livrables','Ouvrir le rapport · Ouvrir le notebook<br><span class="act">Régénérer (W5)</span><span class="act">Exporter la passation (W7)</span>']}[sheet];
+  return `<div class="sheet"><h4>${t[0]}<button class="ib" data-act="close">Fermer</button></h4><div style="color:var(--p-soft);font-size:.9rem">${t[1]}</div></div>`;
+}
+function render(){
+  const pane=document.getElementById('pane');
+  const dark=theme!=='light'; // « Auto » suit VS Code, ici sombrepane.className='pane'+(dark?'':' light');
+  let body='';
+  if(V==='A') body=head()+prog()+`<div class="in">${ask()}${look()}${limit()}${drawer()}</div>`;
+  if(V==='B'){
+    const n=cur()-1;
+    body=head()+`<div class="tabs" role="tablist"><button role="tab" data-tab="now" aria-selected="${tabB==='now'}">Maintenant<span class="badge">1</span></button><button role="tab" data-tab="path" aria-selected="${tabB==='path'}">Parcours</button><button role="tab" data-tab="res" aria-selected="${tabB==='res'}">Ressources</button></div>`;
+    if(tabB==='now')body+=prog()+`<div class="in">${ask()}${look()}${limit()}</div>`;
+    if(tabB==='path')body+=`<div class="in">${timeline(false)}</div>`;
+    if(tabB==='res')body+=`<div class="in">${drawer().replace('Le reste, si besoin','Ressources').replace(/<details class="d"><summary>Décisions prises[\s\S]*?<\/details>/,'')}</div>`;
+  }
+  if(V==='C') body=`<div class="sticky">${head()}${prog()}</div><div class="in">${timeline(true)}</div><div class="toolbar"><button data-sheet="data">Données</button><button data-sheet="try">Essayer</button><button data-sheet="learn">Notions</button><button data-sheet="out">Livrables</button></div>`;
+  pane.innerHTML=body;
+  const host=document.getElementById('sheetHost');host.className=pane.className+' host';host.innerHTML=V==='C'&&sheet?sheetHtml():'';
+  document.getElementById('notes').innerHTML=NOTES[V]();
+  // Carnet : le panneau défile jusqu'à l'étape en cours, sous l'en-tête fixe.
+  if(V==='C'){const c=document.getElementById('curStep'),st=pane.querySelector('.sticky');if(c)pane.scrollTop=Math.max(0,c.offsetTop-st.offsetHeight-8);}
+}
+const chat=()=>M==='s11'?'Dans le panneau : la figure des trois configurations.':'Dans le panneau : la fiche des données.';
+const NOTES={
+ A:()=>`<h2>A · Focus<span class="tag">sans onglets</span></h2>
+  <p>Le panel ne montre que l'étape en cours : ce que le chat demande, ce qu'il faut regarder pour répondre, et ce qu'on ne peut pas encore affirmer. Tout le reste tient dans un tiroir plié.</p>
+  <h3>Visible d'emblée</h3><ul><li>Le nom de l'étude et le sceau du test final</li><li>Quatre segments de phase, la ligne « Étape n sur 13 » et ce qui reste</li><li>La question du chat (à copier) et une figure avec sa conclusion</li></ul>
+  <h3>Plié ou caché</h3><ul><li>Comment lire, Attention, pli par pli</li><li>Décisions, données, essais, notions, livrables : dans le tiroir</li><li>Révision, CLI, étape v3 : dans le menu ⋯</li></ul>
+  <h3>Ligne du chat</h3><div class="chatline">${chat()}</div>
+  <div class="pc" style="margin-top:14px"><div><b>Pour</b><br>Le plus calme. On ne peut pas se tromper d'endroit.</div><div><b>Contre</b><br>En fin d'étude, le tiroir devient un fourre-tout, et l'historique n'a plus de lien avec ses preuves.</div></div>`,
+ B:()=>`<h2>B · Trois onglets<span class="tag">par moment, pas par objet</span></h2>
+  <p><b>Maintenant</b> montre l'étape en cours, comme A. <b>Parcours</b> donne une ligne par étape, avec la décision et sa base ; on la déplie sur sa preuve. <b>Ressources</b> réunit les données, les essais, les notions et les livrables.</p>
+  <h3>Visible d'emblée</h3><ul><li>Maintenant, avec un badge « 1 » tant qu'une réponse est attendue</li><li>Le reste comme dans A</li></ul>
+  <h3>Plié ou caché</h3><ul><li>Le passé se trouve dans Parcours, les outils dans Ressources</li></ul>
+  <h3>Ligne du chat</h3><div class="chatline">${chat()}</div><p style="font-size:.85rem;color:var(--faint);margin-top:4px">(onglet Maintenant implicite ; « onglet Parcours » seulement pour revenir sur une décision)</p>
+  <div class="pc" style="margin-top:14px"><div><b>Pour</b><br>Familier. Chaque onglet a un rôle net : maintenant, avant, outils.</div><div><b>Contre</b><br>Revenir sur une décision demande encore deux onglets. Les onglets restent une habitude de rangement.</div></div>`,
+ C:()=>`<h2>C · Carnet<span class="tag">recommandée</span></h2>
+  <p>Une seule page qui défile, comme le rapport et le notebook, avec une cellule par étape. Chaque étape faite tient en une ligne (décision et base), qu'on déplie sur sa preuve. L'étape en cours est dépliée et le panel y défile tout seul. Les étapes à venir sont grisées.</p>
+  <h3>Visible d'emblée</h3><ul><li>Un en-tête fixe : étude, sceau, phase, « Étape n sur 13 » et ce qui reste</li><li>L'étape en cours, dépliée, comme dans A</li><li>Une barre d'outils fixe : Données, Essayer, Notions, Livrables</li></ul>
+  <h3>Plié ou caché</h3><ul><li>Chaque phase finie, en une ligne (« Cadrer · 5 étapes faites »)</li><li>Les preuves des étapes passées, dans leur ligne</li><li>Les outils, qui s'ouvrent en volet par-dessus puis se ferment</li></ul>
+  <h3>Ligne du chat</h3><div class="chatline">${chat()}</div>
+  <div class="pc" style="margin-top:14px"><div><b>Pour</b><br>Même structure que le rapport. L'histoire se lit dans l'ordre, et le passé est relié à sa preuve.</div><div><b>Contre</b><br>La page s'allonge en fin d'étude : une phase finie se replie en une ligne, et le panel défile jusqu'à l'étape en cours. C'est plus de travail que A.</div></div>`
+};
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.v){V=b.dataset.v;sheet=null;menu=false;tabB='now';document.querySelectorAll('#segV button').forEach(x=>x.setAttribute('aria-pressed',x===b));}
+  else if(b.dataset.m){M=b.dataset.m;document.querySelectorAll('#segM button').forEach(x=>x.setAttribute('aria-pressed',x===b));}
+  else if(b.dataset.tab)tabB=b.dataset.tab;
+  else if(b.dataset.sheet)sheet=b.dataset.sheet;
+  else if(b.dataset.act==='close')sheet=null;
+  else if(b.dataset.act==='menu')menu=!menu;
+  else if(b.dataset.act==='theme')theme={auto:'dark',dark:'light',light:'auto'}[theme];
+  else return;
+  render();
+});
+render();
+})();
+</script>
+</body>
+</html>
