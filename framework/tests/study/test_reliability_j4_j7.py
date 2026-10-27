@@ -107,5 +107,8 @@ def test_pause_and_presentation_snapshot_and_notebook_guard(tmp_path):
     assert built['presentation']['pending_action'] == pause
     source = render_notebook.generate_study_source(built)
     # No substantive registered recomputation can execute on notebook open.
-    if 'Run registered recomputations' in source:
-        assert 'mo.stop(not run_recompute.value' in source
+    # Contract P1.9: from init the step-1 sample's cell is a recomputation, so the button and
+    # its guard are always there (the guard also honours HYPOTRAIL_NOTEBOOK_RECOMPUTE).
+    assert 'Run registered recomputations' in source
+    assert 'mo.stop(not (run_recompute.value' in source
+    assert 'def recompute_sample(' in source

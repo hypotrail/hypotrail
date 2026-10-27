@@ -369,7 +369,9 @@ def test_the_digest_summary_gives_every_junior_text_in_both_languages(tmp_path):
     flow, task, _ = jw.journey_flow(tmp_path, 'synthetic', 'fr')
     flow.call('data', '--study', flow.study)
     out = flow.call('status', '--summary', '--digest', '--since', '0', '--study', flow.study)
-    assert list(out)[-1] == 'texts' and list(out['texts']) == ['en', 'fr']
+    # Contract P1 (§17.2): the panel's digest keys follow ``texts``.
+    assert list(out)[-9] == 'texts' and list(out['texts']) == ['en', 'fr']
+    assert tuple(out)[-8:] == view_mod.DIGEST_SUMMARY_KEYS[-8:]
     for lang in ('en', 'fr'):
         table = out['texts'][lang]
         assert tuple(table) == view_mod.LANGUAGE_TEXT_KEYS

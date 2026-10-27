@@ -122,7 +122,9 @@ def test_draft_numbers_are_traced_to_the_registry(study):
     assert {'35.0%', '15%', '55%', '210', '20', '20261017'} <= set(traced)
 
 
-@pytest.mark.parametrize('number', ['0.47', '42', '12.3%', '3.14159'])
+# Contract P1.9: the data card's sample is drawn from the study's seed, so a small integer (42,
+# an age) may be one of its cells, which check traces; these numbers are no cell of the study.
+@pytest.mark.parametrize('number', ['0.47', '98765', '12.3%', '3.14159'])
 def test_fabricated_numbers_are_untraceable(study, number):
     result = text_check(study, f'The model reached {number} on validation rows.')
     assert codes(result) == ['untraceable_number']
@@ -203,7 +205,7 @@ def test_a_digit_only_registry_prefix_is_not_a_claim(study, monkeypatch):
 @pytest.mark.parametrize('text, number', [
     ('The model selected 12345678 clients.', '12345678'),          # not a registry prefix
     ('The model selected 526597 clients.', '526597'),             # diverges from the id
-    ('See result 42 for the count.', '42'),                       # fewer than 6 digits
+    ('See result 98765 for the count.', '98765'),                 # fewer than 6 digits
     ('The result 1357.5 is untraced.', '1357.5'),                  # not digits only
     ('(result 52659681%)', '52659681%'),                           # a percentage
 ])

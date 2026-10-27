@@ -329,9 +329,14 @@ def _decision_words(built: Mapping, decision_id: str) -> str | None:
     value = ((built.get('decisions') or {}).get(decision_id) or {}).get('value')
     if value is None:
         return None
+    lang = built.get('language') or 'en'
     if decision_id == 'conclusion' and isinstance(value, Mapping):
-        return audience.verdict_words(value.get('verdict'), built.get('language') or 'en')
-    return automation_words.value_words(built, decision_id, value)
+        return audience.verdict_words(value.get('verdict'), lang)
+    words = automation_words.value_words(built, decision_id, value)
+    if isinstance(value, str) and words == value:
+        # Free text (the prediction moment): the junior's words, quoted as said.
+        return f'« {value} »' if lang == 'fr' else f'“{value}”'
+    return words
 
 
 def headlines(built: Mapping, summary_out: Mapping, lang: str | None = None
