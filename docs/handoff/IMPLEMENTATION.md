@@ -1,5 +1,16 @@
 # Implementation handoff (v0.2)
 
+## Lesson-style report (owner decision 2026-10-27, R25 to R30)
+
+The report follows the approved mockup [report-lesson-style-mpg-fr.html](../plans/mockups/report-lesson-style-mpg-fr.html) (branch `m-rep`; unit, real-study and simulated-browser tests, **no Copilot session**). `TEMPLATE_VERSION` 4; CLI-CONTRACT §8.3 and §11.5.
+
+- **Shell** (R28): the "blackboard and graph paper" charter, the board by default (no `prefers-color-scheme`, no storage), a whiteboard button, a sticky table of contents with each chapter's status (folded under 1,040 px), a position line (chapter n/9, what remains, decisions to review). No CDN, reduced motion respected, no sideways scrolling at 390 px.
+- **Two editions in one file** (R27): the study language first (the only one shown without script), the other behind the language button, which keeps the reader's place. The second edition is rendered from the same registry in the other language; words recorded in one language are shown as recorded and marked "(fr)" or "(en)". `check` reads the numbers of each edition in its language.
+- **Chapters as lessons** (R29): "At this step", the term then "In this study", the choice cards (an automatic decision reads "to review", never "Confirmed decision", R26), folds (example, why it holds, code from the notebook, where it breaks, what remains uncertain), "What we keep", "Done → Next". Then a summary, "Say it out loud", the decisions to review, a compact annex.
+- **Every figure and table** (R30) is framed with "Why this chart" and its frame line, "How to read it", "What we conclude" with cited registry values, and "Watch out" when a trap exists. Texts live in `content/lesson.yaml` (English and French, regression and binary overlays), none in Python. New charts from recorded results only: errors with intervals and the criterion bar (figure V), configurations fold by fold, paired differences, residuals by model and by period, a coefficient forest.
+- **R26 defects**: no classification wording in a regression report, no English in a French edition (the French report texts now take the regression cross-validation overlay, as the English do), chapter status consistent with the plan, an EBM variant named by its family, the tension between the one-standard-error pick and a paired difference that excludes zero stated in chapter 7, and a regression final test drawn without a declared order says it cannot show drift.
+- Left out of the mockup: the illustrative "course" figures and the interactive widgets (no recorded values), and numbers the registry does not hold (the criterion threshold in error units, the "x % lower" figure). Existing studies render unchanged in content; only the page layout moves to version 4.
+
 ## Owner-session batch, wave W3: L8, the fix pass and L9, integrated (26 October 2026)
 
 Lots L8 and L9 and the third-session fix pass (R21, R22, capture before the opening) of the [2026-10-26 plan](../plans/OWNER-SESSION-2026-10-26-PLAN.md), integrated on branch `w3-int` (unit, walker, simulated-browser and real-CLI tests, the full gate once; **no Copilot session**). The L9 details:
