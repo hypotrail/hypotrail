@@ -537,3 +537,11 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   line "Demandez-le dans le chat" with the copy-question button; the acknowledgement happens in
   the chat. W4 (run another chart), W5 (regenerate) and W7 (export the handoff pack) stay. For the
   real panel: an ADR 0004 amendment and an AGENTS.md update (writes W4, W5, W7 only).
+
+## Owner decision 2026-10-27: implement the mockups
+
+The owner approved both mockups (`docs/plans/mockups/report-lesson-style-mpg-fr.html`,
+`docs/plans/mockups/panel-lesson-style-fr.html`) and asked to implement them, with R23, R24,
+R26–R31. Lots: report (R25–R30, R26 defects), panel (lesson style, R27–R31, W6 removed with an
+ADR 0004 amendment and AGENTS.md update), automatic mode (R23 progress and text summary, R24
+review pause).
