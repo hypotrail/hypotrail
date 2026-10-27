@@ -1,6 +1,6 @@
 # Advanced companion: detailed specification
 
-Status: **the one-page panel is specified, not implemented** (ADR 0004 decision 13, 2026-10-27). The tabbed panel of stages v0 to v3 is implemented behind the flag (WP-0, WP-E1 to E3, WP-U1 to U5, integrated by WP-I with decisions CI.1 to CI.17 in [V0.1-DECISIONS](../plans/V0.1-DECISIONS.md)), tested in Node, an offline browser, and on the real CLI, and **not run inside a real VS Code** ([manual checklist](../../clients/vscode-companion/MANUAL-TEST.md)); it stays as it is until the work packages of [PANEL-ONE-PAGE-PLAN.md](../plans/PANEL-ONE-PAGE-PLAN.md) land, and this document then describes the code. The default stage stays `v0` and the flag stays off by default. The scope and the staging are in [ADR 0004](../decisions/0004-companion-advanced.md). The engine interfaces are in [CLI-CONTRACT-COMPANION.md](CLI-CONTRACT-COMPANION.md), cited below as **CC §n**, and, for the one page, in [CLI-CONTRACT.md §17](CLI-CONTRACT.md) (contract P1), cited as **P1 §n**. The code base is `clients/vscode-companion/`.
+Status: **the one-page panel is implemented behind the flag on the panel side** (ADR 0004 decision 13, 2026-10-27; packages P-0 to P-6 and P-8 of [PANEL-ONE-PAGE-PLAN.md](../plans/PANEL-ONE-PAGE-PLAN.md)), on hand-built contract-P1 fixtures (`clients/vscode-companion/test/fixtures/p1/`); the engine side of contract P1 (E-1 to E-8) lands separately, and the fixtures are then recaptured. Tested in Node, an offline browser, and on the real CLI, and **not run inside a real VS Code** ([manual checklist](../../clients/vscode-companion/MANUAL-TEST.md)). The pixel baselines of the tabbed panel were deleted; the one-page set waits for the owner's review (P-7). The tabbed panel (WP-0, WP-E1 to E3, WP-U1 to U5, WP-I with decisions CI.1 to CI.17 in [V0.1-DECISIONS](../plans/V0.1-DECISIONS.md)) is replaced; its requirements withdrawn by the one page are listed in §18. The default stage stays `v0` and the flag stays off by default. The scope and the staging are in [ADR 0004](../decisions/0004-companion-advanced.md). The engine interfaces are in [CLI-CONTRACT-COMPANION.md](CLI-CONTRACT-COMPANION.md), cited below as **CC §n**, and, for the one page, in [CLI-CONTRACT.md §17](CLI-CONTRACT.md) (contract P1), cited as **P1 §n**. The code base is `clients/vscode-companion/`.
 
 **2026-10-27, ADR 0004 decision 13: one page instead of tabs.** The six tabs are replaced by one page in a fixed order (§4, §6): a sticky header and a one-line progress; then "To handle", "Since your last visit", **Now**, **the path** with its ledger line, and the **tools** as drawers. §3.2 (stages), §4 (information architecture), §6 (the page), §10 (local storage) and §16 (test hooks) are rewritten; LS-1, LS-3 and the theme clause of LS-6 are superseded (§6.0); the content of the former views (EDA cards, evidence, What if?, notions, handoff, session report) is kept in Appendix A, and §A.0 says where each part now lives. The engine names places with anchors (`now`, `todo:<kind>`, `path:<step_id>[/<slot>]`, `tools:<drawer>`, P1 §17.1) instead of tabs. A panel-only theme control (§13.3) replaces "no theme button" (R33), the EN | FR toggle moves into the "more" menu (§13.2), the step-1 data card shows a seeded sample of eight development rows whose target values count as a look (§6.9, P1 §17.3), and What if? is kept with a visible warning (§6.10). The writes stay **W4, W5 and W7** (§7) and the three Marimo launches; the panel decides nothing and records no words. §18 maps every former requirement id to its new place.
 
@@ -346,7 +346,9 @@ Present once a current `policy.evaluation` or `evaluate.regression` exists. Its 
 
 - NOT-1. A term marked in the panel's copy (`data-term`) is a button (`aria-expanded`, `aria-controls`); pressing it (or Enter or Space) expands, **in place**, the term's definition then "In your study: …" with the study's values (`explain`, `example_status == "shown"`); pressing it again folds it. Its open state is kept (FOLD-1).
 - NOT-2. Notions work with the keyboard and by touch; the expanded text has `role="note"`; Escape folds the notion whose button has focus (LE-4).
-- NOT-3. The drawer "My notions" lists the notions met so far on the page (the terms of the steps done and of Now), each with its definition and the study's example, in the order met; at `done` it reads as a sheet to keep. Turning `learningLayer` off removes every notion button, expansion and the drawer, and no `explain` call is made (LE-3).
+- NOT-3. The drawer "My notions" lists the notions met so far on the page (the terms of the steps done and of Now), each with its definition and the study's example, in the order met; at `done` it reads as a sheet to keep. Turning `learningLayer` off removes every notion button, expansion, concept card, prediction and the drawer, and no `explain` call is made (LE-3).
+- **Concept cards (kept, LE-2).** My notions opens on the concept card of the step that waits (§A.6.1, `data-concept-card="<task>:<step>"`), labelled "a concept, not a decision" (INV-6); after its second sighting it collapses to a one-line link (`data-concept-card-link`). The count and the "Hide concept cards" preference are the extension's `globalState` (§10).
+- **Predict before you look (kept, LE-1).** When a prediction of `explain.predictions` belongs to the step Now shows and the junior has not answered it for this study, Now holds it (`data-predict-now="<step>"`) under the figure's heading and before the figure is read: the question, the choices, and "Kept on this computer only. Never written to the study." An answer is a `learn_set` to the extension, never a study write; the reveal follows. At v3 Now reads `explain` for it when the learning layer is on.
 
 #### 6.7.4 Deliverables (v0)
 
@@ -451,7 +453,7 @@ A unit test enumerates the argv builder module and asserts that exactly the thre
 
 ## 8. Webview ↔ extension message protocol (`hypotrail.panel/2`)
 
-- **Envelope.** Every message is a JSON object `{v: 2, type, ...fields}`. The one page keeps version 2: it removes `learn_set` and `learn_state`, changes the fields of `navigate`, and adds `panelContract` to `init`; a message of the tabbed form is dropped like any invalid message.
+- **Envelope.** Every message is a JSON object `{v: 2, type, ...fields}`. The one page keeps version 2: it keeps `learn_set` and `learn_state` (the concept cards and "predict before you look", kept at v3 by the integrator's correction of 2026-10-27, LE-2), changes the fields of `navigate`, and adds `panelContract` to `init`; a message of the tabbed form is dropped like any invalid message.
 - **Unknown or invalid messages.** A message with an unknown `type`, an extra field, a wrong type, or `v !== 2` is dropped and counted in `diagnostics.ignored`. It is never answered.
 - **Validation.** Both sides validate with one schema table in `lib/protocol.js`. The webview copy is `media/protocol.js`, generated by WP-0's script `lib/protocol.js --emit-webview`. A test asserts that the two are identical.
 - **v0.** The v0 messages (implicitly `/1`) are retired. The v0 tests are migrated to `/2`, not deleted.
@@ -477,7 +479,7 @@ A unit test enumerates the argv builder module and asserts that exactly the thre
 | `ask_agent` | `about: {kind ∈ result, decision, proposal, step, limit, execution, term; id (string ≤ 100)}`, `question` (string ≤ 2000), `mode` ∈ `copy`, `insert` | v0 (v2 before WP-E1) |
 | `export_handoff` | `revision` | v3 |
 | `switch_study` | — | v1 |
-| `learn_set` | withdrawn with the concept cards and predictions (ADR 0004 d13): dropped as unknown | — |
+| `learn_set` | `key` ∈ `seen`, `prediction`, `prefs`, `reset_predictions`; `id` (`^[a-z0-9_.:-]+$`, ≤ 100); `value?` (a choice id for `prediction`, `{hideCards?: bool}` for `prefs`, none otherwise) | v3, learning layer on; stored by the extension in `globalState` (§10), never sent to the CLI (LE-1) |
 
 ### 8.2 Extension → webview
 
@@ -492,7 +494,7 @@ A unit test enumerates the argv builder module and asserts that exactly the thre
 | `preview_policy_result` | `seq`, `revision`, `currency?`, `model: PolicyPreviewModel` | dropped by the webview when `seq` is not the latest it sent |
 | `effects` | `proposalId`, `revision`, `currency?`, `model: EffectsModel` | |
 | `draft_result` | `decisionId`, `value`, `revision`, `currency?`, `model: DraftModel` | |
-| `learn_state` | withdrawn (ADR 0004 d13) | — |
+| `learn_state` | `prefs`, `seen`, `predictions` (this study's answers only) | after `init` at v3 with the learning layer on, and after every `learn_set` |
 | `navigate` | `anchor` (a string of the grammar of P1 §17.1.1, at most 200 characters), `kind?` ∈ `result`, `decision`, `proposal`, `step`, `limit`, `execution`, `term`, `id?` (string ≤ 100) | deep link and "go to a result" (§4.3); `{tab, kind, id}` of the tabbed panel is dropped as invalid |
 | `notice` | `text`, `politeness` ∈ `polite`, `assertive` | copy confirmation, invalid link, etc. |
 
@@ -528,12 +530,12 @@ The models are pure functions in `lib/models/*.js`, from CLI payloads to plain o
 | Store | Keys | May hold | Must not hold |
 |---|---|---|---|
 | `vscode.setState` (webview, per panel) | `askDraft` (the question of "Ask the agent about this"), `folds` (`{fold id: true \| false}`, the folds and notions the junior opened or closed, at most 300 ids, oldest dropped first; FOLD-1), `study` (the study key of `init`, CR.2), `language` (`en` \| `fr`, the "more" menu's choice; LANG-1), `theme` (`auto` \| `dark` \| `light`; THEME-2) | a question draft, view navigation, per-viewer preferences | anything read back as a decision, a number, a study value, the junior's words |
-| `context.globalState` (extension) | not used. The keys `hypotrail.learn.*` of the tabbed panel (concept cards and predictions, withdrawn by ADR 0004 d13, §18) are removed on activation (`update(key, undefined)`) and never read | — | — |
+| `context.globalState` (extension) | `hypotrail.learn.prefs` (`{hideCards}`), `hypotrail.learn.seen` (`{card id: count ≤ 99}`, at most 500 ids), `hypotrail.learn.predictions` (`{study key: {question id: choice id}}`, at most 50 studies) | the learning layer's preferences, the concept cards seen, the answers to "predict before you look" (LE-2) | a decision, a study value, the junior's words |
 | `context.workspaceState` | not used | — | — |
 
 - `studyKey` is the first 16 hexadecimal characters of the SHA-256 of the absolute study path, so the path itself is not stored. It is not the engine's sample seed (P1 §17.3), which does not depend on the path.
 - `check_layout.py` keeps forbidding `localStorage` and `indexedDB`.
-- A unit test asserts that `setState` is called only with these keys, each value passing its schema, and that `globalState.update` is called only to remove the old keys.
+- A unit test asserts that `setState` is called only with these keys, each value passing its schema, and that `globalState.update` is called only with the three `hypotrail.learn.*` keys.
 - The question draft is deleted once the question is copied.
 - Drafts and folds belong to one study (decision CR.2). `init.study` names it; when it differs from the stored `study` (the study switch reloads the same webview with its state, and a state without a key is treated as another study), `askDraft` and `folds` are dropped before anything is rendered; `language` and `theme` are kept (they are the viewer's, not the study's).
 - A state saved by the tabbed panel (`tab`, `recapCollapsed`, `evidenceFilter`, `selectedResult`, `drafts`, `ackDrafts`) loses those keys on load.
@@ -616,7 +618,7 @@ English is the source language; the panel ships a French translation of its own 
 
 - NAR-1. At 320, 420 and 600 px, in English and in French, on every captured state and stage: no horizontal scroll of the page; no element's right edge passes the viewport or its card outside a `data-scroll-ok` region; the sticky region obeys PG-2.
 - NAR-2. The only regions that may scroll sideways are the sample, the special-value rows, the dictionary and the development-versus-final table, each in a focusable region (§13 Keyboard).
-- NAR-3. Charts are drawn on a 300-unit-wide frame scaled to the container, chart text at 11 to 12 px never scaled up; the path's step line wraps its value under its name below 420 px; the pills wrap onto a second line.
+- NAR-3. A chart keeps one SVG unit per CSS pixel and never grows past its container (`max-width: 100%`), so its text, drawn at 11 to 12 px, is never scaled up (the mockup's 300-unit frame was not adopted: the existing chart components keep their frames and their tests); the path's step line wraps its value under its name below 420 px; the pills wrap onto a second line.
 - NAR-4. Touch targets are at least 32 × 32 px at every width (fold summaries, notion buttons, copy buttons, the theme and "more" buttons).
 
 ### 13.5 Design system, tokens, and the gates
@@ -803,8 +805,8 @@ The companion does not get:
 | EV-4 to EV-6, EV-9 to EV-15 | kept for the figures and "Where it comes from" in the path's details (PATH-5) and Now's choice card |
 | EV-7 (final test first) | → PG-5 and the `final_test` step's detail |
 | WI-1 to WI-7 | kept in the What if? drawer (§6.7.2), with TOOL-4 |
-| LE-1 (no prediction message) | kept as an invariant: no message carries a prediction (the predictions are withdrawn) |
-| LE-2 (concept cards collapse after two sightings) | withdrawn with the concept cards and "predict before you look": the inline notions and My notions replace them (ADR 0004 d13 lists no other learning feature) |
+| LE-1 (no prediction message to the CLI) | kept: "predict before you look" is in Now at its step (§6.7.3); no answer reaches `cli.js` |
+| LE-2 (concept cards collapse after two sightings) | kept (integrator's correction, 2026-10-27): the concept cards are in My notions (§6.7.3), the count in `globalState` (§10) |
 | LE-3, LE-4 | → NOT-3, NOT-2 |
 | HO-1, HO-2 (export) | kept in the Deliverables drawer (TOOL-6) |
 | HO-3 (after the study) | → Now's `done` card (§6.5.2), NOW-11 |
@@ -840,7 +842,7 @@ The sections below are the former §6.1 to §6.8, renumbered A.1 to A.8. They ke
 | §A.4.1 Final test, development and final evidence | — | the seal pill (PG-5), the `final_test` step's detail, Now's `done` card | v0 (figures v2) |
 | §A.4.2 Variants and model families | — | Now's choice card at the model choice (§6.5.2); the `model_variant` and `models` steps' details | v2 |
 | §A.5 What if? | sandbox, residual explorer, share rules, gain curve | the What if? drawer (§6.7.2) | v2 |
-| §A.6.1 Learning layer | glossary hovers, concept cards, predictions | inline notions and My notions (§6.7.3); concept cards and predictions withdrawn (§18) | v3 |
+| §A.6.1 Learning layer | glossary hovers, concept cards, predictions | inline notions (the hovers become notions that expand in place, NOT-1); concept cards in My notions; "predict before you look" in Now at its step (§6.7.3) | v3 |
 | §A.6.2 Hand off | export, reviewer line, after the study | the Deliverables drawer (TOOL-6); Now's `done` card (HO-3) | v3 (after the study: v0) |
 | §A.6.3 Session report | — | the Deliverables drawer | v3 |
 | §A.7 Term marking | — | notion buttons (NOT-1) | v3 |
@@ -1369,14 +1371,14 @@ The learning layer is shown only when `learningLayer` is true.
 - Escape closes the tooltip.
 - A term absent from `explain.terms` (task filter) is not marked.
 
-**Concept cards.** At the top of the tab and, when the layer is on, at the first appearance of a step in Overview, there is one card per plan step that is `current` or `awaiting_confirmation`. The card is built from `explain.steps[step]`:
+**Concept cards.** In My notions (§6.7.3; formerly at the top of the tab and at the first appearance of a step in Overview), there is one card per plan step that is `current` or `awaiting_confirmation`. The card is built from `explain.steps[step]`:
 
 - the concept term, then its definition;
 - `context`, `interpretation`, and `consequence` segments.
 
 A card is "seen" each time it is fully visible for 2 s; it is not counted twice in one panel session. After it has been seen **twice**, it is collapsed to a one-line link "Show the concept: <term>". A "Hide concept cards" preference hides every card. Both are stored locally (§10).
 
-**Predict before you look.** For each `explain.predictions` item whose step is current or done and that the junior has not answered for this study:
+**Predict before you look.** In Now, at the step it belongs to (§6.7.3), for each `explain.predictions` item whose step is current or done and that the junior has not answered for this study:
 
 - a box shows "Optional · before you look", the `question`, and the `choices` as buttons;
 - choosing one stores the choice locally (§10), then shows `reveal` when `available` (else "The answer appears once the engine has computed it.");
