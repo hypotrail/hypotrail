@@ -1,5 +1,16 @@
 # Implementation handoff (v0.2)
 
+## Owner-session batch of 27 October 2026, integrated (R23 to R31)
+
+Three lots, integrated on branch `m-int` (unit, real-CLI and simulated-browser tests, the full gate once; **no Copilot or VS Code session**). Notes R23–R31 of [copilot-companion-2026-10-26](../acceptance/runs/copilot-companion-2026-10-26.md) are marked implemented.
+
+- **Automatic mode** (R23, R24): `automation run --progress` narrates in the study language (`mlkit.study.automation_words`: a header, one line per recorded decision with its value and why, each computation's key result from registered values, a closing summary); on a terminal, `automation run` prints a readable summary, and `--json` or any non-terminal stdout keeps the JSON (the agent instructions pass `--json`; the panel never calls it and always passes `--json`). A review of an automatic decision is a `decision` pause (adopt / change / explain, nothing recommended, the reviewed decision's step). CLI-CONTRACT §1, §5.5.
+- **Panel** (R27–R31): the lesson style (COMPANION-ADVANCED §6.0, LS-1 to LS-6: journey rail and position line, "At this step" and "Next", a guided reading for every chart, notions, "Copy the question", the board mapped from the VS Code theme class); W6 withdrawn (ADR 0004 decision 12): writes W4, W5, W7 only, `check_layout.py` refuses an acknowledgement control.
+- **Report** (R25–R30, R26 defects): the lesson report below.
+- **Integration fixes**: the panel's next move read an automatic review as "Confirm again"; it now reads "Review …" with an adoption question (`data-hero-review`, LS-2), consistent with the R24 pause; the panel's EDA intro no longer names "understanding" (the panel must not know the understanding review, A23). Panel fixtures recaptured (no hand-written fixture drifted).
+- **Gate** (once, per directory): `check_layout.py` ok; top-level, acceptance and exporters 736 passed, 99 skipped (98 opt-in agent scenarios); `study/understanding` 398 passed, 2 skipped, 1 xfailed (one failure, fixed above, its file rerun green); `study/libraries` 322 passed, 5 skipped; `study/deliverables` 239 passed; `study/test_*.py` in quarters 2,460 passed, 6 skipped; Node 255 passed; panel pytest 460 passed, 12 skipped (the opt-in `HYPOTRAIL_SHOTS` screenshots), 12 failed, all pixel baselines (below).
+- **Pixel baselines**: all 108 of `test_webview_gate.py` differ (the 12 parametrizations, 9 shots each), by design after the lesson restyle; **not updated**: the owner reviews the diff images (`clients/vscode-companion/.local/baseline-diff/`) before `--update-baselines`.
+
 ## Lesson-style report (owner decision 2026-10-27, R25 to R30)
 
 The report follows the approved mockup [report-lesson-style-mpg-fr.html](../plans/mockups/report-lesson-style-mpg-fr.html) (branch `m-rep`; unit, real-study and simulated-browser tests, **no Copilot session**). `TEMPLATE_VERSION` 4; CLI-CONTRACT §8.3 and §11.5.

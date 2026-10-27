@@ -522,6 +522,12 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   `docs/plans/mockups/report-lesson-style-mpg-fr.html` (Auto MPG FR, automatic mode, real
   numbers from the owner's report; invented figures stamped "illustratif (maquette)"). A panel
   mockup in the same charter, adapted to the construction journey, follows.
+  **Implemented (report lot, integrated on `m-int` 2026-10-27).** `reports/study.html` is the
+  lesson (`TEMPLATE_VERSION` 4, `render_lesson.py`, texts in `content/lesson.yaml`; CLI-CONTRACT
+  §8.3, §11.5): the charter, the sticky table of contents, the chapters as lessons (term, "In
+  this study", folds, "What we keep"), the summary and "Say it out loud". The mockup's
+  illustrative figures and widgets are left out (no recorded values). Tests:
+  `deliverables/test_lesson_report.py`.
 - **R26. Defects the mockup work found in the current French regression report.**
   Classification wording in a regression study ("taux observé moins score moyen", "trop peu de
   lignes positives", "une configuration plus basse classe moins bien" while lower MAE is
@@ -534,14 +540,33 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   better by 0.30 mpg with an interval excluding zero. Also: the regression final test is drawn by
   target bins across all years (no declared order), so it cannot show the drift towards recent
   cars (residual +5.27 mpg for 1981–82).
+  **Implemented (report lot, integrated on `m-int` 2026-10-27).** No classification wording in a
+  regression report, no English in a French edition, an automatic decision never "confirmed",
+  chapter status from the plan, the EBM named by its family, the one-standard-error tension
+  stated in chapter 7, and a regression final test without a declared order says it cannot show
+  drift. Tests: `test_lesson_report.py::test_a_regression_report_holds_no_classification_wording`,
+  `::test_each_edition_is_written_in_its_own_language`,
+  `::test_an_automatic_decision_is_never_shown_as_confirmed`,
+  `::test_a_variant_is_named_by_its_family_and_the_tension_is_stated`,
+  `::test_a_regression_final_test_without_order_says_it_cannot_show_drift`.
 - **R27. The report switches between English and French.** The lesson-style report must offer an
   EN/FR switch, like the panel's: one generated file holding both languages (engine texts in
   both, as L3's `texts {en, fr}` already provides; the agent's restatements marked with their
   language), the study language shown first; no network, no storage needed (a session toggle).
+  **Implemented (integrated on `m-int` 2026-10-27).** Report: two editions in one file, the
+  study language first, the language button keeps the reader's place, words recorded in the
+  other language marked "(fr)"/"(en)"; `check` reads each edition in its language
+  (`test_lesson_report.py::test_check_is_clean_on_both_editions_and_the_page_is_deterministic`,
+  `::test_the_restated_words_of_the_other_language_are_marked`). Panel: its EN/FR toggle in the
+  lesson style (`test_webview_lesson.py`, both languages).
 - **R28. Dark mode ("Tableau noir") by default.** The owner wants the board (dark) theme as the
   default for the report (and the mockups), with the "Tableau blanc" button to switch, instead
   of following `prefers-color-scheme` as the charter currently says. To decide for the panel:
   inside VS Code it should probably still follow the editor's theme.
+  **Implemented (integrated on `m-int` 2026-10-27).** The report opens on the board, with a
+  whiteboard button (no `prefers-color-scheme`, no storage); the panel follows the VS Code theme
+  class, dark board, white board, or the editor's High Contrast colours, with no theme button of
+  its own (COMPANION-ADVANCED LS-6, `test_webview_lesson.py::test_ls6_the_vscode_theme_class_picks_the_board`).
 - **Mockup feedback.** The background ruling of cards and the graph-paper grid were too visible:
   made much fainter (separate `--ruleline` token; `--gridmm` lowered).
 - **R29. A short introduction at the start of each step.** Each chapter of the lesson-style report
@@ -552,6 +577,9 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   what evidence (out-of-fold errors, paired bootstrap, one-standard-error rule), and that the
   final test is still sealed. The engine needs one intro text per step (EN/FR) in the report
   content files.
+  **Implemented (integrated on `m-int` 2026-10-27).** Each report chapter opens on "At this
+  step" (EN/FR in `content/lesson.yaml`); each panel tab opens on "At this step" and ends on a
+  "Next" line (LS-3, `test_webview_lesson.py::test_ls3_r29_every_tab_opens_on_at_this_step_and_ends_on_next`).
 - **R30. Everything explained, fluid reading, always know where you are; every chart read and
   concluded.** Every term, number, chart, stamp and abbreviation is explained, at least in a
   foldable block; the main text stays fluid. The reader always sees where they are and what
@@ -560,12 +588,24 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   and comes with a guided reading: "Comment le lire" step by step, "Ce qu'on en conclut" with the
   actual numbers, and "Attention" when a reading trap exists (example: Figure 7.4, residual boxes
   per model). Applies to the report and the panel.
+  **Implemented (integrated on `m-int` 2026-10-27).** Report: the position line and table of
+  contents, "Done → Next" transitions, every figure and table framed ("Why this chart", "How to
+  read it", "What we conclude" with cited registry values, "Watch out")
+  (`test_lesson_report.py::test_every_figure_and_table_is_read_and_concluded`,
+  `::test_the_real_report_fits_on_the_board_in_both_languages`). Panel: the journey rail, what
+  remains and the sticky position line, guided readings of every chart, notions and "Learn
+  more" (LS-1, LS-4, LS-5; `test_webview_lesson.py`).
 - **R31. No typed-words acknowledgement in the panel (owner decision 2026-10-27).** The panel's W6
   ("acknowledge an interrupted execution in typed words": a textarea and an "En prendre acte avec
   mes mots" button) is removed: the panel must not take the junior's words. It becomes a read-only
   line "Demandez-le dans le chat" with the copy-question button; the acknowledgement happens in
   the chat. W4 (run another chart), W5 (regenerate) and W7 (export the handoff pack) stay. For the
   real panel: an ADR 0004 amendment and an AGENTS.md update (writes W4, W5, W7 only).
+  **Implemented (panel lot, integrated on `m-int` 2026-10-27).** W6 is gone from the protocol,
+  the CLI argv builders and the handlers; an interrupted execution shows a read-only line and
+  "Copy the question"; `scripts/check_layout.py` refuses an acknowledgement control in the
+  panel sources (`test_check_layout_acknowledge.py`); ADR 0004 decision 12, AGENTS.md and
+  COMPANION-ADVANCED updated (writes W4, W5, W7 only).
 
 ## Owner decision 2026-10-27: implement the mockups
 
@@ -574,3 +614,11 @@ The owner approved both mockups (`docs/plans/mockups/report-lesson-style-mpg-fr.
 R26–R31. Lots: report (R25–R30, R26 defects), panel (lesson style, R27–R31, W6 removed with an
 ADR 0004 amendment and AGENTS.md update), automatic mode (R23 progress and text summary, R24
 review pause).
+
+**Integrated 2026-10-27 (branch `m-int`).** The three lots (automatic mode, panel, report) are
+cherry-picked onto one branch with R23 to R31 implemented as marked above. One cross-lot fix:
+the panel's next move read the review of an automatic decision (`next_action.review`) as
+"Confirm again" with a "Something changed" question; it now reads "Review …" and copies an
+adoption question, consistent with the R24 review pause (COMPANION-ADVANCED LS-2). Unit,
+real-CLI and simulated-browser tests only: no Copilot or VS Code session has been run on this
+batch.
