@@ -505,3 +505,13 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   better by 0.30 mpg with an interval excluding zero. Also: the regression final test is drawn by
   target bins across all years (no declared order), so it cannot show the drift towards recent
   cars (residual +5.27 mpg for 1981–82).
+- **R27. The report switches between English and French.** The lesson-style report must offer an
+  EN/FR switch, like the panel's: one generated file holding both languages (engine texts in
+  both, as L3's `texts {en, fr}` already provides; the agent's restatements marked with their
+  language), the study language shown first; no network, no storage needed (a session toggle).
+- **R28. Dark mode ("Tableau noir") by default.** The owner wants the board (dark) theme as the
+  default for the report (and the mockups), with the "Tableau blanc" button to switch, instead
+  of following `prefers-color-scheme` as the charter currently says. To decide for the panel:
+  inside VS Code it should probably still follow the editor's theme.
+- **Mockup feedback.** The background ruling of cards and the graph-paper grid were too visible:
+  made much fainter (separate `--ruleline` token; `--gridmm` lowered).
