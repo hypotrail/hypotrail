@@ -1,0 +1,1295 @@
+<!doctype html><html lang="fr" data-mode="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Atelier 2 · Hypotrail</title>
+<style>
+/* ===== tokens : charte « tableau noir / papier millimétré » posée sur les jetons du moteur de présentation =====
+   Tableau noir par défaut (data-mode="dark"), T bascule vers le tableau blanc (data-mode="light"). */
+:root{
+ --board:#20312C;--board2:#1A2925;--chalk:#EDE8DA;--chalk2:#C9C4B6;--dust:rgba(237,232,218,.55);
+ --faint:#8F9A93;--line:rgba(237,232,218,.14);--line2:rgba(237,232,218,.3);
+ --yellow:#F0D178;--pink:#EFA3B8;--mint:#B9E2C4;--teal:#9FE0D2;--violet:#C8B6F5;--sky:#A7CCEB;--coral:#F3A28F;--amber:#F0D178;
+ --paper:#F5F1E6;--cardink:#22302B;--cardmuted:#4E5A55;--cardline:rgba(34,48,43,.14);--cardsoft:#ECE7D8;
+ --gridmm:rgba(38,72,124,.07);--redp:#B8322A;--pen:#1E4E9E;--hl:rgba(255,222,64,.55);--ochre:#B07418;--slate:#2E5446;--okp:#1F7A44;
+ --serif:Georgia,"Iowan Old Style","Times New Roman",serif;
+ --sans:"Avenir Next",Avenir,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+ --mono:ui-monospace,Menlo,Consolas,"DejaVu Sans Mono","Liberation Mono",monospace;
+ /* jetons du moteur, sur l'ardoise */
+ --ink:var(--chalk);--ink2:var(--chalk2);--rule:var(--line2);--surf:var(--board2);--soft:rgba(237,232,218,.07);--onink:var(--board);
+ --blue:var(--sky);--bluebg:rgba(167,204,235,.14);--red:var(--pink);--redbg:rgba(239,163,184,.13);--green:var(--mint);--greenbg:rgba(185,226,196,.13);
+ --code-bg:#13201C;--code-ink:#EDE8DA;--kw:#A7CCEB;--str:#B9E2C4;--num:#F3A28F;--com:#8F9A93;
+ --fw:960px;--ratio:.5625;color-scheme:dark}
+:root[data-mode="light"]{
+ --board:#F1F3F1;--board2:#E4E8E4;--chalk:#1E2A36;--chalk2:#3E4A57;--dust:rgba(30,42,54,.6);
+ --faint:#7C8896;--line:rgba(30,42,54,.12);--line2:rgba(30,42,54,.3);
+ --yellow:#B7791F;--pink:#B93A5A;--mint:#1F7A44;--teal:#0F8A7C;--violet:#6B46C1;--sky:#1F5FA8;--coral:#C0392B;--amber:#B7791F;
+ --paper:#FFFFFF;--cardsoft:#F1EFE9;--cardline:rgba(34,48,43,.12);
+ --soft:rgba(30,42,54,.06);--bluebg:rgba(31,95,168,.10);--redbg:rgba(185,58,90,.09);--greenbg:rgba(31,122,68,.10);
+ --code-bg:#22302B;color-scheme:light}
+/* le papier (fiches, feuilles millimétrées, démos) redéfinit les mêmes jetons */
+.card,.dbody,.tblw,.sheet{--ink:var(--cardink);--ink2:var(--cardmuted);--faint:#6B7570;--rule:var(--cardline);--surf:var(--paper);--soft:rgba(34,48,43,.05);
+ --blue:var(--pen);--bluebg:rgba(30,78,158,.09);--red:var(--redp);--redbg:rgba(184,50,42,.08);--green:var(--okp);--greenbg:rgba(31,122,68,.10);
+ --yellow:var(--ochre);--code-bg:#22302B;color:var(--cardink)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:var(--sans);color:var(--ink);background:var(--board2);line-height:1.4;-webkit-font-smoothing:antialiased;
+ background-image:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.035),transparent 55%),radial-gradient(ellipse at 90% 100%,rgba(255,255,255,.03),transparent 50%)}
+:root[data-mode="light"] body{background-image:none}
+code{font-family:var(--mono);font-size:.88em}
+button{font:inherit;font-size:.85rem;padding:.35rem .8rem;border:1.5px solid var(--line2);background:var(--surf);color:var(--ink);border-radius:3px;cursor:pointer}
+button:hover{border-color:var(--yellow);color:var(--yellow)}
+button.primary,button[aria-pressed="true"]{border-color:var(--yellow);color:var(--yellow)}
+button:disabled{opacity:.35;cursor:default}
+:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+
+/* ===== layout ===== */
+.app{height:100%;display:grid;grid-template-rows:minmax(0,1fr)}
+.mid{display:grid;grid-template-columns:minmax(0,1fr);min-height:0}
+.app.notes-on .mid{grid-template-columns:minmax(0,1fr) minmax(16rem,30%)}
+body.presenter .app.notes-on .mid{grid-template-columns:minmax(0,1fr) minmax(20rem,40%)}
+.stage{overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0;position:relative}
+.screen{display:none;width:100%;height:100%;align-items:center;justify-content:center}
+.screen.on{display:flex}
+.screen>.notes{display:none}
+
+/* ===== le cadre unique : chaque écran, diapositive ou démo, est une ardoise ===== */
+.frame{container-type:inline-size;position:relative;width:var(--fw);height:calc(var(--fw) * var(--ratio));background:var(--board);color:var(--ink);
+ background-image:radial-gradient(ellipse at 18% 0%,rgba(255,255,255,.05),transparent 55%),radial-gradient(ellipse at 92% 100%,rgba(255,255,255,.035),transparent 50%);
+ border:1px solid var(--line2);border-radius:3px;padding:2.6cqw 4.2cqw 3.4cqw;display:flex;flex-direction:column;overflow:hidden;
+ box-shadow:0 18px 40px -18px rgba(0,0,0,.65)}
+:root[data-mode="light"] .frame{background-image:none;box-shadow:0 12px 30px -16px rgba(30,42,54,.35)}
+.frame::after{content:"";position:absolute;left:0;right:0;bottom:0;height:.8cqw;background:linear-gradient(#5b4632,#3b2b1c);opacity:.9}
+:root[data-mode="light"] .frame::after{background:linear-gradient(#c8ccd0,#9aa1a8)}
+.frame .eb{display:flex;justify-content:space-between;align-items:center;font:600 1.3cqw/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);margin:0 0 .9cqw}
+.frame .eb .dur{font:600 1.4cqw/1 var(--mono);letter-spacing:0;text-transform:none;border:1.5px solid var(--yellow);border-radius:99px;padding:.35cqw .9cqw}
+.frame h3{font-family:var(--serif);font-weight:400;font-size:3.5cqw;line-height:1.15;margin:0 0 1.8cqw;color:var(--chalk);text-shadow:0 0 1px var(--dust);text-wrap:balance}
+.frame h3::before{content:"";display:inline-block;width:2.2cqw;height:.22cqw;background:var(--yellow);vertical-align:middle;margin-right:1.2cqw;filter:url(#chalkf)}
+.frame h3 code{font-size:.82em}
+.frame .dn{position:absolute;right:2.2cqw;bottom:1.4cqw;font:1.05cqw var(--mono);color:var(--faint)}
+.frame.sect{justify-content:center;padding:6cqw 8cqw}
+.frame.sect .num{font:400 9cqw/1 var(--serif);color:var(--yellow);text-shadow:0 0 1px var(--dust)}
+.frame.sect h2{font-family:var(--serif);font-weight:400;font-size:5cqw;line-height:1.12;margin:1.4cqw 0 2.2cqw;color:var(--chalk);text-shadow:0 0 1px var(--dust);text-wrap:balance}
+.frame.sect p{font-size:2.5cqw;color:var(--chalk2);margin:0 0 .8cqw}
+.frame.sect .when{font:600 1.7cqw var(--mono);color:var(--yellow);margin-top:1.6cqw}
+.frame.demo{padding:2.3cqw 3.6cqw 3.2cqw}
+.frame.demo h3{font-size:2.8cqw;margin-bottom:1.2cqw}
+.frame .dbody{flex:1;min-height:0;overflow:hidden}
+.frame .fdots{position:absolute;left:3.6cqw;bottom:1.5cqw;display:flex;gap:.9cqw}
+.frame .fdots span{width:1cqw;height:1cqw;border-radius:50%;border:.18cqw solid var(--faint)}
+.frame .fdots span.on{background:var(--yellow);border-color:var(--yellow)}
+
+/* ===== composants de diapositive (en cqw : suivent la taille du cadre) ===== */
+.fx{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:1.5cqw}
+.lead{font:2.5cqw/1.4 var(--serif);color:var(--chalk2);margin:0}
+.frame ul.b{margin:0;padding-left:2.8cqw;display:flex;flex-direction:column;gap:1.3cqw}
+.frame ul.b>li{font-size:2.45cqw;color:var(--ink2);line-height:1.35}
+.frame ul.b>li::marker{color:var(--yellow)}
+.frame ul.b>li b{color:var(--chalk);font-weight:600}
+.cols2,.cols3,.cols4{display:grid;gap:1.4cqw;align-items:stretch}
+.cols2{grid-template-columns:repeat(2,minmax(0,1fr))}.cols3{grid-template-columns:repeat(3,minmax(0,1fr))}.cols4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{background:var(--paper);border-left:.4cqw solid var(--ac,var(--ochre));border-radius:3px;padding:1.3cqw 1.6cqw;font-size:1.95cqw;line-height:1.36;
+ box-shadow:0 14px 26px -14px rgba(0,0,0,.6),0 1px 0 rgba(0,0,0,.2)}
+.card h4{margin:0 0 .7cqw;font:600 2.05cqw/1.2 var(--sans);color:var(--slate)}
+.card h4 small{font-weight:500;color:var(--cardmuted);font-size:.8em}
+.card p{margin:.35cqw 0}.card ul,.card ol{margin:.3cqw 0;padding-left:1.7cqw}.card li{margin:.25cqw 0}
+.card .m{color:var(--cardmuted)}
+.card dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.45cqw .8cqw;align-items:baseline}
+.card dt{font:600 1.4cqw var(--sans);color:var(--cardmuted);text-transform:uppercase;letter-spacing:.04em}
+.card dd{margin:0;border-bottom:1.5px dotted var(--cardline);min-height:2.4cqw}
+.quote{background:var(--board2);color:var(--chalk);border-left:.3cqw solid var(--yellow);padding:1.3cqw 2cqw;font:2.45cqw/1.42 var(--serif);text-shadow:0 0 1px var(--dust);margin:0}
+.quote.big{font-size:3cqw;padding:1.8cqw 2.4cqw}
+.quote small{display:block;font:1.45cqw/1.4 var(--sans);color:var(--faint);text-shadow:none;margin-top:.6cqw}
+.frame .trap{border:1.5px solid var(--red);background:var(--redbg);padding:.8cqw 1.3cqw;transform:rotate(-.3deg);font-size:1.9cqw;color:var(--ink);line-height:1.38}
+.frame .trap .l{display:block;font:700 1.3cqw var(--sans);color:var(--red);letter-spacing:.07em;text-transform:uppercase;margin-bottom:.2cqw}
+.stamp{font:700 1.25cqw/1.2 var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--red);border:1.5px solid var(--red);padding:.15cqw .6cqw;transform:rotate(-1.5deg);display:inline-block;vertical-align:middle}
+.tag{display:inline-block;font:600 1.35cqw/1 var(--sans);padding:.35cqw .7cqw;border-radius:99px;border:1.5px solid currentColor;white-space:nowrap}
+.tag.ok{color:#1F7A44}.tag.wip{color:#9A6510}.tag.mock{color:#6B46C1}.tag.no{color:#B8322A}
+.small{font-size:1.6cqw;color:var(--faint)}
+.chalk{color:var(--chalk)} .y{color:var(--yellow)}
+.tblw{background:var(--paper);border-radius:3px;box-shadow:0 14px 26px -14px rgba(0,0,0,.6);overflow-x:auto;position:relative}
+.tblw table{border-collapse:collapse;width:100%;font-size:1.85cqw;font-variant-numeric:tabular-nums}
+.tblw th{font:600 1.3cqw var(--sans);text-transform:uppercase;letter-spacing:.05em;color:var(--cardmuted);background:var(--cardsoft);text-align:left}
+.tblw th,.tblw td{border:1px solid var(--cardline);padding:.6cqw 1cqw;vertical-align:top}
+.tblw td.n{text-align:right;font-family:var(--mono)}
+.tblw tr.hi td{background:rgba(255,222,64,.28)}
+.frame pre.code.s{font-size:1.5cqw;line-height:1.55;padding:1.2cqw 1.6cqw;white-space:pre-wrap;overflow-wrap:anywhere;overflow:hidden;margin:0}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.2cqw;counter-reset:st}
+.steps .card{position:relative;padding-top:3.6cqw}
+.steps .card::before{counter-increment:st;content:counter(st);position:absolute;top:.8cqw;left:1.5cqw;font:400 2.5cqw/1 var(--serif);color:var(--ochre)}
+.arrow{font:2.8cqw var(--serif);color:var(--yellow);align-self:center;text-align:center}
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:1cqw;align-items:stretch}
+.pill{display:inline-block;border:1.5px solid var(--line2);border-radius:99px;padding:.45cqw 1.2cqw;font-size:1.85cqw;color:var(--chalk2);margin:.3cqw}
+.ph{color:var(--cardmuted);font-style:italic}
+.timeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.8cqw}
+.timeline div{border:1.5px solid var(--line2);border-radius:3px;padding:1cqw 1.2cqw;font-size:1.8cqw;color:var(--chalk2);min-height:9cqw}
+.timeline div b{display:block;font:400 2.8cqw var(--serif);color:var(--chalk)}
+.timeline div.now{border-color:var(--yellow);background:var(--soft)}
+.timeline div.now b{color:var(--yellow)}
+.grid-empty td{height:4cqw}
+
+/* ===== briques des démos (dans .dbody, en rem = relatif au cadre) ===== */
+.dbody{background:repeating-linear-gradient(0deg,var(--gridmm) 0 1px,transparent 1px 12px),repeating-linear-gradient(90deg,var(--gridmm) 0 1px,transparent 1px 12px),var(--paper);
+ border:1px solid var(--cardline);border-radius:3px;box-shadow:0 14px 26px -14px rgba(0,0,0,.6),0 1px 0 rgba(0,0,0,.2)}
+.dbody>div{padding:.5rem .7rem;font-size:.78rem;line-height:1.36}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}
+.panel{background:var(--surf);border:1.5px solid var(--rule);border-radius:3px;padding:.45rem .6rem;transition:background .3s,border-color .3s}
+.panel.active{background:var(--bluebg);border-color:var(--blue)}
+.panel.ok{background:var(--greenbg);border-color:var(--green)}
+.panel.bad{background:var(--redbg);border-color:var(--red)}
+.cap{font-size:.86rem;padding:.42rem .75rem;border-left:3px solid var(--blue);background:var(--bluebg);margin-top:.55rem;min-height:2.8em;font-family:var(--serif)}
+.cap.bad{border-left-color:var(--red);background:var(--redbg)}
+.cap.ok{border-left-color:var(--green);background:var(--greenbg)}
+pre.code{background:var(--code-bg);color:var(--code-ink);border-radius:3px;padding:.6rem .8rem;margin:0;font:.7rem/1.55 var(--mono);white-space:pre;overflow:hidden}
+pre.code .ln{display:block;margin:0 -.8rem;padding:0 .8rem;border-left:3px solid transparent;min-height:1.55em;transition:background .25s}
+pre.code .ln.hot{background:rgba(31,95,168,.45);border-left-color:var(--kw)}
+pre.code .ln.bad{background:rgba(178,58,44,.45);border-left-color:var(--num)}
+pre.code .ln.done{opacity:.55}
+pre.code .cm{color:var(--com);font-style:italic}
+.out{font-family:var(--mono);font-size:.68rem;background:var(--surf);border:1px dashed var(--rule);padding:.4rem .6rem;white-space:pre-wrap;min-height:2.2em}
+.out .e{color:var(--red)}
+.lab{font:600 .62rem/1.2 var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--ink2);margin:0 0 .3rem}
+.kv{font:.64rem/1.5 var(--mono);color:var(--ink)}
+.kv b{color:var(--pen)}
+.mut{color:var(--ink2)}
+.ill{font:700 .58rem/1.2 var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--redp);border:1.3px solid var(--redp);padding:.05rem .3rem;transform:rotate(-1.5deg);display:inline-block;vertical-align:middle}
+.chipx{display:inline-block;font:600 .6rem/1.2 var(--sans);border:1.3px solid currentColor;border-radius:99px;padding:.08rem .4rem;white-space:nowrap}
+.chipx.auto{color:var(--ochre)}.chipx.okc{color:var(--okp)}.chipx.no{color:var(--redp)}.chipx.blue{color:var(--pen)}.chipx.wip{color:#9A6510}
+
+/* --- démo 1 : #dec --- */
+#dec .chat{min-height:13.2rem}
+#dec .msg{border-radius:3px;padding:.28rem .5rem;margin:.32rem 0;font-size:.72rem;max-width:94%;position:relative}
+#dec .msg.a{background:var(--cardsoft);border-left:3px solid var(--slate)}
+#dec .msg.j{background:var(--paper);border:1.5px solid var(--rule);margin-left:auto}
+#dec .msg.j.ref{border-color:var(--redp);background:var(--redbg)}
+#dec .msg.j.ref .t{text-decoration:line-through;text-decoration-color:var(--redp)}
+#dec .msg .who{display:block;font:600 .58rem var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
+#dec .opts{display:flex;gap:.25rem;flex-wrap:wrap;margin-top:.25rem}
+#dec .opt{font-size:.62rem;border:1.5px solid var(--rule);border-radius:99px;padding:.06rem .4rem;background:var(--paper)}
+#dec .opt.sel{border-color:var(--pen);background:var(--bluebg)}
+#dec .chain{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.25rem;margin-bottom:.45rem}
+#dec .nd{font-size:.62rem;text-align:center;border:1.5px solid var(--rule);border-radius:3px;padding:.28rem .15rem;color:var(--ink2);background:var(--paper)}
+#dec .nd.active{border-color:var(--pen);background:var(--bluebg);color:var(--ink);font-weight:600}
+#dec .nd.ok{border-color:var(--okp);background:var(--greenbg);color:var(--ink)}
+#dec .nd.bad{border-color:var(--redp);background:var(--redbg);color:var(--ink);font-weight:600}
+#dec .cmd{font:.62rem/1.4 var(--mono);background:var(--code-bg);color:var(--code-ink);padding:.25rem .45rem;border-radius:3px;margin-bottom:.35rem;white-space:pre-wrap}
+#dec .rf{border:1.5px solid var(--redp);background:var(--redbg);padding:.3rem .45rem;font-size:.66rem;margin:.3rem 0}
+#dec .rf code{color:var(--redp);font-weight:600}
+#dec .rc{border:1.5px solid var(--okp);background:var(--greenbg);padding:.3rem .45rem}
+#dec .bases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.3rem}
+#dec .bases>div{border:1.5px solid var(--rule);border-left:4px solid var(--c);background:var(--paper);padding:.3rem .4rem;font-size:.64rem;line-height:1.35}
+#dec .bases b{display:block;font-size:.66rem;margin-bottom:.1rem}
+
+/* --- démo 2 : #folds --- */
+#folds .axis{display:flex;justify-content:space-between;font:.62rem var(--sans);color:var(--ink2);margin:.1rem 0 .2rem 4.45rem;border-bottom:1.5px solid var(--cardmuted);padding-bottom:.15rem;position:relative}
+#folds .axis::after{content:"▶";position:absolute;right:-.35rem;bottom:-.48rem;font-size:.55rem;color:var(--cardmuted)}
+#folds .band{display:grid;grid-template-columns:4.2rem repeat(5,minmax(0,1fr));gap:.25rem;align-items:center}
+#folds .band .rl{font-size:.62rem;color:var(--ink2)}
+#folds .blk{height:2.6rem;border:1.5px solid var(--rule);border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.66rem;background:var(--paper);transition:background .25s}
+#folds .blk small{font-size:.6rem;color:var(--ink2)}
+#folds .blk.fit{background:rgba(30,78,158,.16);border-color:var(--pen)}
+#folds .blk.pred{background:var(--hl);border-color:var(--ochre);border-width:2px;font-weight:600}
+#folds .blk.all{background:var(--paper);border-color:var(--ochre);border-style:solid;border-width:2px}
+#folds .row{display:grid;grid-template-columns:4.2rem repeat(5,minmax(0,1fr));gap:.25rem;margin-top:.22rem;align-items:center}
+#folds .row .rl{font-size:.62rem;color:var(--ink2)}
+#folds .mc{height:1.05rem;border:1.2px solid var(--rule);border-radius:2px;background:var(--paper)}
+#folds .mc.fit{background:rgba(30,78,158,.16);border-color:var(--pen)}
+#folds .mc.pred{background:var(--hl);border-color:var(--ochre)}
+#folds .mc.off{border-style:dashed;opacity:.6}
+#folds .ft{margin:.35rem 0 0 4.45rem;border:1.5px dashed var(--redp);border-radius:3px;padding:.25rem .4rem}
+#folds .dots{display:flex;justify-content:space-around;margin-top:.2rem}
+#folds .dots i{width:.55rem;height:.55rem;border-radius:50%;border:1.6px solid var(--redp);display:block}
+#folds .rd{font-size:.68rem}
+#folds .lg{font-size:.62rem;color:var(--ink2);display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+#folds .lg i{display:inline-block;width:.8rem;height:.55rem;border:1.3px solid;vertical-align:middle;margin-right:.2rem}
+
+/* --- démo 3 : #auto --- */
+#auto .pipe{display:flex;flex-direction:column;gap:.14rem}
+#auto .it{display:grid;grid-template-columns:.9rem 7.6rem 1fr auto;gap:.3rem;align-items:center;font-size:.66rem;padding:.08rem .3rem;border-radius:2px;border:1.2px solid transparent;color:var(--ink2)}
+#auto .it .ic{font-size:.6rem;text-align:center}
+#auto .it b{font-weight:600;color:inherit}
+#auto .it.now{background:var(--bluebg);border-color:var(--pen);color:var(--ink)}
+#auto .it.done{color:var(--ink)}
+#auto .it.fut{opacity:.42}
+#auto .it.stop{border:1.5px dashed var(--redp);color:var(--ink)}
+#auto .it.stop.opened{background:var(--redbg);border-style:solid}
+#auto .big{font:400 2rem/1 var(--serif);color:var(--ochre)}
+#auto .q{display:flex;flex-wrap:wrap;gap:.2rem;margin-top:.3rem;min-height:2.4rem;align-content:flex-start}
+#auto .ban{border:1.5px solid var(--redp);background:var(--redbg);padding:.3rem .45rem;font-size:.64rem;margin-top:.35rem}
+#auto .rv{border:1.5px solid var(--pen);background:var(--bluebg);padding:.3rem .45rem;font-size:.64rem;margin-top:.35rem}
+#auto .rv .opts{display:flex;gap:.2rem;flex-wrap:wrap;margin:.25rem 0}
+#auto .rv .opt{font-size:.62rem;border:1.5px solid var(--rule);border-radius:99px;padding:.05rem .4rem;background:var(--paper)}
+#auto .st{font:.64rem/1.5 var(--mono)}
+
+/* --- démo 4 : #onese (SVG) --- */
+#onese svg{display:block;height:15rem;width:auto;max-width:100%;margin:0 auto}
+#onese .ax{stroke:var(--cardmuted);stroke-width:1.2}
+#onese .tk{fill:var(--cardmuted);font-family:var(--sans)}
+#onese .rl{fill:var(--cardink);font-family:var(--sans)}
+#onese .rlc{fill:var(--cardmuted);font-family:var(--sans)}
+#onese .vl{fill:var(--cardink);font-family:var(--mono);font-weight:600}
+#onese .dot{fill:var(--pen)}
+#onese .dot.base{fill:var(--cardmuted)}
+#onese .wh{stroke:var(--pen);stroke-width:2}
+#onese .crit{stroke:var(--redp);stroke-width:1.6;stroke-dasharray:5 4}
+#onese .critt{fill:var(--redp);font-family:var(--sans);font-weight:600}
+#onese .bandr{fill:rgba(30,78,158,.12);stroke:var(--pen);stroke-width:1;stroke-dasharray:3 3}
+#onese .bandt{fill:var(--pen);font-family:var(--sans);font-weight:600}
+#onese .keep{fill:none;stroke:var(--okp);stroke-width:2}
+#onese .keept{fill:var(--okp);font-family:var(--sans);font-weight:700}
+#onese .zero{stroke:var(--cardink);stroke-width:1.2}
+#onese .pint{stroke:var(--ochre);stroke-width:3}
+#onese .pdot{fill:var(--ochre)}
+#onese .pt{fill:var(--ochre);font-family:var(--sans);font-weight:700}
+#onese .grid{stroke:var(--cardline);stroke-width:1}
+#onese .hide{display:none}
+
+/* --- démo 5 : #export --- */
+#export .ch{display:flex;flex-direction:column;gap:.18rem}
+#export .nd{display:grid;grid-template-columns:1.1rem 1fr;gap:.35rem;align-items:center;border:1.5px solid var(--rule);border-radius:3px;padding:.22rem .4rem;font-size:.64rem;background:var(--paper);color:var(--ink2)}
+#export .nd b{color:inherit}
+#export .nd .s{font:700 .75rem/1 var(--sans);text-align:center}
+#export .nd.ok{border-color:var(--okp);background:var(--greenbg);color:var(--ink)}
+#export .nd.ok .s{color:var(--okp)}
+#export .nd.now{border-color:var(--pen);background:var(--bluebg);color:var(--ink)}
+#export .nd.no{border-color:var(--redp);background:var(--redbg);color:var(--ink)}
+#export .nd.no .s{color:var(--redp)}
+#export .nd.fut{opacity:.45}
+#export .nd small{display:block;font-size:.6rem;color:var(--ink2);font-weight:400}
+#export .rd{font:.62rem/1.55 var(--mono)}
+#export .rd .k{color:var(--ink2)}
+#export .rd .v{font-weight:600}
+#export .rd .v.no{color:var(--redp)} #export .rd .v.ok{color:var(--okp)} #export .rd .v.wa{color:#9A6510}
+#export .tree{font:.62rem/1.45 var(--mono);color:var(--ink)}
+
+/* ===== barre de contrôle : cachée pendant la présentation, absente en plein écran ===== */
+.bot{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;padding:.5rem 1rem;
+ background:color-mix(in srgb,var(--board2) 92%,transparent);backdrop-filter:blur(4px);opacity:0;transition:opacity .3s;font-size:15px}
+.bot.show,.bot:hover,.bot:focus-within,body.presenter .bot{opacity:1}
+.bot .prog{flex:1;min-width:6rem;height:3px;background:var(--line2)} .bot .prog i{display:block;height:100%;background:var(--yellow);width:0}
+.bot .keys{font-size:.75rem;color:var(--faint)}
+body.nobar .bot{display:none}
+body.presenting{cursor:none}
+
+/* ===== notes + présentateur ===== */
+.notespane{display:none;overflow:auto;border-left:2px solid var(--yellow);background:var(--surf);padding:1rem 1.1rem 5rem;font-size:15px;line-height:1.45;color:var(--ink)}
+.app.notes-on .notespane{display:block}
+body.presenter .notespane{font-size:17px}
+.notespane h4{margin:0 0 .5rem;font-size:.95rem;display:flex;justify-content:space-between;font-family:var(--serif);font-weight:400;color:var(--chalk)}
+.notespane h4 span{font-family:var(--mono);font-size:.7rem;color:var(--faint);font-weight:400}
+.notespane .n{border-left:3px solid var(--faint);padding:.1rem 0 .1rem .7rem;margin:.55rem 0;color:var(--chalk2)}
+.notespane .n::before{font:600 .7em var(--sans);letter-spacing:.06em;text-transform:uppercase;margin-right:.45em;color:var(--faint)}
+.notespane .n.say{border-color:var(--mint)} .notespane .n.say::before{content:"dire";color:var(--mint)}
+.notespane .n.q{border-color:var(--sky)} .notespane .n.q::before{content:"question";color:var(--sky)}
+.notespane .n.trap{border-color:var(--pink)} .notespane .n.trap::before{content:"piège";color:var(--pink)}
+.presinfo{position:sticky;top:-1rem;margin:-1rem -1.1rem 1rem;padding:.8rem 1.1rem;background:var(--surf);border-bottom:1px solid var(--line2);z-index:1}
+.presinfo .pclock{display:flex;align-items:center;gap:.6rem}
+.presinfo .pclock b{font-family:var(--mono);font-size:2rem;color:var(--chalk)}
+.presinfo .pace{font-weight:600;font-size:.95rem;padding:.15rem .55rem;border-radius:3px}
+.presinfo .pace.ok{color:var(--green);background:var(--greenbg)} .presinfo .pace.ahead{color:var(--blue);background:var(--bluebg)} .presinfo .pace.late{color:var(--red);background:var(--redbg)}
+.presinfo ol{list-style:none;margin:.55rem 0 .2rem;padding:0;font-size:.8rem;display:grid;gap:.15rem}
+.presinfo li{display:grid;grid-template-columns:1fr auto 7.5em;gap:.6rem;color:var(--faint);padding:.1rem .4rem;border-left:3px solid transparent}
+.presinfo li.done{text-decoration:line-through} .presinfo li.now{color:var(--chalk);font-weight:600;border-left-color:var(--yellow);background:var(--soft)}
+.presinfo li span+span{font-family:var(--mono);font-size:.75rem;text-align:right}
+.presinfo .ppos{font-family:var(--mono);font-size:.9rem;color:var(--chalk2);margin-top:.2rem}
+.presinfo .plink{font-size:.75rem;color:var(--red)} .presinfo .plink.ok{color:var(--green)}
+body.presenter{cursor:auto}
+
+/* ===== vue d'ensemble ===== */
+.overview{position:fixed;inset:0;z-index:20;background:var(--board2);overflow:auto;padding:2rem}
+.overview[hidden]{display:none}
+.overview .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:.5rem}
+.overview .sep{grid-column:1/-1;font:600 .8rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);margin-top:1rem}
+.overview button{text-align:left}
+.toast{position:fixed;left:50%;top:1rem;transform:translateX(-50%);z-index:50;background:var(--chalk);color:var(--board);padding:.7rem 1rem;border-radius:4px;font-size:15px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.frame h3::before{filter:none}}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="chalkf" x="-2%" y="-2%" width="104%" height="104%">
+<feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="7" result="n"/>
+<feDisplacementMap in="SourceGraphic" in2="n" scale="1.2" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
+<div class="app" id="app"><div class="mid">
+<main class="stage" id="stage">
+
+<!-- =================================================================== 1. OUVERTURE -->
+<section class="screen" data-title="Titre" data-part="Ouverture" data-weight="0.5">
+  <div class="frame sect"><div class="num">Atelier 2 / 5</div><h2>Hypotrail : faire produire une étude ML, et reprendre la main sur ses décisions</h2>
+  <p>Animation : l'organisateur et le lead Data Science · binômes mixtes</p><p class="when">9h30 – 12h30 · 180 min</p></div>
+  <div class="notes"><div class="n say">Bienvenue : trois heures pour faire produire une étude, la relire, puis dire ce que l'équipe veut préserver.</div><div class="n trap">Démarrer le chrono (↺ dans la fenêtre présentateur, touche P) à 9h30 pile.</div></div>
+</section>
+
+<section class="screen" data-title="La série" data-part="Ouverture">
+  <div class="frame"><h3>Où nous en sommes dans la série</h3><div class="fx">
+    <div class="timeline">
+      <div><b>1</b>Indicateurs d'impact</div>
+      <div class="now"><b>2</b>Aujourd'hui : déléguer une étude ML et reprendre la main</div>
+      <div><b>3</b>Proposition de constitution</div>
+      <div><b>4</b><span class="small">à venir</span></div>
+      <div><b>5</b><span class="small">à venir</span></div>
+    </div>
+    <p class="quote big">Faire produire une étude, reprendre la main sur ses décisions, puis déterminer ce que l'équipe veut préserver lorsqu'elle délègue.<small>Le fil de la matinée</small></p>
+  </div></div>
+  <div class="notes"><div class="n say">L'atelier 1 a posé les indicateurs d'impact ; ils serviront au pilote, pas à noter quelqu'un aujourd'hui.</div><div class="n say">Le fil a trois temps : produire, reprendre la main, préserver.</div></div>
+</section>
+
+<section class="screen" data-title="La promesse" data-part="Ouverture">
+  <div class="frame"><h3>La promesse, reformulée</h3><div class="fx">
+    <p class="quote big">Hypotrail fait suivre à une étude ML un parcours vérifiable : chaque choix important est explicite, attribué (à vous, au moteur ou au mode automatique) et relié à ses preuves, pour pouvoir le contester avant de conclure.</p>
+    <p class="lead"><b class="y">Il rend la validité examinable ; il ne la garantit pas.</b></p>
+  </div></div>
+  <div class="notes"><div class="n say">Lire la dernière phrase lentement : examinable, pas garantie.</div><div class="n q">« Alors à quoi bon ? » → à contester avant de conclure, avec les preuves sous les yeux.</div></div>
+</section>
+
+<section class="screen" data-title="À la fin de la matinée" data-part="Ouverture">
+  <div class="frame"><h3>À la fin de la matinée, vous saurez</h3><div class="fx">
+    <ul class="b">
+      <li><b>expliquer</b> une décision importante de l'étude, avec vos mots ;</li>
+      <li><b>retrouver sa preuve</b> : un identifiant de résultat ou un nombre ;</li>
+      <li><b>nommer une limite</b> de la conclusion ;</li>
+      <li><b>contester ou modifier</b> une proposition de l'agent ou du mode automatique ;</li>
+      <li><b>envisager un usage</b> professionnel, et les conditions qu'il demande.</li>
+    </ul>
+  </div></div>
+  <div class="notes"><div class="n say">C'est exactement ce que demande le ticket de sortie, sans outil.</div></div>
+</section>
+
+<section class="screen" data-title="Trois essais de l'organisateur" data-part="Ouverture" data-weight="4" data-dur="4 min">
+  <div class="frame"><h3>Trois essais, avant cet atelier <span class="stamp">à remplir par l'organisateur</span></h3><div class="fx">
+    <div class="cols3">
+      <div class="card" style="--ac:var(--teal)"><h4>Étude ML</h4><dl><dt>Problème</dt><dd class="ph">…</dd><dt>Résultat</dt><dd class="ph">…</dd><dt>Vérifié</dt><dd class="ph">…</dd><dt>Non vérifié</dt><dd class="ph">…</dd><dt>Reprise</dt><dd class="ph">… h de temps humain</dd></dl></div>
+      <div class="card" style="--ac:var(--violet)"><h4>Chatbot RAG</h4><dl><dt>Problème</dt><dd class="ph">…</dd><dt>Résultat</dt><dd class="ph">…</dd><dt>Vérifié</dt><dd class="ph">…</dd><dt>Non vérifié</dt><dd class="ph">…</dd><dt>Reprise</dt><dd class="ph">… h de temps humain</dd></dl></div>
+      <div class="card" style="--ac:var(--sky)"><h4>Application web</h4><dl><dt>Problème</dt><dd class="ph">…</dd><dt>Résultat</dt><dd class="ph">…</dd><dt>Vérifié</dt><dd class="ph">…</dd><dt>Non vérifié</dt><dd class="ph">…</dd><dt>Reprise</dt><dd class="ph">… h de temps humain</dd></dl></div>
+    </div>
+    <p class="small">Mêmes cinq rubriques pour les trois essais ; « reprise » = le temps humain pour relire, corriger et reprendre le travail.</p>
+  </div></div>
+  <div class="notes"><div class="n say">Quatre minutes en tout, environ 1 min 20 par essai, les cinq rubriques dans l'ordre.</div><div class="n trap">Dire « estimé » pour tout temps de reprise qui n'a pas été chronométré.</div></div>
+</section>
+
+<section class="screen" data-title="Le problème en ML" data-part="Ouverture">
+  <div class="frame"><h3>En ML, l'agent change de méthode d'un essai à l'autre</h3><div class="fx">
+    <div class="cols2">
+      <div class="card" style="--ac:var(--sky)"><h4>Essai 1 <span class="stamp">illustratif</span></h4><ul><li>Découpage aléatoire 80 / 20</li><li>Critère choisi après les résultats</li><li><code>acceleration</code> gardée</li><li>Le meilleur score annoncé</li></ul></div>
+      <div class="card" style="--ac:var(--coral)"><h4>Essai 2 <span class="stamp">illustratif</span></h4><ul><li>Plis par années de modèle</li><li>Critère fixé avant tout modèle</li><li><code>acceleration</code> exclue</li><li>Le modèle simple gardé</li></ul></div>
+    </div>
+    <p class="quote">Deux chiffres, deux méthodes, rien pour dire laquelle a produit lequel. La question devient : <b>qu'est-ce qui a été choisi, par qui, et sur quelle preuve ?</b></p>
+  </div></div>
+  <div class="notes"><div class="n say">Rattacher à ce que l'essai ML de l'organisateur a réellement montré.</div><div class="n trap">Les deux colonnes sont un exemple construit, pas des sorties d'agent mesurées.</div></div>
+</section>
+
+<section class="screen" data-title="Trois rôles" data-part="Ouverture" data-weight="1.5">
+  <div class="frame"><h3>Trois rôles : l'agent, le moteur, vous</h3><div class="fx">
+    <div class="cols3">
+      <div class="card" style="--ac:var(--violet)"><h4>L'agent <small>Copilot, dans le chat</small></h4><p>Introduit le terme, puis l'explique sur le cas. Propose, avec la preuve. Lance les commandes. <b>Ne décide pas.</b></p></div>
+      <div class="card" style="--ac:var(--teal)"><h4>Le moteur <small>la CLI <code>hypotrail</code></small></h4><p>Tient l'état et les révisions, scelle le test final, calcule, refuse ce que le protocole interdit, relie chaque chiffre à un résultat.</p></div>
+      <div class="card" style="--ac:var(--yellow)"><h4>Vous <small>l'humain</small></h4><p>Décidez avec vos mots. Ouvrez le test final une fois. Concluez, ou refusez de conclure.</p></div>
+    </div>
+    <p class="quote">« Le test est réservé par le protocole ; le fichier source local reste accessible. Les confirmations sont rapportées par l'agent, sans authentification indépendante. L'historique entre études n'est pas imposé. »<small>Message affiché par <code>hypotrail init</code> à la création de l'étude. Original : “The test is reserved by the protocol; the local source file remains accessible. Confirmations are agent-reported, not independently authenticated.”</small></p>
+  </div></div>
+  <div class="notes"><div class="n say">Le moteur ne croit pas l'agent sur parole, mais il ne peut pas non plus prouver que c'est vous qui avez tapé.</div><div class="n q">« Donc on peut tricher ? » → oui, localement : c'est un protocole coopératif, pas un coffre-fort.</div></div>
+</section>
+
+<section class="screen" data-title="Ce qui existe aujourd'hui" data-part="Ouverture" data-weight="1.5">
+  <div class="frame"><h3>Ce qui existe aujourd'hui, et ce qui n'existe pas encore</h3><div class="fx">
+    <div class="tblw"><table>
+      <tr><th style="width:15%">Statut</th><th>Élément</th></tr>
+      <tr><td><span class="tag ok">disponible</span></td><td>Le moteur (CLI) · le mode automatique <code>until_final_test</code> et <code>full_demo</code> · le rapport HTML narratif · les notebooks Marimo · le panneau VS Code derrière un drapeau (étapes v0 à v3) · les fichiers d'agent Copilot avec sélecteur de réponse</td></tr>
+      <tr><td><span class="tag ok">disponible</span> <span class="tag no">Azure non</span></td><td>L'export vers le gabarit Azure ML de l'équipe : projet généré et vérifié en local ; aucun job ni endpoint Azure</td></tr>
+      <tr><td><span class="tag wip">en cours</span></td><td>Rapport et panneau « style leçon » · progression lisible du mode automatique et pause de relecture adopter / changer / expliquer · panneau sans prise d'acte par mots tapés</td></tr>
+      <tr><td><span class="tag mock">maquette</span></td><td>Les deux pages HTML « style leçon » (rapport Auto MPG, panneau), approuvées, non implémentées</td></tr>
+    </table></div>
+    <p class="small">Ce qui est « en cours » n'est pas montré comme disponible, sauf s'il est fusionné avant l'atelier.</p>
+  </div></div>
+  <div class="notes"><div class="n trap">Mettre ce tableau à jour la veille : rien d'« en cours » montré comme disponible.</div><div class="n q">« Copilot a-t-il été testé ? » → séances réelles du propriétaire sur Hotel ; le mode automatique n'a été testé que par tests unitaires et CLI, pas encore avec Copilot.</div></div>
+</section>
+
+<section class="screen" data-title="Règles de la séance" data-part="Ouverture">
+  <div class="frame"><h3>Règles de la séance</h3><div class="fx">
+    <ul class="b">
+      <li><b>Ne pas adopter est un résultat légitime</b> : garder la référence, ou ne pas conclure, aussi.</li>
+      <li>On examine l'outil et les preuves, <b>pas les personnes</b>.</li>
+      <li>Dans le chat, <b>vos mots</b> : l'agent propose, vous décidez.</li>
+      <li>Un chiffre projeté vient de l'étude ; sinon il porte la mention <b>« illustratif »</b>.</li>
+      <li>Les exigences de sécurité <b>ne se votent pas</b> : on discute du comment, pas du si.</li>
+      <li>Vous pouvez arrêter l'agent à tout moment.</li>
+    </ul>
+  </div></div>
+  <div class="notes"><div class="n say">La règle sur la sécurité reviendra dans les fondations communes.</div></div>
+</section>
+
+<section class="screen" data-title="Une attente, une crainte" data-part="Ouverture" data-weight="3" data-dur="3 min">
+  <div class="frame"><h3>Une attente, une crainte</h3><div class="fx">
+    <div class="cols2">
+      <div class="card" style="--ac:var(--mint)"><h4>Mon attente</h4><p class="ph">« J'espère que cet outil… »</p><p>&nbsp;</p></div>
+      <div class="card" style="--ac:var(--pink)"><h4>Ma crainte</h4><p class="ph">« Je crains que… »</p><p>&nbsp;</p></div>
+    </div>
+    <p class="lead">Seul, une phrase chacune, sans signer. On les relira au retour d'expérience.</p>
+  </div></div>
+  <div class="notes"><div class="n say">Trois minutes, seul ; ramasser les deux fiches et les garder pour 11h15.</div></div>
+</section>
+
+<section class="screen" data-title="Binômes" data-part="Ouverture" data-weight="0.5">
+  <div class="frame"><h3>Binômes mixtes</h3><div class="fx">
+    <div class="cols3">
+      <div class="card" style="--ac:var(--teal)"><h4>La composition</h4><p>Un ML Engineer ou Data Scientist, avec un Data Engineer, un PM ou un Data Analyst. Un trio si le nombre est impair.</p></div>
+      <div class="card" style="--ac:var(--sky)"><h4>Le poste</h4><p>Un poste par binôme : VS Code, le chat Copilot avec l'agent Hypotrail, le panneau activé.</p></div>
+      <div class="card" style="--ac:var(--yellow)"><h4>Les rôles</h4><p>Un référent, un questionneur ; on échange à <b>10h08</b>.</p></div>
+    </div>
+  </div></div>
+  <div class="notes"><div class="n say">Annoncer les binômes préparés ; les deux animateurs passent dans les rangs.</div></div>
+</section>
+
+<!-- =================================================================== 2. ÉTUDE A -->
+<section class="screen" data-title="Étude A guidée" data-part="Étude A guidée">
+  <div class="frame sect"><div class="num">2</div><h2>Étude A, guidée</h2><p>Auto MPG · deux arrêts · vos décisions dans le chat</p><p class="when">9h45 – 10h30 · 45 min</p></div>
+  <div class="notes"><div class="n say">Chaque binôme crée l'étude A ; l'agent conduit, vous décidez aux arrêts.</div></div>
+</section>
+
+<section class="screen" data-title="Le cas Auto MPG" data-part="Étude A guidée" data-weight="2">
+  <div class="frame"><h3>Le cas : Auto MPG</h3><div class="fx">
+    <div class="cols2">
+      <div class="card" style="--ac:var(--teal)"><h4>Les données</h4><p>Le fichier public UCI Auto MPG : <b>398 voitures</b>, années de modèle 1970 à 1982.</p><p>On estime <b>mpg</b>, miles par gallon : plus le nombre est haut, plus la voiture est sobre (23 mpg ≈ 10,2 L/100 km).</p></div>
+      <div class="card" style="--ac:var(--yellow)"><h4>Le partage, fait à la création</h4><p><b>318 voitures de développement</b> : explorer, ajuster, choisir.</p><p><b>80 voitures scellées</b> : le test final, ouvert une fois, à la fin.</p></div>
+    </div>
+    <p class="quote">Une comparaison rétrospective sur des données historiques, <b>pas</b> la validation d'un service pour des véhicules futurs.</p>
+  </div></div>
+  <div class="notes"><div class="n say">C'est un exercice : comparer des méthodes d'estimation, sans décision réelle derrière.</div><div class="n trap">Ces voitures ne décrivent pas les véhicules actuels.</div></div>
+</section>
+
+<section class="screen" data-title="Trois documents" data-part="Étude A guidée" data-weight="3" data-dur="3 min">
+  <div class="frame"><h3>Trois documents, et le lien entre eux</h3><div class="fx">
+    <div class="flow">
+      <div class="card" style="--ac:var(--violet)"><h4>Spécification métier</h4><p>Pourquoi l'étude, pour qui, quelle décision, quel coût d'erreur.</p></div>
+      <div class="arrow">→</div>
+      <div class="card" style="--ac:var(--sky)"><h4>Dictionnaire</h4><p>Chaque colonne : son sens, son unité, sa disponibilité au moment de la prédiction.</p></div>
+      <div class="arrow">→</div>
+      <div class="card" style="--ac:var(--teal)"><h4>Contrat préparé <small><code>case.yaml</code></small></h4><p>Ce que lit le moteur : cible, colonnes, ordre, part scellée. Écrit par un humain.</p></div>
+    </div>
+    <div class="trap"><span class="l">À savoir</span>Rien n'est importé comme décision : le contrat fixe le cadre, et chaque décision de l'étude part ouverte.</div>
+  </div></div>
+  <div class="notes"><div class="n say">Trois minutes : qui a écrit quoi, et qu'est-ce qui passe d'un document à l'autre ?</div><div class="n q">« Le contrat décide-t-il à ma place ? » → non : il borne l'étude ; les décisions se prennent dans le chat.</div></div>
+</section>
+
+<section class="screen" data-title="Rôles dans le binôme" data-part="Étude A guidée" data-weight="1.2">
+  <div class="frame"><h3>Dans le binôme : un référent, un questionneur</h3><div class="fx">
+    <div class="cols2">
+      <div class="card" style="--ac:var(--yellow)"><h4>Le référent</h4><p>Répond le premier, ouvre la preuve, tape la décision dans le chat avec ses mots.</p></div>
+      <div class="card" style="--ac:var(--sky)"><h4>Le questionneur</h4><p>Demande « sur quelle preuve ? », « et sinon ? », « qu'est-ce qui te ferait changer d'avis ? ».</p></div>
+    </div>
+    <p class="lead">Le ML / DS traduit les termes, sans répondre à la place. <b class="y">Échange des rôles à 10h08.</b></p>
+  </div></div>
+  <div class="notes"><div class="n say">À 10h08, j'annonce l'échange à voix haute.</div></div>
+</section>
+
+<section class="screen" data-title="Le rituel de chaque arrêt" data-part="Étude A guidée" data-weight="1.5">
+  <div class="frame"><h3>À chaque arrêt, le même rituel</h3><div class="fx">
+    <div class="steps">
+      <div class="card"><b>Seul, par écrit</b> : votre réponse et votre confiance de 1 à 5, <b>avant</b> l'agent.</div>
+      <div class="card"><b>L'agent propose</b> : le terme d'abord, puis l'exemple sur le cas.</div>
+      <div class="card"><b>Vous ouvrez la preuve</b> citée : rapport, panneau ou notebook.</div>
+      <div class="card"><b>Vous décidez</b> dans le chat, avec vos mots.</div>
+    </div>
+    <div class="trap"><span class="l">Piège</span>Lire l'agent avant d'écrire : on mesure alors l'agent, pas vous.</div>
+  </div></div>
+  <div class="notes"><div class="n say">La fiche papier garde la réponse d'avant ; on la comparera à la décision prise.</div></div>
+</section>
+
+<section class="screen" data-title="Démo : vos mots" data-part="Étude A guidée" data-demo="dec">
+  <div class="frame demo"><h3>Une décision n'est enregistrée qu'avec vos mots</h3><div class="dbody"><div id="dec"></div></div><div class="fdots" aria-hidden="true"></div></div>
+  <div class="notes"><div class="n say">→ proposition, preuve, « ok » refusé, « oui mais » refusé, question fermée, enregistré, trois bases.</div><div class="n trap">Un « oui » court suffit, mais seulement en réponse à la question fermée « Adoptez-vous cette décision ? ».</div><div class="n q">« Le moteur sait-il que c'est moi ? » → non : les mots sont rapportés par l'agent.</div></div>
+</section>
+
+<section class="screen" data-title="Arrêt 1 · Usage et données" data-part="Étude A guidée" data-weight="13" data-dur="13 min">
+  <div class="frame"><h3>Arrêt 1 · Usage et données</h3><div class="fx">
+    <p class="lead">Deux décisions : <b class="chalk">le moment de la prédiction</b> et <b class="chalk">les variables disponibles</b> à ce moment.</p>
+    <div class="cols2">
+      <div class="card" style="--ac:var(--violet)"><h4>PM, référent sur l'usage</h4><ul><li>Qui utilise la prédiction ?</li><li>Pour quelle décision ?</li><li>Que coûte une erreur, trop haut ou trop bas ?</li></ul></div>
+      <div class="card" style="--ac:var(--teal)"><h4>DE, référent sur les données</h4><ul><li>Chaque colonne est-elle connue au moment de la prédiction ?</li><li>D'où vient-elle ?</li><li>Avec quelle fraîcheur ?</li></ul></div>
+    </div>
+    <p class="small">Le ML / DS traduit en décisions du moteur : <code>prediction_time</code>, <code>feature_availability</code>. Réponse écrite et confiance avant l'agent.</p>
+  </div></div>
+  <div class="notes"><div class="n trap">acceleration : son moment est incertain ; laisser les DE le trouver dans le dictionnaire.</div><div class="n q">« Le cas dit-il qui utilise la prédiction ? » → non, c'est un exercice : nommer l'usage supposé, c'est déjà une limite.</div><div class="n say">Vers 10h08 : échange des rôles.</div></div>
+</section>
+
+<section class="screen" data-title="Arrêt 2 · Évaluation" data-part="Étude A guidée" data-weight="18" data-dur="18 min">
+  <div class="frame"><h3>Arrêt 2 · Évaluation</h3><div class="fx">
+    <p class="lead">Deux décisions : <b class="chalk">le découpage</b> et <b class="chalk">le critère de succès</b>, fixé avant tout modèle.</p>
+    <div class="cols2">
+      <div class="card" style="--ac:var(--sky)"><h4>ML / DS, référent</h4><p><b>Validation croisée</b> : chaque pli est prédit par un modèle ajusté sur les autres. Ici, 5 plis de 63 ou 64 voitures, en blocs d'années de modèle.</p><p><b>Erreur absolue moyenne (MAE)</b> : l'erreur moyenne, en mpg. Exemple de critère : au moins 10 % de mieux que la moyenne de référence.</p></div>
+      <div class="card" style="--ac:var(--violet)"><h4>PM et DE reformulent</h4><ul><li>« À quelle question ce découpage répond-il ? »</li><li>« Que veut dire 10 % pour l'usage ? »</li><li>« Qu'est-ce qui nous ferait changer de barre ? »</li></ul></div>
+    </div>
+  </div></div>
+  <div class="notes"><div class="n say">Terme d'abord : MAE ; exemple : 3,7 mpg d'erreur sur une voiture à 23 mpg, c'est environ un sixième.</div><div class="n trap">Fixée après avoir vu un modèle, la barre se place juste au-dessus du résultat.</div></div>
+</section>
+
+<section class="screen" data-title="Démo : plis par années" data-part="Étude A guidée" data-demo="folds">
+  <div class="frame demo"><h3>Des plis par années ne sont pas une prévision</h3><div class="dbody"><div id="folds"></div></div><div class="fdots" aria-hidden="true"></div></div>
+  <div class="notes"><div class="n say">→ cinq blocs, pli 1 (appris sur l'avenir), pli 3, pli 5, bilan, « en avançant », test final.</div><div class="n trap">« En avançant » est une illustration : l'étude ne l'a pas calculé.</div><div class="n q">« Pourquoi pas toujours en avançant ? » → moins de lignes pour apprendre au début ; c'est une décision à discuter selon l'usage.</div></div>
+</section>
+
+<!-- =================================================================== 3. BASCULE -->
+<section class="screen" data-title="Bascule automatique" data-part="Bascule automatique">
+  <div class="frame sect"><div class="num">3</div><h2>Bascule : le mode automatique</h2><p>Étude B, lancée en direct, relue ensuite</p><p class="when">10h30 – 10h37 · 7 min</p></div>
+  <div class="notes"></div>
+</section>
+
+<section class="screen" data-title="Lancer l'étude B" data-part="Bascule automatique" data-weight="2">
+  <div class="frame"><h3>Étude B : le mode automatique, lancé en direct</h3><div class="fx">
+<pre class="code s"><span class="cm"># le mode se choisit au lancement, et seulement là</span>
+hypotrail init --case use-cases/auto-mpg --study ~/etudes/mpg-b --lang fr --automation until_final_test
+hypotrail automation run --progress --study ~/etudes/mpg-b --request-id b1 --expected-revision 1</pre>
+    <ul class="b">
+      <li>Environ <b>30 s de calcul</b>, mesuré sur Auto MPG.</li>
+      <li>Le mode se termine dans un seul sens : on ne le rallume pas.</li>
+      <li>En cas de souci, on passe sur un état préparé, <b>annoncé comme tel</b>.</li>
+    </ul>
+  </div></div>
+  <div class="notes"><div class="n say">Pendant le calcul, montrer les lignes de progression ; leur version lisible est encore en cours.</div><div class="n trap">Si on bascule sur l'état préparé, le dire à voix haute.</div></div>
+</section>
+
+<section class="screen" data-title="Démo : le mode automatique" data-part="Bascule automatique" data-demo="auto">
+  <div class="frame demo"><h3>Le mode automatique décide, vous relisez</h3><div class="dbody"><div id="auto"></div></div><div class="fdots" aria-hidden="true"></div></div>
+  <div class="notes"><div class="n say">→ lancement, cadrage, préparation, modèles, choix et arrêt (7 à relire), relecture, variante full_demo.</div><div class="n trap">La pause « adopter / changer / expliquer » est en cours ; aujourd'hui l'agent demande d'adopter ou de changer avec vos mots.</div><div class="n q">« Le mode choisit-il librement ? » → non : des règles fixes, diapo suivante.</div></div>
+</section>
+
+<section class="screen" data-title="Les règles du mode automatique" data-part="Bascule automatique" data-weight="1.7">
+  <div class="frame"><h3>Ce que le moteur a choisi pour vous, et selon quelles règles</h3><div class="fx">
+    <div class="steps" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <div class="card"><b>La valeur rédigée</b> par le moteur pour cette décision (son brouillon).</div>
+      <div class="card"><b>Sinon, sa recommandation.</b></div>
+      <div class="card"><b>Sinon, une règle fixe :</b><ul><li>choix du modèle : la règle d'une erreur type ;</li><li>règle de décision (cas binaires) : la part du scénario ;</li><li>conclusion, <b>en full_demo seulement</b> : le critère jugé sur le test final.</li></ul></div>
+    </div>
+    <div class="cols2">
+      <div class="trap"><span class="l">Jamais</span>un choix libre de l'agent ; une valeur que le moteur refuserait n'est jamais proposée.</div>
+      <p class="quote" style="font-size:2.1cqw">Le contrat du cas a été écrit par un humain : une partie de ces « choix automatiques » vient de lui.</p>
+    </div>
+  </div></div>
+  <div class="notes"><div class="n say">La règle de décision ne concerne pas MPG, qui est une régression.</div><div class="n q">« Et si le moteur n'a pas de valeur ? » → le mode s'arrête et vous répondez.</div></div>
+</section>
+
+<!-- =================================================================== 4. RELECTURE -->
+<section class="screen" data-title="Relecture et missions" data-part="Relecture et missions">
+  <div class="frame sect"><div class="num">4</div><h2>Relecture et missions</h2><p>Tronc commun, puis une mission par profil</p><p class="when">10h37 – 11h00 · 11 min + 12 min</p></div>
+  <div class="notes"></div>
+</section>
+
+<section class="screen" data-title="Arrêt 3 · Résultat et choix" data-part="Relecture et missions" data-weight="4">
+  <div class="frame"><h3>Arrêt 3 · Résultat et choix</h3><div class="fx">
+    <div class="cols2" style="grid-template-columns:1.15fr 1fr">
+      <div class="tblw"><table>
+        <tr><th>Configuration</th><th style="text-align:right">MAE hors pli</th></tr>
+        <tr><td>Moyenne de référence</td><td class="n">7,16 mpg</td></tr>
+        <tr class="hi"><td>Modèle linéaire · <b>choisi</b></td><td class="n">3,69 mpg</td></tr>
+        <tr><td>Ridge, pénalité réglée</td><td class="n">3,68 mpg</td></tr>
+        <tr><td>EBM (non linéaire lisible)</td><td class="n">3,40 mpg</td></tr>
+        <tr><td colspan="2" class="m" style="font-size:1.4cqw;color:var(--cardmuted)">318 voitures, 5 plis · preuves de développement, donc optimistes · test final encore scellé</td></tr>
+      </table></div>
+      <div class="fx" style="gap:1.2cqw">
+        <div class="card" style="--ac:var(--sky)"><h4>Le choix</h4><p>Le linéaire, par la règle d'une erreur type. Mais l'EBM fait mieux de <b>0,30 mpg</b>, intervalle apparié <b>[−0,49 ; −0,12]</b>, qui exclut zéro.</p></div>
+        <p class="quote" style="font-size:2.3cqw">PM, référent : « Que peut-on promettre ? »</p>
+      </div>
+    </div>
+  </div></div>
+  <div class="notes"><div class="n say">Terme : EBM, un modèle non linéaire lisible, une courbe par variable.</div><div class="n trap">Ces chiffres ont servi à choisir : ce ne sont pas des résultats finaux.</div></div>
+</section>
+
+<section class="screen" data-title="Démo : la règle d'une erreur type" data-part="Relecture et missions" data-demo="onese">
+  <div class="frame demo"><h3>La règle d'une erreur type garde le plus simple</h3><div class="dbody"><div id="onese"></div></div><div class="fdots" aria-hidden="true"></div></div>
+  <div class="notes"><div class="n say">→ quatre MAE et la barre du critère, erreurs types, bande d'une erreur type, écart apparié, la tension.</div><div class="n trap">Les erreurs types de la règle ne sont pas appariées : elles portent la difficulté commune des plis.</div><div class="n q">« L'export a-t-il poussé au linéaire ? » → non, la règle a choisi avant ; mais l'export ne qualifie que le linéaire, il faut le dire.</div></div>
+</section>
+
+<section class="screen" data-title="Une situation" data-part="Relecture et missions" data-weight="3.7">
+  <div class="frame"><h3>Une situation</h3><div class="fx">
+    <p class="quote big">« Un collègue propose d'utiliser le modèle pour de nouveaux véhicules. Que devons-nous examiner avant d'accepter ? »</p>
+    <div class="cols2">
+      <div class="trap"><span class="l">Précaution 1</span>Les plis par blocs mettent des années <b>plus récentes</b> dans l'ajustement : l'erreur hors pli n'est pas une erreur de prévision.</div>
+      <div class="trap"><span class="l">Précaution 2</span>Le test final est tiré par tranches de mpg <b>sur toutes les années</b> : il ne peut pas répondre à « véhicules futurs ».</div>
+    </div>
+    <p class="lead">Résidu moyen du modèle linéaire sur 1981–82 : <b class="y">+5,27 mpg</b>, il sous-estime les plus récentes. Et ces voitures datent de 1970 à 1982.</p>
+  </div></div>
+  <div class="notes"><div class="n say">Deux minutes en binôme avant de commenter les deux encadrés.</div><div class="n q">« Que faudrait-il pour accepter ? » → des données récentes, une évaluation en avançant dans le temps, un usage écrit.</div></div>
+</section>
+
+<section class="screen" data-title="Missions par profil" data-part="Relecture et missions" data-weight="9" data-dur="12 min">
+  <div class="frame"><h3>Missions par profil</h3><div class="fx">
+    <div class="cols3">
+      <div class="card" style="--ac:var(--sky)"><h4>ML / DS · Contester</h4><p>Prenez une décision automatique de l'étude B. Expliquez la règle qui l'a produite, proposez une alternative et dites ce qu'elle changerait.</p><p class="m">Exemples : plis en avançant, garder l'EBM.</p></div>
+      <div class="card" style="--ac:var(--teal)"><h4>DE · Enquêter</h4><p>Où le modèle se trompe-t-il ? Par période (années de modèle) et par origine des données (<code>origin</code>, puissance manquante).</p><p class="m">Citez le graphique ou le nombre.</p></div>
+      <div class="card" style="--ac:var(--violet)"><h4>PM · Transmettre</h4><p>Une autre paire, sans aide, retrouve-t-elle dans le rapport le modèle choisi, sa justification et une limite ?</p><p class="m">Notez ce qui l'a bloquée.</p></div>
+    </div>
+  </div></div>
+  <div class="notes"><div class="n say">Chaque mission finit sur la fiche de relecture, diapo suivante.</div><div class="n trap">Adopter ou changer se fait dans le chat ; le panneau ne fait que copier la question.</div></div>
+</section>
+
+<section class="screen" data-title="Fiche de relecture" data-part="Relecture et missions" data-weight="3">
+  <div class="frame"><h3>La fiche de relecture, et trois lignes à rendre</h3><div class="fx">
+    <div class="tblw"><table>
+      <tr><th>Décision</th><th>Preuve citée <span style="text-transform:none">(id de résultat ou nombre)</span></th><th>Ce qui me ferait changer d'avis</th><th>Adopter ou modifier, en vos mots</th></tr>
+      <tr class="grid-empty"><td></td><td></td><td></td><td></td></tr>
+      <tr class="grid-empty"><td></td><td></td><td></td><td></td></tr>
+    </table></div>
+    <div class="cols3">
+      <div class="card" style="--ac:var(--mint)"><h4>Observé</h4><p class="ph">ce que la preuve montre…</p></div>
+      <div class="card" style="--ac:var(--yellow)"><h4>Proposé</h4><p class="ph">ce que nous changerions…</p></div>
+      <div class="card" style="--ac:var(--pink)"><h4>À vérifier</h4><p class="ph">ce que nous ne savons pas…</p></div>
+    </div>
+  </div></div>
+  <div class="notes"><div class="n say">Ramasser les fiches à 11h00 : on les trie pendant la pause.</div></div>
+</section>
+
+<!-- =================================================================== 5. EXPORT -->
+<section class="screen" data-title="Après l'étude : la transmission" data-part="Démo export Azure ML">
+  <div class="frame sect"><div class="num">5</div><h2>Après l'étude : la transmission</h2><p>Démonstration de l'organisateur, sur l'étude MPG complète préparée</p><p class="when">11h00 – 11h06 · 6 min</p></div>
+  <div class="notes"><div class="n say">Étude préparée : test final ouvert une fois, modèle linéaire choisi ; captures d'écran en secours.</div></div>
+</section>
+
+<section class="screen" data-title="Les commandes d'export" data-part="Démo export Azure ML" data-weight="2.7">
+  <div class="frame"><h3>Exporter vers le gabarit Azure ML de l'équipe</h3><div class="fx">
+<pre class="code s"><span class="cm"># dans l'étude : ce qui sera exporté, et ce qui manque pour Azure</span>
+hypotrail export azureml --study ~/etudes/mpg-complete --plan --expected-revision &lt;n&gt;
+hypotrail export azureml --study ~/etudes/mpg-complete --out ~/exports/mpg-aml --expected-revision &lt;n&gt;
+<span class="cm"># dans le projet généré, déplacé ailleurs</span>
+python -m src.pipeline.utils.project validate --offline
+python -m src.pipeline.utils.project predict --parity --output outputs/predictions.json</pre>
+    <div class="cols2">
+      <div class="card" style="--ac:var(--mint)"><h4>Vérifié en local</h4><p>Le projet : 4 étapes, README, recette du modèle, contrat de données. Le modèle exporté reproduit les scores de l'étude.</p></div>
+      <div class="card" style="--ac:var(--pink)"><h4>Jamais exécuté</h4><p>Aucun job ni endpoint Azure. Une transmission vérifiable, <b>pas un déploiement</b>.</p></div>
+    </div>
+  </div></div>
+  <div class="notes"><div class="n say">Le plan lit une seule révision : sans --expected-revision, le refus donne le numéro à utiliser.</div></div>
+</section>
+
+<section class="screen" data-title="Démo : exporter n'est pas déployer" data-part="Démo export Azure ML" data-demo="export">
+  <div class="frame demo"><h3>Exporter n'est pas déployer</h3><div class="dbody"><div id="export"></div></div><div class="fdots" aria-hidden="true"></div></div>
+  <div class="notes"><div class="n say">→ étude, plan, projet, validate, parité, Azure (rien n'a tourné), candidat reconstruit.</div><div class="n trap">Dire mot pour mot : aucun job ni endpoint Azure n'a jamais tourné.</div><div class="n q">« Et la ridge ou l'EBM ? » → refusées par l'export (capability_not_supported), jamais remplacées par un autre modèle.</div></div>
+</section>
+
+<!-- =================================================================== 6. PAUSE -->
+<section class="screen" data-title="Pause" data-part="Pause" data-weight="9">
+  <div class="frame sect"><div class="num">☕</div><h2>Pause</h2><p>Reprise à 11h15, par le retour d'expérience.</p><p class="when">11h06 – 11h15 · 9 min</p></div>
+  <div class="notes"><div class="n say">Animateurs : trier les fiches, décisions validées sans justification d'un côté, avec preuve citée de l'autre ; noter le taux.</div></div>
+</section>
+
+<!-- =================================================================== 7. RETOUR D'EXPÉRIENCE -->
+<section class="screen" data-title="Retour d'expérience" data-part="Retour d'expérience">
+  <div class="frame sect"><div class="num">7</div><h2>Retour d'expérience</h2><p>Animé par le lead Data Science</p><p class="when">11h15 – 11h35 · 20 min</p></div>
+  <div class="notes"><div class="n say">Le lead prend la main ; l'organisateur note.</div></div>
+</section>
+
+<section class="screen" data-title="Seul, d'abord" data-part="Retour d'expérience" data-weight="3" data-dur="3 min">
+  <div class="frame"><h3>Seul, d'abord</h3><div class="fx">
+    <div class="cols2">
+      <div class="card" style="--ac:var(--sky)"><h4>Sur votre fiche</h4><ul><li>Une observation précise de la matinée.</li><li>Une réaction : intérêt, frustration, sentiment de contrôle, inquiétude pour le maintien de vos compétences.</li></ul></div>
+      <div class="card" style="--ac:var(--pink)"><h4>Carte d'objection, anonyme</h4><p>Ce que vous n'oseriez pas dire en groupe, contre l'outil ou contre son usage. Dans l'urne.</p></div>
+    </div>
+  </div></div>
+  <div class="notes"><div class="n say">Les cartes d'objection sont lues sans chercher leur auteur.</div></div>
+</section>
+
+<section class="screen" data-title="Pré-mortem" data-part="Retour d'expérience" data-weight="7" data-dur="7 min">
+  <div class="frame"><h3>Pré-mortem, par table</h3><div class="fx">
+    <p class="quote big">« Dans six mois, l'usage d'Hypotrail a échoué, ou a causé un incident. Pourquoi ? »</p>
+    <p class="lead">Une cause par post-it ; le plus de causes différentes possible ; pas encore de solution.</p>
+  </div></div>
+  <div class="notes"><div class="n say">Si une table sèche : la relecture bâclée, une étude transmise sans son auteur, un usage hors du cadre.</div></div>
+</section>
+
+<section class="screen" data-title="Mise en commun" data-part="Retour d'expérience" data-weight="8" data-dur="10 min">
+  <div class="frame"><h3>Mise en commun : trois colonnes</h3><div class="fx">
+    <div class="cols3">
+      <div class="card" style="--ac:var(--mint)"><h4>Observations du jour</h4><p class="m">Ce qui s'est passé, vu par plusieurs.</p></div>
+      <div class="card" style="--ac:var(--yellow)"><h4>Hypothèses à tester</h4><p class="m">Ce qu'on croit, à vérifier dans un pilote.</p></div>
+      <div class="card" style="--ac:var(--sky)"><h4>Améliorations produit</h4><p class="m">Ce qu'Hypotrail devrait changer.</p></div>
+    </div>
+    <p class="small">Le taux de décisions validées sans justification, relevé pendant la pause, va dans la première colonne.</p>
+  </div></div>
+  <div class="notes"><div class="n trap">Ne pas transformer une observation d'un seul binôme en conclusion générale.</div></div>
+</section>
+
+<section class="screen" data-title="Usages professionnels" data-part="Retour d'expérience" data-weight="1.7">
+  <div class="frame"><h3>Des usages professionnels, en perspective</h3><div class="fx">
+    <div class="cols4">
+      <div class="card" style="--ac:var(--teal)"><h4>Découvrir</h4><p>un nouveau cas, ses données et ses pièges.</p></div>
+      <div class="card" style="--ac:var(--sky)"><h4>Explorer</h4><p>pendant une absence, puis relire au retour.</p></div>
+      <div class="card" style="--ac:var(--violet)"><h4>Reprendre</h4><p>l'étude d'un collègue, avec ses décisions.</p></div>
+      <div class="card" style="--ac:var(--yellow)"><h4>Revoir</h4><p>en pair : contester chaque choix.</p></div>
+    </div>
+    <p class="quote">« Lancer la nuit, revoir le matin » demande un cadrage préalable : l'objectif, les données autorisées, les ressources, les conditions d'arrêt. Et le temps de relecture compte dans le coût total.</p>
+  </div></div>
+  <div class="notes"><div class="n say">Ce sont des perspectives, pas des promesses ni des usages validés.</div></div>
+</section>
+
+<!-- =================================================================== 8. FONDATIONS -->
+<section class="screen" data-title="Fondations communes" data-part="Fondations communes">
+  <div class="frame sect"><div class="num">8</div><h2>Fondations communes</h2><p>Qu'est-ce que l'équipe veut préserver lorsqu'elle délègue ?</p><p class="when">11h35 – 12h25 · 50 min</p></div>
+  <div class="notes"><div class="n say">On quitte Hypotrail : les principes doivent tenir aussi pour un chatbot RAG et une application web.</div></div>
+</section>
+
+<section class="screen" data-title="Provocation" data-part="Fondations communes" data-weight="3" data-dur="3 min">
+  <div class="frame"><h3>Deux signaux, à prendre avec leurs limites</h3><div class="fx">
+    <div class="cols2">
+      <div class="card" style="--ac:var(--sky)"><h4>La charge de supervision</h4><p>Le rapport d'Anthropic sur le travail chez Anthropic (2026) décrit la supervision que demande la délégation à des agents.</p><p class="m">Une seule entreprise, pas d'essai randomisé : un signal, pas une promesse.</p></div>
+      <div class="card" style="--ac:var(--pink)"><h4>Perception ou mesure</h4><p>METR (2025), essai randomisé : des développeurs open source expérimentés, sur leurs propres dépôts, environ <b>19 % plus lents</b> avec l'IA, en se croyant environ <b>20 % plus rapides</b>.</p><p class="m">Outils de début 2025, 16 développeurs, dépôts matures.</p></div>
+    </div>
+    <p class="quote">Sans mesure, on croira gagner du temps ; et la relecture ne se fait pas toute seule.</p>
+  </div></div>
+  <div class="notes"><div class="n trap">Citer le rapport d'Anthropic depuis le texte, pas de mémoire ; ne donner aucun chiffre non relu.</div><div class="n say">Trois minutes, pas de débat : c'est une provocation.</div></div>
+</section>
+
+<section class="screen" data-title="Seul, cinq minutes" data-part="Fondations communes" data-weight="5" data-dur="5 min">
+  <div class="frame"><h3>Seul, cinq minutes</h3><div class="fx">
+    <p class="quote big">Quand l'équipe délègue à un agent une étude, un chatbot ou une application, qu'est-ce qu'elle doit préserver, quoi qu'il arrive ?</p>
+    <p class="lead">Deux ou trois réponses, une par fiche. Les relances ne viennent qu'après.</p>
+  </div></div>
+  <div class="notes"><div class="n trap">Ne pas montrer les relances avant la fin des cinq minutes.</div></div>
+</section>
+
+<section class="screen" data-title="Groupes par thème" data-part="Fondations communes" data-weight="12" data-dur="15 min">
+  <div class="frame"><h3>Groupes par thème, un format commun</h3><div class="fx">
+    <div><span class="pill">compréhension</span><span class="pill">sécurité</span><span class="pill">données</span><span class="pill">maîtrise humaine</span><span class="pill">qualité des conclusions</span><span class="pill">traçabilité</span><span class="pill">continuité des compétences</span></div>
+    <div class="cols4">
+      <div class="card" style="--ac:var(--mint)"><h4>Ce qu'on veut préserver</h4></div>
+      <div class="card" style="--ac:var(--yellow)"><h4>Niveau minimal attendu</h4></div>
+      <div class="card" style="--ac:var(--sky)"><h4>Rôles concernés</h4></div>
+      <div class="card" style="--ac:var(--pink)"><h4>Situation inacceptable</h4></div>
+    </div>
+    <p class="lead">Chaque principe est testé trois fois : sur l'étude ML, sur le <b class="chalk">chatbot RAG</b> et sur l'<b class="chalk">application web</b>.</p>
+  </div></div>
+  <div class="notes"><div class="n say">Un thème par groupe ; une fiche à quatre cases par principe.</div><div class="n trap">Un principe qui ne tient que pour le ML est une règle d'outil, pas une fondation.</div></div>
+</section>
+
+<section class="screen" data-title="Relances" data-part="Fondations communes" data-weight="3">
+  <div class="frame"><h3>Relances, après votre propre réflexion</h3><div class="fx">
+    <div class="cols2" style="align-items:center">
+      <ul class="b">
+        <li>Expliquer les hypothèses, l'évaluation et les limites.</li>
+        <li>Des exigences de sécurité sur le code et les dépendances générés.</li>
+        <li>Le périmètre d'accès et de transmission des données.</li>
+        <li>Le pouvoir de contester, d'interrompre ou de refuser.</li>
+        <li>Proportionner les conclusions aux vérifications.</li>
+        <li>La reprise par un collègue.</li>
+      </ul>
+      <p class="quote">Une responsabilité humaine demande des moyens effectifs : du temps de relecture, des compétences, de la visibilité, et le pouvoir d'arrêter.</p>
+    </div>
+  </div></div>
+  <div class="notes"><div class="n say">Les relances complètent, elles ne remplacent pas ce que les groupes ont écrit.</div></div>
+</section>
+
+<section class="screen" data-title="Mise en commun des principes" data-part="Fondations communes" data-weight="12" data-dur="12 min">
+  <div class="frame"><h3>Mise en commun</h3><div class="fx">
+    <ul class="b">
+      <li>Chaque groupe lit ses principes, <b>une fiche à quatre cases</b> par principe.</li>
+      <li>Pour chacun : tient-il pour le <b>chatbot RAG</b> et l'<b>application web</b> ?</li>
+      <li>Les autres groupes signalent les doublons et les contradictions.</li>
+    </ul>
+  </div></div>
+  <div class="notes"><div class="n say">Afficher les fiches au mur par thème, regrouper les doublons au fil de l'eau.</div></div>
+</section>
+
+<section class="screen" data-title="Tensions et niveaux" data-part="Fondations communes" data-weight="10" data-dur="10 min">
+  <div class="frame"><h3>Tensions, et niveaux selon la criticité</h3><div class="fx">
+    <div class="tblw"><table>
+      <tr><th style="width:26%">Criticité de l'usage</th><th>Relecture minimale</th><th>Preuve exigée</th><th>Qui peut arrêter</th></tr>
+      <tr><td>Faible <span class="m" style="color:var(--cardmuted)">· exploration interne</span></td><td></td><td></td><td></td></tr>
+      <tr><td>Moyenne <span class="m" style="color:var(--cardmuted)">· aide à une décision</span></td><td></td><td></td><td></td></tr>
+      <tr><td>Élevée <span class="m" style="color:var(--cardmuted)">· personnes, données sensibles, production</span></td><td></td><td></td><td></td></tr>
+    </table></div>
+    <p class="lead">Où deux principes se contredisent-ils ? Une tension nommée vaut mieux qu'un consensus flou.</p>
+  </div></div>
+  <div class="notes"><div class="n trap">La grille est une proposition de format, vide : à remplir par la salle.</div></div>
+</section>
+
+<section class="screen" data-title="Reformulation" data-part="Fondations communes" data-weight="5" data-dur="5 min">
+  <div class="frame"><h3>Reformuler en propositions et en questions</h3><div class="fx">
+    <div class="cols2">
+      <div class="card" style="--ac:var(--mint)"><h4>Propositions</h4><p class="m">« L'équipe s'engage à… », formulées pour être vérifiables.</p></div>
+      <div class="card" style="--ac:var(--yellow)"><h4>Questions ouvertes</h4><p class="m">Ce qui demande des données, un pilote ou une décision de direction.</p></div>
+    </div>
+    <p class="quote">Aucune constitution n'est validée aujourd'hui.</p>
+  </div></div>
+  <div class="notes"><div class="n say">Le résultat de ce bloc est une matière première, pas un texte adopté.</div></div>
+</section>
+
+<!-- =================================================================== 9. CLÔTURE -->
+<section class="screen" data-title="Ticket de sortie" data-part="Clôture" data-weight="2.5">
+  <div class="frame"><h3>Ticket de sortie, sans outil</h3><div class="fx">
+    <div class="steps" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <div class="card">Que mesurent des plis par blocs d'années, et que ne mesurent-ils pas ?</div>
+      <div class="card">Citez une preuve du choix du modèle : un nombre ou un identifiant.</div>
+      <div class="card">Nommez une limite de la conclusion.</div>
+    </div>
+    <div class="card" style="--ac:var(--faint)"><b>À part :</b> votre satisfaction, de 1 à 5. Elle ne compte pas dans la compréhension.</div>
+  </div></div>
+  <div class="notes"><div class="n say">Sans téléphone ni rapport : on mesure ce qui reste.</div></div>
+</section>
+
+<section class="screen" data-title="Volontaires pour un pilote" data-part="Clôture" data-weight="1.5">
+  <div class="frame"><h3>Volontaires pour un pilote</h3><div class="fx">
+    <ul class="b">
+      <li>Un pilote <b>limité</b>, sur un cas réel au périmètre borné.</li>
+      <li>Mesuré avec les <b>indicateurs de l'atelier 1</b>.</li>
+      <li>En comptant aussi le temps de <b>relecture</b>, de <b>correction</b> et de <b>transmission</b>.</li>
+      <li>Avec le droit d'arrêter.</li>
+    </ul>
+  </div></div>
+  <div class="notes"><div class="n say">Noter les noms à la sortie ; personne n'est engagé sans le confirmer par écrit.</div></div>
+</section>
+
+<section class="screen" data-title="La suite" data-part="Clôture" data-weight="1">
+  <div class="frame sect"><div class="num">→ 3</div><h2>La suite</h2><p>L'organisateur et le lead Data Science consolident une proposition de constitution, présentée à l'atelier 3.</p><p>Merci.</p></div>
+  <div class="notes"><div class="n say">Remercier ; rappeler que les objections anonymes seront traitées dans la proposition.</div></div>
+</section>
+
+<!-- =================================================================== ANNEXE -->
+<section class="screen" data-title="Annexe" data-part="Annexe">
+  <div class="frame sect"><div class="num">A</div><h2>Annexe</h2><p>Critères de réussite, conditions et replis, références</p></div>
+  <div class="notes"><div class="n say">Facultative : à ouvrir seulement si une question l'appelle.</div></div>
+</section>
+
+<section class="screen" data-title="Critères de réussite" data-part="Annexe">
+  <div class="frame"><h3>Critères de réussite, par familles séparées</h3><div class="fx">
+    <div class="tblw"><table>
+      <tr><th style="width:24%">Famille</th><th>Ce qu'on regarde</th></tr>
+      <tr><td>Compréhension</td><td>Les trois réponses du ticket de sortie ; la réponse écrite avant l'agent comparée à la décision prise.</td></tr>
+      <tr><td>Reprise de main</td><td>La part des décisions avec une preuve citée ; le taux de validations sans justification ; les propositions contestées ou modifiées.</td></tr>
+      <tr><td>Adoption et gouvernance</td><td>Les propositions de principes, les objections recueillies, les volontaires du pilote.</td></tr>
+      <tr><td>Satisfaction</td><td>Un item séparé ; jamais un critère de réussite à lui seul.</td></tr>
+      <tr><td>Productivité</td><td><b>Pilote seulement</b> : rien n'est mesuré aujourd'hui.</td></tr>
+    </table></div>
+  </div></div>
+  <div class="notes"></div>
+</section>
+
+<section class="screen" data-title="Conditions et replis" data-part="Annexe">
+  <div class="frame"><h3>Conditions minimales et replis</h3><div class="fx">
+    <div class="cols2">
+      <div class="card" style="--ac:var(--mint)"><h4>Conditions minimales</h4><ul><li>Un poste par binôme : VS Code, Copilot, le moteur, le panneau activé.</li><li>Trois études prêtes : A vierge, B à lancer, MPG complète pour l'export.</li><li>Un vidéoprojecteur, les fiches papier, les rapports HTML précalculés.</li></ul></div>
+      <div class="card" style="--ac:var(--pink)"><h4>Replis</h4><ul><li><b>Copilot en panne</b> : CLI, rapport et panneau ; le chat de l'animateur projeté.</li><li><b>Poste défaillant</b> : regrouper les binômes.</li><li><b>Panne générale</b> : rapport HTML précalculé et fiches papier.</li><li><b>Retard</b> : couper la mission libre, jamais les fondations.</li></ul></div>
+    </div>
+  </div></div>
+  <div class="notes"></div>
+</section>
+
+<section class="screen" data-title="Références" data-part="Annexe">
+  <div class="frame"><h3>Références, et limites de transposition</h3><div class="fx">
+    <div class="tblw"><table style="font-size:1.45cqw">
+      <tr><th style="width:24%">Référence</th><th>Idée retenue</th><th style="width:32%">Limite pour nous</th></tr>
+      <tr><td>Bainbridge 1983</td><td>Automatiser laisse à l'humain les cas les plus durs, avec moins de pratique.</td><td>Contrôle de procédés industriels.</td></tr>
+      <tr><td>Parasuraman &amp; Manzey 2010</td><td>Complaisance et biais d'automatisation chez des opérateurs qui supervisent.</td><td>Aviation, supervision ; pas d'étude ML.</td></tr>
+      <tr><td>Rozenblit &amp; Keil 2002</td><td>L'illusion de profondeur explicative : on croit comprendre jusqu'à devoir expliquer.</td><td>Objets mécaniques, grand public.</td></tr>
+      <tr><td>Buçinca et al. 2021</td><td>Faire réfléchir avant de montrer l'IA réduit la sur-confiance, mais plaît moins.</td><td>Tâches de laboratoire, participants en ligne.</td></tr>
+      <tr><td>Bansal et al. 2021</td><td>Les explications augmentent l'acceptation, que l'IA ait raison ou tort.</td><td>Tâches simples, non-experts.</td></tr>
+      <tr><td>Vasconcelos et al. 2023</td><td>Une explication réduit la sur-confiance quand elle rend la vérification moins coûteuse.</td><td>Tâches de laboratoire.</td></tr>
+      <tr><td>Bastani et al. 2025</td><td>Sans garde-fous, l'IA générative aide à l'exercice mais nuit à l'apprentissage.</td><td>Lycéens, mathématiques.</td></tr>
+      <tr><td>METR 2025</td><td>Plus lents avec l'IA en se croyant plus rapides.</td><td>16 développeurs experts, début 2025.</td></tr>
+    </table></div>
+  </div></div>
+  <div class="notes"><div class="n trap">Aucune de ces études ne porte sur des études ML conduites par un agent : ce sont des analogies.</div></div>
+</section>
+
+</main>
+<aside class="notespane" id="notesPane" aria-label="Notes de l'intervenant"></aside>
+</div>
+<footer class="bot"><button id="bPrev" aria-label="Précédent">←</button><button id="bNext" class="primary" aria-label="Suivant">→</button>
+<div class="prog"><i id="prog"></i></div><button id="bNotes" aria-pressed="false">notes</button><button id="bOver">vue d'ensemble</button>
+<button id="bFull">plein écran</button><button id="bTheme">tableau noir / blanc</button><button id="bHide">masquer la barre</button>
+<span class="keys">← → espace · N notes · O vue d'ensemble · F plein écran · T thème · H barre · P présentateur</span></footer>
+</div>
+<div class="overview" id="overview" hidden></div>
+<script>window.DECK_CONFIG={id:"atelier-2-hypotrail",plan:[["Ouverture",15],["Étude A guidée",45],["Bascule automatique",7],["Relecture et missions",23],["Démo export Azure ML",6],["Pause",9],["Retour d'expérience",20],["Fondations communes",50],["Clôture",5],["Annexe",0]]};var DEMOS={};</script>
+<script>
+/* Espaces insécables du français (avant ; : ? ! % et après « ), pour les chaînes des démos. */
+function T(s){return String(s).replace(/ ([;:?!»%])/g," $1").replace(/« /g,"« ");}
+
+/* ---------- Démo 1 : une décision n'est enregistrée qu'avec vos mots ----------
+   Sorties réelles : produites par `hypotrail decide propose / confirm` (moteur de ce dépôt) sur une étude Auto MPG temporaire. */
+DEMOS.dec=function(root,sync){
+  root.innerHTML='<div class="g2"><div class="panel chat"><div class="lab">Chat Copilot · simulé</div><div id="decChat"></div></div>'+
+    '<div><div class="lab">'+T('Moteur · décision « moment de la prédiction »')+'</div><div class="chain" id="decChain"></div><div id="decRec"></div></div></div><div class="cap" id="decCap"></div>';
+  var MS=[[0,"a","Assistant","Je propose : on prédit les mpg quand la fiche technique est fixée, avant toute mesure de consommation."],
+    [1,"a","Assistant","Sur quoi je m'appuie : la spécification métier et le dictionnaire des données. Ouvrez-les avant de répondre."],
+    [2,"j","Vous","ok",2],
+    [3,"j","Vous","oui mais je veux réfléchir",3],
+    [4,"a","Assistant","Adoptez-vous cette décision ?",0,true],
+    [4,"j","Vous","Je confirme : on prédit sur plan, avant tout essai de consommation."]];
+  var NODES=["Proposée","Preuve consultée","Réponse","Enregistrée"];
+  var NS=[["active","","",""],["ok","active","",""],["ok","ok","bad",""],["ok","ok","bad",""],["ok","ok","active",""],["ok","ok","ok","ok"],["ok","ok","ok","ok"]];
+  var PROP='<div class="cmd">decide propose prediction_time</div><div class="kv">proposal_id <b>p_1</b> · status <b>open</b> · revision <b>2</b></div>';
+  var REC=[
+    PROP+'<p class="mut">'+T("Rien n'est décidé : la décision est « proposée ».")+'</p>',
+    PROP+'<p class="mut">'+T("La preuve se lit hors du chat : rapport, panneau, notebook. Le moteur attend.")+'</p>',
+    '<div class="cmd">decide confirm p_1 --user-words "ok"</div><div class="rf">refusé · <code>ambiguous_confirmation</code> · <code>bare_acknowledgement</code><br>“A bare acknowledgement is not a decision on its own.”</div><div class="kv">'+T("revision : <b>2</b>, inchangée")+'</div>',
+    '<div class="cmd">decide confirm p_1 --user-words "oui mais je veux réfléchir"</div><div class="rf">refusé · <code>ambiguous_confirmation</code> · <code>conditional_reply</code><br>“…nothing is confirmed. Ask what the condition is; record it as a hold, or propose again.”</div><div class="kv">'+T("revision : <b>2</b>, inchangée")+'</div>',
+    '<div class="panel active" style="font-size:.64rem">'+T("Question fermée : à cette question, un « oui » court confirmerait aussi (<code>--adoption-question</code> ; l'option du sélecteur : <code>--channel choice</code>).")+'</div><div class="cmd" style="margin-top:.35rem">decide confirm p_1 --user-words "Je confirme : on prédit sur plan, avant tout essai de consommation."</div>',
+    '<div class="rc kv">status <b>confirmed</b> · revision <b>3</b><br>basis <b>restated</b> · actor <b>user</b> · mode <b>guided</b><br>user_words « Je confirme : on prédit sur plan, avant tout essai de consommation. »</div><p class="mut" style="font-size:.6rem">'+T("Mots rapportés par l'agent, sans authentification indépendante.")+'</p>',
+    '<div class="bases"><div style="--c:var(--okp)"><b>Vos mots</b>basis <code>endorsed</code> ou <code>restated</code> · actor user<br>'+T("Votre décision.")+'</div>'+
+      '<div style="--c:var(--pen)"><b>Délégation</b><code>delegated_default</code> · '+T("cette décision ou permanente ; n'ouvre jamais le test final.")+'</div>'+
+      '<div style="--c:var(--ochre)"><b>Automatique</b><code>automatic</code> · actor assistant, sans mots<br>'+T("À relire : pas défendable avant d'être adoptée.")+'</div></div>'];
+  var CAP=["L'agent propose ; le moteur ouvre une proposition. Rien n'est décidé.",
+    "Avant de répondre, vous ouvrez la preuve que l'agent cite.",
+    "« ok » seul n'est pas une décision : refusé, rien n'est écrit.",
+    "« oui mais… » pose une condition : refusé ; l'agent doit demander laquelle.",
+    "La question fermée, puis votre réponse, avec vos mots.",
+    "Enregistré : la valeur, vos mots, la base de la décision, la révision 3.",
+    "Trois bases, jamais confondues : vos mots, une délégation, l'automatique à relire."];
+  function set(k){
+    var shown=MS.filter(function(m){return m[0]<=k;}).slice(-4);
+    root.querySelector("#decChat").innerHTML=shown.map(function(m){
+      var ref=m[4]&&k>=m[4];
+      return '<div class="msg '+m[1]+(ref?" ref":"")+'"><span class="who">'+m[2]+(ref?" · refusé":"")+'</span><span class="t">'+esc(T(m[3]))+'</span>'+
+        (m[5]?'<div class="opts"><span class="opt">J’adopte cette décision</span><span class="opt">Changer quelque chose</span><span class="opt">Expliquer d’abord</span></div>':'')+'</div>';}).join("");
+    root.querySelector("#decChain").innerHTML=NODES.map(function(n,i){return '<div class="nd '+NS[k][i]+'">'+n+'</div>';}).join("");
+    root.querySelector("#decRec").innerHTML=REC[k];
+    var c=root.querySelector("#decCap");c.innerHTML=T(CAP[k]);c.className="cap"+(k===2||k===3?" bad":k>=5?" ok":"");
+  }
+  return {n:7,set:set};
+};
+
+/* ---------- Démo 2 : des plis par années ne sont pas une prévision ---------- */
+DEMOS.folds=function(root,sync){
+  root.innerHTML='<div class="lab">318 voitures de développement, rangées par année de modèle · 5 plis de 63 ou 64</div>'+
+    '<div class="axis"><span>1970 · plus anciennes</span><span>plus récentes · 1982</span></div><div class="band" id="fb"></div><div id="fx"></div>'+
+    '<div class="g2" style="margin-top:.4rem;align-items:start"><div class="panel rd" id="fr"></div><div class="lg"><span><i style="background:var(--hl);border-color:var(--ochre)"></i>pli prédit</span><span><i style="background:rgba(30,78,158,.16);border-color:var(--pen)"></i>plis d’ajustement</span><span><i style="border-style:dashed;border-color:var(--cardmuted)"></i>non utilisé</span><span><i style="border-radius:50%;width:.55rem;border-color:var(--redp)"></i>test final</span></div></div>'+
+    '<div class="cap" id="fc"></div>';
+  var P=[null,1,3,5,"all",null,null];
+  var RD=["Cinq blocs contigus d'années, du plus ancien au plus récent.",
+    "Pli 1 prédit, appris sur les plis 2 à 5.<br><b>Années plus récentes dans l'ajustement : toutes.</b>",
+    "Pli 3 prédit, appris sur les plis 1, 2, 4 et 5.<br><b>Années plus récentes dans l'ajustement : en partie.</b>",
+    "Pli 5 prédit, appris sur les plis 1 à 4.<br><b>Années plus récentes dans l'ajustement : aucune.</b>",
+    "Chaque voiture reçoit une prédiction hors pli ; <b>4 plis sur 5</b> ont appris sur des années plus récentes.",
+    "En avançant : 4 évaluations, chacune sur le bloc suivant ; le premier bloc ne sert qu'à apprendre. <span class=\"ill\">illustratif · non calculé</span>",
+    "Résidu moyen du modèle linéaire en 1981–82 : <b>+5,27 mpg</b> (développement). Le test final ne mesurera pas cette dérive."];
+  var CAP=["Le découpage : cinq blocs contigus, des plus anciennes aux plus récentes.",
+    "Pour prédire les voitures les plus anciennes, le modèle apprend sur des voitures plus récentes : il connaît « l'avenir ».",
+    "Pli 3 : appris sur le passé et sur l'avenir.",
+    "Seul le pli 5 ressemble à une prévision : appris sur le passé seulement.",
+    "L'erreur hors pli répond à « une voiture de ces années, jamais vue », pas à « une voiture future ».",
+    "Le contraste : n'apprendre que du passé, bloc après bloc.",
+    "Le test final, tiré par tranches de mpg sur toutes les années, ne peut pas répondre à « véhicules futurs »."];
+  function set(k){
+    var p=P[k],h='<span class="rl">5 plis</span>';
+    for(var i=1;i<=5;i++){var cls="blk";
+      if(p==="all")cls+=" all";else if(p===i)cls+=" pred";else if(p)cls+=" fit";
+      h+='<div class="'+cls+'">pli '+i+'<small>'+(p===i?"prédit":p&&p!=="all"?"ajustement":p==="all"?"prédit une fois":"63–64 voitures")+'</small></div>';}
+    root.querySelector("#fb").innerHTML=h;
+    var x="";
+    if(k===5){for(var j=2;j<=5;j++){x+='<div class="row"><span class="rl">évaluation '+(j-1)+'</span>';
+      for(var c=1;c<=5;c++)x+='<span class="mc '+(c<j?"fit":c===j?"pred":"off")+'"></span>';x+='</div>';}}
+    if(k===6){x='<div class="ft"><div class="lab" style="color:var(--redp);margin:0">'+T("test final · 80 voitures scellées · tirées par 5 tranches de mpg, toutes années confondues")+' <span class="ill">positions illustratives</span></div><div class="dots">';
+      for(var d=0;d<20;d++)x+='<i></i>';x+='</div></div>';}
+    root.querySelector("#fx").innerHTML=x;
+    root.querySelector("#fr").innerHTML=T(RD[k]);
+    var cp=root.querySelector("#fc");cp.innerHTML=T(CAP[k]);cp.className="cap"+(k===1||k===6?" bad":k===3?" ok":"");
+  }
+  return {n:7,set:set};
+};
+
+/* ---------- Démo 3 : le mode automatique décide, vous relisez ----------
+   Valeurs de l'étude automatique Auto MPG du propriétaire (séance du 26/10, O6, et maquette du rapport). */
+DEMOS.auto=function(root,sync){
+  var IT=[[1,"d","Moment de prédiction","fiche technique fixée"],
+    [1,"d","Variables disponibles","5, acceleration exclue"],
+    [1,"d","Découpage","5 plis, blocs d'années"],
+    [1,"d","Critère de succès","MAE ≥ 10 % sous la référence"],
+    [2,"c","Contrôle structurel","qualité des lignes, sans la cible"],
+    [2,"d","Préparation","log de horsepower"],
+    [2,"c","Regards sur la cible","comptés"],
+    [3,"c","Référence et linéaire","7,16 · 3,69 mpg"],
+    [3,"d","Variantes","ridge réglée + EBM"],
+    [3,"c","Variantes ajustées","3,68 · 3,40 mpg"],
+    [4,"d","Choix du modèle","linéaire (une erreur type)"],
+    [4,"s","Test final","scellé · 80 voitures"]];
+  var SHORT=["moment","variables","découpage","critère","préparation","variantes","choix du modèle"];
+  root.innerHTML='<div class="g2" style="grid-template-columns:1.25fr 1fr"><div><div class="lab">until_final_test · le parcours suivi par le moteur</div><div class="pipe" id="aP"></div></div>'+
+    '<div><div class="lab">État de l’étude B</div><div class="panel st" id="aS"></div><div class="lab" style="margin-top:.45rem">File de relecture</div><div><span class="big" id="aN">0</span> <span class="mut">/ 7 décisions automatiques</span></div><div class="q" id="aQ"></div><div id="aX"></div></div></div>'+
+    '<div class="cap" id="aC"></div>';
+  var CAP=["Le mode se choisit au lancement, et seulement là. File vide, test final scellé.",
+    "Le cadrage : quatre décisions enregistrées « automatique », avec la valeur du moteur.",
+    "La préparation, décidée d'après le contrôle de qualité, avant tout regard sur la cible.",
+    "Les modèles et les variantes : les calculs du moteur, comme pour vous.",
+    "Arrêt avant le test final : 7 décisions à relire, rien n'est encore défendable.",
+    "La relecture : chaque décision adoptée ou changée avec vos mots ; puis vous ouvrez le test final.",
+    "Variante full_demo : le test final s'ouvre seul, et c'est marqué pour toujours."];
+  function set(k){
+    var ph=Math.min(k,4),nd=0,h="";
+    IT.forEach(function(it){var st=it[0]<ph?"done":it[0]===ph?"now":"fut";if(k>=4&&it[0]<=4)st="done";
+      var isD=it[1]==="d",isS=it[1]==="s";if(isD&&it[0]<=ph)nd++;
+      var chip="";
+      if(isD&&it[0]<=ph)chip='<span class="chipx auto">auto · à relire</span>';
+      else if(it[1]==="c"&&it[0]<=ph)chip='<span class="chipx okc">✓ calculé</span>';
+      if(isS){st="stop"+(k===6?" opened":"");chip=k===6?'<span class="chipx no">ouvert automatiquement</span>':k>=4?'<span class="chipx no">arrêt ici</span>':'<span class="chipx no">scellé</span>';}
+      h+='<div class="it '+st+'"><span class="ic">'+(isD?"◆":isS?"■":"●")+'</span><b>'+esc(it[2])+'</b><span>'+esc(T(isS&&k===6?"ouvert, puis conclu":it[3]))+'</span>'+chip+'</div>';});
+    root.querySelector("#aP").innerHTML=h;
+    root.querySelector("#aN").textContent=nd;
+    root.querySelector("#aQ").innerHTML=SHORT.slice(0,nd).map(function(s,i){return '<span class="chipx '+(k===5&&i===0?"blue":"auto")+'">'+s+'</span>';}).join(" ");
+    var mode=k===0?"running (lancé)":k<4?"running":"ended · reached_end";
+    root.querySelector("#aS").innerHTML='init --automation '+(k===6?"full_demo":"until_final_test")+'<br>'+T('mode : <b>'+mode+'</b>')+'<br>'+T('test final : <b>'+(k===6?"ouvert automatiquement":"scellé · 80")+'</b>')+(k>=4&&k<6?'<br>'+T('arrêt : révision 38, 25 étapes'):'');
+    var x="";
+    if(k===4)x='<div class="ban">'+T("« Étude automatique : à relire, pas encore défendable. »")+'</div>';
+    if(k===5)x='<div class="rv"><b>'+T("Relecture 1 / 7 : le moment de la prédiction")+'</b><div class="opts"><span class="opt">'+T("J'adopte, avec mes mots")+'</span><span class="opt">Changer</span><span class="opt">'+T("Expliquer d'abord")+'</span></div><span class="chipx wip">'+T("ce sélecteur de relecture : en cours")+'</span> '+T("Aujourd'hui, l'agent demande d'adopter ou de changer, avec vos mots, dans le chat.")+'</div>';
+    if(k===6)x='<div class="ban">'+T("« Le test final a été ouvert automatiquement, par le mode démonstration, et non par votre décision. »")+'</div>';
+    root.querySelector("#aX").innerHTML=x;
+    var c=root.querySelector("#aC");c.innerHTML=T(CAP[k]);c.className="cap"+(k===4||k===6?" bad":k===5?" ok":"");
+  }
+  return {n:7,set:set};
+};
+
+/* ---------- Démo 4 : la règle d'une erreur type garde le plus simple ----------
+   MAE hors pli : 7,16 · 3,69 · 3,68 · 3,40 ; erreurs types des plis 0,68 · 0,69 · 0,61 (tableau 6.8 du rapport, via la maquette) ;
+   écart apparié EBM − linéaire −0,30 [−0,49 ; −0,12]. La barre 6,44 = 0,9 × 7,16 et le seuil 4,01 = 3,40 + 0,61 sont calculés. */
+DEMOS.onese=function(root,sync){
+  var X0=210,X1=770,V0=2.5,V1=7.6;function x(v){return X0+(v-V0)/(V1-V0)*(X1-X0);}
+  var P0=-0.6,P1=0.2;function px(v){return X0+(v-P0)/(P1-P0)*(X1-X0);}
+  var R=[["Moyenne de référence",7.16,"7,16",null,"base"],["Modèle linéaire",3.69,"3,69",0.68,""],["Ridge réglée",3.68,"3,68",0.69,""],["EBM",3.40,"3,40",0.61,""]];
+  var Y=[40,84,128,172];
+  var s='<svg viewBox="0 0 800 300" role="img" aria-label="Erreur absolue moyenne hors pli des quatre configurations">';
+  for(var t=3;t<=7;t++)s+='<line class="grid" x1="'+x(t)+'" y1="20" x2="'+x(t)+'" y2="192"/><text class="tk" x="'+x(t)+'" y="209" font-size="13" text-anchor="middle">'+t+'</text>';
+  s+='<line class="ax" x1="'+X0+'" y1="192" x2="'+X1+'" y2="192"/><text class="tk" x="'+X1+'" y="228" font-size="12" text-anchor="end">'+T("MAE hors pli, en mpg · plus bas = mieux")+'</text>';
+  s+='<g id="oBand" class="hide"><rect class="bandr" x="'+x(3.40)+'" y="66" width="'+(x(4.01)-x(3.40))+'" height="124"/><text class="bandt" x="'+x(3.40)+'" y="228" font-size="13">'+T("bande : 3,40 + 0,61 = 4,01")+'</text></g>';
+  s+='<g id="oCrit"><line class="crit" x1="'+x(6.44)+'" y1="20" x2="'+x(6.44)+'" y2="192"/><text class="critt" x="'+(x(6.44)-6)+'" y="'+(Y[0]+5)+'" font-size="13" text-anchor="end">'+T("critère : 6,44 (−10 %)")+'</text></g>';
+  R.forEach(function(r,i){var y=Y[i];
+    s+='<text class="rl" x="10" y="'+(y+5)+'" font-size="15">'+r[0]+'</text>';
+    if(r[3])s+='<g class="oWh hide"><line class="wh" x1="'+x(r[1]-r[3])+'" y1="'+y+'" x2="'+x(r[1]+r[3])+'" y2="'+y+'"/><line class="wh" x1="'+x(r[1]-r[3])+'" y1="'+(y-6)+'" x2="'+x(r[1]-r[3])+'" y2="'+(y+6)+'"/><line class="wh" x1="'+x(r[1]+r[3])+'" y1="'+(y-6)+'" x2="'+x(r[1]+r[3])+'" y2="'+(y+6)+'"/><text class="rlc" x="'+(x(r[1]+r[3])+7)+'" y="'+(y+5)+'" font-size="12">± '+String(r[3]).replace(".",",")+'</text></g>';
+    s+='<circle class="dot '+r[4]+'" cx="'+x(r[1])+'" cy="'+y+'" r="7"/><text class="vl" x="'+x(r[1])+'" y="'+(y-12)+'" font-size="14" text-anchor="middle">'+r[2]+'</text>';});
+  s+='<g id="oKeep" class="hide"><rect class="keep" x="4" y="'+(Y[1]-16)+'" width="170" height="28" rx="3"/><text class="keept" x="'+(x(4.37)+52)+'" y="'+(Y[1]+5)+'" font-size="13">'+T("← gardé : le plus simple")+'</text></g>';
+  s+='<g id="oPair" class="hide"><text class="rl" x="10" y="266" font-size="15">'+T("Écart apparié")+'</text><text class="rlc" x="10" y="283" font-size="12">EBM − linéaire</text>'+
+     '<line class="ax" x1="'+X0+'" y1="282" x2="'+X1+'" y2="282"/>';
+  [-0.6,-0.4,-0.2,0,0.2].forEach(function(v){s+='<text class="tk" x="'+px(v)+'" y="298" font-size="12" text-anchor="middle">'+(v===0?"0":String(v).replace(".",",").replace("-","−"))+'</text>';});
+  s+='<line class="zero" x1="'+px(0)+'" y1="240" x2="'+px(0)+'" y2="282"/><line class="pint" x1="'+px(-0.49)+'" y1="264" x2="'+px(-0.12)+'" y2="264"/><circle class="pdot" cx="'+px(-0.30)+'" cy="264" r="7"/>'+
+     '<text class="pt" x="'+px(-0.30)+'" y="250" font-size="14" text-anchor="middle">'+T("−0,30 [−0,49 ; −0,12] : exclut zéro")+'</text></g></svg>';
+  root.innerHTML='<div class="lab">318 voitures · 5 plis · hors pli · preuves de développement</div>'+s+'<div class="cap" id="oC"></div>';
+  var CAP=["Quatre erreurs hors pli. Barre du critère à 6,44 : les trois modèles la passent, en développement.",
+    "Chaque erreur a son incertitude : une erreur type des 5 plis, 0,61 à 0,69 mpg (rapport de l'étude).",
+    "La règle : tout modèle à moins d'une erreur type du meilleur est « aussi bon » ; on garde le plus simple, le linéaire.",
+    "Comparées voiture par voiture, l'EBM fait mieux de 0,30 mpg, et l'intervalle exclut zéro.",
+    "Deux outils, deux réponses. Garder le linéaire est un choix de simplicité, pas de précision : à dire avec vos mots."];
+  function show(id,on){var e=root.querySelector(id);if(e)e.setAttribute("class",on?"":"hide");}
+  function set(k){
+    $$(".oWh",root).forEach(function(g){g.setAttribute("class","oWh"+(k>=1?"":" hide"));});
+    show("#oBand",k>=2);show("#oKeep",k>=2);show("#oPair",k>=3);show("#oCrit",k<=1||k===4);
+    var c=root.querySelector("#oC");c.innerHTML=T(CAP[k]);c.className="cap"+(k===4?" bad":k===2?" ok":"");
+  }
+  return {n:5,set:set};
+};
+
+/* ---------- Démo 5 : exporter n'est pas déployer ----------
+   Statuts et commandes : docs/handoff/AZUREML-EXPORT-V1.md (§4, §5, §9, §10). */
+DEMOS.export=function(root,sync){
+  var N=[["Étude terminée","test final ouvert une fois, modèle linéaire choisi"],
+    ["Plan d'export","ce qui part, et ce qui manque pour Azure"],
+    ["Projet généré","gabarit team-azureml-v1"],
+    ["validate --offline","le projet se vérifie seul"],
+    ["predict --parity","mêmes scores que l'étude"],
+    ["Job Azure ML","jamais soumis"],
+    ["Endpoint","n'existe pas"]];
+  root.innerHTML='<div class="g2" style="grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)"><div><div class="lab">La chaîne de transmission</div><div class="ch" id="eC"></div></div><div><div class="lab" id="eL"></div><div id="eR"></div></div></div><div class="cap" id="eK"></div>';
+  var CMD=["","hypotrail export azureml --plan --expected-revision &lt;n&gt;","hypotrail export azureml --out ~/exports/mpg-aml …","python -m src.pipeline.utils.project validate --offline","python -m src.pipeline.utils.project predict --parity","python -m src.pipeline.utils.project submit   # imprime seulement","python -m src.pipeline.utils.project run-local --mode rebuild_final_candidate"];
+  var READY='<div class="rd"><span class="k">configuration</span> <span class="v wa">draft</span> · <span class="k">artefact</span> <span class="v ok">packaged</span> · <span class="k">preuve</span> <span class="v ok">evaluated</span><br>'+
+    '<span class="k">validation locale</span> <span class="v">not_run</span> · <span class="k">preflight</span> <span class="v">not_run</span><br><span class="k">job</span> <span class="v no">not_submitted</span> · <span class="k">enregistrement</span> <span class="v no">not_registered</span><br>'+
+    '<span class="k">autorisation de production</span> <span class="v no">outside_scope</span> · <span class="k">Azure</span> <span class="v no">not_qualified</span></div>';
+  var R=['<div class="panel">'+T("L'étude MPG complète, préparée : le modèle linéaire capturé avant l'ouverture, le test final ouvert une fois.")+'</div>',
+    '<div class="panel">'+READY+'</div><p class="mut" style="font-size:.6rem">'+T("Ce qui manque pour Azure : le profil de destination (configuration « draft »).")+'</p>',
+    '<div class="panel tree">aml/  components/ ×4 · pipelines/training/<br>src/pipeline/  data_preparation · data_splitting<br>              training · evaluation<br>README.md<br>data/hypotrail/contracts/<br>  model-recipe.json · data-contract.json<br>  readiness.json · deployment-snapshot.json<br>data/hypotrail/models/evaluated/</div>',
+    '<div class="panel ok">'+T("✓ validate --offline : le projet déplacé vérifie ses contrats, ses empreintes et son modèle.")+'</div>',
+    '<div class="panel ok">'+T("✓ predict --parity : le modèle exporté reproduit les scores de l'étude.")+'</div>',
+    '<div class="panel bad">'+T("✗ Aucun job, aucun endpoint, aucun appel Azure n'a jamais été fait. Statut : <b>not_qualified</b>.")+'</div>'+READY,
+    '<div class="panel bad">'+T("Candidat reconstruit : <b>rebuilt_candidate</b> · verdict <b>not_inherited</b> · aucune métrique de généralisation.")+'</div>'];
+  var CAP=["Le point de départ : une étude terminée, pas un modèle isolé.",
+    "Le plan dit ce qui part et ce qui manque, avant d'écrire quoi que ce soit.",
+    "Le projet suit le gabarit de l'équipe : quatre étapes, README, recette et contrat de données.",
+    "Vérifié en local, dans le projet déplacé.",
+    "La parité : ce qui part est bien ce qui a été évalué.",
+    "Exporter n'est pas déployer : une transmission vérifiable, rien n'a tourné sur Azure.",
+    "Un modèle réentraîné hors de l'étude n'hérite pas de son verdict."];
+  function set(k){
+    root.querySelector("#eC").innerHTML=N.map(function(n,i){var st,sym;
+      if(i>=5){st=k>=5?"no":"fut";sym="✗";}else if(i<k||(k===0&&i===0)||(k>=5&&i<5)){st="ok";sym="✓";}else if(i===k){st="now";sym="●";}else{st="fut";sym="○";}
+      if(k===6&&i<5){st="ok";sym="✓";}
+      return '<div class="nd '+st+'"><span class="s">'+sym+'</span><span><b>'+esc(n[0])+'</b><small>'+esc(T(n[1]))+'</small></span></div>';}).join("");
+    root.querySelector("#eL").innerHTML=k===0?"étude prête":"commande";
+    root.querySelector("#eR").innerHTML=(CMD[k]?'<pre class="code" style="font-size:.6rem;margin-bottom:.35rem">'+CMD[k]+'</pre>':'')+R[k];
+    var c=root.querySelector("#eK");c.innerHTML=T(CAP[k]);c.className="cap"+(k>=5?" bad":k===4?" ok":"");
+  }
+  return {n:7,set:set};
+};
+
+/* ---------- Décor : surtitre de partie, durée, numéro d'écran, espaces insécables ---------- */
+(function(){
+  var parts={};(window.DECK_CONFIG.plan||[]).forEach(function(p,j){parts[p[0]]=j+1;});
+  var scr=document.querySelectorAll(".screen");
+  Array.prototype.forEach.call(scr,function(s,i){var f=s.querySelector(".frame");if(!f)return;
+    if(!f.classList.contains("sect")){var p=s.getAttribute("data-part")||"";
+      var eb=document.createElement("div");eb.className="eb";
+      eb.innerHTML='<span>'+(p==="Annexe"?"Annexe":(parts[p]+" · "+p))+'</span>'+(s.getAttribute("data-dur")?'<span class="dur">'+s.getAttribute("data-dur")+'</span>':'');
+      f.insertBefore(eb,f.firstChild);}
+    var dn=document.createElement("span");dn.className="dn";dn.textContent=(i+1)+" / "+scr.length;f.appendChild(dn);});
+  function walk(n){if(n.nodeType===3){n.nodeValue=T(n.nodeValue);return;}
+    if(n.nodeType!==1||/^(PRE|CODE|SCRIPT|STYLE|SVG)$/i.test(n.tagName))return;for(var c=n.firstChild;c;c=c.nextSibling)walk(c);}
+  Array.prototype.forEach.call(document.querySelectorAll(".frame,.notes"),walk);
+})();
+</script>
+<script>
+/* ===== moteur de présentation augmentée (skill augmented-slides, chaînes traduites en français).
+   window.DECK_CONFIG = { id, plan:[[partie, minutes], ...] } ; démos : DEMOS.nom = function(root, sync){ return { n, set } } */
+var DEMOS = window.DEMOS || {};
+function $(s,r){return (r||document).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+(function(){
+  var CFG=window.DECK_CONFIG||{},ID=CFG.id||"deck",PRES=/-presenter$/.test(location.hash);
+  var app=$("#app"),stage=$("#stage"),pane=$("#notesPane"),screens=$$(".screen"),N=screens.length;
+  var cur=-1,step=0,ctrls={},fitted={},remote=false,popup=null,bc=null,t0=Date.now();
+
+  /* ---------- démos : contrôleurs paresseux ---------- */
+  function ctrl(i){
+    if(i in ctrls)return ctrls[i];
+    var s=screens[i],name=s.getAttribute("data-demo"),c=null;
+    if(name&&DEMOS[name])c=DEMOS[name](s.querySelector("#"+name),function(k){if(cur===i){step=k;drawDots();emit();}})||null;
+    return ctrls[i]=c;
+  }
+
+  /* ---------- ajustement : cadre le plus grand possible ; démo zoomée à la plus grande taille où toutes les étapes tiennent ---------- */
+  function fitPres(inner){
+    $$("pre",inner).forEach(function(p){p.style.fontSize="";p.style.whiteSpace="";
+      if(p.scrollWidth>p.clientWidth+1){var r=p.clientWidth/p.scrollWidth*0.97,f=parseFloat(getComputedStyle(p).fontSize);
+        if(r<0.8){r=0.8;p.style.whiteSpace="pre-wrap";p.style.overflowWrap="anywhere";}
+        p.style.fontSize=(f*r)+"px";}});
+  }
+  function body(i){var b=screens[i].querySelector(".dbody");return b&&b.firstElementChild?b:null;}
+  function shrink(i){var b=body(i);if(!b)return;var inner=b.firstElementChild;fitPres(inner);
+    var z=parseFloat(inner.style.zoom||"1"),h=inner.getBoundingClientRect().height,av=b.getBoundingClientRect().height;
+    if(h>av+1)inner.style.zoom=String(z*av/h*0.97);}
+  function fits(i,c){var b=body(i),inner=b.firstElementChild,av=b.getBoundingClientRect().height;
+    for(var k=0;k<c.n;k++){c.set(k);fitPres(inner);
+      if(inner.getBoundingClientRect().height>av+1||b.scrollWidth>b.clientWidth+1)return false;}
+    return true;}
+  function prefit(i){var c=ctrls[i],b=body(i);if(!c||!b||fitted[i]===stage.clientWidth)return;
+    var inner=b.firstElementChild,lo=0.4,hi=1.7;inner.style.zoom=String(hi);
+    if(!fits(i,c)){for(var it=0;it<9;it++){var m=(lo+hi)/2;inner.style.zoom=String(m);if(fits(i,c))lo=m;else hi=m;}inner.style.zoom=String(lo*0.98);}
+    fitted[i]=stage.clientWidth;}
+  function fit(){
+    var W=stage.clientWidth,H=stage.clientHeight,g=Math.max(10,Math.min(W,H)*0.02);
+    var ratio=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ratio"))||0.75;
+    var fw=Math.max(280,Math.min(W-2*g,(H-2*g)/ratio));
+    document.documentElement.style.setProperty("--fw",fw+"px");
+    document.documentElement.style.fontSize=(fw/47)+"px";
+    if(cur>=0&&ctrls[cur]){fitted[cur]=null;prefit(cur);ctrls[cur].set(step);shrink(cur);}
+  }
+
+  /* ---------- navigation ---------- */
+  function go(i,atEnd){
+    i=Math.max(0,Math.min(N-1,i));
+    if(cur>=0)screens[cur].classList.remove("on");
+    cur=i;screens[i].classList.add("on");
+    var c=ctrl(i);step=0;
+    if(c){step=atEnd?c.n-1:0;prefit(i);c.set(step);shrink(i);
+      setTimeout(function(){if(cur===i){fitted[i]=null;prefit(i);c.set(step);shrink(i);}},120);}
+    $("#prog").style.width=((i+1)/N*100)+"%";
+    drawDots();drawNotes();emit();
+    try{history.replaceState(null,"","#"+(i+1)+(PRES?"-presenter":""));}catch(e){}
+  }
+  function next(){var c=ctrls[cur];if(c&&step<c.n-1){step++;c.set(step);shrink(cur);drawDots();emit();}else if(cur<N-1)go(cur+1,false);}
+  function prev(){var c=ctrls[cur];if(c&&step>0){step--;c.set(step);shrink(cur);drawDots();emit();}else if(cur>0)go(cur-1,true);}
+  function drawDots(){
+    drawInfo();var c=ctrls[cur],fd=screens[cur].querySelector(".fdots");if(!fd)return;fd.innerHTML="";
+    if(c&&c.n>1)for(var k=0;k<c.n;k++){var d=document.createElement("span");if(k<=step)d.className="on";fd.appendChild(d);}
+  }
+
+  /* ---------- notes ---------- */
+  function drawNotes(){
+    var nt=screens[cur].querySelector(".notes");
+    pane.innerHTML=(PRES?'<div class="presinfo" id="pInfo"></div>':'')+'<h4>Notes <span>'+(cur+1)+' / '+N+'</span></h4>'+
+      (nt&&nt.innerHTML.trim()?nt.innerHTML:'<p style="color:var(--faint)">—</p>');
+    drawInfo();
+  }
+  function setNotes(on){app.classList.toggle("notes-on",on);$("#bNotes").setAttribute("aria-pressed",String(on));setTimeout(fit,0);
+    if(!PRES)try{localStorage.setItem(ID+"-notes",on?"1":"0");}catch(e){}}
+
+  /* ---------- tempo : minutes par partie, réparties sur les écrans selon leur poids ---------- */
+  var PLAN=(CFG.plan||[]).map(function(p){return [p[0],p[1]];}),PS=[],PE=[],PART=[];
+  (function(){
+    if(!PLAN.length)return;var idx={};PLAN.forEach(function(p,j){idx[p[0]]=j;});
+    var w=screens.map(function(s,i){PART[i]=idx[s.getAttribute("data-part")]||0;
+      var f=s.querySelector(".frame");return +(s.getAttribute("data-weight")||(f&&f.classList.contains("sect")?0.3:s.getAttribute("data-demo")?3:1));});
+    var t=0;PLAN.forEach(function(p,j){var tw=0;w.forEach(function(x,i){if(PART[i]===j)tw+=x;});var u=t;
+      w.forEach(function(x,i){if(PART[i]===j){PS[i]=u;u+=tw?p[1]*x/tw:0;PE[i]=u;}});p.push(t,t+p[1]);t+=p[1];});
+  })();
+  try{var s0=+localStorage.getItem(ID+"-t0");if(PRES&&s0&&Date.now()-s0<4*3600e3)t0=s0;}catch(e){}
+  function hm(min){var d=new Date(t0+min*60000);return d.getHours()+"h"+("0"+d.getMinutes()).slice(-2);}
+  function mmss(sec){sec=Math.round(Math.abs(sec));return Math.floor(sec/60)+":"+("0"+sec%60).slice(-2);}
+  function drawInfo(){
+    var el=$("#pInfo");if(!PRES||!el||cur<0)return;
+    var c=ctrls[cur],el_min=(Date.now()-t0)/60000,pace="",cls="ok",parts="",ok=peers().length>0;
+    if(PLAN.length){
+      if(el_min<PS[cur]-0.5){pace=mmss((PS[cur]-el_min)*60)+" d'avance";cls="ahead";}
+      else if(el_min>PE[cur]+0.5){pace=mmss((el_min-PE[cur])*60)+" de retard";cls="late";}else pace="à l'heure";
+      parts='<ol>'+PLAN.map(function(p,j){return '<li class="'+(j<PART[cur]?"done":j===PART[cur]?"now":"")+'"><span>'+esc(p[0])+'</span><span>'+p[1]+' min</span><span>'+hm(p[2])+' → '+hm(p[3])+'</span></li>';}).join("")+'</ol>';
+    }
+    var nx=c&&step<c.n-1?"étape "+(step+2)+" de la démo":(cur<N-1?esc(screens[cur+1].getAttribute("data-title")||""):"fin");
+    el.innerHTML='<div class="pclock"><b id="pTimer">'+mmss((Date.now()-t0)/1000)+'</b>'+(pace?'<span class="pace '+cls+'">'+pace+'</span>':'')+
+      '<button type="button" id="pReset" title="Démarrer le chrono maintenant">↺</button></div>'+parts+
+      '<div class="ppos">écran '+(cur+1)+' / '+N+(c&&c.n>1?' · étape '+(step+1)+' / '+c.n:'')+(PLAN.length?' · prévu '+hm(PS[cur])+'–'+hm(PE[cur]):'')+'</div>'+
+      '<div>Ensuite : '+nx+'</div><div class="plink'+(ok?' ok':'')+'">'+(ok?'fenêtre public synchronisée':'fenêtre public introuvable : appuyez sur P dans celle-ci')+'</div>';
+  }
+
+  /* ---------- fenêtre présentateur : P l'ouvre ; les deux fenêtres reflètent écran + étape ---------- */
+  try{bc=new BroadcastChannel(ID+"-sync");bc.onmessage=function(e){recv(e.data);};}catch(e){}
+  function peers(){var p=[];if(popup&&!popup.closed)p.push(popup);try{if(window.opener&&!window.opener.closed)p.push(window.opener);}catch(e){}return p;}
+  function send(m){m.deck=ID;peers().forEach(function(w){try{w.postMessage(m,"*");}catch(e){}});if(bc)try{bc.postMessage(m);}catch(e){}}
+  function emit(){if(!remote&&cur>=0)send({t:"pos",i:cur,k:step});}
+  function recv(m){
+    if(!m||m.deck!==ID)return;
+    if(m.t==="hello"){send({t:"pos",i:cur,k:step});return;}
+    if(m.t!=="pos")return;
+    remote=true;
+    try{if(m.i!==cur)go(m.i,false);var c=ctrls[cur];
+      if(c&&m.k!==step){step=Math.max(0,Math.min(m.k,c.n-1));c.set(step);shrink(cur);drawDots();}}
+    finally{remote=false;}
+  }
+  window.addEventListener("message",function(e){recv(e.data);});
+  function openPresenter(){
+    popup=window.open(location.href.split("#")[0]+"#"+(cur+1)+"-presenter",ID+"-presenter","width=1280,height=800");
+    if(!popup)toast("Fenêtre bloquée : autorisez les fenêtres surgissantes pour ce fichier, puis appuyez de nouveau sur P.");
+  }
+  function toast(t){var d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove();},5000);}
+
+  /* ---------- vue d'ensemble, plein écran, thème, barre ---------- */
+  function toggleOver(){var o=$("#overview");if(!o.hidden){o.hidden=true;return;}
+    var html="",part=null;screens.forEach(function(s,i){var p=s.getAttribute("data-part")||"";
+      if(p!==part){part=p;html+='<div class="sep">'+esc(p)+'</div>';}
+      html+='<button data-i="'+i+'">'+(i+1)+'. '+esc(s.getAttribute("data-title")||"")+'</button>';});
+    o.innerHTML='<div class="grid">'+html+'</div>';o.hidden=false;
+    $$("button",o).forEach(function(b){b.onclick=function(){o.hidden=true;go(+b.getAttribute("data-i"),false);};});}
+  function full(){try{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen().catch(function(){});}catch(e){}}
+  function theme(){var r=document.documentElement;r.setAttribute("data-mode",r.getAttribute("data-mode")==="dark"?"light":"dark");}
+  function setBar(on){document.body.classList.toggle("nobar",!on);var a=document.activeElement;if(!on&&a&&$(".bot").contains(a))a.blur();}
+  document.addEventListener("fullscreenchange",function(){setBar(!document.fullscreenElement);});
+  $("#bPrev").onclick=prev;$("#bNext").onclick=next;$("#bNotes").onclick=function(){setNotes(!app.classList.contains("notes-on"));};
+  $("#bOver").onclick=toggleOver;$("#bFull").onclick=full;$("#bTheme").onclick=theme;$("#bHide").onclick=function(){setBar(false);};
+  $(".bot").addEventListener("click",function(e){var b=e.target.closest("button");if(b)b.blur();});
+  ["click","input"].forEach(function(ev){stage.addEventListener(ev,function(e){if(e.target.closest(".dbody"))setTimeout(function(){shrink(cur);},0);});});
+  (function(){var bar=$(".bot"),t=null;
+    function wake(){bar.classList.add("show");document.body.classList.remove("presenting");clearTimeout(t);
+      t=setTimeout(function(){if(!bar.matches(":hover")&&!bar.contains(document.activeElement)){bar.classList.remove("show");document.body.classList.add("presenting");}},2200);}
+    document.addEventListener("mousemove",wake);document.addEventListener("touchstart",wake,{passive:true});wake();})();
+  document.addEventListener("keydown",function(e){
+    var t=e.target;if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable)){if(e.key==="Escape")t.blur();return;}
+    if(e.ctrlKey||e.metaKey||e.altKey)return;var k=e.key;
+    if(k==="ArrowRight"||k===" "||k==="PageDown"){e.preventDefault();next();}
+    else if(k==="ArrowLeft"||k==="PageUp"){e.preventDefault();prev();}
+    else if(k==="Home"){e.preventDefault();go(0,false);}else if(k==="End"){e.preventDefault();go(N-1,false);}
+    else if(k==="n"||k==="N")setNotes(!app.classList.contains("notes-on"));
+    else if(k==="o"||k==="O")toggleOver();else if(k==="Escape")$("#overview").hidden=true;
+    else if(k==="f"||k==="F")full();else if(k==="t"||k==="T")theme();
+    else if(k==="h"||k==="H")setBar(document.body.classList.contains("nobar"));
+    else if((k==="p"||k==="P")&&!PRES)openPresenter();
+  });
+  window.addEventListener("resize",fit);
+  if("ResizeObserver" in window)new ResizeObserver(fit).observe(stage);
+
+  /* ---------- démarrage ---------- */
+  var on=false;try{on=localStorage.getItem(ID+"-notes")==="1";}catch(e){}
+  setNotes(PRES||on);fit();
+  var m=/^#(\d+)/.exec(location.hash);go(m?(+m[1])-1:0,false);
+  if(PRES){document.body.classList.add("presenter");send({t:"hello"});
+    setInterval(function(){var el=$("#pTimer");if(el)el.textContent=mmss((Date.now()-t0)/1000);},1000);setInterval(drawInfo,5000);
+    pane.addEventListener("click",function(e){if(e.target.id==="pReset"){t0=Date.now();try{localStorage.setItem(ID+"-t0",String(t0));}catch(x){}drawInfo();}});}
+  window.__deck={go:go,next:next,prev:prev,fit:fit,refit:function(){fitted={};fit();}};
+})();
+</script>
+</body></html>
