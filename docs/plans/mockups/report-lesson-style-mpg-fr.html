@@ -14,7 +14,7 @@
   --yellow:#F0D178; --pink:#EFA3B8; --mint:#B9E2C4;
   --teal:#9FE0D2; --violet:#C8B6F5; --blue:#A7CCEB; --green:#B9E2C4; --coral:#F3A28F; --amber:#F0D178;
   --card:#F5F1E6; --cardink:#22302B; --cardmuted:#4E5A55; --cardline:rgba(34,48,43,.14); --cardsoft:#ECE7D8;
-  --gridmm:rgba(38,72,124,.11); --red:#B8322A; --pen:#1E4E9E; --hl:rgba(255,222,64,.55);
+  --gridmm:rgba(38,72,124,.045); --ruleline:rgba(34,48,43,.045); --red:#B8322A; --pen:#1E4E9E; --hl:rgba(255,222,64,.55);
   --ochre:#B07418; --slate:#2E5446;
   --serif:Georgia,"Iowan Old Style","Times New Roman",serif;
   --sans:"Avenir Next",Avenir,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -27,7 +27,7 @@ body.white{ --board:#F1F3F1; --board2:#E4E8E4; --chalk:#1E2A36; --chalk2:#3E4A57
   --ink:#1E2A36; --muted:#3E4A57; --faint:#7C8896; --line:rgba(30,42,54,.12); --line2:rgba(30,42,54,.3);
   --yellow:#B7791F; --pink:#B93A5A; --mint:#1F7A44;
   --teal:#0F8A7C; --violet:#6B46C1; --blue:#1F5FA8; --green:#1F7A44; --coral:#C0392B; --amber:#B7791F;
-  --card:#FFFFFF; --cardsoft:#F1EFE9; --cardline:rgba(34,48,43,.12); color-scheme:light}
+  --card:#FFFFFF; --cardsoft:#F1EFE9; --cardline:rgba(34,48,43,.12); --ruleline:rgba(34,48,43,.035); --gridmm:rgba(38,72,124,.035); color-scheme:light}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:var(--board);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;padding-bottom:20px;
@@ -94,7 +94,7 @@ body.white .ledge{background:linear-gradient(#c8ccd0,#9aa1a8)}
   .side .in{padding:0 14px 12px}
 }
 /* ---- fiches cartonnées ---- */
-.card{background:repeating-linear-gradient(0deg,transparent 0 27px,var(--cardline) 27px 28px),var(--card);color:var(--cardink);border-radius:3px;padding:16px 20px;box-shadow:0 14px 26px -14px rgba(0,0,0,.6),0 1px 0 rgba(0,0,0,.2);border-left:4px solid var(--ac,var(--ochre))}
+.card{background:repeating-linear-gradient(0deg,transparent 0 27px,var(--ruleline) 27px 28px),var(--card);color:var(--cardink);border-radius:3px;padding:16px 20px;box-shadow:0 14px 26px -14px rgba(0,0,0,.6),0 1px 0 rgba(0,0,0,.2);border-left:4px solid var(--ac,var(--ochre))}
 .card.plain{background:var(--card)}
 .card .lbl,.frame .lbl,details .lbl{font:600 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--cardmuted);margin-bottom:6px}
 .card p,.card li{font-size:15px;line-height:1.55}
