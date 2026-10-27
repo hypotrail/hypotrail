@@ -172,7 +172,8 @@
     "revision": 38,
     "origin": {
      "channel": "chat"
-    }
+    },
+    "data_contingent": false
    }
   ],
   "decisions": {
@@ -314,73 +315,85 @@
     "result_id": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "eda.distribution:weight": {
     "result_id": "bedade14ed77dd17cb9d696a4706af59a70071a5da92bfea69c2230a50d194fc",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "eda.mean_by:model_year": {
     "result_id": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "eda.quality": {
     "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "eda.single_feature_signal": {
     "result_id": "99cecf8893cdd9dd923e425395c64215db2c07340cc43e8b06a986e632f9f2a7",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "eda.special_values": {
     "result_id": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "eda.target_summary": {
     "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "evaluate.regression": {
     "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.baseline": {
     "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.linear": {
     "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.variant": {
     "result_id": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "split": {
     "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    }
   },
   "artifacts": {
@@ -653,7 +666,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-27T09:52:51.114855+00:00",
+   "boundary_time": "2026-10-27T23:42:37.674588+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -662,7 +675,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-27T09:52:51.261449+00:00",
+     "time": "2026-10-27T23:42:37.868176+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -685,7 +698,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-27T09:52:52.006751+00:00",
+     "time": "2026-10-27T23:42:38.548665+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -715,7 +728,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-27T09:52:52.642694+00:00",
+     "time": "2026-10-27T23:42:39.233859+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -738,7 +751,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-27T09:52:53.334532+00:00",
+     "time": "2026-10-27T23:42:39.996488+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -768,7 +781,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-27T09:52:54.190860+00:00",
+     "time": "2026-10-27T23:42:40.917401+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -791,7 +804,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-27T09:52:55.305458+00:00",
+     "time": "2026-10-27T23:42:41.852199+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -821,7 +834,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-27T09:52:56.603193+00:00",
+     "time": "2026-10-27T23:42:42.979728+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -844,7 +857,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-27T09:52:57.891549+00:00",
+     "time": "2026-10-27T23:42:43.923467+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -874,7 +887,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-27T09:52:58.981628+00:00",
+     "time": "2026-10-27T23:42:45.002496+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -897,7 +910,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-27T09:53:00.001444+00:00",
+     "time": "2026-10-27T23:42:46.088184+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -927,7 +940,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-27T09:53:01.418727+00:00",
+     "time": "2026-10-27T23:42:47.203826+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -950,7 +963,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-27T09:53:02.563592+00:00",
+     "time": "2026-10-27T23:42:48.365159+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -973,7 +986,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-27T09:53:03.650747+00:00",
+     "time": "2026-10-27T23:42:49.831426+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -996,7 +1009,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-27T09:53:04.776886+00:00",
+     "time": "2026-10-27T23:42:51.086881+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1019,7 +1032,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-27T09:53:06.413776+00:00",
+     "time": "2026-10-27T23:42:52.683920+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1042,7 +1055,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-27T09:53:07.582559+00:00",
+     "time": "2026-10-27T23:42:53.956960+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1065,7 +1078,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-27T09:53:09.145990+00:00",
+     "time": "2026-10-27T23:42:55.264414+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1088,7 +1101,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-27T09:53:10.548604+00:00",
+     "time": "2026-10-27T23:42:56.922278+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1111,7 +1124,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-27T09:53:11.915609+00:00",
+     "time": "2026-10-27T23:42:58.270824+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1134,7 +1147,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-27T09:53:13.674777+00:00",
+     "time": "2026-10-27T23:42:59.670451+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1157,7 +1170,7 @@
     },
     {
      "revision": 32,
-     "time": "2026-10-27T09:53:14.981791+00:00",
+     "time": "2026-10-27T23:43:00.878056+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1180,7 +1193,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-27T09:53:16.296439+00:00",
+     "time": "2026-10-27T23:43:02.013949+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1213,7 +1226,7 @@
     },
     {
      "revision": 35,
-     "time": "2026-10-27T09:53:17.676676+00:00",
+     "time": "2026-10-27T23:43:03.372887+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1236,7 +1249,7 @@
     },
     {
      "revision": 37,
-     "time": "2026-10-27T09:53:18.990862+00:00",
+     "time": "2026-10-27T23:43:04.873911+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1259,7 +1272,7 @@
     },
     {
      "revision": 38,
-     "time": "2026-10-27T09:53:20.163142+00:00",
+     "time": "2026-10-27T23:43:06.231698+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1297,7 +1310,7 @@
    "channel_actions": []
   },
   "task": "regression",
-  "currency": "1795f1c8e6d56e8e",
+  "currency": "26c603c7ad500ff9",
   "texts": {
    "en": {
     "plan": {
@@ -1380,7 +1393,27 @@
     },
     "proposals": {
      "p_7": null
-    }
+    },
+    "question": "Do you adopt this decision?",
+    "options": {
+     "adopt": "I adopt this decision",
+     "change": "Change something",
+     "explain": "Explain first"
+    },
+    "options_note": null,
+    "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change.",
+    "headlines": {
+     "prediction_time": "Moment: “when the technical characteristics of a new model are fixed, before its fuel efficiency is measured”.",
+     "feature_availability": "Variables: keep cylinders, displacement, horsepower, origin and weight; exclude acceleration (its timing is uncertain).",
+     "split": "Split: rows with model_year at 79 or later are validation rows; earlier rows train the models.",
+     "success_criterion": "Criterion: adopt only if the model's mean absolute error is at least 10% below the mean baseline's.",
+     "structural_eda": "Quality: 318 development rows checked, 0 duplicated.",
+     "preprocessing": "Preparation: default preparation: nothing added, grouped, capped, or transformed.",
+     "train_eda": "Explore: mean target 20.57 mpg on the explored rows.",
+     "model_variant": "Variants: compare the model with a variant: stronger regularisation."
+    },
+    "data_contingent": {},
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
    },
    "fr": {
     "plan": {
@@ -1407,26 +1440,26 @@
     "next_action": "Une proposition sur le choix du modèle attend votre réponse. Lisez sa reformulation et dites si vous l'adoptez, ou ce que vous changeriez.",
     "choice_options": {},
     "limits": {
-     "unconfirmed_decisions": "Pas encore confirmé par vous : le choix du modèle, l'ouverture de l'échantillon de test final et la conclusion.",
-     "validation_is_not_independent": "Le jeu de validation sert à comparer les modèles et à en choisir un : ses erreurs ne sont donc pas une preuve indépendante de l'erreur future.",
-     "public_data_already_explored": "Les données ont été explorées ou publiées avant cette étude : ses lignes ne sont pas inédites.",
-     "grouped_split_unsupported": "Des lignes qui partagent une valeur de car_name peuvent tomber dans les deux jeux : cette version ne fait pas de découpage groupé, elle compte les valeurs partagées. Le jeu de validation n'est alors pas indépendant du jeu d'entraînement pour ces groupes.",
+     "unconfirmed_decisions": "Pas encore confirmé par vous : le choix du modèle, l'ouverture de l'échantillon de test final et la conclusion.",
+     "validation_is_not_independent": "Le jeu de validation sert à comparer les modèles et à en choisir un : ses erreurs ne sont donc pas une preuve indépendante de l'erreur future.",
+     "public_data_already_explored": "Les données ont été explorées ou publiées avant cette étude : ses lignes ne sont pas inédites.",
+     "grouped_split_unsupported": "Des lignes qui partagent une valeur de car_name peuvent tomber dans les deux jeux : cette version ne fait pas de découpage groupé, elle compte les valeurs partagées. Le jeu de validation n'est alors pas indépendant du jeu d'entraînement pour ces groupes.",
      "no_causality": "Des associations dans des données observées ne montrent pas qu'agir sur une variable changerait le résultat.",
      "workbench_not_tracked": "Les essais faits dans l'atelier (workbench) ne sont pas enregistrés et ne sont pas des décisions.",
-     "final_test_sealed": "L'échantillon de test final est encore scellé : chaque chiffre jusqu'ici est un résultat de développement, mesuré sur des lignes qui ont servi à explorer, ajuster et choisir."
+     "final_test_sealed": "L'échantillon de test final est encore scellé : chaque chiffre jusqu'ici est un résultat de développement, mesuré sur des lignes qui ont servi à explorer, ajuster et choisir."
     },
     "artifacts": {
-     "editable": "Le notebook éditable de l'étude suit le notebook généré jusqu'à votre première modification ; ensuite il n'est jamais écrasé et ne constitue pas une preuve officielle.",
+     "editable": "Le notebook éditable de l'étude suit le notebook généré jusqu'à votre première modification ; ensuite il n'est jamais écrasé et ne constitue pas une preuve officielle.",
      "notebook": "Le notebook généré est à jour.",
      "report": "Le rapport est à jour.",
-     "workbench": "L'atelier (workbench) est votre espace libre : il est créé une fois, jamais écrasé, et n'est pas suivi par l'étude."
+     "workbench": "L'atelier (workbench) est votre espace libre : il est créé une fois, jamais écrasé, et n'est pas suivi par l'étude."
     },
     "recap": [
-     "Objectif : « Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques » ; la prédiction est faite « when the technical characteristics of a new model are fixed, before its fuel efficiency is measured ».",
-     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : acceleration) ; le découpage des données (selon model_year, jeu de validation à partir de 79) ; le critère de succès (erreur de validation au moins 10 % sous celle de la moyenne de référence) ; la préparation des variables (par défaut, rien ne change) ; la variante à comparer (une régularisation plus forte).",
-     "Maintenant : Choisir le modèle, en attente de votre réponse (MAE de validation : la moyenne de référence 10,27 mpg; le modèle linéaire 6,48 mpg; la variante 6,51 mpg) ; le rapport et le notebook sont à jour.",
-     "Ensuite : si vous adoptez le choix du modèle : « Adopt the linear model. »",
-     "Limite : Le jeu de validation sert à comparer les modèles et à en choisir un : ses erreurs ne sont donc pas une preuve indépendante de l'erreur future."
+     "Objectif : « Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques » ; la prédiction est faite « when the technical characteristics of a new model are fixed, before its fuel efficiency is measured ».",
+     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : acceleration) ; le découpage des données (selon model_year, jeu de validation à partir de 79) ; le critère de succès (erreur de validation au moins 10 % sous celle de la moyenne de référence) ; la préparation des variables (par défaut, rien ne change) ; la variante à comparer (une régularisation plus forte).",
+     "Maintenant : Choisir le modèle, en attente de votre réponse (MAE de validation : la moyenne de référence 10,27 mpg; le modèle linéaire 6,48 mpg; la variante 6,51 mpg) ; le rapport et le notebook sont à jour.",
+     "Ensuite : si vous adoptez le choix du modèle : « Adopt the linear model. »",
+     "Limite : Le jeu de validation sert à comparer les modèles et à en choisir un : ses erreurs ne sont donc pas une preuve indépendante de l'erreur future."
     ],
     "digest": {
      "2": "Une proposition a été faite pour le moment de la prédiction.",
@@ -1439,21 +1472,21 @@
      "9": "Vous avez confirmé le critère de succès.",
      "10": "Une proposition a été faite pour la préparation des variables.",
      "11": "Vous avez confirmé la préparation des variables.",
-     "13": "Résultat calculé : le découpage.",
-     "15": "Résultat calculé : le résumé de la cible.",
-     "17": "Résultat calculé : la vérification des valeurs spéciales.",
-     "19": "Résultat calculé : le contrôle de qualité des données.",
-     "21": "Résultat calculé : le signal d'une variable seule.",
-     "23": "Résultat calculé : une moyenne de la cible par groupe de model_year.",
-     "25": "Résultat calculé : la distribution d'une colonne de weight.",
-     "27": "Résultat calculé : une analyse.",
-     "29": "Résultat calculé : le modèle de référence.",
-     "31": "Résultat calculé : le modèle linéaire.",
+     "13": "Résultat calculé : le découpage.",
+     "15": "Résultat calculé : le résumé de la cible.",
+     "17": "Résultat calculé : la vérification des valeurs spéciales.",
+     "19": "Résultat calculé : le contrôle de qualité des données.",
+     "21": "Résultat calculé : le signal d'une variable seule.",
+     "23": "Résultat calculé : une moyenne de la cible par groupe de model_year.",
+     "25": "Résultat calculé : la distribution d'une colonne de weight.",
+     "27": "Résultat calculé : une analyse.",
+     "29": "Résultat calculé : le modèle de référence.",
+     "31": "Résultat calculé : le modèle linéaire.",
      "32": "Une proposition a été faite pour la variante à comparer.",
      "33": "Vous avez confirmé la variante à comparer.",
-     "35": "Résultat calculé : le modèle variante.",
-     "37": "Résultat calculé : la comparaison des modèles.",
-     "38": "Une proposition a été faite pour le choix du modèle : le modèle linéaire."
+     "35": "Résultat calculé : le modèle variante.",
+     "37": "Résultat calculé : la comparaison des modèles.",
+     "38": "Une proposition a été faite pour le choix du modèle : le modèle linéaire."
     },
     "goal": {
      "intended_use": "Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques",
@@ -1463,8 +1496,189 @@
     },
     "proposals": {
      "p_7": null
-    }
+    },
+    "question": "Adoptez-vous cette décision ?",
+    "options": {
+     "adopt": "J'adopte cette décision",
+     "change": "Changer quelque chose",
+     "explain": "Expliquer d'abord"
+    },
+    "options_note": null,
+    "junior_digest": "Proposition sur le choix du modèle : « Adopt the linear model. » Si elle vous convient, dites que vous l'adoptez ; sinon dites ce que vous changez.",
+    "headlines": {
+     "prediction_time": "Moment : « when the technical characteristics of a new model are fixed, before its fuel efficiency is measured ».",
+     "feature_availability": "Variables : garder cylinders, displacement, horsepower, origin et weight ; exclure acceleration (moment incertain).",
+     "split": "Découpage : les lignes dont model_year vaut 79 ou plus sont les lignes de validation ; les lignes antérieures entraînent les modèles.",
+     "success_criterion": "Critère : n'adopter que si l'erreur absolue moyenne du modèle est inférieure d'au moins 10 % à celle de la moyenne de référence.",
+     "structural_eda": "Qualité : 318 lignes de développement vérifiées, 0 en double.",
+     "preprocessing": "Préparation : préparation par défaut : rien d'ajouté, de regroupé, de plafonné ni de transformé.",
+     "train_eda": "Exploration : cible moyenne 20,57 mpg sur les lignes explorées.",
+     "model_variant": "Variantes : comparer le modèle avec une variante : une régularisation plus forte."
+    },
+    "data_contingent": {},
+    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant."
    }
+  },
+  "panel_contract": 2,
+  "automation": null,
+  "review_queue": null,
+  "defensibility": {
+   "kind": "pending",
+   "count": 4,
+   "items": [
+    {
+     "id": "unconfirmed_decisions",
+     "severity": "not_final"
+    },
+    {
+     "id": "validation_is_not_independent",
+     "severity": "not_final"
+    },
+    {
+     "id": "final_test_sealed",
+     "severity": "not_final"
+    },
+    {
+     "id": "public_data_already_explored",
+     "severity": "context"
+    },
+    {
+     "id": "grouped_split_unsupported",
+     "severity": "caveat"
+    },
+    {
+     "id": "no_causality",
+     "severity": "context"
+    },
+    {
+     "id": "workbench_not_tracked",
+     "severity": "context"
+    }
+   ]
+  },
+  "ledger": {
+   "final_test": {
+    "openings": 0,
+    "max": 1
+   },
+   "target_looks": {
+    "eda": 4,
+    "sample": 1,
+    "total": 5
+   },
+   "configurations": {
+    "tried": 2,
+    "reference": true
+   }
+  },
+  "sample": {
+   "seed": "bf788f1b245ca3dd",
+   "row_keys": [
+    "L128",
+    "L181",
+    "L203",
+    "L226",
+    "L232",
+    "L258",
+    "L271",
+    "L375"
+   ],
+   "recorded": true
+  },
+  "headlines": {
+   "prediction_time": {
+    "decision_id": "prediction_time",
+    "basis": "restated",
+    "results": []
+   },
+   "feature_availability": {
+    "decision_id": "feature_availability",
+    "basis": "restated",
+    "results": []
+   },
+   "split": {
+    "decision_id": "split",
+    "basis": "restated",
+    "results": []
+   },
+   "success_criterion": {
+    "decision_id": "success_criterion",
+    "basis": "restated",
+    "results": []
+   },
+   "structural_eda": {
+    "decision_id": null,
+    "basis": null,
+    "results": [
+     "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e"
+    ]
+   },
+   "preprocessing": {
+    "decision_id": "preprocessing",
+    "basis": "restated",
+    "results": []
+   },
+   "train_eda": {
+    "decision_id": null,
+    "basis": null,
+    "results": [
+     "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305"
+    ]
+   },
+   "model_variant": {
+    "decision_id": "model_variant",
+    "basis": "restated",
+    "results": []
+   }
+  },
+  "criterion_configurations": {
+   "metric": "mae_reduction",
+   "unit": "mpg",
+   "bound": {
+    "value": 9.241925675675674,
+    "reference": 10.268806306306304,
+    "minimum": 0.1,
+    "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+    "path": "models.[fit.baseline].mae"
+   },
+   "configurations": [
+    {
+     "slot": "fit.linear",
+     "value": 6.476590382656274,
+     "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "path": "models.[fit.linear].mae",
+     "point_meets_bound": true,
+     "gain": 0.36929471747082676,
+     "low": 0.30765831630777174,
+     "high": 0.4261314806060684,
+     "status": "met",
+     "judged_on": "development"
+    },
+    {
+     "slot": "fit.variant",
+     "value": 6.505297098322088,
+     "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "path": "models.[fit.variant].mae",
+     "point_meets_bound": true,
+     "gain": 0.3664991914077648,
+     "low": 0.30994390240705527,
+     "high": 0.42051921404705234,
+     "status": "met",
+     "judged_on": "development"
+    },
+    {
+     "slot": "fit.baseline",
+     "value": 10.268806306306304,
+     "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "path": "models.[fit.baseline].mae",
+     "point_meets_bound": false,
+     "gain": null,
+     "low": null,
+     "high": null,
+     "status": "not_assessed",
+     "judged_on": "development"
+    }
+   ]
   }
  }
 }

@@ -180,7 +180,8 @@
     "revision": 30,
     "origin": {
      "channel": "chat"
-    }
+    },
+    "data_contingent": null
    }
   ],
   "decisions": {
@@ -357,43 +358,50 @@
     "result_id": "6e73621b6f03637b6525a003585c332e6475e8ee92363c6136b0c77105963dfe",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "eda.target_rate": {
     "result_id": "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.baseline": {
     "result_id": "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.logistic": {
     "result_id": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.variant": {
     "result_id": "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "policy.evaluation": {
     "result_id": "f3d4a09533c0a7f93890b19c206c49a23a647831e26a97304d20bf8fc1d6f871",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "split": {
     "result_id": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    }
   },
   "artifacts": {
@@ -671,7 +679,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-27T09:50:08.903569+00:00",
+   "boundary_time": "2026-10-27T23:39:34.187284+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -680,7 +688,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-27T09:50:09.125111+00:00",
+     "time": "2026-10-27T23:39:34.401151+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -703,7 +711,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-27T09:50:10.077501+00:00",
+     "time": "2026-10-27T23:39:35.413762+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -733,7 +741,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-27T09:50:10.991813+00:00",
+     "time": "2026-10-27T23:39:36.412233+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -756,7 +764,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-27T09:50:12.163145+00:00",
+     "time": "2026-10-27T23:39:37.530303+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -786,7 +794,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-27T09:50:13.534518+00:00",
+     "time": "2026-10-27T23:39:39.046811+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -809,7 +817,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-27T09:50:14.815954+00:00",
+     "time": "2026-10-27T23:39:40.640280+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -839,7 +847,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-27T09:50:16.914883+00:00",
+     "time": "2026-10-27T23:39:42.162733+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -862,7 +870,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-27T09:50:18.246798+00:00",
+     "time": "2026-10-27T23:39:43.562095+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -892,7 +900,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-27T09:50:19.860959+00:00",
+     "time": "2026-10-27T23:39:45.255410+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -915,7 +923,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-27T09:50:21.390295+00:00",
+     "time": "2026-10-27T23:39:47.200630+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -945,7 +953,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-27T09:50:23.137233+00:00",
+     "time": "2026-10-27T23:39:48.990072+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -968,7 +976,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-27T09:50:25.123186+00:00",
+     "time": "2026-10-27T23:39:51.051161+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -991,7 +999,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-27T09:50:26.969408+00:00",
+     "time": "2026-10-27T23:39:52.910582+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1014,7 +1022,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-27T09:50:29.270085+00:00",
+     "time": "2026-10-27T23:39:57.072645+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1037,7 +1045,7 @@
     },
     {
      "revision": 20,
-     "time": "2026-10-27T09:50:30.881677+00:00",
+     "time": "2026-10-27T23:39:58.866196+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1060,7 +1068,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-27T09:50:32.444090+00:00",
+     "time": "2026-10-27T23:40:00.539269+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1093,7 +1101,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-27T09:50:34.835550+00:00",
+     "time": "2026-10-27T23:40:04.698777+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1116,7 +1124,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-27T09:50:42.320650+00:00",
+     "time": "2026-10-27T23:40:14.570033+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1142,7 +1150,7 @@
     },
     {
      "revision": 26,
-     "time": "2026-10-27T09:50:44.389562+00:00",
+     "time": "2026-10-27T23:40:16.375203+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1165,7 +1173,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-27T09:50:45.773370+00:00",
+     "time": "2026-10-27T23:40:17.984531+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_choice",
@@ -1199,7 +1207,7 @@
     },
     {
      "revision": 28,
-     "time": "2026-10-27T09:50:47.382928+00:00",
+     "time": "2026-10-27T23:40:19.779990+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
@@ -1222,7 +1230,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-27T09:50:48.812272+00:00",
+     "time": "2026-10-27T23:40:21.501940+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "policy",
@@ -1256,7 +1264,7 @@
     },
     {
      "revision": 30,
-     "time": "2026-10-27T09:50:50.593906+00:00",
+     "time": "2026-10-27T23:40:23.248150+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "final_test",
@@ -1279,7 +1287,7 @@
     },
     {
      "revision": 32,
-     "time": "2026-10-27T09:50:52.466613+00:00",
+     "time": "2026-10-27T23:40:25.442214+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1317,7 +1325,7 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "c1b199fa9cb952fa",
+  "currency": "551ced68295190f8",
   "texts": {
    "en": {
     "plan": {
@@ -1402,7 +1410,27 @@
     },
     "proposals": {
      "p_9": null
-    }
+    },
+    "question": "Do you adopt this decision?",
+    "options": {
+     "adopt": "I adopt this decision",
+     "change": "Change something",
+     "explain": "Explain first"
+    },
+    "options_note": null,
+    "junior_digest": "Proposal on the opening of the final test: \"You open the sealed final test once, for the chosen configuration.\" If it suits you, say that you adopt it; otherwise say what you change.",
+    "headlines": {
+     "prediction_time": "Moment: “before the first contact of the campaign, from the client file”.",
+     "feature_availability": "Variables: keep age, balance, contact, default, education, housing, job, loan, marital, pdays, poutcome and previous; exclude campaign (known only after the prediction moment), day (known only after the prediction moment), duration (known only after the prediction moment) and month (known only after the prediction moment).",
+     "split": "Split: cross-validation on the development rows: 5 folds, stratified on the outcome (seed 20261017); every row is predicted once by a model that did not see it.",
+     "success_criterion": "Criterion: adopt only if the precision beats the baseline by at least 5 percentage points at the adopted rule.",
+     "preprocessing": "Preparation: default preparation: nothing added, grouped, capped, or transformed.",
+     "model_variant": "Variants: compare the model with a variant: stronger regularisation.",
+     "model_choice": "Choice: the logistic model.",
+     "policy": "Rule: select the top 10% by score; precision 36.4% against 11.5% for the baseline."
+    },
+    "data_contingent": {},
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
    },
    "fr": {
     "plan": {
@@ -1430,28 +1458,28 @@
     "next_action": "Une proposition sur l'ouverture de l'échantillon de test final attend votre réponse. Lisez sa reformulation et dites si vous l'adoptez, ou ce que vous changeriez.",
     "choice_options": {},
     "limits": {
-     "unconfirmed_decisions": "Pas encore confirmé par vous : l'ouverture de l'échantillon de test final et la conclusion.",
-     "validation_is_not_independent": "Les prédictions hors pli de l'échantillon de développement servent à comparer les modèles, la variante et la règle : ce sont des résultats de développement, pas une preuve indépendante de la performance future. Seul l'échantillon de test final scellé, ouvert une fois, l'est.",
-     "public_data_already_explored": "Les données ont été explorées ou publiées avant cette étude : ses lignes ne sont pas inédites.",
-     "no_time_or_entity_identifier": "Les données n'ont ni colonne de temps ni identifiant d'entité : l'étude ne peut pas vérifier une dérive dans le temps ni des entités répétées entre les échantillons.",
-     "uncertain_features_included": "Ces variables sont utilisées alors que leur disponibilité au moment de la prédiction est incertaine : age, contact, default, education, housing, job, loan, marital. Vérifiez qu'elles sont connues à ce moment-là.",
+     "unconfirmed_decisions": "Pas encore confirmé par vous : l'ouverture de l'échantillon de test final et la conclusion.",
+     "validation_is_not_independent": "Les prédictions hors pli de l'échantillon de développement servent à comparer les modèles, la variante et la règle : ce sont des résultats de développement, pas une preuve indépendante de la performance future. Seul l'échantillon de test final scellé, ouvert une fois, l'est.",
+     "public_data_already_explored": "Les données ont été explorées ou publiées avant cette étude : ses lignes ne sont pas inédites.",
+     "no_time_or_entity_identifier": "Les données n'ont ni colonne de temps ni identifiant d'entité : l'étude ne peut pas vérifier une dérive dans le temps ni des entités répétées entre les échantillons.",
+     "uncertain_features_included": "Ces variables sont utilisées alors que leur disponibilité au moment de la prédiction est incertaine : age, contact, default, education, housing, job, loan, marital. Vérifiez qu'elles sont connues à ce moment-là.",
      "no_causality": "Des associations dans des données observées ne montrent pas qu'agir sur une variable changerait le résultat.",
      "workbench_not_tracked": "Les essais faits dans l'atelier (workbench) ne sont pas enregistrés et ne sont pas des décisions.",
-     "capacity_assumed_for_exercise": "Capacité supposée pour l'exercice : agir sur les 10 % meilleurs scores est une hypothèse du scénario pédagogique, pas un chiffre d'une équipe réelle. Avec une vraie équipe, demandez combien elle peut traiter et évaluez cette capacité.",
-     "final_test_sealed": "L'échantillon de test final est encore scellé : chaque chiffre jusqu'ici est un résultat de développement, mesuré sur des lignes qui ont servi à explorer, ajuster et choisir."
+     "capacity_assumed_for_exercise": "Capacité supposée pour l'exercice : agir sur les 10 % meilleurs scores est une hypothèse du scénario pédagogique, pas un chiffre d'une équipe réelle. Avec une vraie équipe, demandez combien elle peut traiter et évaluez cette capacité.",
+     "final_test_sealed": "L'échantillon de test final est encore scellé : chaque chiffre jusqu'ici est un résultat de développement, mesuré sur des lignes qui ont servi à explorer, ajuster et choisir."
     },
     "artifacts": {
-     "editable": "Le notebook éditable de l'étude suit le notebook généré jusqu'à votre première modification ; ensuite il n'est jamais écrasé et ne constitue pas une preuve officielle.",
+     "editable": "Le notebook éditable de l'étude suit le notebook généré jusqu'à votre première modification ; ensuite il n'est jamais écrasé et ne constitue pas une preuve officielle.",
      "notebook": "Le notebook généré est à jour.",
      "report": "Le rapport est à jour.",
-     "workbench": "L'atelier (workbench) est votre espace libre : il est créé une fois, jamais écrasé, et n'est pas suivi par l'étude."
+     "workbench": "L'atelier (workbench) est votre espace libre : il est créé une fois, jamais écrasé, et n'est pas suivi par l'étude."
     },
     "recap": [
-     "Objectif : « Simulation pédagogique : prioriser les contacts quand la capacité d'appel est limitée » ; la prédiction est faite « before the first contact of the campaign, from the client file ».",
-     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : campaign, day, duration, month; gardées malgré un doute : contact) ; le découpage des données (validation croisée à 5 plis, stratifiée sur le résultat) ; le critère de succès (gain de précision sur le modèle de référence d'au moins 5 points) ; la préparation des variables (par défaut, rien ne change) ; la variante à comparer (une régularisation plus forte) ; le choix du modèle : le modèle logistique ; la règle de décision : sélectionner les 10 % meilleurs scores (le modèle logistique sur les 3617 lignes de l'échantillon de développement, hors pli : précision 36,4 %, rappel 31,4 %).",
-     "Maintenant : Ouvrir une fois l'échantillon de test final, en attente de votre réponse ; le rapport et le notebook sont à jour.",
-     "Ensuite : si vous adoptez l'ouverture de l'échantillon de test final : « You open the sealed final test once, for the chosen configuration. »",
-     "Limite : Ces variables sont utilisées alors que leur disponibilité au moment de la prédiction est incertaine : age, contact, default, education, housing, job, loan, marital. Vérifiez qu'elles sont connues à ce moment-là."
+     "Objectif : « Simulation pédagogique : prioriser les contacts quand la capacité d'appel est limitée » ; la prédiction est faite « before the first contact of the campaign, from the client file ».",
+     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : campaign, day, duration, month; gardées malgré un doute : contact) ; le découpage des données (validation croisée à 5 plis, stratifiée sur le résultat) ; le critère de succès (gain de précision sur le modèle de référence d'au moins 5 points) ; la préparation des variables (par défaut, rien ne change) ; la variante à comparer (une régularisation plus forte) ; le choix du modèle : le modèle logistique ; la règle de décision : sélectionner les 10 % meilleurs scores (le modèle logistique sur les 3617 lignes de l'échantillon de développement, hors pli : précision 36,4 %, rappel 31,4 %).",
+     "Maintenant : Ouvrir une fois l'échantillon de test final, en attente de votre réponse ; le rapport et le notebook sont à jour.",
+     "Ensuite : si vous adoptez l'ouverture de l'échantillon de test final : « You open the sealed final test once, for the chosen configuration. »",
+     "Limite : Ces variables sont utilisées alors que leur disponibilité au moment de la prédiction est incertaine : age, contact, default, education, housing, job, loan, marital. Vérifiez qu'elles sont connues à ce moment-là."
     ],
     "digest": {
      "2": "Une proposition a été faite pour le moment de la prédiction.",
@@ -1464,20 +1492,20 @@
      "9": "Vous avez confirmé le critère de succès.",
      "10": "Une proposition a été faite pour la préparation des variables.",
      "11": "Vous avez confirmé la préparation des variables.",
-     "13": "Résultat calculé : le découpage.",
-     "15": "Résultat calculé : le taux de résultat positif.",
-     "17": "Résultat calculé : le modèle de référence.",
-     "19": "Résultat calculé : le modèle logistique.",
+     "13": "Résultat calculé : le découpage.",
+     "15": "Résultat calculé : le taux de résultat positif.",
+     "17": "Résultat calculé : le modèle de référence.",
+     "19": "Résultat calculé : le modèle logistique.",
      "20": "Une proposition a été faite pour la variante à comparer.",
      "21": "Vous avez confirmé la variante à comparer.",
-     "23": "Résultat calculé : le modèle variante.",
-     "25": "Résultat calculé : l'évaluation de la règle, pour : sélectionner les 10 % meilleurs scores; sélectionner les 100 meilleurs scores.",
-     "26": "Une proposition a été faite pour le choix du modèle : le modèle logistique.",
+     "23": "Résultat calculé : le modèle variante.",
+     "25": "Résultat calculé : l'évaluation de la règle, pour : sélectionner les 10 % meilleurs scores; sélectionner les 100 meilleurs scores.",
+     "26": "Une proposition a été faite pour le choix du modèle : le modèle logistique.",
      "27": "Vous avez confirmé le choix du modèle.",
-     "28": "Une proposition a été faite pour la règle de décision : sélectionner les 10 % meilleurs scores.",
+     "28": "Une proposition a été faite pour la règle de décision : sélectionner les 10 % meilleurs scores.",
      "29": "Vous avez confirmé la règle de décision.",
      "30": "Une proposition a été faite pour l'ouverture de l'échantillon de test final.",
-     "32": "Résultat calculé : les diagnostics de développement."
+     "32": "Résultat calculé : les diagnostics de développement."
     },
     "goal": {
      "intended_use": "Simulation pédagogique : prioriser les contacts quand la capacité d'appel est limitée",
@@ -1487,8 +1515,195 @@
     },
     "proposals": {
      "p_9": null
-    }
+    },
+    "question": "Adoptez-vous cette décision ?",
+    "options": {
+     "adopt": "J'adopte cette décision",
+     "change": "Changer quelque chose",
+     "explain": "Expliquer d'abord"
+    },
+    "options_note": null,
+    "junior_digest": "Proposition sur l'ouverture de l'échantillon de test final : « You open the sealed final test once, for the chosen configuration. » Si elle vous convient, dites que vous l'adoptez ; sinon dites ce que vous changez.",
+    "headlines": {
+     "prediction_time": "Moment : « before the first contact of the campaign, from the client file ».",
+     "feature_availability": "Variables : garder age, balance, contact, default, education, housing, job, loan, marital, pdays, poutcome et previous ; exclure campaign (connue seulement après le moment de la prédiction), day (connue seulement après le moment de la prédiction), duration (connue seulement après le moment de la prédiction) et month (connue seulement après le moment de la prédiction).",
+     "split": "Découpage : validation croisée sur les lignes de développement : 5 plis, stratifiés sur le résultat (graine 20261017) ; chaque ligne est prédite une fois par un modèle qui ne l'a pas vue.",
+     "success_criterion": "Critère : n'adopter que si la précision dépasse celle du modèle de référence d'au moins 5 points de pourcentage à la règle adoptée.",
+     "preprocessing": "Préparation : préparation par défaut : rien d'ajouté, de regroupé, de plafonné ni de transformé.",
+     "model_variant": "Variantes : comparer le modèle avec une variante : une régularisation plus forte.",
+     "model_choice": "Choix : le modèle logistique.",
+     "policy": "Règle : sélectionner les 10 % meilleurs scores ; précision 36,4 % contre 11,5 % pour le modèle de référence."
+    },
+    "data_contingent": {},
+    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant."
    }
+  },
+  "panel_contract": 2,
+  "automation": null,
+  "review_queue": null,
+  "defensibility": {
+   "kind": "pending",
+   "count": 5,
+   "items": [
+    {
+     "id": "unconfirmed_decisions",
+     "severity": "not_final"
+    },
+    {
+     "id": "uncertain_features_included",
+     "severity": "caveat"
+    },
+    {
+     "id": "validation_is_not_independent",
+     "severity": "not_final"
+    },
+    {
+     "id": "final_test_sealed",
+     "severity": "not_final"
+    },
+    {
+     "id": "public_data_already_explored",
+     "severity": "context"
+    },
+    {
+     "id": "no_time_or_entity_identifier",
+     "severity": "context"
+    },
+    {
+     "id": "no_causality",
+     "severity": "context"
+    },
+    {
+     "id": "workbench_not_tracked",
+     "severity": "context"
+    },
+    {
+     "id": "capacity_assumed_for_exercise",
+     "severity": "caveat"
+    }
+   ]
+  },
+  "ledger": {
+   "final_test": {
+    "openings": 0,
+    "max": 1
+   },
+   "target_looks": {
+    "eda": 2,
+    "sample": 1,
+    "total": 3
+   },
+   "configurations": {
+    "tried": 2,
+    "reference": true
+   }
+  },
+  "sample": {
+   "seed": "b4b5787955fc2f2b",
+   "row_keys": [
+    "L380",
+    "L873",
+    "L875",
+    "L950",
+    "L1935",
+    "L2036",
+    "L2831",
+    "L2979"
+   ],
+   "recorded": true
+  },
+  "headlines": {
+   "prediction_time": {
+    "decision_id": "prediction_time",
+    "basis": "restated",
+    "results": []
+   },
+   "feature_availability": {
+    "decision_id": "feature_availability",
+    "basis": "restated",
+    "results": []
+   },
+   "split": {
+    "decision_id": "split",
+    "basis": "restated",
+    "results": []
+   },
+   "success_criterion": {
+    "decision_id": "success_criterion",
+    "basis": "restated",
+    "results": []
+   },
+   "preprocessing": {
+    "decision_id": "preprocessing",
+    "basis": "restated",
+    "results": []
+   },
+   "model_variant": {
+    "decision_id": "model_variant",
+    "basis": "restated",
+    "results": []
+   },
+   "model_choice": {
+    "decision_id": "model_choice",
+    "basis": "restated",
+    "results": []
+   },
+   "policy": {
+    "decision_id": "policy",
+    "basis": "endorsed",
+    "results": [
+     "f3d4a09533c0a7f93890b19c206c49a23a647831e26a97304d20bf8fc1d6f871"
+    ]
+   }
+  },
+  "criterion_configurations": {
+   "metric": "precision_gain",
+   "unit": "share",
+   "bound": {
+    "value": 0.16528850782879806,
+    "reference": 0.11528850782879806,
+    "minimum": 5,
+    "result_id": "f3d4a09533c0a7f93890b19c206c49a23a647831e26a97304d20bf8fc1d6f871",
+    "path": "rules.[share:0.1].models.[fit.baseline].precision"
+   },
+   "configurations": [
+    {
+     "slot": "fit.logistic",
+     "value": 0.3638888888888889,
+     "result_id": "f3d4a09533c0a7f93890b19c206c49a23a647831e26a97304d20bf8fc1d6f871",
+     "path": "rules.[share:0.1].models.[fit.logistic].precision",
+     "point_meets_bound": true,
+     "gain": 24.860038106009082,
+     "low": 19.85454030805754,
+     "high": 29.44419927710659,
+     "status": "met",
+     "judged_on": "development"
+    },
+    {
+     "slot": "fit.variant",
+     "value": 0.37222222222222223,
+     "result_id": "f3d4a09533c0a7f93890b19c206c49a23a647831e26a97304d20bf8fc1d6f871",
+     "path": "rules.[share:0.1].models.[fit.variant].precision",
+     "point_meets_bound": true,
+     "gain": 25.693371439342418,
+     "low": 20.640455253458452,
+     "high": 30.197654066975893,
+     "status": "met",
+     "judged_on": "development"
+    },
+    {
+     "slot": "fit.baseline",
+     "value": 0.11528850782879806,
+     "result_id": "f3d4a09533c0a7f93890b19c206c49a23a647831e26a97304d20bf8fc1d6f871",
+     "path": "rules.[share:0.1].models.[fit.baseline].precision",
+     "point_meets_bound": false,
+     "gain": null,
+     "low": null,
+     "high": null,
+     "status": "not_assessed",
+     "judged_on": "development"
+    }
+   ]
   }
  }
 }

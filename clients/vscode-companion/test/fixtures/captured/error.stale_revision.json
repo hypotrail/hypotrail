@@ -40,8 +40,14 @@
       },
       "request_id": "b-prop",
       "result": {
-       "data_contingent": null,
-       "data_contingent_reason": null,
+       "data_contingent": true,
+       "data_contingent_reason": {
+        "evaluation": "7badf1dfdfc32377b33e9376f05c914cad989474d248eec173bac6b1581b493b",
+        "junior_text": "This rule is proposed after you saw how the earlier one did on the validation rows: a change guided by those figures makes them slightly optimistic. It is recorded, not refused.",
+        "kind": "changed_after_validation",
+        "previous_value": "threshold:0.2",
+        "text": "This rule changes the value proposed before (threshold:0.2) after an evaluation of that value was seen: the development figures that guided the change are slightly optimistic. Say so to the junior before presenting it."
+       },
        "decision_id": "policy",
        "decision_status": "confirmed",
        "proposal_id": "p_9",
@@ -50,8 +56,8 @@
        "superseded": []
       },
       "revision": 50,
-      "state_sha256": "ffcb23827248c8a00c7983acb7b08754750ee24ba75d72326ca0f14b6f93b311",
-      "time": "2026-10-27T09:49:50.439665+00:00"
+      "state_sha256": "fa5bd7718a2024cb25fb4c0dfbfa708be6b363c9c10c84cfc0b040dc7389f8aa",
+      "time": "2026-10-27T23:39:12.170910+00:00"
      }
     ]
    }

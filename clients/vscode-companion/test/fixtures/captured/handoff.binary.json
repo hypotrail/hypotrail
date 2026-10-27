@@ -381,7 +381,7 @@
     "rows_exposed": 3617,
     "by_purpose": {
      "development_diagnostics": 3617,
-     "labelled_preview_available": 5,
+     "development_target_sample": 8,
      "sealed": 904,
      "structural_inspection": 3617,
      "train_eda": 2531,
@@ -391,7 +391,7 @@
     },
     "by_partition": {
      "development": {
-      "labelled_preview_available": 5,
+      "development_target_sample": 8,
       "structural_inspection": 3617
      },
      "final_test": {
@@ -435,7 +435,8 @@
       "eda.correlation"
      ],
      "first_revision": 1,
-     "last_revision": 30
+     "last_revision": 30,
+     "note": null
     },
     {
      "purpose": "train_eda",
@@ -450,7 +451,8 @@
       "eda.distribution"
      ],
      "first_revision": 14,
-     "last_revision": 28
+     "last_revision": 28,
+     "note": null
     },
     {
      "purpose": "train_fit",
@@ -463,7 +465,8 @@
       "fit.variant"
      ],
      "first_revision": 32,
-     "last_revision": 38
+     "last_revision": 38,
+     "note": null
     },
     {
      "purpose": "validation_model_evaluation",
@@ -476,7 +479,8 @@
       "fit.variant"
      ],
      "first_revision": 32,
-     "last_revision": 38
+     "last_revision": 38,
+     "note": null
     },
     {
      "purpose": "validation_policy_selection",
@@ -487,7 +491,8 @@
       "policy.evaluation"
      ],
      "first_revision": 40,
-     "last_revision": 48
+     "last_revision": 48,
+     "note": null
     },
     {
      "purpose": "sealed",
@@ -498,7 +503,8 @@
       "init.final_test"
      ],
      "first_revision": 1,
-     "last_revision": 1
+     "last_revision": 1,
+     "note": null
     },
     {
      "purpose": "development_diagnostics",
@@ -509,7 +515,8 @@
       "diag.binary"
      ],
      "first_revision": 46,
-     "last_revision": 46
+     "last_revision": 46,
+     "note": null
     },
     {
      "purpose": "development_diagnostics",
@@ -520,18 +527,20 @@
       "diag.binary"
      ],
      "first_revision": 46,
-     "last_revision": 46
+     "last_revision": 46,
+     "note": null
     },
     {
-     "purpose": "labelled_preview_available",
+     "purpose": "development_target_sample",
      "partition": "development",
-     "rows": 5,
+     "rows": 8,
      "records": 1,
      "activities": [
-      "init.labelled_preview"
+      "data.sample"
      ],
      "first_revision": 1,
-     "last_revision": 1
+     "last_revision": 1,
+     "note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
     }
    ]
   },

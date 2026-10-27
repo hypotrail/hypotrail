@@ -92,21 +92,45 @@
     "kind": "decision",
     "language": "en",
     "revision": 30,
-    "position": {"step_id": "model_choice", "completed": 9, "total": 12},
+    "position": {
+     "step_id": "model_choice",
+     "completed": 9,
+     "total": 12
+    },
     "learned": [],
     "limitations": [
-     {"code": "unconfirmed_decisions", "text": "Not confirmed by you yet: model choice, final test and conclusion."},
-     {"code": "validation_is_not_independent", "text": "Validation rows are used to compare models and choose one."},
-     {"code": "public_data_already_explored", "text": "The public data were already explored."}
+     {
+      "code": "unconfirmed_decisions",
+      "text": "Not confirmed by you yet: model choice, final test and conclusion."
+     },
+     {
+      "code": "validation_is_not_independent",
+      "text": "Validation rows are used to compare models and choose one."
+     },
+     {
+      "code": "public_data_already_explored",
+      "text": "The public data were already explored."
+     }
     ],
     "proposal_id": "p_4",
     "proposal_text": "Adopt the linear model.",
     "recommended_option": "adopt",
-    "options": ["adopt", "change", "explain"],
-    "option_labels": {"adopt": "I adopt this decision", "change": "Change something", "explain": "Explain first"},
+    "options": [
+     "adopt",
+     "change",
+     "explain"
+    ],
+    "option_labels": {
+     "adopt": "I adopt this decision",
+     "change": "Change something",
+     "explain": "Explain first"
+    },
     "question": "Do you adopt this decision?",
     "evidence_refs": [],
-    "detail_topics": ["metric", "uncertainty"]
+    "detail_topics": [
+     "metric",
+     "uncertainty"
+    ]
    }
   },
   "open_proposals": [
@@ -118,7 +142,8 @@
     "revision": 22,
     "origin": {
      "channel": "webview"
-    }
+    },
+    "data_contingent": false
    }
   ],
   "decisions": {
@@ -229,49 +254,57 @@
     "result_id": "49cddc6cff8134ce50749f83219d748241878a1fc340404bce011dfa513d7b92",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "eda.special_values": {
     "result_id": "56a67260f0ed30142d0779b01923172e7a37c73ced6845235cf6e8041802d85f",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "eda.target_summary": {
     "result_id": "3f7320adae5a5c60034155213b03bc18b3842dc256cd51a77f11b1997548e276",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "evaluate.regression": {
     "result_id": "142ac050de162499aa31cd03b837cd162f25d7cfef4d83b9b3d6e8d3cbef5301",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.baseline": {
     "result_id": "148b20ff6b8ad1dd05c9a0e5259d63d2463b88aca0260981efecb308ac96c41a",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.linear": {
     "result_id": "e2fb692df878075e4c417702a123201226c5e353aa479172a91bef7d9a517c7c",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "split": {
     "result_id": "6e96c20fe6026d4dc33b7a4b70ede72858d12d2b33195cb10763fc11be19df88",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.variant": {
     "result_id": "3dba08aad798ad0b76e1452aa4e6712afb3bcd6abf7e8327060d54189fdf640d",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    }
   },
   "artifacts": {
@@ -650,9 +683,80 @@
     },
     "proposals": {
      "p_4": "Adopt the linear model."
-    }
+    },
+    "question": "Do you adopt this decision?",
+    "options": {},
+    "options_note": null,
+    "junior_digest": null,
+    "headlines": {},
+    "data_contingent": {},
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
    },
    "fr": null
-  }
+  },
+  "panel_contract": 2,
+  "automation": null,
+  "review_queue": null,
+  "defensibility": {
+   "kind": "pending",
+   "count": 3,
+   "items": [
+    {
+     "id": "unconfirmed_decisions",
+     "severity": "not_final"
+    },
+    {
+     "id": "validation_is_not_independent",
+     "severity": "not_final"
+    },
+    {
+     "id": "public_data_already_explored",
+     "severity": "context"
+    },
+    {
+     "id": "grouped_split_unsupported",
+     "severity": "caveat"
+    },
+    {
+     "id": "no_causality",
+     "severity": "context"
+    },
+    {
+     "id": "workbench_not_tracked",
+     "severity": "context"
+    }
+   ]
+  },
+  "ledger": {
+   "final_test": {
+    "openings": 0,
+    "max": 1
+   },
+   "target_looks": {
+    "eda": 4,
+    "sample": 1,
+    "total": 5
+   },
+   "configurations": {
+    "tried": 2,
+    "reference": true
+   }
+  },
+  "sample": {
+   "seed": "bf788f1b245ca3dd",
+   "row_keys": [
+    "L128",
+    "L181",
+    "L203",
+    "L226",
+    "L232",
+    "L258",
+    "L271",
+    "L375"
+   ],
+   "recorded": true
+  },
+  "headlines": {},
+  "criterion_configurations": null
  }
 }

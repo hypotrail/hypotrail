@@ -6,9 +6,10 @@ on, at which stage, and the place of the page that shows the current step (an an
 handle, the path, a drawer), with the panel's own labels in the study language (CLI-CONTRACT
 §17.1.4). This test reads the panel's copy (``media/copy/page.js``, ``media/copy-fr/page.js``,
 run in Node) and the contract's tables, and fails when one of them drifts; the engine's copy of
-the labels (``ANCHOR_LABELS``, ``CONTENT_LABELS``, ``TODO_LABELS``, ``DRAWER_LABELS``) is
-compared too once the engine has it (E-1), and the flag and its environment variables
-(``lib/flag.js``) always. The tabbed panel's tab and section labels went with the tabs.
+the labels (``ANCHOR_LABELS``, which also names the kinds of To handle as ``todo:<kind>``,
+``CONTENT_LABELS``, ``DRAWER_LABELS``, ``STEP_LABELS``, the EDA card names and the lines) is
+compared too, and the flag and its environment variables (``lib/flag.js``). The tabbed panel's
+tab and section labels went with the tabs.
 """
 from __future__ import annotations
 
@@ -31,7 +32,14 @@ for (const [lang, file] of [['en', 'media/copy/page.js'], ['fr', 'media/copy-fr/
   const HT = { copy: {} };
   new Function('globalThis', fs.readFileSync(file, 'utf8'))({ Hypotrail: HT });
   const c = lang === 'fr' ? HT.copyFr.page : HT.copy.page;
-  out[lang] = { anchors: c.anchors, contents: c.contents, todoKinds: c.todoKinds, drawers: c.drawers };
+  const OV = { copy: {} };
+  new Function('globalThis', fs.readFileSync(file.replace('page.js', 'overview.js'), 'utf8'))({ Hypotrail: OV });
+  const EDA = { copy: {} };
+  new Function('globalThis', fs.readFileSync(file.replace('page.js', 'eda.js'), 'utf8'))({ Hypotrail: EDA });
+  const o = lang === 'fr' ? OV.copyFr.overview : OV.copy.overview;
+  const e = lang === 'fr' ? EDA.copyFr.eda : EDA.copy.eda;
+  out[lang] = { anchors: c.anchors, contents: c.contents, todoKinds: c.todoKinds, drawers: c.drawers,
+                steps: o.journeyLabels, eyebrows: e.binary.eyebrows };
 }
 process.stdout.write(JSON.stringify(out));
 """
@@ -88,15 +96,51 @@ def test_the_anchor_names_open_the_contract_lines(page_copy):
         assert lines['tools:<drawer>'][lang].strip('`').startswith(f'{start}{names["tools"]} →'), lang
 
 
+# The panel's eyebrow keys (media/copy*/eda.js) and the engine's EDA activities.
+EYEBROW_ACTIVITIES = {'targetRate': 'eda.target_rate', 'targetSummary': 'eda.target_summary',
+                      'special': 'eda.special_values', 'rateBy': 'eda.rate_by',
+                      'meanBy': 'eda.mean_by', 'signal': 'eda.single_feature_signal',
+                      'correlation': 'eda.correlation', 'distribution': 'eda.distribution'}
+
+
 def test_the_engine_labels_equal_the_page(page_copy):
-    """The engine's copy of the labels (E-1); skipped while the engine still names tabs."""
-    if not hasattr(ce, 'ANCHOR_LABELS'):
-        pytest.skip('companion_env still names the tabbed panel; E-1 gives it the anchors (CLI-CONTRACT §17.1.4)')
+    """CLI-CONTRACT §17.1.4, PG-13 (E-1, P-8): ``companion_env`` copies the panel's labels
+    verbatim. The engine keeps the kinds of To handle in ``ANCHOR_LABELS`` as ``todo:<kind>``
+    (with ``path_ledger``, the ledger line's name), next to the four place names."""
     for lang in ('en', 'fr'):
-        assert ce.ANCHOR_LABELS[lang] == page_copy[lang]['anchors'], lang
+        anchors = ce.ANCHOR_LABELS[lang]
+        assert {k: anchors[k] for k in page_copy[lang]['anchors']} == page_copy[lang]['anchors'], lang
+        assert {k: anchors[f'todo:{k}'] for k in ce.TODO_KINDS} == page_copy[lang]['todoKinds'], lang
+        assert set(anchors) == set(page_copy[lang]['anchors']) | {f'todo:{k}' for k in ce.TODO_KINDS} \
+            | {'path_ledger'}, lang
         assert ce.CONTENT_LABELS[lang] == page_copy[lang]['contents'], lang
-        assert ce.TODO_LABELS[lang] == page_copy[lang]['todoKinds'], lang
+        assert set(ce.CONTENT_LABELS[lang]) == set(ce.CONTENTS), lang
         assert ce.DRAWER_LABELS[lang] == page_copy[lang]['drawers'], lang
+        assert tuple(ce.DRAWER_LABELS[lang]) == ce.DRAWERS, lang
+        # the path's step names are the panel's journey labels
+        assert ce.STEP_LABELS[lang] == page_copy[lang]['steps'], lang
+        # an EDA figure is named by its card's name, the first part of the panel's eyebrow
+        for key, activity in EYEBROW_ACTIVITIES.items():
+            assert ce.EDA_CARD_LABELS[lang][activity] == page_copy[lang]['eyebrows'][key].split(' · ')[0], \
+                (lang, key)
+
+
+def test_the_engine_lines_are_the_contract_lines():
+    """CLI-CONTRACT §17.1.4: ``companion_env.LINES`` are the table's lines, and a line built for
+    each kind of place starts with the panel's place name (the ledger line's name included)."""
+    table = _table('Anchor')
+    keys = {'now': 'now', 'todo:<kind>': 'todo', 'path': 'path', 'path:<step>': 'path_step',
+            'path:<step>/<slot>': 'path_figure', 'tools:<drawer>': 'tools'}
+    for lang in ('en', 'fr'):
+        for row, key in keys.items():
+            expected = table[row][lang].strip('`').replace('{kind label}', '{kind}')
+            assert ce.LINES[lang][key] == expected, (lang, row)
+        ledger = ce.ANCHOR_LABELS[lang]['path_ledger']
+        assert ce.LINES[lang]['path'].endswith(f'{ledger}.'), lang
+        assert ce.line_of('tools:whatif', None, lang) == ce.LINES[lang]['tools'].format(
+            drawer=ce.DRAWER_LABELS[lang]['whatif']), lang
+        assert ce.label_of(ce.line_of('now', 'data_card', lang)) == \
+            f"{ce.ANCHOR_LABELS[lang]['now']}, {ce.CONTENT_LABELS[lang]['data_card']}", lang
 
 
 def test_the_flag_and_the_stage_are_read_as_the_extension_reads_them():

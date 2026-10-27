@@ -339,7 +339,8 @@
     return ids.map(id => {
       const row = plan.find(p => p.id === id) || { id, title: id };
       const wanted = arr(FIGURE_ACTIVITIES[id]);
-      const slots = Object.values(results).flat().filter(r => wanted.includes(activityOf(r.slot)));
+      // Its figures: the results its comparison shows, and the results filed under the step.
+      const slots = Object.values(results).flat().filter(r => wanted.includes(activityOf(r.slot)) || r.step === id);
       const stale = slots.filter(r => !r.current);
       const reasons = [...new Set(stale.map(r => r.staleReason).filter(Boolean))];
       const unknown = [...new Set(stopped.map(e => e.activity).filter(a => wanted.includes(a)))];

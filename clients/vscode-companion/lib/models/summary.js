@@ -285,7 +285,12 @@ function resultsOf(raw) {
   const out = {};
   for (const [slot, r] of Object.entries(obj(raw))) {
     if (!r || typeof r !== 'object') continue;
-    out[slot] = { resultId: str(r.result_id), current: r.current === true, staleReason: strOrNull(r.stale_reason),
+    // The engine's `stale_reason` is `{reason, since}` (CLI-CONTRACT §4, H2); older fixtures
+    // carried the sentence alone. The model keeps the engine's sentence without its reference
+    // to the contract's table ("(§3.7 row 14: preprocessing)"), which is not for the junior.
+    const raw = r.stale_reason && typeof r.stale_reason === 'object' ? r.stale_reason.reason : r.stale_reason;
+    const why = typeof raw === 'string' ? raw.replace(/\s*\(§[^)]*\)/g, '').trim() || null : null;
+    out[slot] = { resultId: str(r.result_id), current: r.current === true, staleReason: strOrNull(why),
       integrity: strOrNull(r.integrity), channel: RESULT_CHANNELS.includes(r.channel) ? r.channel : null };
   }
   return out;
@@ -520,8 +525,9 @@ function toSummaryModel(summary) {
 
 const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary', 'summary.regression', 'summary.binary.health',
   'captured/summary.binary.cv', 'captured/summary.binary.cv.opening',
-  // Contract P1, hand-built until the engine's recapture (PANEL-ONE-PAGE-PLAN E-8).
-  'p1/summary.step1', 'p1/summary.choice', 'p1/summary.reopened', 'p1/summary.review', 'p1/summary.done'];
+  // Contract P1, the one-page states captured from the engine (PANEL-ONE-PAGE-PLAN E-8).
+  'captured/summary.regression.step1', 'captured/summary.regression.choice', 'captured/summary.regression.reopened',
+  'captured/summary.regression.interrupted', 'captured/summary.regression.review', 'captured/summary.regression.done'];
 
 // v0 name, kept for the migrated tests and older callers.
 const toModel = toSummaryModel;

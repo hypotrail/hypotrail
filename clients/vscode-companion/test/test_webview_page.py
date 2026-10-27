@@ -2,8 +2,9 @@
 decision 13; COMPANION-ADVANCED §4, §6; docs/plans/mockups/panel-synthesis-fr.html).
 
 The real document under the real CSP, offline, on the contract-P1 payloads of
-``test/fixtures/p1`` (step 1, the model choice, a reopened preparation with an interrupted run,
-the automatic review, the end) and the captured Auto MPG reads. Each test follows the junior
+``test/fixtures/captured/summary.regression.<state>`` (step 1, the model choice, the reopened
+preparation and the same study once a run was interrupted, the automatic review, the end) and
+the one-page study's reads, captured from the engine. Each test follows the junior
 through one state and checks several requirements at once: the order of the page, what Now
 asks and offers, what the path and To handle hold, and the honesty rules. Not a VS Code
 session; no Copilot.
@@ -111,7 +112,7 @@ def test_todo5_changed_sources_and_integrity_show_the_engine_junior_text(open_pa
     """TODO-5: `sources_changed` and `result_integrity` items of To handle show the engine's
     junior text (`texts.<lang>.limits.<id>`) in the panel language, the engine text under
     "Details"; the panel writes neither."""
-    raw = copy.deepcopy(payload('p1/summary.reopened'))
+    raw = copy.deepcopy(payload('captured/summary.regression.reopened'))
     engine = {'sources_changed': 'Sources changed since revision 31 (data hash, case file).',
               'result_integrity': 'Result fit.logistic failed its integrity check (stored hash differs).'}
     junior = {'en': {'sources_changed': 'The data file changed since the last results.',

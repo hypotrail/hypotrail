@@ -376,85 +376,264 @@
     "origin",
     "car_name"
    ],
-   "n_rows": 5,
-   "order": "first rows by row key",
+   "n_rows": 8,
+   "order": "seeded sample",
    "items": [
     {
-     "row_key": "L1",
+     "row_key": "L128",
      "values": {
-      "mpg": 18,
-      "cylinders": 8,
-      "displacement": 307,
-      "horsepower": 130,
-      "weight": 3504,
-      "acceleration": 12,
-      "model_year": 70,
+      "mpg": 19,
+      "cylinders": 6,
+      "displacement": 232,
+      "horsepower": 100,
+      "weight": 2901,
+      "acceleration": 16,
+      "model_year": 74,
       "origin": 1,
-      "car_name": "chevrolet chevelle malibu"
+      "car_name": "amc hornet"
      }
     },
     {
-     "row_key": "L2",
+     "row_key": "L181",
      "values": {
-      "mpg": 15,
-      "cylinders": 8,
-      "displacement": 350,
-      "horsepower": 165,
-      "weight": 3693,
-      "acceleration": 11.5,
-      "model_year": 70,
-      "origin": 1,
-      "car_name": "buick skylark 320"
+      "mpg": 25,
+      "cylinders": 4,
+      "displacement": 121,
+      "horsepower": 115,
+      "weight": 2671,
+      "acceleration": 13.5,
+      "model_year": 75,
+      "origin": 2,
+      "car_name": "saab 99le"
      }
     },
     {
-     "row_key": "L3",
+     "row_key": "L203",
      "values": {
-      "mpg": 18,
-      "cylinders": 8,
-      "displacement": 318,
-      "horsepower": 150,
-      "weight": 3436,
-      "acceleration": 11,
-      "model_year": 70,
+      "mpg": 17.5,
+      "cylinders": 6,
+      "displacement": 258,
+      "horsepower": 95,
+      "weight": 3193,
+      "acceleration": 17.8,
+      "model_year": 76,
       "origin": 1,
-      "car_name": "plymouth satellite"
+      "car_name": "amc pacer d/l"
      }
     },
     {
-     "row_key": "L4",
+     "row_key": "L226",
      "values": {
-      "mpg": 16,
-      "cylinders": 8,
-      "displacement": 304,
-      "horsepower": 150,
-      "weight": 3433,
-      "acceleration": 12,
-      "model_year": 70,
+      "mpg": 17.5,
+      "cylinders": 6,
+      "displacement": 250,
+      "horsepower": 110,
+      "weight": 3520,
+      "acceleration": 16.4,
+      "model_year": 77,
       "origin": 1,
-      "car_name": "amc rebel sst"
+      "car_name": "chevrolet concours"
      }
     },
     {
-     "row_key": "L5",
+     "row_key": "L232",
      "values": {
-      "mpg": 17,
+      "mpg": 15.5,
       "cylinders": 8,
-      "displacement": 302,
-      "horsepower": 140,
-      "weight": 3449,
-      "acceleration": 10.5,
-      "model_year": 70,
+      "displacement": 400,
+      "horsepower": 190,
+      "weight": 4325,
+      "acceleration": 12.2,
+      "model_year": 77,
       "origin": 1,
-      "car_name": "ford torino"
+      "car_name": "chrysler cordoba"
+     }
+    },
+    {
+     "row_key": "L258",
+     "values": {
+      "mpg": 19.4,
+      "cylinders": 6,
+      "displacement": 232,
+      "horsepower": 90,
+      "weight": 3210,
+      "acceleration": 17.2,
+      "model_year": 78,
+      "origin": 1,
+      "car_name": "amc concord"
+     }
+    },
+    {
+     "row_key": "L271",
+     "values": {
+      "mpg": 21.1,
+      "cylinders": 4,
+      "displacement": 134,
+      "horsepower": 95,
+      "weight": 2515,
+      "acceleration": 14.8,
+      "model_year": 78,
+      "origin": 3,
+      "car_name": "toyota celica gt liftback"
+     }
+    },
+    {
+     "row_key": "L375",
+     "values": {
+      "mpg": 23,
+      "cylinders": 4,
+      "displacement": 151,
+      "horsepower": null,
+      "weight": 3035,
+      "acceleration": 20.5,
+      "model_year": 82,
+      "origin": 1,
+      "car_name": "amc concord dl"
      }
     }
-   ]
+   ],
+   "seed": "bf788f1b245ca3dd",
+   "target_shown": true,
+   "exposure": {
+    "exposure_id": "x_fef01ce6665040d98a111cc1f160354e",
+    "purpose": "development_target_sample",
+    "recorded": true
+   }
   },
   "note": {
    "text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored after the split, on the rows it leaves for exploration. The test is reserved by the protocol; the local source file remains accessible. Confirmations are agent-reported, not independently authenticated. Cross-study history is not enforced.",
    "audience": "junior",
    "junior_text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored after the split, on the rows it leaves for exploration. The test is reserved by the protocol; the local source file remains accessible. Confirmations are agent-reported, not independently authenticated. Cross-study history is not enforced."
+  },
+  "special_rows": {
+   "columns": [
+    "cylinders",
+    "displacement",
+    "horsepower",
+    "weight",
+    "acceleration",
+    "model_year",
+    "origin",
+    "car_name"
+   ],
+   "n_rows": 6,
+   "items": [
+    {
+     "row_key": "L33",
+     "values": {
+      "cylinders": 4,
+      "displacement": 98,
+      "horsepower": null,
+      "weight": 2046,
+      "acceleration": 19,
+      "model_year": 71,
+      "origin": 1,
+      "car_name": "ford pinto"
+     },
+     "specials": [
+      {
+       "column": "horsepower",
+       "value": "?"
+      }
+     ]
+    },
+    {
+     "row_key": "L127",
+     "values": {
+      "cylinders": 6,
+      "displacement": 200,
+      "horsepower": null,
+      "weight": 2875,
+      "acceleration": 17,
+      "model_year": 74,
+      "origin": 1,
+      "car_name": "ford maverick"
+     },
+     "specials": [
+      {
+       "column": "horsepower",
+       "value": "?"
+      }
+     ]
+    },
+    {
+     "row_key": "L331",
+     "values": {
+      "cylinders": 4,
+      "displacement": 85,
+      "horsepower": null,
+      "weight": 1835,
+      "acceleration": 17.3,
+      "model_year": 80,
+      "origin": 2,
+      "car_name": "renault lecar deluxe"
+     },
+     "specials": [
+      {
+       "column": "horsepower",
+       "value": "?"
+      }
+     ]
+    },
+    {
+     "row_key": "L337",
+     "values": {
+      "cylinders": 4,
+      "displacement": 140,
+      "horsepower": null,
+      "weight": 2905,
+      "acceleration": 14.3,
+      "model_year": 80,
+      "origin": 1,
+      "car_name": "ford mustang cobra"
+     },
+     "specials": [
+      {
+       "column": "horsepower",
+       "value": "?"
+      }
+     ]
+    },
+    {
+     "row_key": "L355",
+     "values": {
+      "cylinders": 4,
+      "displacement": 100,
+      "horsepower": null,
+      "weight": 2320,
+      "acceleration": 15.8,
+      "model_year": 81,
+      "origin": 2,
+      "car_name": "renault 18i"
+     },
+     "specials": [
+      {
+       "column": "horsepower",
+       "value": "?"
+      }
+     ]
+    },
+    {
+     "row_key": "L375",
+     "values": {
+      "cylinders": 4,
+      "displacement": 151,
+      "horsepower": null,
+      "weight": 3035,
+      "acceleration": 20.5,
+      "model_year": 82,
+      "origin": 1,
+      "car_name": "amc concord dl"
+     },
+     "specials": [
+      {
+       "column": "horsepower",
+       "value": "?"
+      }
+     ]
+    }
+   ],
+   "truncated": false
   }
  }
 }

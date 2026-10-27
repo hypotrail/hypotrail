@@ -351,55 +351,64 @@
     "result_id": "8fd250acc49855af7e866400aa78722cd7e3741cbd5b70df7cec6f34226fd73d",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "eda.target_rate": {
     "result_id": "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.baseline": {
     "result_id": "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.logistic": {
     "result_id": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.variant": {
     "result_id": "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.variant:2": {
     "result_id": "fa17fbc1dba5d3067b18244e7c01fa600f96c4ff522de4f709d679c7baac2167",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.variant:3": {
     "result_id": "d0780377137168ff4ab6c6681c7bbc0dc6ba2b006d034904610516f547fd7be7",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "policy.evaluation": {
     "result_id": "fdb67a66193db75a0efb9fd4caabb4cb87bec82a7bf137a1828c78261171062f",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "split": {
     "result_id": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    }
   },
   "artifacts": {
@@ -676,7 +685,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-27T09:51:30.907088+00:00",
+   "boundary_time": "2026-10-27T23:41:08.581803+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -685,7 +694,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-27T09:51:31.133202+00:00",
+     "time": "2026-10-27T23:41:08.777358+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -708,7 +717,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-27T09:51:32.074070+00:00",
+     "time": "2026-10-27T23:41:09.745738+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -738,7 +747,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-27T09:51:33.035066+00:00",
+     "time": "2026-10-27T23:41:10.748280+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -761,7 +770,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-27T09:51:34.302053+00:00",
+     "time": "2026-10-27T23:41:11.913709+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -791,7 +800,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-27T09:51:35.722700+00:00",
+     "time": "2026-10-27T23:41:13.341931+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -814,7 +823,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-27T09:51:37.214405+00:00",
+     "time": "2026-10-27T23:41:14.867958+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -844,7 +853,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-27T09:51:38.639929+00:00",
+     "time": "2026-10-27T23:41:16.493189+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -867,7 +876,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-27T09:51:40.065897+00:00",
+     "time": "2026-10-27T23:41:17.955951+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -897,7 +906,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-27T09:51:41.397171+00:00",
+     "time": "2026-10-27T23:41:19.624408+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -920,7 +929,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-27T09:51:42.937165+00:00",
+     "time": "2026-10-27T23:41:21.191056+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -950,7 +959,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-27T09:51:45.173657+00:00",
+     "time": "2026-10-27T23:41:23.038496+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -973,7 +982,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-27T09:51:47.427013+00:00",
+     "time": "2026-10-27T23:41:24.937742+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -996,7 +1005,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-27T09:51:49.397662+00:00",
+     "time": "2026-10-27T23:41:26.805471+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1019,7 +1028,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-27T09:51:52.124027+00:00",
+     "time": "2026-10-27T23:41:30.095635+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1042,7 +1051,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-27T09:51:54.239661+00:00",
+     "time": "2026-10-27T23:41:32.078048+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1065,7 +1074,7 @@
     },
     {
      "revision": 22,
-     "time": "2026-10-27T09:51:56.101676+00:00",
+     "time": "2026-10-27T23:41:33.827833+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1088,7 +1097,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-27T09:51:59.219535+00:00",
+     "time": "2026-10-27T23:41:36.728012+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1123,7 +1132,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-27T09:52:02.553135+00:00",
+     "time": "2026-10-27T23:41:40.095688+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1146,7 +1155,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-27T09:52:20.990799+00:00",
+     "time": "2026-10-27T23:42:00.898634+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1169,7 +1178,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-27T09:52:33.940424+00:00",
+     "time": "2026-10-27T23:42:15.170460+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1192,7 +1201,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-27T09:52:45.037653+00:00",
+     "time": "2026-10-27T23:42:30.703960+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1218,7 +1227,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-27T09:52:47.239813+00:00",
+     "time": "2026-10-27T23:42:33.308167+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1256,7 +1265,7 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "1e186dcf132a64e2",
+  "currency": "3fa20131f5930727",
   "texts": {
    "en": {
     "plan": {
@@ -1337,7 +1346,21 @@
      "observation_unit": "A customer contacted during a telephone campaign",
      "prediction_time": "before the first contact of the campaign, from the client file"
     },
-    "proposals": {}
+    "proposals": {},
+    "question": null,
+    "options": {},
+    "options_note": null,
+    "junior_digest": "Next: the data quality check, run without asking you. Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
+    "headlines": {
+     "prediction_time": "Moment: “before the first contact of the campaign, from the client file”.",
+     "feature_availability": "Variables: keep age, balance, contact, default, education, housing, job, loan, marital, pdays, poutcome and previous; exclude campaign (known only after the prediction moment), day (known only after the prediction moment), duration (known only after the prediction moment) and month (known only after the prediction moment).",
+     "split": "Split: cross-validation on the development rows: 5 folds, stratified on the outcome (seed 20261017); every row is predicted once by a model that did not see it.",
+     "success_criterion": "Criterion: adopt only if the precision beats the baseline by at least 5 percentage points at the adopted rule.",
+     "preprocessing": "Preparation: default preparation: nothing added, grouped, capped, or transformed.",
+     "model_variant": "Variants: compare the model with: stronger regularisation, an Explainable Boosting Machine and histogram gradient boosting."
+    },
+    "data_contingent": {},
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
    },
    "fr": {
     "plan": {
@@ -1362,31 +1385,31 @@
      "compare": "Travailler et comparer",
      "conclude": "Conclure et transmettre"
     },
-    "next_action": "Quelles colonnes ont des cellules manquantes, des catégories rares ou des valeurs hors de leur plage possible ? Ce contrôle lit les lignes de l'échantillon de développement sans la cible : la préparation décidée d'après lui vient avant tout regard sur la cible.",
+    "next_action": "Quelles colonnes ont des cellules manquantes, des catégories rares ou des valeurs hors de leur plage possible ? Ce contrôle lit les lignes de l'échantillon de développement sans la cible : la préparation décidée d'après lui vient avant tout regard sur la cible.",
     "choice_options": {},
     "limits": {
-     "unconfirmed_decisions": "Pas encore confirmé par vous : le choix du modèle, la règle de décision, l'ouverture de l'échantillon de test final et la conclusion.",
-     "validation_is_not_independent": "Les prédictions hors pli de l'échantillon de développement servent à comparer les modèles, la variante et la règle : ce sont des résultats de développement, pas une preuve indépendante de la performance future. Seul l'échantillon de test final scellé, ouvert une fois, l'est.",
-     "public_data_already_explored": "Les données ont été explorées ou publiées avant cette étude : ses lignes ne sont pas inédites.",
-     "no_time_or_entity_identifier": "Les données n'ont ni colonne de temps ni identifiant d'entité : l'étude ne peut pas vérifier une dérive dans le temps ni des entités répétées entre les échantillons.",
-     "uncertain_features_included": "Ces variables sont utilisées alors que leur disponibilité au moment de la prédiction est incertaine : age, contact, default, education, housing, job, loan, marital. Vérifiez qu'elles sont connues à ce moment-là.",
+     "unconfirmed_decisions": "Pas encore confirmé par vous : le choix du modèle, la règle de décision, l'ouverture de l'échantillon de test final et la conclusion.",
+     "validation_is_not_independent": "Les prédictions hors pli de l'échantillon de développement servent à comparer les modèles, la variante et la règle : ce sont des résultats de développement, pas une preuve indépendante de la performance future. Seul l'échantillon de test final scellé, ouvert une fois, l'est.",
+     "public_data_already_explored": "Les données ont été explorées ou publiées avant cette étude : ses lignes ne sont pas inédites.",
+     "no_time_or_entity_identifier": "Les données n'ont ni colonne de temps ni identifiant d'entité : l'étude ne peut pas vérifier une dérive dans le temps ni des entités répétées entre les échantillons.",
+     "uncertain_features_included": "Ces variables sont utilisées alors que leur disponibilité au moment de la prédiction est incertaine : age, contact, default, education, housing, job, loan, marital. Vérifiez qu'elles sont connues à ce moment-là.",
      "stale_results": "Certains résultats ne sont plus à jour et sont recalculés avant d'être cités.",
      "no_causality": "Des associations dans des données observées ne montrent pas qu'agir sur une variable changerait le résultat.",
      "workbench_not_tracked": "Les essais faits dans l'atelier (workbench) ne sont pas enregistrés et ne sont pas des décisions.",
-     "final_test_sealed": "L'échantillon de test final est encore scellé : chaque chiffre jusqu'ici est un résultat de développement, mesuré sur des lignes qui ont servi à explorer, ajuster et choisir."
+     "final_test_sealed": "L'échantillon de test final est encore scellé : chaque chiffre jusqu'ici est un résultat de développement, mesuré sur des lignes qui ont servi à explorer, ajuster et choisir."
     },
     "artifacts": {
-     "editable": "Le notebook éditable de l'étude suit le notebook généré jusqu'à votre première modification ; ensuite il n'est jamais écrasé et ne constitue pas une preuve officielle.",
+     "editable": "Le notebook éditable de l'étude suit le notebook généré jusqu'à votre première modification ; ensuite il n'est jamais écrasé et ne constitue pas une preuve officielle.",
      "notebook": "Le notebook généré est à jour.",
      "report": "Le rapport est à jour.",
-     "workbench": "L'atelier (workbench) est votre espace libre : il est créé une fois, jamais écrasé, et n'est pas suivi par l'étude."
+     "workbench": "L'atelier (workbench) est votre espace libre : il est créé une fois, jamais écrasé, et n'est pas suivi par l'étude."
     },
     "recap": [
-     "Objectif : « Simulation pédagogique : prioriser les contacts quand la capacité d'appel est limitée » ; la prédiction est faite « before the first contact of the campaign, from the client file ».",
-     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : campaign, day, duration, month; gardées malgré un doute : contact) ; le découpage des données (validation croisée à 5 plis, stratifiée sur le résultat) ; le critère de succès (gain de précision sur le modèle de référence d'au moins 5 points) ; la préparation des variables (par défaut, rien ne change) ; la variante à comparer (régularisation plus forte, une Explainable Boosting Machine (EBM) et le gradient boosting par histogrammes).",
-     "Maintenant : Vérifier la structure des données (dernière évaluation de la règle : le modèle logistique, sélectionner les 10 % meilleurs scores, sur les 3617 lignes de l'échantillon de développement, hors pli : précision 36,4 %, rappel 31,4 %) ; le rapport et le notebook sont à jour.",
-     "Ensuite : Quelles colonnes ont des cellules manquantes, des catégories rares ou des valeurs hors de leur plage possible ? Ce contrôle lit les lignes de l'échantillon de développement sans la cible : la préparation décidée d'après lui vient avant tout regard sur la cible.",
-     "Limite : Ces variables sont utilisées alors que leur disponibilité au moment de la prédiction est incertaine : age, contact, default, education, housing, job, loan, marital. Vérifiez qu'elles sont connues à ce moment-là."
+     "Objectif : « Simulation pédagogique : prioriser les contacts quand la capacité d'appel est limitée » ; la prédiction est faite « before the first contact of the campaign, from the client file ».",
+     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : campaign, day, duration, month; gardées malgré un doute : contact) ; le découpage des données (validation croisée à 5 plis, stratifiée sur le résultat) ; le critère de succès (gain de précision sur le modèle de référence d'au moins 5 points) ; la préparation des variables (par défaut, rien ne change) ; la variante à comparer (régularisation plus forte, une Explainable Boosting Machine (EBM) et le gradient boosting par histogrammes).",
+     "Maintenant : Vérifier la structure des données (dernière évaluation de la règle : le modèle logistique, sélectionner les 10 % meilleurs scores, sur les 3617 lignes de l'échantillon de développement, hors pli : précision 36,4 %, rappel 31,4 %) ; le rapport et le notebook sont à jour.",
+     "Ensuite : Quelles colonnes ont des cellules manquantes, des catégories rares ou des valeurs hors de leur plage possible ? Ce contrôle lit les lignes de l'échantillon de développement sans la cible : la préparation décidée d'après lui vient avant tout regard sur la cible.",
+     "Limite : Ces variables sont utilisées alors que leur disponibilité au moment de la prédiction est incertaine : age, contact, default, education, housing, job, loan, marital. Vérifiez qu'elles sont connues à ce moment-là."
     ],
     "digest": {
      "2": "Une proposition a été faite pour le moment de la prédiction.",
@@ -1399,18 +1422,18 @@
      "9": "Vous avez confirmé le critère de succès.",
      "10": "Une proposition a été faite pour la préparation des variables.",
      "11": "Vous avez confirmé la préparation des variables.",
-     "13": "Résultat calculé : le découpage.",
-     "15": "Résultat calculé : le taux de résultat positif.",
-     "17": "Résultat calculé : le modèle de référence.",
-     "19": "Résultat calculé : le modèle logistique.",
-     "21": "Résultat calculé : les diagnostics de développement.",
+     "13": "Résultat calculé : le découpage.",
+     "15": "Résultat calculé : le taux de résultat positif.",
+     "17": "Résultat calculé : le modèle de référence.",
+     "19": "Résultat calculé : le modèle logistique.",
+     "21": "Résultat calculé : les diagnostics de développement.",
      "22": "Une proposition a été faite pour la variante à comparer.",
      "23": "Vous avez confirmé la variante à comparer.",
-     "25": "Résultat calculé : le modèle variante.",
-     "27": "Résultat calculé : le modèle variante de 2.",
-     "29": "Résultat calculé : le modèle variante de 3.",
-     "31": "Résultat calculé : l'évaluation de la règle, pour : sélectionner les 10 % meilleurs scores; sélectionner les 100 meilleurs scores.",
-     "33": "Résultat remplacé : les diagnostics de développement. Modèles inchangés, rien n'est réajusté."
+     "25": "Résultat calculé : le modèle variante.",
+     "27": "Résultat calculé : le modèle variante de 2.",
+     "29": "Résultat calculé : le modèle variante de 3.",
+     "31": "Résultat calculé : l'évaluation de la règle, pour : sélectionner les 10 % meilleurs scores; sélectionner les 100 meilleurs scores.",
+     "33": "Résultat remplacé : les diagnostics de développement. Modèles inchangés, rien n'est réajusté."
     },
     "goal": {
      "intended_use": "Simulation pédagogique : prioriser les contacts quand la capacité d'appel est limitée",
@@ -1418,8 +1441,129 @@
      "observation_unit": "Un client contacté pendant une campagne téléphonique",
      "prediction_time": "before the first contact of the campaign, from the client file"
     },
-    "proposals": {}
+    "proposals": {},
+    "question": null,
+    "options": {},
+    "options_note": null,
+    "junior_digest": "Ensuite : le contrôle de qualité des données, lancé sans vous demander. Quelles colonnes ont des cellules manquantes, des catégories rares ou des valeurs hors de leur plage possible ? Ce contrôle lit les lignes de l'échantillon de développement sans la cible : la préparation décidée d'après lui vient avant tout regard sur la cible.",
+    "headlines": {
+     "prediction_time": "Moment : « before the first contact of the campaign, from the client file ».",
+     "feature_availability": "Variables : garder age, balance, contact, default, education, housing, job, loan, marital, pdays, poutcome et previous ; exclure campaign (connue seulement après le moment de la prédiction), day (connue seulement après le moment de la prédiction), duration (connue seulement après le moment de la prédiction) et month (connue seulement après le moment de la prédiction).",
+     "split": "Découpage : validation croisée sur les lignes de développement : 5 plis, stratifiés sur le résultat (graine 20261017) ; chaque ligne est prédite une fois par un modèle qui ne l'a pas vue.",
+     "success_criterion": "Critère : n'adopter que si la précision dépasse celle du modèle de référence d'au moins 5 points de pourcentage à la règle adoptée.",
+     "preprocessing": "Préparation : préparation par défaut : rien d'ajouté, de regroupé, de plafonné ni de transformé.",
+     "model_variant": "Variantes : comparer le modèle avec : régularisation plus forte, une Explainable Boosting Machine (EBM) et le gradient boosting par histogrammes."
+    },
+    "data_contingent": {},
+    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant."
    }
-  }
+  },
+  "panel_contract": 2,
+  "automation": null,
+  "review_queue": null,
+  "defensibility": {
+   "kind": "pending",
+   "count": 5,
+   "items": [
+    {
+     "id": "stale_results",
+     "severity": "caveat"
+    },
+    {
+     "id": "unconfirmed_decisions",
+     "severity": "not_final"
+    },
+    {
+     "id": "uncertain_features_included",
+     "severity": "caveat"
+    },
+    {
+     "id": "validation_is_not_independent",
+     "severity": "not_final"
+    },
+    {
+     "id": "final_test_sealed",
+     "severity": "not_final"
+    },
+    {
+     "id": "public_data_already_explored",
+     "severity": "context"
+    },
+    {
+     "id": "no_time_or_entity_identifier",
+     "severity": "context"
+    },
+    {
+     "id": "no_causality",
+     "severity": "context"
+    },
+    {
+     "id": "workbench_not_tracked",
+     "severity": "context"
+    }
+   ]
+  },
+  "ledger": {
+   "final_test": {
+    "openings": 0,
+    "max": 1
+   },
+   "target_looks": {
+    "eda": 3,
+    "sample": 1,
+    "total": 4
+   },
+   "configurations": {
+    "tried": 4,
+    "reference": true
+   }
+  },
+  "sample": {
+   "seed": "02a40beb37ff0b97",
+   "row_keys": [
+    "L443",
+    "L1102",
+    "L1331",
+    "L2074",
+    "L2504",
+    "L2923",
+    "L2995",
+    "L3645"
+   ],
+   "recorded": true
+  },
+  "headlines": {
+   "prediction_time": {
+    "decision_id": "prediction_time",
+    "basis": "restated",
+    "results": []
+   },
+   "feature_availability": {
+    "decision_id": "feature_availability",
+    "basis": "restated",
+    "results": []
+   },
+   "split": {
+    "decision_id": "split",
+    "basis": "restated",
+    "results": []
+   },
+   "success_criterion": {
+    "decision_id": "success_criterion",
+    "basis": "restated",
+    "results": []
+   },
+   "preprocessing": {
+    "decision_id": "preprocessing",
+    "basis": "restated",
+    "results": []
+   },
+   "model_variant": {
+    "decision_id": "model_variant",
+    "basis": "restated",
+    "results": []
+   }
+  },
+  "criterion_configurations": null
  }
 }

@@ -70,15 +70,19 @@
     "template"
    ],
    "next_action.panel": [
+    "version",
     "stage",
     "title",
-    "tabs",
     "where",
     "shown"
    ],
    "next_action.panel.shown": [
-    "tab",
-    "section",
+    "anchor",
+    "label",
+    "line"
+   ],
+   "next_action.panel.where": [
+    "anchor",
     "label",
     "line"
    ]
@@ -120,7 +124,15 @@
     "digest",
     "task",
     "currency",
-    "texts"
+    "texts",
+    "panel_contract",
+    "automation",
+    "review_queue",
+    "defensibility",
+    "ledger",
+    "sample",
+    "headlines",
+    "criterion_configurations"
    ],
    "moments[]": [
     "id",
@@ -226,17 +238,53 @@
     "template"
    ],
    "next_action.panel": [
+    "version",
     "stage",
     "title",
-    "tabs",
     "where",
     "shown"
    ],
    "next_action.panel.shown": [
-    "tab",
-    "section",
+    "anchor",
     "label",
     "line"
+   ],
+   "next_action.panel.where": [
+    "anchor",
+    "label",
+    "line"
+   ],
+   "automation": [
+    "variant",
+    "active",
+    "started_revision",
+    "ended"
+   ],
+   "review_queue": [
+    "items",
+    "done",
+    "total"
+   ],
+   "defensibility": [
+    "kind",
+    "count",
+    "items"
+   ],
+   "ledger": [
+    "final_test",
+    "target_looks",
+    "configurations"
+   ],
+   "sample": [
+    "seed",
+    "row_keys",
+    "recorded"
+   ],
+   "criterion_configurations": [
+    "metric",
+    "unit",
+    "bound",
+    "configurations"
    ]
   },
   "hypotrail.decisions/1": {
@@ -457,7 +505,8 @@
     "records",
     "activities",
     "first_revision",
-    "last_revision"
+    "last_revision",
+    "note"
    ],
    "impacts[]": [
     "decision_id",
@@ -730,7 +779,8 @@
     "final_test",
     "groups",
     "rows",
-    "note"
+    "note",
+    "special_rows"
    ],
    "groups[].variables[]": [
     "name",
@@ -745,6 +795,21 @@
     "n_missing",
     "n_distinct",
     "examples"
+   ],
+   "rows": [
+    "columns",
+    "n_rows",
+    "order",
+    "items",
+    "seed",
+    "target_shown",
+    "exposure"
+   ],
+   "special_rows": [
+    "columns",
+    "n_rows",
+    "items",
+    "truncated"
    ]
   }
  },

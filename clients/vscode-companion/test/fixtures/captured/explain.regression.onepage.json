@@ -1,0 +1,1362 @@
+{
+ "about": {
+  "schema": "hypotrail.explain/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "explain",
+   "--json"
+  ],
+  "note": "The one-page Auto MPG study at the model choice (the reads behind the five states)."
+ },
+ "payload": {
+  "schema": "hypotrail.explain/1",
+  "ok": true,
+  "study": "/studies/auto mpg-onepage",
+  "revision": 35,
+  "task": "regression",
+  "terms": [
+   {
+    "id": "prediction_time",
+    "term": "Prediction time",
+    "definition": "The moment when the prediction is made and used. Only information known at that moment may enter the model.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "prediction_time"
+    ],
+    "language": "en"
+   },
+   {
+    "id": "leakage",
+    "term": "Leakage",
+    "definition": "A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use. For example, a fuel consumption measured on a road test would reveal a car's fuel efficiency, but it is known only after the measurement the model is meant to anticipate.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "feature_availability",
+    "term": "Feature availability",
+    "definition": "Whether a variable is known at the prediction time. It is a decision about the use case, not a property the data can prove.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "feature_availability"
+    ],
+    "language": "en"
+   },
+   {
+    "id": "validation_partition",
+    "term": "Validation set",
+    "definition": "Rows held apart from model fitting and used to compare models and choose one. Once used to choose, they are no longer independent evidence.",
+    "example": {
+     "segments": [
+      {
+       "text": "Here "
+      },
+      {
+       "text": "96",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+       "path": "partitions.validation.n_rows",
+       "value": 96,
+       "format": "int"
+      },
+      {
+       "text": " rows are held apart for validation and "
+      },
+      {
+       "text": "222",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+       "path": "partitions.train.n_rows",
+       "value": 222,
+       "format": "int"
+      },
+      {
+       "text": " rows train the models."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [
+     "split"
+    ],
+    "language": "en"
+   },
+   {
+    "id": "exposure",
+    "term": "Data exposure",
+    "definition": "The record of which rows were read, by which activity, and why. Changing the split does not make rows already seen unseen.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "distribution",
+    "term": "Distribution",
+    "definition": "How the values of one column spread over the rows, read as how often each value occurs or, for a measurement, its range, quartiles, and missing cells. Read on training rows only, it leaves the validation rows unexplored.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "special_value",
+    "term": "Special value",
+    "definition": "A code that stands for something other than a measurement, such as \"never\" or \"unknown\". Treating it as an ordinary number distorts a model.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "baseline",
+    "term": "Baseline",
+    "definition": "The simplest reference model, here the training mean of the target predicted for every row. Keeping the baseline is a valid conclusion.",
+    "example": {
+     "segments": [
+      {
+       "text": "Here the mean baseline predicts "
+      },
+      {
+       "text": "20.57",
+       "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+       "path": "train_mean",
+       "value": 20.565315315315317,
+       "format": "f2"
+      },
+      {
+       "text": " mpg for every row, the mean of the training rows."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [
+     "models"
+    ],
+    "language": "en"
+   },
+   {
+    "id": "paired_bootstrap",
+    "term": "Paired bootstrap",
+    "definition": "Resampling the same validation rows for both models at once, so the interval describes their difference rather than each one separately.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "paired_difference",
+    "term": "Paired difference",
+    "definition": "The difference between two models measured on the same rows, such as the linear model's MAE minus the baseline's. Pairing removes the noise of which rows each model was measured on.",
+    "example": {
+     "segments": [
+      {
+       "text": "Here the linear model's MAE minus the baseline's is "
+      },
+      {
+       "text": "-3.79",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.point",
+       "value": -3.792215923650031,
+       "format": "f2"
+      },
+      {
+       "text": " mpg, between "
+      },
+      {
+       "text": "-4.38",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.low",
+       "value": -4.375861635363238,
+       "format": "f2"
+      },
+      {
+       "text": " and "
+      },
+      {
+       "text": "-3.16",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.high",
+       "value": -3.159283658688826,
+       "format": "f2"
+      },
+      {
+       "text": " on resamples of the validation rows."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "confidence_interval",
+    "term": "Confidence interval",
+    "definition": "A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for future rows.",
+    "example": {
+     "segments": [
+      {
+       "text": "Here the linear model's MAE ranges from "
+      },
+      {
+       "text": "5.69",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "intervals.[fit.linear].mae.low",
+       "value": 5.690730215654784,
+       "format": "f2"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "7.31",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "intervals.[fit.linear].mae.high",
+       "value": 7.3058496174077225,
+       "format": "f2"
+      },
+      {
+       "text": " mpg on resamples of the validation rows."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "percentile_interval",
+    "term": "Percentile interval",
+    "definition": "The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the error on future rows.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "selection_on_validation",
+    "term": "Selection on validation",
+    "definition": "Choosing a model by looking at validation results. The chosen model's validation error is optimistic for that reason.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "documented_fact",
+    "term": "Documented fact",
+    "definition": "A statement backed by the dataset documentation, with its source.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "scenario_assumption",
+    "term": "Scenario assumption",
+    "definition": "A statement the scenario takes as given without evidence. It can be challenged and is never a decision.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "confirmed_decision",
+    "term": "Confirmed decision",
+    "definition": "A choice recorded with the user's own words in reply to a restatement. The engine records the words; it cannot verify who typed them.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "conclusion"
+    ],
+    "language": "en"
+   },
+   {
+    "id": "proposal",
+    "term": "Proposal",
+    "definition": "A restated choice waiting for the user's answer. It is not a decision until it is confirmed.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "stale_result",
+    "term": "Stale result",
+    "definition": "A result computed under decisions that have since changed. It is kept for the record but is not cited.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "overfitting",
+    "term": "Overfitting",
+    "definition": "A model that fits the noise of its training set as well as its pattern. It looks better on the rows it was fitted on than on new rows. For example, a model that memorises the fuel efficiency of the car names it was fitted on predicts those cars well and later model years badly; the gap between training and validation errors reveals it.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "regularisation",
+    "term": "Regularisation",
+    "definition": "A penalty on large model weights during fitting. It trades a little fit on the training set for steadier predictions on new rows. For example, with few cars and closely related features such as weight and displacement, a penalty keeps their weights from offsetting each other with large opposite values.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "one_hot_encoding",
+    "term": "One-hot encoding",
+    "definition": "Turning a category column into one indicator column per category, set for the rows that have that category. A linear model needs it because categories have no order. For example, the origin of a car is coded as a region number; it becomes one indicator per region instead of a number the model would read as a measurement.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "imputation",
+    "term": "Imputation",
+    "definition": "Filling a missing value with a substitute, such as the median of the training set, before fitting. The substitute is computed on the training set only, and an indicator can record that the value was missing. For example, the cars whose engine power is missing get the median engine power of the training cars, never a figure computed with validation cars.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "standardisation",
+    "term": "Standardisation",
+    "definition": "Rescaling a numeric column to a mean of zero and a standard deviation of one, with both computed on the training set. It puts features on one scale, so their weights and a penalty treat them alike. For example, weight in pounds and acceleration in seconds are rescaled so that the weight given to a car's weight is not tiny only because pounds are large numbers.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "cross_validation",
+    "term": "k-fold cross-validation",
+    "definition": "Dividing the development set into k folds; each fold is in turn the validation fold, measured by a model fitted on the other folds, the training folds. Every development row is measured once, so the estimate rests on more rows than one validation set; a choice made with it is still optimistic. For example, with five folds of the cars, each model is fitted five times and its error measured each time on cars it did not see.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "out_of_fold",
+    "term": "Out-of-fold predictions",
+    "definition": "The prediction for a development row made by the model fitted on the training folds, the folds other than the row's own validation fold, so by a model that never saw that row. Every development row gets one, and the errors and the model choice are read on them; they are development evidence, because the choice is made on them. For example, a car in the third fold is predicted by the model fitted on the other folds' cars.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "fold_spread",
+    "term": "Fold spread",
+    "definition": "How much a figure moves from one validation fold to another, given as its lowest and highest fold value. It is not a confidence interval, since it describes the folds of this development set, while a confidence interval describes how a figure could move with another sample. A difference between two models smaller than the spread is not a difference this study can see. For example, if the mean error ranges widely across folds, a small gain of the variant over the candidate says little.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "final_test",
+    "term": "Holdout (final test)",
+    "definition": "Rows set apart and sealed before any look at the data, opened once, after the model is chosen, to measure it on rows that played no part in any choice. It is the study's only independent evidence. For example, the cars sealed at the start are predicted once by the chosen model; any change made after that opening is reported as made after the final test.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "development_rows",
+    "term": "Development set (development rows)",
+    "definition": "Every row outside the sealed final test, the rows the study may explore, split into training and validation rows, and use to choose. What they show is development evidence, not final evidence. For example, the cars in the development rows feed the exploration, the model fits, and the comparison of models, while the sealed cars stay unread.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "discover_data"
+    ],
+    "language": "en"
+   },
+   {
+    "id": "permutation_null_band",
+    "term": "Permutation null band",
+    "definition": "The range of a chart's figures after shuffling the outcome among the training rows several times with a fixed seed, which breaks any real link between the variable and the outcome. A pattern that stays inside the band is what chance alone draws; one above every shuffle is unlikely to be chance alone. For example, if the rates by job group differ less than they do after shuffling who subscribed, the differences are not evidence of anything.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "target_look",
+    "term": "Look at the target",
+    "definition": "An analysis that read the variable to predict, such as its distribution or its summary, the special values read with it, or its mean by group. Each one is counted. The more looks, the more a pattern found among them can be chance. For example, the quality check of the columns reads no target and is not a look; the distribution of the variable to predict is one.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "structural_eda"
+    ],
+    "language": "en"
+   },
+   {
+    "id": "data_contingent_decision",
+    "term": "Data-contingent decision",
+    "definition": "A decision chosen after looking at the outcome in the data. It is allowed, but it is recorded with the analyses that motivated it, because a choice adapted to the training rows makes the validation figures slightly optimistic. For example, capping a variable because a chart of the outcome looked odd at its extremes is a data-contingent preparation.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "preprocessing"
+    ],
+    "language": "en"
+   },
+   {
+    "id": "success_criterion",
+    "term": "Success criterion",
+    "definition": "The smallest reduction of the baseline's error that would make the model worth adopting, fixed before any model is fitted, so the result cannot move the bar. The conclusion is read against it. For example, deciding before the models that the linear model must make errors at least a tenth smaller than predicting the training mean for every car, and keeping the mean when it does not.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "success_criterion"
+    ],
+    "language": "en"
+   },
+   {
+    "id": "single_feature_signal",
+    "term": "Single-feature signal",
+    "definition": "How well one variable alone predicts the outcome, measured out of fold on the training rows. A variable that predicts far better than the others raises a question about when its value becomes known, because a value recorded at or after the outcome would leak it. It never decides which variables to keep. For example, the length of the last call predicts the answer of that call very well, because it is only known once the call has ended.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "heteroscedasticity",
+    "term": "Heteroscedasticity",
+    "definition": "Errors whose size changes with the prediction or across groups instead of staying about the same. The mean error stays a fair summary, but one interval width for every row would be wrong. For example, if a model of fuel efficiency errs more for the cars it predicts most efficient, its errors are heteroscedastic.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "qq_plot",
+    "term": "Quantile-quantile plot",
+    "definition": "The quantiles of the residuals, rescaled, plotted against the same quantiles of a normal distribution; points on the diagonal mean normal residuals. Normality is a question about the residuals after the fit, never about the raw variables, and it matters for prediction intervals rather than for the mean error. For example, a few cars with very large errors bend the ends of the plot away from the diagonal.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "example_errors",
+    "term": "Example errors",
+    "definition": "The rows with the largest errors, shown with their values so a person can read what the model saw. They are examples to understand, not a sample to count. For example, the cars the model predicts worst can reveal a group of cars it was not fitted to describe.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "training_set",
+    "term": "Training set",
+    "definition": "The rows a model is fitted on. Under k-fold cross-validation each model's training set is the training folds, every fold but the one it is measured on. For example, with five folds of the clients, each model learns from four folds of clients.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "fold",
+    "term": "Fold",
+    "definition": "One of the k parts the development set is divided into for k-fold cross-validation. Each fold is in turn the validation fold, measured by a model fitted on the other folds, the training folds. For example, with five folds the clients of the third fold are scored by a model that learnt from the clients of the four other folds.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "sample",
+    "term": "Sample",
+    "definition": "A set of rows drawn from the population the study is about; a figure computed on it would move with another sample of the same size. For example, the development set is one sample of the clients, and the holdout another one.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "forward_chaining",
+    "term": "Forward-chaining cross-validation",
+    "definition": "Cross-validation that follows the order of prediction time. The development rows are cut into consecutive windows; each later window is predicted once by a model fitted only on earlier rows whose target was already known, and the first window, the warm-up, only trains and is never predicted. A choice made with it is still optimistic. For example, the cars of the third window are predicted by a model fitted on the cars of the first two windows, never on later ones.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "random_split",
+    "term": "Random split",
+    "definition": "A random division of the rows between training and validation, with a recorded seed. It assumes the rows are exchangeable, which a time order or repeated entities can contradict.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "ordinal_split",
+    "term": "Ordinal (temporal) split",
+    "definition": "A split on an ordered column such as a model year. Rows at or after a cutoff are validation rows and earlier rows train the model, so the validation asks whether a model fitted on the past holds on later periods.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "extrapolation",
+    "term": "Extrapolation",
+    "definition": "Predicting for values outside the range the model was fitted on, such as later years. A model can be accurate inside its training range and biased outside it.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "group_overlap",
+    "term": "Group overlap",
+    "definition": "Rows that describe the same entity, such as one name recorded in several years, falling in both partitions. Their validation rows are not independent of the training rows; the study reports how many groups are shared.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "target_distribution",
+    "term": "Target distribution",
+    "definition": "How the values of the target spread, summarised by the mean, the standard deviation, and the quartiles. Any model is compared with the simplest guess, the training mean.",
+    "example": {
+     "segments": [
+      {
+       "text": "On this study's training rows the target has a mean of "
+      },
+      {
+       "text": "20.57",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+       "path": "mean",
+       "value": 20.565315315315317,
+       "format": "f2"
+      },
+      {
+       "text": " mpg and a standard deviation of "
+      },
+      {
+       "text": "6.20",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+       "path": "sd",
+       "value": 6.195978453412262,
+       "format": "f2"
+      },
+      {
+       "text": " mpg."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [
+     "train_eda"
+    ],
+    "language": "en"
+   },
+   {
+    "id": "linear_regression",
+    "term": "Linear regression",
+    "definition": "A model that predicts the target as a weighted sum of the features, with weights fitted on training rows by least squares. Its weights are associations, not effects.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "prediction",
+    "term": "Prediction",
+    "definition": "The value a model gives for the target of a row, in the unit of the target.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "residual",
+    "term": "Residual",
+    "definition": "Observed minus predicted value for one row. A positive residual means the model predicted too low.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "bias",
+    "term": "Bias",
+    "definition": "The mean residual. A bias far from zero means the model is systematically too low or too high, for example on later periods than the ones it was fitted on.",
+    "example": {
+     "segments": [
+      {
+       "text": "Here the mean residual of the linear model on the validation rows is "
+      },
+      {
+       "text": "6.39",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.linear].mean_residual",
+       "value": 6.394515464632113,
+       "format": "f2"
+      },
+      {
+       "text": " mpg."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "mae",
+    "term": "Mean absolute error (MAE)",
+    "definition": "The average size of the residuals, in the unit of the target. It reads directly as the typical error of one prediction.",
+    "example": {
+     "segments": [
+      {
+       "text": "Here the linear model's validation MAE is "
+      },
+      {
+       "text": "6.48",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.linear].mae",
+       "value": 6.476590382656274,
+       "format": "f2"
+      },
+      {
+       "text": " mpg, against "
+      },
+      {
+       "text": "10.27",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.baseline].mae",
+       "value": 10.268806306306304,
+       "format": "f2"
+      },
+      {
+       "text": " mpg for the mean baseline."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [
+     "model_choice"
+    ],
+    "language": "en"
+   },
+   {
+    "id": "rmse",
+    "term": "Root mean squared error (RMSE)",
+    "definition": "The square root of the average squared residual, in the unit of the target. Squaring weighs large errors more, so a gap between RMSE and MAE signals a few large errors.",
+    "example": {
+     "segments": [
+      {
+       "text": "Here the linear model's validation RMSE is "
+      },
+      {
+       "text": "7.66",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.linear].rmse",
+       "value": 7.664419781686159,
+       "format": "f2"
+      },
+      {
+       "text": " mpg, against "
+      },
+      {
+       "text": "11.92",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.baseline].rmse",
+       "value": 11.924502477405836,
+       "format": "f2"
+      },
+      {
+       "text": " mpg for the mean baseline."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "smearing",
+    "term": "Retransformation (smearing)",
+    "definition": "When a model predicts the logarithm of the target, turning its predictions back to the original unit underestimates the mean, and a correction such as Duan's smearing is needed. For example, a model of the log of fuel efficiency would need it; this engine does not transform the target, so it does not apply here.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
+   }
+  ],
+  "steps": {
+   "discover_data": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Development set (development rows)"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The case describes one row as: A vehicle model for a model year. The data card shows the columns grouped with their meaning and availability, and a few development rows."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Nothing is computed and nothing is decided. The rows shown are development rows, already read for their structure when the study was created; the final test stays sealed."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Reading the columns before any decision is how you know what each variable describes and when its value becomes known."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "The availability decision that follows relies on this reading."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "prediction_time": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Prediction time"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "In this case the decision is: Compare estimation methods without a real decision. The moment of prediction decides which variables are allowed."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "You state the moment; the agent restates it and records your answer. No data are read."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Every later step is judged against this moment."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Changing it later makes the availability decision, the model choice, and the conclusion need confirmation again."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "feature_availability": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Feature availability"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The case describes one row as: A vehicle model for a model year. For each variable you decide whether it is known at the prediction moment."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Each candidate variable gets one status. Uncertain variables are either excluded or included and listed as a limit. A time column is not a candidate variable; it orders the rows."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Variables marked not available, or uncertain and excluded, never enter a model."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "A change that alters the set of usable variables refits the linear model and asks for the model choice again."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "split": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Validation set"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The split is fixed before any exploration of the target. When the case declares a time column, the cut is ordinal: later periods are validated on a model fitted on earlier ones, which shows extrapolation instead of hiding it. When it declares a group column, the split reports the groups both partitions share."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "A random split with a recorded seed, or an ordinal cutoff on the integer time column (read as integers, never as dates). The rows read are recorded as exposure."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Training rows: "
+      },
+      {
+       "text": "222",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+       "path": "partitions.train.n_rows",
+       "value": 222,
+       "format": "int"
+      },
+      {
+       "text": ". Validation rows: "
+      },
+      {
+       "text": "96",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+       "path": "partitions.validation.n_rows",
+       "value": 96,
+       "format": "int"
+      },
+      {
+       "text": ". Shared groups and the range of the time column in each partition are listed with the result."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Changing the split refits both models and recomputes the exploration; rows already explored stay exposed."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "success_criterion": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Success criterion"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The criterion is fixed at the split pause, before any model is fitted, so the result cannot shape it."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "You state the smallest relative reduction of the validation mean absolute error of the mean baseline that would make the model worth using."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "The conclusion is read against it. A reduction below it, or whose paired interval includes zero, does not support adopting the model."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Changing it later asks for the conclusion again."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "structural_eda": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Look at the target"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The quality check reads the development rows without the target, so the preparation decided from it comes before any look at the target."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Missing cells by column, repeated rows, the categories of each categorical column with their rare ones, and the range of each numeric column against the range the case declares. The rows read are recorded as a structural inspection."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "The drafted preparation cites what this check found; it is not data-contingent while no look at the target came before it."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "A preparation proposed after a look at the target is still stamped data-contingent."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "preprocessing": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Data-contingent decision"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The exploration of the training rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Missing-value indicators, the minimum rows of a category, caps at training quantiles, and log transforms are learnt on training rows only and applied unchanged to the validation rows. The default changes nothing."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "A preparation chosen after looking at the target is stamped data-contingent; the validation errors may then be slightly optimistic."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Changing it refits the linear model and asks for the model choice and the conclusion again; the exploration is unchanged."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "train_eda": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Target distribution"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The target is: mpg: city-cycle fuel efficiency in miles per gallon according to the source. Exploration reads training rows only."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "The target summary and the special values are computed on the training partition, with their counts."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "On the training rows the target has a mean of "
+      },
+      {
+       "text": "20.57",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+       "path": "mean",
+       "value": 20.565315315315317,
+       "format": "f2"
+      },
+      {
+       "text": " and a standard deviation of "
+      },
+      {
+       "text": "6.20",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+       "path": "sd",
+       "value": 6.195978453412262,
+       "format": "f2"
+      },
+      {
+       "text": ", in the unit of the target. The mean baseline predicts that mean for every row; a model has to do better to be useful."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "A missing-value marker on a numeric variable becomes an indicator and an imputed value in the model, never an ordinary number."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "models": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Baseline"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "A mean baseline and a linear model are fitted on training rows and predict the validation rows."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Predictions on validation rows are stored, so comparing and choosing a model never requires a refit."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "On the validation rows the mean baseline has a mean absolute error of "
+      },
+      {
+       "text": "10.27",
+       "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+       "path": "validation.mae",
+       "value": 10.268806306306304,
+       "format": "f2"
+      },
+      {
+       "text": " and the linear model of "
+      },
+      {
+       "text": "6.48",
+       "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+       "path": "validation.mae",
+       "value": 6.476590382656274,
+       "format": "f2"
+      },
+      {
+       "text": ", in the unit of the target."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "The model comparison reads these stored predictions."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "model_variant": {
+    "concept": null,
+    "context": null,
+    "method": null,
+    "interpretation": null,
+    "consequence": null,
+    "text_status": "shown"
+   },
+   "model_choice": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Mean absolute error (MAE)"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The intended use is: Exercise: estimate a future model fuel efficiency from technical characteristics. A model is adopted only when it reduces the error of the mean baseline by more than the variability of these validation rows, and its residuals do not show a bias that matters for that use."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "MAE and RMSE are computed in the unit of the target on the stored validation predictions, with paired bootstrap intervals of each and of the difference with the baseline, and the residuals by period."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "The linear model's MAE minus the baseline's is "
+      },
+      {
+       "text": "-3.79",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.point",
+       "value": -3.792215923650031,
+       "format": "f2"
+      },
+      {
+       "text": " on the validation rows, between "
+      },
+      {
+       "text": "-4.38",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.low",
+       "value": -4.375861635363238,
+       "format": "f2"
+      },
+      {
+       "text": " and "
+      },
+      {
+       "text": "-3.16",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.high",
+       "value": -3.159283658688826,
+       "format": "f2"
+      },
+      {
+       "text": " on resamples of those rows. Its mean residual (bias) is "
+      },
+      {
+       "text": "6.39",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.linear].mean_residual",
+       "value": 6.394515464632113,
+       "format": "f2"
+      },
+      {
+       "text": ". These rows were used for the choice, so the figures are optimistic and are not a forecast."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Changing the model choice reuses the stored predictions and the evaluation; nothing is refitted."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "final_test": {
+    "concept": null,
+    "context": null,
+    "method": null,
+    "interpretation": null,
+    "consequence": null,
+    "text_status": "shown"
+   },
+   "conclusion": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Confirmed decision"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The conclusion says what can be claimed, for which use, and with which limits."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "You choose a verdict and write the text; keeping the baseline or calling the study inconclusive are valid results."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "The conclusion rests on validation rows that were used for selection."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "The limits listed under \"What is not yet defensible\" stay attached to it."
+      }
+     ]
+    },
+    "text_status": "shown"
+   }
+  },
+  "predictions": [
+   {
+    "id": "regression.models.sign",
+    "step": "models",
+    "question": "Fitted without the rows it predicts, will the linear model predict them too low or too high on average?",
+    "choices": [
+     {
+      "id": "too_low",
+      "label": "Too low"
+     },
+     {
+      "id": "too_high",
+      "label": "Too high"
+     },
+     {
+      "id": "not_sure",
+      "label": "Not sure"
+     }
+    ],
+    "reveal": {
+     "segments": [
+      {
+       "text": "The mean residual of the linear model on the rows it predicted is "
+      },
+      {
+       "text": "6.39",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.linear].mean_residual",
+       "value": 6.394515464632113,
+       "format": "f2"
+      },
+      {
+       "text": " mpg: on average it predicted too low (observed minus predicted is positive)."
+      }
+     ]
+    },
+    "available": true
+   },
+   {
+    "id": "regression.model_choice.beats_mean",
+    "step": "model_choice",
+    "question": "Will the linear model's error be below the mean baseline's?",
+    "choices": [
+     {
+      "id": "yes",
+      "label": "Yes"
+     },
+     {
+      "id": "no",
+      "label": "No"
+     },
+     {
+      "id": "not_sure",
+      "label": "Not sure"
+     }
+    ],
+    "reveal": {
+     "segments": [
+      {
+       "text": "The MAE of the evaluated rows is "
+      },
+      {
+       "text": "6.48",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.linear].mae",
+       "value": 6.476590382656274,
+       "format": "f2"
+      },
+      {
+       "text": " mpg for the linear model and "
+      },
+      {
+       "text": "10.27",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.baseline].mae",
+       "value": 10.268806306306304,
+       "format": "f2"
+      },
+      {
+       "text": " mpg for the mean baseline. The paired difference is "
+      },
+      {
+       "text": "-3.79",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.point",
+       "value": -3.792215923650031,
+       "format": "f2"
+      },
+      {
+       "text": " mpg, between "
+      },
+      {
+       "text": "-4.38",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.low",
+       "value": -4.375861635363238,
+       "format": "f2"
+      },
+      {
+       "text": " and "
+      },
+      {
+       "text": "-3.16",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.high",
+       "value": -3.159283658688826,
+       "format": "f2"
+      },
+      {
+       "text": " on resamples of the evaluated rows."
+      }
+     ]
+    },
+    "available": true
+   }
+  ]
+ }
+}

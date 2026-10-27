@@ -26,8 +26,14 @@
    "decision_status": "confirmed",
    "superseded": [],
    "restatement": "Call the 100 clients with the highest scores.",
-   "data_contingent": null,
-   "data_contingent_reason": null
+   "data_contingent": true,
+   "data_contingent_reason": {
+    "kind": "changed_after_validation",
+    "previous_value": "threshold:0.2",
+    "evaluation": "7badf1dfdfc32377b33e9376f05c914cad989474d248eec173bac6b1581b493b",
+    "text": "This rule changes the value proposed before (threshold:0.2) after an evaluation of that value was seen: the development figures that guided the change are slightly optimistic. Say so to the junior before presenting it.",
+    "junior_text": "This rule is proposed after you saw how the earlier one did on the validation rows: a change guided by those figures makes them slightly optimistic. It is recorded, not refused."
+   }
   },
   "artifacts": {
    "report": {

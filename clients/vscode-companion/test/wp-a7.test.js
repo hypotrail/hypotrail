@@ -25,7 +25,7 @@ function make(settings = { stage: 'v2' }) {
 }
 
 // DA-2 -> SAMPLE-1 (ADR 0004 d13): the rows are the engine's, five first rows from an older
-// engine, the seeded sample of eight under contract P1 (p1/data.regression).
+// engine, the seeded sample of eight under contract P1 (captured/data.regression.onepage).
 test('DataModel: keys, development rows, groups in order, the engine\'s rows with the target first', () => {
   for (const name of FIXTURES) {
     const p = payload(name);
@@ -49,13 +49,18 @@ test('DataModel: keys, development rows, groups in order, the engine\'s rows wit
   assert.throws(() => toDataModel(payload('summary.binary')), /hypotrail.data\/1/);
   // SAMPLE-1, SAMPLE-3 (contract P1 §17.3, §17.4): the seed, whether the target is shown, and
   // the special-value rows without the target.
-  const s = toDataModel(payload('p1/data.regression'));
-  assert.equal(s.rows.seed, '5f0c2a9e41d7b3a6');
+  const raw = payload('captured/data.regression.onepage');
+  const s = toDataModel(raw);
+  assert.match(s.rows.seed, /^[0-9a-f]{16}$/);
+  assert.equal(s.rows.seed, raw.rows.seed);
   assert.equal(s.rows.targetShown, true);
-  assert.deepEqual(s.rows.exposure, { exposureId: 'x_1', purpose: 'development_target_sample', recorded: true });
+  assert.deepEqual(s.rows.exposure, { exposureId: raw.rows.exposure.exposure_id, purpose: 'development_target_sample', recorded: true });
   assert.equal(s.specialRows.nRows, 6);
   assert.ok(!s.specialRows.columns.includes('mpg'));
-  assert.equal(toDataModel(payload('data.binary')).specialRows, null, 'an older engine: no special rows');
+  // An older engine (no `special_rows`): no special rows.
+  const older = payload('data.binary');
+  delete older.special_rows;
+  assert.equal(toDataModel(older).specialRows, null, 'an older engine: no special rows');
 });
 
 test('DataModel: a note written for the agent is not kept; a missing cell stays null', () => {

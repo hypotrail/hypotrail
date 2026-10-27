@@ -208,11 +208,11 @@ def binary(cap: Capture) -> None:
                  '--expected-revision', run('status', '--study', broken)[1]['revision'], '--json')
 
 
-def _killed_run(study: Path, rev: int) -> None:
+def _killed_run(study: Path, rev: int, column: str = 'balance') -> None:
     """``run`` killed after its reservation (``HYPOTRAIL_FAULT=run_after_reserve``)."""
     import subprocess
 
-    subprocess.run([sys.executable, '-m', 'mlkit.study.cli', 'run', 'eda.distribution', '--column=balance',
+    subprocess.run([sys.executable, '-m', 'mlkit.study.cli', 'run', 'eda.distribution', f'--column={column}',
                     '--request-id', 'b-fault', '--expected-revision', str(rev), '--json', '--study', str(study)],
                    cwd=study, env=fk.env(HYPOTRAIL_TEST_HOOKS='1', HYPOTRAIL_FAULT='run_after_reserve'),
                    capture_output=True, text=True, timeout=300, check=False)
@@ -454,6 +454,120 @@ def french(cap: Capture) -> None:
     cap.read('status.regression.fr', 'regression', study, 'status', '--json', note=note)
 
 
+# The five states of the approved one-page mockup (ADR 0004 d13, PANEL-ONE-PAGE-PLAN E-8) on
+# an English Auto MPG study, read with the panel on at stage v3, so ``next_action.panel`` is
+# the engine's line (contract P1, CLI-CONTRACT §17.1).
+PANEL_ON = {'HYPOTRAIL_COMPANION': '1', 'HYPOTRAIL_COMPANION_STAGE': 'v3'}
+HOLD_WORDS = 'Wait: I want to check how the six missing horsepower values are handled before I keep this preparation'
+RESOLVE_WORDS = 'The team confirmed how horsepower is prepared, so the hold is over'
+PREPARATION_WORDS = 'Yes, add an indicator for the missing horsepower values, because they may carry information'
+CHOICE_WORDS = 'Yes, I keep the linear model, because its error is the lowest and it is the simplest'
+AUTO_REVIEW_WORDS = 'Yes, I adopt this as it stands, because I read it and it fits my study'
+
+
+def _summary(cap: Capture, name: str, study: Path, note: str) -> dict:
+    with environment(**PANEL_ON):
+        return cap.read(name, 'regression', study, 'status', '--summary', '--digest', '--json', note=note)
+
+
+def one_page(cap: Capture) -> None:
+    """E-8: step 1 (the data card and its seeded sample), the model choice asked as a choice
+    (R16) with a chart requested from the panel (W4), the preparation to confirm again (then,
+    on the same study, a run interrupted), the review of an ``init --automation
+    until_final_test`` study, and the end (the final test opened once, the conclusion
+    adopted)."""
+    from mlkit.study import governance, state as st
+
+    study = cap.root / 'regression-onepage'
+    flow = fk.Flow(study, AUTO, prefix='o')
+    flow.init()
+    # The agent regenerates the deliverables after every change, the creation included.
+    code, out = run('render', '--json', '--study', study)
+    assert code == 0, out
+    _summary(cap, 'summary.regression.step1', study, 'Auto MPG at step 1: the data card and its seeded sample.')
+    flow.decide('prediction_time', 'when the technical characteristics of a new model are fixed, '
+                                   'before its fuel efficiency is measured')
+    flow.decide('feature_availability', fk.availability(AUTO, acceleration='uncertain_excluded'))
+    flow.decide('split', {'method': 'ordinal_cutoff', 'column': 'model_year', 'cutoff': 79})
+    flow.model_decisions()
+    _run_pending(flow)
+    flow.variant()
+    nxt = _run_pending(flow)
+    assert nxt['kind'] == 'propose' and nxt['decision'] == 'model_choice' and nxt.get('choice_options'), nxt
+    # W4: a chart requested from the panel, filed under its step like any other.
+    code, out = run('run', 'eda.mean_by', '--column=model_year', '--channel', 'webview', '--request-id', 'o-w4',
+                    '--expected-revision', flow.rev(), '--study', study)
+    assert code == 0, out
+    _summary(cap, 'summary.regression.choice', study,
+             'Auto MPG at the model choice, asked as a choice (R16); a chart requested from the panel.')
+    # The panel's other reads of this study at the choice, for every one-page state (the same
+    # result ids as the summaries).
+    note = 'The one-page Auto MPG study at the model choice (the reads behind the five states).'
+    cap.read('data.regression.onepage', 'regression', study, 'data', '--json',
+             note=note + ' The seeded sample and the special-value rows (CLI-CONTRACT §17.3, §17.4).')
+    for name, argv in (('evidence', ['evidence']), ('decisions', ['decisions']), ('explain', ['explain']),
+                       ('status', ['status'])):
+        cap.read(f'{name}.regression.onepage', 'regression', study, *argv, '--json', note=note)
+    # The preparation changed after the models (an indicator for the missing horsepower
+    # values: the linear model and its evaluation are stale), then put on hold in the junior's
+    # words and the hold resolved: the preparation is to confirm again (``reconfirm``).
+    reopened = fk.clone(study, cap.root / 'regression-reopened')
+    held = fk.Flow(reopened, AUTO, prefix='r')
+    held.decide('preprocessing', {**dict(governance.DEFAULT_PREPROCESSING), 'missing': 'indicator'},
+                words=PREPARATION_WORDS)
+    note_id = held.call('decide', 'note', '--about', 'preprocessing', '--text', HOLD_WORDS, '--request-id',
+                        held.rid(), '--expected-revision', held.rev(), '--study', reopened)['result']['note_id']
+    held.call('decide', 'note', '--resolve', note_id, '--text', RESOLVE_WORDS, '--request-id', held.rid(),
+              '--expected-revision', held.rev(), '--study', reopened)
+    summary = _summary(cap, 'summary.regression.reopened', reopened,
+                       'Auto MPG: the preparation changed after the models, then to confirm again after a resolved '
+                       'hold; the linear model and its evaluation are stale.')
+    assert summary['next_action']['kind'] == 'reconfirm', summary['next_action']
+    assert summary['next_action']['decision'] == 'preprocessing', summary['next_action']
+    # The same study after a chart run was killed after its reservation: the interruption
+    # comes first in the engine's next action (CLI-CONTRACT §8, F1), the preparation stays
+    # to confirm again in the path.
+    _killed_run(reopened, held.rev(), column='horsepower')
+    summary = _summary(cap, 'summary.regression.interrupted', reopened,
+                       'The reopened Auto MPG study after a chart run was interrupted: the interruption is the next '
+                       'action; the preparation stays to confirm again.')
+    assert summary['next_action']['kind'] in ('outcome_unknown', 'acknowledge_interruption'), summary['next_action']
+    assert summary['decisions']['preprocessing']['status'] == 'reconfirm_required', summary['decisions']
+    # The end: the model chosen, the final test opened once, the conclusion adopted.
+    flow.decide('model_choice', 'fit.linear', words=CHOICE_WORDS)
+    nxt = _run_pending(flow)
+    if nxt.get('decision') == 'final_test':
+        value = st.b1_default_value(flow.state(), 'final_test')
+        code, out = run('decide', 'propose', 'final_test', '--value-json', json.dumps(value), '--restatement',
+                        'You open the sealed final test once, for the chosen model.', '--rationale',
+                        'The model is chosen.', '--request-id', 'o-open', '--expected-revision', flow.rev(),
+                        '--study', study)
+        assert code == 0, out
+        flow.call('decide', 'confirm', out['result']['proposal_id'], '--user-words', OPEN_WORDS,
+                  '--request-id', flow.rid(), '--expected-revision', flow.rev(), '--study', study)
+        nxt = _run_pending(flow)
+    assert nxt['kind'] == 'propose' and nxt['decision'] == 'conclusion', nxt
+    flow.decide('conclusion', {**nxt['choice_options'][0]['value'], 'text': CONCLUSION_TEXT})
+    done = _summary(cap, 'summary.regression.done', study,
+                    'Auto MPG at the end: the final test opened once, the conclusion adopted.')
+    assert done['next_action']['kind'] == 'done', done['next_action']
+    # The review of an automatic study: every decision waits for the junior's own words.
+    auto = cap.root / 'regression-automatic'
+    code, out = run('init', '--case', AUTO, '--automation', 'until_final_test', '--study', auto)
+    assert code == 0, out
+    code, out = run('automation', 'run', '--request-id', 'o-auto', '--expected-revision',
+                    run('status', '--study', auto)[1]['revision'], '--study', auto)
+    assert code == 0, out
+    review = fk.Flow(auto, AUTO, prefix='u')
+    nxt = review.view()['next_action']
+    if nxt['kind'] == 'await_user_words' and nxt.get('review'):
+        review.call('decide', 'confirm', nxt['proposal_id'], '--user-words', AUTO_REVIEW_WORDS,
+                    '--request-id', review.rid(), '--expected-revision', review.rev(), '--study', auto)
+    summary = _summary(cap, 'summary.regression.review', auto,
+                       'Auto MPG created with --automation until_final_test: the review of its automatic decisions.')
+    assert summary['review_queue'] and summary['review_queue']['items'], summary['review_queue']
+
+
 def capture(root: Path) -> dict[str, dict]:
     """Every captured scenario: ``{name: {about, payload}}`` (the studies live in ``root``)."""
     cap = Capture(root)
@@ -464,6 +578,7 @@ def capture(root: Path) -> dict[str, dict]:
         scenario(cap)
         regression(cap)
         french(cap)
+        one_page(cap)
     return cap.items
 
 

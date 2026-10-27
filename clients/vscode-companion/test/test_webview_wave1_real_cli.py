@@ -6,16 +6,14 @@ engine's CLI code path (``cli.run``, the walkthrough of ``test_journey_walkthrou
 the study panel on at stage v3 and, on the payloads it really emits:
 
 * at the conclusion (and the model choice), with no recommendation, the summary carries
-  ``choice_options``, the pause is of kind ``choice``, ``panel.shown`` names the choice card
-  on a read while the write that led there names what it produced (D3), the panel's summary
-  model holds the same options, and Now lists them as plain text (NOW-4; the one page, ADR
-  0004 d13: the Decisions tab's choice card became Now);
+  ``choice_options``, the pause is of kind ``choice``, ``panel.shown`` names Now (its anchor
+  ``now``, content ``choice``, CLI-CONTRACT §17.1.3) on a read while the write that led there
+  names what it produced (D3: a figure in the path or Now, the final test's result), and that
+  anchor is on the page (``data-anchor``); the panel's summary model holds the same options,
+  and Now lists them as plain text (NOW-4; the one page, ADR 0004 d13);
 * HO-3: at ``done``, the summary carries ``after_study``; Now's "And after" (NOW-11) shows its
   junior text read only, and the export plan line only when the engine says the model is
   supported; no new write control appears, and the hand-off drawer's only write stays W7.
-
-``panel.shown`` is still the engine's tabbed form here; E-1 turns it into an anchor
-(CLI-CONTRACT §17.1), and this check then reads ``panel.anchor``.
 
 Simulated browser (headless Chromium, ``conftest.py``); not a VS Code or Copilot session.
 """
@@ -35,10 +33,11 @@ import test_journey_walkthrough as journey  # noqa: E402
 from mlkit.study import companion_env as ce  # noqa: E402
 from panel_cases import click_fold  # noqa: E402
 
-CHOICE_SHOWN = {'en': {'tab': 'decisions', 'section': 'choice', 'label': 'Waiting for your answer',
-                       'line': 'In the panel: Decisions → Waiting for your answer.'},
-                'fr': {'tab': 'decisions', 'section': 'choice', 'label': 'En attente de votre réponse',
-                       'line': 'Dans le panneau : Décisions → En attente de votre réponse.'}}
+def _choice_shown(lang):
+    """The engine's line at a choice (CLI-CONTRACT §17.1.3, §17.1.4): Now, the options."""
+    content = ce.CONTENT_LABELS[lang]['choice']
+    return {'anchor': 'now', 'label': f"{ce.ANCHOR_LABELS[lang]['now']}, {content}",
+            'line': ce.LINES[lang]['now'].format(content=content)}
 
 
 def _walk(tmp_path, monkeypatch, case, lang):
@@ -85,15 +84,18 @@ def test_w1_choice_card_and_after_study_on_a_real_study(tmp_path, monkeypatch, o
         assert action['pause']['kind'] == 'choice'
         assert action['pause']['options'] == [o['id'] for o in options]
         assert action['pause']['option_labels'] == {o['id']: o['label'] for o in options}
-        # L2 (R16): a read names the choice card; D3: the write that led there names what it
-        # produced (the opening: the final test; a fit or the diagnostics: the evidence).
-        assert action['panel']['shown'] == CHOICE_SHOWN[lang]
+        # L2 (R16): a read names Now, where the choice is; D3: the write that led there names
+        # what it produced (the opening: the final test's result; a fit or the diagnostics:
+        # its figure, in Now when its step is the current one, else in its step's detail).
+        assert action['panel']['shown'] == _choice_shown(lang)
+        assert action['panel']['where']['anchor'] == 'now'
         label, write = seen['write']
         shown = write['next_action']['panel']['shown']
-        expected = ({'final_test'} if label == 'confirm:final_test'
-                    else {'development', 'diagnostics'})
-        assert label.startswith(('run:', 'confirm:')) and shown['section'] in expected, \
-            (label, shown)
+        assert label.startswith(('run:', 'confirm:')), label
+        if label == 'confirm:final_test':
+            assert shown['anchor'] == 'path:final_test/final_test.evaluation', (label, shown)
+        else:
+            assert shown['anchor'] == 'now' or shown['anchor'].startswith('path:'), (label, shown)
         # The panel's summary model holds the same options, labels verbatim; a conclusion's
         # value reads as its verdict, never as raw JSON.
         raw = seen['summary']
@@ -108,6 +110,9 @@ def test_w1_choice_card_and_after_study_on_a_real_study(tmp_path, monkeypatch, o
         panel = _page(open_panel, m)
         now = panel.page.locator('[data-block="now"]')
         assert now.get_attribute('data-now-step') == decision, decision
+        # The places the engine named exist on the page (CLI-CONTRACT §17.1.1, data-anchor).
+        for anchor in (action['panel']['shown']['anchor'], shown['anchor']):
+            assert panel.page.locator(f'[data-anchor="{anchor}"]').count() >= 1, anchor
         assert now.locator('[data-options] [data-option]').all_inner_texts() == [o['label'] for o in options]
         assert now.locator('textarea, input, select, [data-write]').count() == 0
         assert now.locator('button:not(.ht-term):not(summary *)').evaluate_all(

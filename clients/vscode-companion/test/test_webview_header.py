@@ -180,7 +180,7 @@ def test_pg11_a_load_error_replaces_the_content_below_the_sticky_region(open_pan
 def test_skew_a_different_contract_shows_one_line_and_changes_nothing_else(open_panel, views, model, payload):
     """§3.3 contract skew, CLI-CONTRACT §17.1.5: a digest without `panel_contract`, or another
     version, gives one read-only line in the "more" menu and the footer; nothing else changes."""
-    raw = payload('p1/summary.choice')
+    raw = payload('captured/summary.regression.choice')
     raw['panel_contract'] = 3
     skewed = model('summary', raw)
     panel = open_case(open_panel, views, case='choice', width=420, lang='en', deliver=False)

@@ -1,0 +1,1931 @@
+{
+ "about": {
+  "schema": "hypotrail.summary/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "status",
+   "--summary",
+   "--digest",
+   "--json"
+  ],
+  "note": "Auto MPG created with --automation until_final_test: the review of its automatic decisions."
+ },
+ "payload": {
+  "schema": "hypotrail.summary/1",
+  "ok": true,
+  "study": "/studies/auto mpg-automatic",
+  "revision": 38,
+  "since": null,
+  "changed": null,
+  "goal": {
+   "intended_use": {
+    "value": "Exercise: estimate a future model fuel efficiency from technical characteristics",
+    "status": "scenario_assumption"
+   },
+   "decision": {
+    "value": "Compare estimation methods without a real decision",
+    "status": "scenario_assumption"
+   },
+   "observation_unit": {
+    "value": "A vehicle model for a model year",
+    "status": "scenario_assumption"
+   },
+   "prediction_time": {
+    "value": "When technical characteristics are fixed, before measuring fuel efficiency",
+    "source": "decision",
+    "status": "confirmed"
+   }
+  },
+  "current_step": "final_test",
+  "plan": [
+   {
+    "id": "discover_data",
+    "title": "Discover the data",
+    "status": "done"
+   },
+   {
+    "id": "prediction_time",
+    "title": "Define the prediction moment",
+    "status": "done"
+   },
+   {
+    "id": "feature_availability",
+    "title": "Decide which variables are available at prediction time",
+    "status": "done"
+   },
+   {
+    "id": "split",
+    "title": "Split the data before exploring it",
+    "status": "done"
+   },
+   {
+    "id": "success_criterion",
+    "title": "Fix the success criterion before seeing a model",
+    "status": "done"
+   },
+   {
+    "id": "structural_eda",
+    "title": "Check the structure of the data",
+    "status": "done"
+   },
+   {
+    "id": "preprocessing",
+    "title": "Decide how the model prepares the variables",
+    "status": "done"
+   },
+   {
+    "id": "train_eda",
+    "title": "Explore the target on the development rows",
+    "status": "done"
+   },
+   {
+    "id": "models",
+    "title": "Fit a mean baseline and a linear model",
+    "status": "done"
+   },
+   {
+    "id": "model_variant",
+    "title": "Choose the variants to compare",
+    "status": "done"
+   },
+   {
+    "id": "model_choice",
+    "title": "Choose the model",
+    "status": "done"
+   },
+   {
+    "id": "final_test",
+    "title": "Open the final test once",
+    "status": "ready"
+   },
+   {
+    "id": "conclusion",
+    "title": "Conclude proportionately",
+    "status": "ready"
+   }
+  ],
+  "next_action": {
+   "kind": "reconfirm",
+   "decision": "prediction_time",
+   "default_value": "When technical characteristics are fixed, before measuring fuel efficiency",
+   "message": "Decision prediction_time was recorded by the automatic mode, not in the junior's words. Propose it again as it stands, then ask the junior whether they adopt it in their own words or what they change.",
+   "review": true,
+   "audience": "agent",
+   "junior_message": "The decision on the prediction moment was made by the automatic mode, without your words. Review it: adopt it in your own words, or say what you change.",
+   "language": "en",
+   "recommended": null,
+   "question": "Do you confirm the prediction moment again?",
+   "junior_digest": "The decision on the prediction moment was made by the automatic mode, without your words. Review it: adopt it in your own words, or say what you change.",
+   "pause": {
+    "schema": "hypotrail.pause/1",
+    "kind": "decision",
+    "language": "en",
+    "revision": 38,
+    "position": {
+     "step_id": "prediction_time",
+     "completed": 11,
+     "total": 13
+    },
+    "learned": [],
+    "limitations": [
+     {
+      "code": "unconfirmed_decisions",
+      "text": "Not confirmed by you yet: the opening of the final test and the conclusion."
+     },
+     {
+      "code": "validation_is_not_independent",
+      "text": "Out-of-fold predictions on the development rows are used to compare the models and the variant, so they are development evidence, not independent evidence of future performance. Only the sealed final test, opened once, is."
+     },
+     {
+      "code": "public_data_already_explored",
+      "text": "The data were explored or published before this study; its rows are not unseen."
+     }
+    ],
+    "proposal_id": null,
+    "proposal_text": "The prediction moment: When technical characteristics are fixed, before measuring fuel efficiency (value recorded by the automatic mode, not yet in your words).",
+    "recommended_option": null,
+    "options": [
+     "adopt",
+     "change",
+     "explain"
+    ],
+    "option_labels": {
+     "adopt": "I adopt this decision",
+     "change": "Change something",
+     "explain": "Explain first"
+    },
+    "question": "The prediction moment: When technical characteristics are fixed, before measuring fuel efficiency (value recorded by the automatic mode, not yet in your words).\n\nDo you adopt this decision?",
+    "evidence_refs": [],
+    "detail_topics": [
+     "metric",
+     "uncertainty",
+     "why-consider-a-nonlinear-family"
+    ]
+   },
+   "panel": {
+    "version": 2,
+    "stage": "v3",
+    "title": "Hypotrail study",
+    "where": {
+     "anchor": "now",
+     "label": "Now, the decision to review",
+     "line": "In the panel: Now, the decision to review."
+    },
+    "shown": null
+   }
+  },
+  "open_proposals": [],
+  "decisions": {
+   "prediction_time": {
+    "status": "confirmed",
+    "value": "When technical characteristics are fixed, before measuring fuel efficiency",
+    "basis": "automatic",
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "feature_availability": {
+    "status": "confirmed",
+    "value": {
+     "uncertain_excluded": [
+      "acceleration"
+     ],
+     "available_at_prediction": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "origin",
+      "weight"
+     ]
+    },
+    "basis": "automatic",
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": {
+     "proposed_not_discussed": [
+      "acceleration"
+     ],
+     "default_from_case": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "origin",
+      "weight"
+     ]
+    }
+   },
+   "split": {
+    "status": "confirmed",
+    "value": {
+     "folds": 5,
+     "method": "temporal_folds",
+     "seed": 20261017
+    },
+    "basis": "automatic",
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "success_criterion": {
+    "status": "confirmed",
+    "value": {
+     "metric": "mae_reduction",
+     "min_share": 0.1
+    },
+    "basis": "automatic",
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "preprocessing": {
+    "status": "confirmed",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [
+      "horsepower"
+     ],
+     "missing": "none",
+     "motivated_by": [
+      "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e"
+     ],
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
+    },
+    "basis": "automatic",
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "model_variant": {
+    "status": "confirmed",
+    "value": {
+     "variants": [
+      {
+       "kind": "tuned",
+       "question": "Does a ridge penalty chosen by nested cross-validation predict with a smaller error than the unpenalised linear model?"
+      },
+      {
+       "family": "ebm",
+       "kind": "family",
+       "question": "Does a readable non-linear model predict with a smaller error by following what the linear model misses: the shape of horsepower and weight?"
+      }
+     ]
+    },
+    "basis": "automatic",
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "model_choice": {
+    "status": "confirmed",
+    "value": "fit.linear",
+    "basis": "automatic",
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "final_test": {
+    "status": "open",
+    "value": null,
+    "basis": null,
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "conclusion": {
+    "status": "open",
+    "value": null,
+    "basis": null,
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   }
+  },
+  "results": {
+   "diag.regression": {
+    "result_id": "03610ae378272d51c2c6e2358a7f44f84c1b6ddb2081c0571832cd1df83b1029",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "channel": "cli"
+   },
+   "eda.quality": {
+    "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "channel": "cli"
+   },
+   "eda.special_values": {
+    "result_id": "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "channel": "cli"
+   },
+   "eda.target_summary": {
+    "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "channel": "cli"
+   },
+   "evaluate.regression": {
+    "result_id": "4096c39947dd4d43e201bd27592fb081b8bd5530c967721d6c50a29452e1621b",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "channel": "cli"
+   },
+   "fit.baseline": {
+    "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "channel": "cli"
+   },
+   "fit.linear": {
+    "result_id": "b62902a5464b894df3949fdc100ff961e87e9606218a016fda5656abb9e7e189",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "channel": "cli"
+   },
+   "fit.variant": {
+    "result_id": "5b1f87bb6a194afa9adb724d96f057e77f50cfff840baf9987ad48432176938f",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "channel": "cli"
+   },
+   "fit.variant:2": {
+    "result_id": "ebac1cf29da030a307b259d306b19d978dbbe7938eeb37cab7347e9ab2a820dc",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "channel": "cli"
+   },
+   "split": {
+    "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "channel": "cli"
+   }
+  },
+  "artifacts": {
+   "status": "ok",
+   "items": {
+    "editable": {
+     "status": "ok",
+     "revision": 38,
+     "last_ok_revision": 38,
+     "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence.",
+     "audience": "agent",
+     "junior_message": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence."
+    },
+    "notebook": {
+     "status": "ok",
+     "revision": 38,
+     "last_ok_revision": 38,
+     "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
+     "audience": "agent",
+     "junior_message": "The generated notebook is up to date."
+    },
+    "report": {
+     "status": "ok",
+     "revision": 38,
+     "last_ok_revision": 38,
+     "message": "The report (reports/study.html) is up to date.",
+     "audience": "agent",
+     "junior_message": "The report is up to date."
+    },
+    "workbench": {
+     "status": "ok",
+     "revision": 38,
+     "last_ok_revision": 38,
+     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study.",
+     "audience": "agent",
+     "junior_message": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
+    }
+   }
+  },
+  "executions": {
+   "active": [],
+   "interrupted": [],
+   "late": [],
+   "suspected_interrupted": []
+  },
+  "not_yet_defensible": {
+   "top": [
+    {
+     "id": "automatic_decisions_to_review",
+     "text": "Automatic study: not defensible until reviewed. Recorded by the automatic mode chosen at launch, not in the junior's words: prediction_time, feature_availability, split, success_criterion, preprocessing, model_variant, model_choice. The junior adopts or changes each one in their own words.",
+     "audience": "agent",
+     "junior_text": "Automatic study: not defensible until reviewed. The automatic mode decided these without your words; adopt or change each one in your own words: the prediction moment, the feature availability, the split, the success criterion, the preparation of the variables, the variant to compare and the model choice."
+    },
+    {
+     "id": "stale_results",
+     "text": "Some results are stale and must be recomputed before they are cited.",
+     "audience": "agent",
+     "junior_text": "Some results are out of date and are computed again before they are cited."
+    },
+    {
+     "id": "unconfirmed_decisions",
+     "text": "These decisions are not confirmed: final_test, conclusion.",
+     "audience": "agent",
+     "junior_text": "Not confirmed by you yet: the opening of the final test and the conclusion."
+    },
+    {
+     "id": "validation_is_not_independent",
+     "text": "Out-of-fold predictions on the development rows are used to compare the models and the variant, so they are development evidence, not independent evidence of future performance. Only the sealed final test, opened once, is.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "id": "final_test_sealed",
+     "text": "The final test is still sealed: every figure so far is development evidence, measured on rows used to explore, fit, and choose.",
+     "audience": "junior",
+     "junior_text": null
+    }
+   ],
+   "more": [
+    "public_data_already_explored",
+    "grouped_split_unsupported",
+    "no_causality",
+    "workbench_not_tracked"
+   ]
+  },
+  "notes": [],
+  "holds": [],
+  "final_test": {
+   "status": "sealed",
+   "rows": 80,
+   "method": "quantile_stratified",
+   "fraction": 0.2,
+   "development_rows": 318,
+   "schema_check": "pass",
+   "opening": null,
+   "post_final_test": false,
+   "changed_after": [],
+   "excluded_prior_exposed": 0
+  },
+  "criterion": {
+   "decision_status": "confirmed",
+   "value": {
+    "metric": "mae_reduction",
+    "min_share": 0.1
+   },
+   "status": "met",
+   "gain": 0.48447302758636623,
+   "low": 0.4134216375566274,
+   "high": 0.5534609406420422,
+   "minimum": 0.1,
+   "unit": "share",
+   "rule": null,
+   "result_id": "4096c39947dd4d43e201bd27592fb081b8bd5530c967721d6c50a29452e1621b",
+   "contradicts_verdict": false,
+   "final_test": null,
+   "model": "fit.linear",
+   "judged_on": "development",
+   "judged_status": "met"
+  },
+  "eda_looks": {
+   "target_looks": 4,
+   "results": [
+    "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+    "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
+    "93c662e715fc7f3775128f80034540a8784a9a69c2f89952ece7a17ad221b1d0",
+    "03610ae378272d51c2c6e2358a7f44f84c1b6ddb2081c0571832cd1df83b1029"
+   ]
+  },
+  "recap": [
+   "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when technical characteristics are fixed, before measuring fuel efficiency.",
+   "Decided: prediction moment; feature availability (excluded acceleration); split (5-fold cross-validation, temporal folds); success criterion (out-of-fold error at least 10% below the mean baseline); preprocessing (log transform of horsepower); variant (penalty chosen by nested cross-validation and an Explainable Boosting Machine); model choice: the linear model (out-of-fold MAE 3.69 mpg, result 4096c399).",
+   "Now: Open the final test once; the report and notebook are up to date.",
+   "Next: confirm the prediction moment again.",
+   "Limit: Automatic study: not defensible until reviewed. Recorded by the automatic mode chosen at launch, not in the junior's words: prediction_time, feature_availability, split, success_criterion, preprocessing, model_variant, model_choice. The junior adopts or changes each one in their own words."
+  ],
+  "recap_audience": "agent",
+  "recap_junior": [
+   "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when technical characteristics are fixed, before measuring fuel efficiency.",
+   "Decided: the prediction moment; the feature availability (excluded acceleration); the split (5-fold cross-validation, folds in time order); the success criterion (out-of-fold error at least 10% below the mean baseline); the preparation of the variables (log transform of horsepower); the variant to compare (penalty chosen by nested cross-validation and an Explainable Boosting Machine); the model choice: the linear model (out-of-fold MAE 3.69 mpg).",
+   "Now: Define the prediction moment, waiting for you to confirm it again; the report and notebook are up to date.",
+   "Next: The decision on the prediction moment was made by the automatic mode, without your words. Review it: adopt it in your own words, or say what you change.",
+   "Limit: Automatic study: not defensible until reviewed. The automatic mode decided these without your words; adopt or change each one in your own words: the prediction moment, the feature availability, the split, the success criterion, the preparation of the variables, the variant to compare and the model choice."
+  ],
+  "mode": "guided",
+  "deliverables": {
+   "launch": {
+    "notebook": {
+     "mode": "run",
+     "path": "notebooks/study_generated.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "run",
+      "/studies/auto mpg-automatic/notebooks/study_generated.py"
+     ]
+    },
+    "editable": {
+     "mode": "edit",
+     "path": "notebooks/study_editable.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "edit",
+      "/studies/auto mpg-automatic/notebooks/study_editable.py"
+     ]
+    },
+    "workbench": {
+     "mode": "edit",
+     "path": "notebooks/workbench.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "edit",
+      "/studies/auto mpg-automatic/notebooks/workbench.py"
+     ]
+    }
+   }
+  },
+  "trials": {
+   "count": 3
+  },
+  "scenario_defaults": null,
+  "language": "en",
+  "moments": [
+   {
+    "id": "frame",
+    "title": "Frame the change",
+    "steps": [
+     "discover_data",
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "success_criterion"
+    ]
+   },
+   {
+    "id": "evidence",
+    "title": "Prepare evidence",
+    "steps": [
+     "structural_eda",
+     "preprocessing",
+     "train_eda"
+    ]
+   },
+   {
+    "id": "compare",
+    "title": "Work and compare",
+    "steps": [
+     "models",
+     "model_variant",
+     "model_choice"
+    ]
+   },
+   {
+    "id": "conclude",
+    "title": "Conclude and hand over",
+    "steps": [
+     "final_test",
+     "conclusion"
+    ]
+   }
+  ],
+  "pauses": [
+   {
+    "pause": 1,
+    "decisions": [
+     "prediction_time",
+     "feature_availability"
+    ],
+    "status": "closed",
+    "confirmed": [
+     "prediction_time",
+     "feature_availability"
+    ]
+   },
+   {
+    "pause": 2,
+    "decisions": [
+     "split",
+     "success_criterion",
+     "preprocessing"
+    ],
+    "status": "closed",
+    "confirmed": [
+     "split",
+     "success_criterion",
+     "preprocessing"
+    ]
+   },
+   {
+    "pause": 3,
+    "decisions": [
+     "model_variant",
+     "model_choice",
+     "final_test",
+     "conclusion"
+    ],
+    "status": "open",
+    "confirmed": [
+     "model_variant",
+     "model_choice"
+    ]
+   }
+  ],
+  "last_session": {
+   "boundary_revision": 1,
+   "boundary_time": "2026-10-27T23:50:58.410534+00:00",
+   "gap_minutes": null
+  },
+  "digest": {
+   "since": 1,
+   "until": 38,
+   "items": [
+    {
+     "revision": 2,
+     "time": "2026-10-27T23:50:58.670198+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "prediction_time",
+     "proposal_id": "p_1",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "The prediction moment was proposed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 3,
+     "time": "2026-10-27T23:50:58.780221+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "prediction_time",
+     "proposal_id": "p_1",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": "automatic",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": []
+     },
+     "text": "The prediction moment was recorded by the automatic mode, without the junior's words; it waits for their review.",
+     "audience": "agent",
+     "junior_text": "The automatic mode recorded the prediction moment; it waits for your review."
+    },
+    {
+     "revision": 4,
+     "time": "2026-10-27T23:50:58.915275+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "feature_availability",
+     "proposal_id": "p_2",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "The feature availability was proposed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 5,
+     "time": "2026-10-27T23:50:59.088098+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "feature_availability",
+     "proposal_id": "p_2",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": "automatic",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": []
+     },
+     "text": "The feature availability was recorded by the automatic mode, without the junior's words; it waits for their review.",
+     "audience": "agent",
+     "junior_text": "The automatic mode recorded the feature availability; it waits for your review."
+    },
+    {
+     "revision": 6,
+     "time": "2026-10-27T23:50:59.272354+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "split",
+     "proposal_id": "p_3",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "The split was proposed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 7,
+     "time": "2026-10-27T23:50:59.476868+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "split",
+     "proposal_id": "p_3",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": "automatic",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": []
+     },
+     "text": "The split was recorded by the automatic mode, without the junior's words; it waits for their review.",
+     "audience": "agent",
+     "junior_text": "The automatic mode recorded the split; it waits for your review."
+    },
+    {
+     "revision": 9,
+     "time": "2026-10-27T23:50:59.885065+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "split",
+     "slot": "split",
+     "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "execution_id": "e_adb18f4d4090e67f98b120be",
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The split was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 10,
+     "time": "2026-10-27T23:51:00.296857+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "success_criterion",
+     "proposal_id": "p_4",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "The success criterion was proposed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 11,
+     "time": "2026-10-27T23:51:00.484305+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "success_criterion",
+     "proposal_id": "p_4",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": "automatic",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": []
+     },
+     "text": "The success criterion was recorded by the automatic mode, without the junior's words; it waits for their review.",
+     "audience": "agent",
+     "junior_text": "The automatic mode recorded the success criterion; it waits for your review."
+    },
+    {
+     "revision": 13,
+     "time": "2026-10-27T23:51:00.834184+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.quality",
+     "slot": "eda.quality",
+     "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
+     "execution_id": "e_81dfc4b15ad1fd2916cb360c",
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The data quality check was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 14,
+     "time": "2026-10-27T23:51:01.474648+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "preprocessing",
+     "proposal_id": "p_5",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "The preparation of the variables was proposed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 15,
+     "time": "2026-10-27T23:51:01.815726+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "preprocessing",
+     "proposal_id": "p_5",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": "automatic",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": []
+     },
+     "text": "The preparation of the variables was recorded by the automatic mode, without the junior's words; it waits for their review.",
+     "audience": "agent",
+     "junior_text": "The automatic mode recorded the preparation of the variables; it waits for your review."
+    },
+    {
+     "revision": 17,
+     "time": "2026-10-27T23:51:02.158548+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.target_summary",
+     "slot": "eda.target_summary",
+     "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+     "execution_id": "e_ea2e3bb6a6ccc7967a46fb1e",
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The target summary was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 19,
+     "time": "2026-10-27T23:51:02.691920+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.special_values",
+     "slot": "eda.special_values",
+     "result_id": "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
+     "execution_id": "e_174a44f4fab59c54ebf55c04",
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The special-value check was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 21,
+     "time": "2026-10-27T23:51:03.226590+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "fit.baseline",
+     "slot": "fit.baseline",
+     "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
+     "execution_id": "e_c632559fccd186cbace624c3",
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The mean baseline was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 23,
+     "time": "2026-10-27T23:51:04.063835+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "fit.linear",
+     "slot": "fit.linear",
+     "result_id": "b62902a5464b894df3949fdc100ff961e87e9606218a016fda5656abb9e7e189",
+     "execution_id": "e_fed5f592e4bd5403021c55ac",
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The linear model was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 25,
+     "time": "2026-10-27T23:51:04.708465+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "diag.regression",
+     "slot": "diag.regression",
+     "result_id": "93c662e715fc7f3775128f80034540a8784a9a69c2f89952ece7a17ad221b1d0",
+     "execution_id": "e_7c2acba655e3d6409833fccc",
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The activity diag.regression was computed.",
+     "audience": "agent",
+     "junior_text": "The development diagnostics was computed."
+    },
+    {
+     "revision": 26,
+     "time": "2026-10-27T23:51:05.238164+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "model_variant",
+     "proposal_id": "p_6",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "Model variant was proposed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 27,
+     "time": "2026-10-27T23:51:05.489043+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "model_variant",
+     "proposal_id": "p_6",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": "automatic",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [
+       "diag.regression"
+      ],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": [
+       "fit.baseline",
+       "fit.linear"
+      ]
+     },
+     "text": "Model variant was recorded by the automatic mode, without the junior's words; it waits for their review.",
+     "audience": "agent",
+     "junior_text": "The automatic mode recorded model variant; it waits for your review."
+    },
+    {
+     "revision": 29,
+     "time": "2026-10-27T23:51:09.466213+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "fit.variant",
+     "slot": "fit.variant",
+     "result_id": "5b1f87bb6a194afa9adb724d96f057e77f50cfff840baf9987ad48432176938f",
+     "execution_id": "e_0c09e8b0aaec878455557cd3",
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The activity fit.variant was computed.",
+     "audience": "agent",
+     "junior_text": "The variant model was computed."
+    },
+    {
+     "revision": 31,
+     "time": "2026-10-27T23:51:26.292929+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "fit.variant",
+     "slot": "fit.variant:2",
+     "result_id": "ebac1cf29da030a307b259d306b19d978dbbe7938eeb37cab7347e9ab2a820dc",
+     "execution_id": "e_fbaaa3583704acd44a2e8c99",
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The activity fit.variant of 2 was computed.",
+     "audience": "agent",
+     "junior_text": "The variant model of 2 was computed."
+    },
+    {
+     "revision": 33,
+     "time": "2026-10-27T23:51:27.011424+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "evaluate.regression",
+     "slot": "evaluate.regression",
+     "result_id": "4096c39947dd4d43e201bd27592fb081b8bd5530c967721d6c50a29452e1621b",
+     "execution_id": "e_3b64bd9e30397d04d0040ad6",
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The model evaluation was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 35,
+     "time": "2026-10-27T23:51:27.695290+00:00",
+     "action": "run.promote",
+     "kind": "result_replaced",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "diag.regression",
+     "slot": "diag.regression",
+     "result_id": "03610ae378272d51c2c6e2358a7f44f84c1b6ddb2081c0571832cd1df83b1029",
+     "execution_id": "e_70a83ee7076041b21d99d955",
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The activity diag.regression was replaced. Models unchanged, nothing refitted.",
+     "audience": "agent",
+     "junior_text": "The development diagnostics was replaced. Models unchanged, nothing refitted."
+    },
+    {
+     "revision": 36,
+     "time": "2026-10-27T23:51:28.113862+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "model_choice",
+     "proposal_id": "p_7",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "The model choice was proposed: fit.linear.",
+     "audience": "agent",
+     "junior_text": "The model choice was proposed: the linear model."
+    },
+    {
+     "revision": 37,
+     "time": "2026-10-27T23:51:28.338722+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "model_choice",
+     "proposal_id": "p_7",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": "automatic",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": [
+       "fit.baseline",
+       "fit.linear",
+       "fit.variant",
+       "fit.variant:2"
+      ]
+     },
+     "text": "The model choice was recorded by the automatic mode, without the junior's words; it waits for their review.",
+     "audience": "agent",
+     "junior_text": "The automatic mode recorded the model choice; it waits for your review."
+    },
+    {
+     "revision": 38,
+     "time": "2026-10-27T23:51:28.560110+00:00",
+     "action": "study.end_automation",
+     "kind": "other",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The study changed (study.end_automation).",
+     "audience": "agent",
+     "junior_text": "The study changed."
+    }
+   ],
+   "truncated": false,
+   "counts": {
+    "proposed": 7,
+    "confirmed": 7,
+    "withdrawn": 0,
+    "holds_recorded": 0,
+    "holds_resolved": 0,
+    "results_added": 10,
+    "results_replaced": 1,
+    "runs_started": 11,
+    "runs_failed": 0,
+    "invalidations": 1
+   },
+   "channel_actions": [
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 8,
+     "activity": "split",
+     "time": "2026-10-27T23:50:59.782387+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 12,
+     "activity": "eda.quality",
+     "time": "2026-10-27T23:51:00.721856+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 16,
+     "activity": "eda.target_summary",
+     "time": "2026-10-27T23:51:02.065907+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 18,
+     "activity": "eda.special_values",
+     "time": "2026-10-27T23:51:02.602222+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 20,
+     "activity": "fit.baseline",
+     "time": "2026-10-27T23:51:03.133464+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 22,
+     "activity": "fit.linear",
+     "time": "2026-10-27T23:51:03.739511+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 24,
+     "activity": "diag.regression",
+     "time": "2026-10-27T23:51:04.568504+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 28,
+     "activity": "fit.variant",
+     "time": "2026-10-27T23:51:05.742036+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 30,
+     "activity": "fit.variant",
+     "time": "2026-10-27T23:51:09.923806+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 32,
+     "activity": "evaluate.regression",
+     "time": "2026-10-27T23:51:26.751743+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 34,
+     "activity": "diag.regression",
+     "time": "2026-10-27T23:51:27.476628+00:00"
+    }
+   ]
+  },
+  "task": "regression",
+  "currency": "ed88c056780fa4b2",
+  "texts": {
+   "en": {
+    "plan": {
+     "discover_data": "Discover the data",
+     "prediction_time": "Define the prediction moment",
+     "feature_availability": "Decide which variables are available at prediction time",
+     "split": "Split the data before exploring it",
+     "success_criterion": "Fix the success criterion before seeing a model",
+     "structural_eda": "Check the structure of the data",
+     "preprocessing": "Decide how the model prepares the variables",
+     "train_eda": "Explore the target on the development rows",
+     "models": "Fit a mean baseline and a linear model",
+     "model_variant": "Choose the variants to compare",
+     "model_choice": "Choose the model",
+     "final_test": "Open the final test once",
+     "conclusion": "Conclude proportionately"
+    },
+    "moments": {
+     "frame": "Frame the change",
+     "evidence": "Prepare evidence",
+     "compare": "Work and compare",
+     "conclude": "Conclude and hand over"
+    },
+    "next_action": "The decision on the prediction moment was made by the automatic mode, without your words. Review it: adopt it in your own words, or say what you change.",
+    "choice_options": {},
+    "limits": {
+     "unconfirmed_decisions": "Not confirmed by you yet: the opening of the final test and the conclusion.",
+     "validation_is_not_independent": "Out-of-fold predictions on the development rows are used to compare the models and the variant, so they are development evidence, not independent evidence of future performance. Only the sealed final test, opened once, is.",
+     "public_data_already_explored": "The data were explored or published before this study; its rows are not unseen.",
+     "grouped_split_unsupported": "Rows that share a value of car_name can fall in several folds: this version does not group the folds by it, so the split reports how many group values the folds share instead of preventing it. A row predicted out of fold is then not independent of the rows of its group the model was fitted on.",
+     "automatic_decisions_to_review": "Automatic study: not defensible until reviewed. The automatic mode decided these without your words; adopt or change each one in your own words: the prediction moment, the feature availability, the split, the success criterion, the preparation of the variables, the variant to compare and the model choice.",
+     "stale_results": "Some results are out of date and are computed again before they are cited.",
+     "no_causality": "Associations in observational data do not show that acting on a variable would change the outcome.",
+     "workbench_not_tracked": "Experiments in the notebook workbench are not recorded and are not decisions.",
+     "final_test_sealed": "The final test is still sealed: every figure so far is development evidence, measured on rows used to explore, fit, and choose."
+    },
+    "artifacts": {
+     "editable": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence.",
+     "notebook": "The generated notebook is up to date.",
+     "report": "The report is up to date.",
+     "workbench": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
+    },
+    "recap": [
+     "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when technical characteristics are fixed, before measuring fuel efficiency.",
+     "Decided: the prediction moment; the feature availability (excluded acceleration); the split (5-fold cross-validation, folds in time order); the success criterion (out-of-fold error at least 10% below the mean baseline); the preparation of the variables (log transform of horsepower); the variant to compare (penalty chosen by nested cross-validation and an Explainable Boosting Machine); the model choice: the linear model (out-of-fold MAE 3.69 mpg).",
+     "Now: Define the prediction moment, waiting for you to confirm it again; the report and notebook are up to date.",
+     "Next: The decision on the prediction moment was made by the automatic mode, without your words. Review it: adopt it in your own words, or say what you change.",
+     "Limit: Automatic study: not defensible until reviewed. The automatic mode decided these without your words; adopt or change each one in your own words: the prediction moment, the feature availability, the split, the success criterion, the preparation of the variables, the variant to compare and the model choice."
+    ],
+    "digest": {
+     "2": "The prediction moment was proposed.",
+     "3": "The automatic mode recorded the prediction moment; it waits for your review.",
+     "4": "The feature availability was proposed.",
+     "5": "The automatic mode recorded the feature availability; it waits for your review.",
+     "6": "The split was proposed.",
+     "7": "The automatic mode recorded the split; it waits for your review.",
+     "9": "The split was computed.",
+     "10": "The success criterion was proposed.",
+     "11": "The automatic mode recorded the success criterion; it waits for your review.",
+     "13": "The data quality check was computed.",
+     "14": "The preparation of the variables was proposed.",
+     "15": "The automatic mode recorded the preparation of the variables; it waits for your review.",
+     "17": "The target summary was computed.",
+     "19": "The special-value check was computed.",
+     "21": "The mean baseline was computed.",
+     "23": "The linear model was computed.",
+     "25": "The development diagnostics was computed.",
+     "26": "Model variant was proposed.",
+     "27": "The automatic mode recorded model variant; it waits for your review.",
+     "29": "The variant model was computed.",
+     "31": "The variant model of 2 was computed.",
+     "33": "The model evaluation was computed.",
+     "35": "The development diagnostics was replaced. Models unchanged, nothing refitted.",
+     "36": "The model choice was proposed: the linear model.",
+     "37": "The automatic mode recorded the model choice; it waits for your review.",
+     "38": "The study changed."
+    },
+    "goal": {
+     "intended_use": "Exercise: estimate a future model fuel efficiency from technical characteristics",
+     "decision": "Compare estimation methods without a real decision",
+     "observation_unit": "A vehicle model for a model year",
+     "prediction_time": "When technical characteristics are fixed, before measuring fuel efficiency"
+    },
+    "proposals": {},
+    "question": "Do you confirm the prediction moment again?",
+    "options": {
+     "adopt": "I adopt this decision",
+     "change": "Change something",
+     "explain": "Explain first"
+    },
+    "options_note": "No recommendation.",
+    "junior_digest": "The decision on the prediction moment was made by the automatic mode, without your words. Review it: adopt it in your own words, or say what you change.",
+    "headlines": {
+     "prediction_time": "Moment: “When technical characteristics are fixed, before measuring fuel efficiency”.",
+     "feature_availability": "Variables: keep cylinders, displacement, horsepower, origin and weight; exclude acceleration (its timing is uncertain).",
+     "split": "Split: cross-validation on the development rows: 5 folds, blocks in time order; every row is predicted once by a model that did not see it.",
+     "success_criterion": "Criterion: adopt only if the model's mean absolute error is at least 10% below the mean baseline's.",
+     "structural_eda": "Quality: 318 development rows checked, 0 duplicated.",
+     "preprocessing": "Preparation: log transform of horsepower.",
+     "train_eda": "Explore: mean target 23.53 mpg on the explored rows.",
+     "model_variant": "Variants: compare the model with: penalty chosen by nested cross-validation and an Explainable Boosting Machine.",
+     "model_choice": "Choice: the linear model; mean absolute error 3.69 mpg against 7.16 mpg for the baseline."
+    },
+    "data_contingent": {},
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
+   },
+   "fr": {
+    "plan": {
+     "discover_data": "Découvrir les données",
+     "prediction_time": "Définir le moment de la prédiction",
+     "feature_availability": "Décider quelles variables sont disponibles au moment de la prédiction",
+     "split": "Découper les données avant de les explorer",
+     "success_criterion": "Fixer le critère de succès avant de voir un modèle",
+     "structural_eda": "Vérifier la structure des données",
+     "preprocessing": "Décider comment le modèle prépare les variables",
+     "train_eda": "Explorer la cible sur l'échantillon de développement",
+     "models": "Ajuster une moyenne de référence et un modèle linéaire",
+     "model_variant": "Choisir les variantes à comparer",
+     "model_choice": "Choisir le modèle",
+     "final_test": "Ouvrir une fois l'échantillon de test final",
+     "conclusion": "Conclure avec mesure"
+    },
+    "moments": {
+     "frame": "Cadrer le changement",
+     "evidence": "Préparer les preuves",
+     "compare": "Travailler et comparer",
+     "conclude": "Conclure et transmettre"
+    },
+    "next_action": "La décision sur le moment de la prédiction a été prise par le mode automatique, sans vos mots. Relisez-la : adoptez-la avec vos propres mots, ou dites ce que vous changez.",
+    "choice_options": {},
+    "limits": {
+     "unconfirmed_decisions": "Pas encore confirmé par vous : l'ouverture de l'échantillon de test final et la conclusion.",
+     "validation_is_not_independent": "Les prédictions hors pli de l'échantillon de développement servent à comparer les modèles et la variante : ce sont des résultats de développement, pas une preuve indépendante de la performance future. Seul l'échantillon de test final scellé, ouvert une fois, l'est.",
+     "public_data_already_explored": "Les données ont été explorées ou publiées avant cette étude : ses lignes ne sont pas inédites.",
+     "grouped_split_unsupported": "Des lignes qui partagent une valeur de car_name peuvent tomber dans plusieurs plis : cette version ne regroupe pas les plis selon cette colonne, elle compte les valeurs partagées. Une ligne prédite hors pli n'est alors pas indépendante des lignes de son groupe vues par le modèle.",
+     "automatic_decisions_to_review": "Étude automatique : à relire, pas encore défendable. Le mode automatique a pris ces décisions sans vos mots ; adoptez ou changez chacune avec vos propres mots : le moment de la prédiction, la disponibilité des variables, le découpage des données, le critère de succès, la préparation des variables, la variante à comparer et le choix du modèle.",
+     "stale_results": "Certains résultats ne sont plus à jour et sont recalculés avant d'être cités.",
+     "no_causality": "Des associations dans des données observées ne montrent pas qu'agir sur une variable changerait le résultat.",
+     "workbench_not_tracked": "Les essais faits dans l'atelier (workbench) ne sont pas enregistrés et ne sont pas des décisions.",
+     "final_test_sealed": "L'échantillon de test final est encore scellé : chaque chiffre jusqu'ici est un résultat de développement, mesuré sur des lignes qui ont servi à explorer, ajuster et choisir."
+    },
+    "artifacts": {
+     "editable": "Le notebook éditable de l'étude suit le notebook généré jusqu'à votre première modification ; ensuite il n'est jamais écrasé et ne constitue pas une preuve officielle.",
+     "notebook": "Le notebook généré est à jour.",
+     "report": "Le rapport est à jour.",
+     "workbench": "L'atelier (workbench) est votre espace libre : il est créé une fois, jamais écrasé, et n'est pas suivi par l'étude."
+    },
+    "recap": [
+     "Objectif : « Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques » ; la prédiction est faite « When technical characteristics are fixed, before measuring fuel efficiency ».",
+     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : acceleration) ; le découpage des données (validation croisée à 5 plis, plis dans l'ordre du temps) ; le critère de succès (erreur hors pli au moins 10 % sous celle de la moyenne de référence) ; la préparation des variables (modifiée) ; la variante à comparer (pénalité choisie par validation croisée imbriquée et une Explainable Boosting Machine (EBM)) ; le choix du modèle : le modèle linéaire (MAE hors pli 3,69 mpg).",
+     "Maintenant : Définir le moment de la prédiction, en attente de votre nouvelle confirmation ; le rapport et le notebook sont à jour.",
+     "Ensuite : La décision sur le moment de la prédiction a été prise par le mode automatique, sans vos mots. Relisez-la : adoptez-la avec vos propres mots, ou dites ce que vous changez.",
+     "Limite : Étude automatique : à relire, pas encore défendable. Le mode automatique a pris ces décisions sans vos mots ; adoptez ou changez chacune avec vos propres mots : le moment de la prédiction, la disponibilité des variables, le découpage des données, le critère de succès, la préparation des variables, la variante à comparer et le choix du modèle."
+    ],
+    "digest": {
+     "2": "Une proposition a été faite pour le moment de la prédiction.",
+     "3": "Le mode automatique a enregistré le moment de la prédiction ; cela attend votre relecture.",
+     "4": "Une proposition a été faite pour la disponibilité des variables.",
+     "5": "Le mode automatique a enregistré la disponibilité des variables ; cela attend votre relecture.",
+     "6": "Une proposition a été faite pour le découpage des données.",
+     "7": "Le mode automatique a enregistré le découpage des données ; cela attend votre relecture.",
+     "9": "Résultat calculé : le découpage.",
+     "10": "Une proposition a été faite pour le critère de succès.",
+     "11": "Le mode automatique a enregistré le critère de succès ; cela attend votre relecture.",
+     "13": "Résultat calculé : le contrôle de qualité des données.",
+     "14": "Une proposition a été faite pour la préparation des variables.",
+     "15": "Le mode automatique a enregistré la préparation des variables ; cela attend votre relecture.",
+     "17": "Résultat calculé : le résumé de la cible.",
+     "19": "Résultat calculé : la vérification des valeurs spéciales.",
+     "21": "Résultat calculé : le modèle de référence.",
+     "23": "Résultat calculé : le modèle linéaire.",
+     "25": "Résultat calculé : les diagnostics de développement.",
+     "26": "Une proposition a été faite pour la variante à comparer.",
+     "27": "Le mode automatique a enregistré la variante à comparer ; cela attend votre relecture.",
+     "29": "Résultat calculé : le modèle variante.",
+     "31": "Résultat calculé : le modèle variante de 2.",
+     "33": "Résultat calculé : la comparaison des modèles.",
+     "35": "Résultat remplacé : les diagnostics de développement. Modèles inchangés, rien n'est réajusté.",
+     "36": "Une proposition a été faite pour le choix du modèle : le modèle linéaire.",
+     "37": "Le mode automatique a enregistré le choix du modèle ; cela attend votre relecture.",
+     "38": "L'étude a changé."
+    },
+    "goal": {
+     "intended_use": "Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques",
+     "decision": "Comparer des méthodes d'estimation, sans décision réelle",
+     "observation_unit": "Un modèle de véhicule pour une année de modèle",
+     "prediction_time": "When technical characteristics are fixed, before measuring fuel efficiency"
+    },
+    "proposals": {},
+    "question": "Confirmez-vous à nouveau le moment de la prédiction ?",
+    "options": {
+     "adopt": "J'adopte cette décision",
+     "change": "Changer quelque chose",
+     "explain": "Expliquer d'abord"
+    },
+    "options_note": "Sans recommandation.",
+    "junior_digest": "La décision sur le moment de la prédiction a été prise par le mode automatique, sans vos mots. Relisez-la : adoptez-la avec vos propres mots, ou dites ce que vous changez.",
+    "headlines": {
+     "prediction_time": "Moment : « When technical characteristics are fixed, before measuring fuel efficiency ».",
+     "feature_availability": "Variables : garder cylinders, displacement, horsepower, origin et weight ; exclure acceleration (moment incertain).",
+     "split": "Découpage : validation croisée sur les lignes de développement : 5 plis, par blocs dans l'ordre du temps ; chaque ligne est prédite une fois par un modèle qui ne l'a pas vue.",
+     "success_criterion": "Critère : n'adopter que si l'erreur absolue moyenne du modèle est inférieure d'au moins 10 % à celle de la moyenne de référence.",
+     "structural_eda": "Qualité : 318 lignes de développement vérifiées, 0 en double.",
+     "preprocessing": "Préparation : une transformation logarithmique de horsepower.",
+     "train_eda": "Exploration : cible moyenne 23,53 mpg sur les lignes explorées.",
+     "model_variant": "Variantes : comparer le modèle avec : pénalité choisie par validation croisée imbriquée et une Explainable Boosting Machine (EBM).",
+     "model_choice": "Choix : le modèle linéaire ; erreur absolue moyenne 3,69 mpg contre 7,16 mpg pour le modèle de référence."
+    },
+    "data_contingent": {},
+    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant."
+   }
+  },
+  "panel_contract": 2,
+  "automation": {
+   "variant": "until_final_test",
+   "active": false,
+   "started_revision": 1,
+   "ended": {
+    "revision": 38,
+    "reason": "reached_end"
+   }
+  },
+  "review_queue": {
+   "items": [
+    {
+     "decision_id": "prediction_time",
+     "status": "confirmed",
+     "value": "When technical characteristics are fixed, before measuring fuel efficiency",
+     "proposal_id": "p_1",
+     "revision": 3
+    },
+    {
+     "decision_id": "feature_availability",
+     "status": "confirmed",
+     "value": {
+      "acceleration": "uncertain_excluded",
+      "cylinders": "available_at_prediction",
+      "displacement": "available_at_prediction",
+      "horsepower": "available_at_prediction",
+      "origin": "available_at_prediction",
+      "weight": "available_at_prediction"
+     },
+     "proposal_id": "p_2",
+     "revision": 5
+    },
+    {
+     "decision_id": "split",
+     "status": "confirmed",
+     "value": {
+      "folds": 5,
+      "method": "temporal_folds",
+      "seed": 20261017
+     },
+     "proposal_id": "p_3",
+     "revision": 7
+    },
+    {
+     "decision_id": "success_criterion",
+     "status": "confirmed",
+     "value": {
+      "metric": "mae_reduction",
+      "min_share": 0.1
+     },
+     "proposal_id": "p_4",
+     "revision": 11
+    },
+    {
+     "decision_id": "preprocessing",
+     "status": "confirmed",
+     "value": {
+      "caps": {},
+      "data_contingent": false,
+      "log_transform": [
+       "horsepower"
+      ],
+      "missing": "none",
+      "motivated_by": [
+       "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e"
+      ],
+      "rare_category_min_rows": 0,
+      "target_looks_before": 0
+     },
+     "proposal_id": "p_5",
+     "revision": 15
+    },
+    {
+     "decision_id": "model_variant",
+     "status": "confirmed",
+     "value": {
+      "variants": [
+       {
+        "kind": "tuned",
+        "question": "Does a ridge penalty chosen by nested cross-validation predict with a smaller error than the unpenalised linear model?"
+       },
+       {
+        "family": "ebm",
+        "kind": "family",
+        "question": "Does a readable non-linear model predict with a smaller error by following what the linear model misses: the shape of horsepower and weight?"
+       }
+      ]
+     },
+     "proposal_id": "p_6",
+     "revision": 27
+    },
+    {
+     "decision_id": "model_choice",
+     "status": "confirmed",
+     "value": "fit.linear",
+     "proposal_id": "p_7",
+     "revision": 37
+    }
+   ],
+   "done": 0,
+   "total": 7
+  },
+  "defensibility": {
+   "kind": "warn",
+   "count": 6,
+   "items": [
+    {
+     "id": "automatic_decisions_to_review",
+     "severity": "blocking"
+    },
+    {
+     "id": "stale_results",
+     "severity": "caveat"
+    },
+    {
+     "id": "unconfirmed_decisions",
+     "severity": "not_final"
+    },
+    {
+     "id": "validation_is_not_independent",
+     "severity": "not_final"
+    },
+    {
+     "id": "final_test_sealed",
+     "severity": "not_final"
+    },
+    {
+     "id": "public_data_already_explored",
+     "severity": "context"
+    },
+    {
+     "id": "grouped_split_unsupported",
+     "severity": "caveat"
+    },
+    {
+     "id": "no_causality",
+     "severity": "context"
+    },
+    {
+     "id": "workbench_not_tracked",
+     "severity": "context"
+    }
+   ]
+  },
+  "ledger": {
+   "final_test": {
+    "openings": 0,
+    "max": 1
+   },
+   "target_looks": {
+    "eda": 4,
+    "sample": 1,
+    "total": 5
+   },
+   "configurations": {
+    "tried": 3,
+    "reference": true
+   }
+  },
+  "sample": {
+   "seed": "84f64a96cac91856",
+   "row_keys": [
+    "L103",
+    "L104",
+    "L135",
+    "L203",
+    "L283",
+    "L287",
+    "L355",
+    "L367"
+   ],
+   "recorded": true
+  },
+  "headlines": {
+   "prediction_time": {
+    "decision_id": "prediction_time",
+    "basis": "automatic",
+    "results": []
+   },
+   "feature_availability": {
+    "decision_id": "feature_availability",
+    "basis": "automatic",
+    "results": []
+   },
+   "split": {
+    "decision_id": "split",
+    "basis": "automatic",
+    "results": []
+   },
+   "success_criterion": {
+    "decision_id": "success_criterion",
+    "basis": "automatic",
+    "results": []
+   },
+   "structural_eda": {
+    "decision_id": null,
+    "basis": null,
+    "results": [
+     "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e"
+    ]
+   },
+   "preprocessing": {
+    "decision_id": "preprocessing",
+    "basis": "automatic",
+    "results": []
+   },
+   "train_eda": {
+    "decision_id": null,
+    "basis": null,
+    "results": [
+     "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b"
+    ]
+   },
+   "model_variant": {
+    "decision_id": "model_variant",
+    "basis": "automatic",
+    "results": []
+   },
+   "model_choice": {
+    "decision_id": "model_choice",
+    "basis": "automatic",
+    "results": [
+     "4096c39947dd4d43e201bd27592fb081b8bd5530c967721d6c50a29452e1621b"
+    ]
+   }
+  },
+  "criterion_configurations": {
+   "metric": "mae_reduction",
+   "unit": "mpg",
+   "bound": {
+    "value": 6.448238387793093,
+    "reference": 7.164709319770103,
+    "minimum": 0.1,
+    "result_id": "4096c39947dd4d43e201bd27592fb081b8bd5530c967721d6c50a29452e1621b",
+    "path": "models.[fit.baseline].mae"
+   },
+   "configurations": [
+    {
+     "slot": "fit.linear",
+     "value": 3.6936009038448265,
+     "result_id": "4096c39947dd4d43e201bd27592fb081b8bd5530c967721d6c50a29452e1621b",
+     "path": "models.[fit.linear].mae",
+     "point_meets_bound": true,
+     "gain": 0.48447302758636623,
+     "low": 0.4134216375566274,
+     "high": 0.5534609406420422,
+     "status": "met",
+     "judged_on": "development"
+    },
+    {
+     "slot": "fit.variant",
+     "value": 3.6812285177615403,
+     "result_id": "4096c39947dd4d43e201bd27592fb081b8bd5530c967721d6c50a29452e1621b",
+     "path": "models.[fit.variant].mae",
+     "point_meets_bound": true,
+     "gain": 0.48619987867425984,
+     "low": 0.417045759419798,
+     "high": 0.5532440734025116,
+     "status": "met",
+     "judged_on": "development"
+    },
+    {
+     "slot": "fit.variant:2",
+     "value": 3.3981500614774,
+     "result_id": "4096c39947dd4d43e201bd27592fb081b8bd5530c967721d6c50a29452e1621b",
+     "path": "models.[fit.variant:2].mae",
+     "point_meets_bound": true,
+     "gain": 0.5257099890848834,
+     "low": 0.45663692300201,
+     "high": 0.5949397441616279,
+     "status": "met",
+     "judged_on": "development"
+    },
+    {
+     "slot": "fit.baseline",
+     "value": 7.164709319770103,
+     "result_id": "4096c39947dd4d43e201bd27592fb081b8bd5530c967721d6c50a29452e1621b",
+     "path": "models.[fit.baseline].mae",
+     "point_meets_bound": false,
+     "gain": null,
+     "low": null,
+     "high": null,
+     "status": "not_assessed",
+     "judged_on": "development"
+    }
+   ]
+  }
+ }
+}

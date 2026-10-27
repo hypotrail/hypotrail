@@ -1,6 +1,6 @@
 # Plan: the one-page study panel (ADR 0004 decision 13)
 
-Status: panel side done (P-0 to P-6 and P-8, on hand-built P1 fixtures; P-7: the tabbed baselines deleted, the one-page set generated locally and waiting for the owner's review, not committed); engine side (E-1 to E-8) in progress separately. Specification: [COMPANION-ADVANCED.md](../specs/COMPANION-ADVANCED.md) (§3.2, §4, §6, §10, §13, §16, §18, Appendix A). Engine contract: [CLI-CONTRACT.md §17](../specs/CLI-CONTRACT.md) (contract P1). Approved mockup: [panel-synthesis-fr.html](mockups/panel-synthesis-fr.html).
+Status: integrated (I-1, 2026-10-27): panel side P-0 to P-6 and P-8, engine side E-1 to E-8 (the hand-built P1 fixtures replaced by captures); P-7: the tabbed baselines deleted, the one-page set waiting for the owner's review, not committed. Specification: [COMPANION-ADVANCED.md](../specs/COMPANION-ADVANCED.md) (§3.2, §4, §6, §10, §13, §16, §18, Appendix A). Engine contract: [CLI-CONTRACT.md §17](../specs/CLI-CONTRACT.md) (contract P1). Approved mockup: [panel-synthesis-fr.html](mockups/panel-synthesis-fr.html).
 
 Rules for every package:
 

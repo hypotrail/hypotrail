@@ -19,7 +19,7 @@ const DATA_KEYS = ['revision', 'observationUnit', 'development', 'target', 'fina
   // Contract P1 (CLI-CONTRACT §17.4): the development rows holding a declared special value,
   // without the target, at most 50 (`truncated` when there are more).
   'specialRows'];
-const FIXTURES = ['data.binary', 'data.regression', 'p1/data.regression'];
+const FIXTURES = ['data.binary', 'data.regression', 'captured/data.regression.onepage'];
 
 /** A stored cell as text: a missing cell is null (shown as an empty cell, marked missing). */
 function cell(value) {

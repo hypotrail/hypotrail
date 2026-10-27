@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/auto mpg",
    "revision": 38,
-   "updated": "2026-10-27T09:53:20.163142+00:00",
+   "updated": "2026-10-27T23:43:06.231698+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
@@ -348,7 +348,7 @@
      "restatement": "Adopt the linear model.",
      "rationale": "Lower error on later years.",
      "revision": 38,
-     "created": "2026-10-27T09:53:20.163080+00:00",
+     "created": "2026-10-27T23:43:06.231655+00:00",
      "labels": null,
      "label": "Adopt the linear model.",
      "origin": {
@@ -372,7 +372,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-27T09:52:52.006683+00:00",
+      "time": "2026-10-27T23:42:38.548592+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -411,7 +411,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-27T09:52:53.334441+00:00",
+      "time": "2026-10-27T23:42:39.996402+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -452,7 +452,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-27T09:52:55.305349+00:00",
+      "time": "2026-10-27T23:42:41.852126+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -485,7 +485,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-27T09:52:57.891444+00:00",
+      "time": "2026-10-27T23:42:43.923386+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -523,7 +523,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-27T09:53:00.001339+00:00",
+      "time": "2026-10-27T23:42:46.088087+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -556,7 +556,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 33,
-      "time": "2026-10-27T09:53:16.296361+00:00",
+      "time": "2026-10-27T23:43:02.013857+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -960,7 +960,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_284db43c31758f9aef75cd0b",
-     "exposure_id": "x_f8355c366fdd4c21a3c4bd3affdca683",
+     "exposure_id": "x_c8a74e25e51a4dd7bb209a3c84c0dd82",
      "started_revision": 26,
      "integrity": "ok"
     },
@@ -1110,7 +1110,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_622dd0c704d6af123eea761a",
-     "exposure_id": "x_a061e28a6ef44cdb897a0842a80c8a5b",
+     "exposure_id": "x_147061d8f7774723a5a0e9b7acf75618",
      "started_revision": 24,
      "integrity": "ok"
     },
@@ -1348,7 +1348,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_5f95a7d242e4ea751ed82afb",
-     "exposure_id": "x_8ded990042cf46119d4c55f8090b70f8",
+     "exposure_id": "x_e7768d41f0824704a28417120827e14f",
      "started_revision": 22,
      "integrity": "ok"
     },
@@ -2592,7 +2592,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_808e66ec55e19cf01a72e71c",
-     "exposure_id": "x_94046632539842039a671c033581a989",
+     "exposure_id": "x_c67478cd954a4ae8804ec9d0071618e6",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -2718,7 +2718,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_75c47b1ef767a30eb39cdb4d",
-     "exposure_id": "x_a000b43140994fcf9120ac6af65c8159",
+     "exposure_id": "x_de00d948b25440ac8c7879508de5bfc8",
      "started_revision": 20,
      "integrity": "ok"
     },
@@ -2788,7 +2788,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_305370681065d9971a93f227",
-     "exposure_id": "x_2c6b48e7fecd4959a1c5a527cbfc5a96",
+     "exposure_id": "x_e0ab6af5f73f4eb2b3b536c87454ac99",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -2854,7 +2854,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_f37508d21e9ebda7c2ebce28",
-     "exposure_id": "x_421998582be74a08aa335f3dac0b76fd",
+     "exposure_id": "x_0ff0db7a0e3449fd8f782bf7dd986df9",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -3204,7 +3204,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_952532c3c79c0a600a6ca16b",
-     "exposure_id": "x_db48f4e2d1684f038f1b305ef5d9bb5f",
+     "exposure_id": "x_f85167b0bd3f4135983468fc17792733",
      "started_revision": 36,
      "integrity": "ok"
     },
@@ -3284,7 +3284,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_aa1477c41bc44c975f9888ce",
-     "exposure_id": "x_d1570d1b53ca44cdb6fd3b399aa8d3d9",
+     "exposure_id": "x_d10f953cb4db44e6a3a3346592ca3d65",
      "started_revision": 28,
      "integrity": "ok"
     },
@@ -3429,7 +3429,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_2033db067e905124ef78ea82",
-     "exposure_id": "x_29f6e6e3783842fd88f086476a3cf7ff",
+     "exposure_id": "x_d91768deab41424c8397727bfc7ba72d",
      "started_revision": 30,
      "integrity": "ok"
     },
@@ -3584,7 +3584,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_9ef87905207eafeced71da38",
-     "exposure_id": "x_80ebd46157394fab96e901c80c219581",
+     "exposure_id": "x_bcca78f81b8a43f2a07194aada8dc032",
      "started_revision": 34,
      "integrity": "ok"
     },
@@ -3677,7 +3677,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ea1ff066194e9ce5fbc1533b",
-     "exposure_id": "x_dc15e864293d439aa048b267cfbb6b9d",
+     "exposure_id": "x_464ea2207b2343ff9127c7f0cca94b0a",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -3703,7 +3703,7 @@
       "last_ok_revision": 38,
       "path": "notebooks/study_editable.py",
       "revision": 38,
-      "sha256": "88122e8adc9701d0aeca0bf544e7de5e2a9aab6e56113000b4b3a15ce5381c00",
+      "sha256": "17f1c8e64203dc437028f328ef0ee40fff4d54d3fa4575e50dfaa738c59cb059",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -3729,14 +3729,14 @@
        "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
        "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c"
       ],
-      "edit_check_sha256": "2a1fe0b891d562ad44a9885f5816930ba7dc5eec88b115b830e1bb666d77592d",
+      "edit_check_sha256": "31673eaaa31332fd7d31a2154e72fc0cf8bab86ad114e9e3a8366bdc4cf752bb",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
       "last_ok_revision": 38,
       "path": "notebooks/study_generated.py",
       "revision": 38,
-      "sha256": "26e0d05187f690671a369fb0b1f6604f5134c98b9a27f72d9b7d6b8536768cc1",
+      "sha256": "2eaf8269f31603c7562f652168623942d9d3e42b896f14f2959879d0716b3ea6",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -3768,7 +3768,7 @@
       "last_ok_revision": 38,
       "path": "reports/study.html",
       "revision": 38,
-      "sha256": "db537e1b86b0e4d7f775f0a24985c4c0ec59af90921bfb61a77a2a7f6d3e2ff8",
+      "sha256": "d49867d897c5217337bbc3550390abaf580f5c9f42a44a0e943eaea3ecd80169",
       "status": "ok",
       "template_version": 4,
       "user_edits_preserved": [],
@@ -3804,7 +3804,7 @@
     "records": 18,
     "rows_exposed": 318,
     "by_purpose": {
-     "labelled_preview_available": 5,
+     "development_target_sample": 8,
      "sealed": 80,
      "structural_inspection": 318,
      "train_eda": 222,
@@ -3813,7 +3813,7 @@
     },
     "by_partition": {
      "development": {
-      "labelled_preview_available": 5,
+      "development_target_sample": 8,
       "structural_inspection": 318
      },
      "final_test": {

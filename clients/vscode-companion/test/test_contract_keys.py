@@ -17,7 +17,7 @@ sys.path.insert(0, str(REPO / 'framework' / 'tests' / 'study'))
 import companion_contract as cc  # noqa: E402
 import test_contract_freeze as freeze  # noqa: E402  (WP-A7: the data card's frozen keys)
 
-from mlkit.study import after_study as aft, companion_env as ce  # noqa: E402
+from mlkit.study import after_study as aft, cmd_data, companion_env as ce, panel_digest as pd  # noqa: E402
 
 CONTRACT = json.loads((HERE / 'fixtures' / 'contract-keys.json').read_text(encoding='utf-8'))
 
@@ -31,13 +31,18 @@ NEXT_ACTION = {'next_action.pause': freeze.PAUSE_KEYS,
                'next_action.after_study': aft.AFTER_STUDY_KEYS,
                'next_action.after_study.azureml': aft.AZUREML_KEYS,
                'next_action.panel': ce.PANEL_KEYS,
+               'next_action.panel.where': ce.WHERE_KEYS,
                'next_action.panel.shown': ce.SHOWN_KEYS}
+# Contract P1 (CLI-CONTRACT §17.2): the digest's objects for the one page.
+P1_DIGEST = {'automation': pd.SUMMARY_AUTOMATION_KEYS, 'review_queue': pd.SUMMARY_REVIEW_KEYS,
+             'defensibility': pd.SUMMARY_DEFENSIBILITY_KEYS, 'ledger': pd.SUMMARY_LEDGER_KEYS,
+             'sample': pd.SUMMARY_SAMPLE_KEYS, 'criterion_configurations': pd.SUMMARY_CRITERION_CONFIG_KEYS}
 
 EXPECTED = {
     'hypotrail.summary/1': {'': cc.SUMMARY_KEYS, **NEXT_ACTION},
     'hypotrail.summary/1+digest': {'': cc.DIGEST_SUMMARY_KEYS, 'digest.items[]': cc.DIGEST_ITEM_KEYS,
                                    'digest.counts': cc.DIGEST_COUNT_KEYS, 'last_session': cc.LAST_SESSION_KEYS,
-                                   **NEXT_ACTION},
+                                   **NEXT_ACTION, **P1_DIGEST},
     'hypotrail.decisions/1': {'': cc.DECISIONS_KEYS, 'history[]': cc.DECISIONS_HISTORY_KEYS,
                               'proposals[]': cc.DECISIONS_PROPOSAL_KEYS},
     'hypotrail.preview_effects/1': {'': cc.PREVIEW_EFFECTS_KEYS},
@@ -49,7 +54,9 @@ EXPECTED = {
     'hypotrail.handoff/1': {'': cc.HANDOFF_KEYS},
     'hypotrail.check/1': {'findings[].location': cc.CHECK_LOCATION_KEYS},
     # WP-A7: the data card is a read of the Data & EDA tab (CLI-CONTRACT §11.1).
-    'hypotrail.data/1': {'': freeze.DATA_PAYLOAD_KEYS, 'groups[].variables[]': freeze.DATA_VARIABLE_KEYS},
+    'hypotrail.data/1': {'': freeze.DATA_PAYLOAD_KEYS, 'groups[].variables[]': freeze.DATA_VARIABLE_KEYS,
+                         # Contract P1.9, P1.10 (§17.3, §17.4): the seeded sample, the special rows.
+                         'rows': cmd_data.ROWS_KEYS, 'special_rows': cmd_data.SPECIAL_ROW_KEYS},
 }
 
 
@@ -62,6 +69,12 @@ def test_client_key_lists_equal_the_engine_contract():
     assert rules['values.numeric.bins[]'] == list(cc.DISTRIBUTION_BIN_KEYS)
     assert CONTRACT['not_implemented_reason'] == cc.NOT_IMPLEMENTED
     assert CONTRACT['error_codes_added'] == list(cc.NEW_ERROR_CODES)
+
+
+def test_the_panel_contract_version_is_the_engines():
+    """CLI-CONTRACT §17.1.5: the panel's constant (``lib/flag.js``) is the engine's version."""
+    flag = (HERE.parent / 'lib' / 'flag.js').read_text(encoding='utf-8')
+    assert f'const PANEL_CONTRACT = {ce.PANEL_CONTRACT};' in flag
 
 
 def test_the_engine_stub_refusal_matches_the_fixture():

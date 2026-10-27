@@ -1,0 +1,6540 @@
+{
+ "about": {
+  "schema": "hypotrail.evidence/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "evidence",
+   "--json"
+  ],
+  "note": "The one-page Auto MPG study at the model choice (the reads behind the five states)."
+ },
+ "payload": {
+  "schema": "hypotrail.evidence/1",
+  "ok": true,
+  "study": "/studies/auto mpg-onepage",
+  "revision": 35,
+  "task": "regression",
+  "results": [
+   {
+    "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+    "activity": "split",
+    "slot": "split",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "development",
+    "n_rows": 318,
+    "params": {},
+    "upstream": {},
+    "downstream": [
+     "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+     "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+     "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+     "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f",
+     "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+     "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+     "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77"
+    ],
+    "created": "2026-10-27T23:50:17.639549+00:00",
+    "started_revision": 12,
+    "execution_id": "e_911198e0a8508fa9f4a6fa78",
+    "exposure_id": "x_5af5287d2e1a4a0892abf98092943305",
+    "values": {
+     "method": "ordinal_cutoff",
+     "column": "model_year",
+     "cutoff": 79,
+     "n_rows": 318,
+     "partitions": {
+      "train": {
+       "n_rows": 222,
+       "column_min": 70,
+       "column_max": 78,
+       "distinct_values": 9
+      },
+      "validation": {
+       "n_rows": 96,
+       "column_min": 79,
+       "column_max": 82,
+       "distinct_values": 4
+      }
+     },
+     "validation_share": 0.3018867924528302,
+     "stratified_on": null,
+     "implementation": "mlkit.study.activities (ordinal cutoff on the integer values of the time column, never converted to a date)",
+     "scenario": "Rows with model_year >= 79 are validated on a model fitted on rows with model_year < 79: later periods validated on earlier ones. Values beyond the training range are extrapolation.",
+     "groups": {
+      "column": "car_name",
+      "n_groups": 254,
+      "train_groups": 178,
+      "validation_groups": 89,
+      "shared_groups": 13,
+      "validation_rows": 96,
+      "validation_rows_in_shared_groups": 15,
+      "validation_share_in_shared_groups": 0.15625,
+      "examples": [
+       "amc concord",
+       "buick century",
+       "buick estate wagon (sw)",
+       "buick skylark",
+       "chevrolet caprice classic"
+      ],
+      "capability": "grouped split (v0.2)",
+      "note": "Grouped split is not available in this version: validation rows of a shared group are not independent of the training rows."
+     },
+     "overlap": null
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "222",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+       "path": "partitions.train.n_rows",
+       "value": 222,
+       "format": "int"
+      },
+      {
+       "text": " training rows / "
+      },
+      {
+       "text": "96",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+       "path": "partitions.validation.n_rows",
+       "value": 96,
+       "format": "int"
+      },
+      {
+       "text": " validation rows"
+      }
+     ]
+    },
+    "question_junior": null,
+    "texts": null
+   },
+   {
+    "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
+    "activity": "eda.quality",
+    "slot": "eda.quality",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "development",
+    "n_rows": 318,
+    "params": {
+     "partition": "development"
+    },
+    "upstream": {},
+    "downstream": [],
+    "created": "2026-10-27T23:50:19.288914+00:00",
+    "started_revision": 14,
+    "execution_id": "e_f2a9d4ff734c5609ecaf8062",
+    "exposure_id": "x_dcd5938fe04d478bae0eb22f9586f3ae",
+    "values": {
+     "partition": "development",
+     "n_rows": 318,
+     "n_columns": 8,
+     "target_read": false,
+     "missing": [
+      {
+       "column": "cylinders",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "displacement",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "horsepower",
+       "n_missing": 6,
+       "share": 0.018867924528301886
+      },
+      {
+       "column": "weight",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "acceleration",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "model_year",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "origin",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "car_name",
+       "n_missing": 0,
+       "share": 0.0
+      }
+     ],
+     "n_rows_with_missing": 6,
+     "co_missing": [
+      {
+       "columns": [
+        "horsepower"
+       ],
+       "n_rows": 6,
+       "share": 0.018867924528301886
+      }
+     ],
+     "duplicates": {
+      "n_rows": 0,
+      "n_groups": 0,
+      "definition": "rows identical on every column except the target"
+     },
+     "cardinality": [
+      {
+       "column": "origin",
+       "type": "category",
+       "n_distinct": 3,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "car_name",
+       "type": "string",
+       "n_distinct": 254,
+       "rare": [
+        {
+         "value": "amc ambassador brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "amc ambassador dpl",
+         "n_rows": 1
+        },
+        {
+         "value": "amc ambassador sst",
+         "n_rows": 1
+        },
+        {
+         "value": "amc concord d/l",
+         "n_rows": 1
+        },
+        {
+         "value": "amc concord dl",
+         "n_rows": 1
+        },
+        {
+         "value": "amc concord dl 6",
+         "n_rows": 1
+        },
+        {
+         "value": "amc hornet sportabout (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "amc pacer",
+         "n_rows": 1
+        },
+        {
+         "value": "amc pacer d/l",
+         "n_rows": 1
+        },
+        {
+         "value": "amc rebel sst",
+         "n_rows": 1
+        },
+        {
+         "value": "amc spirit dl",
+         "n_rows": 1
+        },
+        {
+         "value": "audi 100 ls",
+         "n_rows": 1
+        },
+        {
+         "value": "audi 4000",
+         "n_rows": 1
+        },
+        {
+         "value": "audi 5000",
+         "n_rows": 1
+        },
+        {
+         "value": "audi 5000s (diesel)",
+         "n_rows": 1
+        },
+        {
+         "value": "bmw 2002",
+         "n_rows": 1
+        },
+        {
+         "value": "bmw 320i",
+         "n_rows": 1
+        },
+        {
+         "value": "buick century 350",
+         "n_rows": 1
+        },
+        {
+         "value": "buick century limited",
+         "n_rows": 1
+        },
+        {
+         "value": "buick century luxus (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "buick century special",
+         "n_rows": 1
+        },
+        {
+         "value": "buick electra 225 custom",
+         "n_rows": 1
+        },
+        {
+         "value": "buick lesabre custom",
+         "n_rows": 1
+        },
+        {
+         "value": "buick opel isuzu deluxe",
+         "n_rows": 1
+        },
+        {
+         "value": "buick regal sport coupe (turbo)",
+         "n_rows": 1
+        },
+        {
+         "value": "buick skylark 320",
+         "n_rows": 1
+        },
+        {
+         "value": "buick skylark limited",
+         "n_rows": 1
+        },
+        {
+         "value": "cadillac eldorado",
+         "n_rows": 1
+        },
+        {
+         "value": "cadillac seville",
+         "n_rows": 1
+        },
+        {
+         "value": "capri ii",
+         "n_rows": 1
+        },
+        {
+         "value": "chevroelt chevelle malibu",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet bel air",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet cavalier",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet cavalier 2-door",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet cavalier wagon",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet chevelle concours (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet chevelle malibu",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet chevelle malibu classic",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet concours",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet malibu classic (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet monza 2+2",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet nova custom",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet vega (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet vega 2300",
+         "n_rows": 1
+        },
+        {
+         "value": "chevy c10",
+         "n_rows": 1
+        },
+        {
+         "value": "chevy c20",
+         "n_rows": 1
+        },
+        {
+         "value": "chevy s-10",
+         "n_rows": 1
+        },
+        {
+         "value": "chrysler cordoba",
+         "n_rows": 1
+        },
+        {
+         "value": "chrysler lebaron medallion",
+         "n_rows": 1
+        },
+        {
+         "value": "chrysler lebaron salon",
+         "n_rows": 1
+        },
+        {
+         "value": "chrysler newport royal",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 1200",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 200-sx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 200sx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 210 mpg",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 280-zx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 310",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 310 gx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 510",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 510 (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 510 hatchback",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 610",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 810",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 810 maxima",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun b-210",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun b210 gx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun f-10 hatchback",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge aries se",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge aries wagon (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge aspen 6",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge aspen se",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge challenger se",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge colt (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge colt hardtop",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge colt hatchback custom",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge colt m/m",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge coronet custom (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge d100",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge dart custom",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge diplomat",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge monaco brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge omni",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge rampage",
+         "n_rows": 1
+        },
+        {
+         "value": "fiat 124 sport coupe",
+         "n_rows": 1
+        },
+        {
+         "value": "fiat 124 tc",
+         "n_rows": 1
+        },
+        {
+         "value": "fiat 131",
+         "n_rows": 1
+        },
+        {
+         "value": "ford country",
+         "n_rows": 1
+        },
+        {
+         "value": "ford escort 2h",
+         "n_rows": 1
+        },
+        {
+         "value": "ford f108",
+         "n_rows": 1
+        },
+        {
+         "value": "ford fairmont",
+         "n_rows": 1
+        },
+        {
+         "value": "ford fairmont (auto)",
+         "n_rows": 1
+        },
+        {
+         "value": "ford fairmont 4",
+         "n_rows": 1
+        },
+        {
+         "value": "ford fairmont futura",
+         "n_rows": 1
+        },
+        {
+         "value": "ford futura",
+         "n_rows": 1
+        },
+        {
+         "value": "ford granada",
+         "n_rows": 1
+        },
+        {
+         "value": "ford granada ghia",
+         "n_rows": 1
+        },
+        {
+         "value": "ford ltd",
+         "n_rows": 1
+        },
+        {
+         "value": "ford ltd landau",
+         "n_rows": 1
+        },
+        {
+         "value": "ford mustang",
+         "n_rows": 1
+        },
+        {
+         "value": "ford mustang cobra",
+         "n_rows": 1
+        },
+        {
+         "value": "ford mustang gl",
+         "n_rows": 1
+        },
+        {
+         "value": "ford mustang ii 2+2",
+         "n_rows": 1
+        },
+        {
+         "value": "ford pinto (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "ford ranger",
+         "n_rows": 1
+        },
+        {
+         "value": "ford thunderbird",
+         "n_rows": 1
+        },
+        {
+         "value": "ford torino",
+         "n_rows": 1
+        },
+        {
+         "value": "hi 1200d",
+         "n_rows": 1
+        },
+        {
+         "value": "honda accord",
+         "n_rows": 1
+        },
+        {
+         "value": "honda accord cvcc",
+         "n_rows": 1
+        },
+        {
+         "value": "honda civic (auto)",
+         "n_rows": 1
+        },
+        {
+         "value": "honda civic 1500 gl",
+         "n_rows": 1
+        },
+        {
+         "value": "honda civic cvcc",
+         "n_rows": 1
+        },
+        {
+         "value": "honda prelude",
+         "n_rows": 1
+        },
+        {
+         "value": "maxda rx3",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc 4",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc custom",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc custom l",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc deluxe",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda rx-4",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda rx2 coupe",
+         "n_rows": 1
+        },
+        {
+         "value": "mercedes benz 300d",
+         "n_rows": 1
+        },
+        {
+         "value": "mercedes-benz 240d",
+         "n_rows": 1
+        },
+        {
+         "value": "mercedes-benz 280s",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury capri 2000",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury capri v6",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury lynx l",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury marquis brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury monarch ghia",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury zephyr",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury zephyr 6",
+         "n_rows": 1
+        },
+        {
+         "value": "nissan stanza xe",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile cutlass ciera (diesel)",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile cutlass ls",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile cutlass salon brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile cutlass supreme",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile delta 88 royale",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile omega",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile omega brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile starfire sx",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile vista cruiser",
+         "n_rows": 1
+        },
+        {
+         "value": "opel 1900",
+         "n_rows": 1
+        },
+        {
+         "value": "peugeot 304",
+         "n_rows": 1
+        },
+        {
+         "value": "peugeot 505s turbo diesel",
+         "n_rows": 1
+        },
+        {
+         "value": "peugeot 604sl",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth arrow gs",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth champ",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth cricket",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth custom suburb",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth duster",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth fury",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth fury gran sedan",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth grand fury",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth horizon tc3",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth sapporo",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth satellite",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth satellite custom",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth satellite custom (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth valiant custom",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth volare custom",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth volare premier v8",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac astro",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac catalina brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac firebird",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac grand prix",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac grand prix lj",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac j2000 se hatchback",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac lemans v6",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac phoenix",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac phoenix lj",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac safari (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac sunbird coupe",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac ventura sj",
+         "n_rows": 1
+        },
+        {
+         "value": "renault 12 (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "renault 12tl",
+         "n_rows": 1
+        },
+        {
+         "value": "renault 18i",
+         "n_rows": 1
+        },
+        {
+         "value": "renault lecar deluxe",
+         "n_rows": 1
+        },
+        {
+         "value": "saab 99e",
+         "n_rows": 1
+        },
+        {
+         "value": "saab 99gle",
+         "n_rows": 1
+        },
+        {
+         "value": "subaru dl",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota carina",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota celica gt",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota celica gt liftback",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corolla 1200",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corolla 1600 (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corolla liftback",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corolla tercel",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corona hardtop",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota cressida",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota starlet",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota tercel",
+         "n_rows": 1
+        },
+        {
+         "value": "toyouta corona mark ii (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "triumph tr7 coupe",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen 1131 deluxe sedan",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen 411 (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen jetta",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen model 111",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen rabbit custom",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen rabbit custom diesel",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen rabbit l",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen scirocco",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen super beetle",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen type 3",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo 144ea",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo 145e (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo 244dl",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo 264gl",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo diesel",
+         "n_rows": 1
+        },
+        {
+         "value": "vw pickup",
+         "n_rows": 1
+        },
+        {
+         "value": "vw rabbit c (diesel)",
+         "n_rows": 1
+        },
+        {
+         "value": "vw rabbit custom",
+         "n_rows": 1
+        },
+        {
+         "value": "amc concord",
+         "n_rows": 2
+        },
+        {
+         "value": "amc matador (sw)",
+         "n_rows": 2
+        },
+        {
+         "value": "audi 100ls",
+         "n_rows": 2
+        },
+        {
+         "value": "buick century",
+         "n_rows": 2
+        },
+        {
+         "value": "buick estate wagon (sw)",
+         "n_rows": 2
+        },
+        {
+         "value": "buick skylark",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet caprice classic",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet malibu",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet monte carlo landau",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet nova",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet vega",
+         "n_rows": 2
+        },
+        {
+         "value": "datsun 210",
+         "n_rows": 2
+        },
+        {
+         "value": "datsun 710",
+         "n_rows": 2
+        },
+        {
+         "value": "dodge aspen",
+         "n_rows": 2
+        },
+        {
+         "value": "fiat 128",
+         "n_rows": 2
+        },
+        {
+         "value": "ford country squire (sw)",
+         "n_rows": 2
+        },
+        {
+         "value": "ford gran torino (sw)",
+         "n_rows": 2
+        },
+        {
+         "value": "mazda 626",
+         "n_rows": 2
+        },
+        {
+         "value": "opel manta",
+         "n_rows": 2
+        },
+        {
+         "value": "plymouth fury iii",
+         "n_rows": 2
+        },
+        {
+         "value": "plymouth reliant",
+         "n_rows": 2
+        },
+        {
+         "value": "plymouth valiant",
+         "n_rows": 2
+        },
+        {
+         "value": "pontiac catalina",
+         "n_rows": 2
+        },
+        {
+         "value": "saab 99le",
+         "n_rows": 2
+        },
+        {
+         "value": "subaru",
+         "n_rows": 2
+        },
+        {
+         "value": "volkswagen dasher",
+         "n_rows": 2
+        },
+        {
+         "value": "volkswagen rabbit",
+         "n_rows": 2
+        },
+        {
+         "value": "vw rabbit",
+         "n_rows": 2
+        },
+        {
+         "value": "amc gremlin",
+         "n_rows": 3
+        },
+        {
+         "value": "amc hornet",
+         "n_rows": 3
+        },
+        {
+         "value": "chevrolet chevette",
+         "n_rows": 3
+        },
+        {
+         "value": "chevrolet citation",
+         "n_rows": 3
+        },
+        {
+         "value": "chevrolet impala",
+         "n_rows": 3
+        },
+        {
+         "value": "dodge colt",
+         "n_rows": 3
+        },
+        {
+         "value": "ford galaxie 500",
+         "n_rows": 3
+        },
+        {
+         "value": "ford gran torino",
+         "n_rows": 3
+        },
+        {
+         "value": "ford maverick",
+         "n_rows": 3
+        },
+        {
+         "value": "honda civic",
+         "n_rows": 3
+        },
+        {
+         "value": "peugeot 504",
+         "n_rows": 3
+        },
+        {
+         "value": "toyota corolla",
+         "n_rows": 4
+        },
+        {
+         "value": "toyota corona",
+         "n_rows": 4
+        },
+        {
+         "value": "amc matador",
+         "n_rows": 5
+        },
+        {
+         "value": "ford pinto",
+         "n_rows": 5
+        }
+       ],
+       "rare_rows": 30
+      }
+     ],
+     "ranges": [
+      {
+       "column": "cylinders",
+       "type": "integer",
+       "min": 3,
+       "max": 8,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null,
+       "quantiles": {
+        "0.01": 4.0,
+        "0.5": 4.0,
+        "0.99": 8.0
+       },
+       "skewness": 0.5592211132140309
+      },
+      {
+       "column": "displacement",
+       "type": "numeric",
+       "min": 68,
+       "max": 455,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null,
+       "quantiles": {
+        "0.01": 71.17,
+        "0.5": 146.0,
+        "0.99": 438.1299999999998
+       },
+       "skewness": 0.7525518764501847
+      },
+      {
+       "column": "horsepower",
+       "type": "numeric",
+       "min": 46,
+       "max": 230,
+       "n_special": 6,
+       "declared": null,
+       "n_below": null,
+       "n_above": null,
+       "quantiles": {
+        "0.01": 48.11,
+        "0.5": 95.0,
+        "0.99": 219.44999999999993
+       },
+       "skewness": 1.0522043350803072
+      },
+      {
+       "column": "weight",
+       "type": "numeric",
+       "min": 1613,
+       "max": 5140,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null,
+       "quantiles": {
+        "0.01": 1776.74,
+        "0.5": 2781.5,
+        "0.99": 4943.349999999999
+       },
+       "skewness": 0.5545371594372033
+      },
+      {
+       "column": "acceleration",
+       "type": "numeric",
+       "min": 8.5,
+       "max": 24.8,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null,
+       "quantiles": {
+        "0.01": 9.585,
+        "0.5": 15.5,
+        "0.99": 22.148999999999994
+       },
+       "skewness": 0.24350896763584787
+      },
+      {
+       "column": "model_year",
+       "type": "integer",
+       "min": 70,
+       "max": 82,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null,
+       "quantiles": {
+        "0.01": 70.0,
+        "0.5": 76.0,
+        "0.99": 82.0
+       },
+       "skewness": -0.019726195913936255
+      }
+     ],
+     "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
+     "note": "Structural reading of the development rows: the target is not read, and nothing here is a rate or an association. A range is checked only against a range the case declares."
+    },
+    "headline": null,
+    "question_junior": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
+    "texts": {
+     "en": {
+      "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
+      "note": "Structural reading of the development rows: the target is not read, and nothing here is a rate or an association. A range is checked only against a range the case declares.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Y a-t-il des cellules manquantes, des lignes répétées, des catégories rares ou des valeurs hors de leur plage possible dans les lignes de l'échantillon de développement ?",
+      "note": "Lecture structurelle des lignes de l'échantillon de développement : la cible n'est pas lue, et rien ici n'est un taux ni une association. Une plage n'est vérifiée que par rapport à une plage que le cas déclare.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+    "activity": "eda.target_summary",
+    "slot": "eda.target_summary",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 222,
+    "params": {},
+    "upstream": {
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [],
+    "created": "2026-10-27T23:50:20.920911+00:00",
+    "started_revision": 16,
+    "execution_id": "e_01e009ee66e5659fa376f9c8",
+    "exposure_id": "x_03bf1dd34e4f4066b8d4cc703c28f9f9",
+    "values": {
+     "partition": "train",
+     "target": "mpg",
+     "unit": "mpg",
+     "n_rows": 222,
+     "n_missing": 0,
+     "n": 222,
+     "mean": 20.565315315315317,
+     "sd": 6.195978453412262,
+     "min": 9.0,
+     "q25": 15.5,
+     "median": 19.2,
+     "q75": 25.0,
+     "max": 43.1,
+     "note": "Distribution of the target on training rows, in its unit. The mean is what the baseline predicts for every row.",
+     "mean_interval": {
+      "low": 19.74578253659207,
+      "high": 21.384848094038563,
+      "level": 0.95,
+      "method": "t"
+     },
+     "question": "How is the target distributed among the training rows?"
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Mean "
+      },
+      {
+       "text": "20.57",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+       "path": "mean",
+       "value": 20.565315315315317,
+       "format": "f2"
+      },
+      {
+       "text": " mpg, standard deviation "
+      },
+      {
+       "text": "6.20",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+       "path": "sd",
+       "value": 6.195978453412262,
+       "format": "f2"
+      },
+      {
+       "text": " on "
+      },
+      {
+       "text": "222",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+       "path": "n_rows",
+       "value": 222,
+       "format": "int"
+      },
+      {
+       "text": " training rows"
+      }
+     ]
+    },
+    "question_junior": "How is the target distributed among the training rows?",
+    "texts": {
+     "en": {
+      "question": "How is the target distributed among the training rows?",
+      "note": "Distribution of the target on training rows, in its unit. The mean is what the baseline predicts for every row.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Comment la cible se répartit-elle parmi les lignes d'entraînement ?",
+      "note": "Distribution de la cible sur les lignes d'entraînement, dans son unité. La moyenne est ce que le modèle de référence prédit pour chaque ligne.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+    "activity": "eda.special_values",
+    "slot": "eda.special_values",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 222,
+    "params": {},
+    "upstream": {
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [],
+    "created": "2026-10-27T23:50:22.564727+00:00",
+    "started_revision": 18,
+    "execution_id": "e_ef6d58ebcc377e92b00e1641",
+    "exposure_id": "x_a23bec3f87304178b30f28aa87c2a866",
+    "values": {
+     "partition": "train",
+     "n_rows": 222,
+     "target": "mpg",
+     "unit": "mpg",
+     "special_values": [
+      {
+       "column": "horsepower",
+       "value": "?",
+       "meaning": "Missing value.",
+       "status": "observed",
+       "source": "data/auto-mpg.names:44 documents 6 missing horsepower values; structural inspection of data/auto-mpg.data shows that they are written \"?\"",
+       "n_rows": 2,
+       "share": 0.009009009009009009,
+       "mean_target": 23.0
+      }
+     ],
+     "co_occurrence": [],
+     "note": "Counts on training rows. A missing-value marker is imputed by the model, with an indicator column for a numeric variable.",
+     "question": "How many training rows carry each special value, and how does the target look among them?"
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Special values counted on "
+      },
+      {
+       "text": "222",
+       "result_id": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+       "path": "n_rows",
+       "value": 222,
+       "format": "int"
+      },
+      {
+       "text": " training rows"
+      }
+     ]
+    },
+    "question_junior": "How many training rows carry each special value, and how does the target look among them?",
+    "texts": {
+     "en": {
+      "question": "How many training rows carry each special value, and how does the target look among them?",
+      "note": "Counts on training rows. A missing-value marker is imputed by the model, with an indicator column for a numeric variable.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {
+       "horsepower=?": "Missing value."
+      }
+     },
+     "fr": {
+      "question": "Combien des lignes d'entraînement portent chaque valeur spéciale, et à quoi ressemble la cible parmi elles ?",
+      "note": "Effectifs sur les lignes d'entraînement. Un marqueur de valeur manquante est imputé par le modèle, avec une colonne indicatrice pour une variable numérique.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {
+       "horsepower=?": "Valeur manquante."
+      }
+     }
+    }
+   },
+   {
+    "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+    "activity": "fit.baseline",
+    "slot": "fit.baseline",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 96,
+    "params": {
+     "model": "train_mean"
+    },
+    "upstream": {
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [
+     "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c"
+    ],
+    "created": "2026-10-27T23:50:24.282103+00:00",
+    "started_revision": 20,
+    "execution_id": "e_47e14a8659b67b6ecc88b5f7",
+    "exposure_id": "x_54054886d22142dd9ec216fd462f7249",
+    "values": {
+     "model": "train_mean",
+     "target": "mpg",
+     "unit": "mpg",
+     "train_mean": 20.565315315315317,
+     "train_median": 19.2,
+     "n_train": 222,
+     "features": [],
+     "train": {
+      "n_rows": 222,
+      "mae": 5.114093823553284,
+      "rmse": 6.182007796506872,
+      "mean_residual": -1.5363086178596762e-15
+     },
+     "validation": {
+      "n_rows": 96,
+      "mae": 10.268806306306304,
+      "rmse": 11.924502477405836,
+      "mean_residual": 9.806559684684684
+     },
+     "predictions": {
+      "blob": "predictions",
+      "format": "gzip csv row_key,y,prediction",
+      "model": "train_mean",
+      "partition": "validation",
+      "target": "mpg",
+      "unit": "mpg",
+      "prediction_semantics": "A prediction of the target, in its unit.",
+      "n": 96,
+      "features": []
+     },
+     "note": "Every row receives the training mean: the reference a model must beat."
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Validation MAE "
+      },
+      {
+       "text": "10.27",
+       "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+       "path": "validation.mae",
+       "value": 10.268806306306304,
+       "format": "f2"
+      },
+      {
+       "text": " mpg on "
+      },
+      {
+       "text": "96",
+       "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+       "path": "validation.n_rows",
+       "value": 96,
+       "format": "int"
+      },
+      {
+       "text": " rows"
+      }
+     ]
+    },
+    "question_junior": null,
+    "texts": null
+   },
+   {
+    "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+    "activity": "fit.linear",
+    "slot": "fit.linear",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 96,
+    "params": {
+     "estimator": "sklearn.linear_model.LinearRegression",
+     "implementation": "mlkit.classical.pipeline",
+     "model": "linear",
+     "preprocessing": "numeric: median imputation and standardisation; categorical: most frequent imputation and one-hot encoding; fitted on training rows only",
+     "seed": 0,
+     "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
+    },
+    "upstream": {
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [
+     "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f",
+     "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2"
+    ],
+    "created": "2026-10-27T23:50:26.076170+00:00",
+    "started_revision": 22,
+    "execution_id": "e_d8c0a36ea30eea85e955656e",
+    "exposure_id": "x_e638089d6b5942bcad108dd9410ecce3",
+    "values": {
+     "model": "linear",
+     "target": "mpg",
+     "unit": "mpg",
+     "features": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin"
+     ],
+     "special_value_indicators": [
+      "horsepower=?"
+     ],
+     "n_train": 222,
+     "n_terms": 8,
+     "intercept": 21.07139386751173,
+     "coefficients": {
+      "num__cylinders": -0.37022387198762724,
+      "num__displacement": 0.41888510741149876,
+      "num__horsepower": -1.1866635219111468,
+      "num__weight": -4.061984545313062,
+      "num__horsepower=?": -0.04154318702939566,
+      "cat__origin_1": -0.9522927696704008,
+      "cat__origin_2": -0.1883477305837519,
+      "cat__origin_3": 1.1406405002541518
+     },
+     "coefficient_scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects",
+     "train": {
+      "n_rows": 222,
+      "mae": 2.107827519590371,
+      "rmse": 2.828244905141762,
+      "mean_residual": 6.40128590774865e-17
+     },
+     "validation": {
+      "n_rows": 96,
+      "mae": 6.476590382656274,
+      "rmse": 7.664419781686159,
+      "mean_residual": 6.394515464632113
+     },
+     "predictions": {
+      "blob": "predictions",
+      "format": "gzip csv row_key,y,prediction",
+      "model": "linear",
+      "partition": "validation",
+      "target": "mpg",
+      "unit": "mpg",
+      "prediction_semantics": "A prediction of the target, in its unit.",
+      "n": 96,
+      "features": [
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight",
+       "origin"
+      ]
+     },
+     "preprocessing": {
+      "value": {
+       "missing": "none",
+       "rare_category_min_rows": 0,
+       "caps": {},
+       "log_transform": []
+      },
+      "fitted": {
+       "missing_indicators": [],
+       "rare_categories": {},
+       "caps": {},
+       "log_transform": [],
+       "ignored": []
+      },
+      "note": "Parameters learnt on training rows only and applied unchanged to validation rows."
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Validation MAE "
+      },
+      {
+       "text": "6.48",
+       "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+       "path": "validation.mae",
+       "value": 6.476590382656274,
+       "format": "f2"
+      },
+      {
+       "text": " mpg on "
+      },
+      {
+       "text": "96",
+       "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+       "path": "validation.n_rows",
+       "value": 96,
+       "format": "int"
+      },
+      {
+       "text": " rows"
+      }
+     ]
+    },
+    "question_junior": null,
+    "texts": null
+   },
+   {
+    "result_id": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+    "activity": "fit.variant",
+    "slot": "fit.variant",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 96,
+    "params": {
+     "alpha": 10.0,
+     "estimator": "sklearn.linear_model.Ridge",
+     "implementation": "mlkit.classical.pipeline",
+     "model": "ridge",
+     "preprocessing": "numeric: median imputation and standardisation; categorical: most frequent imputation and one-hot encoding; fitted on training rows only",
+     "seed": 0,
+     "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
+    },
+    "upstream": {
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [
+     "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2"
+    ],
+    "created": "2026-10-27T23:50:32.615845+00:00",
+    "started_revision": 28,
+    "execution_id": "e_8142a37e0a93ddb744855aa8",
+    "exposure_id": "x_141ad7f345bf43799235fcff2e83bed0",
+    "values": {
+     "model": "ridge",
+     "target": "mpg",
+     "unit": "mpg",
+     "features": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin"
+     ],
+     "special_value_indicators": [
+      "horsepower=?"
+     ],
+     "n_train": 222,
+     "n_terms": 8,
+     "intercept": 20.943266941816127,
+     "coefficients": {
+      "num__cylinders": -0.5206655589928507,
+      "num__displacement": -0.4706630199042758,
+      "num__horsepower": -1.0461027069104654,
+      "num__weight": -3.1876711076603237,
+      "num__horsepower=?": -0.04053541390734935,
+      "cat__origin_1": -0.7060718689819638,
+      "cat__origin_2": -0.20009242812717776,
+      "cat__origin_3": 0.9061642971091335
+     },
+     "coefficient_scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects",
+     "train": {
+      "n_rows": 222,
+      "mae": 2.0983194550246034,
+      "rmse": 2.8506217842819295,
+      "mean_residual": -7.681543089298381e-16
+     },
+     "validation": {
+      "n_rows": 96,
+      "mae": 6.505297098322088,
+      "rmse": 7.754118337852464,
+      "mean_residual": 6.409752295558562
+     },
+     "predictions": {
+      "blob": "predictions",
+      "format": "gzip csv row_key,y,prediction",
+      "model": "linear",
+      "partition": "validation",
+      "target": "mpg",
+      "unit": "mpg",
+      "prediction_semantics": "A prediction of the target, in its unit.",
+      "n": 96,
+      "features": [
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight",
+       "origin"
+      ]
+     },
+     "preprocessing": {
+      "value": {
+       "missing": "none",
+       "rare_category_min_rows": 0,
+       "caps": {},
+       "log_transform": []
+      },
+      "fitted": {
+       "missing_indicators": [],
+       "rare_categories": {},
+       "caps": {},
+       "log_transform": [],
+       "ignored": []
+      },
+      "note": "Parameters learnt on training rows only and applied unchanged to validation rows."
+     },
+     "variant": {
+      "kind": "regularisation",
+      "strength": "strong"
+     },
+     "alpha": 10.0
+    },
+    "headline": null,
+    "question_junior": null,
+    "texts": null
+   },
+   {
+    "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+    "activity": "evaluate.regression",
+    "slot": "evaluate.regression",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 96,
+    "params": {
+     "candidate": "fit.linear",
+     "metrics": [
+      "mae",
+      "rmse"
+     ],
+     "models": [
+      "fit.baseline",
+      "fit.linear",
+      "fit.variant"
+     ],
+     "reference": "fit.baseline"
+    },
+    "upstream": {
+     "fit.baseline": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+     "fit.linear": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "fit.variant": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [],
+    "created": "2026-10-27T23:50:34.284740+00:00",
+    "started_revision": 30,
+    "execution_id": "e_2e0d6c177d108bbe4bb3bf56",
+    "exposure_id": "x_391b128250ec4dea8a3aa8a3a170e753",
+    "values": {
+     "n": 96,
+     "target": "mpg",
+     "unit": "mpg",
+     "models": {
+      "fit.baseline": {
+       "n": 96,
+       "mae": 10.268806306306304,
+       "rmse": 11.924502477405836,
+       "mean_residual": 9.806559684684684,
+       "median_abs_residual": 10.434684684684683,
+       "max_abs_residual": 26.034684684684684
+      },
+      "fit.linear": {
+       "n": 96,
+       "mae": 6.476590382656274,
+       "rmse": 7.664419781686159,
+       "mean_residual": 6.394515464632113,
+       "median_abs_residual": 5.572351386623355,
+       "max_abs_residual": 18.45304785315237
+      },
+      "fit.variant": {
+       "n": 96,
+       "mae": 6.505297098322088,
+       "rmse": 7.754118337852464,
+       "mean_residual": 6.409752295558562,
+       "median_abs_residual": 5.673693089740421,
+       "max_abs_residual": 18.794732120875594
+      }
+     },
+     "intervals": {
+      "fit.baseline": {
+       "mae": {
+        "low": 9.020375609984985,
+        "high": 11.442172719594593
+       },
+       "rmse": {
+        "low": 10.7294383439307,
+        "high": 13.066515033675511
+       }
+      },
+      "fit.linear": {
+       "mae": {
+        "low": 5.690730215654784,
+        "high": 7.3058496174077225
+       },
+       "rmse": {
+        "low": 6.765424236359606,
+        "high": 8.545695275480197
+       }
+      },
+      "fit.variant": {
+       "mae": {
+        "low": 5.700070241671318,
+        "high": 7.367522314327747
+       },
+       "rmse": {
+        "low": 6.833640498704084,
+        "high": 8.65974474375661
+       }
+      }
+     },
+     "deltas": {
+      "fit.linear": {
+       "mae": {
+        "point": -3.792215923650031,
+        "low": -4.375861635363238,
+        "high": -3.159283658688826
+       },
+       "rmse": {
+        "point": -4.260082695719677,
+        "low": -4.785149196088145,
+        "high": -3.7022079436310995
+       }
+      },
+      "fit.variant": {
+       "mae": {
+        "point": -3.7635092079842165,
+        "low": -4.318230357129342,
+        "high": -3.182753899638755
+       },
+       "rmse": {
+        "point": -4.170384139553372,
+        "low": -4.660485375760737,
+        "high": -3.648570386778664
+       }
+      }
+     },
+     "residuals": {
+      "fit.baseline": {
+       "n": 96,
+       "mean": 9.806559684684684,
+       "sd": 6.81979631004668,
+       "min": -5.065315315315317,
+       "q05": -1.8403153153153156,
+       "q25": 5.384684684684683,
+       "median": 10.434684684684683,
+       "q75": 14.059684684684683,
+       "q95": 20.48468468468468,
+       "max": 26.034684684684684
+      },
+      "fit.linear": {
+       "n": 96,
+       "mean": 6.394515464632113,
+       "sd": 4.2475209438452115,
+       "min": -1.776599519158502,
+       "q05": 0.41185178765315067,
+       "q25": 3.261984922442746,
+       "median": 5.572351386623355,
+       "q75": 8.998533037532638,
+       "q95": 15.165754635580324,
+       "max": 18.45304785315237
+      },
+      "fit.variant": {
+       "n": 96,
+       "mean": 6.409752295558562,
+       "sd": 4.386554773122254,
+       "min": -2.0154747653481238,
+       "q05": 0.4804557357102279,
+       "q25": 3.3901253743852857,
+       "median": 5.673693089740421,
+       "q75": 9.178199377862295,
+       "q95": 15.431844902403551,
+       "max": 18.794732120875594
+      }
+     },
+     "residuals_by": [
+      {
+       "column": "model_year",
+       "binned": false,
+       "binning": null,
+       "groups": [
+        {
+         "value": "79",
+         "n_rows": 22,
+         "small_count": true,
+         "models": {
+          "fit.baseline": {
+           "mae": 5.82170352170352,
+           "mean_residual": 4.2074119574119555
+          },
+          "fit.linear": {
+           "mae": 3.95800803197313,
+           "mean_residual": 3.807868612211449
+          },
+          "fit.variant": {
+           "mae": 3.924945436027481,
+           "mean_residual": 3.753553139485518
+          }
+         }
+        },
+        {
+         "value": "80",
+         "n_rows": 24,
+         "small_count": true,
+         "models": {
+          "fit.baseline": {
+           "mae": 13.656794294294292,
+           "mean_residual": 13.534684684684683
+          },
+          "fit.linear": {
+           "mae": 8.942708621261152,
+           "mean_residual": 8.90008671054259
+          },
+          "fit.variant": {
+           "mae": 9.00156758638398,
+           "mean_residual": 8.944454210939016
+          }
+         }
+        },
+        {
+         "value": "81",
+         "n_rows": 25,
+         "small_count": true,
+         "models": {
+          "fit.baseline": {
+           "mae": 9.883909909909908,
+           "mean_residual": 9.646684684684683
+          },
+          "fit.linear": {
+           "mae": 5.841737309743365,
+           "mean_residual": 5.699609348210685
+          },
+          "fit.variant": {
+           "mae": 5.9372553994158785,
+           "mean_residual": 5.776017418188028
+          }
+         }
+        },
+        {
+         "value": "82",
+         "n_rows": 25,
+         "small_count": true,
+         "models": {
+          "fit.baseline": {
+           "mae": 11.314684684684682,
+           "mean_residual": 11.314684684684682
+          },
+          "fit.linear": {
+           "mae": 6.960322415109672,
+           "mean_residual": 6.960322415109672
+          },
+          "fit.variant": {
+           "mae": 6.947628591508134,
+           "mean_residual": 6.947628591508134
+          }
+         }
+        }
+       ],
+       "min_group_rows": 30
+      }
+     ],
+     "predictions": {
+      "fit.baseline": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+      "fit.linear": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+      "fit.variant": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0"
+     },
+     "reference": "fit.baseline",
+     "candidate": "fit.linear",
+     "bootstrap": {
+      "replicates": 2000,
+      "seed": 20261017,
+      "level": 0.95,
+      "method": "paired percentile bootstrap over validation rows"
+     },
+     "residual_definition": "residual = observed minus predicted; a positive residual means the model predicted too low; the mean residual is the bias",
+     "note": "The model is chosen on these validation rows: these errors are not independent evidence of future error. No model was refitted.",
+     "model_selection": {
+      "available": false,
+      "metric": "mae",
+      "direction": "lower",
+      "folds": null,
+      "configurations": [],
+      "best": null,
+      "one_se": null,
+      "optimism": null,
+      "advice": {
+       "code": "not_available",
+       "text": "The comparison across folds needs a cross-validation of the development rows.",
+       "texts": {
+        "en": "The comparison across folds needs a cross-validation of the development rows.",
+        "fr": "La comparaison entre plis demande une validation croisée des lignes de développement."
+       }
+      },
+      "budget": {
+       "max": 3,
+       "declared": 1,
+       "used": 1,
+       "remaining": 2,
+       "legacy": true
+      },
+      "trials": 0,
+      "note": "Development evidence: every configuration is compared on the same out-of-fold predictions of the development rows. The fold standard errors ignore the overlap of the folds' training rows (Bengio & Grandvalet 2004), so they understate the noise: the advice errs towards stopping late, not early. The final test, opened once, is not affected by this choice."
+     },
+     "comparisons": {
+      "fit.variant": {
+       "reference": "fit.linear",
+       "mae": {
+        "point": 0.028706715665814286,
+        "low": -0.04194178849329033,
+        "high": 0.09590339908292789
+       },
+       "rmse": {
+        "point": 0.08969855616630529,
+        "low": 0.021499179657065777,
+        "high": 0.15014827065407482
+       }
+      }
+     },
+     "evaluation": "validation"
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "MAE "
+      },
+      {
+       "text": "6.48",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.linear].mae",
+       "value": 6.476590382656274,
+       "format": "f2"
+      },
+      {
+       "text": " mpg for the linear model and "
+      },
+      {
+       "text": "10.27",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.baseline].mae",
+       "value": 10.268806306306304,
+       "format": "f2"
+      },
+      {
+       "text": " mpg for the mean baseline on "
+      },
+      {
+       "text": "96",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "n",
+       "value": 96,
+       "format": "int"
+      },
+      {
+       "text": " validation rows"
+      }
+     ]
+    },
+    "question_junior": null,
+    "texts": null
+   },
+   {
+    "result_id": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+    "activity": "diag.regression",
+    "slot": "diag.regression",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 96,
+    "params": {
+     "coefficients": {
+      "intervals": "wald_sandwich",
+      "level": 0.95
+     },
+     "evaluation": "validation",
+     "models": [
+      "fit.linear",
+      "fit.variant"
+     ],
+     "residual_columns": [
+      "origin",
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight"
+     ],
+     "segments": [
+      "origin"
+     ]
+    },
+    "upstream": {
+     "fit.linear": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "fit.variant": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [],
+    "created": "2026-10-27T23:50:35.889506+00:00",
+    "started_revision": 32,
+    "execution_id": "e_3d00c3aea34475b6aac5c90f",
+    "exposure_id": "x_e09a7c172e104ead8a5e2582e3078970",
+    "values": {
+     "question": "Where are the predictions off, by how much, and does the error grow with the prediction or differ across groups?",
+     "evidence": "development",
+     "purpose": "development_diagnostics",
+     "partition": "validation",
+     "evaluation": "validation",
+     "n": 96,
+     "target": "mpg",
+     "unit": "mpg",
+     "residual_columns": [
+      "origin",
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight"
+     ],
+     "residual_definition": "residual = observed minus predicted",
+     "target_transform": null,
+     "smearing": {
+      "applies": false,
+      "implemented": false,
+      "note": "The model predicts the target on its own scale (no transform of the target), so no retransformation correction such as Duan's smearing applies. Smearing is not implemented: a log-transformed target would need it."
+     },
+     "normality_note": "The quantile-quantile points compare the standardised residuals with a normal distribution. Normality is not needed for the mean error or the coefficients with this many rows (Lumley et al. 2002); it matters for prediction intervals, which this study does not give.",
+     "models": {
+      "fit.linear": {
+       "errors": {
+        "n": 96,
+        "mae": 6.476590382656274,
+        "rmse": 7.664419781686159,
+        "mean_residual": 6.394515464632113,
+        "median_abs_residual": 5.572351386623355,
+        "max_abs_residual": 18.45304785315237
+       },
+       "residuals": {
+        "n": 96,
+        "mean": 6.394515464632113,
+        "sd": 4.2475209438452115,
+        "min": -1.776599519158502,
+        "q05": 0.41185178765315067,
+        "q25": 3.261984922442746,
+        "median": 5.572351386623355,
+        "q75": 8.998533037532638,
+        "q95": 15.165754635580324,
+        "max": 18.45304785315237,
+        "skewness": 0.6429575078121351,
+        "excess_kurtosis": 0.29047454114475
+       },
+       "qq": {
+        "points": [
+         {
+          "probability": 0.01,
+          "theoretical": -2.3263478740408408,
+          "sample": -1.8957651965831102
+         },
+         {
+          "probability": 0.025,
+          "theoretical": -1.9599639845400545,
+          "sample": -1.5779437069425966
+         },
+         {
+          "probability": 0.05,
+          "theoretical": -1.6448536269514729,
+          "sample": -1.408507163607522
+         },
+         {
+          "probability": 0.1,
+          "theoretical": -1.2815515655446004,
+          "sample": -1.114919131267805
+         },
+         {
+          "probability": 0.15,
+          "theoretical": -1.0364333894937898,
+          "sample": -0.9606030567109114
+         },
+         {
+          "probability": 0.2,
+          "theoretical": -0.8416212335729142,
+          "sample": -0.8808533955114891
+         },
+         {
+          "probability": 0.25,
+          "theoretical": -0.6744897501960817,
+          "sample": -0.7374961968647854
+         },
+         {
+          "probability": 0.3,
+          "theoretical": -0.5244005127080409,
+          "sample": -0.5489536026069588
+         },
+         {
+          "probability": 0.35,
+          "theoretical": -0.38532046640756773,
+          "sample": -0.4457958410005082
+         },
+         {
+          "probability": 0.4,
+          "theoretical": -0.2533471031357997,
+          "sample": -0.32033256555019085
+         },
+         {
+          "probability": 0.45,
+          "theoretical": -0.12566134685507402,
+          "sample": -0.26208190879316434
+         },
+         {
+          "probability": 0.5,
+          "theoretical": 0.0,
+          "sample": -0.19356327817526114
+         },
+         {
+          "probability": 0.55,
+          "theoretical": 0.12566134685507416,
+          "sample": -0.021228425109221207
+         },
+         {
+          "probability": 0.6,
+          "theoretical": 0.2533471031357997,
+          "sample": 0.08277227313934195
+         },
+         {
+          "probability": 0.65,
+          "theoretical": 0.38532046640756773,
+          "sample": 0.39677611520114725
+         },
+         {
+          "probability": 0.7,
+          "theoretical": 0.5244005127080407,
+          "sample": 0.5158861184101841
+         },
+         {
+          "probability": 0.75,
+          "theoretical": 0.6744897501960817,
+          "sample": 0.6130676239922552
+         },
+         {
+          "probability": 0.8,
+          "theoretical": 0.8416212335729143,
+          "sample": 0.6614777342346928
+         },
+         {
+          "probability": 0.85,
+          "theoretical": 1.0364333894937898,
+          "sample": 0.8602012426065027
+         },
+         {
+          "probability": 0.9,
+          "theoretical": 1.2815515655446004,
+          "sample": 1.1848230218224245
+         },
+         {
+          "probability": 0.95,
+          "theoretical": 1.6448536269514722,
+          "sample": 2.065025525926601
+         },
+         {
+          "probability": 0.975,
+          "theoretical": 1.959963984540054,
+          "sample": 2.4231030909261086
+         },
+         {
+          "probability": 0.99,
+          "theoretical": 2.3263478740408408,
+          "sample": 2.4794668968927986
+         }
+        ],
+        "definition": "Quantiles of the residuals standardised by their mean and standard deviation, against the same quantiles of a normal distribution: on a straight diagonal line when the residuals are normal."
+       },
+       "by_prediction": {
+        "binning": "10 equal-count bins of the prediction, in prediction order",
+        "bins": [
+         {
+          "bin": 1,
+          "n": 10,
+          "prediction_min": 13.257454402641573,
+          "prediction_max": 19.376599519158503,
+          "mean_prediction": 16.98198679474249,
+          "mean_observed": 19.639999999999997,
+          "mean_residual": 2.658013205257511,
+          "sd_residual": 3.1833616587329923,
+          "mae": 3.0133331090892113
+         },
+         {
+          "bin": 2,
+          "n": 10,
+          "prediction_min": 19.51086870068749,
+          "prediction_max": 21.477034838570432,
+          "mean_prediction": 20.639159989686867,
+          "mean_observed": 23.0,
+          "mean_residual": 2.360840010313132,
+          "sd_residual": 2.584435857275363,
+          "mae": 2.7934393195133773
+         },
+         {
+          "bin": 3,
+          "n": 9,
+          "prediction_min": 21.49584400531875,
+          "prediction_max": 22.010882533759986,
+          "mean_prediction": 21.81671921906619,
+          "mean_observed": 27.822222222222223,
+          "mean_residual": 6.005503003156036,
+          "sd_residual": 4.9069634137409,
+          "mae": 6.005503003156036
+         },
+         {
+          "bin": 4,
+          "n": 10,
+          "prediction_min": 22.10228572101689,
+          "prediction_max": 22.998897906397872,
+          "mean_prediction": 22.644270353491983,
+          "mean_observed": 28.829999999999995,
+          "mean_residual": 6.185729646508017,
+          "sd_residual": 3.621649877260466,
+          "mae": 6.185729646508017
+         },
+         {
+          "bin": 5,
+          "n": 9,
+          "prediction_min": 23.04602378344402,
+          "prediction_max": 23.519896073762222,
+          "mean_prediction": 23.296821574847595,
+          "mean_observed": 28.144444444444446,
+          "mean_residual": 4.847622869596847,
+          "sd_residual": 2.4323013617635,
+          "mae": 4.847622869596847
+         },
+         {
+          "bin": 6,
+          "n": 10,
+          "prediction_min": 23.779036362983977,
+          "prediction_max": 24.922388740361114,
+          "mean_prediction": 24.47474598014515,
+          "mean_observed": 31.65,
+          "mean_residual": 7.17525401985485,
+          "sd_residual": 2.4382708835194125,
+          "mae": 7.17525401985485
+         },
+         {
+          "bin": 7,
+          "n": 10,
+          "prediction_min": 25.60977709754618,
+          "prediction_max": 26.588042628880398,
+          "mean_prediction": 26.116643499318048,
+          "mean_observed": 35.58,
+          "mean_residual": 9.463356500681954,
+          "sd_residual": 3.290885656570964,
+          "mae": 9.463356500681954
+         },
+         {
+          "bin": 8,
+          "n": 9,
+          "prediction_min": 26.83643855297099,
+          "prediction_max": 27.46533526308448,
+          "mean_prediction": 27.23013769711095,
+          "mean_observed": 36.7,
+          "mean_residual": 9.469862302889046,
+          "sd_residual": 4.714983546668312,
+          "mae": 9.469862302889046
+         },
+         {
+          "bin": 9,
+          "n": 10,
+          "prediction_min": 27.47242519980405,
+          "prediction_max": 28.56283664886654,
+          "mean_prediction": 28.166790494753066,
+          "mean_observed": 36.28,
+          "mean_residual": 8.113209505246934,
+          "sd_residual": 4.625677906558858,
+          "mae": 8.113209505246934
+         },
+         {
+          "bin": 10,
+          "n": 9,
+          "prediction_min": 28.632086802595218,
+          "prediction_max": 29.9511510407215,
+          "mean_prediction": 28.944159761635376,
+          "mean_observed": 36.87777777777777,
+          "mean_residual": 7.933618016142402,
+          "sd_residual": 3.894133994535869,
+          "mae": 7.933618016142402
+         }
+        ]
+       },
+       "heteroscedasticity": {
+        "abs_residual_prediction_correlation": 0.5177988259620996,
+        "spread_ratio_top_bottom": 1.1112096866456798,
+        "flag": true,
+        "rule": "Flagged when the rank correlation of the absolute residual with the prediction is at least 0.2 in size, or the residual standard deviation of the top third of the predictions is more than 1.5 times (or less than 1/1.5 of) that of the bottom third",
+        "meaning": "An error that grows with the prediction makes one interval width wrong for every row; the mean error stays a fair summary."
+       },
+       "by_feature": [
+        {
+         "column": "origin",
+         "binned": false,
+         "binning": null,
+         "groups": [
+          {
+           "value": "1",
+           "n": 49,
+           "mean_residual": 4.551752865958009,
+           "mae": 4.712552705352283,
+           "small_cell": false
+          },
+          {
+           "value": "2",
+           "n": 16,
+           "mean_residual": 9.99944330733949,
+           "mae": 9.99944330733949,
+           "small_cell": true
+          },
+          {
+           "value": "3",
+           "n": 31,
+           "mean_residual": 7.4466613308164105,
+           "mae": 7.4466613308164105,
+           "small_cell": false
+          }
+         ]
+        },
+        {
+         "column": "cylinders",
+         "binned": false,
+         "binning": null,
+         "groups": [
+          {
+           "value": "4",
+           "n": 71,
+           "mean_residual": 7.1991010263789175,
+           "mae": 7.1991010263789175,
+           "small_cell": false
+          },
+          {
+           "value": "5",
+           "n": 2,
+           "mean_residual": 9.412749712229553,
+           "mae": 9.412749712229553,
+           "small_cell": true
+          },
+          {
+           "value": "6",
+           "n": 16,
+           "mean_residual": 3.7850495488990625,
+           "mae": 4.277499057044028,
+           "small_cell": true
+          },
+          {
+           "value": "8",
+           "n": 7,
+           "mean_residual": 3.3358599321336664,
+           "mae": 3.3358599321336664,
+           "small_cell": true
+          }
+         ]
+        },
+        {
+         "column": "displacement",
+         "binned": true,
+         "binning": "5 quantile bins of the rows shown",
+         "groups": [
+          {
+           "value": "(78.999, 97.0]",
+           "n": 23,
+           "mean_residual": 9.318892528112679,
+           "mae": 9.318892528112679,
+           "small_cell": true
+          },
+          {
+           "value": "(97.0, 112.0]",
+           "n": 17,
+           "mean_residual": 7.551953529285085,
+           "mae": 7.551953529285085,
+           "small_cell": true
+          },
+          {
+           "value": "(112.0, 140.0]",
+           "n": 19,
+           "mean_residual": 6.033709225576352,
+           "mae": 6.033709225576352,
+           "small_cell": true
+          },
+          {
+           "value": "(140.0, 173.0]",
+           "n": 20,
+           "mean_residual": 5.211174459838866,
+           "mae": 5.211174459838866,
+           "small_cell": true
+          },
+          {
+           "value": "(173.0, 351.0]",
+           "n": 17,
+           "mean_residual": 3.075987175148054,
+           "mae": 3.5394690651668452,
+           "small_cell": true
+          }
+         ]
+        },
+        {
+         "column": "horsepower",
+         "binned": true,
+         "binning": "5 quantile bins of the rows shown",
+         "groups": [
+          {
+           "value": "(47.999, 67.0]",
+           "n": 20,
+           "mean_residual": 9.898862472873168,
+           "mae": 9.898862472873168,
+           "small_cell": true
+          },
+          {
+           "value": "(67.0, 76.0]",
+           "n": 18,
+           "mean_residual": 6.912332121643368,
+           "mae": 6.912332121643368,
+           "small_cell": true
+          },
+          {
+           "value": "(76.0, 87.2]",
+           "n": 17,
+           "mean_residual": 5.629125497123316,
+           "mae": 6.032435277892373,
+           "small_cell": true
+          },
+          {
+           "value": "(87.2, 99.2]",
+           "n": 18,
+           "mean_residual": 5.0245958487487075,
+           "mae": 5.081425063040124,
+           "small_cell": true
+          },
+          {
+           "value": "(99.2, 155.0]",
+           "n": 19,
+           "mean_residual": 4.004817890581632,
+           "mae": 4.004817890581632,
+           "small_cell": true
+          },
+          {
+           "value": "(missing)",
+           "n": 4,
+           "mean_residual": 7.311214577003724,
+           "mae": 7.311214577003724,
+           "small_cell": true
+          }
+         ]
+        },
+        {
+         "column": "weight",
+         "binned": true,
+         "binning": "5 quantile bins of the rows shown",
+         "groups": [
+          {
+           "value": "(1754.999, 2085.0]",
+           "n": 20,
+           "mean_residual": 8.515288210043412,
+           "mae": 8.515288210043412,
+           "small_cell": true
+          },
+          {
+           "value": "(2085.0, 2385.0]",
+           "n": 19,
+           "mean_residual": 8.823675868118913,
+           "mae": 8.823675868118913,
+           "small_cell": true
+          },
+          {
+           "value": "(2385.0, 2670.0]",
+           "n": 20,
+           "mean_residual": 6.08823107887074,
+           "mae": 6.08823107887074,
+           "small_cell": true
+          },
+          {
+           "value": "(2670.0, 3015.0]",
+           "n": 18,
+           "mean_residual": 4.946704238175383,
+           "mae": 5.130207973439658,
+           "small_cell": true
+          },
+          {
+           "value": "(3015.0, 4360.0]",
+           "n": 19,
+           "mean_residual": 3.426977949735986,
+           "mae": 3.667826628449801,
+           "small_cell": true
+          }
+         ]
+        }
+       ],
+       "scatter": {
+        "n_rows": 96,
+        "n_shown": 96,
+        "sampling": "every row",
+        "points": [
+         {
+          "row_key": "L290",
+          "prediction": 13.257454402641573,
+          "observed": 16.9,
+          "residual": 3.642545597358426
+         },
+         {
+          "row_key": "L291",
+          "prediction": 15.047236771875804,
+          "observed": 15.5,
+          "residual": 0.452763228124196
+         },
+         {
+          "row_key": "L286",
+          "prediction": 16.206482277958152,
+          "observed": 17.0,
+          "residual": 0.7935177220418481
+         },
+         {
+          "row_key": "L299",
+          "prediction": 16.253907571638855,
+          "observed": 23.0,
+          "residual": 6.746092428361145
+         },
+         {
+          "row_key": "L287",
+          "prediction": 16.75034960819252,
+          "observed": 17.6,
+          "residual": 0.8496503918074829
+         },
+         {
+          "row_key": "L292",
+          "prediction": 17.283744474561672,
+          "observed": 19.2,
+          "residual": 1.9162555254383271
+         },
+         {
+          "row_key": "L365",
+          "prediction": 17.64980536819576,
+          "observed": 26.6,
+          "residual": 8.95019463180424
+         },
+         {
+          "row_key": "L364",
+          "prediction": 18.882971586018563,
+          "observed": 22.4,
+          "residual": 3.5170284139814356
+         },
+         {
+          "row_key": "L285",
+          "prediction": 19.11131636718349,
+          "observed": 20.6,
+          "residual": 1.4886836328165103
+         },
+         {
+          "row_key": "L367",
+          "prediction": 19.376599519158503,
+          "observed": 17.6,
+          "residual": -1.776599519158502
+         },
+         {
+          "row_key": "L281",
+          "prediction": 19.51086870068749,
+          "observed": 21.5,
+          "residual": 1.9891312993125112
+         },
+         {
+          "row_key": "L317",
+          "prediction": 19.611462928622746,
+          "observed": 19.1,
+          "residual": -0.5114629286227448
+         },
+         {
+          "row_key": "L298",
+          "prediction": 20.13177967845363,
+          "observed": 25.4,
+          "residual": 5.268220321546369
+         },
+         {
+          "row_key": "L284",
+          "prediction": 20.1684510624696,
+          "observed": 20.2,
+          "residual": 0.031548937530399
+         },
+         {
+          "row_key": "L375",
+          "prediction": 20.593060176086652,
+          "observed": 23.0,
+          "residual": 2.4069398239133477
+         },
+         {
+          "row_key": "L387",
+          "prediction": 20.839163288292834,
+          "observed": 25.0,
+          "residual": 4.160836711707166
+         },
+         {
+          "row_key": "L337",
+          "prediction": 21.144988589638675,
+          "observed": 23.6,
+          "residual": 2.455011410361326
+         },
+         {
+          "row_key": "L282",
+          "prediction": 21.45153361737848,
+          "observed": 19.8,
+          "residual": -1.6515336173784796
+         },
+         {
+          "row_key": "L360",
+          "prediction": 21.46325701666814,
+          "observed": 28.1,
+          "residual": 6.63674298333186
+         },
+         {
+          "row_key": "L316",
+          "prediction": 21.477034838570432,
+          "observed": 24.3,
+          "residual": 2.8229651614295683
+         },
+         {
+          "row_key": "L361",
+          "prediction": 21.49584400531875,
+          "observed": 30.7,
+          "residual": 9.204155994681248
+         },
+         {
+          "row_key": "L388",
+          "prediction": 21.575090799153415,
+          "observed": 38.0,
+          "residual": 16.424909200846585
+         },
+         {
+          "row_key": "L329",
+          "prediction": 21.778510089475883,
+          "observed": 30.0,
+          "residual": 8.221489910524117
+         },
+         {
+          "row_key": "L308",
+          "prediction": 21.779137043453076,
+          "observed": 26.8,
+          "residual": 5.0208629565469245
+         },
+         {
+          "row_key": "L342",
+          "prediction": 21.8139130363967,
+          "observed": 23.5,
+          "residual": 1.6860869636033016
+         },
+         {
+          "row_key": "L300",
+          "prediction": 21.9143173498085,
+          "observed": 27.2,
+          "residual": 5.2856826501915
+         },
+         {
+          "row_key": "L324",
+          "prediction": 21.976865578010045,
+          "observed": 27.9,
+          "residual": 5.923134421989953
+         },
+         {
+          "row_key": "L374",
+          "prediction": 22.005912536219316,
+          "observed": 24.0,
+          "residual": 1.9940874637806836
+         },
+         {
+          "row_key": "L283",
+          "prediction": 22.010882533759986,
+          "observed": 22.3,
+          "residual": 0.28911746624001466
+         },
+         {
+          "row_key": "L315",
+          "prediction": 22.10228572101689,
+          "observed": 26.4,
+          "residual": 4.297714278983108
+         },
+         {
+          "row_key": "L307",
+          "prediction": 22.25900377655182,
+          "observed": 28.8,
+          "residual": 6.540996223448182
+         },
+         {
+          "row_key": "L334",
+          "prediction": 22.386456605503696,
+          "observed": 32.7,
+          "residual": 10.313543394496307
+         },
+         {
+          "row_key": "L394",
+          "prediction": 22.527510460850404,
+          "observed": 27.0,
+          "residual": 4.472489539149596
+         },
+         {
+          "row_key": "L363",
+          "prediction": 22.568340755846496,
+          "observed": 24.2,
+          "residual": 1.6316592441535036
+         },
+         {
+          "row_key": "L328",
+          "prediction": 22.84272089708726,
+          "observed": 36.4,
+          "residual": 13.557279102912737
+         },
+         {
+          "row_key": "L398",
+          "prediction": 22.886096654590926,
+          "observed": 31.0,
+          "residual": 8.113903345409074
+         },
+         {
+          "row_key": "L362",
+          "prediction": 22.90905412557935,
+          "observed": 25.4,
+          "residual": 2.4909458744206496
+         },
+         {
+          "row_key": "L314",
+          "prediction": 22.962336631495113,
+          "observed": 28.0,
+          "residual": 5.037663368504887
+         },
+         {
+          "row_key": "L306",
+          "prediction": 22.998897906397872,
+          "observed": 28.4,
+          "residual": 5.401102093602127
+         },
+         {
+          "row_key": "L369",
+          "prediction": 23.04602378344402,
+          "observed": 27.0,
+          "residual": 3.9539762165559793
+         },
+         {
+          "row_key": "L297",
+          "prediction": 23.1818879414696,
+          "observed": 27.4,
+          "residual": 4.218112058530398
+         },
+         {
+          "row_key": "L341",
+          "prediction": 23.186972203560526,
+          "observed": 25.8,
+          "residual": 2.613027796439475
+         },
+         {
+          "row_key": "L368",
+          "prediction": 23.205979361143605,
+          "observed": 28.0,
+          "residual": 4.794020638856395
+         },
+         {
+          "row_key": "L340",
+          "prediction": 23.337689456515154,
+          "observed": 26.6,
+          "residual": 3.2623105434848476
+         },
+         {
+          "row_key": "L389",
+          "prediction": 23.346927781260106,
+          "observed": 26.0,
+          "residual": 2.6530722187398936
+         },
+         {
+          "row_key": "L397",
+          "prediction": 23.413515444235326,
+          "observed": 28.0,
+          "residual": 4.586484555764674
+         },
+         {
+          "row_key": "L371",
+          "prediction": 23.432502128237807,
+          "observed": 31.0,
+          "residual": 7.567497871762193
+         },
+         {
+          "row_key": "L309",
+          "prediction": 23.519896073762222,
+          "observed": 33.5,
+          "residual": 9.980103926237778
+         },
+         {
+          "row_key": "L372",
+          "prediction": 23.779036362983977,
+          "observed": 29.0,
+          "residual": 5.220963637016023
+         },
+         {
+          "row_key": "L339",
+          "prediction": 23.938991940683557,
+          "observed": 27.2,
+          "residual": 3.261008059316442
+         },
+         {
+          "row_key": "L370",
+          "prediction": 24.16571282734109,
+          "observed": 34.0,
+          "residual": 9.834287172658911
+         },
+         {
+          "row_key": "L343",
+          "prediction": 24.4188586737823,
+          "observed": 30.0,
+          "residual": 5.5811413262177005
+         },
+         {
+          "row_key": "L355",
+          "prediction": 24.42905029737938,
+          "observed": 34.5,
+          "residual": 10.07094970262062
+         },
+         {
+          "row_key": "L336",
+          "prediction": 24.488147772981584,
+          "observed": 35.0,
+          "residual": 10.511852227018416
+         },
+         {
+          "row_key": "L396",
+          "prediction": 24.830173016438366,
+          "observed": 32.0,
+          "residual": 7.169826983561634
+         },
+         {
+          "row_key": "L353",
+          "prediction": 24.86610381653799,
+          "observed": 29.9,
+          "residual": 5.033896183462009
+         },
+         {
+          "row_key": "L391",
+          "prediction": 24.908996352962134,
+          "observed": 32.0,
+          "residual": 7.091003647037866
+         },
+         {
+          "row_key": "L358",
+          "prediction": 24.922388740361114,
+          "observed": 32.9,
+          "residual": 7.977611259638884
+         },
+         {
+          "row_key": "L359",
+          "prediction": 25.60977709754618,
+          "observed": 31.6,
+          "residual": 5.990222902453823
+         },
+         {
+          "row_key": "L303",
+          "prediction": 25.795060140734442,
+          "observed": 34.5,
+          "residual": 8.704939859265558
+         },
+         {
+          "row_key": "L380",
+          "prediction": 25.882464477048757,
+          "observed": 36.0,
+          "residual": 10.117535522951243
+         },
+         {
+          "row_key": "L321",
+          "prediction": 25.988035548259692,
+          "observed": 37.0,
+          "residual": 11.011964451740308
+         },
+         {
+          "row_key": "L320",
+          "prediction": 26.004995922887826,
+          "observed": 31.3,
+          "residual": 5.295004077112175
+         },
+         {
+          "row_key": "L318",
+          "prediction": 26.1162058490873,
+          "observed": 34.3,
+          "residual": 8.183794150912696
+         },
+         {
+          "row_key": "L354",
+          "prediction": 26.256974823695483,
+          "observed": 33.0,
+          "residual": 6.743025176304517
+         },
+         {
+          "row_key": "L310",
+          "prediction": 26.380740515823646,
+          "observed": 41.5,
+          "residual": 15.119259484176354
+         },
+         {
+          "row_key": "L296",
+          "prediction": 26.54413798921674,
+          "observed": 35.7,
+          "residual": 9.155862010783263
+         },
+         {
+          "row_key": "L331",
+          "prediction": 26.588042628880398,
+          "observed": 40.9,
+          "residual": 14.3119573711196
+         },
+         {
+          "row_key": "L357",
+          "prediction": 26.83643855297099,
+          "observed": 32.4,
+          "residual": 5.563561447029009
+         },
+         {
+          "row_key": "L395",
+          "prediction": 27.156230972609023,
+          "observed": 44.0,
+          "residual": 16.843769027390977
+         },
+         {
+          "row_key": "L345",
+          "prediction": 27.15781232259464,
+          "observed": 39.0,
+          "residual": 11.84218767740536
+         },
+         {
+          "row_key": "L338",
+          "prediction": 27.19623043698529,
+          "observed": 32.4,
+          "residual": 5.20376956301471
+         },
+         {
+          "row_key": "L376",
+          "prediction": 27.216708289892967,
+          "observed": 36.0,
+          "residual": 8.783291710107033
+         },
+         {
+          "row_key": "L322",
+          "prediction": 27.224902098812827,
+          "observed": 32.2,
+          "residual": 4.975097901187176
+         },
+         {
+          "row_key": "L381",
+          "prediction": 27.363318859256324,
+          "observed": 36.0,
+          "residual": 8.636681140743676
+         },
+         {
+          "row_key": "L326",
+          "prediction": 27.454262477792042,
+          "observed": 44.3,
+          "residual": 16.845737522207955
+         },
+         {
+          "row_key": "L383",
+          "prediction": 27.46533526308448,
+          "observed": 34.0,
+          "residual": 6.53466473691552
+         },
+         {
+          "row_key": "L356",
+          "prediction": 27.47242519980405,
+          "observed": 33.7,
+          "residual": 6.227574800195953
+         },
+         {
+          "row_key": "L294",
+          "prediction": 27.49611441761416,
+          "observed": 31.9,
+          "residual": 4.40388558238584
+         },
+         {
+          "row_key": "L332",
+          "prediction": 27.96957688196,
+          "observed": 33.8,
+          "residual": 5.830423118039999
+         },
+         {
+          "row_key": "L325",
+          "prediction": 28.14311648288237,
+          "observed": 40.8,
+          "residual": 12.656883517117627
+         },
+         {
+          "row_key": "L323",
+          "prediction": 28.14695214684763,
+          "observed": 46.6,
+          "residual": 18.45304785315237
+         },
+         {
+          "row_key": "L347",
+          "prediction": 28.335189630987614,
+          "observed": 32.3,
+          "residual": 3.9648103690123833
+         },
+         {
+          "row_key": "L377",
+          "prediction": 28.465176026306914,
+          "observed": 37.0,
+          "residual": 8.534823973693086
+         },
+         {
+          "row_key": "L349",
+          "prediction": 28.522086686722965,
+          "observed": 37.7,
+          "residual": 9.177913313277038
+         },
+         {
+          "row_key": "L304",
+          "prediction": 28.554430825538432,
+          "observed": 31.8,
+          "residual": 3.2455691744615685
+         },
+         {
+          "row_key": "L313",
+          "prediction": 28.56283664886654,
+          "observed": 37.2,
+          "residual": 8.637163351133463
+         },
+         {
+          "row_key": "L386",
+          "prediction": 28.632086802595218,
+          "observed": 38.0,
+          "residual": 9.367913197404782
+         },
+         {
+          "row_key": "L350",
+          "prediction": 28.64798240082072,
+          "observed": 34.1,
+          "residual": 5.452017599179282
+         },
+         {
+          "row_key": "L378",
+          "prediction": 28.7165347912634,
+          "observed": 31.0,
+          "residual": 2.283465208736601
+         },
+         {
+          "row_key": "L348",
+          "prediction": 28.760087996866467,
+          "observed": 37.0,
+          "residual": 8.239912003133533
+         },
+         {
+          "row_key": "L384",
+          "prediction": 28.769191583480573,
+          "observed": 38.0,
+          "residual": 9.230808416519427
+         },
+         {
+          "row_key": "L385",
+          "prediction": 28.769191583480573,
+          "observed": 32.0,
+          "residual": 3.2308084165194266
+         },
+         {
+          "row_key": "L311",
+          "prediction": 28.95645174528217,
+          "observed": 38.1,
+          "residual": 9.143548254717832
+         },
+         {
+          "row_key": "L330",
+          "prediction": 29.294759910207766,
+          "observed": 44.6,
+          "residual": 15.305240089792235
+         },
+         {
+          "row_key": "L344",
+          "prediction": 29.9511510407215,
+          "observed": 39.1,
+          "residual": 9.148848959278503
+         }
+        ]
+       },
+       "examples": {
+        "largest_errors": [
+         {
+          "row_key": "L323",
+          "observed": 46.6,
+          "prediction": 28.14695214684763,
+          "residual": 18.45304785315237,
+          "values": {
+           "cylinders": "4",
+           "displacement": "86",
+           "horsepower": "65",
+           "weight": "2110",
+           "origin": "3"
+          }
+         },
+         {
+          "row_key": "L326",
+          "observed": 44.3,
+          "prediction": 27.454262477792042,
+          "residual": 16.845737522207955,
+          "values": {
+           "cylinders": "4",
+           "displacement": "90",
+           "horsepower": "48",
+           "weight": "2085",
+           "origin": "2"
+          }
+         },
+         {
+          "row_key": "L395",
+          "observed": 44.0,
+          "prediction": 27.156230972609023,
+          "residual": 16.843769027390977,
+          "values": {
+           "cylinders": "4",
+           "displacement": "97",
+           "horsepower": "52",
+           "weight": "2130",
+           "origin": "2"
+          }
+         },
+         {
+          "row_key": "L388",
+          "observed": 38.0,
+          "prediction": 21.575090799153415,
+          "residual": 16.424909200846585,
+          "values": {
+           "cylinders": "6",
+           "displacement": "262",
+           "horsepower": "85",
+           "weight": "3015",
+           "origin": "1"
+          }
+         },
+         {
+          "row_key": "L330",
+          "observed": 44.6,
+          "prediction": 29.294759910207766,
+          "residual": 15.305240089792235,
+          "values": {
+           "cylinders": "4",
+           "displacement": "91",
+           "horsepower": "67",
+           "weight": "1850",
+           "origin": "3"
+          }
+         }
+        ],
+        "features": [
+         "cylinders",
+         "displacement",
+         "horsepower",
+         "weight",
+         "origin"
+        ],
+        "note": "The rows with the largest absolute residuals, with the feature values as written in the file."
+       },
+       "coefficients": {
+        "terms": [
+         {
+          "term": "num__weight",
+          "value": -4.061984545313062,
+          "low": -4.975802987169089,
+          "high": -3.148166103457031,
+          "std_error": 0.46624246622086557,
+          "excludes_zero": true,
+          "inside_interval": true
+         },
+         {
+          "term": "num__horsepower",
+          "value": -1.1866635219111468,
+          "low": -2.3031650030845583,
+          "high": -0.07016204073773946,
+          "std_error": 0.5696540803709819,
+          "excludes_zero": true,
+          "inside_interval": true
+         },
+         {
+          "term": "cat__origin_3",
+          "value": 1.1406405002541518,
+          "low": 0.0008203333440128802,
+          "high": 2.2804606671642897,
+          "std_error": 0.5815515876316579,
+          "excludes_zero": true,
+          "inside_interval": true
+         },
+         {
+          "term": "cat__origin_1",
+          "value": -0.9522927696704008,
+          "low": -1.7871619188214076,
+          "high": -0.11742362051939081,
+          "std_error": 0.4259614746680806,
+          "excludes_zero": true,
+          "inside_interval": true
+         },
+         {
+          "term": "num__displacement",
+          "value": 0.41888510741149876,
+          "low": -1.3255373866643845,
+          "high": 2.1633076014873778,
+          "std_error": 0.8900278310395822,
+          "excludes_zero": false,
+          "inside_interval": true
+         },
+         {
+          "term": "num__cylinders",
+          "value": -0.37022387198762724,
+          "low": -1.3849745497064594,
+          "high": 0.644526805731213,
+          "std_error": 0.517739451195563,
+          "excludes_zero": false,
+          "inside_interval": true
+         },
+         {
+          "term": "cat__origin_2",
+          "value": -0.1883477305837519,
+          "low": -1.1806996206798284,
+          "high": 0.8040041595123248,
+          "std_error": 0.5063112883316336,
+          "excludes_zero": false,
+          "inside_interval": true
+         },
+         {
+          "term": "num__horsepower=?",
+          "value": -0.04154318702939566,
+          "low": -0.13700034795827704,
+          "high": 0.053913973899486545,
+          "std_error": 0.0487035280657378,
+          "excludes_zero": false,
+          "inside_interval": true
+         }
+        ],
+        "n_rows": 222,
+        "level": 0.95,
+        "penalty": 0.0,
+        "point_check": {
+         "consistent": true,
+         "max_difference": 3.9968028886505635e-15,
+         "tolerance": 0.0001,
+         "misaligned_terms": [],
+         "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
+        },
+        "method": "Wald intervals, estimate +- z * standard error, from the sandwich covariance H^-1 B H^-1 of the fit on every prepared row (H the penalised information, B the spread of the row scores): the delta-method approximation of a nonparametric bootstrap",
+        "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
+        "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
+       },
+       "predictions": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f"
+      },
+      "fit.variant": {
+       "errors": {
+        "n": 96,
+        "mae": 6.505297098322088,
+        "rmse": 7.754118337852464,
+        "mean_residual": 6.409752295558562,
+        "median_abs_residual": 5.673693089740421,
+        "max_abs_residual": 18.794732120875594
+       },
+       "residuals": {
+        "n": 96,
+        "mean": 6.409752295558562,
+        "sd": 4.386554773122254,
+        "min": -2.0154747653481238,
+        "q05": 0.4804557357102279,
+        "q25": 3.3901253743852857,
+        "median": 5.673693089740421,
+        "q75": 9.178199377862295,
+        "q95": 15.431844902403551,
+        "max": 18.794732120875594,
+        "skewness": 0.6420064328470629,
+        "excess_kurtosis": 0.23413391825410423
+       },
+       "qq": {
+        "points": [
+         {
+          "probability": 0.01,
+          "theoretical": -2.3263478740408408,
+          "sample": -1.8365157117094544
+         },
+         {
+          "probability": 0.025,
+          "theoretical": -1.9599639845400545,
+          "sample": -1.5809786617520245
+         },
+         {
+          "probability": 0.05,
+          "theoretical": -1.6448536269514729,
+          "sample": -1.351697828140418
+         },
+         {
+          "probability": 0.1,
+          "theoretical": -1.2815515655446004,
+          "sample": -1.1090584136561648
+         },
+         {
+          "probability": 0.15,
+          "theoretical": -1.0364333894937898,
+          "sample": -1.0257563255943773
+         },
+         {
+          "probability": 0.2,
+          "theoretical": -0.8416212335729142,
+          "sample": -0.8423317519292246
+         },
+         {
+          "probability": 0.25,
+          "theoretical": -0.6744897501960817,
+          "sample": -0.6883823586737006
+         },
+         {
+          "probability": 0.3,
+          "theoretical": -0.5244005127080409,
+          "sample": -0.6029100416875013
+         },
+         {
+          "probability": 0.35,
+          "theoretical": -0.38532046640756773,
+          "sample": -0.47359114481481007
+         },
+         {
+          "probability": 0.4,
+          "theoretical": -0.2533471031357997,
+          "sample": -0.37128210831610475
+         },
+         {
+          "probability": 0.45,
+          "theoretical": -0.12566134685507402,
+          "sample": -0.25999821421558644
+         },
+         {
+          "probability": 0.5,
+          "theoretical": 0.0,
+          "sample": -0.16779893193815737
+         },
+         {
+          "probability": 0.55,
+          "theoretical": 0.12566134685507416,
+          "sample": -0.02118516551994612
+         },
+         {
+          "probability": 0.6,
+          "theoretical": 0.2533471031357997,
+          "sample": 0.1601452351741235
+         },
+         {
+          "probability": 0.65,
+          "theoretical": 0.38532046640756773,
+          "sample": 0.2876231728768571
+         },
+         {
+          "probability": 0.7,
+          "theoretical": 0.5244005127080407,
+          "sample": 0.54600446036359
+         },
+         {
+          "probability": 0.75,
+          "theoretical": 0.6744897501960817,
+          "sample": 0.6311210563850347
+         },
+         {
+          "probability": 0.8,
+          "theoretical": 0.8416212335729143,
+          "sample": 0.7425540148423077
+         },
+         {
+          "probability": 0.85,
+          "theoretical": 1.0364333894937898,
+          "sample": 0.8039774802706163
+         },
+         {
+          "probability": 0.9,
+          "theoretical": 1.2815515655446004,
+          "sample": 1.1770941754398845
+         },
+         {
+          "probability": 0.95,
+          "theoretical": 1.6448536269514722,
+          "sample": 2.0567605041947896
+         },
+         {
+          "probability": 0.975,
+          "theoretical": 1.959963984540054,
+          "sample": 2.4194653973539264
+         },
+         {
+          "probability": 0.99,
+          "theoretical": 2.3263478740408408,
+          "sample": 2.4524425665454896
+         }
+        ],
+        "definition": "Quantiles of the residuals standardised by their mean and standard deviation, against the same quantiles of a normal distribution: on a straight diagonal line when the residuals are normal."
+       },
+       "by_prediction": {
+        "binning": "10 equal-count bins of the prediction, in prediction order",
+        "bins": [
+         {
+          "bin": 1,
+          "n": 10,
+          "prediction_min": 13.434255563567898,
+          "prediction_max": 19.590374460140875,
+          "mean_prediction": 16.92783113950413,
+          "mean_observed": 20.03,
+          "mean_residual": 3.1021688604958717,
+          "sd_residual": 2.982977168688125,
+          "mae": 3.1021688604958717
+         },
+         {
+          "bin": 2,
+          "n": 10,
+          "prediction_min": 19.615474765348125,
+          "prediction_max": 21.794965415470617,
+          "mean_prediction": 20.846031684611113,
+          "mean_observed": 23.85,
+          "mean_residual": 3.003968315388885,
+          "sd_residual": 5.52006764335324,
+          "mae": 3.8694934173763507
+         },
+         {
+          "bin": 3,
+          "n": 9,
+          "prediction_min": 21.79658803997293,
+          "prediction_max": 22.430938067136996,
+          "mean_prediction": 22.137103135680118,
+          "mean_observed": 28.133333333333333,
+          "mean_residual": 5.996230197653215,
+          "sd_residual": 2.8795862155031067,
+          "mae": 5.996230197653215
+         },
+         {
+          "bin": 4,
+          "n": 10,
+          "prediction_min": 22.54308479631743,
+          "prediction_max": 23.352812118016594,
+          "mean_prediction": 22.895969152144424,
+          "mean_observed": 26.79,
+          "mean_residual": 3.8940308478555736,
+          "sd_residual": 3.6672878132356317,
+          "mae": 3.9457358523979638
+         },
+         {
+          "bin": 5,
+          "n": 9,
+          "prediction_min": 23.416382333811317,
+          "prediction_max": 23.8877618586956,
+          "mean_prediction": 23.635344765404824,
+          "mean_observed": 28.72222222222222,
+          "mean_residual": 5.0868774568174,
+          "sd_residual": 2.4900325817721587,
+          "mae": 5.0868774568174
+         },
+         {
+          "bin": 6,
+          "n": 10,
+          "prediction_min": 23.994235486644264,
+          "prediction_max": 25.172968760151043,
+          "mean_prediction": 24.581711344053776,
+          "mean_observed": 31.65,
+          "mean_residual": 7.068288655946226,
+          "sd_residual": 2.4711152354092527,
+          "mae": 7.068288655946226
+         },
+         {
+          "bin": 7,
+          "n": 10,
+          "prediction_min": 25.539361926903716,
+          "prediction_max": 26.446543001845193,
+          "mean_prediction": 26.01178599728315,
+          "mean_observed": 35.58,
+          "mean_residual": 9.568214002716847,
+          "sd_residual": 3.3197630020556317,
+          "mae": 9.568214002716847
+         },
+         {
+          "bin": 8,
+          "n": 9,
+          "prediction_min": 26.586946390981005,
+          "prediction_max": 27.094902515332485,
+          "mean_prediction": 26.917535661032026,
+          "mean_observed": 35.522222222222226,
+          "mean_residual": 8.6046865611902,
+          "sd_residual": 3.849942716149313,
+          "mae": 8.6046865611902
+         },
+         {
+          "bin": 9,
+          "n": 10,
+          "prediction_min": 27.191925027576957,
+          "prediction_max": 28.1323595053204,
+          "mean_prediction": 27.78314608951098,
+          "mean_observed": 37.339999999999996,
+          "mean_residual": 9.556853910489025,
+          "sd_residual": 5.269347213352547,
+          "mae": 9.556853910489025
+         },
+         {
+          "bin": 10,
+          "n": 9,
+          "prediction_min": 28.143611487060753,
+          "prediction_max": 29.292559652711653,
+          "mean_prediction": 28.409908166249977,
+          "mean_observed": 36.87777777777777,
+          "mean_residual": 8.467869611527803,
+          "sd_residual": 3.92851364321698,
+          "mae": 8.467869611527803
+         }
+        ]
+       },
+       "heteroscedasticity": {
+        "abs_residual_prediction_correlation": 0.5545325370777175,
+        "spread_ratio_top_bottom": 1.0679382147638137,
+        "flag": true,
+        "rule": "Flagged when the rank correlation of the absolute residual with the prediction is at least 0.2 in size, or the residual standard deviation of the top third of the predictions is more than 1.5 times (or less than 1/1.5 of) that of the bottom third",
+        "meaning": "An error that grows with the prediction makes one interval width wrong for every row; the mean error stays a fair summary."
+       },
+       "by_feature": [
+        {
+         "column": "origin",
+         "binned": false,
+         "binning": null,
+         "groups": [
+          {
+           "value": "1",
+           "n": 49,
+           "mean_residual": 4.375782873091196,
+           "mae": 4.56297269075035,
+           "small_cell": false
+          },
+          {
+           "value": "2",
+           "n": 16,
+           "mean_residual": 9.931393334508918,
+           "mae": 9.931393334508918,
+           "small_cell": true
+          },
+          {
+           "value": "3",
+           "n": 31,
+           "mean_residual": 7.807115040000341,
+           "mae": 7.807115040000341,
+           "small_cell": false
+          }
+         ]
+        },
+        {
+         "column": "cylinders",
+         "binned": false,
+         "binning": null,
+         "groups": [
+          {
+           "value": "4",
+           "n": 71,
+           "mean_residual": 7.220284366162463,
+           "mae": 7.227566761168433,
+           "small_cell": false
+          },
+          {
+           "value": "5",
+           "n": 2,
+           "mean_residual": 9.018732045386734,
+           "mae": 9.018732045386734,
+           "small_cell": true
+          },
+          {
+           "value": "6",
+           "n": 16,
+           "mean_residual": 3.7562052159956996,
+           "mae": 4.297158404737866,
+           "small_cell": true
+          },
+          {
+           "value": "8",
+           "n": 7,
+           "mean_residual": 3.5084689756260485,
+           "mae": 3.5084689756260485,
+           "small_cell": true
+          }
+         ]
+        },
+        {
+         "column": "displacement",
+         "binned": true,
+         "binning": "5 quantile bins of the rows shown",
+         "groups": [
+          {
+           "value": "(78.999, 97.0]",
+           "n": 23,
+           "mean_residual": 9.72280660987219,
+           "mae": 9.72280660987219,
+           "small_cell": true
+          },
+          {
+           "value": "(97.0, 112.0]",
+           "n": 17,
+           "mean_residual": 7.558972553683908,
+           "mae": 7.558972553683908,
+           "small_cell": true
+          },
+          {
+           "value": "(112.0, 140.0]",
+           "n": 19,
+           "mean_residual": 5.82151995422319,
+           "mae": 5.848733114508659,
+           "small_cell": true
+          },
+          {
+           "value": "(140.0, 173.0]",
+           "n": 20,
+           "mean_residual": 5.0068364760171296,
+           "mae": 5.0068364760171296,
+           "small_cell": true
+          },
+          {
+           "value": "(173.0, 351.0]",
+           "n": 17,
+           "mean_residual": 3.086089781373638,
+           "mae": 3.5952221943074414,
+           "small_cell": true
+          }
+         ]
+        },
+        {
+         "column": "horsepower",
+         "binned": true,
+         "binning": "5 quantile bins of the rows shown",
+         "groups": [
+          {
+           "value": "(47.999, 67.0]",
+           "n": 20,
+           "mean_residual": 10.199952704493668,
+           "mae": 10.199952704493668,
+           "small_cell": true
+          },
+          {
+           "value": "(67.0, 76.0]",
+           "n": 18,
+           "mean_residual": 7.10016406911879,
+           "mae": 7.10016406911879,
+           "small_cell": true
+          },
+          {
+           "value": "(76.0, 87.2]",
+           "n": 17,
+           "mean_residual": 5.422260849684309,
+           "mae": 5.850762614931105,
+           "small_cell": true
+          },
+          {
+           "value": "(87.2, 99.2]",
+           "n": 18,
+           "mean_residual": 4.811931978861071,
+           "mae": 4.916808148644574,
+           "small_cell": true
+          },
+          {
+           "value": "(99.2, 155.0]",
+           "n": 19,
+           "mean_residual": 4.032948274980314,
+           "mae": 4.032948274980314,
+           "small_cell": true
+          },
+          {
+           "value": "(missing)",
+           "n": 4,
+           "mean_residual": 7.02874643771294,
+           "mae": 7.02874643771294,
+           "small_cell": true
+          }
+         ]
+        },
+        {
+         "column": "weight",
+         "binned": true,
+         "binning": "5 quantile bins of the rows shown",
+         "groups": [
+          {
+           "value": "(1754.999, 2085.0]",
+           "n": 20,
+           "mean_residual": 8.933874228347758,
+           "mae": 8.933874228347758,
+           "small_cell": true
+          },
+          {
+           "value": "(2085.0, 2385.0]",
+           "n": 19,
+           "mean_residual": 8.993604179011312,
+           "mae": 8.993604179011312,
+           "small_cell": true
+          },
+          {
+           "value": "(2385.0, 2670.0]",
+           "n": 20,
+           "mean_residual": 5.9228470823996915,
+           "mae": 5.9228470823996915,
+           "small_cell": true
+          },
+          {
+           "value": "(2670.0, 3015.0]",
+           "n": 18,
+           "mean_residual": 4.720805324269502,
+           "mae": 4.930284797820789,
+           "small_cell": true
+          },
+          {
+           "value": "(3015.0, 4360.0]",
+           "n": 19,
+           "mean_residual": 3.2815167852951017,
+           "mae": 3.5658152348411742,
+           "small_cell": true
+          }
+         ]
+        }
+       ],
+       "scatter": {
+        "n_rows": 96,
+        "n_shown": 96,
+        "sampling": "every row",
+        "points": [
+         {
+          "row_key": "L290",
+          "prediction": 13.434255563567898,
+          "observed": 16.9,
+          "residual": 3.4657444364321
+         },
+         {
+          "row_key": "L291",
+          "prediction": 14.868985042242269,
+          "observed": 15.5,
+          "residual": 0.6310149577577313
+         },
+         {
+          "row_key": "L299",
+          "prediction": 15.872293278257235,
+          "observed": 23.0,
+          "residual": 7.127706721742765
+         },
+         {
+          "row_key": "L286",
+          "prediction": 16.150044232343166,
+          "observed": 17.0,
+          "residual": 0.8499557676568337
+         },
+         {
+          "row_key": "L287",
+          "prediction": 16.60169251503767,
+          "observed": 17.6,
+          "residual": 0.9983074849623321
+         },
+         {
+          "row_key": "L365",
+          "prediction": 17.025433877440854,
+          "observed": 26.6,
+          "residual": 9.574566122559148
+         },
+         {
+          "row_key": "L292",
+          "prediction": 17.28801266172857,
+          "observed": 19.2,
+          "residual": 1.9119873382714303
+         },
+         {
+          "row_key": "L364",
+          "prediction": 19.112052739548943,
+          "observed": 22.4,
+          "residual": 3.2879472604510553
+         },
+         {
+          "row_key": "L285",
+          "prediction": 19.335167024733806,
+          "observed": 20.6,
+          "residual": 1.264832975266195
+         },
+         {
+          "row_key": "L281",
+          "prediction": 19.590374460140875,
+          "observed": 21.5,
+          "residual": 1.9096255398591246
+         },
+         {
+          "row_key": "L367",
+          "prediction": 19.615474765348125,
+          "observed": 17.6,
+          "residual": -2.0154747653481238
+         },
+         {
+          "row_key": "L317",
+          "prediction": 19.785360505339572,
+          "observed": 19.1,
+          "residual": -0.6853605053395704
+         },
+         {
+          "row_key": "L284",
+          "prediction": 20.17122193043228,
+          "observed": 20.2,
+          "residual": 0.02877806956771778
+         },
+         {
+          "row_key": "L298",
+          "prediction": 20.576212458468056,
+          "observed": 25.4,
+          "residual": 4.823787541531942
+         },
+         {
+          "row_key": "L387",
+          "prediction": 21.01318053981436,
+          "observed": 25.0,
+          "residual": 3.9868194601856395
+         },
+         {
+          "row_key": "L388",
+          "prediction": 21.069921882954837,
+          "observed": 38.0,
+          "residual": 16.930078117045163
+         },
+         {
+          "row_key": "L375",
+          "prediction": 21.246770513441284,
+          "observed": 23.0,
+          "residual": 1.7532294865587161
+         },
+         {
+          "row_key": "L282",
+          "prediction": 21.426790239249634,
+          "observed": 19.8,
+          "residual": -1.6267902392496332
+         },
+         {
+          "row_key": "L337",
+          "prediction": 21.760418595592384,
+          "observed": 23.6,
+          "residual": 1.8395814044076175
+         },
+         {
+          "row_key": "L308",
+          "prediction": 21.794965415470617,
+          "observed": 26.8,
+          "residual": 5.005034584529383
+         },
+         {
+          "row_key": "L361",
+          "prediction": 21.79658803997293,
+          "observed": 30.7,
+          "residual": 8.903411960027068
+         },
+         {
+          "row_key": "L342",
+          "prediction": 21.83668110403067,
+          "observed": 23.5,
+          "residual": 1.6633188959693292
+         },
+         {
+          "row_key": "L360",
+          "prediction": 22.051000312019124,
+          "observed": 28.1,
+          "residual": 6.048999687980878
+         },
+         {
+          "row_key": "L316",
+          "prediction": 22.053295919371756,
+          "observed": 24.3,
+          "residual": 2.246704080628245
+         },
+         {
+          "row_key": "L307",
+          "prediction": 22.17154422899447,
+          "observed": 28.8,
+          "residual": 6.62845577100553
+         },
+         {
+          "row_key": "L334",
+          "prediction": 22.228910027863545,
+          "observed": 32.7,
+          "residual": 10.471089972136458
+         },
+         {
+          "row_key": "L329",
+          "prediction": 22.29930309219342,
+          "observed": 30.0,
+          "residual": 7.700696907806581
+         },
+         {
+          "row_key": "L324",
+          "prediction": 22.36566742953815,
+          "observed": 27.9,
+          "residual": 5.534332570461849
+         },
+         {
+          "row_key": "L300",
+          "prediction": 22.430938067136996,
+          "observed": 27.2,
+          "residual": 4.7690619328630035
+         },
+         {
+          "row_key": "L374",
+          "prediction": 22.54308479631743,
+          "observed": 24.0,
+          "residual": 1.4569152036825699
+         },
+         {
+          "row_key": "L283",
+          "prediction": 22.558525022711954,
+          "observed": 22.3,
+          "residual": -0.25852502271195377
+         },
+         {
+          "row_key": "L363",
+          "prediction": 22.567301568755134,
+          "observed": 24.2,
+          "residual": 1.6326984312448651
+         },
+         {
+          "row_key": "L315",
+          "prediction": 22.63025432052602,
+          "observed": 26.4,
+          "residual": 3.769745679473978
+         },
+         {
+          "row_key": "L362",
+          "prediction": 22.685182071419007,
+          "observed": 25.4,
+          "residual": 2.7148179285809917
+         },
+         {
+          "row_key": "L394",
+          "prediction": 22.96972243611334,
+          "observed": 27.0,
+          "residual": 4.03027756388666
+         },
+         {
+          "row_key": "L328",
+          "prediction": 23.186323450758472,
+          "observed": 36.4,
+          "residual": 13.213676549241526
+         },
+         {
+          "row_key": "L314",
+          "prediction": 23.21889700885034,
+          "observed": 28.0,
+          "residual": 4.781102991149659
+         },
+         {
+          "row_key": "L306",
+          "prediction": 23.247588727975966,
+          "observed": 28.4,
+          "residual": 5.1524112720240325
+         },
+         {
+          "row_key": "L341",
+          "prediction": 23.352812118016594,
+          "observed": 25.8,
+          "residual": 2.4471878819834068
+         },
+         {
+          "row_key": "L398",
+          "prediction": 23.416382333811317,
+          "observed": 31.0,
+          "residual": 7.583617666188683
+         },
+         {
+          "row_key": "L389",
+          "prediction": 23.47833838919121,
+          "observed": 26.0,
+          "residual": 2.5216616108087884
+         },
+         {
+          "row_key": "L340",
+          "prediction": 23.530767772143744,
+          "observed": 26.6,
+          "residual": 3.069232227856258
+         },
+         {
+          "row_key": "L369",
+          "prediction": 23.575815254303304,
+          "observed": 27.0,
+          "residual": 3.424184745696696
+         },
+         {
+          "row_key": "L297",
+          "prediction": 23.639636930612145,
+          "observed": 27.4,
+          "residual": 3.7603630693878536
+         },
+         {
+          "row_key": "L309",
+          "prediction": 23.656445725516146,
+          "observed": 33.5,
+          "residual": 9.843554274483854
+         },
+         {
+          "row_key": "L368",
+          "prediction": 23.701341525477922,
+          "observed": 28.0,
+          "residual": 4.298658474522078
+         },
+         {
+          "row_key": "L397",
+          "prediction": 23.831613098892017,
+          "observed": 28.0,
+          "residual": 4.168386901107983
+         },
+         {
+          "row_key": "L371",
+          "prediction": 23.8877618586956,
+          "observed": 31.0,
+          "residual": 7.112238141304399
+         },
+         {
+          "row_key": "L372",
+          "prediction": 23.994235486644264,
+          "observed": 29.0,
+          "residual": 5.005764513355736
+         },
+         {
+          "row_key": "L339",
+          "prediction": 24.11976175781888,
+          "observed": 27.2,
+          "residual": 3.080238242181121
+         },
+         {
+          "row_key": "L370",
+          "prediction": 24.45449915252562,
+          "observed": 34.0,
+          "residual": 9.54550084747438
+         },
+         {
+          "row_key": "L343",
+          "prediction": 24.496340571342728,
+          "observed": 30.0,
+          "residual": 5.503659428657272
+         },
+         {
+          "row_key": "L355",
+          "prediction": 24.5368714388165,
+          "observed": 34.5,
+          "residual": 9.963128561183499
+         },
+         {
+          "row_key": "L336",
+          "prediction": 24.540801919529585,
+          "observed": 35.0,
+          "residual": 10.459198080470415
+         },
+         {
+          "row_key": "L391",
+          "prediction": 24.7502729477563,
+          "observed": 32.0,
+          "residual": 7.249727052243699
+         },
+         {
+          "row_key": "L396",
+          "prediction": 24.81912241150603,
+          "observed": 32.0,
+          "residual": 7.180877588493971
+         },
+         {
+          "row_key": "L358",
+          "prediction": 24.932238994446784,
+          "observed": 32.9,
+          "residual": 7.967761005553214
+         },
+         {
+          "row_key": "L353",
+          "prediction": 25.172968760151043,
+          "observed": 29.9,
+          "residual": 4.727031239848955
+         },
+         {
+          "row_key": "L359",
+          "prediction": 25.539361926903716,
+          "observed": 31.6,
+          "residual": 6.060638073096285
+         },
+         {
+          "row_key": "L321",
+          "prediction": 25.7915928369883,
+          "observed": 37.0,
+          "residual": 11.2084071630117
+         },
+         {
+          "row_key": "L303",
+          "prediction": 25.836309871956296,
+          "observed": 34.5,
+          "residual": 8.663690128043704
+         },
+         {
+          "row_key": "L320",
+          "prediction": 25.8466276995736,
+          "observed": 31.3,
+          "residual": 5.453372300426402
+         },
+         {
+          "row_key": "L380",
+          "prediction": 25.956139996452762,
+          "observed": 36.0,
+          "residual": 10.043860003547238
+         },
+         {
+          "row_key": "L318",
+          "prediction": 26.03027823790172,
+          "observed": 34.3,
+          "residual": 8.269721762098278
+         },
+         {
+          "row_key": "L354",
+          "prediction": 26.09372886852084,
+          "observed": 33.0,
+          "residual": 6.9062711314791585
+         },
+         {
+          "row_key": "L310",
+          "prediction": 26.236323831391022,
+          "observed": 41.5,
+          "residual": 15.263676168608978
+         },
+         {
+          "row_key": "L331",
+          "prediction": 26.340953701298073,
+          "observed": 40.9,
+          "residual": 14.559046298701926
+         },
+         {
+          "row_key": "L296",
+          "prediction": 26.446543001845193,
+          "observed": 35.7,
+          "residual": 9.25345699815481
+         },
+         {
+          "row_key": "L357",
+          "prediction": 26.586946390981005,
+          "observed": 32.4,
+          "residual": 5.8130536090189935
+         },
+         {
+          "row_key": "L376",
+          "prediction": 26.846886495568544,
+          "observed": 36.0,
+          "residual": 9.153113504431456
+         },
+         {
+          "row_key": "L381",
+          "prediction": 26.875076279670424,
+          "observed": 36.0,
+          "residual": 9.124923720329576
+         },
+         {
+          "row_key": "L338",
+          "prediction": 26.88527045695248,
+          "observed": 32.4,
+          "residual": 5.514729543047519
+         },
+         {
+          "row_key": "L322",
+          "prediction": 26.89179590669079,
+          "observed": 32.2,
+          "residual": 5.3082040933092145
+         },
+         {
+          "row_key": "L395",
+          "prediction": 26.921455217866207,
+          "observed": 44.0,
+          "residual": 17.078544782133793
+         },
+         {
+          "row_key": "L345",
+          "prediction": 27.06212642451412,
+          "observed": 39.0,
+          "residual": 11.937873575485881
+         },
+         {
+          "row_key": "L356",
+          "prediction": 27.093361261712168,
+          "observed": 33.7,
+          "residual": 6.606638738287835
+         },
+         {
+          "row_key": "L383",
+          "prediction": 27.094902515332485,
+          "observed": 34.0,
+          "residual": 6.905097484667515
+         },
+         {
+          "row_key": "L294",
+          "prediction": 27.191925027576957,
+          "observed": 31.9,
+          "residual": 4.7080749724230415
+         },
+         {
+          "row_key": "L326",
+          "prediction": 27.218116488838845,
+          "observed": 44.3,
+          "residual": 17.081883511161152
+         },
+         {
+          "row_key": "L332",
+          "prediction": 27.57978303725907,
+          "observed": 33.8,
+          "residual": 6.220216962740928
+         },
+         {
+          "row_key": "L323",
+          "prediction": 27.805267879124408,
+          "observed": 46.6,
+          "residual": 18.794732120875594
+         },
+         {
+          "row_key": "L325",
+          "prediction": 27.809577665157104,
+          "observed": 40.8,
+          "residual": 12.990422334842894
+         },
+         {
+          "row_key": "L347",
+          "prediction": 27.866700228515334,
+          "observed": 32.3,
+          "residual": 4.433299771484663
+         },
+         {
+          "row_key": "L377",
+          "prediction": 28.009742078174124,
+          "observed": 37.0,
+          "residual": 8.990257921825876
+         },
+         {
+          "row_key": "L349",
+          "prediction": 28.086352800965095,
+          "observed": 37.7,
+          "residual": 9.613647199034908
+         },
+         {
+          "row_key": "L313",
+          "prediction": 28.131636184178408,
+          "observed": 37.2,
+          "residual": 9.068363815821595
+         },
+         {
+          "row_key": "L304",
+          "prediction": 28.1323595053204,
+          "observed": 31.8,
+          "residual": 3.667640494679599
+         },
+         {
+          "row_key": "L386",
+          "prediction": 28.143611487060753,
+          "observed": 38.0,
+          "residual": 9.856388512939247
+         },
+         {
+          "row_key": "L350",
+          "prediction": 28.153200673802257,
+          "observed": 34.1,
+          "residual": 5.946799326197745
+         },
+         {
+          "row_key": "L378",
+          "prediction": 28.206997647162808,
+          "observed": 31.0,
+          "residual": 2.793002352837192
+         },
+         {
+          "row_key": "L384",
+          "prediction": 28.25120543378185,
+          "observed": 38.0,
+          "residual": 9.748794566218152
+         },
+         {
+          "row_key": "L385",
+          "prediction": 28.25120543378185,
+          "observed": 32.0,
+          "residual": 3.7487945662181517
+         },
+         {
+          "row_key": "L348",
+          "prediction": 28.293750425402052,
+          "observed": 37.0,
+          "residual": 8.706249574597948
+         },
+         {
+          "row_key": "L311",
+          "prediction": 28.432993846333822,
+          "observed": 38.1,
+          "residual": 9.667006153666179
+         },
+         {
+          "row_key": "L330",
+          "prediction": 28.663648896212734,
+          "observed": 44.6,
+          "residual": 15.936351103787267
+         },
+         {
+          "row_key": "L344",
+          "prediction": 29.292559652711653,
+          "observed": 39.1,
+          "residual": 9.807440347288349
+         }
+        ]
+       },
+       "examples": {
+        "largest_errors": [
+         {
+          "row_key": "L323",
+          "observed": 46.6,
+          "prediction": 27.805267879124408,
+          "residual": 18.794732120875594,
+          "values": {
+           "cylinders": "4",
+           "displacement": "86",
+           "horsepower": "65",
+           "weight": "2110",
+           "origin": "3"
+          }
+         },
+         {
+          "row_key": "L326",
+          "observed": 44.3,
+          "prediction": 27.218116488838845,
+          "residual": 17.081883511161152,
+          "values": {
+           "cylinders": "4",
+           "displacement": "90",
+           "horsepower": "48",
+           "weight": "2085",
+           "origin": "2"
+          }
+         },
+         {
+          "row_key": "L395",
+          "observed": 44.0,
+          "prediction": 26.921455217866207,
+          "residual": 17.078544782133793,
+          "values": {
+           "cylinders": "4",
+           "displacement": "97",
+           "horsepower": "52",
+           "weight": "2130",
+           "origin": "2"
+          }
+         },
+         {
+          "row_key": "L388",
+          "observed": 38.0,
+          "prediction": 21.069921882954837,
+          "residual": 16.930078117045163,
+          "values": {
+           "cylinders": "6",
+           "displacement": "262",
+           "horsepower": "85",
+           "weight": "3015",
+           "origin": "1"
+          }
+         },
+         {
+          "row_key": "L330",
+          "observed": 44.6,
+          "prediction": 28.663648896212734,
+          "residual": 15.936351103787267,
+          "values": {
+           "cylinders": "4",
+           "displacement": "91",
+           "horsepower": "67",
+           "weight": "1850",
+           "origin": "3"
+          }
+         }
+        ],
+        "features": [
+         "cylinders",
+         "displacement",
+         "horsepower",
+         "weight",
+         "origin"
+        ],
+        "note": "The rows with the largest absolute residuals, with the feature values as written in the file."
+       },
+       "coefficients": {
+        "terms": [
+         {
+          "term": "num__weight",
+          "value": -3.1876711076603237,
+          "low": -3.7483544627035434,
+          "high": -2.6269877526171004,
+          "std_error": 0.2860681928167153,
+          "excludes_zero": true,
+          "inside_interval": true
+         },
+         {
+          "term": "num__horsepower",
+          "value": -1.0461027069104654,
+          "low": -1.786412748651713,
+          "high": -0.3057926651692302,
+          "std_error": 0.37771614559283373,
+          "excludes_zero": true,
+          "inside_interval": true
+         },
+         {
+          "term": "cat__origin_3",
+          "value": 0.9061642971091335,
+          "low": 0.0884935705036135,
+          "high": 1.7238350237146447,
+          "std_error": 0.41718660804749386,
+          "excludes_zero": true,
+          "inside_interval": true
+         },
+         {
+          "term": "cat__origin_1",
+          "value": -0.7060718689819638,
+          "low": -1.3802675839348786,
+          "high": -0.031876154029053416,
+          "std_error": 0.3439837263699142,
+          "excludes_zero": true,
+          "inside_interval": true
+         },
+         {
+          "term": "num__cylinders",
+          "value": -0.5206655589928507,
+          "low": -1.1537101318734755,
+          "high": 0.11237901388768656,
+          "std_error": 0.32298785991679235,
+          "excludes_zero": false,
+          "inside_interval": true
+         },
+         {
+          "term": "num__displacement",
+          "value": -0.4706630199042758,
+          "low": -1.20089557776469,
+          "high": 0.2595695379562316,
+          "std_error": 0.3725744777049182,
+          "excludes_zero": false,
+          "inside_interval": true
+         },
+         {
+          "term": "cat__origin_2",
+          "value": -0.20009242812717776,
+          "low": -0.9306795653975317,
+          "high": 0.5304947091431793,
+          "std_error": 0.37275538889139487,
+          "excludes_zero": false,
+          "inside_interval": true
+         },
+         {
+          "term": "num__horsepower=?",
+          "value": -0.04053541390734935,
+          "low": -0.10576861209120123,
+          "high": 0.02469778427650468,
+          "std_error": 0.03328285555163468,
+          "excludes_zero": false,
+          "inside_interval": true
+         }
+        ],
+        "n_rows": 222,
+        "level": 0.95,
+        "penalty": 10.0,
+        "point_check": {
+         "consistent": true,
+         "max_difference": 4.657385588302532e-14,
+         "tolerance": 0.0001,
+         "misaligned_terms": [],
+         "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
+        },
+        "method": "Wald intervals, estimate +- z * standard error, from the sandwich covariance H^-1 B H^-1 of the fit on every prepared row (H the penalised information, B the spread of the row scores): the delta-method approximation of a nonparametric bootstrap",
+        "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
+        "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
+       },
+       "predictions": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0"
+      }
+     },
+     "coefficient_rows": 222,
+     "note": "Development evidence: computed on the validation predictions, on which the model and the rule were chosen. These figures describe the choice; they are not independent evidence.",
+     "linear_checks": {
+      "model": "fit.linear",
+      "nonlinearity": [
+       {
+        "feature": "displacement",
+        "bins": [
+         {
+          "bin": 1,
+          "n": 23,
+          "low": 79.0,
+          "high": 97.0,
+          "gap": 9.318892528112674,
+          "se": 0.8856693408010375
+         },
+         {
+          "bin": 2,
+          "n": 17,
+          "low": 98.0,
+          "high": 112.0,
+          "gap": 7.551953529285083,
+          "se": 1.0301751469704132
+         },
+         {
+          "bin": 3,
+          "n": 19,
+          "low": 119.0,
+          "high": 140.0,
+          "gap": 6.033709225576356,
+          "se": 0.9744481344628303
+         },
+         {
+          "bin": 4,
+          "n": 20,
+          "low": 141.0,
+          "high": 173.0,
+          "gap": 5.211174459838862,
+          "se": 0.949774556629196
+         },
+         {
+          "bin": 5,
+          "n": 17,
+          "low": 181.0,
+          "high": 351.0,
+          "gap": 3.075987175148054,
+          "se": 1.0301751469704132
+         }
+        ],
+        "statistic": 241.8093460357827,
+        "df": 5,
+        "p_value": 3.1417594680037027e-50,
+        "level": 0.0033333333333333335,
+        "flagged": true
+       },
+       {
+        "feature": "horsepower",
+        "bins": [
+         {
+          "bin": 1,
+          "n": 20,
+          "low": 48.0,
+          "high": 67.0,
+          "gap": 9.89886247287317,
+          "se": 0.949774556629196
+         },
+         {
+          "bin": 2,
+          "n": 18,
+          "low": 68.0,
+          "high": 76.0,
+          "gap": 6.912332121643374,
+          "se": 1.0011502875416114
+         },
+         {
+          "bin": 3,
+          "n": 17,
+          "low": 77.0,
+          "high": 86.0,
+          "gap": 5.629125497123319,
+          "se": 1.0301751469704132
+         },
+         {
+          "bin": 4,
+          "n": 18,
+          "low": 88.0,
+          "high": 96.0,
+          "gap": 5.024595848748707,
+          "se": 1.0011502875416114
+         },
+         {
+          "bin": 5,
+          "n": 19,
+          "low": 100.0,
+          "high": 155.0,
+          "gap": 4.004817890581631,
+          "se": 0.9744481344628303
+         }
+        ],
+        "statistic": 228.2327658220951,
+        "df": 5,
+        "p_value": 2.5583877348250105e-47,
+        "level": 0.0033333333333333335,
+        "flagged": true
+       },
+       {
+        "feature": "weight",
+        "bins": [
+         {
+          "bin": 1,
+          "n": 20,
+          "low": 1755.0,
+          "high": 2085.0,
+          "gap": 8.515288210043412,
+          "se": 0.949774556629196
+         },
+         {
+          "bin": 2,
+          "n": 19,
+          "low": 2110.0,
+          "high": 2385.0,
+          "gap": 8.823675868118912,
+          "se": 0.9744481344628303
+         },
+         {
+          "bin": 3,
+          "n": 20,
+          "low": 2395.0,
+          "high": 2670.0,
+          "gap": 6.088231078870741,
+          "se": 0.949774556629196
+         },
+         {
+          "bin": 4,
+          "n": 18,
+          "low": 2678.0,
+          "high": 3015.0,
+          "gap": 4.946704238175386,
+          "se": 1.0011502875416114
+         },
+         {
+          "bin": 5,
+          "n": 19,
+          "low": 3035.0,
+          "high": 4360.0,
+          "gap": 3.4269779497359814,
+          "se": 0.9744481344628303
+         }
+        ],
+        "statistic": 240.24802628638457,
+        "df": 5,
+        "p_value": 6.792414746000168e-50,
+        "level": 0.0033333333333333335,
+        "flagged": true
+       }
+      ],
+      "interaction": [
+       {
+        "feature": "origin",
+        "groups": [],
+        "q": null,
+        "df": 0,
+        "p_value": null,
+        "level": 0.01,
+        "flagged": false
+       }
+      ],
+      "calibration_slope": {
+       "slope": 1.5807115874559536,
+       "se": 0.10480756197030992,
+       "low": 1.3752925406866963,
+       "high": 1.786130634225211,
+       "band": [
+        0.8,
+        1.2
+       ],
+       "flagged": true,
+       "definition": "least-squares slope of the target on the prediction: 1 when the predictions are as spread as the target"
+      },
+      "flags": [
+       {
+        "check": "nonlinearity",
+        "feature": "displacement",
+        "p_value": 3.1417594680037027e-50
+       },
+       {
+        "check": "nonlinearity",
+        "feature": "horsepower",
+        "p_value": 2.5583877348250105e-47
+       },
+       {
+        "check": "nonlinearity",
+        "feature": "weight",
+        "p_value": 6.792414746000168e-50
+       },
+       {
+        "check": "calibration_slope",
+        "feature": null,
+        "p_value": null,
+        "slope": 1.5807115874559536
+       }
+      ],
+      "alpha": 0.01,
+      "method": "binned out-of-fold gaps per numeric feature (chi-square, Bonferroni); calibration slope by segment (Cochran's Q); overall calibration slope (Cox 1958)",
+      "note": "Checks of the candidate linear model on its out-of-fold predictions: a flag is evidence that another model family might follow the data more closely, not proof; choosing a family after seeing it makes that comparison data-contingent."
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Mean residual "
+      },
+      {
+       "text": "6.39",
+       "result_id": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+       "path": "models.[fit.linear].residuals.mean",
+       "value": 6.394515464632113,
+       "format": "f2"
+      },
+      {
+       "text": " mpg, error-size rank correlation with the prediction "
+      },
+      {
+       "text": "0.52",
+       "result_id": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+       "path": "models.[fit.linear].heteroscedasticity.abs_residual_prediction_correlation",
+       "value": 0.5177988259620996,
+       "format": "f2"
+      },
+      {
+       "text": " on "
+      },
+      {
+       "text": "96",
+       "result_id": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+       "path": "n",
+       "value": 96,
+       "format": "int"
+      },
+      {
+       "text": " development rows"
+      }
+     ]
+    },
+    "question_junior": "Where are the predictions off, by how much, and does the error grow with the prediction or differ across groups?",
+    "texts": null
+   },
+   {
+    "result_id": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
+    "activity": "eda.mean_by",
+    "slot": "eda.mean_by:model_year",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 222,
+    "params": {
+     "column": "model_year"
+    },
+    "upstream": {
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [],
+    "created": "2026-10-27T23:50:37.458419+00:00",
+    "started_revision": 34,
+    "execution_id": "e_652a57bfe02cfb4ce76a3a62",
+    "exposure_id": "x_b0072f8dccb64ce289d69ff4518fab7a",
+    "values": {
+     "partition": "train",
+     "column": "model_year",
+     "target": "mpg",
+     "unit": "mpg",
+     "n_rows": 222,
+     "overall_mean": 20.565315315315317,
+     "binned": false,
+     "binning": null,
+     "groups": [
+      {
+       "value": "70",
+       "n_rows": 22,
+       "mean": 18.09090909090909,
+       "sd": 5.022891321682883,
+       "small_count": true,
+       "interval": {
+        "low": 15.863883840267457,
+        "high": 20.31793434155072,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.504545454545454,
+        "high": 23.722727272727273
+       }
+      },
+      {
+       "value": "71",
+       "n_rows": 20,
+       "mean": 21.7,
+       "sd": 6.489667901648297,
+       "small_count": true,
+       "interval": {
+        "low": 18.662741929147668,
+        "high": 24.73725807085233,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.740000000000002,
+        "high": 23.0
+       }
+      },
+      {
+       "value": "72",
+       "n_rows": 25,
+       "mean": 18.84,
+       "sd": 5.5051491048532615,
+       "small_count": true,
+       "interval": {
+        "low": 16.56758613618911,
+        "high": 21.11241386381089,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.212,
+        "high": 22.54
+       }
+      },
+      {
+       "value": "73",
+       "n_rows": 32,
+       "mean": 17.0625,
+       "sd": 4.950969276232033,
+       "small_count": false,
+       "interval": {
+        "low": 15.277485225670816,
+        "high": 18.847514774329184,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 18.06875,
+        "high": 22.96875
+       }
+      },
+      {
+       "value": "74",
+       "n_rows": 19,
+       "mean": 21.05263157894737,
+       "sd": 6.25809417395252,
+       "small_count": true,
+       "interval": {
+        "low": 18.03632673906477,
+        "high": 24.06893641882997,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.110526315789475,
+        "high": 22.50526315789474
+       }
+      },
+      {
+       "value": "75",
+       "n_rows": 24,
+       "mean": 20.125,
+       "sd": 4.455699818161589,
+       "small_count": true,
+       "interval": {
+        "low": 18.243522976930336,
+        "high": 22.006477023069664,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.758333333333333,
+        "high": 23.05
+       }
+      },
+      {
+       "value": "76",
+       "n_rows": 25,
+       "mean": 21.6,
+       "sd": 6.554260700745228,
+       "small_count": true,
+       "interval": {
+        "low": 18.89453415343937,
+        "high": 24.305465846560633,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 18.128,
+        "high": 22.628
+       }
+      },
+      {
+       "value": "77",
+       "n_rows": 24,
+       "mean": 23.166666666666668,
+       "sd": 6.23570829746024,
+       "small_count": true,
+       "interval": {
+        "low": 20.533557982725515,
+        "high": 25.79977535060782,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 19.029166666666665,
+        "high": 22.46666666666667
+       }
+      },
+      {
+       "value": "78",
+       "n_rows": 31,
+       "mean": 23.79032258064516,
+       "sd": 6.9084660544730525,
+       "small_count": false,
+       "interval": {
+        "low": 21.256276773582485,
+        "high": 26.324368387707835,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 19.190322580645162,
+        "high": 24.483870967741932
+       }
+      }
+     ],
+     "min_group_rows": 30,
+     "warnings": [
+      "model_year = 70: only 22 training rows; its mean is too noisy to read on its own.",
+      "model_year = 71: only 20 training rows; its mean is too noisy to read on its own.",
+      "model_year = 72: only 25 training rows; its mean is too noisy to read on its own.",
+      "model_year = 74: only 19 training rows; its mean is too noisy to read on its own.",
+      "model_year = 75: only 24 training rows; its mean is too noisy to read on its own.",
+      "model_year = 76: only 25 training rows; its mean is too noisy to read on its own.",
+      "model_year = 77: only 24 training rows; its mean is too noisy to read on its own."
+     ],
+     "n_groups": 9,
+     "max_groups": 20,
+     "other": null,
+     "note": "Mean target by group on training rows: associations, not effects of the variable.",
+     "question": "Does the mean target differ across the groups of model_year by more than chance alone draws?",
+     "null_band": {
+      "chart": {
+       "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+       "observed": 6.72782258064516,
+       "null_min": 0.04415322580645409,
+       "null_max": 4.108870967741932,
+       "outside": true
+      },
+      "shuffles": 19,
+      "seed": 20261019,
+      "note": "The band is the range of the same figure after shuffling the target among the training rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "9",
+       "result_id": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
+       "path": "n_groups",
+       "value": 9,
+       "format": "int"
+      },
+      {
+       "text": " groups on "
+      },
+      {
+       "text": "222",
+       "result_id": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
+       "path": "n_rows",
+       "value": 222,
+       "format": "int"
+      },
+      {
+       "text": " training rows"
+      }
+     ]
+    },
+    "question_junior": "Does the mean target differ across the groups of model_year by more than chance alone draws?",
+    "texts": {
+     "en": {
+      "question": "Does the mean target differ across the groups of model_year by more than chance alone draws?",
+      "note": "Mean target by group on training rows: associations, not effects of the variable.",
+      "warnings": [
+       "model_year = 70: only 22 training rows; its mean is too noisy to read on its own.",
+       "model_year = 71: only 20 training rows; its mean is too noisy to read on its own.",
+       "model_year = 72: only 25 training rows; its mean is too noisy to read on its own.",
+       "model_year = 74: only 19 training rows; its mean is too noisy to read on its own.",
+       "model_year = 75: only 24 training rows; its mean is too noisy to read on its own.",
+       "model_year = 76: only 25 training rows; its mean is too noisy to read on its own.",
+       "model_year = 77: only 24 training rows; its mean is too noisy to read on its own."
+      ],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": "The band is the range of the same figure after shuffling the target among the training rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks.",
+      "meanings": {}
+     },
+     "fr": {
+      "question": "La moyenne de la cible diffère-t-elle entre les groupes de model_year plus que le hasard seul ne le produit ?",
+      "note": "Moyenne de la cible par groupe sur les lignes d'entraînement : des associations, pas des effets de la variable.",
+      "warnings": [
+       "model_year = 70 : seulement 22 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 71 : seulement 20 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 72 : seulement 25 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 74 : seulement 19 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 75 : seulement 24 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 76 : seulement 25 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule.",
+       "model_year = 77 : seulement 24 lignes d'entraînement ; sa moyenne est trop bruitée pour être lue seule."
+      ],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": "La bande est l'étendue du même chiffre après avoir mélangé la cible entre les lignes d'entraînement 19 fois (graine fixe) : ce que le hasard seul produit. Un motif à l'intérieur ne se distingue pas du hasard ; un motif au-dessus de chaque mélange arrive par hasard environ une fois sur 20 regards.",
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f",
+    "activity": "diag.regression",
+    "slot": "diag.regression",
+    "promoted": false,
+    "current": false,
+    "stale_reason": {
+     "reason": "not promoted in any slot",
+     "since": null
+    },
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 96,
+    "params": {
+     "coefficients": {
+      "intervals": "wald_sandwich",
+      "level": 0.95
+     },
+     "evaluation": "validation",
+     "models": [
+      "fit.linear"
+     ],
+     "residual_columns": [
+      "origin",
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight"
+     ],
+     "segments": [
+      "origin"
+     ]
+    },
+    "upstream": {
+     "fit.linear": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
+    },
+    "downstream": [],
+    "created": "2026-10-27T23:50:27.838400+00:00",
+    "started_revision": 24,
+    "execution_id": "e_742cb865548c9b2f674c0f23",
+    "exposure_id": "x_a844cbc81d58402f892557e66149f54b",
+    "values": null,
+    "headline": null,
+    "question_junior": null,
+    "texts": null
+   }
+  ],
+  "truncated": false,
+  "lineage": {
+   "nodes": [
+    {
+     "id": "case",
+     "kind": "source",
+     "label": "case.yaml",
+     "status": "ok"
+    },
+    {
+     "id": "dataset",
+     "kind": "source",
+     "label": "auto-mpg.data",
+     "status": "ok"
+    },
+    {
+     "id": "decision:prediction_time",
+     "kind": "decision",
+     "label": "prediction_time",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:feature_availability",
+     "kind": "decision",
+     "label": "feature_availability",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:split",
+     "kind": "decision",
+     "label": "split",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:success_criterion",
+     "kind": "decision",
+     "label": "success_criterion",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:preprocessing",
+     "kind": "decision",
+     "label": "preprocessing",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:model_variant",
+     "kind": "decision",
+     "label": "model_variant",
+     "status": "confirmed"
+    },
+    {
+     "id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "kind": "result",
+     "label": "split",
+     "status": "current"
+    },
+    {
+     "id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
+     "kind": "result",
+     "label": "eda.quality",
+     "status": "current"
+    },
+    {
+     "id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+     "kind": "result",
+     "label": "eda.target_summary",
+     "status": "current"
+    },
+    {
+     "id": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+     "kind": "result",
+     "label": "eda.special_values",
+     "status": "current"
+    },
+    {
+     "id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+     "kind": "result",
+     "label": "fit.baseline",
+     "status": "current"
+    },
+    {
+     "id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "kind": "result",
+     "label": "fit.linear",
+     "status": "current"
+    },
+    {
+     "id": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+     "kind": "result",
+     "label": "fit.variant",
+     "status": "current"
+    },
+    {
+     "id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "kind": "result",
+     "label": "evaluate.regression",
+     "status": "current"
+    },
+    {
+     "id": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+     "kind": "result",
+     "label": "diag.regression",
+     "status": "current"
+    },
+    {
+     "id": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
+     "kind": "result",
+     "label": "eda.mean_by:model_year",
+     "status": "current"
+    },
+    {
+     "id": "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f",
+     "kind": "result",
+     "label": "diag.regression",
+     "status": "stale"
+    },
+    {
+     "id": "artifact:report",
+     "kind": "artifact",
+     "label": "report",
+     "status": "ok"
+    },
+    {
+     "id": "artifact:notebook",
+     "kind": "artifact",
+     "label": "notebook",
+     "status": "ok"
+    }
+   ],
+   "edges": [
+    {
+     "from": "dataset",
+     "to": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "role": "rows"
+    },
+    {
+     "from": "decision:split",
+     "to": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
+     "role": "rows"
+    },
+    {
+     "from": "dataset",
+     "to": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+     "role": "rows"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+     "role": "rows"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+     "role": "rows"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "role": "rows"
+    },
+    {
+     "from": "decision:feature_availability",
+     "to": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "role": "features"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+     "role": "rows"
+    },
+    {
+     "from": "decision:feature_availability",
+     "to": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+     "role": "features"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "role": "rows"
+    },
+    {
+     "from": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+     "to": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "role": "fit.baseline"
+    },
+    {
+     "from": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "to": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "role": "fit.linear"
+    },
+    {
+     "from": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+     "to": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "role": "fit.variant"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+     "role": "rows"
+    },
+    {
+     "from": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "to": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+     "role": "fit.linear"
+    },
+    {
+     "from": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+     "to": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+     "role": "fit.variant"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
+     "role": "rows"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f",
+     "role": "rows"
+    },
+    {
+     "from": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "to": "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f",
+     "role": "fit.linear"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f",
+     "role": "split"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    }
+   ]
+  },
+  "exposure": {
+   "summary": {
+    "records": 19,
+    "rows_exposed": 318,
+    "by_purpose": {
+     "development_diagnostics": 318,
+     "development_target_sample": 8,
+     "sealed": 80,
+     "structural_inspection": 318,
+     "train_eda": 222,
+     "train_fit": 222,
+     "validation_model_evaluation": 96
+    },
+    "by_partition": {
+     "development": {
+      "development_target_sample": 8,
+      "structural_inspection": 318
+     },
+     "final_test": {
+      "sealed": 80
+     },
+     "train": {
+      "development_diagnostics": 222,
+      "train_eda": 222,
+      "train_fit": 222
+     },
+     "validation": {
+      "development_diagnostics": 96,
+      "validation_model_evaluation": 96
+     }
+    },
+    "validation_rows_used_for_selection": 96,
+    "prior_exposure": [
+     {
+      "source": "Results of an earlier analysis published with the dataset",
+      "status": "observed",
+      "value": "Outputs of an earlier analysis (protocol \"chronological-70-78-vs-79-82\": Train on 1970–1978, compare on 1979–1982. Chronological split by model year. The horsepower imputation median is calculated from training data only.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
+     },
+     {
+      "source": "Results of an earlier analysis published with the dataset",
+      "status": "observed",
+      "value": "Outputs of an earlier analysis (protocol \"random-70-30-counterexample\": Counterexample: random 70/30 split (mixed years). Random split with seed 20261017. Future years also contribute to training.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
+     }
+    ]
+   },
+   "records": [
+    {
+     "exposure_id": "x_2e0ea37d2cf941db8c586537c212877f",
+     "revision": 1,
+     "time": "2026-10-27T23:50:03.650203+00:00",
+     "activity": "init.structure",
+     "result_id": null,
+     "execution_id": null,
+     "purpose": "structural_inspection",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "mpg",
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "model_year",
+      "origin",
+      "car_name"
+     ]
+    },
+    {
+     "exposure_id": "x_40356a6cddd3412080f52e5bedd1cc5e",
+     "revision": 1,
+     "time": "2026-10-27T23:50:03.656206+00:00",
+     "activity": "data.sample",
+     "result_id": null,
+     "execution_id": null,
+     "purpose": "development_target_sample",
+     "partition": "development",
+     "n_rows": 8,
+     "columns": [
+      "mpg",
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "model_year",
+      "origin",
+      "car_name"
+     ]
+    },
+    {
+     "exposure_id": "x_198e54b5338f47c2af5a1c651c9a5e5e",
+     "revision": 1,
+     "time": "2026-10-27T23:50:03.658091+00:00",
+     "activity": "init.final_test",
+     "result_id": null,
+     "execution_id": null,
+     "purpose": "sealed",
+     "partition": "final_test",
+     "n_rows": 80,
+     "columns": [
+      "mpg",
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "model_year",
+      "origin",
+      "car_name"
+     ]
+    },
+    {
+     "exposure_id": "x_5af5287d2e1a4a0892abf98092943305",
+     "revision": 12,
+     "time": "2026-10-27T23:50:17.658308+00:00",
+     "activity": "split",
+     "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "execution_id": "e_911198e0a8508fa9f4a6fa78",
+     "purpose": "structural_inspection",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "model_year",
+      "car_name"
+     ]
+    },
+    {
+     "exposure_id": "x_dcd5938fe04d478bae0eb22f9586f3ae",
+     "revision": 14,
+     "time": "2026-10-27T23:50:19.306452+00:00",
+     "activity": "eda.quality",
+     "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
+     "execution_id": "e_f2a9d4ff734c5609ecaf8062",
+     "purpose": "structural_inspection",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "model_year",
+      "origin",
+      "car_name"
+     ]
+    },
+    {
+     "exposure_id": "x_03bf1dd34e4f4066b8d4cc703c28f9f9",
+     "revision": 16,
+     "time": "2026-10-27T23:50:20.926141+00:00",
+     "activity": "eda.target_summary",
+     "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+     "execution_id": "e_01e009ee66e5659fa376f9c8",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 222,
+     "columns": [
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_a23bec3f87304178b30f28aa87c2a866",
+     "revision": 18,
+     "time": "2026-10-27T23:50:22.582359+00:00",
+     "activity": "eda.special_values",
+     "result_id": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+     "execution_id": "e_ef6d58ebcc377e92b00e1641",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 222,
+     "columns": [
+      "mpg",
+      "horsepower"
+     ]
+    },
+    {
+     "exposure_id": "x_73c16172c8ef42fea7ad5ed81d0957ef",
+     "revision": 20,
+     "time": "2026-10-27T23:50:24.294436+00:00",
+     "activity": "fit.baseline",
+     "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+     "execution_id": "e_47e14a8659b67b6ecc88b5f7",
+     "purpose": "train_fit",
+     "partition": "train",
+     "n_rows": 222,
+     "columns": [
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_54054886d22142dd9ec216fd462f7249",
+     "revision": 20,
+     "time": "2026-10-27T23:50:24.298238+00:00",
+     "activity": "fit.baseline",
+     "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+     "execution_id": "e_47e14a8659b67b6ecc88b5f7",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 96,
+     "columns": [
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_893ac42d16804b5ab59e436b8d92a89c",
+     "revision": 22,
+     "time": "2026-10-27T23:50:26.090450+00:00",
+     "activity": "fit.linear",
+     "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "execution_id": "e_d8c0a36ea30eea85e955656e",
+     "purpose": "train_fit",
+     "partition": "train",
+     "n_rows": 222,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_e638089d6b5942bcad108dd9410ecce3",
+     "revision": 22,
+     "time": "2026-10-27T23:50:26.094281+00:00",
+     "activity": "fit.linear",
+     "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "execution_id": "e_d8c0a36ea30eea85e955656e",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 96,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_1634226775864aa29dcc84219758108e",
+     "revision": 24,
+     "time": "2026-10-27T23:50:27.846849+00:00",
+     "activity": "diag.regression",
+     "result_id": "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f",
+     "execution_id": "e_742cb865548c9b2f674c0f23",
+     "purpose": "development_diagnostics",
+     "partition": "validation",
+     "n_rows": 96,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_a844cbc81d58402f892557e66149f54b",
+     "revision": 24,
+     "time": "2026-10-27T23:50:27.854319+00:00",
+     "activity": "diag.regression",
+     "result_id": "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f",
+     "execution_id": "e_742cb865548c9b2f674c0f23",
+     "purpose": "development_diagnostics",
+     "partition": "train",
+     "n_rows": 222,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_9d14e2bf15784146b0bc07c31b081963",
+     "revision": 28,
+     "time": "2026-10-27T23:50:32.618093+00:00",
+     "activity": "fit.variant",
+     "result_id": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+     "execution_id": "e_8142a37e0a93ddb744855aa8",
+     "purpose": "train_fit",
+     "partition": "train",
+     "n_rows": 222,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_141ad7f345bf43799235fcff2e83bed0",
+     "revision": 28,
+     "time": "2026-10-27T23:50:32.619100+00:00",
+     "activity": "fit.variant",
+     "result_id": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+     "execution_id": "e_8142a37e0a93ddb744855aa8",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 96,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_391b128250ec4dea8a3aa8a3a170e753",
+     "revision": 30,
+     "time": "2026-10-27T23:50:34.287233+00:00",
+     "activity": "evaluate.regression",
+     "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "execution_id": "e_2e0d6c177d108bbe4bb3bf56",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 96,
+     "columns": [
+      "mpg",
+      "model_year"
+     ]
+    },
+    {
+     "exposure_id": "x_723b32b2185c40158693ab573cfdad0a",
+     "revision": 32,
+     "time": "2026-10-27T23:50:35.895053+00:00",
+     "activity": "diag.regression",
+     "result_id": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+     "execution_id": "e_3d00c3aea34475b6aac5c90f",
+     "purpose": "development_diagnostics",
+     "partition": "validation",
+     "n_rows": 96,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_e09a7c172e104ead8a5e2582e3078970",
+     "revision": 32,
+     "time": "2026-10-27T23:50:35.896019+00:00",
+     "activity": "diag.regression",
+     "result_id": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+     "execution_id": "e_3d00c3aea34475b6aac5c90f",
+     "purpose": "development_diagnostics",
+     "partition": "train",
+     "n_rows": 222,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_b0072f8dccb64ce289d69ff4518fab7a",
+     "revision": 34,
+     "time": "2026-10-27T23:50:37.461355+00:00",
+     "activity": "eda.mean_by",
+     "result_id": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
+     "execution_id": "e_652a57bfe02cfb4ce76a3a62",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 222,
+     "columns": [
+      "mpg",
+      "model_year"
+     ]
+    }
+   ],
+   "ledger": [
+    {
+     "purpose": "structural_inspection",
+     "partition": "development",
+     "rows": 318,
+     "records": 3,
+     "activities": [
+      "init.structure",
+      "split",
+      "eda.quality"
+     ],
+     "first_revision": 1,
+     "last_revision": 14,
+     "note": null
+    },
+    {
+     "purpose": "train_eda",
+     "partition": "train",
+     "rows": 222,
+     "records": 3,
+     "activities": [
+      "eda.target_summary",
+      "eda.special_values",
+      "eda.mean_by"
+     ],
+     "first_revision": 16,
+     "last_revision": 34,
+     "note": null
+    },
+    {
+     "purpose": "train_fit",
+     "partition": "train",
+     "rows": 222,
+     "records": 3,
+     "activities": [
+      "fit.baseline",
+      "fit.linear",
+      "fit.variant"
+     ],
+     "first_revision": 20,
+     "last_revision": 28,
+     "note": null
+    },
+    {
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "rows": 96,
+     "records": 4,
+     "activities": [
+      "fit.baseline",
+      "fit.linear",
+      "fit.variant",
+      "evaluate.regression"
+     ],
+     "first_revision": 20,
+     "last_revision": 30,
+     "note": null
+    },
+    {
+     "purpose": "sealed",
+     "partition": "final_test",
+     "rows": 80,
+     "records": 1,
+     "activities": [
+      "init.final_test"
+     ],
+     "first_revision": 1,
+     "last_revision": 1,
+     "note": null
+    },
+    {
+     "purpose": "development_diagnostics",
+     "partition": "train",
+     "rows": 222,
+     "records": 2,
+     "activities": [
+      "diag.regression"
+     ],
+     "first_revision": 24,
+     "last_revision": 32,
+     "note": null
+    },
+    {
+     "purpose": "development_diagnostics",
+     "partition": "validation",
+     "rows": 96,
+     "records": 2,
+     "activities": [
+      "diag.regression"
+     ],
+     "first_revision": 24,
+     "last_revision": 32,
+     "note": null
+    },
+    {
+     "purpose": "development_target_sample",
+     "partition": "development",
+     "rows": 8,
+     "records": 1,
+     "activities": [
+      "data.sample"
+     ],
+     "first_revision": 1,
+     "last_revision": 1,
+     "note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
+    }
+   ],
+   "prior_exposure": [
+    {
+     "source": "Results of an earlier analysis published with the dataset",
+     "status": "observed",
+     "value": "Outputs of an earlier analysis (protocol \"chronological-70-78-vs-79-82\": Train on 1970–1978, compare on 1979–1982. Chronological split by model year. The horsepower imputation median is calculated from training data only.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
+    },
+    {
+     "source": "Results of an earlier analysis published with the dataset",
+     "status": "observed",
+     "value": "Outputs of an earlier analysis (protocol \"random-70-30-counterexample\": Counterexample: random 70/30 split (mixed years). Random split with seed 20261017. Future years also contribute to training.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
+    }
+   ]
+  },
+  "impacts": [
+   {
+    "decision_id": "prediction_time",
+    "mutation": "prediction_time",
+    "row": 1,
+    "change": "a different prediction moment",
+    "stale_slots": [
+     "fit.linear",
+     "fit.variant",
+     "evaluate.regression",
+     "diag.regression"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.quality",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.mean_by:model_year",
+     "fit.baseline"
+    ],
+    "refit": [
+     "fit.linear",
+     "fit.variant"
+    ],
+    "reconfirm": [
+     "feature_availability"
+    ],
+    "notes": [
+     "The linear refit waits until feature availability is confirmed again."
+    ]
+   },
+   {
+    "decision_id": "feature_availability",
+    "mutation": "feature_availability.feature_set",
+    "row": 2,
+    "change": "a change that alters the set of usable features",
+    "stale_slots": [
+     "fit.linear",
+     "fit.variant",
+     "evaluate.regression",
+     "diag.regression"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.quality",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.mean_by:model_year",
+     "fit.baseline"
+    ],
+    "refit": [
+     "fit.linear",
+     "fit.variant"
+    ],
+    "reconfirm": [],
+    "notes": [
+     "The mean baseline uses no feature and stays current."
+    ]
+   },
+   {
+    "decision_id": "feature_availability",
+    "mutation": "feature_availability.wording",
+    "row": 3,
+    "change": "a change of the variable descriptions that keeps the same usable features",
+    "stale_slots": [],
+    "kept_slots": [
+     "split",
+     "eda.quality",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.mean_by:model_year",
+     "fit.baseline",
+     "fit.linear",
+     "fit.variant",
+     "evaluate.regression",
+     "diag.regression"
+    ],
+    "refit": [],
+    "reconfirm": [],
+    "notes": [
+     "The feature set is unchanged; only the dictionary text changes."
+    ]
+   },
+   {
+    "decision_id": "split",
+    "mutation": "split",
+    "row": 4,
+    "change": "a different split of the rows",
+    "stale_slots": [
+     "split",
+     "eda.quality",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.mean_by:model_year",
+     "fit.baseline",
+     "fit.linear",
+     "fit.variant",
+     "evaluate.regression",
+     "diag.regression"
+    ],
+    "kept_slots": [],
+    "refit": [
+     "fit.baseline",
+     "fit.linear"
+    ],
+    "reconfirm": [],
+    "notes": [
+     "Exposure is retained: rows explored under the old split are not unseen. The split activity reports the overlap (exposure.overlap) when it runs."
+    ]
+   },
+   {
+    "decision_id": "preprocessing",
+    "mutation": "preprocessing",
+    "row": 14,
+    "change": "a different preparation of the variables",
+    "stale_slots": [
+     "fit.linear",
+     "fit.variant",
+     "evaluate.regression",
+     "diag.regression"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.quality",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.mean_by:model_year",
+     "fit.baseline"
+    ],
+    "refit": [
+     "fit.linear",
+     "fit.variant"
+    ],
+    "reconfirm": [],
+    "notes": [
+     "The mean baseline uses no feature and stays current; the exploration is unchanged."
+    ]
+   },
+   {
+    "decision_id": "success_criterion",
+    "mutation": "success_criterion",
+    "row": 16,
+    "change": "a different success criterion",
+    "stale_slots": [],
+    "kept_slots": [
+     "split",
+     "eda.quality",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.mean_by:model_year",
+     "fit.baseline",
+     "fit.linear",
+     "fit.variant",
+     "evaluate.regression",
+     "diag.regression"
+    ],
+    "refit": [],
+    "reconfirm": [],
+    "notes": [
+     "No result changes; the conclusion is judged against the new criterion."
+    ]
+   },
+   {
+    "decision_id": "model_variant",
+    "mutation": "model_variant",
+    "row": 17,
+    "change": "model_variant",
+    "stale_slots": [
+     "fit.variant",
+     "evaluate.regression",
+     "diag.regression"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.quality",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.mean_by:model_year",
+     "fit.baseline",
+     "fit.linear"
+    ],
+    "refit": [
+     "fit.variant"
+    ],
+    "reconfirm": [],
+    "notes": [
+     "The baseline and the candidate stay current; only the variant is fitted again. The trial count grows by one configuration."
+    ]
+   }
+  ],
+  "eda_catalog": {
+   "activities": [
+    {
+     "activity": "eda.target_summary",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": [],
+     "partition": "train"
+    },
+    {
+     "activity": "eda.special_values",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": [],
+     "partition": "train"
+    },
+    {
+     "activity": "eda.mean_by",
+     "per_column": true,
+     "columns": [
+      {
+       "name": "cylinders",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "displacement",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "horsepower",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "weight",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "acceleration",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "model_year",
+       "role": "time",
+       "type": "integer",
+       "slot": "eda.mean_by:model_year",
+       "result_id": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77"
+      },
+      {
+       "name": "origin",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      }
+     ],
+     "runnable": true,
+     "missing": [],
+     "partition": "train"
+    },
+    {
+     "activity": "eda.distribution",
+     "per_column": true,
+     "columns": [
+      {
+       "name": "mpg",
+       "role": "target",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "cylinders",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "displacement",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "horsepower",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "weight",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "acceleration",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "model_year",
+       "role": "time",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "origin",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      }
+     ],
+     "runnable": true,
+     "missing": [],
+     "partition": "train"
+    },
+    {
+     "activity": "eda.quality",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": [],
+     "partition": "development"
+    },
+    {
+     "activity": "eda.single_feature_signal",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": [],
+     "partition": "train"
+    },
+    {
+     "activity": "eda.correlation",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": [],
+     "partition": "development"
+    }
+   ]
+  },
+  "sources": {
+   "case": {
+    "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
+    "sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+    "matches": true
+   },
+   "dataset": {
+    "path": "/hypotrail/use-cases/auto-mpg/data/auto-mpg.data",
+    "sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+    "matches": true
+   }
+  },
+  "detail": null
+ }
+}

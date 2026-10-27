@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-families",
    "revision": 22,
-   "updated": "2026-10-27T09:51:56.101676+00:00",
+   "updated": "2026-10-27T23:41:33.827833+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -393,7 +393,7 @@
      "restatement": "You compare three variants of the candidate, each with its question.",
      "rationale": "One penalty change and two model families, inside the budget of three.",
      "revision": 22,
-     "created": "2026-10-27T09:51:56.099986+00:00",
+     "created": "2026-10-27T23:41:33.826095+00:00",
      "labels": null,
      "label": "You compare three variants of the candidate, each with its question.",
      "origin": {
@@ -417,7 +417,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-27T09:51:32.073958+00:00",
+      "time": "2026-10-27T23:41:09.745611+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -466,7 +466,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-27T09:51:34.301958+00:00",
+      "time": "2026-10-27T23:41:11.913558+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -517,7 +517,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-27T09:51:37.214286+00:00",
+      "time": "2026-10-27T23:41:14.867881+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -550,7 +550,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-27T09:51:40.065822+00:00",
+      "time": "2026-10-27T23:41:17.955866+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -588,7 +588,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-27T09:51:42.937068+00:00",
+      "time": "2026-10-27T23:41:21.190953+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -2270,7 +2270,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_e3011a6950ece5ea44c0419c",
-     "exposure_id": "x_925cfd85bf11411fb4b9ff8a946bce03",
+     "exposure_id": "x_14f6b7331cb34a07a85aebd10352b923",
      "started_revision": 20,
      "integrity": "ok"
     },
@@ -2329,7 +2329,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_a8274014a4c678f4a2a235d2",
-     "exposure_id": "x_40717346b0a44674b2fc671c24a50539",
+     "exposure_id": "x_724d931b9d434890a7a5e459431c87aa",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -2464,7 +2464,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_eff39ccb2204a33ff345cb41",
-     "exposure_id": "x_1e3f2d02d57846888ddc348fcc9f74e5",
+     "exposure_id": "x_cd4e9f00bd3e491d9cba36f598dd3b0b",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -2734,7 +2734,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
-     "exposure_id": "x_3cfc5ababb914bc78a3787837ece0c65",
+     "exposure_id": "x_035e8aea1f194e609011b0fe5a71f9ff",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -2839,7 +2839,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_bb85e451e092b31aedb250d1",
-     "exposure_id": "x_9e69a65a15334e168aebe63fc168b7da",
+     "exposure_id": "x_2979591a24704b90abb2f0455db9c32c",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -2865,7 +2865,7 @@
       "last_ok_revision": 22,
       "path": "notebooks/study_editable.py",
       "revision": 22,
-      "sha256": "729f67d77643c37572880b12cfed388b85cf1660fc387a6d182be5685350074f",
+      "sha256": "f5a0a67487dc6679f23a37d74bf55992744cdac18105477a67bd96fe7c5cfa68",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -2884,14 +2884,14 @@
        "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
        "e06ba880cdfc83b1fb98ba7e067115bc9300ddc8322ddb39bf003a23e4e9039c"
       ],
-      "edit_check_sha256": "0a06b0b107447246039c627c5765d3d5069c010b7640a6047e2ce43739b5a7cc",
+      "edit_check_sha256": "8212c9c07f2622d5ac6d2c7daad7f36134bcb21f9255b5dc7bf7199b0e962f56",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
       "last_ok_revision": 22,
       "path": "notebooks/study_generated.py",
       "revision": 22,
-      "sha256": "c3a605ebfff3bb41bd83c1c2b4e451800553d07c3481631fb841b1f6c9bd3ed5",
+      "sha256": "8ff24c10397dfda4817928edf7361827d30ed16608d76fcc1d54a628e9d25a7a",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -2916,7 +2916,7 @@
       "last_ok_revision": 22,
       "path": "reports/study.html",
       "revision": 22,
-      "sha256": "8d0d93f6155581bf85bafc91fab5db385fdd452beb0541da385fc3a9804b2633",
+      "sha256": "2951170266eeb3e59d698d456a672f79981020532f493a586e47809b171ba66b",
       "status": "ok",
       "template_version": 4,
       "user_edits_preserved": [],
@@ -2954,7 +2954,7 @@
     "by_purpose": {
      "cross_validated_fit": 3617,
      "development_diagnostics": 3617,
-     "labelled_preview_available": 5,
+     "development_target_sample": 8,
      "out_of_fold_evaluation": 3617,
      "sealed": 904,
      "structural_inspection": 3617,
@@ -2964,7 +2964,7 @@
      "development": {
       "cross_validated_fit": 3617,
       "development_diagnostics": 3617,
-      "labelled_preview_available": 5,
+      "development_target_sample": 8,
       "out_of_fold_evaluation": 3617,
       "structural_inspection": 3617,
       "train_eda": 3617

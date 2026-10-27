@@ -93,7 +93,8 @@
     "revision": 26,
     "origin": {
      "channel": "chat"
-    }
+    },
+    "data_contingent": false
    }
   ],
   "decisions": {
@@ -226,49 +227,57 @@
     "result_id": "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "eda.special_values": {
     "result_id": "c183ac33ce3214c2860568f968750b0f0fb4693817308d14d58d9a41ffcc7fb0",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "eda.target_rate": {
     "result_id": "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.baseline": {
     "result_id": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.logistic": {
     "result_id": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "policy.evaluation": {
     "result_id": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "split": {
     "result_id": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    },
    "fit.variant": {
     "result_id": "ddcbf654b0107f132937e89e10e630e299e21c9984eb79f92253c135c696b01a",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "channel": "chat"
    }
   },
   "artifacts": {
@@ -748,9 +757,88 @@
     },
     "proposals": {
      "p_5": "Call the 100 clients with the highest scores."
-    }
+    },
+    "question": null,
+    "options": {},
+    "options_note": null,
+    "junior_digest": null,
+    "headlines": {},
+    "data_contingent": {},
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
    },
    "fr": null
-  }
+  },
+  "panel_contract": 2,
+  "automation": null,
+  "review_queue": null,
+  "defensibility": {
+   "kind": "warn",
+   "count": 4,
+   "items": [
+    {
+     "id": "interrupted_executions",
+     "severity": "blocking"
+    },
+    {
+     "id": "unconfirmed_decisions",
+     "severity": "not_final"
+    },
+    {
+     "id": "uncertain_features_included",
+     "severity": "caveat"
+    },
+    {
+     "id": "validation_is_not_independent",
+     "severity": "not_final"
+    },
+    {
+     "id": "public_data_already_explored",
+     "severity": "context"
+    },
+    {
+     "id": "no_time_or_entity_identifier",
+     "severity": "context"
+    },
+    {
+     "id": "no_causality",
+     "severity": "context"
+    },
+    {
+     "id": "workbench_not_tracked",
+     "severity": "context"
+    }
+   ]
+  },
+  "ledger": {
+   "final_test": {
+    "openings": 0,
+    "max": 1
+   },
+   "target_looks": {
+    "eda": 5,
+    "sample": 1,
+    "total": 6
+   },
+   "configurations": {
+    "tried": 2,
+    "reference": true
+   }
+  },
+  "sample": {
+   "seed": "800a4f885f818eea",
+   "row_keys": [
+    "L340",
+    "L479",
+    "L1697",
+    "L1840",
+    "L3211",
+    "L3339",
+    "L4070",
+    "L4505"
+   ],
+   "recorded": true
+  },
+  "headlines": {},
+  "criterion_configurations": null
  }
 }
