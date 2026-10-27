@@ -177,7 +177,8 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     assert chat.view['current_step'] == 'discover_data'
     assert chat.view['next_action']['kind'] == 'show_data_card'
     card = chat('data')
-    assert card['schema'] == 'hypotrail.data/1' and card['rows']['n_rows'] == 5
+    # contract P1.9: the seeded step-1 sample, eight development rows
+    assert card['schema'] == 'hypotrail.data/1' and card['rows']['n_rows'] == 8
     assert Chat(study, work, 'chat1b').view['revision'] == chat.view['revision']   # read-only
     p = chat.propose('prediction_time', junior['prediction_time'], junior['restatement'])
     refused = chat.confirm(p, 'ok', expect=2)

@@ -250,8 +250,10 @@ def test_the_reviewers_split_cell_holds(delayed):
 
 def test_the_notebooks_run_headless_on_the_engines_rows(delayed):
     source = (delayed.study / rn.GENERATED).read_text(encoding='utf-8')
-    assert _cells(source)[:6] == ['recompute_imports', 'explore_rows', 'explore_info',
-                                  'explore_missing', 'explore_describe', 'recompute_split']
+    # contract P1.9: the step-1 sample's cell first, at the data step
+    assert _cells(source)[:7] == ['recompute_imports', 'recompute_sample', 'explore_rows',
+                                  'explore_info', 'explore_missing', 'explore_describe',
+                                  'recompute_split']
     for name in ('recompute_target', 'explore_special_values', 'explore_correlation',
                  'recompute_model', 'recompute_policy', 'recompute_dev_diagnostics',
                  'recompute_final_diagnostics'):
