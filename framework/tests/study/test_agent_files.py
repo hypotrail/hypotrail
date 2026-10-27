@@ -1073,6 +1073,9 @@ CLAUDE_CODE_INTENDED_CHANGES = {
         'best),\n'
         '   the selection optimism, and `advice.text`; when `advice.stop` is true, recommend\n'
         '   stopping.\n'),
+    'R31: the panel no longer acknowledges an interruption': (
+        '   regenerate the deliverables, and export a handoff pack:',
+        '   regenerate the deliverables, acknowledge an interruption, and export a handoff pack:'),
 }
 
 
