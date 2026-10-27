@@ -269,6 +269,44 @@ def development_frame(study: read.Study, split_rid: str | None = None):
     return frame
 
 
+def sample_seed(study: read.Study) -> str:
+    """The seed of the step-1 sample (contract P1.9, ``partition.sample_seed``)."""
+    from . import partition
+    return partition.sample_seed(study.state)
+
+
+def sample_candidates(study: read.Study) -> list[str]:
+    """The development row keys the step-1 sample is drawn from (``partition.sample``): never
+    a final-test row, never a row kept out for a delayed label."""
+    from . import exposure, partition
+    from . import records as rec
+
+    def every_key():                     # a study without a final test: every row
+        keys = set()
+        for entry in study.exposure_records():
+            if entry.get('purpose') == exposure.STRUCTURAL_PURPOSE:
+                keys.update(rec.parse_row_keys(study.blob(entry['row_keys'])))
+        return sorted(keys, key=lambda k: int(k[1:]))
+    return list(partition.sample_candidates(study.state, study.blob, every_key) or [])
+
+
+def sample_frame(study: read.Study):
+    """The step-1 sample (contract P1.9): the eight development rows the data card and the
+    report show, indexed by row key in row-key order, target first. The target column is
+    left out until its look is recorded (``development_target_sample`` of this seed), as
+    the data card leaves it out. Never the final test; records nothing."""
+    from . import exposure
+    state = study.state
+    entries = study.exposure_records()
+    drawn = exposure.current_sample(study, state, entries)
+    case, frame = _development(study)
+    target = case.target_column
+    shown = bool(drawn) and bool(exposure.sample_records(entries, drawn['seed']))
+    columns = ([target] if shown else []) + [n for n in case.column_names if n != target]
+    keys = [k for k in (drawn or {}).get('row_keys', []) if k in frame.index]
+    return frame.loc[keys, columns]
+
+
 def delayed_labels_text(study: read.Study) -> str:
     """Review round 3 (E3-1): the engine's ``delayed_labels_excluded`` limit in the study
     language (the term first, then this study's example), or '' when no row is left out."""

@@ -759,3 +759,61 @@ def validate(part: Any) -> list[dict]:
         problems.append({'path': f'{path}.schema_check',
                          'problem': 'must be {status: pass|fail, n_rows, checks, reveals}'})
     return problems
+
+
+# --- the seeded step-1 sample (CLI-CONTRACT §17.3, contract P1.9) ---------------------------
+
+SAMPLE_ROWS = 8
+SAMPLE_SEED_PREFIX = 'hypotrail.sample/1'
+SAMPLE_SEED_HEX = 16
+
+
+def sample_seed(state: Mapping) -> str:
+    """The seed of the step-1 sample: the first :data:`SAMPLE_SEED_HEX` hex characters of the
+    SHA-256 of ``"hypotrail.sample/1\\n" + case id + "\\n" + created + "\\n" + dataset
+    sha256``. The study's key is its case id and creation stamp (a moved study keeps them),
+    the data's key the recorded dataset digest (a changed dataset draws a new sample)."""
+    import hashlib
+    text = '\n'.join((SAMPLE_SEED_PREFIX, str(state['case']['id']), str(state['created']),
+                      str(state['dataset']['sha256'])))
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()[:SAMPLE_SEED_HEX]
+
+
+def _row_number(key: str) -> int:
+    return int(str(key)[1:])
+
+
+def draw(seed: str, keys, n: int = SAMPLE_ROWS) -> list[str]:
+    """The sample drawn from ``keys``: each key ranked by the SHA-256 hex digest of
+    ``seed + "\\n" + key``, the first ``n`` kept (all of them when fewer), returned in
+    row-key order (``L34`` before ``L69``). Standard library only."""
+    import hashlib
+    ranked = sorted(set(keys), key=lambda k: hashlib.sha256(
+        f'{seed}\n{k}'.encode('utf-8')).hexdigest())
+    return sorted(ranked[:n], key=_row_number)
+
+
+def sample_candidates(state: Mapping, read_blob: Callable[[str], bytes],
+                      all_keys: Callable[[], list[str] | None] | None = None
+                      ) -> list[str] | None:
+    """The row keys the sample is drawn from: the development rows (never a sealed
+    final-test row) less the rows kept out of training for a delayed label (their outcome is
+    not known at the decision moment); in a study without a final test every row, from
+    ``all_keys()``. None when they cannot be listed."""
+    keys = development_keys(read_blob, inputs(state))
+    if keys is None:
+        keys = all_keys() if all_keys is not None else None
+        if keys is None:
+            return None
+    excluded = excluded_keys(read_blob, training_exclusions(state))
+    return [k for k in keys if k not in excluded]
+
+
+def sample(state: Mapping, read_blob: Callable[[str], bytes],
+           all_keys: Callable[[], list[str] | None] | None = None) -> dict | None:
+    """``{seed, row_keys}`` of the step-1 sample, or None when no row can be listed."""
+    keys = sample_candidates(state, read_blob, all_keys)
+    if not keys:
+        return None
+    seed = sample_seed(state)
+    return {'seed': seed, 'row_keys': draw(seed, keys)}

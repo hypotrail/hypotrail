@@ -54,7 +54,10 @@ RESULT_KEYS = ('result_id', 'activity', 'slot', 'promoted', 'current', 'stale_re
 EXPOSURE_RECORD_KEYS = ('exposure_id', 'revision', 'time', 'activity', 'result_id',
                         'execution_id', 'purpose', 'partition', 'n_rows', 'columns')
 LEDGER_KEYS = ('purpose', 'partition', 'rows', 'records', 'activities', 'first_revision',
-               'last_revision')
+               'last_revision',
+               # Contract P1.9 (CLI-CONTRACT §17.3): the note of the step-1 sample's entry, in
+               # the study language (``exposure.SAMPLE_NOTE``); null for every other purpose.
+               'note')
 IMPACT_KEYS = ('decision_id', 'mutation', 'row', 'change', 'stale_slots', 'kept_slots', 'refit',
                'reconfirm', 'notes')
 DETAIL_KEYS = ('result_id', 'values', 'params', 'inputs', 'code', 'environment', 'blobs',
@@ -319,8 +322,12 @@ def _exposure(study: read.Study) -> dict:
                 else min(row['first_revision'], revision)
             row['last_revision'] = revision if row['last_revision'] is None \
                 else max(row['last_revision'], revision)
+    from . import exposure
+    language = study.state.get('language') or 'en'
     for key, row in ledger.items():
         row['rows'] = len(rows[key])
+        row['note'] = (exposure.sample_note(language) if row['purpose'] == exposure.SAMPLE_PURPOSE
+                       else None)
     purpose_rank = {p: i for i, p in enumerate(rec.EXPOSURE_PURPOSES)}
     part_rank = {p: i for i, p in enumerate(PARTITION_ORDER)}
     ordered = sorted(ledger.values(), key=lambda x: (

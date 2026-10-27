@@ -191,8 +191,10 @@ data_section:
   case_unknown: Le cas ne documente pas sa disponibilité ; la variable est utilisée comme connue au moment de la prédiction.
   target: Cible
   dictionary: Colonnes par groupe
-  rows: Premières lignes de développement, cible en premier
-  rows_note: Lignes fixes montrées pour rendre les colonnes concrètes. Il s'agit uniquement de lignes de développement.
+  rows: Huit lignes de développement tirées au hasard, cible comprise (un regard compté sur la cible)
+  rows_note: Uniquement des lignes de développement, tirées au hasard à partir d'une graine fixée pour cette étude, de sorte que la fiche des données, ce rapport et le notebook montrent les mêmes lignes. Les valeurs de leur cible sont un regard sur la cible avant le découpage, inscrit au registre d'exposition.
+  rows_seed: 'Graine du tirage :'
+  rows_hidden: La cible de ces lignes s'affiche quand une écriture enregistre ce regard.
   rows_missing: Les lignes d'exemple n'ont pas pu être lues.
   ungrouped: Autres colonnes
   missing: Valeurs manquantes dans les lignes de développement

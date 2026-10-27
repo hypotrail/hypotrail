@@ -1138,11 +1138,13 @@ def _digest(action: Mapping, view: Mapping, state: Mapping, ctx: dict, lang: str
                  _t(lang, f'The target is {target}{positive}.', f'La cible est {target}{positive}.')
                  if target else '',
                  _t(lang, 'The data card shows what one row describes, the columns grouped with '
-                          'their meaning, and five example rows. Nothing is decided at this '
-                          'step.',
+                          'their meaning, and eight development rows drawn at random, target '
+                          'included: a look at the target, counted in the exposure ledger. '
+                          'Nothing is decided at this step.',
                     'La fiche des données montre ce que décrit une ligne, les colonnes '
-                    'regroupées avec leur sens, et cinq lignes d\'exemple. Rien n\'est décidé à '
-                    'cette étape.')]
+                    'regroupées avec leur sens, et huit lignes de développement tirées au '
+                    'hasard, cible comprise : un regard sur la cible, compté au registre '
+                    'd\'exposition. Rien n\'est décidé à cette étape.')]
         return _fit(parts)
     if kind == 'propose':
         parts = _digest_propose(action.get('decision'), view, ctx, lang, action)

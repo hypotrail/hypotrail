@@ -99,7 +99,8 @@ def test_exposure_records_development_inspection_and_sealed_final_test(bank_stud
     records = fk.exposure_records(flow.study)
     assert [(r['purpose'], r['partition'], r['n_rows']) for r in records] == [
         ('structural_inspection', 'development', 3617),
-        ('labelled_preview_available', 'development', 5),
+        # Contract P1.9: the seeded step-1 sample (target included) replaces J4's preview.
+        ('development_target_sample', 'development', 8),
         ('sealed', 'final_test', 904)]
     s = read.open(flow.study)
     assert set(s.blob(records[0]['row_keys']).decode().split()) == \

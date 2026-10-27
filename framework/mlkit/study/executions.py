@@ -590,6 +590,9 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
     options = act.normalize_options(activity, options)
     eid = execution_id(request_id)
     with store.writing() as state:
+        # Contract P1.9: a study created before the step-1 sample records its look on its
+        # first write, before the write's own work (once per seed).
+        exposure.ensure_sample(store, state)
         if activity == act.CAPTURE and not options:
             # Round 5 (review E, R5E-3): a capture run again without --profile or --packager
             # keeps the options of the capture it replaces, so an MLflow package is never

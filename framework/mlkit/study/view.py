@@ -930,7 +930,7 @@ def _recap_next(summary_out: dict, view: dict, junior: bool = False) -> str:
     if kind == 'show_data_card':
         # WP-A9 (M4): step 0 is the first step of the plan, not its end.
         return ('show the junior the data card (hypotrail data): what one row describes, the '
-                'columns and their meaning, and five example rows; nothing to confirm. Then '
+                'columns and their meaning, and the eight sample rows; nothing to confirm. Then '
                 'propose the prediction moment.')
     if kind != 'done' and nxt.get('message'):
         return str(nxt['message']).strip()

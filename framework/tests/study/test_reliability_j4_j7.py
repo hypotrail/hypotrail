@@ -50,13 +50,18 @@ def test_policy_inspection_records_every_consultation_without_refit(tmp_path):
 
 
 def test_labelled_preview_and_unrecorded_surface_contract(tmp_path):
+    """J4: the labelled rows the data card shows are recorded at init. Contract P1.9: a study
+    created now records the seeded step-1 sample (eight rows, target included) instead of the
+    five first rows; an older study's ``labelled_preview_available`` record stays as it is."""
     case = make_case(tmp_path / 'case', n_rows=100)['case'].parent
     flow = Flow(tmp_path / 'study', case)
     flow.init()
     study = read.open(flow.study)
+    purposes = [e['purpose'] for e in study.exposure_records()]
+    assert 'labelled_preview_available' not in purposes
     labelled = [e for e in study.exposure_records()
-                if e['purpose'] == 'labelled_preview_available']
-    assert len(labelled) == 1 and labelled[0]['n_rows'] == 5
+                if e['purpose'] == 'development_target_sample']
+    assert len(labelled) == 1 and labelled[0]['n_rows'] == 8
     assurance = view.build(study)['assurance']
     assert assurance['exploration_coverage'] == 'instrumented_operations_only'
     assert assurance['unrecorded_surfaces'] == ['preview', 'workbench', 'external_files']

@@ -238,8 +238,10 @@ data_section:
   case_unknown: The case does not document its availability; it is used as known at prediction time.
   target: Target
   dictionary: Columns by group
-  rows: The first development rows, target first
-  rows_note: Fixed rows (the first by position in the file), shown to make the columns concrete. They are development rows only.
+  rows: Eight development rows drawn at random, target included (a counted look at the target)
+  rows_note: Development rows only, drawn at random from a seed fixed for this study, so the data card, this report and the notebook show the same rows. Their target values are a look at the target before the split, recorded in the exposure ledger.
+  rows_seed: 'Seed of the draw:'
+  rows_hidden: The target of these rows is shown once a write records that look.
   rows_missing: The example rows could not be read.
   ungrouped: Other columns
   missing: Missing in development rows

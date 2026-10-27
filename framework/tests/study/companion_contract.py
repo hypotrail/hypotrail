@@ -159,7 +159,7 @@ EXPOSURE_KEYS = ('summary', 'records', 'ledger', 'prior_exposure')
 EXPOSURE_RECORD_VIEW_KEYS = ('exposure_id', 'revision', 'time', 'activity', 'result_id',
                              'execution_id', 'purpose', 'partition', 'n_rows', 'columns')
 LEDGER_KEYS = ('purpose', 'partition', 'rows', 'records', 'activities', 'first_revision',
-               'last_revision')
+               'last_revision', 'note')
 IMPACT_KEYS = ('decision_id', 'mutation', 'row', 'change', 'stale_slots', 'kept_slots', 'refit',
                'reconfirm', 'notes')
 EDA_CATALOG_KEYS = ('activities',)

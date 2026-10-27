@@ -44,7 +44,7 @@ BANNER_END = '<!--/hypotrail:banner-->'
 # (:mod:`mlkit.study.render_lesson`).
 TEMPLATE_VERSION = 4
 # ``structure``: a count recorded in the study state rather than computed by an activity
-# (the sealed final test, the dataset rows); ``data_row``: a cell of the five development
+# (the sealed final test, the dataset rows); ``data_row``: a cell of the sample's development
 # rows shown as recorded in the file; ``axis``: a chart tick, exempt only inside an SVG
 # (WP-A6, :mod:`mlkit.study.render_charts`).
 LITERAL_KINDS = ('revision', 'ordinal', 'user_words', 'proposal', 'decision_value', 'case',
@@ -1690,17 +1690,22 @@ def data_dictionary(view: Mapping, citer: cite.Citer, variables: list[dict]) -> 
 
 
 def data_rows(sample: Mapping | None) -> str:
-    """The five fixed development rows, target first (``cmd_render.sample_rows``)."""
+    """The seeded step-1 sample, target first (contract P1.9, ``cmd_render.sample_rows``),
+    with its seed in a note."""
     ds = _labels()['data_section']
     parts = [f'<h3>{e(ds["rows"])}</h3>']
     if sample and sample.get('rows'):
         cols = sample['columns']
         head_html = ''.join(f'<th>{lit("identifier", c)}</th>' for c in cols)
-        body = ''.join('<tr>' + ''.join(f'<td>{lit("data_row", r["values"].get(c, ""))}</td>'
-                                        for c in cols) + '</tr>' for r in sample['rows'])
+        body = ''.join(f'<tr data-row-key="{e(str(r["row_key"]))}">'
+                       + ''.join(f'<td>{lit("data_row", r["values"].get(c, ""))}</td>'
+                                 for c in cols) + '</tr>' for r in sample['rows'])
+        hidden = '' if sample.get('target_shown', True) else f' {e(ds["rows_hidden"])}'
+        seed = (f' {e(ds["rows_seed"])} {lit("identifier", sample["seed"], "code")}.'
+                if sample.get('seed') else '')
         parts.append(f'<div class="scroll"><table class="rows"><thead><tr>{head_html}</tr>'
                      f'</thead><tbody>{body}</tbody></table></div>'
-                     f'<p class="small">{e(ds["rows_note"])}</p>')
+                     f'<p class="small">{e(ds["rows_note"])}{hidden}{seed}</p>')
     else:
         parts.append(f'<p class="muted">{e(ds["rows_missing"])}</p>')
     return ''.join(parts)

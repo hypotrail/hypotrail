@@ -51,12 +51,18 @@ EXPOSURE_PURPOSES = ('structural_inspection', 'train_eda', 'train_fit',
                      'development_diagnostics',
                      # J4: an explicit, recorded consultation of persisted predictions, and
                      # the labelled rows made visible by the init data card.
-                     'policy_exploration', 'labelled_preview_available')
+                     'policy_exploration', 'labelled_preview_available',
+                     # Contract P1.9 (CLI-CONTRACT §17.3): the target values of the seeded
+                     # step-1 sample, shown before the split (a counted look at the target).
+                     'development_target_sample')
 # Purposes that record rows set aside rather than looked at: not counted in rows_exposed.
 SEALED_PURPOSES = ('sealed',)
 EXPOSURE_KEYS = ('schema', 'exposure_id', 'revision', 'activity', 'result_id', 'execution_id',
                  'purpose', 'partition', 'n_rows', 'row_keys', 'dataset_sha256', 'columns',
                  'time')
+# Optional keys of an exposure record, after :data:`EXPOSURE_KEYS` (contract P1.9): the seed of
+# the step-1 sample a ``development_target_sample`` record shows.
+EXPOSURE_OPTIONAL_KEYS = ('sample_seed',)
 # Purposes that read the validation partition to choose something: their rows are
 # no longer independent evidence.
 SELECTION_PURPOSES = ('validation_model_evaluation', 'validation_policy_selection',

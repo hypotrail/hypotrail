@@ -77,6 +77,8 @@ PURPOSE_LABELS = {'structural_inspection': 'Structural inspection',
                   'validation_policy_selection': 'Rule selection',
                   'policy_exploration': 'Recorded policy exploration',
                   'labelled_preview_available': 'Labelled preview made available',
+                  # Contract P1.9 (CLI-CONTRACT §17.3).
+                  'development_target_sample': 'Development target sample shown at step 1',
                   'sealed': 'Final test set aside, sealed (schema check only)'}
 BASIS_WORDS = {st.EXPLICIT: "the junior's own decision",
                # ADR 0005: the two kinds of own words of the guided mode.
@@ -101,6 +103,8 @@ PURPOSE_LABELS_FR = {'structural_inspection': 'Inspection de la structure',
                      'validation_policy_selection': 'Choix de la règle',
                      'policy_exploration': 'Exploration enregistrée des règles',
                      'labelled_preview_available': 'Aperçu étiqueté mis à disposition',
+                     'development_target_sample': 'Échantillon de développement montré à '
+                                                  "l'étape 1, cible comprise",
                      'sealed': 'Test final mis de côté, scellé (contrôle du schéma seulement)',
                      'cross_validated_fit': 'Ajustement en validation croisée',
                      'out_of_fold_evaluation': 'Évaluation hors pli',

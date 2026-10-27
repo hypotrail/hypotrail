@@ -277,7 +277,9 @@ FULL_REGRESSION_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availab
                             'success_criterion', 'train_eda', 'preprocessing', 'models',
                             'model_choice', 'conclusion')
 DATA_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'observation_unit', 'development',
-                     'target', 'final_test', 'groups', 'rows', 'note')
+                     'target', 'final_test', 'groups', 'rows', 'note',
+                     # Contract P1.10 (§17.4): the special-value rows, without the target.
+                     'special_rows')
 DATA_VARIABLE_KEYS = ('name', 'role', 'type', 'unit', 'description', 'description_fr',
                       'availability', 'decided', 'special_values', 'n_missing', 'n_distinct',
                       'examples')
@@ -441,7 +443,9 @@ EXPOSURE_PURPOSES = ('structural_inspection', 'train_eda', 'train_fit',
                      'out_of_fold_policy_selection', 'final_evaluation',
                      # v0.2b (WP-B4): the diagnostics of the development predictions.
                      'development_diagnostics', 'policy_exploration',
-                     'labelled_preview_available')
+                     'labelled_preview_available',
+                     # Contract P1.9 (§17.3): the seeded step-1 sample's target values.
+                     'development_target_sample')
 EXPOSURE_PARTITIONS = ('all', 'train', 'validation', 'development', 'final_test')
 FINAL_TEST_STATUS_KEYS = ('status', 'rows', 'method', 'fraction', 'development_rows',
                           'schema_check',
@@ -928,7 +932,8 @@ def test_extension_point_signatures():
     assert [n for n, _ in _params(registry.code_fingerprint)] == ['modules']
     assert [n for n, _ in _params(exposure.record)] == [
         'store', 'exposure_id', 'revision', 'activity', 'result_id', 'purpose', 'partition',
-        'row_keys', 'dataset_sha256', 'columns', 'execution_id']
+        'row_keys', 'dataset_sha256', 'columns', 'execution_id',
+        'sample_seed']                                    # contract P1.9, keyword, last
     assert [n for n, _ in _params(exposure.overlap)] == ['old_split', 'new_split', 'store']
     assert [n for n, _ in _params(exposure.summary)] == ['store', 'state']
     assert [n for n, _ in _params(dep.effects)] == ['old_state', 'decision_id', 'old', 'new']

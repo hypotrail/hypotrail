@@ -100,41 +100,42 @@ def _variables(view: dict) -> list[dict]:
     return out
 
 
-SAMPLE_ROWS = 5
-
-
 def sample_rows(study: Path, view: dict) -> dict | None:
-    """The five fixed development rows of the report's data section (v0.2a, WP-A6): the
-    first development rows by position in the file, target first, as recorded (text).
+    """The seeded step-1 sample of the report's data section (contract P1.9, CLI-CONTRACT
+    §17.3): eight development rows drawn at random, target first, as recorded (text), with
+    the seed (``{columns, rows, seed, target_shown}``).
 
-    The same rows as ``hypotrail data`` (the first five by row key), read with the standard
-    library so that a render never imports pandas. Development rows only: the sealed final
-    test is never read (ADR 0006); ``init`` already recorded their structure as exposure.
-    None when they cannot be read (the report then says so)."""
-    from . import case as c, data as dt, partition, read
+    The same rows as ``hypotrail data`` (``partition.sample``), read with the standard library
+    so that a render never imports pandas, and only those lines. Development rows only: the
+    sealed final test is never read (ADR 0006). The target is shown only when the look is
+    recorded (render records it first, :func:`render_all`). None when they cannot be read
+    (the report then says so)."""
+    from . import case as c, data as dt, exposure, read
 
     try:
         snapshot = read.open(study)
+        entries = snapshot.exposure_records()
+        drawn = exposure.current_sample(snapshot, snapshot.state, entries)
+        if drawn is None:
+            return None
+        shown = bool(exposure.sample_records(entries, drawn['seed']))
         case = c.load_case(view['case']['path'], verify_data=False)
-        keys = partition.development_keys(snapshot.blob, partition.inputs(snapshot.state))
         lines = case.dataset_path.read_bytes().decode(case.dataset['encoding']).split('\n')
         first = 2 if case.dataset['header'] else 1
         body = lines[1:] if case.dataset['header'] else lines
-        candidates = (sorted(keys, key=lambda k: int(str(k)[1:])) if keys is not None
-                      else [f'L{first + i}' for i in range(len(body))])
-        wanted = candidates[:SAMPLE_ROWS]
         split = dt._field_splitter(case)
         names = case.column_names
         target = case.target_column
-        columns = [target] + [n for n in names if n != target]
+        columns = ([target] if shown else []) + [n for n in names if n != target]
         rows = []
-        for key in wanted:
+        for key in drawn['row_keys']:
             fields = split(body[int(key[1:]) - first].rstrip('\r'))
             if len(fields) != len(names):
                 return None
             record = dict(zip(names, fields))
             rows.append({'row_key': key, 'values': {col: record[col] for col in columns}})
-        return {'columns': columns, 'rows': rows}
+        return {'columns': columns, 'rows': rows, 'seed': drawn['seed'],
+                'target_shown': shown}
     except Exception:          # the report still renders, without the example rows
         return None
 
@@ -248,6 +249,11 @@ def render_all(study_dir) -> dict:
     # Marimo's code generator is imported by render_notebook only when the notebook text
     # changes (cached template); most commits render without importing it.
     with lock.writer_lock(study):
+        # Contract P1.9: render is a write; a study created before the step-1 sample records
+        # its look here when no write did, so the report shows the target it records.
+        from . import exposure
+        store = StudyStore(study)
+        exposure.ensure_sample(store, store.load_state())
         view = view_model.build(study)
         manifest = mf.load(study)
         items = _render_notebooks(study, view, manifest)

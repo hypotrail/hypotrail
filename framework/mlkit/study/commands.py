@@ -2276,15 +2276,10 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
                                  row_keys=development.index.keys,
                                  dataset_sha256=index.dataset_sha256,
                                  columns=case.column_names)
-        # J4: the data card deterministically shows these labelled development rows. Record
-        # their availability at init; previews remain byte-level read-only afterwards.
-        preview_keys = sorted(development.index.keys,
-                              key=lambda key: int(str(key)[1:]))[:5]
-        exposure.record(store, exposure_id=exposure.new_exposure_id(),
-                        revision=state['revision'], activity='init.labelled_preview',
-                        result_id=None, purpose='labelled_preview_available',
-                        partition=partition.DEVELOPMENT, row_keys=preview_keys,
-                        dataset_sha256=index.dataset_sha256, columns=case.column_names)
+        # Contract P1.9 (CLI-CONTRACT §17.3): the data card, the report and the notebook show
+        # the seeded step-1 sample, target included: a counted look at the target, recorded
+        # once per seed. It replaces J4's ``init.labelled_preview`` for a study created now.
+        exposure.ensure_sample(store, state)
         exposure.record(store, exposure_id=exposure.new_exposure_id(),
                         revision=state['revision'], activity=partition.ACTIVITY,
                         result_id=None, purpose=partition.EXPOSURE_PURPOSE,
@@ -2408,6 +2403,9 @@ def apply(study_dir, *, action: str, params: dict, request_id: str, expected_rev
     if not store.exists():
         raise StudyError('study_missing', f'No study here: {store.state_path} does not exist.',
                          details={'study': str(store.study_dir)})
+    # Contract P1.9: a study created before the step-1 sample records its look on its first
+    # write, before the write's own work (once per seed).
+    exposure.ensure_sample_locked(store.study_dir)
     request = {'request_id': request_id, 'expected_revision': expected_revision,
                'action': action, 'params': params}
     available = handlers(Context(store, request_id))

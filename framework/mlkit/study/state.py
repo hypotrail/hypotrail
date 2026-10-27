@@ -1580,7 +1580,7 @@ def _planned_action(state: dict) -> dict:
             return {'kind': 'show_data_card', 'step': DISCOVER_DATA,
                     'message': 'Before proposing anything, show the junior the data card '
                                '(hypotrail data): the row unit, the grouped columns with their '
-                               'meaning and availability, and the five example rows. It is '
+                               'meaning and availability, and the eight sample rows. It is '
                                'informational: nothing to confirm. Then propose the prediction '
                                'moment.'}
         if step['status'] == 'blocked':

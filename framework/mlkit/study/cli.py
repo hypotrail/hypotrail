@@ -101,7 +101,7 @@ EXTENSION_HELP = {
     'evidence': 'read-only results, lineage, rows read, and exploration catalog',
     'explain': 'glossary terms, step texts, and examples cited from this study',
     'export': 'export a handoff pack of the study into a new folder',
-    'data': 'read-only data card: row unit, sizes, grouped columns, five development rows',
+    'data': 'read-only data card: row unit, sizes, grouped columns, eight sample rows',
     'understanding': 'opt-in understanding and handover review (off by default; ADR 0008)',
     'automation': 'run the automatic mode chosen at init, or stop it in the junior\'s words',
 }

@@ -349,10 +349,11 @@ def _junior_next(action: Mapping, lang: str = EN) -> tuple[str, str]:
         # WP-A4 (R2): step 0, informational.
         if fr:
             return AGENT, ("D'abord, regardez les données avec l'assistant : ce que décrit une "
-                           'ligne, les colonnes et ce que chacune signifie, et cinq lignes '
-                           "d'exemple. Rien n'est décidé à cette étape.")
+                           'ligne, les colonnes et ce que chacune signifie, et huit lignes '
+                           "tirées au hasard. Rien n'est décidé à cette étape.")
         return AGENT, ('First, look at the data with the assistant: what one row describes, '
-                       'the columns and what each one means, and five example rows. Nothing '
+                       'the columns and what each one means, and eight rows drawn at random. '
+                       'Nothing '
                        'is decided at this step.')
     if kind in ('propose', 'run'):
         # The step's question, written for the junior (state.STEPS); WP-C: in French, its
