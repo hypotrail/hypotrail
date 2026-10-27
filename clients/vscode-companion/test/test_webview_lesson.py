@@ -22,6 +22,8 @@ This is not a VS Code session.
 """
 from __future__ import annotations
 
+import copy
+
 import pytest
 
 from conftest import inline_styles_ok
@@ -199,6 +201,35 @@ def test_ls2_the_next_move_copies_a_question_in_the_panel_language(open_panel, v
     assert [m['type'] for m in sent] == ['ask_agent'] and sent[0]['mode'] == 'copy'
     assert sent[0]['question'].startswith({'en': 'I am reading the proposal on', 'fr': 'Je lis la proposition sur'}[lang])
     clean(panel)
+
+
+@pytest.mark.parametrize('lang', ['en', 'fr'])
+def test_ls2_r24_the_review_of_an_automatic_decision_copies_an_adoption_question(open_panel, views, lang):
+    """R24 (owner session 2026-10-27): ``next_action.review`` (a decision the automatic mode
+    recorded) is an adoption question, as the chat's review pause is (kind ``decision``, adopt,
+    change or explain, nothing recommended): the next move says "Review", not "Confirm again",
+    and its copied question asks to adopt or change it. Without ``review`` the same
+    reconfirmation keeps its words."""
+    summary = copy.deepcopy(views['summary.regression'])
+    decision = 'prediction_time'
+    assert decision in [s['id'] for s in summary['plan']]
+    words = {'en': ('Review ', 'The automatic mode recorded '),
+             'fr': ('Relire ', 'Le mode automatique a enregistré ')}[lang]
+    for review in (True, False):
+        summary['nextAction'] = {**summary['nextAction'], 'kind': 'reconfirm', 'decision': decision,
+                                 'proposalId': None, 'step': None, 'review': review}
+        panel = open_case(open_panel, {**views, 'summary.regression': summary}, case='regression', lang=lang)
+        hero = panel.page.locator('[data-band] [data-ov="hero"]')
+        title = hero.locator('[data-hero-title]').first.inner_text()
+        assert (hero.get_attribute('data-hero-review') == 'true') is review
+        assert title.startswith(words[0]) is review, title
+        assert hero.locator('[data-write]').count() == 0
+        before = len(panel.posted())
+        hero.locator('[data-copy-question]').click()
+        sent = panel.posted()[before:]
+        assert [m['type'] for m in sent] == ['ask_agent'] and sent[0]['mode'] == 'copy'
+        assert sent[0]['question'].startswith(words[1]) is review, sent[0]['question']
+        clean(panel)
 
 
 BOARD = "() => getComputedStyle(document.body).getPropertyValue('--board').trim().toLowerCase()"

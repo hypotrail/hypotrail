@@ -164,8 +164,12 @@
     const step = arr(model.plan).find(s => s.id === (next.decision || next.step));
     // WP-B5: the opening of the final test is a chat act: its own words, and no action.
     const opening = (next.decision || next.step) === 'final_test';
+    // R24 (owner session 2026-10-27): the review of an automatic decision is an adoption
+    // question (adopt or change, in the chat), not a change underneath it.
+    const review = next.review === true && ['reconfirm', 'await_user_words'].includes(kind) && Boolean(N.review);
     const spec = opening && kind === 'await_user_words' ? N.finalTest.await
-      : opening && ['propose', 'run', 'blocked'].includes(kind) ? N.finalTest.propose : N[kind];
+      : opening && ['propose', 'run', 'blocked'].includes(kind) ? N.finalTest.propose
+        : review && !opening ? N.review : N[kind];
     const pause = step && Number.isInteger(step.pause) ? step.pause : null;
     const proposal = next.kind === 'await_user_words'
       ? arr(model.proposals).find(p => p.proposalId === next.proposalId) || arr(model.proposals)[0] || null : null;
@@ -200,7 +204,7 @@
       children.push(el('p', { className: 'ov-hero-why', 'data-hero-why': decision }, [
         el('strong', { text: `${N.whyTitle}. ` }), J().why(decision, task)]));
     }
-    if (!compact && kind === 'reconfirm' && model.decisions && model.decisions[decision] && model.decisions[decision].reason) {
+    if (!compact && kind === 'reconfirm' && !review && model.decisions && model.decisions[decision] && model.decisions[decision].reason) {
       children.push(el('p', { className: 'muted', 'data-hero-reason': true, text: c.becauseChanged }));
     }
     const support = compact ? null : supporting(model, ctx, proposal);
@@ -222,7 +226,7 @@
     // ready question for the chat (the agent bridge: a clipboard copy, never a write); the
     // way to the card in Decisions or to the run stays a link-like button beside it.
     const copyButton = HT.askButton(ctx, heroAbout(model, next, kind, proposal, decision, step),
-      title, { label: HT.copy.lesson.copyQuestion, question: heroQuestion(next, kind, opening, name, step, c), stage: 'v0', direct: true,
+      title, { label: HT.copy.lesson.copyQuestion, question: heroQuestion(next, kind, opening, name, step, c, review), stage: 'v0', direct: true,
         attrs: { className: 'ov-hero-copy', 'data-copy-question': kind } });
     if (copyButton) actions.push(copyButton);
     if (target && spec.action) {
@@ -244,7 +248,7 @@
     if (proposal && proposal.value) engine.push({ id: proposal.proposalId, label: N.engineLabel, text: `${proposal.value} (${proposal.proposalId})` });
     if (!compact) children.push(details(N.details, engine, { 'data-hero-details': true }));
     return el('section', { className: `ov-hero${compact ? ' ov-hero-compact' : ''}`, 'aria-labelledby': 'ov-hero-title', 'data-ov': 'hero',
-      'data-hero': kind, 'data-hero-compact': compact ? 'true' : null }, children);
+      'data-hero': kind, 'data-hero-review': review ? 'true' : null, 'data-hero-compact': compact ? 'true' : null }, children);
   }
 
   /** What the copied question is about (§4.2 kinds; the bridge labels it from the snapshot). */
@@ -259,9 +263,10 @@
   }
 
   /** The ready question of the next move, in the panel language (media/copy/lesson.js and its French twin). */
-  function heroQuestion(next, kind, opening, name, step, c) {
+  function heroQuestion(next, kind, opening, name, step, c, review = false) {
     const Q = HT.copy.lesson.questions;
     if (opening) return kind === 'await_user_words' ? Q.final_await() : Q.final_next();
+    if (review && Q.review) return Q.review(name);
     if (kind === 'await_user_words') return Q.await_user_words(name);
     if (kind === 'reconfirm') return Q.reconfirm(name);
     if (kind === 'choice') return Q.choice(name);

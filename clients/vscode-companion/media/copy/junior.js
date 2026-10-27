@@ -292,6 +292,10 @@
       leadTraining: 'The assistant proposed this in the chat. Answer in the chat, in your own words: say what it decides, or what you change.' },
     reconfirm: { title: name => `Confirm ${name} again`, action: 'Open in Decisions',
       lead: 'Something it rests on changed, so your earlier answer no longer holds until you confirm it again.' },
+    // R24 (owner session 2026-10-27): the review of a decision the automatic mode recorded
+    // (`next_action.review`): adopt it or change it in the chat; nothing changed underneath.
+    review: { title: name => `Review ${name}`, action: 'Open in Decisions',
+      lead: 'The automatic mode recorded this decision without your words. Review it in the chat: adopt it in your own words, or say what you change.' },
     acknowledge_interruption: { title: () => 'A run stopped before it finished', action: 'Go to the run',
       lead: 'Its outcome is unknown. Say in the chat, in your own words, that you know this; nothing restarts by itself, and this panel records nothing.' },
     outcome_unknown: { title: () => 'A run stopped before it finished', action: 'Go to the run',

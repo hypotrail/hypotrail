@@ -223,6 +223,9 @@
       leadTraining: "L'assistant l'a proposé dans le chat. Répondez dans le chat, avec vos mots : dites ce qu'elle décide, ou ce que vous changez." },
     reconfirm: { title: name => `Confirmer de nouveau ${name}`, action: 'Ouvrir dans Décisions',
       lead: "Quelque chose sur quoi elle repose a changé : votre réponse précédente ne vaut plus tant que vous ne la confirmez pas de nouveau." },
+    // R24 (session du 2026-10-27) : la relecture d'une décision enregistrée par le mode automatique.
+    review: { title: name => `Relire ${name}`, action: 'Ouvrir dans Décisions',
+      lead: "Le mode automatique a enregistré cette décision sans vos mots. Relisez-la dans le chat : adoptez-la avec vos propres mots, ou dites ce que vous changez." },
     acknowledge_interruption: { title: () => "Une exécution s'est arrêtée avant la fin", action: "Aller à l'exécution",
       lead: "Son issue est inconnue. Dites dans le chat, avec vos mots, que vous le savez ; rien ne redémarre tout seul, et ce panneau n'enregistre rien." },
     outcome_unknown: { title: () => "Une exécution s'est arrêtée avant la fin", action: "Aller à l'exécution",

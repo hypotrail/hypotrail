@@ -185,6 +185,7 @@
     questions: {
       await_user_words: name => `I am reading the proposal on ${name}. Could you restate it so that I adopt it or change it in my own words?`,
       reconfirm: name => `Something changed under ${name}. Could you tell me what changed, so that I confirm it again or change it in my own words?`,
+      review: name => `The automatic mode recorded ${name} without my words. Could you restate it, so that I adopt it or change it in my own words?`,
       choice: name => `Could you show me the options for ${name} and what each one would change, so that I choose in my own words?`,
       outcome_unknown: () => 'A run stopped before it finished and its outcome is unknown: what do we do? I want to acknowledge it in my own words, or run it again.',
       final_await: () => 'Could you restate the proposal to open the final test, so that I answer it in my own words?',

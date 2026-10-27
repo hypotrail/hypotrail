@@ -176,6 +176,7 @@
     questions: {
       await_user_words: name => `Je lis la proposition sur ${name}. Pouvez-vous la reformuler pour que je l'adopte ou la change avec mes mots ?`,
       reconfirm: name => `Quelque chose a changé sous ${name}. Pouvez-vous me dire ce qui a changé, pour que je la confirme de nouveau ou la change avec mes mots ?`,
+      review: name => `Le mode automatique a enregistré ${name} sans mes mots. Pouvez-vous la reformuler, pour que je l'adopte ou la change avec mes mots ?`,
       choice: name => `Pouvez-vous me montrer les options pour ${name} et ce que chacune changerait, pour que je choisisse avec mes mots ?`,
       outcome_unknown: () => "Une exécution s'est arrêtée avant la fin et son issue est inconnue : que fait-on ? Je veux en prendre acte avec mes mots, ou la relancer.",
       final_await: () => "Pouvez-vous reformuler la proposition d'ouvrir le test final, pour que j'y réponde avec mes mots ?",
