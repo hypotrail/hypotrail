@@ -450,3 +450,38 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   slots' words in English. Fixed: the words are the copy's `slotWords` (EN "See the
   decision-rule evaluation →", FR "Voir l'évaluation de la règle de décision →"), pinned in
   `decisions.test.js`.
+
+## Fourth session (automatic mode, Auto MPG FR, `5352eeb`) — for the next batch
+
+- **O6 (positive).** `init --automation until_final_test` then `automation run --progress` walked
+  Auto MPG to the review (`reason: reached_end`, revision 38, 25 steps): the structural check
+  ran before the target looks, the drafted preparation logged `horsepower`
+  (`data_contingent: false`), the variants were a tuned ridge plus an EBM motivated by the
+  shapes of `horsepower` and `weight`, the model choice picked the linear model, and the run
+  stopped before the final test with every decision in the review queue.
+- **R23. The automatic run's progress says too little.** Its stderr lines only name the step and
+  a state ("Mode automatique · 3 · la disponibilité des variables · proposée", "… · enregistrée
+  comme automatique", "Le modèle linéaire · terminé en 0 s"). The owner wants, clearly and in a
+  friendly tone, what is going on, the intermediate results and the decisions taken:
+  - one line per decision with its value in words and why (e.g. "Préparation : log de
+    horsepower (distribution asymétrique) ; rien d'autre") instead of two lines "proposée" /
+    "enregistrée comme automatique" (the propose/confirm pair is noise; the step counter
+    counts it twice);
+  - after each computation, its key result (split: 5 temporal folds, n rows each; quality:
+    missing, extremes, rare categories found; baseline and linear model: MAE out of fold;
+    variants: each one's MAE and the comparison's advice; diagnostics: the flags raised);
+  - a short header (mode, case, what will be done, where it stops) and a closing summary
+    (decisions to review, best model and its figure, what the junior does next);
+  - stdout then prints the full `hypotrail.automation/1` JSON (very long in a terminal): with
+    `--format text`, or by default on a terminal, print a readable summary instead and keep the
+    JSON for `--json`.
+  The numbers must stay traceable (cite registered values only; same formats as the study
+  language).
+- **R24. The review pause offers the wrong options.** After the run, `next_action` is
+  `reconfirm prediction_time` with `review: true` and the junior message "Relisez-la : adoptez-la
+  avec vos propres mots, ou dites ce que vous changez", but its `pause` is `kind: action` with
+  options `continue` / `explain` ("On continue", "Expliquer d'abord") and `recommended_option:
+  continue`. A review pause is an adoption question: it should offer adopt / change / explain
+  (the decision pause's options, with the restated value as the quoted block), never mark
+  "continue" as recommended, and its position should name the reviewed decision, not
+  `final_test`.
