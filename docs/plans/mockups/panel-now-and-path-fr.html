@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panel Maintenant et Parcours</title>
+<style>
+/* Charte « tableau noir / papier millimétré » v5. */
+:root{
+  --board:#20312C; --board2:#1A2925; --chalk:#EDE8DA; --chalk2:#C9C4B6;
+  --ink:#EDE8DA; --faint:#8F9A93; --line:rgba(237,232,218,.14); --line2:rgba(237,232,218,.3);
+  --yellow:#F0D178; --mint:#B9E2C4; --violet:#C8B6F5; --coral:#F3A28F;
+  --cardink:#22302B;
+  --serif:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --sans:"Avenir Next",Avenir,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--board);color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.05),transparent 55%)}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+.eyebrow{font:600 .72rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow)}
+
+/* ===== page ===== */
+.page{max-width:1240px;margin:0 auto;padding:20px 16px 60px}
+.page>h1{font:400 2rem/1.15 var(--serif);margin:6px 0 8px}
+.lede{color:var(--chalk2);max-width:76ch}
+.controls{position:sticky;top:0;z-index:20;background:var(--board);border-bottom:1px solid var(--line2);
+  display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:10px 0;margin-top:16px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1.5px solid var(--line2);border-radius:4px;overflow:hidden}
+.seg button{background:transparent;border:0;padding:6px 11px;font-size:.86rem}
+.seg button+button{border-left:1px solid var(--line2)}
+.seg button[aria-pressed="true"]{background:var(--yellow);color:var(--cardink);font-weight:600}
+.ctl-label{font-size:.8rem;color:var(--faint);margin-right:4px}
+.stage{display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;margin-top:20px;align-items:start}
+@media (max-width:1000px){.stage{grid-template-columns:minmax(0,1fr)}}
+.stage>*{min-width:0}
+.notes h2{font:400 1.45rem var(--serif);margin-bottom:6px}
+.notes h3{font:600 .72rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);margin:16px 0 4px}
+.notes ul{padding-left:18px;color:var(--chalk2)} .notes li{margin:3px 0}
+.notes .chatline{font-family:var(--mono);font-size:.84rem;background:rgba(0,0,0,.2);border-left:3px solid var(--yellow);padding:8px 10px;color:var(--chalk)}
+section.block{margin-top:44px}
+section.block>h2{font:400 1.6rem var(--serif);margin-bottom:6px}
+.fix{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}
+.fix th,.fix td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top;color:var(--chalk2)}
+.fix th{color:var(--yellow);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase}
+.fix td:first-child{color:var(--chalk);width:38%}
+.tablewrap{overflow-x:auto}
+.cols{columns:2 320px;column-gap:28px;color:var(--chalk2)} .cols li{break-inside:avoid;margin:3px 0 3px 18px}
+
+/* ===== panneau simulé ===== */
+.vsc{position:relative;border:1px solid #0d1512;border-radius:6px;overflow:hidden;box-shadow:0 18px 40px -20px rgba(0,0,0,.7);width:600px;max-width:100%}
+.vsc.narrow{width:420px}
+.vsc-bar{background:#151d1a;color:#9aa59f;font:12px var(--sans);padding:6px 10px;display:flex;gap:8px;align-items:center}
+.vsc-bar i{width:9px;height:9px;border-radius:50%;background:#3a4540;display:inline-block}
+/* Thème du panneau seul (R33) : tokens redéfinis sur .pane. Contrastes AA vérifiés sur fond et sur fiche. */
+.pane{--bg:#20312C;--bg2:#1A2925;--ink:#EDE8DA;--soft:#C9C4B6;--faint:#A3ADA6;--line:rgba(237,232,218,.14);--line2:rgba(237,232,218,.32);
+  --acc:#F0D178;--ok:#B9E2C4;--seal:#C8B6F5;--warn:#F3A28F;
+  --card:#F5F1E6;--cink:#22302B;--cmuted:#4A5651;--cline:rgba(34,48,43,.16);--csoft:#ECE7D8;--cacc:#7A4E0C;--pen:#1E4E9E;--leaf:#1F6B3D;--cwarn:#A12C24;
+  background:var(--bg);color:var(--ink);height:760px;overflow:auto;position:relative;font-size:14px;line-height:1.5}
+.pane.light{--bg:#F1F3F1;--bg2:#E4E8E4;--ink:#1E2A36;--soft:#3E4A57;--faint:#56626E;--line:rgba(30,42,54,.13);--line2:rgba(30,42,54,.32);
+  --acc:#7A5208;--ok:#1F6B3D;--seal:#5B3AAE;--warn:#A12C24;--card:#FFFFFF;--csoft:#F1EFE9}
+/* zone fixe */
+.top{position:sticky;top:0;z-index:4;background:var(--bg);border-bottom:1px solid var(--line)}
+.hd{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;padding:10px 14px 6px}
+.hd .name{font:400 1.2rem var(--serif);margin-right:2px}
+.pill{font-size:.76rem;border:1px solid currentColor;border-radius:12px;padding:1px 8px;white-space:nowrap;background:transparent}
+.pill.seal{color:var(--seal)} .pill.nyd{color:var(--warn)} .pill.ok{color:var(--ok)} .pill.auto{color:var(--acc)}
+.hd .sp{flex:1}
+.ib{background:transparent;border:1px solid var(--line2);border-radius:4px;padding:2px 8px;font-size:.8rem;white-space:nowrap;color:var(--ink)}
+.ib:hover{border-color:var(--acc);color:var(--acc)}
+.menu{position:absolute;right:10px;top:44px;z-index:8;background:var(--bg2);border:1px solid var(--line2);border-radius:5px;padding:6px 0;min-width:250px;box-shadow:0 10px 24px -10px rgba(0,0,0,.6)}
+.menu button,.menu .mi{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:transparent;border:0;padding:6px 14px;font-size:.85rem;color:var(--soft)}
+.menu button:hover{color:var(--acc)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:5px 0}
+.menu .mseg{display:inline-flex;border:1px solid var(--line2);border-radius:3px;overflow:hidden}
+.menu .mseg span{padding:0 7px;font-size:.78rem} .menu .mseg span.on{background:var(--acc);color:var(--bg)}
+.nydbox{margin:0 14px 8px;font-size:.84rem;color:var(--soft);border-left:2px solid var(--warn);padding:4px 10px}
+.nydbox ol{padding-left:18px}
+.prog{display:flex;align-items:center;gap:10px;padding:2px 14px 9px}
+.prog .bar{flex:1;height:5px;border-radius:3px;background:var(--line2);display:flex;gap:3px;overflow:hidden}
+.prog .bar i{display:block;height:100%;background:var(--line2)}
+.prog .bar i.d{background:var(--ok)} .prog .bar i.c{background:var(--acc)}
+.prog .lbl{font-size:.82rem;white-space:nowrap;color:var(--soft)} .prog .lbl b{color:var(--ink);font-weight:600}
+/* À traiter */
+details.todo{margin:0 14px 10px;border:1px solid var(--warn);border-radius:4px;background:rgba(243,162,143,.06)}
+.pane.light details.todo{background:rgba(161,44,36,.04)}
+details.todo>summary{list-style:none;cursor:pointer;padding:6px 10px;font-size:.86rem;display:flex;gap:8px;align-items:baseline}
+details.todo>summary::-webkit-details-marker{display:none}
+details.todo>summary::before{content:"▸";color:var(--warn)} details.todo[open]>summary::before{content:"▾"}
+details.todo>summary b{color:var(--warn)}
+.todo ul{list-style:none;padding:0 10px 8px}
+.todo li{border-top:1px solid var(--line);padding:7px 0;font-size:.86rem;color:var(--soft)}
+.todo li b{color:var(--ink);font-weight:600}
+.todo .acts{margin-top:4px;display:flex;gap:6px;flex-wrap:wrap}
+.lnk{background:transparent;border:0;padding:0;color:var(--acc);text-decoration:underline;text-underline-offset:2px;font-size:.84rem}
+.btn{background:transparent;border:1px solid var(--line2);border-radius:3px;padding:3px 9px;font-size:.82rem}
+.btn:hover{border-color:var(--acc);color:var(--acc)}
+/* contenu */
+.in{padding:12px 14px 20px}
+.sec{font:600 .7rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:18px 0 6px}
+.sec:first-child{margin-top:2px}
+.wait{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;padding:2px 0 4px}
+.wait .q{font:400 1.05rem/1.35 var(--serif)}
+.wait .who{font-size:.8rem;color:var(--acc);font-weight:600;letter-spacing:.02em}
+.copy{background:transparent;border:1.5px solid var(--acc);color:var(--acc);border-radius:3px;padding:3px 10px;font-size:.82rem;font-weight:600}
+details.p{border-top:1px solid var(--line)}
+details.p>summary{list-style:none;cursor:pointer;padding:6px 0;font-size:.85rem;color:var(--soft);display:flex;gap:6px}
+details.p>summary::-webkit-details-marker{display:none}
+details.p>summary::before{content:"▸";color:var(--acc)} details.p[open]>summary::before{content:"▾"}
+details.p>div{padding:0 0 8px 14px;font-size:.88rem;color:var(--soft)}
+details.p ul,details.p ol{padding-left:18px}
+.card{background:var(--card);color:var(--cink);border-radius:4px;padding:12px 14px;margin-top:10px;box-shadow:0 8px 18px -12px rgba(0,0,0,.55)}
+.card .k{font:600 .7rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--cacc)}
+.card h3{font:400 1.1rem/1.3 var(--serif);margin:3px 0 6px}
+.card .frame{font-size:.76rem;color:var(--cmuted);margin-bottom:6px}
+.card .frame b{color:var(--cink);font-weight:600}
+.card .head{border-left:3px solid var(--leaf);padding:3px 0 3px 10px;margin:8px 0}
+.card .rule{font-size:.88rem;background:var(--csoft);border-radius:3px;padding:7px 10px;margin:8px 0}
+.card .crit{font-size:.86rem;margin:6px 0;color:var(--cink)} .card .crit b{color:var(--leaf)}
+.card details.f{border-top:1px solid var(--cline)}
+.card details.f>summary{list-style:none;cursor:pointer;padding:6px 0;font-size:.85rem;color:var(--cmuted);display:flex;gap:6px}
+.card details.f>summary::-webkit-details-marker{display:none}
+.card details.f>summary::before{content:"▸";color:var(--cacc)} .card details.f[open]>summary::before{content:"▾"}
+.card details.f>div{padding:0 0 8px;font-size:.87rem}
+.card details.f ol{padding-left:18px}
+.term{background:transparent;border:0;padding:0;color:inherit;text-decoration:underline dotted;text-underline-offset:3px;font:inherit}
+.term:hover{color:var(--pen)}
+.limit{margin-top:10px;font-size:.85rem;color:var(--soft);display:flex;gap:8px;align-items:baseline}
+.limit::before{content:"◐";color:var(--warn)}
+.mini{width:100%;border-collapse:collapse;font-size:.84rem;margin-top:4px}
+.mini td,.mini th{border-bottom:1px solid var(--cline);padding:4px 5px;text-align:left}
+.mini th{color:var(--cmuted);font-weight:600;font-size:.78rem}
+.mini td.n{text-align:right;font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:3px 14px;font-size:.87rem}
+/* parcours */
+.path{list-style:none}
+.path>li{border-top:1px solid var(--line)}
+.path details>summary,.path .row{list-style:none;cursor:pointer;display:flex;gap:8px;align-items:baseline;padding:8px 0}
+.path details>summary::-webkit-details-marker{display:none}
+.path .mk{width:14px;text-align:center;flex:none}
+.path .mk.d{color:var(--ok)} .path .mk.c{color:var(--acc)} .path .mk.l{color:var(--faint)} .path .mk.x{color:var(--warn)}
+.path .t{font-weight:600;white-space:nowrap}
+.path .v{color:var(--soft);font-size:.86rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.path .b{font-size:.74rem;white-space:nowrap;border-radius:10px;padding:0 7px;border:1px solid currentColor}
+.path .b.auto{color:var(--acc)} .path .b.again{color:var(--warn)} .path .b.now{color:var(--acc)}
+.path .sub{list-style:none;padding-left:20px}
+.path .sub>li{border-top:1px dashed var(--line)}
+.path .ev{padding:0 0 10px 22px;font-size:.86rem;color:var(--soft)}
+.path .later{color:var(--faint)} .path .later .t{font-weight:400}
+.path .phase>summary .t{font:600 .74rem var(--sans);letter-spacing:.07em;text-transform:uppercase}
+.path .phase>summary .v{font-size:.8rem}
+/* outils */
+.tools{margin-top:18px}
+.tools details{border-top:1px solid var(--line)}
+.tools summary{list-style:none;cursor:pointer;display:flex;gap:8px;align-items:baseline;padding:8px 0}
+.tools summary::-webkit-details-marker{display:none}
+.tools summary::before{content:"▸";color:var(--acc)} .tools details[open]>summary::before{content:"▾"}
+.tools summary .c{margin-left:auto;font-size:.8rem;color:var(--faint)}
+.tools details>div{padding:0 0 12px 16px;font-size:.88rem;color:var(--soft)}
+.tools .off{color:var(--faint);font-size:.84rem}
+.tools .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.dl{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin:3px 0}
+.chip{font-size:.74rem;border-radius:10px;padding:0 7px;border:1px solid currentColor}
+.chip.ok{color:var(--ok)} .chip.stale{color:var(--warn)}
+.foot{margin-top:16px;font-size:.76rem;color:var(--faint)}
+svg text{font-family:var(--sans)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="eyebrow">Maquette · panel d'étude · synthèse après revue · 2026-10-27</div>
+  <h1>Maintenant, puis le parcours</h1>
+  <p class="lede">Synthèse de la maquette C (Carnet) et de sa revue en contexte frais. L'étape en cours passe <b>en haut</b>, sans défilement automatique. Tout ce qui n'est pas l'étape (relectures, interruptions, livrables périmés) prend place dans « À traiter ». Le parcours suit, replié par phase, et les outils sont des tiroirs en bas. Cinq états sont montrés, sur la même étude Auto MPG ; les chiffres sont illustratifs.</p>
+
+  <div class="controls">
+    <span><span class="ctl-label">État</span>
+      <span class="seg" id="segS">
+        <button data-s="s1" aria-pressed="false">Début</button>
+        <button data-s="s11" aria-pressed="true">Choix du modèle</button>
+        <button data-s="x11">Choix + imprévus</button>
+        <button data-s="auto">Relecture du mode auto</button>
+        <button data-s="end">Fin d'étude</button></span></span>
+    <span><span class="ctl-label">Largeur</span>
+      <span class="seg" id="segW"><button data-w="600" aria-pressed="true">600 px</button><button data-w="420">420 px</button></span></span>
+  </div>
+
+  <div class="stage">
+    <div class="vsc" id="vsc">
+      <div class="vsc-bar"><i></i><i></i><i></i><span>HYPOTRAIL : ÉTUDE</span></div>
+      <div class="pane" id="pane" tabindex="-1"></div>
+    </div>
+    <aside class="notes" id="notes"></aside>
+  </div>
+
+  <section class="block">
+    <h2>Ce que la revue a changé</h2>
+    <div class="tablewrap"><table class="fix">
+      <thead><tr><th>Problème relevé</th><th>Réponse dans cette maquette</th></tr></thead>
+      <tbody>
+        <tr><td>La figure désignée par le chat est sous la ligne de flottaison, et le défilement automatique fait sauter la lecture.</td><td>« Maintenant » est le premier bloc : la figure apparaît sans défiler à 420 px. Il n'y a plus de défilement automatique, et la zone fixe tient en deux lignes.</td></tr>
+        <tr><td>Rien n'a de place hors de l'étape en cours.</td><td>Une bande « À traiter (n) » dans la zone fixe : une ligne par élément, son étape et l'action possible. Elle est absente quand n = 0.</td></tr>
+        <tr><td>Une phase repliée cache une décision automatique ou rouverte.</td><td>Une phase ne se replie jamais si l'une de ses étapes est rouverte, automatique, déléguée ou suspendue. Ces lignes restent visibles.</td></tr>
+        <tr><td>Les signaux d'honnêteté sont affaiblis.</td><td>
+          <ul>
+            <li>« Pas encore défendable · n raisons » est dans l'en-tête, avec ses raisons dépliables.</li>
+            <li>Le statut de votre critère est rappelé.</li>
+            <li>Le seuil de la règle et votre critère ont deux noms distincts.</li>
+            <li>La limite a sa propre icône, distincte du sceau.</li>
+          </ul></td></tr>
+        <tr><td>Une recommandation déguisée : « aucune option recommandée » au-dessus de « la règle garde le linéaire ».</td><td>La phrase devient « La règle d'une erreur type, fixée dans votre plan, désigne le modèle linéaire. Ce n'est pas une décision. » La figure ne met plus aucun modèle en avant.</td></tr>
+        <tr><td>L'ordre des preuves est inversé.</td><td>Le titre est l'écart apparié (EBM − linéaire, intervalle qui touche zéro). Les trois moyennes et le seuil de la règle sont dépliables.</td></tr>
+        <tr><td>La fiche de question copie le chat, et ses options ont l'air cliquables.</td><td>Une ligne « Le chat attend : … » et un bouton « Copier une question pour le chat ». Les options sont une liste dépliable, en texte simple.</td></tr>
+        <tr><td>Les volets d'outils masquent le contexte, et W4 est proposé trop tôt.</td><td>Les outils sont des tiroirs dans le flux, ouverts selon l'étape. « Un autre graphique » apparaît après le découpage, et son résultat se range sous Exploration. « Régénérer » remonte dans À traiter quand un livrable est périmé. Le jargon W4/W5/W7 n'apparaît plus.</td></tr>
+        <tr><td>Accessibilité : thème inactif, contrastes, éléments non activables au clavier.</td><td>
+          <ul>
+            <li>Le thème du panneau fonctionne.</li>
+            <li>L'ocre sur fiche passe à #7A4E0C (contraste 6,6:1) et le texte pâle du thème clair à #56626E (5,6:1).</li>
+            <li>Tout ce qui agit est un bouton.</li>
+            <li>Le menu se ferme au clic extérieur et sur Échap.</li>
+            <li>Les notions s'ouvrent au clic.</li>
+          </ul></td></tr>
+        <tr><td>Bruit répété : « vos mots » sur chaque ligne, « reste : … et 10 de plus ».</td><td>La base n'est affichée que quand elle n'est pas « confirmé par vous ». La progression se lit « Étape 11 sur 13 · Comparer ».</td></tr>
+        <tr><td>Copie : termes utilisés avant d'être définis, chiffres incohérents, « FR » ambigu.</td><td>
+          <ul>
+            <li>Chaque terme est défini à sa première apparition, et la notion s'ouvre au clic.</li>
+            <li>Les chiffres sont alignés : 3,70 est la moyenne des plis, partout.</li>
+            <li>La langue se choisit dans le menu, en Français | English.</li>
+          </ul></td></tr>
+        <tr><td>Le nombre de phases est codé en dur en 5/3/3/2.</td><td>La barre est construite depuis le plan : une tâche binaire, avec son étape Règle, donne 14 segments sans changement de code.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="block">
+    <h2>États à dessiner avant l'implémentation</h2>
+    <ul class="cols">
+      <li>Lecture CLI impossible ou datée ; aucune étude ; plusieurs études.</li>
+      <li>Mode relecteur : seul l'export de passation est permis.</li>
+      <li>Mode « démonstration complète » (full_demo) : sa marque permanente.</li>
+      <li>Décision déléguée ; suspension ; proposition périmée, avec sa raison.</li>
+      <li>Issue inconnue ; résultat arrivé en retard.</li>
+      <li>Une écriture du panel en cours, échouée ou faite.</li>
+      <li>Livrable modifié à la main, ou en échec ; constats de vérification.</li>
+      <li>Conclusion qui contredit le critère ; plan bloqué (référence gardée, pas de test final).</li>
+      <li>Changement fait après le test final, marqué comme tel.</li>
+      <li>« Depuis votre dernière session ».</li>
+      <li>Étape en calcul, sans question.</li>
+      <li>Étapes v0 à v3 : ce que chaque étape montre ; version anglaise.</li>
+    </ul>
+    <p class="lede" style="margin-top:12px"><b>Coût, hors moteur.</b> Il faut réécrire les vues du panel. Dans `companion_env.py`, la correspondance devient « étape → figure », et chaque élément d'À traiter reçoit une ancre. Les images de référence du panel sont à refaire. La CLI, les décisions et les écritures permises ne changent pas.</p>
+  </section>
+</div>
+
+<script>
+(function(){
+'use strict';
+// Plan construit depuis les données (pas de grille codée en dur) : [clé, titre court, titre long, phase]
+const PLAN=[['data','Données','Découvrir les données','Cadrer'],['moment','Moment','Moment de la prédiction','Cadrer'],['vars','Variables','Variables disponibles','Cadrer'],
+ ['split','Découpage','Découpage','Cadrer'],['crit','Critère','Critère de succès','Cadrer'],['qual','Qualité','Contrôle de qualité','Préparer les preuves'],
+ ['prep','Préparation','Préparation','Préparer les preuves'],['eda','Exploration','Exploration','Préparer les preuves'],['models','Modèles','Modèles','Comparer'],
+ ['variants','Variantes','Variantes','Comparer'],['choice','Choix','Choisir le modèle','Comparer'],['final','Test final','Test final','Conclure'],['concl','Conclusion','Conclusion','Conclure']];
+const DEC={
+ data:['398 voitures, 9 colonnes, 80 lignes scellées','318 lignes de développement · horsepower a 6 valeurs « ? ».'],
+ moment:['Avant la mise en vente, sur la fiche technique','Seules les colonnes connues avant la vente peuvent servir.'],
+ vars:['Toutes sauf car_name (identifiant)','Un nom de modèle ne se généralise pas à une voiture nouvelle.'],
+ split:['5 blocs dans l\'ordre des années','Chaque bloc de validation suit dans le temps les années qui l\'entraînent.'],
+ crit:['Erreur moyenne au moins 10 % sous la moyenne de référence : 6,44 mpg ou moins','Fixé avant tout résultat.'],
+ qual:['Les 6 « ? » de horsepower sont des manquants','Lecture de structure, sans la cible.'],
+ prep:['Médiane pour les manquants, log de horsepower','Asymétrie 1,1 : une traîne de valeurs hautes.'],
+ eda:['Poids et mpg : corrélation de rang −0,86','mpg moyen 19,45 (1970–72) contre 32,04 (1980–82).'],
+ models:['Linéaire 3,70 mpg contre 7,16 pour la moyenne de référence','Écart apparié −3,47 [−3,97 ; −2,96] : le gain tient sur chaque bloc.'],
+ variants:['Pénalité 3,69 · EBM 3,40','Budget de 2 variantes, utilisé.'],
+ choice:['Modèle linéaire','Règle d\'une erreur type ; l\'EBM gagne 0,30 mpg, intervalle qui touche zéro.'],
+ final:['Ouvert une fois : 3,82 mpg [3,21 ; 4,47] sur 80 voitures','Le seul chiffre indépendant de l\'étude.'],
+ concl:['Adopter le modèle linéaire, critère atteint','Le critère (6,44) est atteint aussi sur le test final.']};
+const STATES={
+ s1:{cur:0,todo:[],seal:'sealed',nyd:['Aucune décision encore','Le test final n\'est pas encore ouvert'],tools:0},
+ s11:{cur:10,todo:[],seal:'sealed',nyd:['Le modèle n\'est pas choisi','Le test final n\'est pas encore ouvert','La conclusion n\'est pas écrite'],tools:2},
+ x11:{cur:10,seal:'sealed',nyd:['Une décision est à confirmer de nouveau','Le modèle n\'est pas choisi','Le test final n\'est pas encore ouvert','La conclusion n\'est pas écrite'],tools:2,
+   flags:{prep:'again'},todo:[
+   {t:'Préparation · à confirmer de nouveau',d:'Votre réponse a été mise de côté : la plage déclarée de horsepower a changé, et la préparation en dépendait.',a:[['lnk','Voir l\'étape'],['copy','Copier une question pour le chat']]},
+   {t:'Exécution interrompue · Variantes',d:'Le calcul de l\'EBM s\'est arrêté avant la fin ; son issue est inconnue. Prenez-en acte dans le chat, avec vos mots. Ce panneau n\'enregistre rien.',a:[['copy','Copier une question pour le chat']]},
+   {t:'Rapport périmé',d:'Le rapport date de la révision 12 ; l\'étude est à la révision 14.',a:[['btn','Régénérer le rapport et le notebook']]}]},
+ auto:{cur:-1,seal:'sealed',auto:true,nyd:['10 décisions automatiques à relire','Le test final n\'est pas encore ouvert'],tools:2,
+   flags:{moment:'auto',vars:'auto',split:'auto',crit:'auto',qual:'auto',prep:'auto',eda:'auto',models:'auto',variants:'auto',choice:'auto'},doneUpTo:11,
+   todo:[]},
+ end:{cur:13,seal:'opened',nyd:[],tools:3,todo:[]}};
+let S='s11',theme='auto',lang='fr',menu=false,nydOpen=false;
+
+const st=()=>STATES[S];
+function phases(){const out=[];PLAN.forEach((p,i)=>{let ph=out.find(x=>x.name===p[3]);if(!ph){ph={name:p[3],idx:[]};out.push(ph)}ph.idx.push(i)});return out}
+function flagOf(key){return (st().flags||{})[key]||null}
+function header(){
+  const s=st();
+  const seal=s.seal==='opened'?'<span class="pill seal" title="Ouvert une fois, le 27 octobre ; tout chiffre calculé ensuite est marqué comme tel.">test final ouvert · une fois</span>'
+    :'<span class="pill seal" title="80 lignes mises de côté à la création ; aucun graphique ni ajustement ne les lit.">🔒 test final scellé</span>';
+  const def=s.nyd.length?`<button class="pill nyd" data-act="nyd" aria-expanded="${nydOpen}">Pas encore défendable · ${s.nyd.length}</button>`:'<span class="pill ok">Défendable</span>';
+  const auto=s.auto?'<span class="pill auto" title="Choisi au lancement ; s\'arrête avant le test final.">automatique jusqu\'au test final</span>':'';
+  return `<div class="hd"><span class="name">mpg-A</span>${seal}${def}${auto}<span class="sp"></span>
+   <button class="ib" data-act="theme" title="Thème de ce panneau seulement (R33)" aria-label="Thème du panneau : ${{auto:'suit VS Code',dark:'sombre',light:'clair'}[theme]}">${{auto:'◐ Auto',dark:'● Sombre',light:'○ Clair'}[theme]}</button>
+   <button class="ib" data-act="menu" aria-expanded="${menu}" aria-label="Plus d'options">⋯</button></div>
+   ${nydOpen&&s.nyd.length?`<div class="nydbox">Ce que l'étude ne peut pas encore soutenir :<ol>${s.nyd.map(x=>`<li>${x}</li>`).join('')}</ol></div>`:''}
+   ${menu?`<div class="menu" role="menu"><button role="menuitem">Étude : mpg-A <span>changer ▾</span></button><div class="mi">Langue <span class="mseg"><span class="on">Français</span><span>English</span></span></div>
+     <button role="menuitem">Actualiser <span>relu il y a 2 min · révision 14</span></button><hr><div class="mi">Régression · expérimental · étape v3</div><button role="menuitem">Comment fonctionne ce panneau</button></div>`:''}`;
+}
+function prog(){
+  const s=st(),n=PLAN.length,cur=s.cur<0?(s.doneUpTo||0):s.cur;
+  const segs=PLAN.map((p,i)=>`<i class="${i<cur?'d':i===cur?'c':''}" style="flex:1"></i>`).join('');
+  const lbl=s.cur>=n?'<b>Étude terminée</b>':s.cur<0?`<b>Relecture</b> · 1 sur 10`:`<b>Étape ${s.cur+1} sur ${n}</b> · ${PLAN[s.cur][3]}`;
+  return `<div class="prog"><div class="bar" aria-hidden="true">${segs}</div><span class="lbl">${lbl}</span></div>`;
+}
+function todo(){
+  const t=st().todo;if(!t.length)return '';
+  return `<details class="todo"${t.length>1?'':' open'}><summary><b>À traiter (${t.length})</b><span>${t.map(x=>x.t.split(' · ')[0]).join(' · ')}</span></summary><ul>${t.map(x=>`<li><b>${x.t}</b><br>${x.d}<div class="acts">${x.a.map(([k,l])=>k==='lnk'?`<button class="lnk">${l}</button>`:k==='copy'?`<button class="copy">${l}</button>`:`<button class="btn">${l}</button>`).join('')}</div></li>`).join('')}</ul></details>`;
+}
+const T=(w,def)=>`<button class="term" data-term="${w}" title="${def}">${w}</button>`;
+function chartPaired(){
+  // Écart apparié à chaque variante, en mpg, par rapport au modèle linéaire ; zéro = pas de différence.
+  const x=v=>70+(v+0.8)/(1.6)*270,rows=[['Pénalité − linéaire',-0.01,-0.09,0.07],['EBM − linéaire',-0.30,-0.62,0.04]];
+  let s=`<svg viewBox="0 0 360 112" width="100%" role="img" aria-label="Écart apparié d'erreur moyenne par rapport au modèle linéaire : pénalité −0,01 (−0,09 à +0,07), EBM −0,30 (−0,62 à +0,04) ; les deux intervalles contiennent zéro.">`;
+  [-0.8,-0.4,0,0.4,0.8].forEach(t=>s+=`<line x1="${x(t)}" x2="${x(t)}" y1="8" y2="76" stroke="${t===0?'#22302B':'rgba(34,48,43,.12)'}" stroke-width="${t===0?1.4:1}"/><text x="${x(t)}" y="90" font-size="10" text-anchor="middle" fill="#4A5651">${(t>0?'+':'')+String(t).replace('.',',')}</text>`);
+  rows.forEach(([n,v,lo,hi],i)=>{const y=28+i*30;s+=`<text x="0" y="${y-9}" font-size="10.5" fill="#22302B">${n}</text>
+   <line x1="${x(lo)}" x2="${x(hi)}" y1="${y}" y2="${y}" stroke="#4A5651" stroke-width="2"/><circle cx="${x(v)}" cy="${y}" r="4.5" fill="#22302B"/>
+   <text x="${x(hi)+5}" y="${y+4}" font-size="10" fill="#22302B">${String(v.toFixed(2)).replace('.',',')}</text>`});
+  return s+`<text x="${x(0)}" y="106" font-size="10" text-anchor="middle" fill="#4A5651">← moins d'erreur · écart en mpg · plus d'erreur →</text></svg>`;
+}
+function chartMeans(){
+  const x=v=>70+(v-2.5)/(7-2.5)*270,rows=[['Linéaire',3.70,.68],['Pénalité',3.69,.69],['EBM',3.40,.61]];
+  let s=`<svg viewBox="0 0 360 128" width="100%" role="img" aria-label="Erreur moyenne des trois configurations avec une erreur type ; seuil de la règle 4,01 ; votre critère 6,44 ; les trois sont sous les deux lignes.">`;
+  [3,4,5,6,7].forEach(t=>s+=`<line x1="${x(t)}" x2="${x(t)}" y1="12" y2="96" stroke="rgba(34,48,43,.1)"/><text x="${x(t)}" y="110" font-size="10" text-anchor="middle" fill="#4A5651">${t}</text>`);
+  s+=`<line x1="${x(4.01)}" x2="${x(4.01)}" y1="10" y2="96" stroke="#7A4E0C" stroke-dasharray="4 3" stroke-width="1.5"/><text x="${x(4.01)+3}" y="9" font-size="9.5" fill="#7A4E0C">seuil de la règle 4,01</text>`;
+  s+=`<line x1="${x(6.44)}" x2="${x(6.44)}" y1="10" y2="96" stroke="#1F6B3D" stroke-width="1.6"/><text x="${x(6.44)-3}" y="22" font-size="9.5" text-anchor="end" fill="#1F6B3D">votre critère 6,44</text>`;
+  rows.forEach(([n,v,se],i)=>{const y=40+i*24;s+=`<text x="0" y="${y+4}" font-size="11" fill="#22302B">${n}</text><line x1="${x(v-se)}" x2="${x(v+se)}" y1="${y}" y2="${y}" stroke="#4A5651" stroke-width="2"/><circle cx="${x(v)}" cy="${y}" r="4" fill="#22302B"/>`});
+  return s+`<text x="205" y="124" font-size="10" text-anchor="middle" fill="#4A5651">erreur moyenne hors pli (mpg) ± une erreur type</text></svg>`;
+}
+function now(){
+  const s=st();
+  if(S==='s1')return `<div class="sec">Maintenant · Découvrir les données</div>
+   <div class="wait"><span class="who">Le chat attend</span><span class="q">Ces données décrivent-elles ce que vous voulez prédire : la consommation (mpg) d'une voiture ?</span></div>
+   <button class="copy">Copier une question pour le chat</button>
+   <div class="card"><div class="k">Pour répondre, regardez</div><h3>La fiche des données</h3>
+   <div class="frame"><b>Lecture de structure</b> · aucune statistique de la cible, aucun modèle</div>
+   <div class="grid2"><span><b>398</b> voitures, de 1970 à 1982</span><span><b>9</b> colonnes ; à prédire : <i>mpg</i></span><span><b>80</b> mises de côté (${T('test final','Des lignes mises de côté avant tout regard, lues une seule fois, à la fin, pour le seul chiffre indépendant.')})</span><span><b>318</b> pour développer</span></div>
+   <p class="head">Une anomalie de structure : <i>horsepower</i> contient 6 « ? ». Vous en déciderez au contrôle de qualité ; rien n'est à faire maintenant.</p>
+   <details class="f"><summary>Les 9 colonnes</summary><div><table class="mini"><tr><th>Colonne</th><th>Type</th><th>Valeurs manquantes</th></tr><tr><td>mpg (à prédire)</td><td>nombre</td><td class="n">0</td></tr><tr><td>cylinders</td><td>entier</td><td class="n">0</td></tr><tr><td>displacement</td><td>nombre</td><td class="n">0</td></tr><tr><td>horsepower</td><td>texte, lu comme nombre</td><td class="n">6 « ? »</td></tr><tr><td>weight</td><td>nombre</td><td class="n">0</td></tr><tr><td>acceleration</td><td>nombre</td><td class="n">0</td></tr><tr><td>model_year</td><td>entier</td><td class="n">0</td></tr><tr><td>origin</td><td>3 catégories</td><td class="n">0</td></tr><tr><td>car_name</td><td>texte</td><td class="n">0</td></tr></table></div></details>
+   <details class="f"><summary>Pourquoi une fiche avant tout graphique</summary><div>Décrire les colonnes avant de chercher des liens évite de choisir la suite d'après ce qu'on a vu par hasard. Les regards sur la cible viendront à l'exploration, et l'étude les comptera.</div></details></div>
+   <p class="limit">Rien n'est encore mesuré : il n'y a ni modèle ni chiffre de performance.</p>`;
+  if(S==='end')return `<div class="sec">Ce que l'étude peut affirmer</div>
+   <div class="card"><div class="k">Conclusion · confirmée par vous</div><h3>Adopter le modèle linéaire : il se trompe d'environ 3,8 mpg sur des voitures qu'il n'a jamais vues.</h3>
+   <table class="mini"><tr><th></th><th>Développement<br>(a servi à choisir)</th><th>Test final<br>(80 voitures, une fois)</th></tr>
+   <tr><td>Linéaire</td><td class="n">3,70</td><td class="n">3,82 [3,21 ; 4,47]</td></tr><tr><td>Moyenne de référence</td><td class="n">7,16</td><td class="n">7,41</td></tr></table>
+   <p class="crit">Votre critère, 6,44 mpg ou moins : <b>atteint sur le test final</b>, intervalle compris.</p>
+   <details class="f"><summary>Pourquoi le chiffre final est un peu plus haut</summary><div>Les chiffres de développement ont servi à choisir : ils sont légèrement optimistes. Le test final, lu une seule fois, n'a influencé aucun choix.</div></details></div>
+   <div class="sec">Et après</div>
+   <div class="wait"><span class="who">Dans le chat</span><span class="q">Préparer l'export Azure ML du modèle retenu ?</span></div><button class="copy">Copier une question pour le chat</button>`;
+  if(S==='auto')return `<div class="sec">Maintenant · Relire les décisions automatiques</div>
+   <div class="wait"><span class="who">Le chat attend</span><span class="q">Moment de la prédiction : adoptez-vous « avant la mise en vente, sur la fiche technique », ou le changez-vous ?</span></div>
+   <button class="copy">Copier une question pour le chat</button>
+   <div class="card"><div class="k">Décision automatique · à relire</div><h3>Moment de la prédiction</h3>
+   <div class="frame"><b>Choisie par le mode automatique</b>, pas par vous. L'étude reste non défendable tant que vous ne l'avez pas adoptée ou changée.</div>
+   <p class="head">Valeur : avant la mise en vente, sur la fiche technique. Raison donnée : la cible se mesure après la vente, sur route.</p>
+   <details class="f"><summary>Ce que cette décision entraîne</summary><div>Elle fixe les colonnes utilisables : celles qu'on connaît avant la vente. Si vous la changez, les variables, le découpage et la suite reviennent à relire.</div></details></div>
+   <p class="limit">Les chiffres du parcours ont été calculés sur des décisions que vous n'avez pas encore adoptées.</p>`;
+  // choix du modèle (s11, x11)
+  return `<div class="sec">Maintenant · Choisir le modèle</div>
+   <div class="wait"><span class="who">Le chat attend</span><span class="q">Quelle configuration garder ?</span></div>
+   <button class="copy">Copier une question pour le chat</button>
+   <details class="p"><summary>Les options proposées dans le chat</summary><div><ul><li>le modèle linéaire</li><li>la variante avec pénalité</li><li>l'EBM</li><li>expliquer d'abord</li></ul></div></details>
+   <div class="card"><div class="k">Pour répondre, regardez</div><h3>Les variantes se trompent-elles moins que le modèle linéaire ?</h3>
+   <div class="frame"><b>Preuve de développement</b> · 318 voitures, 5 blocs dans l'ordre des années · a servi à choisir</div>
+   ${chartPaired()}
+   <p class="head">L'${T('EBM','Explainable Boosting Machine : un modèle additif, une courbe apprise par variable, plus souple qu\'un modèle linéaire et encore lisible.')} se trompe en moyenne de 0,30 mpg de moins que le linéaire, mais l'${T('écart apparié','La différence d\'erreur entre deux modèles, calculée voiture par voiture sur les mêmes blocs ; elle retire la part due au bloc lui-même.')} va de −0,62 à +0,04 : il touche zéro. Ces 318 voitures ne permettent pas de les départager.</p>
+   <p class="rule">La ${T('règle d\'une erreur type','Parmi les configurations dont l\'erreur est à moins d\'une erreur type de la meilleure, garder la plus simple.')}, fixée dans votre plan, désigne le modèle linéaire, le plus simple des trois. Ce n'est pas une décision : c'est vous qui choisissez, dans le chat.</p>
+   <p class="crit">Votre critère, ${T('erreur absolue moyenne','MAE : l\'écart moyen, en mpg, entre la consommation prédite et la vraie, sans tenir compte du signe.')} de 6,44 mpg ou moins : <b>atteint par les trois</b>, en développement.</p>
+   <details class="f"><summary>Les trois erreurs moyennes, le seuil de la règle et votre critère</summary><div>${chartMeans()}</div></details>
+   <details class="f"><summary>Comment lire l'écart apparié</summary><div><ol><li>Chaque point est la différence d'erreur moyenne, variante moins linéaire.</li><li>Le trait est l'intervalle à 95 % (bootstrap apparié).</li><li>À gauche de zéro, la variante se trompe moins. Si le trait touche zéro, l'écart peut venir du hasard des blocs.</li></ol></div></details>
+   <details class="f"><summary>Attention</summary><div>Ne pas avoir de preuve d'écart ne prouve pas que les modèles se valent : 318 voitures, c'est peu. Gagner 0,30 mpg compte-t-il pour votre usage ? C'est une question métier.</div></details></div>
+   <p class="limit">Pas encore affirmable : la précision sur des voitures nouvelles. Ces chiffres ont servi à choisir ; le test final le dira, une fois.</p>`;
+}
+function path(){
+  const s=st(),cur=s.cur<0?99:s.cur,done=s.cur<0?(s.doneUpTo||0):s.cur;
+  const flagged=k=>{const f=flagOf(k);return f==='auto'||f==='again'};
+  let html='<ul class="path">';
+  phases().forEach(ph=>{
+    const allDone=ph.idx.every(i=>i<done),hasCur=ph.idx.includes(cur),hasFlag=ph.idx.some(i=>flagged(PLAN[i][0]));
+    const rows=ph.idx.map(i=>row(i,done,cur)).join('');
+    if(allDone&&!hasFlag) html+=`<li><details class="phase"><summary><span class="mk d">✓</span><span class="t">${ph.name}</span><span class="v">${ph.idx.length} étapes faites</span></summary><ul class="sub">${rows}</ul></details></li>`;
+    else if(ph.idx.every(i=>i>cur)&&!hasFlag) html+=`<li class="later"><div class="row"><span class="mk l">○</span><span class="t">${ph.name}</span><span class="v">${ph.idx.map(i=>PLAN[i][1]).join(' · ')}</span></div></li>`;
+    else html+=`<li><details class="phase" open><summary><span class="mk ${hasCur?'c':'d'}">${hasCur?'●':'✓'}</span><span class="t">${ph.name}</span><span class="v">${hasFlag?'à relire':''}</span></summary><ul class="sub">${rows}</ul></details></li>`;
+  });
+  return html+'</ul>';
+}
+function row(i,done,cur){
+  const [k,short]=PLAN[i],f=flagOf(k);
+  if(i===cur)return `<li><div class="row"><span class="mk c">●</span><span class="t">${short}</span><span class="v">en cours, voir Maintenant</span><span class="b now">vous attend</span></div></li>`;
+  if(i<done){const badge=f==='auto'?'<span class="b auto">automatique, à relire</span>':f==='again'?'<span class="b again">à confirmer de nouveau</span>':'';
+    const extra=k==='eda'&&S!=='s1'?'<br>+ 1 graphique demandé depuis le panneau : mpg selon l\'origine.':'';
+    return `<li><details><summary><span class="mk ${f==='again'?'x':'d'}">${f==='again'?'↺':'✓'}</span><span class="t">${short}</span><span class="v">${DEC[k][0]}</span>${badge}</summary><div class="ev">${DEC[k][1]}${extra}</div></details></li>`;}
+  return `<li class="later"><div class="row"><span class="mk l">○</span><span class="t">${short}</span><span class="v"></span></div></li>`;
+}
+function tools(){
+  const s=st(),afterSplit=s.tools>=2,stale=S==='x11';
+  return `<div class="tools"><div class="sec">Outils</div>
+   <details><summary>Les données<span class="c">fiche${afterSplit?', graphiques':''}</span></summary><div>La fiche, le contrôle de qualité${afterSplit?', et les graphiques sur les lignes d\'entraînement':''}.
+    <div class="acts">${afterSplit?'<button class="btn">Lancer un autre graphique</button>':'<span class="off">Un autre graphique : possible après le découpage, sur les lignes d\'entraînement seulement.</span>'}</div>
+    ${afterSplit?'<span class="off">Le graphique se range sous Exploration, dans le parcours.</span>':''}</div></details>
+   ${afterSplit?`<details><summary>Et si ? (sans décider)<span class="c">rien n'est enregistré</span></summary><div>Rejouer une autre règle ou un autre modèle sur les chiffres déjà calculés. Rien n'est décidé ni enregistré.</div></details>`:''}
+   <details id="notions"><summary>Notions<span class="c">${S==='s1'?'2':'7'}</span></summary><div>${S==='s1'?'Variable à prédire · test final':'Erreur absolue moyenne · hors pli · erreur type · règle d\'une erreur type · écart apparié · EBM · test final'}<br><span class="off">Chaque terme souligné en pointillé ouvre aussi sa notion.</span></div></details>
+   <details${s.tools>=3?' open':''}><summary>Livrables<span class="c">rapport, notebook, passation</span></summary><div>
+    <div class="dl">Rapport <span class="chip ${stale?'stale':'ok'}">${stale?'périmé · révision 12':'à jour'}</span><button class="lnk">Ouvrir</button></div>
+    <div class="dl">Notebook <span class="chip ${stale?'stale':'ok'}">${stale?'périmé':'à jour'}</span><button class="lnk">Ouvrir</button></div>
+    <div class="acts"><button class="btn">Régénérer le rapport et le notebook</button>${s.tools>=3?'<button class="btn">Exporter le dossier de passation</button>':''}</div></div></details>
+   <p class="foot">Lit uniquement la CLI hypotrail. Les décisions se prennent dans le chat ; le chat, le rapport et le notebook restent complets sans ce panneau.</p></div>`;
+}
+function render(){
+  const pane=document.getElementById('pane');
+  const keep=pane.scrollTop;
+  pane.className='pane'+(theme==='light'?' light':''); // « Auto » suit VS Code : ici sombre
+  pane.innerHTML=`<div class="top">${header()}${prog()}${todo()}</div><div class="in">${now()}<div class="sec">Le parcours</div>${path()}${tools()}</div>`;
+  pane.scrollTop=keep;
+  document.getElementById('notes').innerHTML=NOTES();
+}
+const CHAT={s1:'Dans le panneau : Maintenant, la fiche des données.',s11:'Dans le panneau : Maintenant, l\'écart apparié.',x11:'Dans le panneau : À traiter, l\'exécution interrompue.',auto:'Dans le panneau : Maintenant, la décision à relire.',end:'Dans le panneau : Ce que l\'étude peut affirmer.'};
+const WHY={
+ s1:['Une seule question, une seule fiche. Pas encore d\'outils de graphique : il n\'y a pas de découpage.','La limite dit honnêtement que rien n\'est mesuré.'],
+ s11:['Le titre est l\'écart apparié, la preuve qui tranche. La règle est présentée comme une règle, pas comme un choix.','Votre critère est rappelé à part du seuil de la règle. Le parcours ne déplie que la phase en cours.'],
+ x11:['À traiter regroupe trois éléments hors étape, chacun avec son action : rouvrir, prendre acte dans le chat, régénérer.','La phase « Préparer les preuves » reste ouverte, car une de ses étapes est à confirmer de nouveau.'],
+ auto:['La marque « automatique jusqu\'au test final » reste dans l\'en-tête. La relecture étant la tâche en cours, elle est dans Maintenant, pas répétée dans À traiter. Aucune phase ne se replie tant qu\'elle contient une décision automatique.','Maintenant montre la décision à relire, sa raison et ses conséquences.'],
+ end:['Maintenant devient « Ce que l\'étude peut affirmer » : la preuve de développement et la preuve finale côte à côte, et le critère.','L\'export Azure ML se demande dans le chat. Le dossier de passation est le seul export du panneau.']};
+function NOTES(){
+  return `<h2>${{s1:'Début',s11:'Choix du modèle',x11:'Choix, avec des imprévus',auto:'Relecture du mode automatique',end:'Fin d\'étude'}[S]}</h2>
+  <ul>${WHY[S].map(x=>`<li>${x}</li>`).join('')}</ul>
+  <h3>Ligne du chat</h3><div class="chatline">${CHAT[S]}</div>
+  <h3>Ordre fixe du panneau</h3>
+  <ul>
+    <li><b>En-tête :</b> l'étude, le sceau, « Pas encore défendable · n », le thème et ⋯.</li>
+    <li><b>Progression :</b> une ligne.</li>
+    <li><b>À traiter :</b> seulement si n &gt; 0.</li>
+    <li><b>Maintenant :</b> ce que le chat attend, la figure qui aide à répondre et la limite.</li>
+    <li><b>Le parcours :</b> replié par phase, sauf la phase en cours et les exceptions.</li>
+    <li><b>Outils :</b> tiroirs, selon l'étape.</li>
+  </ul>
+  <h3>Par défaut</h3>
+  <ul>
+    <li><b>Visible :</b> une question, une figure, une phrase de conclusion, la règle et votre critère.</li>
+    <li><b>Plié :</b> les options, la lecture pas à pas, « Attention » et les moyennes.</li>
+    <li><b>Dans ⋯ :</b> la langue, la révision, Actualiser, le changement d'étude et l'aide.</li>
+  </ul>`;
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');
+  if(!b){if(menu&&!e.target.closest('.menu')){menu=false;render()}return}
+  if(b.dataset.s){S=b.dataset.s;menu=false;nydOpen=false;document.getElementById('pane').scrollTop=0;document.querySelectorAll('#segS button').forEach(x=>x.setAttribute('aria-pressed',x===b));}
+  else if(b.dataset.w){document.getElementById('vsc').classList.toggle('narrow',b.dataset.w==='420');document.querySelectorAll('#segW button').forEach(x=>x.setAttribute('aria-pressed',x===b));return}
+  else if(b.dataset.act==='menu')menu=!menu;
+  else if(b.dataset.act==='nyd')nydOpen=!nydOpen;
+  else if(b.dataset.act==='theme')theme={auto:'dark',dark:'light',light:'auto'}[theme];
+  else if(b.dataset.term){const t=document.getElementById('notions');if(t){t.open=true;t.scrollIntoView({block:'nearest'})}return}
+  else {if(menu&&!b.closest('.menu')){menu=false;render()}return}
+  render();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&menu){menu=false;render()}});
+render();
+})();
+</script>
+</body>
+</html>

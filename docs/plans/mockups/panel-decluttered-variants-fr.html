@@ -325,7 +325,7 @@ function sheetHtml(){
 }
 function render(){
   const pane=document.getElementById('pane');
-  const dark=theme!=='light'; // « Auto » suit VS Code, ici sombrepane.className='pane'+(dark?'':' light');
+  const dark=theme!=='light'; /* « Auto » suit VS Code, ici sombre */ pane.className='pane'+(dark?'':' light');
   let body='';
   if(V==='A') body=head()+prog()+`<div class="in">${ask()}${look()}${limit()}${drawer()}</div>`;
   if(V==='B'){
