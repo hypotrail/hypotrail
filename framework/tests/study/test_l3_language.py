@@ -35,7 +35,8 @@ import yaml
 import flowkit as fk
 import test_journey_walkthrough as jw
 from mlkit.study import (case as c, correlation, diagnostics, eda, junior, l10n,
-                         l10n_report, read, state as st, texts, view as view_mod)
+                         l10n_report, panel_digest, read, state as st, texts,
+                         view as view_mod)
 
 REPO = Path(__file__).resolve().parents[3]
 CASES = REPO / 'use-cases'
@@ -379,14 +380,17 @@ def test_the_digest_summary_gives_every_junior_text_in_both_languages(tmp_path):
         assert set(table['moments']) == {m['id'] for m in out['moments']}
     # The study language's table is the summary's own; the other one is the same study read
     # in English.
+    # (up to the French typography of the engine's texts, CLI-CONTRACT §17.2.3: a narrow
+    # no-break space before ; : ? ! », after «)
     fr, en = out['texts']['fr'], out['texts']['en']
-    assert fr['plan'] == {s['id']: s['title'] for s in out['plan']}
+    typo = panel_digest.french_typography
+    assert fr['plan'] == typo({s['id']: s['title'] for s in out['plan']})
     assert en['plan']['discover_data'] == 'Discover the data'
     assert fr['moments']['frame'] == 'Cadrer le changement' and en['moments']['frame'] == \
         'Frame the change'
-    assert fr['next_action'] == out['next_action']['junior_message']
+    assert fr['next_action'] == typo(out['next_action']['junior_message'])
     assert en['next_action'] and not g.foreign_sentences(en['next_action'], 'en', 4)
-    assert fr['recap'] == out['recap_junior']
+    assert fr['recap'] == typo(out['recap_junior'])
     assert all(not g.foreign_sentences(t, 'en', 4) for t in en['recap'])
     # The digest of a French study speaks French to the junior; ``text`` stays English.
     items = out['digest']['items']
@@ -394,7 +398,7 @@ def test_the_digest_summary_gives_every_junior_text_in_both_languages(tmp_path):
                                                                  for i in items}
     for item in items:
         assert item['junior_text'] and not _english_sentences(item['junior_text'], 3), item
-        assert fr['digest'][str(item['revision'])] == item['junior_text']
+        assert fr['digest'][str(item['revision'])] == typo(item['junior_text'])
         assert not g.foreign_sentences(en['digest'][str(item['revision'])], 'en', 3)
     # Without ``--digest`` the summary has no ``texts`` (the agent's read stays compact).
     assert 'texts' not in flow.call('status', '--summary', '--study', flow.study)

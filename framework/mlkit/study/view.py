@@ -2089,6 +2089,9 @@ LANGUAGE_TEXT_KEYS = ('plan', 'moments', 'next_action', 'choice_options', 'limit
                       # the step-1 sample's note.
                       'question', 'options', 'options_note', 'junior_digest', 'headlines',
                       'data_contingent', 'sample_note')
+# The engine's own texts of ``texts.fr``, set in French typography (a narrow no-break space
+# before ; : ? ! », after «); the others are the junior's or the agent's words, as written.
+FRENCH_TYPOGRAPHY_KEYS = tuple(k for k in LANGUAGE_TEXT_KEYS if k not in ('goal', 'proposals'))
 # Review fix H1: ``currency`` is the first CURRENCY_HEX hex characters of a sha256 over the
 # canonical JSON of :func:`currency_inputs` (CLI-CONTRACT-COMPANION §1.5).
 CURRENCY_HEX = 16
@@ -2599,7 +2602,10 @@ def language_texts(study: read.Study, built: dict, summary_out: dict, *, since: 
     and each open proposal's restatement in that language (``proposals``, null when the agent
     gave none in it). The study language's table is read from this summary; the other one
     from the same study read in the other language (no write, no clock), so the study panel
-    can follow its own language switch."""
+    can follow its own language switch. The French table's engine texts
+    (:data:`FRENCH_TYPOGRAPHY_KEYS`) are set in French typography
+    (:func:`panel_digest.french_typography`), so they equal the summary's own texts up to
+    those spaces."""
     state = study.state
     lang = built.get('language') or audience.EN
     other = audience.FR if lang == audience.EN else audience.EN
@@ -2612,6 +2618,13 @@ def language_texts(study: read.Study, built: dict, summary_out: dict, *, since: 
     extra = {'contingency': contingency, 'has_sample': has_sample}
     tables = {lang: _texts_of(built, summary_out, lang, **extra),
               other: _texts_of(twin_built, twin_summary, other, **extra)}
+    # The panel shows these texts verbatim: the French table carries its own typography
+    # (CLI-CONTRACT §17.2.3); the junior's and the agent's words (``goal``, ``proposals``)
+    # stay as they were written.
+    from . import panel_digest
+    tables[audience.FR] = {k: panel_digest.french_typography(v)
+                           if k in FRENCH_TYPOGRAPHY_KEYS else v
+                           for k, v in tables[audience.FR].items()}
     return {k: tables[k] for k in (audience.EN, audience.FR)}
 
 

@@ -1636,7 +1636,7 @@ D3 of §3.2 holds: a command that produced something names it, even when the nex
 
 #### 17.1.4 Labels and the line
 
-`label` is the name of the place in the study language; `line` is the ready sentence the agent ends its message with (the agent texts' panel rule, `framework/mlkit/study/agent/CLAUDE.md.in` rule 6), in the study language. Both are verbatim from the panel's copy (`media/copy/page.js` and `media/copy-fr/page.js` keys `anchors`, `contents`, `drawers`; the step names are `media/copy*/overview.js` `journeyLabels`, kept as the path's step names), copied in `companion_env.ANCHOR_LABELS`, `CONTENT_LABELS`, `DRAWER_LABELS`, `STEP_LABELS`, and checked equal by `clients/vscode-companion/test/test_panel_labels.py` (rewritten, P-8 of the plan).
+`label` is the name of the place in the study language; `line` is the ready sentence the agent ends its message with (the agent texts' panel rule, `framework/mlkit/study/agent/CLAUDE.md.in` rule 6), in the study language. Both are verbatim from the panel's copy (`media/copy/page.js` and `media/copy-fr/page.js` keys `anchors`, `contents`, `drawers`; the step names are `media/copy*/overview.js` `journeyLabels`, kept as the path's step names), copied in `companion_env.ANCHOR_LABELS` (the four place names, the kinds of To handle as `todo:<kind>`, the panel's `todoKinds`, and `path_ledger`, the ledger line's name), `CONTENT_LABELS`, `DRAWER_LABELS`, `STEP_LABELS` and `EDA_CARD_LABELS` (the first part of the panel's EDA eyebrows, `media/copy*/eda.js`), and checked equal by `clients/vscode-companion/test/test_panel_labels.py` (rewritten, P-8 of the plan).
 
 | Anchor | `line`, English | `line`, French |
 |---|---|---|
@@ -1735,6 +1735,8 @@ With `--digest`, these keys are appended **after `texts`**, in this order (`view
 | `sample_note` | the ledger entry's note (§17.3), or `null` without a sample | `exposure.SAMPLE_NOTE` |
 
 The tables of the other language are built from the same state read in that language, with no write and no clock (L3).
+
+The panel shows these texts verbatim (`data-verbatim`; it sets French spacing only in its own copy), so the engine sets the French typography of its own texts in `texts.fr`: a narrow no-break space (U+202F) replaces the space before `;` `:` `?` `!` `»` and follows `«` (`panel_digest.french_typography`, applied to `view.FRENCH_TYPOGRAPHY_KEYS`, every key but `goal` and `proposals`, which are the junior's and the agent's words as written). A sign glued to the previous word (`12:30`, `http:`) is left as written. The French table of a French study therefore equals the summary's own texts up to those spaces; the plain summary, the chat's texts, the report and the notebook are unchanged.
 
 #### 17.2.4 Criterion per configuration, with the absolute bound (P1.6)
 

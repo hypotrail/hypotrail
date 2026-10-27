@@ -32,6 +32,7 @@ import flowkit as fk
 import test_automation as ta
 import test_journey_walkthrough as jw
 from mlkit.study import cite, notebook_view, panel_digest as pd, read
+from mlkit.study import view as view_mod
 
 PRECISION_WORDS = 'Yes, I adopt that rule because the desk can act on that share'
 
@@ -232,7 +233,14 @@ def test_the_regression_walkthrough(regression, tmp_path):
     caveats = [x for x in d['defensibility']['items'] if x['severity'] == 'caveat']
     assert d['defensibility']['count'] == len(caveats)
     _assert_headlines(f, d, tmp_path)
-    assert d['texts']['fr']['headlines']['model_choice'].startswith('Choix : ')
+    # The French table carries its own typography (CLI-CONTRACT §17.2.3): a narrow no-break
+    # space before the colon, as the panel shows it verbatim.
+    assert d['texts']['fr']['headlines']['model_choice'].startswith('Choix\u202f: ')
+    fr = d['texts']['fr']
+    shown = json.dumps({k: fr[k] for k in view_mod.FRENCH_TYPOGRAPHY_KEYS}, ensure_ascii=False)
+    for sign in ';:?!\u00bb':
+        assert f' {sign}' not in shown and f'\u00a0{sign}' not in shown, sign
+    assert '\u00ab ' not in shown and '\u202f:' in shown
     crit = d['criterion_configurations']
     evaluation = view['results']['evaluate.regression']
     reference = evaluation['values']['models']['fit.baseline']['mae']

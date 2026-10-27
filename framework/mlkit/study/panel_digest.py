@@ -13,6 +13,7 @@ pandas nor scikit-learn.
 """
 from __future__ import annotations
 
+import re
 from typing import Any, Iterable, Mapping
 
 from . import audience, cite, companion_env, criterion as criterion_mod, junior, partition
@@ -490,6 +491,28 @@ def criterion_configurations(built: Mapping) -> dict | None:
 
 # --- the texts of §17.2.3 ------------------------------------------------------------------
 
+# French typography of the texts the panel shows verbatim (CLI-CONTRACT §17.2.3): a narrow
+# no-break space (U+202F) before ; : ? ! and », and after «, as the panel sets its own copy
+# (media/core.js ``frenchSpaces``), which leaves the engine's texts byte for byte.
+NNBSP = '\u202f'
+_FR_BEFORE = re.compile('(?<=\\S)[ \u00a0\u202f]+([;:?!\u00bb])')
+_FR_AFTER = re.compile('\u00ab[ \u00a0\u202f]*')
+
+
+def french_typography(value):
+    """``value`` with the French spaces set: every string of a str, list or dict (keys kept).
+    A sign glued to the previous word ("http:", "12:30", "Note:") is left as written; only a
+    space (plain, no-break or narrow) before the sign becomes one narrow no-break space."""
+    if isinstance(value, str):
+        out = _FR_BEFORE.sub(NNBSP + r'\1', value)
+        return _FR_AFTER.sub('\u00ab' + NNBSP, out)
+    if isinstance(value, list):
+        return [french_typography(v) for v in value]
+    if isinstance(value, dict):
+        return {k: french_typography(v) for k, v in value.items()}
+    return value
+
+
 def _sample_note(lang: str) -> str:
     from . import exposure              # the read side imports no writer at module level
     return exposure.sample_note(lang)
@@ -550,4 +573,4 @@ def additions(study, built: Mapping, summary_out: Mapping) -> dict:
 
 __all__ = ['additions', 'automation', 'review_queue', 'defensibility', 'ledger', 'sample',
            'headlines', 'criterion_configurations', 'run_channels', 'with_channels',
-           'proposal_contingency', 'contingency_text', 'texts']
+           'proposal_contingency', 'contingency_text', 'texts', 'french_typography']
