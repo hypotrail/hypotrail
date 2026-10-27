@@ -1,7 +1,8 @@
 """``hypotrail automation``: the automatic mode chosen at ``init`` (owner session 2026-10-26,
 lot L9, remark R20; ADR 0005 and ADR 0006 amendments of 2026-10-26).
 
-    hypotrail automation run [--progress] --request-id ID --expected-revision REV --study DIR
+    hypotrail automation run [--progress] [--json | --format text|json]
+                             --request-id ID --expected-revision REV --study DIR
     hypotrail automation stop --user-words TEXT
                               --request-id ID --expected-revision REV --study DIR
 
@@ -11,8 +12,14 @@ lot L9, remark R20; ADR 0005 and ADR 0006 amendments of 2026-10-26).
 the junior is needed, or the engine refuses something (:mod:`mlkit.study.automation`). Its
 payload is ``hypotrail.automation/1``: ``status`` (``ended`` when the mode reached what it
 covers, else ``stopped``), ``reason``, ``stopped_at``, ``refusal``, the ``steps`` taken, and
-the ``review_queue`` the junior then walks. ``--progress`` writes one line per step on stderr
-(and the activities' own progress lines); stdout is the one JSON document.
+the ``review_queue`` the junior then walks. ``--progress`` tells on stderr, in the study
+language, what is going on (owner session 2026-10-27, R23; :mod:`mlkit.study.automation_words`):
+a header (the mode, the case, what the run does, where it stops), one line per decision with
+its value in words and why, each computation with the activities' own progress lines and its
+key result with the registered figures, and a closing summary (the decisions to review, the
+model kept and its figure, what the junior does next). stdout is the one JSON document, or,
+with ``--format text`` or by default when stdout is a terminal, its readable summary
+(``--json`` keeps the JSON document on a terminal).
 
 ``stop`` ends the automatic mode midway, one way, in the junior's own words (recorded in
 ``mode_history``); the decisions already recorded stay automatic until the junior reviews
@@ -33,8 +40,8 @@ def configure(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('--user-words', default=None,
                         help="with stop: the junior's verbatim words asking to stop it")
     parser.add_argument('--progress', action='store_true',
-                        help='with run: one progress line per step on stderr; stdout is '
-                             'unchanged')
+                        help='with run: what is going on, in the study language, on stderr '
+                             '(decisions, results, a closing summary); stdout is unchanged')
     parser.add_argument('--request-id', required=True,
                         help='fresh per intent; replay the same one after a timeout')
     parser.add_argument('--expected-revision', required=True, type=int,

@@ -1646,3 +1646,23 @@ def test_l9_automation_contract(tmp_path):
     v = _run('status', '--study', study).payload['view']
     assert v['automation'] is None and v['review_queue'] == []
     assert 'auto_value' not in v['next_action']
+
+
+def test_r23_r24_automation_words_contract():
+    """Owner session 2026-10-27 (R23, R24 of the fourth session of 2026-10-26): the readable
+    summary of ``automation run`` on a terminal (``--json`` keeps the JSON document, a stdout
+    that is not a terminal always gets it), its words module, and the review pause (kind
+    ``decision``, nothing recommended, the reviewed decision's step) are documented; the
+    payload and the pause keep their keys."""
+    from mlkit.study import automation, automation_words, cli, guidance
+    assert cli.TEXT_ON_A_TERMINAL == (('automation', 'run'),)
+    assert callable(automation_words.text_summary) and callable(
+        automation_words.review_restatement)
+    assert automation.PAYLOAD_KEYS[-1] == 'artifacts' and guidance.KINDS == PAUSE_KINDS
+    for name in ('cli.TEXT_ON_A_TERMINAL', 'mlkit.study.automation_words',
+                 'automation_words.text_summary', 'automation_words.review_restatement',
+                 'cite.format_value', 'recommended_option', 'position.step_id'):
+        assert name in DOC_TOKENS, name
+    flat = ' '.join(DOC.split())
+    assert 'hypotrail automation run [--progress] [--json | --format text|json]' in flat
+    assert '**The review pause** (owner session 2026-10-27, R24)' in flat

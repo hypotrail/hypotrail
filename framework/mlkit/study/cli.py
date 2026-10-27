@@ -38,7 +38,9 @@ behind the companion's own feature flag on the client side)::
     hypotrail decide propose ... [--channel chat|cli|webview]           (C9, WP-E1)
 
 Output is JSON on stdout by default (one document); ``--format text`` prints a short
-human summary. ``--study`` is mandatory: the study is never taken from the current
+human summary. One exception (owner session 2026-10-27, R23): ``automation run`` without
+``--format`` or ``--json`` prints its readable summary when stdout is a terminal, and the JSON
+document otherwise (a pipe, a file, an agent's tool). ``--study`` is mandatory: the study is never taken from the current
 directory or from ``OSML_ROOT``.
 
 Exit codes: 0 success or replay; 1 internal error; 2 refusal without effect; 3 the
@@ -429,6 +431,10 @@ def _text(payload: dict) -> str:
     if schema.startswith('hypotrail.understanding'):
         from .cmd_understanding import text
         return text(payload)
+    if schema == 'hypotrail.automation/1':
+        # Owner session 2026-10-27 (R23): the run in the junior's words, not the full JSON.
+        from .automation_words import text_summary
+        return text_summary(payload)
     return json.dumps(payload, ensure_ascii=False, indent=2)
 
 
@@ -441,13 +447,32 @@ def emit(outcome: cmd.Outcome, fmt: str, stream=None) -> None:
     stream.flush()
 
 
-def _wanted_format(argv: Sequence[str]) -> str:
+# Commands whose output is the readable summary by default when stdout is a terminal (owner
+# session 2026-10-27, R23): ``--format json`` or ``--json`` keeps the JSON document there,
+# and stdout that is not a terminal always gets the JSON document.
+TEXT_ON_A_TERMINAL = (('automation', 'run'),)
+
+
+def _isatty(stream) -> bool:
+    try:
+        return bool(stream.isatty())
+    except (AttributeError, ValueError, OSError):
+        return False
+
+
+def _wanted_format(argv: Sequence[str], stream=None) -> str:
     argv = list(argv)
     if '--format' in argv:
         i = argv.index('--format')
         if i + 1 < len(argv) and argv[i + 1] in ('json', 'text'):
             return argv[i + 1]
-    return 'text' if '--format=text' in argv else 'json'
+    if '--format=text' in argv:
+        return 'text'
+    if '--format=json' in argv or '--json' in argv:
+        return 'json'
+    if tuple(argv[:2]) in TEXT_ON_A_TERMINAL and _isatty(stream or sys.stdout):
+        return 'text'
+    return 'json'
 
 
 def run(argv: Sequence[str] | None = None) -> cmd.Outcome:

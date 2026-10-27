@@ -477,6 +477,24 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
     JSON for `--json`.
   The numbers must stay traceable (cite registered values only; same formats as the study
   language).
+  **Fixed (owner session 2026-10-27, automatic-mode lot).** `automation run --progress` now
+  tells, on stderr and in the study language (`mlkit.study.automation_words`): a header (mode,
+  case, the steps on the programme, where it stops); one numbered line per decision once it is
+  recorded, its value in words and why (`recommended.why`, or the fixed rule in words; no JSON,
+  no id, no "proposée"/"enregistrée" pair); one numbered line per computation, the activity's
+  own progress lines indented under it, then its key result with registered figures (split:
+  folds and rows; quality: missing values, repeated rows, rare categories, values outside a
+  declared range; target summary; each model's out-of-fold MAE or AUC against its reference;
+  the comparison's errors, `advice` and one-standard-error pick; the diagnostics' flags; the
+  policy's precisions; the final test's figures in `full_demo`); a closing summary (decisions
+  to review, the model kept and its figure, the final test, what the junior does next). The
+  figures cited by the result and summary lines pass `check --text` on Auto MPG (EN, FR) and on
+  a synthetic binary case. `--format text`, or the default when stdout is a terminal, prints a
+  readable summary instead of the JSON (`--json` keeps it; a pipe always gets it; the agent
+  instructions pass `--json`); CLI-CONTRACT §1 and §5.5. Tests:
+  `test_automation.py::test_progress_tells_what_is_going_on[until|demo]`,
+  `::test_the_text_summary_and_the_terminal_default` (a real pty),
+  `test_contract_freeze.py::test_r23_r24_automation_words_contract`.
 - **R24. The review pause offers the wrong options.** After the run, `next_action` is
   `reconfirm prediction_time` with `review: true` and the junior message "Relisez-la : adoptez-la
   avec vos propres mots, ou dites ce que vous changez", but its `pause` is `kind: action` with
@@ -485,6 +503,17 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   (the decision pause's options, with the restated value as the quoted block), never mark
   "continue" as recommended, and its position should name the reviewed decision, not
   `final_test`.
+  **Fixed (owner session 2026-10-27, automatic-mode lot).** A review (`next_action.review`, the
+  `reconfirm` and, once the value is proposed again, the `await_user_words`) gets a `decision`
+  pause: options adopt / change / explain with the engine's `option_labels`, no
+  `recommended_option`, the recorded value in words as the quoted block ("Le moment de la
+  prédiction : … (valeur enregistrée par le mode automatique, pas encore avec vos mots).") then
+  the closed adoption question, and `position.step_id` the reviewed decision's step
+  (`guidance.pause`, `automation_words.review_restatement`; CLI-CONTRACT J4–J7 and §5.5). The
+  agent instructions already relay `pause.options` and `option_labels` and recommend only what
+  the pause names: unchanged. Tests:
+  `test_automation.py::test_the_review_pause_offers_adopt_change_explain[until|demo]`,
+  `test_pause_pickers.py::test_a_review_pause_is_an_adoption_pause[en|fr]`.
 - **R25. Report in the lesson style (owner request).** The owner wants `reports/study.html` to
   take the design, structure, pedagogical depth and visual interest of the reference lesson
   page ("tableau noir v5" charter: board, index cards, graph-paper figures, sticky TOC, notions

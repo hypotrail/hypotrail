@@ -173,7 +173,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      A bare "ok" or silence is never a delegation. Offer delegation at a pause only, not
      with the plan.
    - **Automatic mode** (`automation.status` `running`, chosen at `init`). Run
-     `automation run --progress`, relay its lines, then its `reason` in one sentence;
+     `automation run --progress --json`, relay its lines, then its `reason` in one sentence;
      only the runner passes `--basis automatic`. A `next_action` with `review: true` is
      the review: propose its value again and ask the closed question; the junior adopts
      or changes it. Until none is left, the study is not defensible. Their "stop" is
