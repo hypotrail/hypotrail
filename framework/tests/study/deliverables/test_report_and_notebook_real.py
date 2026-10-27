@@ -31,10 +31,12 @@ from pathlib import Path
 
 import pytest
 
-from mlkit.study import cmd_check, code_cells, manifest as mf, read, render_notebook as rn
+from mlkit.study import (cmd_check, code_cells, manifest as mf, read, render_notebook as rn,
+                         view as view_mod)
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import flowkit as fk  # noqa: E402
+import flowkit as fk
+from lesson_page import editions, primary  # noqa: E402
 
 AUTO = fk.REPO / 'use-cases' / 'auto-mpg'
 WRITER_MODULES = {'store', 'lock', 'registry', 'exposure', 'dependencies', 'commands', 'cli',
@@ -348,27 +350,39 @@ class _Page(HTMLParser):
 @pytest.mark.parametrize('name', ['bank', 'auto'])
 def test_report_layout_and_traceability(studies, name):
     study = studies[name]
-    page = (study / mf.ARTIFACTS['report']).read_text(encoding='utf-8')
+    whole = (study / mf.ARTIFACTS['report']).read_text(encoding='utf-8')
+    page = primary(whole)                   # v4 (R27): the study language's edition
     p = _Page()
     p.feed(page)
-    # L6 (R8): the verdict first, then the chapters in the order of the study, then the
-    # annex; the data card is in chapter one.
-    assert p.order[:3] == ['verdict', 'howto', 'ch1']
-    chapters = [x for x in p.order if x.startswith('ch') or x == 'appendix']
+    # L6 (R8), v4: how to read, the verdict, then the chapters in the order of the study,
+    # then the summary and the annex; the data card is in chapter one.
+    assert p.order[:4] == ['prereq', 'verdict', 'lesson', 'ch1']
+    chapters = [x for x in p.order if re.fullmatch(r'ch\d|appendix', x)]
     assert chapters == [f'ch{i}' for i in range(1, 10)] + ['appendix']
-    assert p.order.index('objective') < p.order.index('data') < p.order.index('ch2')
-    # v0.3 (WP-J): a distribution and the correlation matrix too. L6 adds two charts drawn
-    # from recorded values, outside that count: the fold-by-fold comparison and the shape a
-    # linear model does not follow.
-    added = [c for c in p.charts if c == 'fold_scores' or c.startswith('nonlinearity:')]
-    assert 3 <= p.figures - len(added) <= 7
+    assert page.index('id="objective"') < page.index('id="data"') < page.index('id="ch2"')
+    # v0.3 (WP-J): a distribution and the correlation matrix too. L6 and v4 add charts drawn
+    # from recorded values outside that count (the diagnostics, the fold-by-fold comparison,
+    # the shape a linear model does not follow, the parts of the file, the folds, the look
+    # counter, figure V, the paired differences, the coefficients).
+    explored = [c for c in p.charts if c.split(':')[0] in (
+        'target_balance', 'target_distribution', 'by_group', 'distribution', 'correlation',
+        'single_feature_signal', 'selection', 'residuals', 'residuals_by')]
+    assert 3 <= len(explored) <= 7, p.charts
+    for added in ('parts', 'looks', 'errors_bar'):
+        assert added in p.charts, (added, p.charts)
+    # the folds as blocks under cross-validation only (a holdout has none)
+    split = view_mod.build(study)['results']['split']['values']
+    assert ('fold_blocks' in p.charts) == bool(split.get('fold_rows')), p.charts
     assert p.annex_open is False
     # every number drawn in a chart is a cited label or an axis tick
     for text, ancestors in p.svg_numbers:
         if re.search(r'\d', text):
             cited = any('data-result-id' in a for a in ancestors)
             literal = {a.get('data-literal') for a in ancestors}
-            assert cited or literal & {'axis', 'category', 'decision_value'}, (text, ancestors)
+            # v4: a fold's number is an ordinal; a count of the study state (the sealed rows,
+            # the looks) a structure literal
+            assert cited or literal & {'axis', 'category', 'decision_value', 'ordinal',
+                                       'structure'}, (text, ancestors)
     # no raw result id (64 hex, or its 12-character prefix) in the prose outside the annex
     prose = ' '.join(p.prose)
     assert not re.search(r'\b[0-9a-f]{12,64}\b', prose)
@@ -377,10 +391,12 @@ def test_report_layout_and_traceability(studies, name):
     rows = re.search(r'<table class="rows">.*?</table>', page, re.S).group(0)
     assert rows.count('<tr>') == 1 + 5
     # the verdict card and the data section
-    verdict = re.search(r'<section class="card verdict" id="verdict">.*?</section>', page,
+    verdict = re.search(r'<section class="blk" id="verdict">.*?</section>', page,
                         re.S).group(0)
     assert 'data-result-id' in verdict and 'Met' in verdict
     assert 'stay sealed' in page and 'data-feature-basis' in page
+    # both languages are in the file, the other edition's ids suffixed (R27)
+    assert set(editions(whole)) == {'en', 'fr'} and 'id="ch1--fr"' in whole
     report = cmd_check.run_check(study)
     assert report['clean'], report['findings']
 
@@ -390,8 +406,9 @@ def test_check_accepts_an_axis_tick_only_inside_an_svg(studies, tmp_path):
     page_path = study / mf.ARTIFACTS['report']
     page = page_path.read_text(encoding='utf-8')
     assert cmd_check.run_check(study)['clean']
-    page_path.write_text(page.replace('<main>', '<main><p><span data-literal="axis">77</span>'
-                                                '</p>', 1), encoding='utf-8')
+    main = '<main id="main">'                   # v4: the study language's edition
+    page_path.write_text(page.replace(main, main + '<p><span data-literal="axis">77</span>'
+                                                   '</p>', 1), encoding='utf-8')
     findings = cmd_check.run_check(study)['findings']
     assert any(f['code'] == 'number_outside_result' and '77' in f['message'] for f in findings)
 
@@ -493,8 +510,8 @@ def test_cross_validated_recomputation_cells_refit_fold_by_fold(cv_studies, name
 @pytest.mark.parametrize('name', ['bank', 'auto'])
 def test_the_verdict_card_separates_development_and_final_evidence(cv_studies, name):
     study = cv_studies[name]
-    page = (study / mf.ARTIFACTS['report']).read_text(encoding='utf-8')
-    verdict = re.search(r'<section class="card verdict" id="verdict">.*?</section>', page,
+    page = primary((study / mf.ARTIFACTS['report']).read_text(encoding='utf-8'))
+    verdict = re.search(r'<section class="blk" id="verdict">.*?</section>', page,
                         re.S).group(0)
     assert 'Development evidence' in verdict and 'out-of-fold' in verdict
     assert 'Final test' in verdict and 'Opened once, on' in verdict
