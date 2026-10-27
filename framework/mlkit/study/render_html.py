@@ -1716,7 +1716,9 @@ def data_rows(sample: Mapping | None) -> str:
                        + ''.join(f'<td>{lit("data_row", r["values"].get(c, ""))}</td>'
                                  for c in cols) + '</tr>' for r in sample['rows'])
         hidden = '' if sample.get('target_shown', True) else f' {e(ds["rows_hidden"])}'
-        seed = (f' {e(ds["rows_seed"])} {lit("identifier", sample["seed"], "code")}.'
+        # The seed in groups of four, so it never reads as a result id.
+        grouped = ' '.join(str(sample.get('seed') or '')[i:i + 4] for i in range(0, 16, 4))
+        seed = (f' {e(ds["rows_seed"])} {lit("identifier", grouped.strip(), "code")}.'
                 if sample.get('seed') else '')
         parts.append(f'<div class="scroll"><table class="rows"><thead><tr>{head_html}</tr>'
                      f'</thead><tbody>{body}</tbody></table></div>'

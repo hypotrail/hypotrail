@@ -283,16 +283,23 @@ def sample_seed(study: read.Study) -> str:
 def sample_candidates(study: read.Study) -> list[str]:
     """The development row keys the step-1 sample is drawn from (``partition.sample``): never
     a final-test row, never a row kept out for a delayed label."""
-    from . import exposure, partition
+    from . import partition
     from . import records as rec
 
     def every_key():                     # a study without a final test: every row
         keys = set()
         for entry in study.exposure_records():
-            if entry.get('purpose') == exposure.STRUCTURAL_PURPOSE:
+            if entry.get('purpose') == partition.STRUCTURAL_PURPOSE:
                 keys.update(rec.parse_row_keys(study.blob(entry['row_keys'])))
         return sorted(keys, key=lambda k: int(k[1:]))
     return list(partition.sample_candidates(study.state, study.blob, every_key) or [])
+
+
+def sample_rank(seed: str, key: str) -> str:
+    """The rank of row ``key`` in the draw of ``seed`` (``partition.sample_rank``): the
+    SHA-256 hex digest of the seed, a line break and the key."""
+    from . import partition
+    return partition.sample_rank(seed, key)
 
 
 def sample_frame(study: read.Study):
@@ -300,13 +307,13 @@ def sample_frame(study: read.Study):
     report show, indexed by row key in row-key order, target first. The target column is
     left out until its look is recorded (``development_target_sample`` of this seed), as
     the data card leaves it out. Never the final test; records nothing."""
-    from . import exposure
+    from . import partition
     state = study.state
     entries = study.exposure_records()
-    drawn = exposure.current_sample(study, state, entries)
+    drawn = partition.study_sample(state, study.blob, entries)
     case, frame = _development(study)
     target = case.target_column
-    shown = bool(drawn) and bool(exposure.sample_records(entries, drawn['seed']))
+    shown = bool(drawn) and bool(partition.sample_records(entries, drawn['seed']))
     columns = ([target] if shown else []) + [n for n in case.column_names if n != target]
     keys = [k for k in (drawn or {}).get('row_keys', []) if k in frame.index]
     return frame.loc[keys, columns]

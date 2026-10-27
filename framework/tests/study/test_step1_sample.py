@@ -71,7 +71,8 @@ def _notebook_sample(study: Path) -> list[str]:
         'outputs, defs = nb.app.run()\n'
         'print(json.dumps({"keys": list(defs["sample"].index), '
         '"columns": list(defs["sample"].columns)}))\n')
-    proc = subprocess.run([sys.executable, '-c', script], cwd=study, env=fk.env(),
+    proc = subprocess.run([sys.executable, '-c', script], cwd=study,
+                          env=fk.env(HYPOTRAIL_NOTEBOOK_RECOMPUTE='1'),
                           capture_output=True, text=True, timeout=300, stdin=subprocess.DEVNULL)
     assert proc.returncode == 0, proc.stderr
     return json.loads(proc.stdout.strip().splitlines()[-1])

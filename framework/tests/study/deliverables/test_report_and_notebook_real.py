@@ -136,7 +136,9 @@ def test_recomputation_cells_run_headless_and_match_the_registry(studies, name):
                          'recompute_model', 'recompute_policy'],
                 'auto': ['recompute_split', 'recompute_target', 'recompute_by_group',
                          'recompute_model', 'recompute_comparison']}[name]
-    assert re.findall(r'^def (recompute_\w+)\(', source, re.M) == ['recompute_imports'] + expected
+    # Contract P1.9: the step-1 sample's cell comes first, at the data step.
+    assert re.findall(r'^def (recompute_\w+)\(', source, re.M) == \
+        ['recompute_imports', 'recompute_sample'] + expected
     explore = {'bank': ['explore_rows', 'explore_info', 'explore_missing', 'explore_describe',
                         'explore_special_values', 'explore_by_group_chart',
                         'explore_job_distribution', 'explore_pdays_distribution',
@@ -387,9 +389,9 @@ def test_report_layout_and_traceability(studies, name):
     prose = ' '.join(p.prose)
     assert not re.search(r'\b[0-9a-f]{12,64}\b', prose)
     assert 'Channel chat' not in prose
-    # the five development rows, never a final-test row
+    # contract P1.9: the eight rows of the step-1 sample, never a final-test row
     rows = re.search(r'<table class="rows">.*?</table>', page, re.S).group(0)
-    assert rows.count('<tr>') == 1 + 5
+    assert rows.count('<tr>') == 1 and rows.count('<tr data-row-key="') == 8
     # the verdict card and the data section
     verdict = re.search(r'<section class="blk" id="verdict">.*?</section>', page,
                         re.S).group(0)

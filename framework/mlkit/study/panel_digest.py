@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Mapping
 
-from . import audience, cite, companion_env, criterion as criterion_mod, exposure, junior
+from . import audience, cite, companion_env, criterion as criterion_mod, junior, partition
 from . import records as rec
 from . import state as st
 
@@ -124,11 +124,11 @@ def defensibility(built: Mapping, summary_out: Mapping) -> dict:
 def sample(study, state: Mapping, entries: list[Mapping]) -> dict | None:
     """``sample``: ``{seed, row_keys, recorded}`` of the step-1 sample, or null when none can
     be drawn. The values are read with ``data --json``."""
-    drawn = exposure.current_sample(study, state, entries)
+    drawn = partition.study_sample(state, study.blob, entries)
     if drawn is None:
         return None
     return {'seed': drawn['seed'], 'row_keys': list(drawn['row_keys']),
-            'recorded': bool(exposure.sample_records(entries, drawn['seed']))}
+            'recorded': bool(partition.sample_records(entries, drawn['seed']))}
 
 
 def ledger(built: Mapping, entries: list[Mapping]) -> dict:
@@ -137,7 +137,7 @@ def ledger(built: Mapping, entries: list[Mapping]) -> dict:
     final = built.get('final_test') or {}
     status = final.get('status')
     looks = (built.get('eda_looks') or {}).get('target_looks') or 0
-    samples = len(exposure.sample_records(entries))
+    samples = len(partition.sample_records(entries))
     return {'final_test': (None if status in (None, 'absent')
                            else {'openings': 1 if status == 'opened' else 0, 'max': 1}),
             'target_looks': {'eda': looks, 'sample': samples, 'total': looks + samples},
@@ -485,6 +485,11 @@ def criterion_configurations(built: Mapping) -> dict | None:
 
 # --- the texts of §17.2.3 ------------------------------------------------------------------
 
+def _sample_note(lang: str) -> str:
+    from . import exposure              # the read side imports no writer at module level
+    return exposure.sample_note(lang)
+
+
 def question(action: Mapping) -> str | None:
     """The one question the chat asks now, or null for a run, a blocked step, an unknown
     outcome or the end."""
@@ -518,7 +523,7 @@ def texts(built: Mapping, lang: str, *, contingency: Mapping, has_sample: bool,
         'data_contingent': {pid: contingency_text(open_ids[pid], reason, lang)
                             for pid, (flag, reason) in contingency.items()
                             if pid in open_ids and flag is True},
-        'sample_note': exposure.sample_note(lang) if has_sample else None,
+        'sample_note': _sample_note(lang) if has_sample else None,
     }
 
 

@@ -817,3 +817,40 @@ def sample(state: Mapping, read_blob: Callable[[str], bytes],
         return None
     seed = sample_seed(state)
     return {'seed': seed, 'row_keys': draw(seed, keys)}
+
+
+def sample_rank(seed: str, key: str) -> str:
+    """The rank of row ``key`` in the draw of ``seed``: the SHA-256 hex digest of
+    ``seed + "\\n" + key`` (the generated notebook recomputes the draw with it)."""
+    import hashlib
+    return hashlib.sha256(f'{seed}\n{key}'.encode('utf-8')).hexdigest()
+
+
+# The exposure records of the sample (``exposure.SAMPLE_PURPOSE``), read on the read side too
+# (the notebook and the read commands import no writer).
+SAMPLE_PURPOSE = 'development_target_sample'
+STRUCTURAL_PURPOSE = 'structural_inspection'
+
+
+def sample_records(entries, seed: str | None = None) -> list:
+    """The ``development_target_sample`` records of ``entries`` (of ``seed`` when given)."""
+    return [e for e in entries if e.get('purpose') == SAMPLE_PURPOSE
+            and (seed is None or e.get('sample_seed') == seed)]
+
+
+def study_sample(state: Mapping, read_blob: Callable[[str], bytes], entries) -> dict | None:
+    """:func:`sample` of a study whose exposure records are ``entries``: a study without a
+    final test draws from the rows its structural inspection recorded at ``init``. None when
+    no row can be listed. Row keys only: no data value is read."""
+    entries = list(entries)
+
+    def every_key():
+        keys: set = set()
+        for entry in entries:
+            if entry.get('purpose') == STRUCTURAL_PURPOSE:
+                keys.update(rec.parse_row_keys(read_blob(entry['row_keys'])))
+        return sorted(keys, key=_row_number) if keys else None
+    try:
+        return sample(state, read_blob, every_key)
+    except (StudyError, KeyError, OSError, ValueError):
+        return None

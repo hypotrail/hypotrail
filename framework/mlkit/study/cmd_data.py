@@ -124,12 +124,12 @@ def sample_rows(study, frame, case) -> dict:
     in row-key order. The target is shown only once the look is recorded
     (``development_target_sample`` of this seed); a read never records it, so until then
     every item omits the target column (``target_shown: false``)."""
-    from . import exposure
+    from . import partition
     state = study.state
     entries = study.exposure_records()
-    drawn = exposure.current_sample(study, state, entries)
+    drawn = partition.study_sample(state, study.blob, entries)
     keys = [k for k in (drawn or {}).get('row_keys', []) if k in frame.index]
-    recorded = exposure.sample_records(entries, drawn['seed']) if drawn else []
+    recorded = partition.sample_records(entries, drawn['seed']) if drawn else []
     shown = bool(recorded)
     target = case.target_column
     columns = ([target] if shown else []) + [n for n in case.column_names if n != target]
@@ -139,7 +139,7 @@ def sample_rows(study, frame, case) -> dict:
                       for k in keys],
             'seed': drawn['seed'] if drawn else None, 'target_shown': shown,
             'exposure': {'exposure_id': recorded[0]['exposure_id'] if shown else None,
-                         'purpose': exposure.SAMPLE_PURPOSE, 'recorded': shown}}
+                         'purpose': partition.SAMPLE_PURPOSE, 'recorded': shown}}
 
 
 def _special_rows(case, frame, special_masks: Mapping[str, list]) -> dict:

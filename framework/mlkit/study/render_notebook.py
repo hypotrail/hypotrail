@@ -60,21 +60,20 @@ STUDY_TEMPLATE_VERSION = 2
 # the first eight) and asserts it gives the rows the data card and the report show.
 _SAMPLE_CODE = '''sample = nv.sample_frame(study)
 _seed = nv.sample_seed(study)
-_ranked = sorted(nv.sample_candidates(study),
-                 key=lambda _k: _hashlib.sha256(f"{_seed}\\n{_k}".encode("utf-8")).hexdigest())
+_ranked = sorted(nv.sample_candidates(study), key=lambda _k: nv.sample_rank(_seed, _k))
 _drawn = sorted(_ranked[:8], key=lambda _k: int(_k[1:]))
 assert _drawn == list(sample.index), "the sample differs from the data card's rows"
 sample'''
 SAMPLE_CELL = ('# Eight development rows drawn at random, target included: a look at the target\n'
                '# before the split, counted in the exposure ledger. The draw is reproducible:\n'
-               '# rank every development row key by the SHA-256 of the seed and the key, keep\n'
-               '# the first eight, show them in row order.\n'
-               'import hashlib as _hashlib\n' + _SAMPLE_CODE)
+               '# rank every development row key by the SHA-256 of the seed and the key\n'
+               '# (nv.sample_rank), keep the first eight, show them in row order.\n'
+               + _SAMPLE_CODE)
 SAMPLE_CELL_FR = ('# Huit lignes de développement tirées au hasard, cible comprise : un regard sur\n'
                   "# la cible avant le découpage, compté au registre d'exposition. Le tirage se\n"
                   '# refait : on classe chaque clé de ligne par le SHA-256 de la graine et de la\n'
-                  "# clé, on garde les huit premières, dans l'ordre des lignes.\n"
-                  'import hashlib as _hashlib\n' + _SAMPLE_CODE)
+                  "# clé (nv.sample_rank), on garde les huit premières, dans l'ordre des lignes.\n"
+                  + _SAMPLE_CODE)
 MAX_REPLACE_ATTEMPTS = 5
 
 _TEMPLATE_VERSION = re.compile(rb'template_version = (\d+)')
@@ -209,6 +208,13 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
     recompute = code_cells.cells_by_step(view, task, target, positive, facts,
                                          [step['id'] for step in view['plan']])
     fr = view.get('language') == 'fr'
+    if target is not None:
+        # Contract P1.9 (CLI-CONTRACT §17.3): the step-1 sample, recomputed from its seed,
+        # behind the recomputation button like every cell that reads rows.
+        first = 'discover_data' if any(s['id'] == 'discover_data' for s in view['plan']) \
+            else view['plan'][0]['id']
+        recompute.setdefault(first, []).insert(
+            0, ('recompute_sample', SAMPLE_CELL_FR if fr else SAMPLE_CELL))
     if recompute:
         button = ('Lancer les recalculs enregistrés' if fr
                   else 'Run registered recomputations')
@@ -220,7 +226,8 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
         guard = ('mo.stop(not (run_recompute.value or '
                  'os.environ.get("HYPOTRAIL_NOTEBOOK_RECOMPUTE") == "1"), '
                  f'mo.md({json.dumps(paused, ensure_ascii=False)}))\n')
-        cells.append(('recompute_imports', guard + code_cells.imports(task)))
+        if any(name != 'recompute_sample' for code in recompute.values() for name, _ in code):
+            cells.append(('recompute_imports', guard + code_cells.imports(task)))
     for index, step in enumerate(view['plan'], start=1):
         content = texts.step(step['id'])
         slots = render_html.slots_of_step(step['id'], view['results'], task, view['plan'])
@@ -233,9 +240,6 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
                                               view.get('language') or 'en'))))
         if pending:
             continue
-        if step['id'] == 'discover_data' and target is not None:
-            # Contract P1.9 (CLI-CONTRACT §17.3): the step-1 sample, recomputed from its seed.
-            cells.append(('step_discover_data_sample', SAMPLE_CELL_FR if fr else SAMPLE_CELL))
         cells += [(name, guard + source) for name, source in code]
         concept = content.get('concept')
         items = [f'mo.Html(nv.example_html(cited, {concept!r}{task_arg}))',

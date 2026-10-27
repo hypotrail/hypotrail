@@ -109,7 +109,7 @@ def overlap(old_split: Mapping, new_split: Mapping, *, store: StudyStore | None 
 
 # --- the seeded step-1 sample (CLI-CONTRACT §17.3, contract P1.9) ---------------------------
 
-SAMPLE_PURPOSE = 'development_target_sample'
+SAMPLE_PURPOSE = 'development_target_sample'          # partition.SAMPLE_PURPOSE
 SAMPLE_ACTIVITY = 'data.sample'
 STRUCTURAL_PURPOSE = 'structural_inspection'
 # The ledger entry's note (``texts.*.sample_note``, ``evidence.exposure.ledger``).
@@ -130,8 +130,8 @@ def sample_note(lang: str = 'en') -> str:
 
 def sample_records(entries: Iterable[Mapping], seed: str | None = None) -> list[Mapping]:
     """The ``development_target_sample`` records of ``entries`` (of ``seed`` when given)."""
-    return [e for e in entries if e.get('purpose') == SAMPLE_PURPOSE
-            and (seed is None or e.get('sample_seed') == seed)]
+    from . import partition
+    return partition.sample_records(entries, seed)
 
 
 def _structural(entries: Iterable[Mapping]) -> list[Mapping]:
@@ -147,16 +147,7 @@ def current_sample(store, state: Mapping, entries: list[Mapping] | None = None) 
     read_blob = getattr(store, 'read_blob', None) or store.blob
     if entries is None:
         entries = records(store) if isinstance(store, StudyStore) else store.exposure_records()
-
-    def every_key():
-        keys: set = set()
-        for entry in _structural(entries):
-            keys.update(rec.parse_row_keys(read_blob(entry['row_keys'])))
-        return sorted(keys, key=lambda k: int(str(k)[1:])) if keys else None
-    try:
-        return partition.sample(state, read_blob, every_key)
-    except (StudyError, KeyError, OSError, ValueError):
-        return None
+    return partition.study_sample(state, read_blob, entries)
 
 
 def ensure_sample(store: StudyStore, state: Mapping | None = None) -> dict | None:

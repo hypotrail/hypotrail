@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from mlkit.study import case as c, governance, read, state as st, store as sto
+from mlkit.study import case as c, governance, partition, read, state as st, store as sto
 
 import flowkit as fk
 from flowkit import Flow
@@ -80,10 +80,11 @@ def test_the_data_card_shows_development_rows_grouped_without_any_rate(tmp_path)
     assert pdays['value'] == -1 and pdays['n_rows'] > 0
     assert all(len(v['examples']) <= 3 for v in variables.values())
     rows = card['rows']
-    assert rows['columns'][0] == 'y' and rows['n_rows'] == 5
+    # Contract P1.9: the seeded step-1 sample, eight development rows, target first.
+    assert rows['columns'][0] == 'y' and rows['n_rows'] == 8
     keys = [r['row_key'] for r in rows['items']]
     development = fk.partition_keys(flow.study, 'development')
-    assert keys == sorted(development, key=lambda k: int(k[1:]))[:5]
+    assert keys == partition.draw(rows['seed'], development)
     assert not set(keys) & set(fk.partition_keys(flow.study, 'final_test'))
     text = json.dumps(card)
     assert '"rate"' not in text and 'share' not in text          # no target rate, no distribution
