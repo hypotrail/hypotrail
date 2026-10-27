@@ -148,7 +148,7 @@
         'This is the board of the construction: it says which of the four moments the study is in, what waits for you, and what you cannot claim yet. ',
         f.step ? `Now: ${f.step}${f.waits ? ', waiting for your answer in the chat' : ''}. ` : '',
         'You read it here; you answer in the chat.'],
-      eda: () => ['This part corresponds to the first two moments: understanding the data before drawing anything from them, then exploring them without touching the final test. ',
+      eda: () => ['This part corresponds to the first two moments: getting to know the data before drawing anything from them, then exploring them without touching the final test. ',
         'It answers "what does a row describe, and what are these columns worth?". ',
         'The decisions they motivate, the availability of the variables and the preparation, are taken in the chat.'],
       decisions: f => ['Every decision of the study goes through a proposal of the assistant and your answer, in the chat. ',
