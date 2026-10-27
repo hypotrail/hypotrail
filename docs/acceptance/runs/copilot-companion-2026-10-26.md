@@ -515,3 +515,11 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   inside VS Code it should probably still follow the editor's theme.
 - **Mockup feedback.** The background ruling of cards and the graph-paper grid were too visible:
   made much fainter (separate `--ruleline` token; `--gridmm` lowered).
+- **R29. A short introduction at the start of each step.** Each chapter of the lesson-style report
+  (and each step in the panel) opens with two or three sentences saying what this step does and
+  what it corresponds to in the study (why it comes now, what question it answers, what the
+  junior will see and decide), before the term card. Example for chapter 7 "Le choix du
+  modèle": what is being chosen (among the baseline, the linear model and the variants), on
+  what evidence (out-of-fold errors, paired bootstrap, one-standard-error rule), and that the
+  final test is still sealed. The engine needs one intro text per step (EN/FR) in the report
+  content files.
