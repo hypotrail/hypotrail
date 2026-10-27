@@ -523,3 +523,11 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   what evidence (out-of-fold errors, paired bootstrap, one-standard-error rule), and that the
   final test is still sealed. The engine needs one intro text per step (EN/FR) in the report
   content files.
+- **R30. Everything explained, fluid reading, always know where you are; every chart read and
+  concluded.** Every term, number, chart, stamp and abbreviation is explained, at least in a
+  foldable block; the main text stays fluid. The reader always sees where they are and what
+  remains (sticky "Chapitre n/9 · … — reste : …", a transition line at the end of each chapter).
+  Every chart says why it is there (question, frame: development vs final evidence, rows, model)
+  and comes with a guided reading: "Comment le lire" step by step, "Ce qu'on en conclut" with the
+  actual numbers, and "Attention" when a reading trap exists (example: Figure 7.4, residual boxes
+  per model). Applies to the report and the panel.
