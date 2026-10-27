@@ -398,6 +398,8 @@ Review round 5 (area E, `view._runnable`, `view._opening_not_current`). **Captur
 
 v0.3 (WP-J): every `hypotrail.decide/1` payload (`decide propose`, `confirm`, `withdraw`, `note`, `mode set`) and every `hypotrail.run/1` payload ends with `next_action`: the study's next action after the write (and, for a run, after its deliverables are rendered), exactly as `status` and `status --summary` give it, junior-ready keys included (`commands.refreshed_next_action`; `null` only if the view cannot be built, the write standing). With the payload's `revision`, the agent needs no `status` call between a write and the next pause.
 
+**Superseded once the one-page panel lands (ADR 0004 decision 13).** The two paragraphs below and their table describe `next_action.panel` version 1, the tab form. §17.1 specifies version 2 (anchors `now`, `todo:<kind>`, `path:<step_id>[/<slot>]`, `tools:<drawer>`), which the integration commit of the one-page panel puts in their place; the conditions under which the key is present do not change.
+
 **Where the study panel shows the step (owner session 2026-10-26, R1; `mlkit.study.companion_env`).** When the flagged study panel is on, every `next_action` of `init`, `plan`, `status`, `status --summary` (with or without `--fields`), `decide`, `mode set` and `run` ends with an optional key `panel` (`companion_env.PANEL_KEYS`): `{stage, title, tabs, where, shown}` (`shown` added by R1b, below). It is **absent when the panel is off**, so the default payload is unchanged. The panel is on when the environment variable `HYPOTRAIL_COMPANION` is exactly `1` (the terminal an agent runs the CLI in inherits VS Code's environment) or the study's `.vscode/settings.json` sets `"hypotrail.companion.enabled": true` (JSON `true` only; comments and trailing commas are read; an unreadable file reads as no setting; user-level settings are not seen). `stage` is `HYPOTRAIL_COMPANION_STAGE` when set and not empty, else the setting `hypotrail.companion.stage`, else `v0`; a higher `vN` (up to three digits) reads as `v3`, anything else as `v0`, as the extension reads them (`lib/flag.js`). `title` is the panel's title and `tabs` (`{tab: label}`, in the panel's order) the tabs it shows at that stage (none at `v0`, a single page; `overview`, `decisions` from `v1`; `eda`, `evidence`, `whatif` from `v2`; `learn` at `v3`), both in the study language and verbatim from the panel's copy (`media/copy*/core.js`; `clients/vscode-companion/test/test_panel_labels.py`). `where` (`{tab, label, line}`, `companion_env.WHERE_KEYS`) is the tab that shows the step of this `next_action`: the data card and `eda.*` runs in `eda`; a `propose`, `await_user_words`, `reconfirm` or `resolve_hold` in `decisions`, except the decision rule and the model choice in `whatif` (as is a `policy.*` run); any other `run` (split, fits, diagnostics, final test) in `evidence`; `done`, `blocked` and an interrupted run in `overview`; when the stage lacks that tab, the closest one it has (`whatif` → `decisions` → `overview`, the others → `overview`), and at `v0` `tab` is null and `label` the panel's title. `line` is the ready sentence the agent ends its message with (CLAUDE.md rule 6), in the study language ("Dans le panneau : onglet Données et EDA."). The key is added by the command surfaces only: the view the deliverables are rendered from (`view.build`) never carries it, so the report and the notebook do not depend on the environment. The `data` command gives no `next_action`; at step 0 the `status` read carries the panel line of the data card.
 
 **What the panel shows of this command (owner session 2026-10-26, R1b; `companion_env.shown`).** `panel.shown` (`companion_env.SHOWN_KEYS`: `{tab, section, label, line}`, the last key of `panel`) names where the panel shows what **this command produced**, or is `null` when it produced nothing the panel shows; `where` keeps its meaning (the tab of the next step). It is computed by the command surfaces from the command and its result (`commands.refreshed_next_action`, `executions._outcome`), never from the view the deliverables are rendered from. `section` is a section id (`companion_env.SECTIONS`) and `label` its heading, verbatim from the panel's copy in the study language (`test_panel_labels.py`):
@@ -1523,3 +1525,283 @@ times).
 State: optional top-level key `understanding` (`hypotrail.understanding-state/1`), §9; a
 newer version is read as `unsupported` and never written. Schemas of the exported review and
 the policy: `framework/mlkit/study/understanding/schemas/` (generated, `--check` in the tests).
+
+## 17. The one-page study panel: anchors and digest additions (contract P1, 2026-10-27)
+
+**Status: specified, not implemented. This section is the contract the implementation of ADR 0004 decision 13 (one page instead of tabs) must follow.** The panel's side is [COMPANION-ADVANCED.md](COMPANION-ADVANCED.md) (§4, §6), its work packages [PANEL-ONE-PAGE-PLAN.md](../plans/PANEL-ONE-PAGE-PLAN.md). Until the integration commit that lands the one-page panel, §3.2 ("Where the study panel shows the step", "What the panel shows of this command") stays in force; that commit replaces it by §17.1 and removes the tab form (no dual emission, §17.1.5). Every other addition below is **additive**: a client that does not know a key ignores it, no listed key is removed, no schema name changes, and `status --summary` **without** `--digest` stays byte-for-byte unchanged (CLI-CONTRACT-COMPANION §1).
+
+Names already in the engine are used as they are; the table says where each addition sits and what it reuses.
+
+| # | Addition | Where | Reuses |
+|---|---|---|---|
+| P1.1 | the panel line names an anchor, `next_action.panel` version 2 | every `next_action` while the panel is on | `companion_env` (§3.2), the panel's copy |
+| P1.2 | `panel_contract` | `status --summary --digest` | — |
+| P1.3 | `automation`, `review_queue` | `status --summary --digest` | `state.automation`, `view.review_queue` (§5.5) |
+| P1.4 | the awaited question, its options and why, in both languages | `texts.{en,fr}` of the digest | `next_action.question`, `next_action.pause.options`, `option_labels`, `choice_options`, `junior_digest` (§3.1, J4–J7) |
+| P1.5 | the final test's opening time | already emitted: `summary.final_test.opening.time` | `partition.final_test_status`, `partition.OPENING_VIEW_KEYS` |
+| P1.6 | `criterion_configurations`: each configuration's status against the criterion and the absolute bound | `status --summary --digest` | `view.criterion` (§11.4), `model_selection` (§14) |
+| P1.7 | `headlines`: one line per done step, from registered values only | digest, texts in `texts.{en,fr}.headlines` | `cite.format_value`, `check` |
+| P1.8 | a result's `channel` | `results.<slot>.channel`, digest only | the run's recorded `channel` (WP-J, R35) |
+| P1.9 | the seeded step-1 sample and its exposure entry | `data --json` `rows`, the report, the notebook, `exposure.jsonl`, `digest.sample` | `data.rows`, `cmd_render.sample_rows`, `exposure.record`, J4 |
+| P1.10 | the special-value rows | `data --json` `special_rows` | `variables[].special_values` |
+| P1.11 | `defensibility`: the pill's kind and the items it lists | `status --summary --digest` | `not_yet_defensible` |
+| P1.12 | `ledger`: the counts of the path's ledger line | `status --summary --digest` | `final_test`, `eda_looks`, `trials` |
+| P1.13 | a result-dependent change of the rule or the model is marked | `decide propose` and `open_proposals[].data_contingent` (digest) | `data_contingent`, `data_contingent_reason` (§3.2, WP-A) |
+
+### 17.1 `next_action.panel`, version 2: anchors instead of tabs (P1.1)
+
+The rules of §3.2 that say **when** the key is present are unchanged: `panel` is the last key of every `next_action` of `init`, `plan`, `status`, `status --summary` (with or without `--fields`), `decide`, `mode set` and `run` when the panel is on (`HYPOTRAIL_COMPANION` exactly `1`, or `"hypotrail.companion.enabled": true` in the study's `.vscode/settings.json`), absent otherwise; it is added by the command surfaces only, never by `view.build`, so the report and the notebook never depend on it; `stage` is read as before (`companion_env.stage`). What changes is what it names.
+
+**Keys** (`companion_env.PANEL_KEYS`, version 2): `version`, `stage`, `title`, `where`, `shown`.
+
+- `version`: the integer `2` (`companion_env.PANEL_CONTRACT`). Version 1 is the tab form of §3.2 (`{stage, title, tabs, where, shown}`), which had no `version` key.
+- `stage`: `v0` to `v3`, as §3.2.
+- `title`: the panel's title in the study language, verbatim from the panel's copy ("Hypotrail study" / "Étude Hypotrail").
+- `where`: `{anchor, label, line}` (`companion_env.WHERE_KEYS`): where the panel shows the step of this `next_action`.
+- `shown`: `{anchor, label, line}` (`companion_env.SHOWN_KEYS`), or `null`: where the panel shows what **this command produced**.
+- `tabs`, `where.tab`, `shown.tab` and `shown.section` no longer exist.
+
+#### 17.1.1 Anchors
+
+An anchor is a string of this grammar (`companion_env.ANCHOR_RE`):
+
+```text
+anchor   := "now" | "todo:" kind | "path" | "path:" step_id [ "/" slot ] | "tools:" drawer
+kind     := "execution" | "deliverables" | "checks" | "sources" | "integrity"
+step_id  := a plan step id of this study (state.derive_plan), e.g. "split", "train_eda"
+slot     := a registry slot of this study, e.g. "eda.rate_by:job", "fit.variant:2"
+drawer   := "data" | "whatif" | "notions" | "deliverables"
+```
+
+| Anchor | What it names in the panel (COMPANION-ADVANCED §6) | First stage |
+|---|---|---|
+| `now` | the **Now** block: what the chat waits for and, from v2, the figure that helps answer | v0 |
+| `todo:execution` | the "To handle" item of an interrupted, suspected or late execution | v0 |
+| `todo:deliverables` | the "To handle" item of a stale, failed, missing or edited deliverable | v0 |
+| `todo:checks` | the "To handle" item of the checks of the deliverables | v1 |
+| `todo:sources` | the "To handle" item of changed sources (`sources_changed`) | v0 |
+| `todo:integrity` | the "To handle" item of a result whose integrity failed (`result_integrity`) | v0 |
+| `path` | the head of the path: its ledger line (§17.2.2) | v0 |
+| `path:<step_id>` | the path's line of that step (its decision, basis and headline) | v0 |
+| `path:<step_id>/<slot>` | the figure of that result in the step's detail | v2 |
+| `tools:data` | the drawer "The data" (data card, quality check, charts, "Run another chart") | v2 |
+| `tools:whatif` | the drawer "What if? (without deciding)" | v2 |
+| `tools:notions` | the drawer "My notions" | v3 |
+| `tools:deliverables` | the drawer "Deliverables" (Open, the Marimo launches, Regenerate from v1, the handoff export and the session report at v3) | v0 |
+
+`step_id` is always a step of the study's plan; `slot` is always a slot the registry holds (current or not). The panel gives the element of each anchor the attribute `data-anchor` with that exact string (COMPANION-ADVANCED §16), so a test can check that every anchor the engine emits exists on the page at that stage.
+
+**The step of a result** (`companion_env.step_of(activity, slot, plan)`): the first plan step whose `activities` lists the activity; else, for an `eda.*` activity, `structural_eda` when the result read no target (`target_read: false`, or an `eda.distribution` of a feature) and the plan has that step, else `train_eda`; else `models` for `fit.*` and `diag.*`; else the step of the decision the activity serves (`final_test` for `final_test.evaluation` and `diag.final_test`). A result requested from the panel (W4) is filed under that step, like any other.
+
+#### 17.1.2 `where`: the place of the next step
+
+| `next_action.kind` | `where.anchor` |
+|---|---|
+| `outcome_unknown`, `acknowledge_interruption` | `todo:execution` |
+| every other kind (`show_data_card`, `propose`, `await_user_words`, `reconfirm`, `resolve_hold`, `run`, `blocked`, `done`) | `now` |
+
+The one page shows the step of every next action in Now (a run as "computing, nothing to answer", a blocked step with its requirement, `done` as "What the study can claim"), so the place does not depend on the stage.
+
+#### 17.1.3 `shown`: what the command produced
+
+`companion_env.shown_anchor(produced, action, plan)` computes the anchor before the stage is considered (`produced` as in §3.2: `{command, action?, activity?, slot?, status?, opening?, kind?}`); "the current step" is the step of the new `next_action` (its `step`, else the step of its `decision`).
+
+| Command and result | `shown.anchor` |
+|---|---|
+| `init`; a read (`status`, `status --summary`, `plan`) while `next_action.kind` is `show_data_card` | `now` (content `data_card`) |
+| a read while `next_action` carries `choice_options` (R16) | `now` (content `choice`) |
+| any other read | `null` |
+| `decide propose`; `decide note --resolve` | `now` (content `question`; `review` when `next_action.review` is true) |
+| `decide note` of a hold | `now` (content `hold`) |
+| `decide confirm`, `decide withdraw`, `decide note --kind correction` | `path:<the decision's step>` |
+| `decide confirm` of `final_test` whose opening ran (`result.opening.status` `promoted`, `already_current`, `opened`) | `path:final_test/final_test.evaluation` |
+| `decide note --withdraw` | `null` |
+| `mode set` | `now` (content `answer_rules`) |
+| `run` promoted or already current, whose step (§17.1.1) is the current step | `now` (content `figure:<slot>`) |
+| `run` promoted or already current, any other step | `path:<step>/<slot>` |
+| `run` not promoted (failed, interrupted, late); an acknowledgement; a capture | `null`, except an interrupted run: `todo:execution` |
+| `render` | gives no `next_action` (unchanged) |
+
+D3 of §3.2 holds: a command that produced something names it, even when the next action is a choice.
+
+**Stage fallback** (`companion_env.at_stage(anchor, content, stage)`): an anchor or content the stage does not show reads as the closest place it shows, never as a place that is absent:
+
+| Asked | Below its stage | Reads as |
+|---|---|---|
+| `now` with content `data_card` or `figure:<slot>` | v0, v1 (Now has no figures) | `now` with content `question` |
+| `path:<step>/<slot>` | v0, v1 | `path:<step>` |
+| `todo:checks` | v0 | `tools:deliverables` |
+| `tools:data`, `tools:whatif` | v0, v1 | `now` |
+| `tools:notions` | v0 to v2 | `null` |
+
+#### 17.1.4 Labels and the line
+
+`label` is the name of the place in the study language; `line` is the ready sentence the agent ends its message with (the agent texts' panel rule, `framework/mlkit/study/agent/CLAUDE.md.in` rule 6), in the study language. Both are verbatim from the panel's copy (`media/copy/page.js` and `media/copy-fr/page.js` keys `anchors`, `contents`, `drawers`; the step names are `media/copy*/overview.js` `journeyLabels`, kept as the path's step names), copied in `companion_env.ANCHOR_LABELS`, `CONTENT_LABELS`, `DRAWER_LABELS`, `STEP_LABELS`, and checked equal by `clients/vscode-companion/test/test_panel_labels.py` (rewritten, P-8 of the plan).
+
+| Anchor | `line`, English | `line`, French |
+|---|---|---|
+| `now` | `In the panel: Now, {content}.` | `Dans le panneau : Maintenant, {content}.` |
+| `todo:<kind>` | `In the panel: To handle, {kind label}.` | `Dans le panneau : À traiter, {kind label}.` |
+| `path` | `In the panel: the path, its ledger line.` | `Dans le panneau : le parcours, sa ligne de registre.` |
+| `path:<step>` | `In the panel: the path, {step}.` | `Dans le panneau : le parcours, {step}.` |
+| `path:<step>/<slot>` | `In the panel: the path, {step} → {figure}.` | `Dans le panneau : le parcours, {step} → {figure}.` |
+| `tools:<drawer>` | `In the panel: Tools → {drawer}.` | `Dans le panneau : Outils → {drawer}.` |
+
+`label` is the part after the colon without the final period ("Now, the data card"; "Maintenant, la fiche des données").
+
+| Content (`now`) | English | French |
+|---|---|---|
+| `data_card` | the data card | la fiche des données |
+| `question` | the question waiting for you | la question qui vous attend |
+| `review` | the decision to review | la décision à relire |
+| `reopened` (a `reconfirm` that is not a review) | the decision to confirm again | la décision à confirmer de nouveau |
+| `choice` | the options to choose from | les options du choix |
+| `hold` | your condition on hold | votre condition en suspens |
+| `answer_rules` | what counts as your answer | ce qui compte comme votre réponse |
+| `running` (a `run` next) | the step being computed | l'étape en calcul |
+| `blocked` | what the step waits for | ce que l'étape attend |
+| `done` | what the study can claim | ce que l'étude peut affirmer |
+| `figure:<slot>` | the figure's name: `companion_env.FIGURE_LABELS` by activity (the EDA card names of §3.2 `EDA_CARD_LABELS` with their column; `split` "the split" / "le découpage"; `fit.*`, `policy.evaluation`, `evaluate.regression` "the model comparison" / "la comparaison des modèles"; a variant fit "the variants" / "les variantes"; `diag.*` "the diagnostics" / "les diagnostics"; `final_test.evaluation` "the final test result" / "le résultat du test final") | |
+
+| `todo` kind | English | French |
+|---|---|---|
+| `execution` | the interrupted run | l'exécution interrompue |
+| `deliverables` | the deliverables out of date | les livrables périmés |
+| `checks` | the checks of the deliverables | les vérifications des livrables |
+| `sources` | the changed sources | les sources modifiées |
+| `integrity` | a result that failed its integrity check | un résultat dont l'intégrité a échoué |
+
+| Drawer | English | French |
+|---|---|---|
+| `data` | The data | Les données |
+| `whatif` | What if? (without deciding) | Et si ? (sans décider) |
+| `notions` | My notions | Mes notions |
+| `deliverables` | Deliverables | Livrables |
+
+`where.anchor` uses the same labels; for `now` its content is the one of the next action (`data_card`, `question`, `review`, `reopened`, `choice`, `hold`, `running`, `blocked`, `done`), after the stage fallback.
+
+#### 17.1.5 Versions and skew
+
+- The engine and the panel ship from one repository revision. The integration commit that lands the one-page panel switches `companion_env` to version 2, the panel's copy and the agent texts' rule 6 together; there is no period with both forms and no setting that selects one.
+- `status --summary --digest` carries `panel_contract` (P1.2, the integer `companion_env.PANEL_CONTRACT`) whether the panel is on or not, so the panel knows which contract its engine speaks even when its own reads do not carry `next_action.panel`.
+- The panel holds its own constant (`lib/flag.js` `PANEL_CONTRACT`, `2`). When the digest's `panel_contract` is absent or differs, the panel still renders everything the engine gives (it reads what it is given and ignores what it does not know) and shows one read-only line in the "more" menu and the footer: "This panel and the study engine come from different versions: the chat's "In the panel" lines may not match what you see." / « Ce panneau et le moteur de l'étude viennent de versions différentes : les lignes « Dans le panneau » du chat peuvent ne pas correspondre. » It never changes its layout to follow the engine, and never writes anything because of it.
+- A key of this section that an older engine does not send is read as absent: the block that needs it shows its fallback (COMPANION-ADVANCED §6.8, HON-9), never a value the panel computed.
+- `test_contract_freeze.py` pins `PANEL_KEYS`, `WHERE_KEYS`, `SHOWN_KEYS`, `PANEL_CONTRACT`, the anchor grammar and the digest keys of §17.2; `clients/vscode-companion/test/test_contract_keys.py` checks the panel's constant against the engine's.
+
+### 17.2 Digest additions (P1.2–P1.4, P1.6–P1.8, P1.11, P1.12)
+
+With `--digest`, these keys are appended **after `texts`**, in this order (`view.DIGEST_SUMMARY_KEYS` gains them): `panel_contract`, `automation`, `review_queue`, `defensibility`, `ledger`, `sample`, `headlines`, `criterion_configurations`. Inside existing structures, with `--digest` only: `results.<slot>` gains `channel` (last key), `open_proposals[]` gains `data_contingent` (after `origin`), and `texts.{en,fr}` gains the keys of §17.2.3 (after its existing keys, `view.LANGUAGE_TEXT_KEYS`). Every key is deterministic for a study content (no clock is read) and is built from the same view as the rest of the summary.
+
+#### 17.2.1 Automation and the review queue (P1.3)
+
+- `automation`: `null` for a study created without `init --automation`; else `{variant, active, started_revision, ended}` (`view.SUMMARY_AUTOMATION_KEYS`):
+  - `variant`: `until_final_test` or `full_demo`, the recorded `state.automation.mode` (§5.5). It is named `variant` here because `summary.mode` is already the confirmation mode (ADR 0005);
+  - `active`: `true` while `state.automation.status` is `running`;
+  - `started_revision`: `state.automation.started_revision`;
+  - `ended`: `null` while active, else `{revision, reason}` with `reason` `reached_end` or `stopped` (`state.automation.ended`).
+- `review_queue`: `null` when `automation` is `null`; else `{items, done, total}` (`view.SUMMARY_REVIEW_KEYS`):
+  - `items`: `view.review_queue` as it is (`REVIEW_QUEUE_KEYS`: `decision_id`, `status`, `value`, `proposal_id`, `revision`), in plan order: the decisions whose current confirmation is still `automatic`;
+  - `total`: the number of distinct decisions the automatic mode confirmed in this study (a confirmation with basis `automatic` in any decision's history, the opening of a demonstration included);
+  - `done`: `total` minus the number of `items` (each adopted or changed in the junior's words).
+- The panel's progress during a review reads "Review k of n" with `k = done + 1`, `n = total` (COMPANION-ADVANCED PG-9); it computes nothing else.
+
+#### 17.2.2 `panel_contract`, `defensibility`, `ledger`, `sample`, `headlines` (P1.2, P1.11, P1.12, P1.7)
+
+- `panel_contract`: the integer `companion_env.PANEL_CONTRACT` (2), §17.1.5.
+- `defensibility` (`view.SUMMARY_DEFENSIBILITY_KEYS`): `{kind, count, items}`, the engine's reading of `not_yet_defensible` for the header pill; the panel decides none of it.
+  - `items`: `[{id, severity}]`, every `not_yet_defensible` id of the view (`top` then `more`, in the engine's order), each with a `severity` of `governance.LIMIT_SEVERITY` (moved from the panel's `media/copy/junior.js` `SEVERITY`, which then reads the engine's): `blocking` (the study cannot be defended while it holds: `sources_changed`, `result_integrity`, `interrupted_executions`, `stale_results` cited by a decision, `automatic_decisions_to_review`, `open_holds`, `conclusion_outdated`, `changed_after_final_test`, `final_test_opening_interrupted`, a reopened decision), `caveat`, `not_final` (a step not done yet: `unconfirmed_decisions` and the like), or `context` (always true of such a study: `no_causality`, `workbench_not_tracked`). An id without a severity in the table is `caveat`.
+  - `kind`: `warn` when any item is `blocking`; else `limits` when `next_action.kind` is `done`; else `pending`.
+  - `count`: for `limits`, the number of `caveat` items; otherwise the number of items that are not `context`.
+  - The texts are the existing `texts.{en,fr}.limits` (by id).
+- `ledger` (`view.SUMMARY_LEDGER_KEYS`): the counts of the path's ledger line, `{final_test, target_looks, configurations}`:
+  - `final_test`: `{openings, max}`: `openings` is 1 when `final_test.status` is `opened`, else 0; `max` is 1; `null` for a study without a final test (`final_test.status` `absent`);
+  - `target_looks`: `{eda, sample, total}`: `eda` is `eda_looks.target_looks` (§11.2, unchanged), `sample` the number of `development_target_sample` exposure records (§17.3; 0 or 1 per seed), `total` their sum;
+  - `configurations`: `{tried, reference}`: `tried` is `trials.count` (§14), `reference` is `true` when a baseline fit (`fit.baseline`) is registered.
+- `sample`: `{seed, row_keys, recorded}` or `null` when no sample can be drawn (§17.3): the seed, the sample's row keys in display order, and whether its exposure record exists. The values are read with `data --json`.
+- `headlines`: `{step_id: {decision_id, basis, results}}` for each plan step whose status is `done`, in plan order: `decision_id` the step's decision or `null`; `basis` that decision's current confirmation basis (`endorsed`, `restated`, `explicit`, `delegated_default`, `automatic`) or `null`; `results` the result ids whose values the headline quotes (current and `integrity: "ok"` only, in the order quoted). The one-line texts are `texts.{en,fr}.headlines.<step_id>` (§17.2.3). A headline is built only from registered values: a decision value in words (`audience.decision_words`, `audience.rule_words`), counts and figures of the listed results formatted by `cite.format_value` in that language, and fixed words of `junior.HEADLINES`; it holds no result id, no token and no number that is not one of those. A step whose figures are stale or not current has a headline without them (its decision value only), and no entry when it has neither. `check --text` accepts the headline's numbers (source `headline`, id `headline.<step_id>.<n>`).
+
+#### 17.2.3 Texts in both languages (P1.4, P1.7, P1.13)
+
+`texts.en` and `texts.fr` gain, after their existing keys:
+
+| Key | Content | Source |
+|---|---|---|
+| `question` | the one question the chat asks the junior now, or `null` (a `run`, `blocked`, `done` without question) | `next_action.question`, built in each language |
+| `options` | `{option_id: label}` in the order the chat offers them, or `{}` | the pause's `options` with `option_labels` (J4–J7); for a choice (`pause.kind` `choice`) the `choice_options` ids and labels |
+| `options_note` | one sentence on the options' order and the recommendation, or `null`: "From the simplest to the most flexible; the order is not a recommendation." / « Du plus simple au plus souple ; l'ordre n'est pas une recommandation. » for a choice; "Recommended: {value in words}. {why}" / « Recommandé : … » when `next_action.recommended` is set; "No recommendation." / « Sans recommandation. » for a review (`recommended_option` `null`) | `junior.options_note` |
+| `junior_digest` | the term first, then this study's example, at most 200 words | `next_action.junior_digest`, built in each language |
+| `headlines` | `{step_id: line}` | §17.2.2 |
+| `data_contingent` | `{proposal_id: text}` for each open proposal whose `data_contingent` is true | `data_contingent_reason.junior_text` in each language |
+| `sample_note` | the ledger entry's note (§17.3), or `null` without a sample | `exposure.SAMPLE_NOTE` |
+
+The tables of the other language are built from the same state read in that language, with no write and no clock (L3).
+
+#### 17.2.4 Criterion per configuration, with the absolute bound (P1.6)
+
+`criterion_configurations`: `null` when the success criterion is not confirmed or no current evaluation compares configurations; else `{metric, unit, bound, configurations}` (`view.SUMMARY_CRITERION_CONFIG_KEYS`):
+
+- `metric`: the confirmed criterion's metric (`precision_gain`, `recall_gain`, `mae_reduction`; §11.4).
+- `bound`: `{value, reference, minimum, result_id, path}`: the absolute level a configuration must reach, computed by the engine from registered values:
+  - regression: `value = (1 - min_share) × reference`, `reference` the mean baseline's MAE (`models.[fit.baseline].mae` of the current evaluation, or the out-of-fold MAE of the baseline under cross-validation), in the target's unit. Example: a 10 % reduction of a 7.16 mpg baseline is a bound of 6.44 mpg (lower is better);
+  - binary: `value = reference + min_points / 100`, `reference` the baseline's precision (or recall for `recall_gain`) at the adopted rule, else the rule of the open policy proposal, as a share (higher is better);
+  - `minimum` the confirmed minimum as recorded (`min_share` or `min_points`); `result_id` and `path` cite `reference`.
+- `configurations`: one item per configuration the current evaluation compares, the candidate first, then each variant and family in slot order, then the baseline: `{slot, value, result_id, path, point_meets_bound, gain, low, high, status, judged_on}`:
+  - `value` the configuration's metric (its out-of-fold mean, or its validation value), cited by `result_id` and `path` (`model_selection.configurations.N.mean`, or `models.[slot].mae`, or the rule's `models.[slot].precision`);
+  - `point_meets_bound`: `value` is at or below the bound (regression) or at or above it (binary), within `1e-12`;
+  - `gain`, `low`, `high`: the gain over the baseline and its paired interval, in the criterion's unit, when the evaluation registered a paired difference of that configuration with the baseline; else `null`;
+  - `status`: `criterion._status(gain, low, high, minimum)` (`met`, `uncertain`, `not_met`) when `gain` is set; `not_assessed` otherwise (the panel then says only whether the point meets the bound, from `point_meets_bound`);
+  - `judged_on`: `development`, or `final_test` for the configuration the opened final test measured (its status is then the final evaluation's, §11.4 `judged_on`).
+
+The existing `criterion` key (one model, plain summary) is unchanged.
+
+#### 17.2.5 A result's channel (P1.8)
+
+With `--digest`, each `results.<slot>` gains `channel` as its last key: `chat` (a run started through the CLI by the agent; the default `--channel`, `commands.DEFAULT_CHANNEL`, recorded as no channel), `webview` (W4, `--channel=webview`), or `cli` (a run started by `hypotrail automation run`, which passes `--channel cli` to its runs from this contract on, as its decisions already do). The value is the `channel` recorded on the run's reservation (WP-J, R35); a result computed before this contract by the automatic runner reads `chat`. The panel files a W4 chart under its step like any other and says "requested from this panel"; an automatic computation is marked "computed automatically", never as a decision.
+
+#### 17.2.6 Result-dependent change of the rule or the model (P1.13)
+
+`decide propose` of `policy` or `model_choice` now assesses `data_contingent` (it was `null`, "not assessed", for these decisions). It is `true` when the proposal **changes** a value already proposed or confirmed for that decision (its value differs from the latest earlier proposal or confirmation of the decision) and a current validation or out-of-fold evaluation that covered that earlier value (`policy.evaluation`, `evaluate.regression`) existed at the proposal's revision; else `false`. When `true`, `data_contingent_reason` is `{kind: "changed_after_validation", previous_value, evaluation, text, junior_text}`, `junior_text` in the study language ("This rule is proposed after you saw how the earlier one did on the validation rows: a change guided by those figures makes them slightly optimistic. It is recorded, not refused."). The mark does not depend on the panel: What if? records nothing, and a change proposed in the chat without it is marked the same way. With `--digest`, `open_proposals[]` gains `data_contingent` (`true`, `false`, or `null` for a decision the engine does not assess), and `texts.{en,fr}.data_contingent` its text. The report and the notebook show the mark next to the decision, as they show a data-contingent preparation.
+
+### 17.3 The seeded step-1 sample and its exposure entry (P1.9)
+
+**What.** The data card, the report's data section and the generated notebook show the same **eight development rows drawn at random**, target included, instead of the first rows of the file. It replaces the five first rows of §11.1 (`data.rows`), §11.5 (`cmd_render.sample_rows`) and J4 (`init.labelled_preview`).
+
+**The seed.** `sample.seed` is the first 16 hexadecimal characters of the SHA-256 of the UTF-8 string `"hypotrail.sample/1\n" + state.case.id + "\n" + state.created + "\n" + state.dataset.sha256` (`partition.sample_seed`). The study's key is its case id and its creation stamp, which a moved study keeps (never the study's path, so moving a study does not draw new rows); the data's key is the recorded dataset digest, so a changed dataset draws a new sample.
+
+**The draw.** Every development row key `k` (`partition.development_keys`; every row key of a study without a final test, whose partition is `all`) is ranked by the SHA-256 hexadecimal digest of `seed + "\n" + k`, ascending; the first `partition.SAMPLE_ROWS` (8) are the sample (all of them when the study has fewer). They are displayed in row-key order (`L34` before `L69`). The draw uses the standard library only, so the report renders without pandas and the notebook can recompute it in one line. It never reads, lists or counts a sealed final-test row, and it reads no data beyond the rows it shows.
+
+**Exposure entry.** Showing the target values of these rows is a look at the target before the split. The engine records it **once per seed** in `exposure.jsonl`:
+
+- `purpose`: `development_target_sample`, added to `records.EXPOSURE_PURPOSES` (pre-split development target values; not `train_eda`, not `structural_inspection`);
+- `partition`: `development` (`all` in a study without a final test); `activity`: `data.sample`; `result_id`: `null`; `row_keys`: the sample's keys; `columns`: every case column, the target included;
+- the new optional record key `sample_seed` (`records.EXPOSURE_OPTIONAL_KEYS`), the seed;
+- **when**: `init` records it under the writer lock for every study it creates (activity `data.sample`, in place of J4's `init.labelled_preview`, which a study created under this contract no longer gets). For a study created earlier, the first write command that takes the writer lock (`decide`, `run`, `render`, `mode set`, `automation run`) records it when no record with that purpose and seed exists (`exposure.ensure_sample`), before its own work. A read never records it: `status`, `data`, `check`, `evidence` and the other read commands write nothing. A record with the same seed is never added twice; a new seed (a changed dataset) is a new record, a new look.
+- J4's existing `labelled_preview_available` records stay as they are, and keep counting as rows exposed.
+- `exposure.rows_exposed` counts the sample's rows (they were looked at); `exposure.overlap` (a later split) therefore reports them in the partition they fall in: under cross-validation every development row is in some validation fold, these ones included; with a holdout split, those that fall in the validation rows were seen before. The ledger entry's note says so (`exposure.SAMPLE_NOTE`, `texts.*.sample_note`): "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before." / « Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant. »
+- The sample is **not** counted in `eda_looks.target_looks` (§11.2), so the `data_contingent` rule of the preparation (§11.3) is unchanged; it is counted in `ledger.target_looks.sample` and `total` (§17.2.2), which the panel's ledger line shows. `evidence.exposure.ledger` lists it with its note; `export handoff` labels the purpose "Development target sample shown at step 1" / « Échantillon de développement montré à l'étape 1, cible comprise ».
+
+**`data --json`.** `rows` keeps its keys and becomes the sample: `{columns, n_rows, order, items, seed, target_shown, exposure}` (`seed`, `target_shown`, `exposure` added last):
+
+- `order`: `"seeded sample"` (it was `"first rows by row key"`); `n_rows`: 8 (fewer for a smaller study); `items`: `[{row_key, values}]` in display order, the target column first;
+- `target_shown`: `true` when the exposure record of this seed exists; else `false`, and every item's `values` omits the target column (the record does not exist yet in a study created before this contract and not written since; a read never creates it);
+- `exposure`: `{exposure_id, purpose: "development_target_sample", recorded}` (`exposure_id` `null` while not recorded).
+
+`check --text` keeps tracing the cells as `data.rows.<row_key>` (now the sample's keys). The report's data section (`render_html`, `render_narrative`) shows the same rows under "Eight development rows drawn at random, target included (a counted look at the target)" / « Huit lignes de développement tirées au hasard, cible comprise (un regard compté sur la cible) », with the seed in a note; `cmd_render.sample_rows` returns them and shows the target only when the record exists (render is a write, so it records it first). The generated notebook's data step gets a cell `sample = nv.sample_frame(study)` that recomputes the draw from the seed and asserts the row keys equal `data.rows` (`code_cells`).
+
+### 17.4 The special-value rows (P1.10)
+
+`data --json` gains, after `note`, `special_rows` (`cmd_data.SPECIAL_ROW_KEYS`): `{columns, n_rows, items, truncated}`:
+
+- `columns`: every case column **except the target**;
+- `items`: `[{row_key, values, specials: [{column, value}]}]`, every development row holding at least one declared special value (a value of a variable's `special_values`, matched as `variables[].special_values[].n_rows` counts them, `activities.matches`), in row-key order, at most `cmd_data.SPECIAL_ROWS_MAX` (50); `values` without the target;
+- `n_rows`: how many development rows hold one (all of them, before the cap); `truncated`: `n_rows` is above the cap.
+
+These rows are shown without their target: they describe a structural anomaly, not what is predicted, so they record no exposure beyond `init`'s `structural_inspection`. A study whose case declares no special value has `{columns, n_rows: 0, items: [], truncated: false}`. Never a sealed row.
+
+### 17.5 Tests the engine side must pass
+
+- `framework/tests/study/test_companion_env.py` (rewritten): the anchor of every row of §17.1.2 and §17.1.3, the stage fallback table, the labels in both languages, `version` 2, no `tabs` key.
+- `clients/vscode-companion/test/test_panel_labels.py` (rewritten): `companion_env` labels equal the panel's copy.
+- `framework/tests/study/test_contract_freeze.py`: the keys and their order (§17.1, §17.2), `panel` still last in `next_action`, `status --summary` without `--digest` byte-identical on the walkthrough studies.
+- `framework/tests/study/test_panel_digest.py` (new): `automation` and `review_queue` through an `init --automation` walkthrough (done and total move as the junior adopts), `defensibility` kinds (pending at step 1, warn with a reopened decision, limits at done), `ledger` counts, `headlines` hold only registered numbers (`check --text` clean on each), `criterion_configurations` (Auto MPG: bound 6.44 from a 7.16 baseline at 10 %; Bank: precision bound), `channel` of a W4 run and of an automatic run, `data_contingent` of a changed rule after its evaluation and not of a first rule.
+- `framework/tests/study/test_step1_sample.py` (new): the seed formula; the same eight keys from `data --json`, the report's HTML and the notebook cell; no final-test key ever; one exposure record per seed (init, then a legacy study's first write, never a read); `target_shown: false` before the record; a changed dataset draws a new seed and a new record; the record's rows appear in `exposure.overlap` of a later split; `special_rows` without the target.
