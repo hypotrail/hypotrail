@@ -622,3 +622,14 @@ the panel's next move read the review of an automatic decision (`next_action.rev
 adoption question, consistent with the R24 review pause (COMPANION-ADVANCED LS-2). Unit,
 real-CLI and simulated-browser tests only: no Copilot or VS Code session has been run on this
 batch.
+
+## Fifth session (demo test, `686451b`) — for the next batch
+
+- **R32. Journey rail labels overlap in the panel.** On the lesson-style panel's journey rail
+  (Auto MPG FR, step 1 of 13, narrow panel width), neighbouring step labels collide: "Données"
+  over "Moment", "Préparation" over "Exploration", "Test final" over "Conclusion"; the fourth
+  phase title is truncated ("CONCLURE ET T…"). Labels are centred under evenly spaced dots with
+  no width limit, so French labels wider than the dot spacing overlap. To fix: labels must never
+  overlap at any panel width (wrap, shorten, or show only the current step's label and a tooltip
+  on the others) and phase titles must stay readable; add a simulated-browser check at a narrow
+  width in both languages. Noted only, not fixed.
