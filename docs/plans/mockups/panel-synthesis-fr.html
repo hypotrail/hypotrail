@@ -119,9 +119,9 @@ h2.sec:first-child{margin-top:4px}
 .copy{flex:none;white-space:normal;text-align:left;max-width:100%;background:transparent;border:1px solid var(--line2);color:var(--ink);border-radius:3px;padding:2px 8px;font-size:.78rem;margin-top:4px}
 .copy:hover{border-color:var(--now);color:var(--now)}
 .copied{font-size:.78rem;color:var(--ok);margin-left:4px}
-.opts{list-style:none;margin:6px 0 2px;display:flex;flex-direction:column;gap:2px}
-.opts li{font-size:.88rem;color:var(--soft);padding-left:14px;position:relative}
-.opts li::before{content:"–";position:absolute;left:0;color:var(--faint)}
+.opts{list-style:none;margin:6px 0 2px;display:flex;flex-wrap:wrap;gap:2px 0;font-size:.88rem;color:var(--soft)}
+.opts::before{content:"Réponses proposées dans le chat :";color:var(--faint);margin-right:6px;font-size:.82rem}
+.opts li+li::before{content:"·";color:var(--faint);margin:0 6px}
 .opts-note{font-size:.78rem;color:var(--faint)}
 .next{margin-top:12px;font-size:.86rem;color:var(--soft)} .next b{color:var(--ink);font-weight:600}
 /* volets */
@@ -174,7 +174,7 @@ details.p>div{padding:0 0 10px 14px;font-size:.88rem;color:var(--soft)}
 .mini.sample th:first-child,.mini.sample td:first-child{position:sticky;left:0;background:var(--card);z-index:1}
 .mini.sample td.key{color:var(--cmuted);font-family:var(--mono);font-size:.72rem}
 .mini.sample td.q{color:var(--cwarn);font-weight:700}
-.mini.sample td.masked{color:var(--cmuted);letter-spacing:.15em}
+.mini.sample .tgt{background:rgba(122,78,12,.09);font-weight:600}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:3px 14px;font-size:.87rem}
 @media (max-width:0px){}
 /* parcours */
@@ -240,15 +240,10 @@ svg text{font-family:var(--sans)}
   </div>
 
   <section class="block">
-    <h2>À trancher par toi avant la spécification</h2>
-    <div class="ask"><h3>1. L'aperçu de l'étape 1 : la colonne mpg, masquée ou montrée ?</h3>
-      <p><b>Pour la masquer</b> (la maquette la masque) : montrer 8 valeurs de mpg, c'est déjà regarder la cible. Pire, les 6 lignes avec « ? » sont des voitures légères et sobres, exactement le signal qui orienterait la préparation des manquants. Le principe « structure d'abord » serait rompu.</p>
-      <p><b>Pour la montrer</b> : le junior voit concrètement ce qu'il prédit. Huit valeurs, c'est peu, à condition que l'étude compte ce regard et le dise.</p>
-      <p><b>Ma recommandation :</b> masquer jusqu'à l'Exploration. La définition de mpg et le dictionnaire des colonnes suffisent à comprendre ce qu'on prédit.</p></div>
-    <div class="ask"><h3>2. Ce changement de structure demande un amendement de l'ADR 0004</h3>
-      <p>Les onglets sont inscrits dans la décision 12 de l'ADR 0004, la spécification LS-6 (qui dit aussi « pas de bouton de thème ») et le §3.2 du contrat de la CLI (`panel.tabs`, `where.tab`). Passer à « Maintenant / parcours / outils » change donc un contrat figé. Il faudrait une 13e décision dans l'ADR et une réécriture des §3.2, §4, §6 et §16 de la spécification. Aucune écriture nouvelle n'est ajoutée : seulement W4, W5 et W7, avec l'ouverture des notebooks Marimo.</p></div>
-    <div class="ask"><h3>3. Garder « Et si ? »</h3>
-      <p>Il rejoue des règles ou des choix sur des chiffres <i>déjà calculés</i> : il n'entraîne aucun modèle, et l'ADR l'autorise déjà. Le risque : chercher une règle après avoir vu les résultats. La maquette le garde, avec un avertissement explicite et un signalement par l'étude.</p></div>
+    <h2>Décisions prises le 27 octobre</h2>
+    <div class="ask"><h3>1. L'aperçu de l'étape 1 montre mpg</h3><p>C'est ton choix, contre ma recommandation de le masquer. En contrepartie, le regard est compté dans le registre de l'étude, et le panel le dit sous l'aperçu.</p></div>
+    <div class="ask"><h3>2. Un amendement à l'ADR 0004 remplace les onglets par une seule page</h3><p>C'est la décision 13 de l'ADR 0004, acceptée mais pas encore implémentée. Elle autorise aussi le bouton de thème du panel (R33). La spécification et le contrat de la CLI seront réécrits avec l'implémentation. Les écritures restent W4, W5 et W7.</p></div>
+    <div class="ask"><h3>3. « Et si ? » est gardé</h3><p>Avec un avertissement visible : changer de règle après avoir vu les chiffres rend le changement dépendant des résultats, et l'étude le signale.</p></div>
   </section>
 
   <section class="block">
@@ -296,7 +291,7 @@ svg text{font-family:var(--sans)}
       <li>Le seuil absolu du critère et son statut pour chaque configuration (aujourd'hui pour un seul modèle).</li>
       <li>Une phrase-titre par étape (`plan[].headline`), en anglais et en français, pour que le panel n'interprète rien lui-même.</li>
       <li>L'origine d'un résultat (graphique demandé depuis le panel).</li>
-      <li>L'aperçu tiré au hasard : une graine dérivée de l'étude et des données, partagée par le rapport et le notebook, tracée par `check`.</li>
+      <li>L'aperçu tiré au hasard : une graine dérivée de l'étude et des données, partagée par le rapport et le notebook, tracée par `check` ; les valeurs de la cible montrées comptent comme un regard dans le registre.</li>
       <li>La liste des lignes avec valeurs spéciales (aujourd'hui, seulement leur nombre).</li>
       <li>`companion_env.py` : des ancres (`now`, `todo:&lt;type&gt;`, `path:&lt;étape&gt;`, `tools:&lt;tiroir&gt;`) remplacent les onglets ; mettre à jour la règle 6 des textes de l'agent.</li>
     </ul>
@@ -343,7 +338,7 @@ const DEC={
  crit:['Au moins 10 % d\'erreur en moins que la référence','Fixé avant tout modèle. Le seuil, 6,44 mpg, a été calculé ensuite, quand la référence a été mesurée (7,16).'],
  qual:['6 « ? » de horsepower lus comme manquants','Contrôle de structure, sans la cible.'],
  prep:['Médiane pour les manquants, log de horsepower','La distribution de horsepower a une traîne de valeurs hautes (asymétrie 1,1).'],
- eda:['3 regards sur la cible, dont le poids : corrélation de rang −0,86','Plus une voiture est lourde, moins elle fait de miles par gallon.'],
+ eda:['3 graphiques sur la cible, dont le poids : corrélation de rang −0,86','Plus une voiture est lourde, moins elle fait de miles par gallon.'],
  models:['Linéaire 3,70 mpg d\'erreur, contre 7,16 pour la référence','Écart apparié −3,47 [−3,97 ; −2,96] : l\'intervalle exclut zéro.'],
  variants:['Pénalité 3,69 · EBM 3,40','Budget de 2 variantes, utilisé.'],
  choice:['Modèle linéaire','Vous l\'avez choisi : la règle d\'une erreur type le désignait, et l\'écart avec l\'EBM n\'était pas départagé.'],
@@ -450,16 +445,16 @@ function chartMeans(){
   rows.forEach(([n,v,se],i)=>{const y=52+i*24;s+=`<text x="0" y="${y+4}" font-size="12" fill="var(--cink)">${n}</text><line x1="${x(v-se)}" x2="${x(v+se)}" y1="${y}" y2="${y}" stroke="var(--cmuted)" stroke-width="2"/><circle cx="${x(v)}" cy="${y}" r="4" fill="var(--cink)"/>`});
   return s+`<text x="150" y="144" font-size="11.5" text-anchor="middle" fill="var(--cmuted)">erreur moyenne hors pli (mpg) ± une erreur type</text></svg>`;
 }
-// —— aperçu de l'étape 1 : vrai tirage fixe de 8 lignes de développement (graine 20261027), mpg masqué
-const SAMPLE=[['L34','6','232','100','2634','13,0','71','1','amc gremlin'],['L69','8','350','155','4502','13,5','72','1','buick lesabre custom'],
- ['L85','4','97','88','2100','16,5','72','3','toyota corolla 1600 (sw)'],['L100','6','232','100','2945','16,0','73','1','amc hornet'],
- ['L122','8','318','150','3399','11,0','73','1','dodge dart custom'],['L123','4','121','110','2660','14,0','73','2','saab 99le'],
- ['L267','4','98','68','2155','16,5','78','1','chevrolet chevette'],['L384','4','91','67','1965','15,0','82','3','honda civic']];
-const QROWS=[['L33','4','98','?','2046','19,0','71','1','ford pinto'],['L127','6','200','?','2875','17,0','74','1','ford maverick'],['L331','4','85','?','1835','17,3','80','2','renault lecar deluxe'],
- ['L337','4','140','?','2905','14,3','80','1','ford mustang cobra'],['L355','4','100','?','2320','15,8','81','2','renault 18i'],['L375','4','151','?','3035','20,5','82','1','amc concord dl']];
+// —— aperçu de l'étape 1 : vrai tirage fixe de 8 lignes de développement (graine 20261027), mpg visible (regard compté)
+const SAMPLE=[['L34','19,0','6','232','100','2634','13,0','71','1','amc gremlin'],['L69','13,0','8','350','155','4502','13,5','72','1','buick lesabre custom'],
+ ['L85','27,0','4','97','88','2100','16,5','72','3','toyota corolla 1600 (sw)'],['L100','18,0','6','232','100','2945','16,0','73','1','amc hornet'],
+ ['L122','15,0','8','318','150','3399','11,0','73','1','dodge dart custom'],['L123','24,0','4','121','110','2660','14,0','73','2','saab 99le'],
+ ['L267','30,0','4','98','68','2155','16,5','78','1','chevrolet chevette'],['L384','38,0','4','91','67','1965','15,0','82','3','honda civic']];
+const QROWS=[['L33','25,0','4','98','?','2046','19,0','71','1','ford pinto'],['L127','21,0','6','200','?','2875','17,0','74','1','ford maverick'],['L331','40,9','4','85','?','1835','17,3','80','2','renault lecar deluxe'],
+ ['L337','23,6','4','140','?','2905','14,3','80','1','ford mustang cobra'],['L355','34,5','4','100','?','2320','15,8','81','2','renault 18i'],['L375','23,0','4','151','?','3035','20,5','82','1','amc concord dl']];
 function sampleTable(rows,label){
-  const head='<tr><th>ligne</th><th>mpg</th><th class="n">cyl.</th><th class="n">displ.</th><th class="n">horsepower</th><th class="n">weight</th><th class="n">accel.</th><th class="n">année</th><th class="n">origin</th><th>car_name</th></tr>';
-  return `<div class="scrollx" tabindex="0" role="region" aria-label="${label}"><table class="mini sample">${head}${rows.map(r=>`<tr><td class="key">${r[0]}</td><td class="masked" title="Masqué jusqu'à l'exploration">· · ·</td>${r.slice(1,8).map(c=>`<td class="n${c==='?'?' q':''}">${c}</td>`).join('')}<td>${r[8]}</td></tr>`).join('')}</table></div>`;
+  const head='<tr><th>ligne</th><th class="n tgt">mpg ◂ à prédire</th><th class="n">cyl.</th><th class="n">displ.</th><th class="n">horsepower</th><th class="n">weight</th><th class="n">accel.</th><th class="n">année</th><th class="n">origin</th><th>car_name</th></tr>';
+  return `<div class="scrollx" tabindex="0" role="region" aria-label="${label}"><table class="mini sample">${head}${rows.map(r=>`<tr><td class="key">${r[0]}</td><td class="n tgt">${r[1]}</td>${r.slice(2,9).map(c=>`<td class="n${c==='?'?' q':''}">${c}</td>`).join('')}<td>${r[9]}</td></tr>`).join('')}</table></div>`;
 }
 
 function now(){
@@ -477,11 +472,11 @@ function now(){
    ${defs(['test'])}
    <p style="font-size:.82rem;font-weight:600;margin-top:10px">Aperçu · 8 voitures tirées au hasard parmi les 318 de développement</p>
    ${sampleTable(SAMPLE,'Aperçu de 8 lignes de développement')}
-   <p class="frame" style="margin-top:4px">mpg est masqué jusqu'à l'exploration. Le tirage est fixé : le panneau, le rapport et le notebook montrent les mêmes lignes ; en tirer d'autres serait un regard de plus.</p>
+   <p class="frame" style="margin-top:4px"><b>Un regard sur la cible, compté :</b> ces valeurs de mpg sont vues dès maintenant, et le registre de l'étude le note. Le tirage est fixé : le panneau, le rapport et le notebook montrent les mêmes lignes ; en tirer d'autres serait un regard de plus.</p>
    <p class="head">${nb('Une anomalie de structure : horsepower contient 6 « ? » parmi les 318 lignes de développement. Vous en déciderez au contrôle de qualité ; rien n\'est à faire maintenant.')}</p>
    ${cfold('cols','Les 9 colonnes et leur sens',`<table class="mini"><tr><th>Colonne</th><th>Sens</th><th class="n">Manquants</th></tr><tr><td>mpg</td><td>à prédire</td><td class="n">0</td></tr><tr><td>cylinders</td><td>nombre de cylindres</td><td class="n">0</td></tr><tr><td>displacement</td><td>cylindrée (pouces cubes)</td><td class="n">0</td></tr><tr><td>horsepower</td><td>puissance (ch)</td><td class="n">6 « ? »</td></tr><tr><td>weight</td><td>poids (livres)</td><td class="n">0</td></tr><tr><td>acceleration</td><td>0 à 60 mph (s)</td><td class="n">0</td></tr><tr><td>model_year</td><td>année du modèle</td><td class="n">0</td></tr><tr><td>origin</td><td>1 USA, 2 Europe, 3 Japon</td><td class="n">0</td></tr><tr><td>car_name</td><td>nom du modèle</td><td class="n">0</td></tr></table>`)}
    ${cfold('qrows','Les 6 lignes avec « ? »',sampleTable(QROWS,'Les 6 lignes avec des valeurs manquantes'))}
-   ${cfold('why1','Pourquoi un tirage au hasard, et mpg masqué',`<p>Le fichier est trié par année : ses premières lignes sont toutes des américaines 8 cylindres de 1970. Un tirage donne une image plus juste.</p><p>Regarder mpg dès maintenant orienterait les choix de préparation. Les regards sur la cible viendront à l'exploration, et l'étude les comptera.</p>`)}</div>
+   ${cfold('why1','Pourquoi un tirage au hasard, et pourquoi c\'est un regard',`<p>Le fichier est trié par année : ses premières lignes sont toutes des américaines 8 cylindres de 1970. Un tirage donne une image plus juste.</p><p>Voir quelques valeurs de mpg aide à comprendre ce qu'on prédit. Mais c'est déjà regarder la cible : par exemple, les 6 voitures sans horsepower sont plutôt sobres. Si cela vous donne une idée pour la préparation, dites-le dans le chat : l'étude saura d'où elle vient.</p>`)}</div>
    <p class="limit">Rien n'est encore mesuré : il n'y a ni modèle ni chiffre de performance.</p>
    <p class="next"><b>Ensuite :</b> le moment de la prédiction. Il fixe quelles colonnes on a le droit d'utiliser.</p>`;
 
@@ -497,12 +492,12 @@ function now(){
    <div class="who">Le chat attend</div><div class="qrow"><h3>Que voulez-vous faire de ce résultat ?</h3></div>
    <ul class="opts"><li>Présenter la conclusion à votre binôme, en trois phrases</li><li>Préparer le dossier de passation</li><li>Préparer l'export Azure ML du modèle</li></ul>
    <div class="acts">${copyBtn('qe','Aide-moi à résumer la conclusion en trois phrases')}</div>
-   <p class="next"><b>Votre parcours :</b> 13 étapes, 11 décisions avec vos mots, 3 regards sur la cible, test final ouvert une fois.</p>`;
+   <p class="next"><b>Votre parcours :</b> 13 étapes, 11 décisions avec vos mots, 4 regards sur la cible, test final ouvert une fois.</p>`;
 
   if(S==='auto')return `<h2 class="sec">Maintenant · Relire les décisions automatiques</h2>
    <div class="who">Le chat attend</div>
    <div class="qrow"><h3>${nb('Moment de la prédiction : adoptez-vous « avant la mise en vente, sur la fiche technique », ou le changez-vous ?')}</h3></div>
-   <ul class="opts"><li>J'adopte</li><li>Je change</li><li>Expliquer d'abord</li></ul><div class="opts-note">Options proposées par le chat, sans recommandation.</div>
+   <ul class="opts"><li>J'adopte</li><li>Je change</li><li>Expliquer d'abord</li></ul><div class="opts-note">Sans recommandation.</div>
    <div class="acts">${copyBtn('qa','Que change le moment de la prédiction ?')}</div>
    <div class="card"><div class="k">Décision automatique · à relire</div><h3>Moment de la prédiction</h3>
    <div class="frame"><b>Choisie par le mode automatique</b>, pas par vous.</div>
@@ -549,9 +544,9 @@ function now(){
 function path(){
   const s=st(),cur=s.cur<0?99:s.cur,done=s.doneUpTo??s.cur;
   const isExc=k=>!!flagOf(k);
-  const ledger=S==='s1'?'<b>Registre :</b> test final 0/1 ouverture · 0 regard sur la cible'
-    :S==='end'?'<b>Registre :</b> test final 1/1 ouverture · 3 regards sur la cible · 3 configurations essayées + la référence'
-    :'<b>Registre :</b> test final 0/1 ouverture · 3 regards sur la cible · 3 configurations essayées + la référence';
+  const ledger=S==='s1'?'<b>Registre :</b> test final 0/1 ouverture · 1 regard sur la cible (l\'aperçu)'
+    :S==='end'?'<b>Registre :</b> test final 1/1 ouverture · 4 regards sur la cible · 3 configurations essayées + la référence'
+    :'<b>Registre :</b> test final 0/1 ouverture · 4 regards sur la cible · 3 configurations essayées + la référence';
   let html=`<p class="ledger">${ledger}</p><ul class="path">`;
   phases().forEach(ph=>{
     const allDone=ph.idx.every(i=>i<done),hasCur=ph.idx.includes(cur),hasExc=ph.idx.some(i=>isExc(PLAN[i][0]));
@@ -600,7 +595,7 @@ function render(){
 }
 const CHAT={s1:'Dans le panneau : Maintenant, l\'aperçu des données.',s11:'Dans le panneau : Maintenant, l\'écart apparié.',x11:'Dans le panneau : Maintenant, la préparation à confirmer.',auto:'Dans le panneau : Maintenant, la décision à relire.',end:'Dans le panneau : Ce que l\'étude peut affirmer.'};
 const WHY={
- s1:['La question, puis un aperçu tiré au hasard (mpg masqué), puis l\'anomalie et ce qui vient ensuite.','La pastille est neutre (« Défendable à la fin · 4 points »), pas une alerte.','Cliquez sur « mpg » ou « test final » : la notion se déplie sur place, avec un ordre de grandeur.'],
+ s1:['La question, puis un aperçu tiré au hasard (mpg visible, regard compté dans le registre), puis l\'anomalie et ce qui vient ensuite.','La pastille est neutre (« Défendable à la fin · 4 points »), pas une alerte.','Cliquez sur « mpg » ou « test final » : la notion se déplie sur place, avec un ordre de grandeur.'],
  s11:['Les options du moteur sont visibles, en liste, avec l\'ordre annoncé. Le bouton dit exactement ce qu\'il copie.','La figure est l\'écart apparié. « Ne pas départager ≠ équivalents » est visible, et la règle est présentée comme une règle de l\'outil.','« En clair, pour votre binôme » : une phrase sans statistiques pour le PM ou le data engineer.'],
  x11:['Maintenant suit le moteur : d\'abord la préparation rouverte. Le choix du modèle est en attente, hachuré et marqué périmé.','À traiter ne garde que ce qui est hors étape : l\'interruption (à dire dans le chat) et les livrables périmés.','La pastille passe au corail avec 5 points, dont les chiffres périmés.'],
  auto:['La barre compte la relecture (1 sur 7), pas les étapes.','7 décisions automatiques (pointillé corail) sont distinguées de 3 calculs lancés automatiquement (gris). Aucun ✓.','« Pour juger » donne le fait qui permet de trancher. La limite dit qu\'adopter maintenant, c\'est fixer après avoir vu les chiffres.'],

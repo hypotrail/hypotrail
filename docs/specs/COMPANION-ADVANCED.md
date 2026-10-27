@@ -14,6 +14,8 @@ Status: **implemented behind the flag** (stages v0 to v3; WP-0, WP-E1 to E3, WP-
 
 **Amended on 2026-10-27 (owner decision: implement the approved mockup `docs/plans/mockups/panel-lesson-style-fr.html`, notes R27 to R30 of `docs/acceptance/runs/copilot-companion-2026-10-26.md`): the lesson style.** The panel takes the lessons' "blackboard / graph paper" charter and their pedagogical pattern; §6.0 specifies it (LS-1 to LS-6). The behaviour of every view is otherwise unchanged.
 
+**Amended later on 2026-10-27 (ADR 0004 decision 13, accepted, not implemented):** one page instead of tabs, a panel-only theme control (superseding the "no theme button" clause of LS-6), What if? kept with a warning, and a step-1 sample that counts as a look at the target. The sections that name tabs stay in force until the implementation rewrites them.
+
 Requirement identifiers are written like `OV-3`. Each one is testable, and the plan maps each one to a test. "MUST" and "MUST NOT" are binding. The visual target is the six static mockups (`companion-mock/project/*.dc.html`): their layout, content, wording, and colours express intent; their numbers are real Bank and Auto MPG walkthrough values; their result ids are illustrative. Where the mockups and this document differ, this document wins.
 
 ## 1. Purpose

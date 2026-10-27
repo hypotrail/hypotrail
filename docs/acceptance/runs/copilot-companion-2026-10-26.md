@@ -640,3 +640,9 @@ batch.
   in the webview state (`vscode.setState`), not study state, and is not a write (no CLI call,
   outside W4/W5/W7). Add a simulated-browser check that the toggle switches the tokens and
   survives a refresh. Noted only, not fixed.
+
+**Owner decisions on the synthesis mockup (2026-10-27).** After four independent reviews of
+`docs/plans/mockups/panel-synthesis-fr.html`: (1) the step-1 sample shows `mpg` (the owner chose
+to show it; the look is counted and said); (2) amend ADR 0004 for one page instead of tabs
+(decision 13, accepted, not implemented; R32 and R33 are covered by it); (3) keep What if?, with
+its warning.
