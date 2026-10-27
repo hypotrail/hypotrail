@@ -531,3 +531,10 @@ Unit tests only: no real Copilot or VS Code session has been run with these fixe
   and comes with a guided reading: "Comment le lire" step by step, "Ce qu'on en conclut" with the
   actual numbers, and "Attention" when a reading trap exists (example: Figure 7.4, residual boxes
   per model). Applies to the report and the panel.
+- **R31. The panel is read-only for now (owner decision 2026-10-27).** The panel must not be an
+  input for anything: no typed-words acknowledgement (W6), no "run another chart" (W4), no
+  regenerate (W5), no handoff export (W7), no form. Each becomes a read-only line with "Demandez-le
+  dans le chat" and the copy-question button; opening the notebooks in Marimo stays (it writes
+  nothing). For the real panel this narrows ADR 0004's whitelist W4–W7 to none: it needs an ADR
+  0004 amendment and an AGENTS.md update when implemented (`scripts/check_layout.py` would then
+  refuse any write command builder).
