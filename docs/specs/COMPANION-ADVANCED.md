@@ -10,6 +10,10 @@ Status: **implemented behind the flag** (stages v0 to v3; WP-0, WP-E1 to E3, WP-
 
 **Amended by WP-E1 (v0.3, 2026-10-20): the narrowing.** W1 (confirm), W2 (withdraw), and W3 (propose) are withdrawn at every stage (owner decision R23, integrator decision I2; [ADR 0004](../decisions/0004-companion-advanced.md) decision 8, AGENTS.md). The panel's writes are **W4–W7**; the messages `confirm`, `withdraw`, and `propose` no longer exist (§8.1) and are dropped as unknown. The pending decision card is read only (§6.2.1): the restatement block, the value in words, "If you confirm" in words ("Confirming changes nothing already done." when the confirmation invalidates nothing; what stays current and what is regenerated under Details), "Answer in the chat", and "Ask the agent about this", which copies a ready question for the chat at every stage (the agent bridge, §6.8, now from v0). The proposal id, its revision, and its origin are under Details (R22). The history is newest first, with the revision and the time in the hover (§6.2.3, R25); values in words carry no dotted underline (the citation style stays on numbers). In What if?, the engine's draft is shown read only next to "Ask the agent to propose this", a copied question (§6.5). Quick fixes of R26: the EDA rows-seen line is split-aware (under cross-validation, the development rows EDA read; no "validation rows stay unexplored"), rule tokens and prepared feature names read as words (`share:0.2` → "top 20%", `cat__poutcome_success` → "poutcome = success", `development_diagnostics` → "Diagnostics of the models"), the quality table drops "0 / 0" and "no declared range", and the y-axis label of a curve is written above the axis so it is never clipped. Where a section below still describes W1, W2, or W3, this paragraph prevails.
 
+**Amended on 2026-10-27 (owner decision R31; [ADR 0004](../decisions/0004-companion-advanced.md) amendment of 2026-10-27, AGENTS.md).** W6, the acknowledgement of an interrupted execution in typed words, is **withdrawn at every stage**: the panel takes no words of the junior. The panel's writes are **W4, W5 and W7**; the message `acknowledge` no longer exists (§8.1) and is dropped as unknown; `lib/cli.js` has no acknowledgement builder and `scripts/check_layout.py` (`companion_acknowledge_errors`) refuses one. The execution card of "Needs attention" is read only (§6.1.5): it says that the acknowledgement is made in the chat, in the junior's own words, explains why words and not an "ok" button under "Learn more", and copies a ready question ("Copy the question", the agent bridge, never a write). The `ackDrafts` key of `vscode.setState` is gone (§10); a state saved by an earlier panel loses it on load.
+
+**Amended on 2026-10-27 (owner decision: implement the approved mockup `docs/plans/mockups/panel-lesson-style-fr.html`, notes R27 to R30 of `docs/acceptance/runs/copilot-companion-2026-10-26.md`): the lesson style.** The panel takes the lessons' "blackboard / graph paper" charter and their pedagogical pattern; §6.0 specifies it (LS-1 to LS-6). The behaviour of every view is otherwise unchanged.
+
 Requirement identifiers are written like `OV-3`. Each one is testable, and the plan maps each one to a test. "MUST" and "MUST NOT" are binding. The visual target is the six static mockups (`companion-mock/project/*.dc.html`): their layout, content, wording, and colours express intent; their numbers are real Bank and Auto MPG walkthrough values; their result ids are illustrative. Where the mockups and this document differ, this document wins.
 
 ## 1. Purpose
@@ -28,7 +32,7 @@ These hold in every stage, view, and state. The plan's `test/invariants.test.js`
 | INV-2 | No state, database, server, socket, loopback HTTP, daemon, polling loop, or language-model call of its own. `vscode.lm` is never used. Local storage is limited to §10 | ADR 0002, CW.2 |
 | INV-3 | Every write is one argv from the whitelist of §7. It carries a fresh `--request-id` (UUID v4, one per submission) and the `--expected-revision` the junior saw, except `render`, which has neither, and `export`, which has the revision only (CR.6). One write runs at a time | CLI-CONTRACT §1, CW.7 |
 | INV-4 | No delegation from the webview: no `--basis delegated_default`, no `--delegation-scope`, no "use your recommended default" control. A typed delegation is refused by the engine (`delegation_needs_basis`), and the panel says to delegate in the chat | CW.6 |
-| INV-5 | Every textarea that becomes `--user-words` starts empty and is never filled, suggested, autocompleted, or restored from another proposal. "Confirm" and "Acknowledge" stay disabled until the field holds a non-blank character. No control confirms in one click. Since WP-E1 no control of the panel confirms at all | CW.5, PV.2 |
+| INV-5 | Every textarea that becomes `--user-words` starts empty and is never filled, suggested, autocompleted, or restored from another proposal. "Confirm" and "Acknowledge" stay disabled until the field holds a non-blank character. No control confirms in one click. Since WP-E1 no control of the panel confirms at all; since R31 (2026-10-27) no control acknowledges either, and the panel has no textarea that becomes `--user-words` (its one textarea is the question of "Ask the agent about this") | CW.5, PV.2 |
 | INV-6 | A proposal, a preview, a draft, a What if? result, a prediction answer, or a learning card is **never** shown as a decision. Every such surface carries its label ("proposal, not a decision yet", "Experiment, not adopted", "Draft only") | AGENTS.md |
 | INV-7 | A number is shown only when it comes from (a) a result with `current: true` and `integrity: "ok"`, as a cited segment, or a value of such a result in `evidence`/`status`; (b) a `preview` payload, shown only inside an Experiment surface; or (c) a recorded literal (revision, counts of the engine's own lists). Stale results are listed with "Not cited", without figures | CLI-CONTRACT §4 |
 | INV-8 | The engine's refusal is shown with its `code`, its `reason`, the engine message **verbatim**, and a short explanation from `lib/refusals.js` that never suggests words to type. After a refusal the panel refreshes. A write without a JSON answer is reported as "outcome unknown", never as success | CW.8 |
@@ -70,7 +74,7 @@ The plan's WP-I owns that change.
 | Stage | Tabs and features (letters of the owner's list) | Engine additions it needs |
 |---|---|---|
 | v0 | v0 panel, rendered by the new view framework: recap, plan, deliverables, pending decision cards (read only since WP-E1: answered in the chat, "Ask the agent about this" copies a question) | none |
-| v1 | **Overview** (A: map, recap, since last session; F: deliverables with Regenerate, executions with acknowledgement, check findings); **Decisions** (B: cards, impact preview, history, reconfirmation queue); multi-study switch (K); reviewer mode (I, without export) | C1, C2, C3, C10 (check `location`) |
+| v1 | **Overview** (A: map, recap, since last session; F: deliverables with Regenerate, executions shown read only and acknowledged in the chat (R31), check findings); **Decisions** (B: cards, impact preview, history, reconfirmation queue); multi-study switch (K); reviewer mode (I, without export) | C1, C2, C3, C10 (check `location`) |
 | v2 | **EDA** tab (gallery, Request a chart); **Evidence** tab (C: registry, lineage, exposure ledger, deep links; E: interval bars, small-data warnings); **What if?** tab (D: policy sandbox or residual explorer; "Ask the agent to propose this" since WP-E1); agent bridge (H) | C4, C5, C8, C9, C10 (anchors) |
 | v3 | **Learn & hand off** tab (G: glossary hovers, concept cards, predictions; I: export handoff; J: session report) | C6, C7 |
 
@@ -87,7 +91,7 @@ A tab or control of a later stage is **absent** from the DOM, not merely disable
 | Loading | The first `status` call has not answered | The header shows "Reading the study..."; tabs are skeletons with `aria-busy="true"`; no control is enabled |
 | Load error | The CLI cannot start, prints no JSON, or refuses | (WP-A5) The error **replaces the content**: no tab content, alert strip, or recap strip is rendered. A `role="alert"` card says what happened, gives the next step ("Press Retry. If it fails again, ask the assistant in the chat to run the study status ..."), says "Last read at revision N; the study could not be read now" when a snapshot existed, and keeps the CLI's message and stderr under "Details from the CLI". "Retry" reads again; the content comes back with the next snapshot |
 | Stale view | A watch event or a write moved the version while a tab shows older data | Each tab's data carries the version it was read at: the revision and the summary's `currency` (decision CR.1, §5). A tab whose data is not at the snapshot's version (an older revision, or the same revision under another currency: a dataset edit, a deleted or edited deliverable) reloads (§11); its older content is marked busy (and dimmed where the view keeps it visible); "Updating..." is never shown next to content that is current (WP-A5). A textarea with text keeps the text and shows the warning of §6.2.1 "Answer" (CW.9, decision CR.3) |
-| Reviewer | `reviewer` setting or command | The header shows a badge "Reviewer, read-only". **No** element with `data-write` is rendered except Export: no textarea for words, no Run, Regenerate, or Acknowledge (Confirm, Withdraw, and Propose no longer exist, WP-E1). The controller refuses every write message of the study (W4 to W6) with `kind: "invalid"` and "Read-only reviewer mode." (RV-2). The handoff export (W7) writes no study state, so a reviewer may run it (decision CA.9). Reads, navigation, Open, Show in report, and the agent bridge stay |
+| Reviewer | `reviewer` setting or command | The header shows a badge "Reviewer, read-only". **No** element with `data-write` is rendered except Export: no textarea for words, no Run or Regenerate (Confirm, Withdraw, and Propose no longer exist, WP-E1; Acknowledge since R31). The controller refuses every write message of the study (W4, W5) with `kind: "invalid"` and "Read-only reviewer mode." (RV-2). The handoff export (W7) writes no study state, so a reviewer may run it (decision CA.9). Reads, navigation, Open, Show in report, and the agent bridge stay |
 | Read-only process | `HYPOTRAIL_READ_ONLY=1` in the extension host | Writes are refused by the engine (`read_only`) and shown as refusals. Nothing special is done in the client |
 | Busy | One write is running | Every `data-write` control is disabled, and the busy control shows `aria-busy="true"` and "Working..." |
 
@@ -161,6 +165,17 @@ A navigation request is `{tab, kind, id}`, where `kind` ∈ `result`, `decision`
 
 Every view below lists its sources, its components, its states, its interactions, its writes, its accessibility points, its copy, and its acceptance criteria. Stable test hooks are `data-*` attributes, listed in §16.
 
+### 6.0 Lesson style (every stage; owner decision 2026-10-27, notes R27–R30)
+
+Approved mockup: `docs/plans/mockups/panel-lesson-style-fr.html` (requirements R27–R31 at the end of `docs/acceptance/runs/copilot-companion-2026-10-26.md`). The panel reads as a lesson on a board: a slate page, paper cards with a coloured left edge per tab, graph-paper frames for the charts, headings in chalk. It adds no write, no state of its own and no tab; every new text is in `media/copy/lesson.js` and its French twin `media/copy-fr/lesson.js` (parity tested). The components are in `media/components/lesson.js`, the styles in `media/css/lesson.css`.
+
+- LS-1. The journey rail (`[data-band] nav[data-rail]`): above the tabs, one mark per plan step in plan order, grouped by the engine's moments when `moments` is present (a step the moments do not list joins the moment of the step before it), one current step; every mark carries its state in words (hover and screen readers), never colour alone. The Overview shows the full rail with its caption, legend and "Still to do" line (`data-remain`); the other tabs show the track only. Under the tabs, a sticky position line (`data-where`) names the current step and the tab open.
+- LS-2. "Your next move" (§6.1.0) sits in the band above the tabs on every tab (compact outside the Overview: title and action only). Its only new action is "Copy the question" (`data-copy-question`), an agent-bridge copy (`ask_agent`, mode copy), never a write.
+- LS-3. Every tab opens on "At this step" (`data-intro`), two or three sentences built from the summary's values, and ends on a "Next" line (`.ht-trans`, `data-next-tab`) that opens the next tab (Learn leads back to the Overview).
+- LS-4. Every chart says why it is there and how to read it: above it, "Why this chart" (`data-guide`: the question, except on an EDA card whose title is the question; the frame of the evidence, structural, training rows, development, final or sandbox; the rows and the model when known); below it, a guided reading (`data-reading`): the steps in a fold (`details[data-lire]`), the conclusion with the chart's own drawn figures (`data-concl`, a copy of a cited value, never a second cited element) and the trap to avoid (`data-attn`).
+- LS-5. Notions (`data-notion`): the term first (`dfn`), its general definition, then "In this study" with the study's own values (`data-here`), folds (why, where it breaks, an example), and "What we keep" (`data-notion-keep`). They appear only where the payload holds their values: sealed final test and success criterion (Overview), training looks, special values, rare categories (EDA), proposal and automatic decision (Decisions), out-of-fold, paired comparison and the one-standard-error rule (Evidence), residual or rule (What-if), handoff (Learn). "Learn more" folds (`details[data-more]`) explain the header marks, the abbreviations of the study's own measures, the exposure ledger and the bases of a decision.
+- LS-6. Theme: the VS Code theme class decides, the panel has no theme button. `vscode-dark` maps to the dark board, `vscode-light` to the white board with darkened inks (AA on board and on paper), `vscode-high-contrast` and `vscode-high-contrast-light` keep the editor's own colours and contrast border, with no ruling, glow, shadow or chalk texture; with no class, `prefers-color-scheme` decides. The contrast rules of A11Y-4 hold on the board and on the paper surfaces.
+
 ### 6.1 Overview (stage v1; v0 shows its v0 subset)
 
 Mockup: `Main.dc.html`; WP-A5: `docs/design/companion-v0.2-mockups/overview.html`, `deliverables.html`.
@@ -220,7 +235,7 @@ The pause number comes from `summary.pauses`. The sub-labels are the only text t
 
 #### 6.1.2a How this panel works (v0.3, owner addition, I1)
 
-The last card of the Overview at every stage (`data-ov="guide"`): what the panel is (a reader of the CLI with no state of its own; the chat, report and notebook stay complete without it), that decisions are made in the chat only, the writes it can make (W4–W7, in words), that every figure is an engine value with its source on hover and its caveats under "Why?", and that the language toggle changes the panel only. From v1 a "What each tab is for" disclosure lists every visible tab with its lead sentence. No extra tab.
+The last card of the Overview at every stage (`data-ov="guide"`): what the panel is (a reader of the CLI with no state of its own; the chat, report and notebook stay complete without it), that decisions are made in the chat only, the writes it can make (W4, W5 and W7, in words; W6 withdrawn, R31), that every figure is an engine value with its source on hover and its caveats under "Why?", and that the language toggle changes the panel only. From v1 a "What each tab is for" disclosure lists every visible tab with its lead sentence. No extra tab.
 
 #### 6.1.3 Since your last session (A)
 
@@ -257,14 +272,12 @@ A "Regenerate the report and notebook" button (`data-write="render"`, v1) is sho
 
 #### 6.1.5 Health (F)
 
-(Amended by WP-A5.) **Needs attention** (the former Health section) is rendered only when something is wrong: an interrupted, suspected, or late execution, an acknowledgement just made, or an alert (`sources_changed`, `result_integrity`). It shows nothing otherwise. The checks of the deliverables move to the Deliverables section. "Not yet defensible" becomes its own section, **What you cannot claim yet**: every `top` item and every `more` id **once**, each with a severity tag of one vocabulary (blocking, caveat, not final, context; `media/copy/junior.js` `SEVERITY`), blocking first; the text is the item's junior variant, or the panel's words for its id (the `more` ids have no text in the summary); the engine texts that differ are under "Details: the engine's wording". The execution card keeps the engine's `reason` under "Details". The rest of this section describes the parts as before.
+(Amended by WP-A5.) **Needs attention** (the former Health section) is rendered only when something is wrong: an interrupted, suspected, or late execution, or an alert (`sources_changed`, `result_integrity`). It shows nothing otherwise. The checks of the deliverables move to the Deliverables section. "Not yet defensible" becomes its own section, **What you cannot claim yet**: every `top` item and every `more` id **once**, each with a severity tag of one vocabulary (blocking, caveat, not final, context; `media/copy/junior.js` `SEVERITY`), blocking first; the text is the item's junior variant, or the panel's words for its id (the `more` ids have no text in the summary); the engine texts that differ are under "Details: the engine's wording". The execution card keeps the engine's `reason` under "Details". The rest of this section describes the parts as before.
 
 - **Executions.**
   - Each `summary.executions.interrupted` and `suspected_interrupted` item is one card: "<activity>: the outcome is unknown. Nothing will be restarted."
-  - The card has an empty textarea labelled "Your reply, in your own words".
-  - Its hint reads: "Say that you know this run was interrupted and its outcome is unknown. 'ok' alone is not enough."
-  - Its button is "Acknowledge in my words" (`data-write="acknowledge"`), disabled until text is typed (INV-5); see W6.
-  - The card offers no rerun. A line reads: "To run it again, ask the agent in the chat."
+  - (Amended 2026-10-27, R31.) The card is read only: no words field, no write. It reads: "Acknowledging this interruption is done in the chat, in your own words: say there that you know this run was interrupted and that its outcome is unknown. 'ok' alone is not enough. This panel records nothing.", with "Learn more: Why words, and not an "ok" button?".
+  - The card offers no rerun. A line reads: "Ask in the chat, to acknowledge it or to run it again.", and one button, "Copy the question", copies a ready question for the chat (`ask_agent`, kind `execution`; the agent bridge of §6.8, not a write).
   - `late` items are listed as "<activity>: a result was computed for a state that no longer holds; it is stored, not used."
 - **Check findings.** A collapsed `<details>` titled "Checks of the deliverables".
   - Expanding it runs `check` (cached per revision). Each finding is shown with its `severity`, `code`, `message` verbatim, and `where`.
@@ -272,7 +285,7 @@ A "Regenerate the report and notebook" button (`data-write="render"`, v1) is sho
   - The header shows `counts`, and "clean" or "N errors".
 - **Not yet defensible.** `summary.not_yet_defensible.top` texts verbatim, and "More: <ids>" for `more`, in the warning colours of the mockup.
 
-- HE-1. An acknowledgement typed in the panel runs the exact argv of W6. A bare "ok" is refused (`ambiguous_confirmation`, `bare_acknowledgement`), and the refusal is shown verbatim.
+- HE-1. (Amended 2026-10-27, R31.) The panel takes no acknowledgement: an `acknowledge` message is dropped as unknown and runs nothing, the card has no words field and no `data-write`, and its one control copies a ready question for the chat. The acknowledgement is made in the chat, where the engine refuses a bare "ok" (`ambiguous_confirmation`, `bare_acknowledgement`).
 - HE-2. An execution card never has a "Restart" or "Run" button.
 - HE-3. Check findings of the Bank fixture with an injected stale citation show it with a working "Open": a cited number edited in the HTML is a `value_mismatch` error on `reports/study.html` after the junior's Refresh (the checks are read again at the same revision, CR.1); `stale_number` is the code of a draft text or the conclusion. With the engine's currency, the edit and a deleted report also move `currency` without the Refresh, and a deleted report is not current (`test_he3_real_cli.py`, real CLI).
 
@@ -796,10 +809,10 @@ This is a question, not a confirmation of anything.
 | ~~W3~~ | withdrawn (WP-E1) | Propose this rule or model choice (after a modal) | `A decide propose <d> --value=<v> --restatement=<draft.restatement> --rationale=<draft.rationale> --channel webview --request-id ID --expected-revision <draft.revision> --json --study S` | `d` ∈ {`policy` binary, `model_choice` regression}; `v` is a canonical rule or a fit slot. The controller itself re-runs `preview proposal <d> --value=<v>` **immediately before**, requires `proposable: true` and `draft.revision == R`, and takes the texts from that draft only. The modal: "Create a proposal for "<title>": <v>? It is not a decision. You will confirm it in your own words in Decisions." where `<title>` is the plan step's title of the last summary ("Choose a decision policy", "Choose the model"; the decision id in words when the plan has none; decision CR.9), plus "It replaces the open proposal p_N." when `supersedes_proposal` is set. [Propose]. The draft read just before neither reads nor fills the cache |
 | W4 | v2 | Run on training rows | `A run <activity> --column=<c> --channel=webview --request-id ID --expected-revision R --json --study S`; v0.3 (WP-E2): `A run eda.correlation --channel=webview --request-id ID --expected-revision R --json --study S` (no column) | `activity` ∈ the `eda_catalog.activities[].activity` values with `per_column: true` and `runnable: true` of the evidence read at revision R; `c` is one of that activity's `columns[].name`. Without a column: `activity` is a whole-study chart the panel knows (`eda.correlation` only, `lib/models/eda.js` `WHOLE_STUDY`) and its catalog entry has `per_column: false` and `runnable: true` |
 | W5 | v1 | Regenerate | `A render --channel=webview --json --study S` | not reviewer; not busy |
-| W6 | v1 | Acknowledge in my words | `A run --acknowledge-interruption <eid> --user-words=<words> --channel=webview --request-id ID --expected-revision R --json --study S` | `eid` is in the snapshot's `executions.interrupted` or `suspected_interrupted`; `words` is non-blank and at most 4000 characters |
+| W6 | — | **withdrawn** (owner decision R31, 2026-10-27; ADR 0004 amendment) | none: the acknowledgement of an interrupted execution is made in the chat, in the junior's words (`run --acknowledge-interruption`, a chat act); the panel copies a ready question for it | — |
 | W7 | v3 | Export a handoff pack | `A export handoff --out=<chosen folder>/revision-<R> --channel=webview --expected-revision R --json --study S` (CR.6; never without `--expected-revision`: an older engine's refusal of the option is shown as such) | `R` is the last snapshot's revision; the folder comes from the VS Code dialog; it is not inside `S/.hypotrail` |
 
-**Channel (v0.3, WP-J, R35).** Every write of W4-W7 carries `--channel=webview`: the engine records it on the run or the acknowledgement (the reservation's parameters) and as a `channel_action` event for a render or an export, and `status --summary --digest` lists them in `digest.channel_actions`, so the agent can say what was done from the panel. It changes no identity, no result and no revision of its own.
+**Channel (v0.3, WP-J, R35).** Every write of W4, W5 and W7 carries `--channel=webview`: the engine records it on the run (the reservation's parameters) and as a `channel_action` event for a render or an export, and `status --summary --digest` lists them in `digest.channel_actions`, so the agent can say what was done from the panel. It changes no identity, no result and no revision of its own.
 
 **WP-E1 narrowing (ADR 0004 decision 8).** W1, W2, and W3 are withdrawn at every stage: `lib/cli.js` has no builder for them, the protocol has no `confirm`, `withdraw`, or `propose` message, and `scripts/check_layout.py` refuses a client source that invokes `decide confirm`, `decide withdraw`, or `decide propose`. The rows above are kept for the record.
 
@@ -816,20 +829,20 @@ This is a question, not a confirmation of anything.
 - `check --text`;
 - `init`.
 
-A unit test enumerates the argv builder module and asserts that exactly the four builders W4–W7 exist (seven before WP-E1).
+A unit test enumerates the argv builder module and asserts that exactly the three builders W4, W5 and W7 exist (seven before WP-E1, four before R31).
 
 **Outcome handling (all writes).**
 
 | Result | Panel |
 |---|---|
-| `ok: true`, exit 0 | Success region: what was recorded (`user_words` verbatim for W1 and W6, the proposal id for W3, the slot and status for W4, the artefact messages for W5, the files for W7), then a refresh |
+| `ok: true`, exit 0 | Success region: what was recorded (`user_words` verbatim for W1 and W6 before they were withdrawn, the proposal id for W3, the slot and status for W4, the artefact messages for W5, the files for W7), then a refresh |
 | `ok: true`, exit 3 | Success with problems: the artefact messages, verbatim |
 | `ok: true`, `run.status` `late_not_promoted` | "The result was computed but not used: the study changed while it ran. Nothing in the study changed." |
 | `ok: false`, any exit | The refusal (INV-8). Exit 4 adds "An execution has an unknown outcome." |
 | no JSON, timeout, start failure | "The outcome is unknown: the refreshed panel shows whether anything was recorded." (v0) |
 | replayed | It cannot happen (new id per submission). If it does, it is shown as success with "(replayed, no effect)" |
 
-**Timeouts.** Reads: 30 s. W5, W6, and W7: 120 s. W4: 300 s, because EDA loads the dataset with pandas.
+**Timeouts.** Reads: 30 s. W5 and W7: 120 s. W4: 300 s, because EDA loads the dataset with pandas.
 
 ## 8. Webview ↔ extension message protocol (`hypotrail.panel/2`)
 
@@ -852,7 +865,7 @@ A unit test enumerates the argv builder module and asserts that exactly the four
 | `propose` | withdrawn by WP-E1: dropped as unknown | — |
 | `run_eda` | `activity` (`^eda\.[a-z_]+$`), `column` (string, 1–200 characters), `revision` | v2 |
 | `render` | — | v1 |
-| `acknowledge` | `executionId` (string, 1–100 characters, `^[A-Za-z0-9_.-]+$`), `words`, `revision` | v1 |
+| `acknowledge` | withdrawn (R31, 2026-10-27): dropped as unknown | — |
 | `open_marimo` | `artifact` ∈ `notebook`, `editable`, `workbench` (WP-A5, ADR 0004 "local launch": `marimo run` of the generated notebook, `marimo edit` of the editable copy or workbench, in a VS Code terminal; not a write; in reviewer mode both edit launches are refused with a notice) | v0 |
 | `open_artifact` | `artifact` ∈ `report`, `notebook`, `editable`, `workbench`; `resultId?` (the report at `#r-<rid>`, or the generated notebook at the line that names the result; not the editable copy or workbench); `line?` (int ≥ 1, an editor deliverable at a check finding's line; not the report; not with `resultId`) | v0 (+ `resultId` and `line` v1, decision CI.3) |
 | `navigate_external` | `kind` ∈ `reveal_export`; `path` (string, must equal the last export's `out`) | v3 |
@@ -906,7 +919,7 @@ The models are pure functions in `lib/models/*.js`, from CLI payloads to plain o
 
 | Store | Keys | May hold | Must not hold |
 |---|---|---|---|
-| `vscode.setState` (webview, per panel) | `drafts{pid: {text, revision}}`, `ackDrafts{eid: {text, revision}}` (the words and the revision at which the junior started typing them, CR.3), `askDraft`, `tab`, `recapCollapsed`, `evidenceFilter`, `selectedResult`, `study` (the study key of `init`, CR.2), `language` (`en`\|`fr`, the header's EN \| FR choice; v0.3, WP-E2) | draft words the junior is typing (never sent until submitted), view navigation | anything read back as a decision, or a number |
+| `vscode.setState` (webview, per panel) | `askDraft` (the question of "Ask the agent about this"; `drafts` went with W1 and `ackDrafts` with W6, R31), `tab`, `recapCollapsed`, `evidenceFilter`, `selectedResult`, `study` (the study key of `init`, CR.2), `language` (`en`\|`fr`, the header's EN \| FR choice; v0.3, WP-E2) | draft words the junior is typing (never sent until submitted), view navigation | anything read back as a decision, or a number |
 | `context.globalState` (extension) | `hypotrail.learn.prefs = {hideCards: bool}`; `hypotrail.learn.seen = {cardId: count ≤ 99}` (at most 500 ids); `hypotrail.learn.predictions = {studyKey: {questionId: choiceId}}` (at most 50 studies, oldest removed first) | learning-layer preferences, seen cards, prediction answers | study values, words, revisions, proposal or result ids, paths |
 | `context.workspaceState` | not used | — | — |
 
@@ -914,8 +927,8 @@ The models are pure functions in `lib/models/*.js`, from CLI payloads to plain o
 - `cardId` is `<task>:<step id>` or `term:<id>`.
 - `check_layout.py` keeps forbidding `localStorage` and `indexedDB`.
 - A unit test asserts that `globalState.update` is called only with these three keys, and with values that pass their schema.
-- Draft words in `setState` are deleted on a successful confirmation, a successful acknowledgement, a withdrawal, or when the proposal is no longer open (v0 behaviour, extended to acknowledgement drafts).
-- Drafts belong to one study (decision CR.2). `init.study` names it; when it differs from the stored `study` (the study switch reloads the same webview with its state, and a state without a key is treated as another study), `drafts`, `ackDrafts`, `askDraft`, and `selectedResult` are dropped before anything is rendered. A draft of another form than `{text, revision}` is dropped when the webview starts.
+- The question draft in `setState` is deleted once the question is copied. (The confirmation and acknowledgement drafts are gone with W1 and W6; a state saved by an earlier panel loses them on load.)
+- Drafts belong to one study (decision CR.2). `init.study` names it; when it differs from the stored `study` (the study switch reloads the same webview with its state, and a state without a key is treated as another study), `askDraft` and `selectedResult` are dropped before anything is rendered.
 
 ## 11. Performance
 
@@ -1059,7 +1072,7 @@ This replaces the "verbatim" rule for engine texts shown as content (the refusal
 |---|---|---|
 | `data-tab` | tab buttons and panels | `overview`, `eda`, `decisions`, `evidence`, `whatif`, `learn` |
 | `data-stage` | any stage-gated element | `v1`, `v2`, `v3` |
-| `data-write` | every control that triggers W4–W7 | `run_eda`, `render`, `acknowledge`, `export` (`confirm`, `withdraw`, `propose` before WP-E1) |
+| `data-write` | every control that triggers W4, W5 or W7 | `run_eda`, `render`, `export` (`confirm`, `withdraw`, `propose` before WP-E1; `acknowledge` before R31) |
 | `data-proposal-card`, `data-restatement`, `data-hold` | decision cards | proposal or note id (v0) |
 | `data-outcome`, `data-code`, `data-reason`, `data-engine-message`, `data-human` | outcome regions | v0 |
 | `data-result-id`, `data-path`, `data-value` | cited numbers | engine values |
@@ -1076,6 +1089,13 @@ This replaces the "verbatim" rule for engine texts shown as content (the refusal
 | `data-pair`, `data-flag`, `data-collinear` | correlation matrix cells, flagged pairs, the finding (v0.3) | `<a>\|<b>` |
 | `data-whole` | a whole-study chart of "Run another chart" (v0.3) | activity |
 | `data-scroll-ok` | the only containers that may scroll sideways (v0.3) | — |
+| `data-band`, `data-rail`, `data-rail-step`, `data-rail-state`, `data-moment`, `data-remain` | the band above the tabs: the journey rail, its marks, what remains (§6.0, LS-1) | `full`, `track`; step id; `done`, `auto`, `cur`, `wait`, `ready`, `later`; moment id |
+| `data-where` | the sticky position line under the tabs (LS-1) | tab id |
+| `data-copy-question` | "Copy the question" of the next move (LS-2) | next-move kind |
+| `data-intro`, `data-next-tab` | "At this step" and the "Next" line of a tab (LS-3) | tab id |
+| `data-guide`, `data-guide-fact`, `data-reading`, `data-lire`, `data-concl`, `data-attn` | "Why this chart" and the guided reading of a chart (LS-4) | `frame`, `rows`, `model`; reading kind |
+| `data-notion`, `data-here`, `data-notion-fold`, `data-notion-keep`, `data-more` | notions and "Learn more" folds (LS-5) | notion id; fold kind; `marks`, `abbr`, `ack`, `basis`, `exposure` |
+| `data-ack-in-chat`, `data-rerun`, `data-ask-execution` | the read-only interrupted execution (R31) | — |
 
 ## 17. Non-goals
 

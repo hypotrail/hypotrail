@@ -9,8 +9,9 @@ extension.js            vscode API only: flag and trust checks, commands, URI ha
 lib/flag.js             enabled, stage (v0-v3), learningLayer, reviewer, chatInsert (hidden, forced off: CR.8), env overrides
 lib/study.js            study discovery and agent.json validation (the CLI argv)
 lib/watch.js            fs.watch of .hypotrail/ (debounced), no polling
-lib/cli.js              THE ONLY child_process user: read builders (READS), write builders W4-W7 (WRITES), run()
-                        (W1-W3 withdrawn in v0.3, ADR 0004 decision 8; check_layout refuses a `decide` write)
+lib/cli.js              THE ONLY child_process user: read builders (READS), write builders W4, W5, W7 (WRITES), run()
+                        (W1-W3 withdrawn in v0.3, ADR 0004 decision 8; W6 withdrawn by R31, decision 12;
+                        check_layout refuses a `decide` write and an acknowledgement builder)
 lib/launch.js           the three Marimo launches (WP-A5, ADR 0004 "local launch"): marimo run of the generated
                         notebook, marimo edit of the editable copy and workbench; argv from status --json or agent.json
 lib/protocol.js         hypotrail.panel/2 schema table and validators; emits media/protocol.js
@@ -36,7 +37,12 @@ media/terms.js          glossary marks and hovers; Hypotrail.askAgent / askButto
 media/components/*.js   bars, intervalRows, histogram, boxplot, valuesTable, figure, segments, cited, curve (WP-B5);
                         v0.3 (WP-E2): card, why, source, chip, lead, engineText, corr, fluid; the charts are
                         HTML grids sized by CSSOM custom properties, curves redrawn at their container's width
-media/copy/<view>.js    panel-owned English strings (copy/core.js for the frame)
+media/components/lesson.js the lesson style (spec §6.0, 2026-10-27): intro, notion(s), fold, more, reading,
+                        trans, trap, quote, withGuide/currentGuide (a view's frame of evidence merged into
+                        every figure's "Why this chart" and guided reading)
+media/css/tokens.css    the board tokens per VS Code theme class (dark board, white board, High Contrast keeps
+                        the editor's colours; no class: prefers-color-scheme), redefined on paper surfaces
+media/copy/<view>.js    panel-owned English strings (copy/core.js for the frame; copy/lesson.js for the lesson texts)
 media/copy-fr/<view>.js the French translation of the same keys (v0.3, WP-E2, R21; test/copy-fr.test.js)
 media/copy/junior.js    the junior-facing copy keyed by kind/code/id, and decision values in words (WP-A5,
                         two-layer copy, COMPANION-ADVANCED §15.1)
@@ -58,19 +64,19 @@ HT.send({type, ...})  -- {v: 2, ...} -->  controller.handle(raw)
                                             load -> handlers' loads[view] -> ctx.read --> (payload cached per read key and version,
                                                                                        projected by each loader's model)
                                             other -> handlers' types[type](message, ctx)
-                                                       ctx.write(op, {argv, record}) -> W4-W7 argv (exclusive)
+                                                       ctx.write(op, {argv, record}) -> W4, W5, W7 argv (exclusive)
 render(model, ctx) <-- {v: 2, ...} -----  ctx.post(...) validated by protocol.validateOutgoing
 ```
 
-Extension to webview: `init` (stage, reviewer, learningLayer, chatInsert, task, study key), `snapshot` (SummaryModel), `view_data` (a view's model), `load_error`, `busy`, `outcome` (`op` W4-W7, `kind`), `effects`, `preview_policy_result`, `draft_result`, `learn_state`, `navigate`, `notice`. The webview drops anything that fails validation.
+Extension to webview: `init` (stage, reviewer, learningLayer, chatInsert, task, study key), `snapshot` (SummaryModel), `view_data` (a view's model), `load_error`, `busy`, `outcome` (`op` W4, W5, W7, `kind`), `effects`, `preview_policy_result`, `draft_result`, `learn_state`, `navigate`, `notice`. The webview drops anything that fails validation.
 
 ## Frozen interfaces
 
 - **Handlers** (`lib/handlers/<name>.js`, discovered in file order): `types: {messageType: async (message, ctx)}`, `loads: {view: {stage?, when?(settings), key(message), argv(cli, agent, message), model(payload)}}` (`key` names the CLI read: loaders of one command share it and its cached payload, as EDA, Evidence and What if? share `evidence`; `when` false refuses the load like a stage gate), `commands: {name: async (args, ctx)}` (extension commands such as `go_to_result`), `onReady: async ctx`. A type, view, or command claimed twice throws at start. `ready`, `refresh`, `load`, and `load: summary` belong to the controller.
 - **ctx**: `agent`, `settings`, `snapshot()`, `stageAtLeast(s)`, `post(message)`, `read(key, argv, modelFn, {group?, timeoutMs?, cache?})` → `{ok, model, revision, currency, payload, cached?} | {ok: false, message, detail, refusal?}` (the payload is cached per key and version, `<revision>:<currency>` of the last snapshot, CR.1; `cache: false` neither reads nor fills it; `modelFn` runs on every answer), `write(op, {target, argv(requestId), record(payload)})` → the outcome (or null when refused before running; one CLI process per write, never a retry, CR.6; every write empties the non-preview cache), `refresh()`, `invalid(op, message, target)`, `host` (openArtifact, pickFolder, openFile, revealInOS, writeClipboard, executeCommand, notify, globalState, switchStudy), `exists`, `artifactPath(name)`, `cli`, `refusals`, `uuid`, `log`, `diagnostics`.
 - **Models**: each `lib/models/<name>.js` exports `to<Name>Model(payload)` (throws `ModelError` from `lib/models/common.js` on a wrong schema) and `FIXTURES` (names under `test/fixtures/`). `test/protocol.test.js` round-trips every one.
-- **Views**: `Hypotrail.register(name, {tab, stage, views?, outcomes?, render(model, ctx), onMessage?(message, ctx)})`. `model` is the SummaryModel. `views` lists the data views the controller loads when the tab is shown and the snapshot moved past them; `ctx.data(view)` returns `{revision, model, resultId}`. `outcomes` lists the write ops whose outcome the view renders itself (`ctx.outcome(target)`, `ctx.renderOutcome(o)`); the frame's live region shows the others. `onMessage` returning `false` for a forwarded message (effects, preview_policy_result, draft_result, learn_state) skips the re-render.
-- **View ctx**: `init`, `stage`, `reviewer`, `task`, `learningLayer`, `chatInsert`, `snapshot`, `data`, `error`, `busy`, `busyOp`, `busyTarget`, `send`, `load(view, extra)`, `version()` and `fresh(entry)` (whether data `{revision, currency, epoch}` is at the snapshot's version, CR.1: use them, never compare revisions), `stamp(message, epoch?)`, `epoch()` (the count of explicit Refreshes), `retry(view)` (forget a failed load so it can be asked again), `drafts` (`get`, `revision`, `set`, `drop`; `ackDrafts` only since v0.3; a draft is `{text, revision}`, CR.3), `ui` (setState keys of spec §10 only), `wordsArea`, `outcome`, `renderOutcome`, `el`, `svg`, `format`, `components`, `copy`, `gate(stage, node)`, `atLeast`, `modal`, `tooltip`, `navigate`, `placeholder()`, `rerender()`.
+- **Views**: `Hypotrail.register(name, {tab, stage, views?, outcomes?, render(model, ctx), onMessage?(message, ctx), band?(model, ctx)})`. `band` (lesson style, 2026-10-27) returns what the view shows above the tabs on every tab (the Overview's journey rail and next move); its ctx carries `tab`, the tab open. `model` is the SummaryModel. `views` lists the data views the controller loads when the tab is shown and the snapshot moved past them; `ctx.data(view)` returns `{revision, model, resultId}`. `outcomes` lists the write ops whose outcome the view renders itself (`ctx.outcome(target)`, `ctx.renderOutcome(o)`); the frame's live region shows the others. `onMessage` returning `false` for a forwarded message (effects, preview_policy_result, draft_result, learn_state) skips the re-render.
+- **View ctx**: `init`, `stage`, `reviewer`, `task`, `learningLayer`, `chatInsert`, `snapshot`, `data`, `error`, `busy`, `busyOp`, `busyTarget`, `send`, `load(view, extra)`, `version()` and `fresh(entry)` (whether data `{revision, currency, epoch}` is at the snapshot's version, CR.1: use them, never compare revisions), `stamp(message, epoch?)`, `epoch()` (the count of explicit Refreshes), `retry(view)` (forget a failed load so it can be asked again), (no `drafts` since R31: the confirmation drafts went with W1 and the acknowledgement drafts with W6), `ui` (setState keys of spec §10 only), `wordsArea`, `outcome`, `renderOutcome`, `el`, `svg`, `format`, `components`, `copy`, `gate(stage, node)`, `atLeast`, `modal`, `tooltip`, `navigate`, `placeholder()`, `rerender()`.
 - **Components** (`Hypotrail.components`): `bars`, `intervalRows`, `histogram`, `boxplot`, `valuesTable`, `figure`, `segments`, `cited`, `textWidth`, with the signatures in each file's header and in the plan §2.2. `bars` and `intervalRows` size their text columns to their texts (`labelWidth`, `valueWidth`, `textWidth` override); `histogram` and `boxplot` take cited cells `{text, cited}` for edges and axis texts.
 - **Frame helpers**: `Hypotrail.askButton(ctx, {kind, id}, shown, {label?, attrs?, question?, stage?, direct?})` (stage v2 unless `stage`; a modal, then `ask_agent`; `direct` copies the ready question at once, WP-E1), `Hypotrail.terms.mark(text, id)` (a glossary-marked word; its id must be in `terms.MAP`), `Hypotrail.registered()` (the registered views, for tests).
 - **Messages added by WP-I**: `open_artifact.resultId` (v1; report anchor or notebook line) and `open_artifact.line` (v1; an editor deliverable at a finding's line); `outcome.recorded.warnings` (W7).
