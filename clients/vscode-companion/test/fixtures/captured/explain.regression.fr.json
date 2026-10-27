@@ -397,7 +397,7 @@
    {
     "id": "target_look",
     "term": "regard sur la cible",
-    "definition": "Une analyse qui a lu la variable à prédire, comme son taux ou sa distribution, les valeurs spéciales lues avec elle, ou un résumé par groupe. Chacune est comptée. Plus il y a de regards, plus une forme trouvée parmi eux peut être due au hasard. Par exemple, le contrôle de qualité des colonnes ne lit pas la cible et n'est pas un regard ; la distribution de la variable à prédire en est un.",
+    "definition": "Une analyse qui a lu la variable à prédire, comme sa distribution ou son résumé, les valeurs spéciales lues avec elle, ou sa moyenne par groupe. Chacune est comptée. Plus il y a de regards, plus une forme trouvée parmi eux peut être due au hasard. Par exemple, le contrôle de qualité des colonnes ne lit pas la cible et n'est pas un regard ; la distribution de la variable à prédire en est un.",
     "example": null,
     "example_status": "none",
     "steps": [

@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-families",
    "revision": 33,
-   "updated": "2026-10-26T20:36:57.865254+00:00",
+   "updated": "2026-10-27T09:52:47.239813+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -379,7 +379,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-26T20:36:11.092981+00:00",
+      "time": "2026-10-27T09:51:32.073958+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -428,7 +428,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-26T20:36:12.193636+00:00",
+      "time": "2026-10-27T09:51:34.301958+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -479,7 +479,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-26T20:36:13.724277+00:00",
+      "time": "2026-10-27T09:51:37.214286+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -512,7 +512,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-26T20:36:15.255091+00:00",
+      "time": "2026-10-27T09:51:40.065822+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -550,7 +550,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-26T20:36:17.169029+00:00",
+      "time": "2026-10-27T09:51:42.937068+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -598,7 +598,7 @@
       "restatement": "You compare three variants of the candidate, each with its question.",
       "proposal_id": "p_6",
       "revision": 23,
-      "time": "2026-10-26T20:36:25.835077+00:00",
+      "time": "2026-10-27T09:51:59.216264+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -6318,11 +6318,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_b8734faf726d77e6af0ae94a",
-     "exposure_id": "x_087c2fa671b440519aa667b5894f6d47",
+     "exposure_id": "x_fa66d6deb3c949a996fb70d6df91ee67",
      "started_revision": 32,
      "integrity": "ok"
     },
@@ -6377,11 +6377,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_a8274014a4c678f4a2a235d2",
-     "exposure_id": "x_cb0fa80c81804cbcb4d61de87fe259bc",
+     "exposure_id": "x_40717346b0a44674b2fc671c24a50539",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -6512,11 +6512,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_eff39ccb2204a33ff345cb41",
-     "exposure_id": "x_9b68af8fe05744c195b2af276e0fb27e",
+     "exposure_id": "x_1e3f2d02d57846888ddc348fcc9f74e5",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -6782,11 +6782,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
-     "exposure_id": "x_25fb9a0cdd36459c944f5ccbe1eb8169",
+     "exposure_id": "x_3cfc5ababb914bc78a3787837ece0c65",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -7064,11 +7064,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_60b0cfe62d69e0ed78f7ce7e",
-     "exposure_id": "x_c3747f9467a845d48bb142647c89a1cd",
+     "exposure_id": "x_26fbf06e01a548edaa50ef89c24e1038",
      "started_revision": 24,
      "integrity": "ok"
     },
@@ -8378,11 +8378,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_46ed3fd080ad3849123b1718",
-     "exposure_id": "x_4afa2dbed90e4375bb30850ac8e677cf",
+     "exposure_id": "x_d46c5768888c4ec7a12e799c5210429f",
      "started_revision": 26,
      "integrity": "ok"
     },
@@ -8893,11 +8893,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_5c3f9f2dbbc0a17a1254423f",
-     "exposure_id": "x_b832422746384f1fb956545974c175c1",
+     "exposure_id": "x_beebcfd827774213a6c963163487843d",
      "started_revision": 28,
      "integrity": "ok"
     },
@@ -10577,11 +10577,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_b98236d8cafd383b17becb1c",
-     "exposure_id": "x_8885befb1c9741c88917754a02ec3dd3",
+     "exposure_id": "x_ef4321b479604faa9ba5b7452bfa7b33",
      "started_revision": 30,
      "integrity": "ok"
     },
@@ -10682,11 +10682,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_bb85e451e092b31aedb250d1",
-     "exposure_id": "x_efbef3fc7e45457da31e8ed20c171fab",
+     "exposure_id": "x_9e69a65a15334e168aebe63fc168b7da",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -10813,9 +10813,9 @@
       "last_ok_revision": 33,
       "path": "reports/study.html",
       "revision": 33,
-      "sha256": "5cae715f5e89903448c36a6a8b198d2332f836db1baaf0f50adac7967139a25a",
+      "sha256": "80dd08599e03dc774e5a04c0a7431a624cecbcd0fa8e112c48ce238095d4fa7d",
       "status": "ok",
-      "template_version": 3,
+      "template_version": 4,
       "user_edits_preserved": [],
       "recorded_status": "ok",
       "stale_reason": null,
