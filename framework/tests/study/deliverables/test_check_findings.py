@@ -55,7 +55,8 @@ def test_rendered_study_is_clean(study):
 
 def test_number_outside_a_cited_value_is_reported(study):
     page = _report(study).read_text()
-    _report(study).write_text(page.replace('<main>', '<main><p>We reached 42 renewals and '
+    main = '<main id="main">'                   # v4: the study language's edition
+    _report(study).write_text(page.replace(main, main + '<p>We reached 42 renewals and '
                                            '<span data-literal="revision">7</span>.</p>', 1))
     result = cmd_check.run_check(study)
     found = [f for f in result['findings'] if f['code'] == 'number_outside_result']
@@ -91,8 +92,8 @@ def test_a_cited_result_that_is_not_current_is_reported(study, synthetic_case_di
     orphan = b.put('eda.target_rate', {'rate': 0.5, 'n_positive': 1, 'n_rows': 2}, promote=False)
     page = _report(study).read_text()
     _report(study).write_text(page.replace(
-        '<main>', f'<main><p><data value="0.5" data-result-id="{orphan}" data-path="rate">'
-        '50.0%</data></p>', 1))
+        '<main id="main">', f'<main id="main"><p><data value="0.5" data-result-id="{orphan}" '
+        'data-path="rate">50.0%</data></p>', 1))
     assert 'stale_result_cited' in codes(cmd_check.run_check(study))
 
 

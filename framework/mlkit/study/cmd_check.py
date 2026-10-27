@@ -302,6 +302,14 @@ class _Report(HTMLParser):
     def _place(self) -> tuple[str | None, int]:
         return self.anchor(), self.getpos()[0]
 
+    def language(self) -> str | None:
+        """v4 (R27): the ``lang`` of the nearest enclosing element that has one (a report
+        holds an edition in each language)."""
+        for _, attrs in reversed(self.stack):
+            if attrs.get('lang') in cite.LANGUAGES:
+                return attrs['lang']
+        return None
+
     def _flush(self):
         text = ''.join(self._block).strip()
         if text:
@@ -321,7 +329,8 @@ class _Report(HTMLParser):
         # carrying the same attributes.
         if tag == 'data' or 'data-result-id' in attrs:
             anchor, line = self._place()
-            self.data.append({'attrs': attrs, 'text': '', 'anchor': anchor, 'line': line})
+            self.data.append({'attrs': attrs, 'text': '', 'anchor': anchor, 'line': line,
+                              'lang': self.language()})
 
     def handle_endtag(self, tag):
         for i in range(len(self.stack) - 1, -1, -1):
@@ -358,7 +367,8 @@ def _result_lookup(view: Mapping, study: read.Study) -> dict:
 
 
 def _check_cited(view: Mapping, study: read.Study, rid: str, path: str, raw: str | None,
-                 shown: str, where: str, scale: str | None = None) -> list[dict]:
+                 shown: str, where: str, scale: str | None = None,
+                 language: str | None = None) -> list[dict]:
     by_id = _result_lookup(view, study)
     if rid not in by_id:
         try:
@@ -378,8 +388,9 @@ def _check_cited(view: Mapping, study: read.Study, rid: str, path: str, raw: str
         return [finding('value_mismatch', where, f'Result {rid} has no value at {path!r}.',
                         result_id=rid, path=path)]
     # Review round 4 (E4-6): the shown text is read as the renderer wrote it, in the study
-    # language (a French report writes 1.286 as "1,286").
-    toks = cite.parse_numbers(shown, view.get('language'))
+    # language (a French report writes 1.286 as "1,286"); v4 (R27): in the language of the
+    # edition that holds it (the nearest ``lang``).
+    toks = cite.parse_numbers(shown, language or view.get('language'))
     try:
         attr_ok = raw is not None and float(raw) == float(value)
         factor = 1.0 if scale is None else float(scale)
@@ -443,7 +454,7 @@ def check_html(view: Mapping, study: read.Study, page: str, where: str) -> list[
                      for f in _check_cited(view, study, a['data-result-id'],
                                            a.get('data-path', ''),
                                            a.get('value', a.get('data-value')), d['text'],
-                                           where, a.get('data-scale'))]
+                                           where, a.get('data-scale'), d.get('lang'))]
     for block, (anchor, line) in zip(parser.blocks, parser.block_places):
         findings += wording(block, where, lambda _offset, a=anchor, n=line: location(where, a, n))
     return findings

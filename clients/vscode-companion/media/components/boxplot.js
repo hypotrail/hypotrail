@@ -23,7 +23,19 @@
     return node;
   }
 
-  function boxplot(container, { min, q25, median, q75, max, texts = {}, title }) {
+  /** Lesson style (R30): the median, the middle half, the range, and which side has the tail. */
+  function conclusion({ min, q25, median, q75, max, texts }) {
+    const R = HT.copy.lesson && HT.copy.lesson.concl;
+    const v = [min, q25, median, q75, max].map(Number);
+    if (!R || !v.every(Number.isFinite)) return null;
+    const q = k => HT.components.quote(texts[k]);
+    const upper = v[4] - v[3];
+    const lower = v[1] - v[0];
+    const side = upper > 1.5 * lower ? 'upper' : lower > 1.5 * upper ? 'lower' : 'even';
+    return [R.box(q('median'), q('q25'), q('q75'), q('min'), q('max')), R.boxTail[side]];
+  }
+
+  function boxplot(container, { min, q25, median, q75, max, texts = {}, title, guide = null }) {
     const lo = Number(min);
     const hi = Number(max) > lo ? Number(max) : lo + 1;
     const x = v => 20 + ((Number(v) - lo) / (hi - lo)) * (W - 40);
@@ -37,7 +49,7 @@
     ]);
     const keys = ['min', 'q25', 'median', 'q75', 'max'];
     return HT.components.figure(container, {
-      title, chart,
+      title, chart, guide, reading: { kind: 'boxplot', concl: conclusion({ min, q25, median, q75, max, texts }) },
       columns: keys.map(k => ({ key: k, label: k })),
       rows: [Object.fromEntries(keys.map(k => [k, texts[k] && typeof texts[k] === 'object' ? texts[k] : (texts[k] || '')]))],
     });

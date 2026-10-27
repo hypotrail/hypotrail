@@ -2,7 +2,9 @@
 // wrapper every chart uses (an accessible name, a "Show values" toggle, the table).
 // Frozen by WP-0:
 //   valuesTable(container, {columns: [{key, label}], rows: [{<key>: text | {text, cited}}], caption})
-//   figure(container, {title, chart, columns, rows, caption?})   (used by the charts)
+//   figure(container, {title, chart, columns, rows, caption?, reading?, guide?})   (used by the charts;
+//   lesson style, R30: `reading` {kind, concl, steps, attn} comes from the chart component,
+//   `guide` {q, frame, rows, model, steps, concl, attn} from the view)
 // A cell `{text, cited: {resultId, path, value}}` renders as a cited <data> element.
 (function (HT) {
   'use strict';
@@ -43,7 +45,18 @@
    * question is the one visible title, R17). `legend` is a list of [swatch, text] pairs;
    * `tools` are extra nodes next to the "Show values" toggle.
    */
-  function figure(container, { title, chart, columns, rows, caption, legend = [], showTitle = true, tools = [] }) {
+  /** The anatomy of a chart drawn by a component, for its guided reading (lesson.js). */
+  function kindOf(chart) {
+    const k = chart.getAttribute('data-chart') || '';
+    if (k === 'bars' || k === 'histogram' || k === 'correlation') return k;
+    if (k === 'intervals') return 'intervals';
+    const cls = String(chart.getAttribute('class') || '');
+    if (cls.includes('ht-boxplot')) return 'boxplot';
+    if (cls.includes('ht-curve')) return 'curve';
+    return 'generic';
+  }
+
+  function figure(container, { title, chart, columns, rows, caption, legend = [], showTitle = true, tools = [], reading = null, guide = null }) {
     figures += 1;
     const id = `ht-values-${figures}`;
     chart.setAttribute('role', 'img');
@@ -64,12 +77,23 @@
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       toggle.textContent = open ? c.hideValues : c.showValues;
     });
+    // Lesson style (R30): every chart says why it is there and how to read it, with the
+    // conclusion its own values support (the chart's `reading`, or the view's `guide`).
+    const r = reading || {};
+    const lesson = HT.components.reading && HT.copy.lesson
+      ? HT.components.reading(r.kind || kindOf(chart), { title, showTitle,
+        guide: { ...((HT.components.currentGuide && HT.components.currentGuide()) || {}), ...(r.guide || {}), ...(guide || {}) },
+        concl: r.concl || null, steps: r.steps || null, attn: r.attn || null }) : null;
     const node = HT.el('figure', { className: 'ht-figure' }, [
-      HT.el('figcaption', { className: showTitle ? null : 'sr-only', text: title }),
+      // The title is the figure's accessible name; with the guided reading on, the visible
+      // question of "Why this chart" says it (the view's question, else the title).
+      HT.el('figcaption', { className: showTitle && !lesson ? null : 'sr-only', text: title }),
+      lesson ? lesson.top : null,
       chart,
       legend.length ? HT.el('div', { className: 'ht-legend', 'aria-hidden': 'true' },
         legend.map(([kind, text]) => HT.el('span', {}, [HT.el('i', { className: kind }), text]))) : null,
-      HT.el('div', { className: 'ht-figure-tools' }, [toggle, ...tools]), wrap]);
+      HT.el('div', { className: 'ht-figure-tools' }, [toggle, ...tools]), wrap,
+      lesson ? lesson.bottom : null]);
     if (container) container.appendChild(node);
     return node;
   }

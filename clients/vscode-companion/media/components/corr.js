@@ -11,7 +11,8 @@
   'use strict';
   const DENSE = 8;
 
-  function corr(container, { order, cell, title, legend = [], columns, rows, tools = [] }) {
+  function corr(container, { order, cell, title, legend = [], columns, rows, tools = [], guide = null }) {
+    const flagged = [];
     const n = order.length;
     const items = [];
     order.forEach((a, i) => {
@@ -25,6 +26,7 @@
           return;
         }
         const v = Number(c.value);
+        if (c.flag) flagged.push({ a, b, v, text: c.text, cited: c.cited });
         const strength = Math.min(1, Math.abs(v));
         const node = HT.el('div', {
           className: `ht-c ${v < 0 ? 'ht-neg' : 'ht-pos'}${strength >= 0.55 ? ' ht-strong' : ''}${c.flag ? ' ht-flag' : ''}`,
@@ -38,7 +40,15 @@
     order.forEach(b => items.push(HT.el('div', { className: 'ht-ch', 'aria-hidden': 'true', title: b, text: b })));
     const chart = HT.el('div', { className: `ht-corr${n > DENSE ? ' ht-dense' : ''}`, 'data-chart': 'correlation',
       css: { '--n': String(n) } }, items);
-    return HT.components.figure(container, { title, chart, showTitle: false, legend, columns, rows, tools });
+    // Lesson style (R30): the flagged pairs, strongest first.
+    const R = HT.copy.lesson && HT.copy.lesson.concl;
+    const named = flagged.sort((x, y) => Math.abs(y.v) - Math.abs(x.v)).slice(0, 4)
+      .map(p => [`${p.a} · ${p.b} (`, HT.components.quote(p.text, p.cited), ')']);
+    const concl = !R ? null : flagged.length
+      ? R.corrSome(HT.format.number(flagged.length, 'int'), named.flatMap((x, i) => (i ? [', ', ...x] : x)))
+      : R.corrNone;
+    return HT.components.figure(container, { title, chart, showTitle: false, legend, columns, rows, tools, guide,
+      reading: { kind: 'correlation', concl } });
   }
 
   HT.components.corr = corr;

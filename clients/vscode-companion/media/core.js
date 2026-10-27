@@ -1,12 +1,14 @@
 // Webview runtime of the study panel (COMPANION-ADVANCED §4, §8, §12, §13). It owns the
-// frame (header, tabs, alert strip, recap strip, footer), the live region, the modal and
-// tooltip hosts, the message whitelist, and the vscode.setState helpers. Views register
+// frame (header, the views' band above the tabs, tabs, the sticky position line, alert
+// strip, recap strip, footer; each tab's "At this step" and "Next" lines, lesson style
+// 2026-10-27), the live region, the modal and tooltip hosts, the message whitelist, and
+// the vscode.setState helpers. Views register
 // with Hypotrail.register and render models; they never call acquireVsCodeApi, never
 // parse study text as HTML, and never set a `style` attribute (the CSP forbids it).
 //
 // Frozen by WP-0. The public API (ARCHITECTURE.md) is:
 //   Hypotrail.el(tag, attrs, children)      Hypotrail.svg(tag, attrs, children)
-//   Hypotrail.register(name, {tab, stage, views?, outcomes?, render(model, ctx), onMessage?})
+//   Hypotrail.register(name, {tab, stage, views?, outcomes?, render(model, ctx), onMessage?, band?(model, ctx)})
 //   Hypotrail.send(message)                 Hypotrail.modal({title, body, actions})
 //   Hypotrail.tooltip.attach(target, contentFn)   Hypotrail.navigate({tab, kind, id})
 //   Hypotrail.renderOutcome(outcome)        Hypotrail.PALETTE
@@ -23,12 +25,14 @@
   // document holds no URL literal at all (test/unit.test.js).
   const SVG_NS = ['http:', '', 'www.w3.org', '2000', 'svg'].join('/');
   // v0.3 (WP-E1): no `drafts` key any more; the confirmation words went with W1.
+  // R31 (owner decision 2026-10-27): no `ackDrafts` either; the acknowledgement of an
+  // interrupted execution (the former W6) is made in the chat, and the panel takes no words.
   // v0.3 (WP-E2, R21): `language`, the header's EN | FR choice (UI state only, never a study
   // write); absent, the panel follows the setting (`auto`: the study language).
-  const UI_KEYS = ['ackDrafts', 'askDraft', 'tab', 'recapCollapsed', 'evidenceFilter', 'selectedResult', 'study', 'language'];
+  const UI_KEYS = ['askDraft', 'tab', 'recapCollapsed', 'evidenceFilter', 'selectedResult', 'study', 'language'];
   const LANGUAGES = ['en', 'fr'];
   // The keys that belong to one study (decision CR.2): dropped when `init` names another.
-  const STUDY_KEYS = ['ackDrafts', 'askDraft', 'selectedResult'];
+  const STUDY_KEYS = ['askDraft', 'selectedResult'];
   const TAB_ORDER = ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn'];
   // Messages the frame handles itself; the others (effects, preview_policy_result,
   // draft_result, learn_state) are only forwarded to the views' onMessage.
@@ -219,39 +223,14 @@
       keep();
     },
   };
-  // A draft is {text, revision} (decision CR.3): the junior's words of an acknowledgement
-  // and the snapshot revision at which they started typing them; the revision changes only
-  // when the words are cleared and typed again. (v0.3: the confirmation drafts went with W1.)
-  const isDraft = d => Boolean(d) && typeof d === 'object' && typeof d.text === 'string' && d.text !== '' &&
-    (d.revision === null || Number.isInteger(d.revision));
-  const draftOf = (kind, id) => (ui[kind] && isDraft(ui[kind][id]) ? ui[kind][id] : null);
-  const shownRevision = () => (state.snapshot && Number.isInteger(state.snapshot.revision) ? state.snapshot.revision : null);
-  const drafts = {
-    get: (kind, id) => { const d = draftOf(kind, id); return d ? d.text : ''; },
-    /** The revision the junior started typing at, or null. */
-    revision: (kind, id) => { const d = draftOf(kind, id); return d ? d.revision : null; },
-    set(kind, id, text) {
-      if (kind !== 'ackDrafts') throw new Error('ackDrafts only');
-      ui[kind] = ui[kind] || {};
-      const before = draftOf(kind, id);
-      if (text) ui[kind][id] = { text, revision: before ? before.revision : shownRevision() };
-      else delete ui[kind][id];
-      keep();
-    },
-    drop(kind, id) {
-      if (ui[kind]) delete ui[kind][id];
-      keep();
-    },
-  };
+  // v0.3: the confirmation drafts went with W1; R31 (2026-10-27): the acknowledgement drafts
+  // went with W6. The only words field left is the "Ask the agent" question (`askDraft`).
 
-  /** Keep the setState keys of §10 only, and drafts of the {text, revision} form only. */
+  /** Keep the setState keys of §10 only (a stored `ackDrafts` of an older panel is dropped). */
   function sanitize() {
     if (!ui || typeof ui !== 'object' || Array.isArray(ui)) ui = {};
     for (const key of Object.keys(ui)) if (!UI_KEYS.includes(key)) delete ui[key];
-    for (const kind of ['ackDrafts']) {
-      if (!ui[kind] || typeof ui[kind] !== 'object' || Array.isArray(ui[kind])) { delete ui[kind]; continue; }
-      for (const id of Object.keys(ui[kind])) if (!isDraft(ui[kind][id])) delete ui[kind][id];
-    }
+    if (typeof ui.askDraft !== 'string') delete ui.askDraft;
     if (ui.study !== undefined && !(typeof ui.study === 'string' && /^[0-9a-f]{16}$/.test(ui.study))) delete ui.study;
     if (ui.language !== undefined && !LANGUAGES.includes(ui.language)) delete ui.language;
   }
@@ -265,20 +244,20 @@
   }
 
   /**
-   * The only textarea of the panel that holds the junior's words (INV-5). It starts empty
-   * and is never filled by the panel; the only value it ever gets is the junior's own draft
-   * for the same key (`ackDrafts` per execution, `askDraft`), kept
-   * in vscode.setState while they type. Views never create a textarea themselves
-   * (test/invariants.test.js). `key` is the execution id; the other attributes
-   * (id, aria-describedby, data-*) go on the element. `onInput(text)` runs on each keystroke.
+   * The only textarea of the panel (INV-5): the question of "Ask the agent about this",
+   * which the extension copies for the chat (never a decision's or an acknowledgement's
+   * words: R23 and R31). It starts empty and is never filled by the panel; the only value it
+   * ever gets is the junior's own draft (`askDraft`), kept in vscode.setState while they
+   * type. Views never create a textarea themselves (test/invariants.test.js). The other
+   * attributes (id, aria-describedby, data-*) go on the element. `onInput(text)` runs on
+   * each keystroke.
    */
-  function wordsArea({ kind, key = '', onInput = null, ...attrs }) {
-    if (!['ackDrafts', 'askDraft'].includes(kind)) throw new Error('ackDrafts or askDraft');
+  function wordsArea({ kind, onInput = null, ...attrs }) {
+    if (kind !== 'askDraft') throw new Error('askDraft only');
     const area = el('textarea', { spellcheck: 'true', autocomplete: 'off', 'data-words': kind, ...attrs });
-    area.value = kind === 'askDraft' ? String(ui.askDraft || '') : drafts.get(kind, key);
+    area.value = String(ui.askDraft || '');
     area.addEventListener('input', () => {
-      if (kind === 'askDraft') uiState.set('askDraft', area.value || undefined);
-      else drafts.set(kind, key, area.value);
+      uiState.set('askDraft', area.value || undefined);
       if (onInput) onInput(area.value);
     });
     return area;
@@ -521,30 +500,40 @@
     return null;
   }
 
+  /**
+   * The band at the top of the board (lesson style, 2026-10-27): the product and the flag,
+   * the language toggle, the study's name in chalk, the study switch, the revision, the read
+   * age and Refresh, the chips, and "Learn more" on what these marks mean (R30).
+   */
   function header() {
     const c = C();
     const snap = state.snapshot;
     ageNode = el('span', { 'data-literal': 'age', text: ageText() });
     const name = snap ? folderName(snap.study) : '';
+    const chip = finalTestChip(snap);
+    const L = HT.copy.lesson;
     return el('header', { className: 'ht-header' }, [
       el('h1', { className: 'sr-only', text: c.title }),
-      el('div', { className: 'ht-brand' }, [
-        el('span', { className: 'ht-name', text: snap ? `${c.product} · ${name}` : c.product }),
-        state.init.task === 'regression' || (snap && snap.task === 'regression')
-          ? el('span', { className: 'ht-badge', text: c.regression }) : null,
-        finalTestChip(snap),
-        el('span', { className: 'ht-badge', text: c.experimental }),
+      el('div', { className: 'ht-row1' }, [
+        el('span', { className: 'ht-prod', text: c.product }),
+        el('span', { className: 'ht-badge', 'data-experimental': state.init.stage, text: `${c.experimental} · ${c.stage(state.init.stage)}` }),
         state.init.reviewer ? el('span', { className: 'ht-badge ht-badge-reviewer', 'data-reviewer': true, text: c.reviewer }) : null,
+        el('span', { className: 'ht-spacer', 'aria-hidden': 'true' }),
+        languageToggle(),
       ]),
+      snap ? el('div', { className: 'ht-brand' }, [el('span', { className: 'ht-name', text: name || c.product })]) : null,
       el('div', { className: 'ht-meta' }, [
         atLeast('v1') && snap ? el('button', { type: 'button', className: 'ht-ghost', 'data-stage': 'v1',
           'data-switch-study': true, text: c.switchStudy(name), onclick: () => send({ type: 'switch_study' }) }) : null,
+        state.init.task === 'regression' || (snap && snap.task === 'regression')
+          ? el('span', { className: 'ht-badge', text: c.regression }) : null,
         snap ? el('span', { className: 'ht-faint', 'data-revision': snap.revision, text: c.revision(snap.revision) }) : null,
         ageNode,
         el('button', { type: 'button', className: 'ht-ghost', text: c.refresh, disabled: Boolean(state.busy),
           'data-refresh': true, onclick: refreshAll }),
-        languageToggle(),
       ]),
+      chip ? el('div', { className: 'ht-chips-row' }, [chip]) : null,
+      snap && L && HT.components.more && activeTab() === 'overview' ? HT.components.more('marks', L.more.marksTitle, [el('ul', {}, L.more.marks.map(t => el('li', {}, HT.components.parts([HT.components.marked(t)]))))]) : null,
     ]);
   }
 
@@ -555,6 +544,126 @@
     return el('div', { className: 'ht-seg', role: 'group', 'aria-label': c.languageLabel, 'data-language-toggle': lang },
       LANGUAGES.map(l => el('button', { type: 'button', lang: l, 'aria-pressed': l === lang ? 'true' : 'false',
         'data-language': l, title: c.languageNames[l], text: l.toUpperCase(), onclick: () => setLanguage(l) })));
+  }
+
+  // --- the journey, the band, the position line (lesson style, R30) ---------------------------
+
+  /**
+   * The step the journey marks as current: the decision of the next action when it waits for
+   * the junior (an open proposal, a reconfirmation), else the first step waiting for an
+   * answer, else the engine's current step.
+   */
+  function currentStepId(snap) {
+    if (!snap) return null;
+    const plan = Array.isArray(snap.plan) ? snap.plan : [];
+    const next = snap.nextAction || {};
+    if ((next.kind === 'await_user_words' || next.kind === 'reconfirm') && next.decision && plan.some(s => s.id === next.decision)) {
+      return next.decision;
+    }
+    const waiting = plan.find(s => s.status === 'awaiting_confirmation' || s.status === 'needs_reconfirmation');
+    if (waiting) return waiting.id;
+    return snap.currentStep ? snap.currentStep.id : null;
+  }
+
+  /** A step's state for the rail and the position line (never colour alone: words too). */
+  function stepState(step, snap) {
+    const open = (snap.proposals || []).some(p => p.decisionId === step.id);
+    if (step.status === 'done' && open) return 'reopened';
+    if (step.status === 'done' && step.basis === 'automatic') return 'automatic';
+    return step.status;
+  }
+
+  /** {index, total, step, state, remaining: [{step, n}]} of the snapshot, or null. */
+  function journeyPosition(snap) {
+    const plan = snap && Array.isArray(snap.plan) ? snap.plan : [];
+    if (!plan.length) return null;
+    const id = currentStepId(snap);
+    const i = plan.findIndex(s => s.id === id);
+    const step = i >= 0 ? plan[i] : null;
+    const remaining = plan.map((s, k) => ({ step: s, n: k + 1 })).filter(x => x.n - 1 > i && x.step.status !== 'done');
+    return { index: i + 1, total: plan.length, step, state: step ? stepState(step, snap) : null, remaining };
+  }
+
+  /** A step's short label (the journey bar's words), else its title. */
+  function shortLabel(step) {
+    const labels = (HT.copy.overview && HT.copy.overview.journeyLabels) || {};
+    return labels[step.id] || String(step.title || step.id);
+  }
+
+  /**
+   * The views' band: what a view shows above the tabs on every tab (the Overview's journey
+   * rail and the next move). A view opts in with `band(model, ctx)`; `ctx.tab` is the tab
+   * shown under it.
+   */
+  function bandViews() {
+    if (!state.snapshot) return null;
+    const out = [];
+    for (const v of visibleViews()) {
+      if (typeof v.band !== 'function') continue;
+      try {
+        out.push(v.band(state.snapshot, { ...context(v), tab: activeTab() }));
+      } catch (e) {
+        out.push(el('p', { className: 'alert', role: 'alert', 'data-view-error': `${v.name}:band`, text: `${C().viewError} ${String((e && e.message) || e)}` }));
+      }
+    }
+    return out.length ? el('div', { className: 'ht-band', 'data-band': true }, out) : null;
+  }
+
+  /**
+   * The position line under the tabs, sticky (R30): the step and its state, the tab, what
+   * remains, and a way back to the tabs.
+   */
+  function whereLine(current) {
+    const snap = state.snapshot;
+    const W = HT.copy.lesson && HT.copy.lesson.where;
+    if (!snap || !W) return null;
+    const pos = journeyPosition(snap);
+    const kids = [];
+    if (pos && pos.step) {
+      kids.push(el('strong', { text: W.step(pos.index, pos.total) }), ` · ${String(pos.step.title || '')}`);
+      const words = pos.state !== 'done' ? W.states[pos.state] : null;
+      if (words) kids.push(el('span', { className: 'ht-wl', text: `, ${words}` }));
+      kids.push(' · ');
+    }
+    kids.push(`${W.tab} `, el('strong', { text: C().tabs[current] }));
+    if (pos && pos.remaining.length) {
+      const shown = pos.remaining.slice(0, 3).map(x => `${x.n} ${shortLabel(x.step)}`).join(', ');
+      kids.push(el('span', { className: 'ht-rest', text: W.rest(`${shown}${pos.remaining.length > 3 ? ', …' : ''}`) }));
+    }
+    kids.push(el('button', { type: 'button', className: 'ht-link', 'data-to-tabs': true, text: W.toTabs, onclick: () => {
+      const tab = document.querySelector('[role="tab"][aria-selected="true"]');
+      if (tab) { tab.scrollIntoView({ block: 'start' }); tab.focus(); }
+    } }));
+    return el('div', { className: 'ht-where', 'data-where': current, 'aria-label': W.label }, kids);
+  }
+
+  /** What "At this step" of a tab names (R29): facts of the snapshot, never a raw id. */
+  function introFacts() {
+    const snap = state.snapshot || {};
+    const pos = journeyPosition(snap);
+    return {
+      step: pos && pos.step ? String(pos.step.title || '') : null,
+      waits: Boolean(pos && pos.step && ['awaiting_confirmation', 'needs_reconfirmation', 'reopened', 'automatic'].includes(pos.state)),
+      waiting: snap.waitingCount > 0 ? HT.format.number(snap.waitingCount, 'int') : null,
+      task: snap.task || state.init.task || null,
+      stage: state.init.stage,
+    };
+  }
+
+  /** The "Next" line at the end of a tab (R30): the next tab of this stage, else back. */
+  function transition(tab) {
+    const L = HT.copy.lesson;
+    const list = tabs();
+    if (!L || !HT.components.trans || !tabbed() || list.length < 2) return null;
+    const next = list[list.indexOf(tab) + 1];
+    const go = target => () => {
+      uiState.set('tab', target);
+      render();
+      const button = document.getElementById(`tab-${target}`);
+      if (button) { button.scrollIntoView({ block: 'start' }); button.focus(); }
+    };
+    if (next) return HT.components.trans({ tab: next, text: L.nextLines[next], label: L.goTo(C().tabs[next]), onclick: go(next) });
+    return HT.components.trans({ tab: list[0], text: L.nextLines.overview, label: L.backTo(C().tabs[list[0]]), onclick: go(list[0]), last: true });
   }
 
   function tablist(list, current) {
@@ -669,7 +778,7 @@
       },
       version, fresh, stamp, epoch: () => state.epoch,
       retry: name => { delete state.errors[name]; for (const k of Object.keys(state.requested)) if (k.startsWith(`${name}@`)) delete state.requested[k]; },
-      drafts, ui: uiState, wordsArea,
+      ui: uiState, wordsArea,
       outcome: target => state.outcomes[target] || null,
       renderOutcome, el, svg, format: HT.format, components: HT.components, copy: HT.copy,
       gate: (stage, node) => (atLeast(stage) && node ? (node.setAttribute('data-stage', stage), node) : null),
@@ -721,12 +830,18 @@
       }
       append(node, [out]);
     }
-    // v0.3 (owner addition, I1): one lead sentence says what the tab is for, under its title.
-    if (lead && tabbed()) {
-      const p = HT.components.lead(lead, { 'data-tab-lead': tab });
+    // v0.3 (owner addition, I1): one lead sentence says what the tab is for, under its title;
+    // lesson style (R29): then "At this step", what this step does in the study.
+    const intros = HT.copy.lesson && HT.copy.lesson.intros;
+    const intro = intros && intros[tab] && HT.components.intro ? HT.components.intro(intros[tab](introFacts()), { 'data-intro': tab }) : null;
+    const top = [lead && tabbed() ? HT.components.lead(lead, { 'data-tab-lead': tab }) : null, intro].filter(Boolean);
+    if (top.length) {
       const h2 = node.querySelector('h2');
-      if (h2 && h2.parentNode === node) h2.after(p); else node.prepend(p);
+      if (h2 && h2.parentNode === node) h2.after(...top); else node.prepend(...top);
     }
+    // R30: the "Next" line at the end of the tab.
+    const trans = transition(tab);
+    if (trans) node.appendChild(trans);
     return node;
   }
 
@@ -759,7 +874,11 @@
     root.textContent = '';
     append(root, [
       header(),
+      // Lesson style (2026-10-27): the journey rail and the next move above the tabs, on every
+      // tab; under the tabs, the sticky position line.
+      state.loadError ? null : bandViews(),
       tabbed() && list.length ? tablist(list, current) : null,
+      state.loadError || !tabbed() || !list.length ? null : whereLine(current),
       // WP-A5: the Overview opens on the next move and its "Needs attention" section, so the
       // alert strip is shown on the other tabs only (nothing pushes the next move down).
       state.loadError ? null : (tabbed() && current !== 'overview' ? alertStrip() : null),
@@ -787,11 +906,7 @@
 
   function onSnapshot(m) {
     const before = state.snapshot ? state.snapshot.revision : null;
-    const executions = m.model.executions || {};
-    const listed = new Set([...(executions.interrupted || []), ...(executions.suspected || [])].map(e => e.executionId));
     if (before !== m.model.revision) state.notice = null;
-    for (const id of Object.keys(ui.ackDrafts || {})) if (!listed.has(id)) delete ui.ackDrafts[id];
-    keep();
     state.raw = m.model;
     state.snapshot = localize(m.model, language());
     state.snapshotLanguage = language();
@@ -829,7 +944,6 @@
       case 'outcome':
         state.lastOutcome = m;
         if (m.target) state.outcomes[m.target] = m;
-        if (m.kind === 'ok' && m.op === 'W6' && m.target) drafts.drop('ackDrafts', m.target);
         state.notice = null;
         break;
       case 'notice': state.notice = { text: m.text, politeness: m.politeness }; break;
@@ -852,6 +966,9 @@
     api = acquireVsCodeApi();
     try { ui = api.getState() || {}; } catch (_) { ui = {}; }
     sanitize();
+    // The sanitised state is kept at once, so a key of an earlier panel (the confirmation or
+    // acknowledgement drafts of W1 and W6) does not outlive this load.
+    keep();
     root = document.getElementById('app');
     window.addEventListener('message', onMessage);
     setInterval(() => { if (ageNode) ageNode.textContent = ageText(); }, 15000);
@@ -864,7 +981,7 @@
 
   Object.assign(HT, { el, svg, wordsArea, register, send, modal, tooltip, navigate, renderOutcome, start, PALETTE, SVG_NS,
     diagnostics, registered, _state: state, TAB_ORDER, fresh, version, language, studyLanguage, LANGUAGES,
-    textsLanguage, localize });
+    textsLanguage, localize, currentStepId, journeyPosition, stepState });
   HT.components = HT.components || {};
   HT.copy = HT.copy || {};
 })(globalThis.Hypotrail = globalThis.Hypotrail || {});

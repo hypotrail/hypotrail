@@ -32,7 +32,8 @@ ASKS_WORDS = re.compile(r'in your own words|avec vos mots(?!\s*:)|Answer in Deci
                         r'Nothing changes until you answer|Rien ne change tant que', re.IGNORECASE)
 
 # Prose a junior reads, without the quoted record of past answers ("Recorded in your words")
-# and the typed acknowledgement of an interrupted run (W6 always takes typed words).
+# and the acknowledgement of an interrupted run (it always takes the junior's words; since R31
+# it is made in the chat, and `.ov-ack` explains it).
 PROSE = """() => {
   const out = [];
   const w = document.createTreeWalker(document.getElementById('app'), NodeFilter.SHOW_TEXT);
@@ -74,7 +75,7 @@ def test_the_next_move_says_to_answer_in_the_chat_and_shows_the_proposal(open_pa
     button.click()
     assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'decisions'
     assert page.evaluate('document.activeElement.closest("[data-nav]").dataset.nav').startswith('proposal:')
-    # Nothing is written (W4-W7) and nothing is asked: the button only navigates.
+    # Nothing is written (W4, W5, W7) and nothing is asked: the button only navigates.
     assert not [m for m in panel.posted() if m['type'] in ('run_eda', 'render', 'acknowledge', 'export_handoff', 'ask_agent')]
 
 

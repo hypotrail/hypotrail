@@ -29,6 +29,7 @@ import pytest
 import yaml
 
 import flowkit as fk
+from lesson_page import primary
 from mlkit.study import audience, cli, launch, texts
 from mlkit.study import view as view_model
 
@@ -252,7 +253,8 @@ def test_undiscussed_features_are_never_the_juniors_decision(flow, synthetic_cas
     grouped = summary['decisions']['feature_availability']['feature_basis']
     assert sorted(grouped['discussed']) == ['fines_outstanding', 'reminders_sent']
     flow.call('render', '--study', flow.study)
-    page = (flow.study / 'reports' / 'study.html').read_text()
+    # v4 (R27): the study language's edition (the other one repeats the table in French)
+    page = primary((flow.study / 'reports' / 'study.html').read_text())
     labels = texts.report()
     rows = re.findall(r'<tr data-feature="([^"]+)" data-feature-basis="([^"]*)">(.*?)</tr>', page)
     assert len(rows) == len(value)

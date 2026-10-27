@@ -505,7 +505,9 @@ CHECK_FINDINGS = {'number_outside_result': 'error', 'unknown_result_id': 'error'
 LITERAL_KINDS = ('revision', 'ordinal', 'user_words', 'proposal', 'decision_value', 'case',
                  'identifier', 'parameter', 'environment', 'setting', 'message', 'category',
                  # v0.2a (WP-A6): state counts, the five example rows, chart axis ticks.
-                 'structure', 'data_row', 'axis')
+                 'structure', 'data_row', 'axis',
+                 # v4 (R29): the notebook's code shown in a chapter's "Code" fold.
+                 'code')
 WRITER_MODULES = {'store', 'lock', 'registry', 'exposure', 'dependencies', 'commands', 'cli',
                   'migrate', 'preconditions'}
 
@@ -1579,7 +1581,10 @@ def test_w2_contract(tmp_path):
     assert tuple(payload['view']['case_texts']) == CASE_TEXTS_KEYS
     assert state[st.EXPLORATION_ORDER_KEY] == st.STRUCTURAL_FIRST
     # L6: the narrative report and the chapter of every step of every plan generation.
-    assert render_html.TEMPLATE_VERSION == 3
+    # v4 (owner decision 2026-10-27, R25 to R30): the lesson report, both languages in one
+    # file, the board by default (CLI-CONTRACT §11.5, "Lesson report").
+    assert render_html.TEMPLATE_VERSION == 4
+    assert render_html.LITERAL_KINDS[-1] == 'code'
     assert rn.CHAPTERS == tuple(f'ch{i}' for i in range(1, 10))
     assert rn.EVIDENCE_CLASSES == ('none', 'structural', 'development', 'final')
     steps = {s['id'] for group in (st.STEPS, st.REGRESSION_STEPS, st.FULL_STEPS,
@@ -1646,3 +1651,23 @@ def test_l9_automation_contract(tmp_path):
     v = _run('status', '--study', study).payload['view']
     assert v['automation'] is None and v['review_queue'] == []
     assert 'auto_value' not in v['next_action']
+
+
+def test_r23_r24_automation_words_contract():
+    """Owner session 2026-10-27 (R23, R24 of the fourth session of 2026-10-26): the readable
+    summary of ``automation run`` on a terminal (``--json`` keeps the JSON document, a stdout
+    that is not a terminal always gets it), its words module, and the review pause (kind
+    ``decision``, nothing recommended, the reviewed decision's step) are documented; the
+    payload and the pause keep their keys."""
+    from mlkit.study import automation, automation_words, cli, guidance
+    assert cli.TEXT_ON_A_TERMINAL == (('automation', 'run'),)
+    assert callable(automation_words.text_summary) and callable(
+        automation_words.review_restatement)
+    assert automation.PAYLOAD_KEYS[-1] == 'artifacts' and guidance.KINDS == PAUSE_KINDS
+    for name in ('cli.TEXT_ON_A_TERMINAL', 'mlkit.study.automation_words',
+                 'automation_words.text_summary', 'automation_words.review_restatement',
+                 'cite.format_value', 'recommended_option', 'position.step_id'):
+        assert name in DOC_TOKENS, name
+    flat = ' '.join(DOC.split())
+    assert 'hypotrail automation run [--progress] [--json | --format text|json]' in flat
+    assert '**The review pause** (owner session 2026-10-27, R24)' in flat

@@ -22,7 +22,9 @@ function protocolFactory() {
     'scenario', 'trials'];
   // v0.3 narrowing (ADR 0004 amendment, R23, I2): W1 confirm, W2 withdraw and W3 propose
   // are withdrawn; decisions are made in the chat only. The remaining ids keep their numbers.
-  const WRITE_OPS = ['W4', 'W5', 'W6', 'W7'];
+  // Owner decision R31 (2026-10-27, ADR 0004 amendment): W6, the acknowledgement of an
+  // interrupted execution in typed words, is withdrawn too; it is made in the chat.
+  const WRITE_OPS = ['W4', 'W5', 'W7'];
   const OUTCOME_KINDS = ['ok', 'ok_with_problems', 'not_promoted', 'refused', 'failed', 'invalid', 'cancelled'];
   const NAV_KINDS = ['result', 'decision', 'proposal', 'step', 'limit', 'execution', 'term'];
   const ARTIFACTS = ['report', 'notebook', 'editable', 'workbench'];
@@ -37,7 +39,6 @@ function protocolFactory() {
   // Field specs: {t: 'str'|'int'|'bool'|'enum'|'obj'|'arr'|'any', opt?, nullable?, ...}.
   const pid = { t: 'str', re: PROPOSAL_ID };
   const rev = { t: 'int', min: 1 };
-  const words = { t: 'str', max: MAX_WORDS };
 
   // Webview -> extension (§8.1). `stage`: the lowest stage that accepts it; `write`: the
   // W id of §7 when the message asks for a write (refused in reviewer mode).
@@ -74,10 +75,8 @@ function protocolFactory() {
       fields: { activity: { t: 'str', re: '^eda\\.[a-z_]+$' }, column: { t: 'str', min: 1, max: 200, opt: true }, revision: rev },
     },
     render: { stage: 'v1', write: 'W5', fields: {} },
-    acknowledge: {
-      stage: 'v1', write: 'W6',
-      fields: { executionId: { t: 'str', min: 1, max: 100, re: '^[A-Za-z0-9_.-]+$' }, words, revision: rev },
-    },
+    // R31 (2026-10-27): no `acknowledge` message any more (W6 withdrawn); an interrupted
+    // execution is acknowledged in the chat, and the panel only copies a question for it.
     // WP-I: `resultId` (v1) opens the report at `#r-<rid>` or the notebook at the line that
     // names the result; `line` (v1, a check finding's `location.line`) opens an editor
     // deliverable at that line. The report opens in the browser, so it takes no line.

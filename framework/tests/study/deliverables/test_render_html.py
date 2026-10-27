@@ -10,6 +10,7 @@ from mlkit.study import cite, render_html, texts, view
 from mlkit.study.errors import StudyError
 
 import phase3_study as fx
+from lesson_page import editions, primary
 
 
 class Tags(HTMLParser):
@@ -43,43 +44,61 @@ def test_report_is_deterministic_and_cites_only_current_results(full_view):
     data = parse(page).all('data')
     assert len(data) > 50
     assert all(d.get('data-result-id') in current and d.get('data-path') and 'value' in d
-               and d.get('title', '').startswith('result ') for d in data)
+               for d in data)
+    # v4 (R27): the edition in the study language, read without script, keeps the hover
+    # title of every number; the other edition's is set by the script from these attributes.
+    first = parse(primary(page)).all('data')
+    assert len(first) > 50
+    assert all(d.get('title', '').startswith('result ') for d in first)
     assert set(consumed) == {d['data-result-id'] for d in data} == current
+    # both editions cite the same results
+    for fragment in editions(page).values():
+        assert {d['data-result-id'] for d in parse(fragment).all('data')} == current
 
 
 def test_every_cited_value_equals_the_registry_value(full_view):
     page, _ = render_html.build(full_view)
     by_id = {r['result_id']: r for r in full_view['results'].values()}
     # WP-A6: a value in percentage points carries data-scale="100" (cite.pts*).
-    seen = 0
-    for m in re.finditer(r'<data value="([^"]+)" data-result-id="([0-9a-f]+)" data-path="([^"]+)"'
-                         r'( data-scale="100")?[^>]*>([^<]+)</data>', page):
-        raw, rid, path, scaled, shown = m.groups()
-        item = by_id[rid]
-        value = cite.resolve(item['values'], cite.parse_path(path.replace('&quot;', '"')),
-                             n_rows=item['n_rows'])
-        assert float(raw) == float(value)
-        assert cite.shown_matches(cite.parse_numbers(shown)[0], value, 100 if scaled else 1), \
-            (shown, value)
-        seen += 1
-    # and every chart value label (an SVG <text> with the same attributes)
-    for m in re.finditer(r'<text [^>]*data-value="([^"]+)" data-result-id="([0-9a-f]+)" '
-                         r'data-path="([^"]+)"[^>]*>(.*?)</text>', page):
-        raw, rid, path, inner = m.groups()
-        item = by_id[rid]
-        value = cite.resolve(item['values'], cite.parse_path(path.replace('&quot;', '"')),
-                             n_rows=item['n_rows'])
-        [tok] = cite.parse_numbers(re.sub(r'<[^>]+>', '', inner))
-        assert float(raw) == float(value) and cite.shown_matches(tok, value), (inner, value)
-        seen += 1
-    assert seen > 50
+    seen = {}
+    # v4 (R27): each edition writes its numbers in its own language (a decimal comma and a
+    # narrow no-break space in French), read back in that language.
+    for lang, fragment in editions(page).items():
+        seen[lang] = 0
+        for m in re.finditer(r'<data value="([^"]+)" data-result-id="([0-9a-f]+)" '
+                             r'data-path="([^"]+)"( data-scale="100")?[^>]*>([^<]+)</data>',
+                             fragment):
+            raw, rid, path, scaled, shown = m.groups()
+            item = by_id[rid]
+            value = cite.resolve(item['values'], cite.parse_path(path.replace('&quot;', '"')),
+                                 n_rows=item['n_rows'])
+            assert float(raw) == float(value)
+            [tok] = cite.parse_numbers(shown, lang)
+            assert cite.shown_matches(tok, value, 100 if scaled else 1), (lang, shown, value)
+            seen[lang] += 1
+        # and every chart value label (an SVG <text> with the same attributes)
+        for m in re.finditer(r'<text [^>]*data-value="([^"]+)" data-result-id="([0-9a-f]+)" '
+                             r'data-path="([^"]+)"( data-scale="100")?[^>]*>(.*?)</text>',
+                             fragment):
+            raw, rid, path, scaled, inner = m.groups()
+            item = by_id[rid]
+            value = cite.resolve(item['values'], cite.parse_path(path.replace('&quot;', '"')),
+                                 n_rows=item['n_rows'])
+            [tok] = cite.parse_numbers(re.sub(r'<[^>]+>', '', inner), lang)
+            assert float(raw) == float(value) and \
+                cite.shown_matches(tok, value, 100 if scaled else 1), (lang, inner, value)
+            seen[lang] += 1
+    assert set(seen) == {'en', 'fr'} and min(seen.values()) > 50
 
 
 def test_no_fake_decision_controls_and_offline(full_view):
     page, _ = render_html.build(full_view)
     tags = parse(page)
     buttons = tags.all('button')
-    assert len(buttons) == 1 and 'data-theme-toggle' in buttons[0]
+    # v4 (R27, R28): the theme and the language buttons, nothing else; neither decides.
+    assert len(buttons) == 2
+    assert {'data-theme-toggle', 'data-lang-toggle'} == {
+        k for b in buttons for k in b if k in ('data-theme-toggle', 'data-lang-toggle')}
     for forbidden in ('input', 'form', 'select', 'textarea', 'option', 'iframe', 'link', 'img',
                       'object', 'embed'):
         assert tags.all(forbidden) == [], forbidden
@@ -147,8 +166,9 @@ def test_steps_without_results_say_not_executed_yet(tmp_path, synthetic_case_dir
     b = fx.build(tmp_path / 'study', synthetic_case_dir, upto='split')
     page, consumed = render_html.build(view.build(b.study))
     pending = texts.load('steps')['pending']
+    first = primary(page)
     for slot in ('eda.target_rate', 'fit.logistic', 'policy.evaluation'):
-        block = page.split(f'data-slot="{slot}" data-state="pending"')
+        block = first.split(f'data-slot="{slot}" data-state="pending"')
         assert len(block) == 2 and pending in block[1][:300], slot
     assert len(consumed) == 1                       # only the split result is cited
 

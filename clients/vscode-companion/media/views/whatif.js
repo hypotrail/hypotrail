@@ -517,8 +517,16 @@
       ctx.svg('text', { x: mid, y: items.length * ROW + 16, class: 'ht-muted-text', 'text-anchor': 'middle', 'aria-hidden': 'true',
         'data-literal': 'axis', text: '0' }),
     ]);
+    // Lesson style (R30): the group predicted the most too low and the most too high.
+    const R = HT.copy.lesson.concl;
+    const known = items.filter(i => i.raw !== null && i.raw !== undefined);
+    const read = known.some(i => !i.small) ? known.filter(i => !i.small) : known;
+    const hi = read.length ? read.reduce((a, b) => (b.raw > a.raw ? b : a)) : null;
+    const lo = read.length ? read.reduce((a, b) => (b.raw < a.raw ? b : a)) : null;
     return ctx.components.figure(container, {
       title, chart,
+      reading: { kind: 'points', concl: !hi ? null : hi !== lo ? R.points(hi.label, HT.components.quote(hi.valueText), lo.label,
+        HT.components.quote(lo.valueText)) : R.one(hi.label, HT.components.quote(hi.valueText)), steps: HT.copy.lesson.whatifBias },
       columns: [{ key: 'label', label: '' }, { key: 'value', label: '' }, { key: 'small', label: '' }],
       rows: items.map(i => ({ label: i.label, value: i.valueText, small: i.small ? HT.copy.core.small : '' })),
     });
@@ -637,9 +645,37 @@
     }
     if (summary && !ctx.fresh(d)) root.appendChild(ctx.el('p', { className: 'muted', role: 'status', 'data-updating': true, text: common.updating }));
     const model = d.model;
-    const parts = model.task === 'regression' ? renderRegression(ctx, model) : renderBinary(ctx, model);
+    // Lesson style (R30): every chart here is a sandbox on development evidence.
+    const parts = HT.components.withGuide(guideOf(ctx, model),
+      () => (model.task === 'regression' ? renderRegression(ctx, model) : renderBinary(ctx, model)));
     root.appendChild(ctx.el('div', { className: 'ht-wi-body', 'data-whatif': model.task }, parts));
+    const notion = whatifNotion(ctx, model, summary);
+    if (notion) root.appendChild(ctx.components.notions([notion], { 'data-whatif-notions': true }));
     return root;
+  }
+
+  /** The frame and the rows of the What if? charts ("Why this chart"). */
+  function guideOf(ctx, model) {
+    const L = HT.copy.lesson;
+    return { frame: L.frames.sandbox, rows: model.n !== null && model.n !== undefined ? L.rowsOf(fmt(ctx, model.n, 'int')) : null };
+  }
+
+  /** The notion of this step: the residual (regression) or a rule on the scores (binary). */
+  function whatifNotion(ctx, model, summary) {
+    const N = HT.copy.lesson.notions;
+    if (model.task === 'regression') {
+      const q = S.fit && model.residuals ? model.residuals[S.fit] : null;
+      const f2 = x => fmt(ctx, x, 'f2');
+      const R = N.residual;
+      return ctx.components.notion({ id: 'residual', term: R.term, tag: 'tool', definition: R.definition,
+        here: q && q.median !== null && q.q25 !== null && q.q75 !== null ? R.here(f2(q.median), f2(q.q25), f2(q.q75)) : null,
+        folds: [{ kind: 'why', body: R.why }, { kind: 'casse', body: R.casse }], keep: R.keep });
+    }
+    const R = N.rule;
+    const rule = S.rule || (summary && summary.decisions && summary.decisions.policy && summary.decisions.policy.value) || null;
+    const words = rule ? HT.copy.junior.value('policy', String(rule).split('@')[0], 'binary') : null;
+    return ctx.components.notion({ id: 'rule', term: R.term, tag: 'rule', definition: R.definition,
+      here: words ? R.here(words) : null, folds: [{ kind: 'why', body: R.why }, { kind: 'casse', body: R.casse }], keep: R.keep });
   }
 
   HT.register('whatif', {
@@ -655,7 +691,9 @@
         S.preview = { seq: m.seq, rule: sent.rule, intervals: sent.intervals, model: m.model, revision: m.revision };
         S.pending = false;
         const data = ctx.data('whatif');
-        if (S.nodes.comparison && S.nodes.comparison.isConnected && data) S.nodes.comparison.replaceWith(S.nodes.comparison = comparison(ctx, data.model));
+        if (S.nodes.comparison && S.nodes.comparison.isConnected && data) {
+          S.nodes.comparison.replaceWith(S.nodes.comparison = HT.components.withGuide(guideOf(ctx, data.model), () => comparison(ctx, data.model)));
+        }
         return false;
       }
       if (m.type === 'draft_result') {

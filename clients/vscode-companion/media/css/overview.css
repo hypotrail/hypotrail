@@ -1,25 +1,29 @@
-/* Overview view styles (COMPANION-ADVANCED §6.1; v0.3 WP-E2, docs/design/companion-v0.3-
-   mockups/overview.html). Tokens of tokens.css and the card pattern of core.css only. */
-.ov-section { background: var(--ht-surface); border: 1px solid var(--ht-card-border); border-radius: var(--r-card);
-  padding: var(--s4); margin: var(--s3) 0; min-width: 0; }
-.ov-section > h2 { font-size: var(--t-cap); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ht-muted);
-  margin: 0 0 var(--s3); }
+/* Overview view styles (COMPANION-ADVANCED §6.1). Lesson style (2026-10-27, owner-approved
+   mockup docs/plans/mockups/panel-lesson-style-fr.html): a section is a chalk title on the
+   board over an index card; the next move comes back on the board above the tabs. Tokens of
+   tokens.css and the patterns of core.css and lesson.css only. */
+.ov-section { margin: var(--s4) 0 var(--s3); min-width: 0; }
+.ov-section > h2 { font-size: var(--t-h); margin: var(--s4) 0 var(--s2); }
+.ov-section > .ov-body { margin: 0; }
 
-/* Your next move: the one hero of the panel (an accent ring, no shadow). */
-.ov-hero { border: 1px solid color-mix(in srgb, var(--ht-accent) 55%, var(--ht-line)); border-radius: var(--r-card);
-  padding: var(--s4); margin: var(--s3) 0 var(--s4); background: var(--ht-bg); box-shadow: 0 0 0 3px var(--ht-accent-tint); }
-.ov-hero[data-hero="done"], .ov-hero[data-hero="propose"], .ov-hero[data-hero="run"], .ov-hero[data-hero="blocked"],
-.ov-hero[data-hero="other"] { border-color: var(--ht-card-border); box-shadow: none; }
-.ov-hero[data-hero="outcome_unknown"], .ov-hero[data-hero="acknowledge_interruption"] { border-color: var(--ht-bad);
-  box-shadow: 0 0 0 3px var(--ht-bad-tint); }
-.ov-hero > h2 { margin: 2px 0 var(--s2); font-size: var(--t-h); }
-.ov-eyebrow { margin: 0; font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--ht-accent-ink); }
-.ov-hero-lead { margin: 0 0 var(--s2); color: var(--ht-fg); }
-.ov-hero-quote { font-size: var(--t-body); }
-.ov-hero-short, .ov-hero-why, .ov-hero-support { margin: 6px 0; }
-.ov-hero-actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); }
+/* Your next move: back on the board ("Au tableau"): board2, a yellow chalk edge, the title in
+   chalk; one action, "Copy the question", and the way to where it is answered. */
+.ov-hero { margin: var(--s3) 0 var(--s2); padding: 10px 14px 12px; background: var(--board2); color: var(--chalk);
+  border: 1px solid var(--ht-contrast); border-left: 3px solid var(--yellow); border-radius: 0 var(--r-card) var(--r-card) 0; }
+.ov-hero[data-hero="outcome_unknown"], .ov-hero[data-hero="acknowledge_interruption"] { border-left-color: var(--onboard-red); }
+.ov-hero > h2 { margin: 3px 0 4px; font-family: var(--serif); font-weight: 400; font-size: var(--t-h); line-height: 1.35; color: var(--chalk);
+  text-shadow: 0 0 1px var(--dust); }
+.ov-eyebrow { margin: 0; font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--yellow); }
+.ov-hero-lead { margin: 0 0 var(--s2); color: var(--chalk2); }
+.ov-hero-quote { margin: var(--s2) 0; background: rgba(0, 0, 0, 0.12); color: var(--chalk); border-left-color: var(--line2); }
+.ov-hero-short, .ov-hero-why, .ov-hero-support { margin: 6px 0; color: var(--chalk2); }
+.ov-hero-why strong { color: var(--chalk); }
+.ov-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); margin-top: var(--s2); }
 .ov-hero-actions button { margin: 0; }
+.ov-hero .ht-details { color: var(--chalk2); }
+.ov-exec-actions { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.ov-exec-actions button { margin: var(--s1) 0 0; }
 
 /* Where we are */
 .ov-recap { margin: var(--s2) 0 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: var(--s4); row-gap: var(--s2); }
@@ -39,10 +43,12 @@
 .ov-step .ov-mark { color: var(--ht-muted); font-weight: 400; }
 .ov-step-awaiting_confirmation .ov-sub, .ov-step-reopened .ov-sub, .ov-step-needs_reconfirmation .ov-sub { color: var(--ht-fg); }
 .ht-journey > li[aria-current="step"] strong { color: var(--ht-accent-ink); }
+/* The journey of the Overview, grouped like the rail: one index card per moment. */
 
 /* Since your last session and the limits */
 .ov-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: var(--s3); }
 .ov-grid > .ov-section { margin: 0; }
+.ov-grid > .ov-section > h2 { margin-top: var(--s3); }
 .ov-digest, .ov-limits { list-style: none; padding: 0; display: flex; flex-direction: column; gap: var(--s2); margin: var(--s1) 0; }
 .ov-digest-more > summary { cursor: pointer; color: var(--ht-link); margin-top: var(--s1); font-size: var(--t-meta); }
 .ov-since-select { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); font-size: var(--t-meta); }
@@ -63,7 +69,7 @@
   .ov-deliverable { flex-direction: column; }
   .ov-deliverable-actions { flex-direction: row; flex-wrap: wrap; }
 }
-.ov-launch { margin: var(--s3) 0 var(--s1); padding: var(--s2) var(--s3); border-radius: 6px; background: var(--ht-sunken);
+.ov-launch { margin: var(--s3) 0 var(--s1); padding: var(--s2) var(--s3); border-radius: var(--r-card); background: var(--ht-sunken);
   border: 1px solid var(--ht-contrast); font-size: var(--t-meta); }
 .ov-launch-title { font-weight: 600; margin: 0 0 var(--s1); }
 .ov-launch p { margin: var(--s1) 0; }
@@ -74,7 +80,7 @@
 /* Needs attention (Health) */
 .ov-sub-section { margin: var(--s3) 0; }
 .ov-execution h4 { margin: 0 0 var(--s1); }
-.ov-execution { border-color: var(--ht-bad); }
+.ov-execution { border-left-color: var(--ht-bad); }
 .ov-checks summary { cursor: pointer; font-weight: 600; }
 .ov-findings { list-style: none; padding: 0; }
 .ov-finding { padding: var(--s1) 0; }
@@ -88,12 +94,17 @@
 
 /* WP-B5: the final test row and the mode explainer (read only). */
 .ov-mode-rules { margin: 6px 0; padding-left: 20px; }
-.ov-hero-chat { padding: var(--s2) var(--s3); border-radius: 6px; background: var(--ht-sunken); border: 1px solid var(--ht-contrast); }
+.ov-hero-chat { padding: var(--s2) var(--s3); border-radius: var(--r-card); background: rgba(0, 0, 0, 0.12); border: 1px solid var(--ht-contrast); color: var(--chalk2); }
 
 /* v0.3 (owner addition, I1): how this panel works. */
-.ov-guide > h2 { font-size: var(--t-title); margin: 0 0 var(--s2); }
+.ov-guide > h2 { font-size: var(--t-title); margin: 0 0 var(--s2); color: var(--slate); }
 .ov-guide-list { margin: var(--s2) 0; }
 .ov-guide-tabs { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px var(--s3); margin: 0; }
 .ov-guide-tabs dt { font-weight: 600; color: var(--ht-fg); }
 .ov-guide-tabs dd { margin: 0; }
 @media (max-width: 600px) { .ov-guide-tabs { grid-template-columns: minmax(0, 1fr); } .ov-guide-tabs dd { margin-bottom: var(--s2); } }
+
+/* On the other tabs the next move is compact: its eyebrow, its title and its actions. */
+.ov-hero-compact { padding: 8px 14px 10px; }
+.ov-hero-compact > h2 { font-size: var(--t-title); margin: 2px 0 2px; }
+.ov-hero-compact .ov-hero-actions { margin-top: 6px; }

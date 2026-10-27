@@ -20,7 +20,19 @@
     return 10 * p;
   }
 
-  function histogram(container, { bins, title, axisLabel = '', zero = null, showTitle = true, legend = [] }) {
+  /** Lesson style (R30): the fullest range of values and its count; the exact zeros apart. */
+  function conclusion(bins, zero) {
+    const R = HT.copy.lesson && HT.copy.lesson.concl;
+    if (!R || !bins.length) return null;
+    const top = bins.reduce((a, b) => ((Number(b.count) || 0) > (Number(a.count) || 0) ? b : a));
+    const q = t => HT.components.quote(t);
+    const out = [R.histogram(q(top.lowText !== undefined && top.lowText !== '' ? top.lowText : top.edgeText || String(top.low)),
+      q(top.highText !== undefined && top.highText !== '' ? top.highText : String(top.high)), q(top.countText))];
+    if (zero && zero.valueText) out.push(R.zeros(q(zero.valueText)));
+    return out;
+  }
+
+  function histogram(container, { bins, title, axisLabel = '', zero = null, showTitle = true, legend = [], guide = null }) {
     const counts = bins.map(b => Number(b.count) || 0);
     const top = niceTop(Math.max(1, ...counts));
     const fmt = n => HT.format.number(n, 'int');
@@ -50,7 +62,7 @@
       ]);
     }
     return HT.components.figure(container, {
-      title, chart, showTitle, legend,
+      title, chart, showTitle, legend, guide, reading: { kind: 'histogram', concl: conclusion(bins, zero) },
       columns: [{ key: 'low', label: HT.copy.core.binFrom }, { key: 'high', label: HT.copy.core.binTo },
         { key: 'count', label: HT.copy.core.rowsWord }],
       rows: bins.map(b => ({ low: b.lowText !== undefined ? b.lowText : String(b.low),

@@ -1,156 +1,205 @@
-/* Theme tokens of the study panel (COMPANION-ADVANCED §13; v0.3 WP-E2, the validated design
-   system of docs/design/companion-v0.3-mockups/ds.css). Two layers:
+/* Theme tokens of the study panel (COMPANION-ADVANCED §13). Lesson-style redesign
+   (2026-10-27, owner-approved mockup docs/plans/mockups/panel-lesson-style-fr.html, notes
+   R27-R31): the "blackboard / graph paper" charter of the lessons, adapted to a VS Code
+   webview. Three layers:
 
-   1. Host values: the VS Code theme variables, with the real Light Modern / Dark Modern
-      defaults as fallbacks (a page loaded outside VS Code, the browser tests).
-   2. Hypotrail tokens: text and surfaces DERIVED from the theme (editor foreground, colour-
-      mix surfaces); six semantic hues FIXED per theme kind (body.vscode-light / -dark /
-      -high-contrast / -high-contrast-light), because the theme's charts-* colours are not
-      tuned for fills. Outside VS Code (no body class) `prefers-color-scheme` picks the kind.
+   1. Charter tokens (--board, --chalk, --card, --cardink, --yellow, --ochre, ...), set on
+      <body> per theme kind. The panel has no theme button: it follows the editor.
+        - body.vscode-dark (and, outside VS Code, a page whose prefers-color-scheme is dark):
+          the blackboard ("Tableau noir"), the charter's default;
+        - body.vscode-light (and, outside VS Code, prefers-color-scheme light): the
+          whiteboard ("Tableau blanc"), with the inks darkened where the charter's values
+          miss WCAG AA (faint, yellow, amber, teal, mint);
+        - body.vscode-high-contrast / -high-contrast-light: no chalk, no paper tint, no
+          graph-paper ruling, no shadow; the editor's own background and foreground, bright
+          (or dark) hues, and every rule, card, chip and button drawn with the theme's
+          contrast border (var(--vscode-contrastBorder)).
+   2. Board tokens (--ht-fg, --ht-bg, --ht-link, ...): what views use, mapped on <body> to
+      the board (chalk on slate).
+   3. Paper tokens: the same --ht-* names redefined on every paper surface (a card, a
+      figure, a tooltip, a modal), so a view drawn on a card gets ink on paper without
+      knowing it; the derived tokens (tints, chart roles, aliases) are recomputed there.
 
-   Views use these tokens, never raw colours. No remote font. The older token names of
-   v0.2 (--ht-border, --ht-warn-bg, --ht-st-*, ...) are kept as aliases of the new ones. */
+   Views use the --ht-* tokens, never raw colours. Fonts are the editor's (no remote font);
+   the chalk headings use Georgia. The older names of v0.2 and v0.3 stay as aliases. */
 :root {
-  /* Layer 1: host values (Light Modern fallbacks). */
-  --ht-host-bg: var(--vscode-editor-background, #ffffff);
-  --ht-host-fg: var(--vscode-editor-foreground, var(--vscode-foreground, #3b3b3b));
-  --ht-host-muted: var(--vscode-descriptionForeground, #6b6b6b);
-  --ht-host-line: var(--vscode-panel-border, #e5e5e5);
-  --ht-host-link: var(--vscode-textLink-foreground, #005fb8);
-  --ht-host-focus: var(--vscode-focusBorder, #005fb8);
-  --ht-host-button-bg: var(--vscode-button-background, #005fb8);
-  --ht-host-button-fg: var(--vscode-button-foreground, #ffffff);
-  --ht-host-button2-bg: var(--vscode-button-secondaryBackground, #e5e5e5);
-  --ht-host-button2-fg: var(--vscode-button-secondaryForeground, #3b3b3b);
-  --ht-host-input-bg: var(--vscode-input-background, #ffffff);
-  --ht-host-input-fg: var(--vscode-input-foreground, #3b3b3b);
-  --ht-host-input-border: var(--vscode-input-border, #cecece);
-  --ht-font: var(--vscode-font-family, system-ui, -apple-system, "Segoe UI", Ubuntu, sans-serif);
-  --ht-mono: var(--vscode-editor-font-family, ui-monospace, "SF Mono", Menlo, Consolas, monospace);
-
-  /* Semantic hues of a light theme. */
-  --ht-accent: #0f766e; --ht-accent-ink: #0b5d56;
-  --ht-warn: #9c4507; --ht-bad: #b42318; --ht-seal: #6941c6; --ht-info: #175cd3; --ht-ok: #067647;
-  --ht-c-ref: #9aa0a6; --ht-div-neg: #c4320a; --ht-div-pos: #0f766e;
-  --ht-strong-ink: #ffffff;
-  --ht-surface-mix: 2.5%;
-}
-/* Dark kind: VS Code's dark themes, or a dark page outside VS Code. */
-@media (prefers-color-scheme: dark) {
-  body:not(.vscode-light):not(.vscode-high-contrast-light) {
-    --ht-host-bg: var(--vscode-editor-background, #1f1f1f);
-    --ht-host-fg: var(--vscode-editor-foreground, var(--vscode-foreground, #cccccc));
-    --ht-host-muted: var(--vscode-descriptionForeground, #9d9d9d);
-    --ht-host-line: var(--vscode-panel-border, #2b2b2b);
-    --ht-host-link: var(--vscode-textLink-foreground, #4daafc);
-    --ht-host-focus: var(--vscode-focusBorder, #0078d4);
-    --ht-host-button-bg: var(--vscode-button-background, #0078d4);
-    --ht-host-button2-bg: var(--vscode-button-secondaryBackground, #313131);
-    --ht-host-button2-fg: var(--vscode-button-secondaryForeground, #cccccc);
-    --ht-host-input-bg: var(--vscode-input-background, #313131);
-    --ht-host-input-fg: var(--vscode-input-foreground, #cccccc);
-    --ht-host-input-border: var(--vscode-input-border, #3c3c3c);
-  }
-}
-body.vscode-dark {
-  --ht-host-bg: var(--vscode-editor-background, #1f1f1f);
-  --ht-host-fg: var(--vscode-editor-foreground, var(--vscode-foreground, #cccccc));
-  --ht-host-muted: var(--vscode-descriptionForeground, #9d9d9d);
-  --ht-host-line: var(--vscode-panel-border, #2b2b2b);
-  --ht-host-link: var(--vscode-textLink-foreground, #4daafc);
-  --ht-host-button2-bg: var(--vscode-button-secondaryBackground, #313131);
-  --ht-host-button2-fg: var(--vscode-button-secondaryForeground, #cccccc);
-  --ht-host-input-bg: var(--vscode-input-background, #313131);
-  --ht-host-input-fg: var(--vscode-input-foreground, #cccccc);
-}
-@media (prefers-color-scheme: dark) {
-  body:not(.vscode-light):not(.vscode-high-contrast-light):not(.vscode-high-contrast) {
-    --ht-accent: #2dd4bf; --ht-accent-ink: #5eead4;
-    --ht-warn: #f5a524; --ht-bad: #f97066; --ht-seal: #b692f6; --ht-info: #84adff; --ht-ok: #47cd89;
-    --ht-c-ref: #7d8590; --ht-div-neg: #fb8a5c; --ht-div-pos: #2dd4bf;
-    --ht-strong-ink: #0b1f1d;
-    --ht-surface-mix: 3.5%;
-    --ht-sunken: color-mix(in srgb, #000 22%, var(--ht-bg));
-  }
-}
-body.vscode-dark {
-  --ht-accent: #2dd4bf; --ht-accent-ink: #5eead4;
-  --ht-warn: #f5a524; --ht-bad: #f97066; --ht-seal: #b692f6; --ht-info: #84adff; --ht-ok: #47cd89;
-  --ht-c-ref: #7d8590; --ht-div-neg: #fb8a5c; --ht-div-pos: #2dd4bf;
-  --ht-strong-ink: #0b1f1d;
-  --ht-surface-mix: 3.5%;
-  --ht-sunken: color-mix(in srgb, #000 22%, var(--ht-bg));
-}
-/* High contrast (dark): bright hues, no tinted fills that could lower contrast; every card,
-   chip and button gets the theme's contrast border (below and in core.css). */
-body.vscode-high-contrast:not(.vscode-high-contrast-light) {
-  --ht-accent: #2ee6d6; --ht-accent-ink: #7ffff0;
-  --ht-warn: #ffb000; --ht-bad: #ff8a80; --ht-seal: #d5b8ff; --ht-info: #8ec5ff; --ht-ok: #7ee787;
-  --ht-c-ref: #c0c0c0; --ht-div-neg: #ff9e6e; --ht-div-pos: #2ee6d6;
-  --ht-strong-ink: #000000;
-  --ht-surface-mix: 0%;
-  --ht-sunken: var(--ht-bg);
-}
-/* High contrast light: dark hues on white. */
-body.vscode-high-contrast-light {
-  --ht-accent: #00544c; --ht-accent-ink: #003d37;
-  --ht-warn: #7a3300; --ht-bad: #8a0f05; --ht-seal: #3d1f80; --ht-info: #0b3d91; --ht-ok: #024b2b;
-  --ht-c-ref: #5a5a5a; --ht-div-neg: #8a2000; --ht-div-pos: #00544c;
-  --ht-strong-ink: #ffffff;
-  --ht-surface-mix: 0%;
-  --ht-sunken: var(--ht-bg);
+  --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --sans: var(--vscode-font-family, "Avenir Next", Avenir, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
+  --mono: var(--vscode-editor-font-family, ui-monospace, Menlo, Consolas, monospace);
+  --ht-font: var(--sans);
+  --ht-mono: var(--mono);
 }
 
-/* Layer 2: Hypotrail tokens, derived from layer 1 on <body> (where the theme kind is known). */
+/* --- 1. charter tokens --------------------------------------------------------------- */
+
+/* The blackboard: the default kind (VS Code dark themes; a dark page outside VS Code). */
 body {
-  --ht-bg: var(--ht-host-bg);
-  --ht-fg: var(--ht-host-fg);
-  --ht-muted: var(--ht-host-muted);
-  --ht-faint: color-mix(in srgb, var(--ht-fg) 72%, var(--ht-bg));
-  --ht-line: var(--ht-host-line);
-  --ht-line-strong: color-mix(in srgb, var(--ht-fg) 18%, var(--ht-bg));
-  --ht-surface: color-mix(in srgb, var(--ht-fg) var(--ht-surface-mix), var(--ht-bg));
-  --ht-sunken: color-mix(in srgb, var(--ht-fg) 5%, var(--ht-bg));
-  --ht-link: var(--ht-host-link);
-  --ht-focus: var(--ht-host-focus);
+  --board: #20312C; --board2: #1A2925; --chalk: #EDE8DA; --chalk2: #C9C4B6; --dust: rgba(237, 232, 218, 0.55);
+  --faint: #8F9A93; --line: rgba(237, 232, 218, 0.14); --line2: rgba(237, 232, 218, 0.3);
+  --yellow: #F0D178; --pink: #EFA3B8; --mint: #B9E2C4; --teal: #9FE0D2; --violet: #C8B6F5; --blue: #A7CCEB;
+  --coral: #F3A28F; --amber: #F0D178;
+  --card: #F5F1E6; --cardink: #22302B; --cardmuted: #4E5A55; --cardline: rgba(34, 48, 43, 0.14);
+  --cardline2: rgba(34, 48, 43, 0.32); --cardsoft: #ECE7D8;
+  /* Graph paper and index-card ruling, made fainter on the owner's request (mockup feedback). */
+  --gridmm: rgba(38, 72, 124, 0.045); --ruleline: rgba(34, 48, 43, 0.045);
+  --red: #B8322A; --pen: #1E4E9E; --orange: #C2571A; --leaf: #1F7A44; --plum: #6B46C1;
+  --ochre: #B07418; --ochre-ink: #855810; --slate: #2E5446; --refgrey: #80878C;
+  --onboard-red: var(--pink);
+  --shadow: 0 14px 26px -16px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(0, 0, 0, 0.2);
+  --glow: radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, 0.05), transparent 55%),
+    radial-gradient(ellipse at 90% 100%, rgba(255, 255, 255, 0.04), transparent 50%);
+  --pulse: rgba(240, 209, 120, 0.22);
+  color-scheme: dark;
+}
+
+/* The whiteboard: VS Code light themes; a light page outside VS Code. */
+@media (prefers-color-scheme: light) {
+  body:not(.vscode-dark):not(.vscode-high-contrast):not(.vscode-high-contrast-light) {
+    --board: #F1F3F1; --board2: #E4E8E4; --chalk: #1E2A36; --chalk2: #3E4A57; --dust: rgba(30, 42, 54, 0.35);
+    --faint: #58636F; --line: rgba(30, 42, 54, 0.12); --line2: rgba(30, 42, 54, 0.3);
+    --yellow: #855810; --pink: #A3304D; --mint: #17643A; --teal: #0B6B60; --violet: #6B46C1; --blue: #1F5FA8;
+    --coral: #C0392B; --amber: #855810;
+    --card: #FFFFFF; --cardsoft: #F1EFE9; --cardline: rgba(34, 48, 43, 0.12); --cardline2: rgba(34, 48, 43, 0.3);
+    --gridmm: rgba(38, 72, 124, 0.035); --ruleline: rgba(34, 48, 43, 0.035);
+    --onboard-red: var(--red);
+    --shadow: 0 10px 22px -16px rgba(30, 42, 54, 0.45), 0 1px 0 rgba(30, 42, 54, 0.12);
+    --glow: none; --pulse: rgba(133, 88, 16, 0.18);
+    color-scheme: light;
+  }
+}
+body.vscode-light {
+  --board: #F1F3F1; --board2: #E4E8E4; --chalk: #1E2A36; --chalk2: #3E4A57; --dust: rgba(30, 42, 54, 0.35);
+  --faint: #58636F; --line: rgba(30, 42, 54, 0.12); --line2: rgba(30, 42, 54, 0.3);
+  --yellow: #855810; --pink: #A3304D; --mint: #17643A; --teal: #0B6B60; --violet: #6B46C1; --blue: #1F5FA8;
+  --coral: #C0392B; --amber: #855810;
+  --card: #FFFFFF; --cardsoft: #F1EFE9; --cardline: rgba(34, 48, 43, 0.12); --cardline2: rgba(34, 48, 43, 0.3);
+  --gridmm: rgba(38, 72, 124, 0.035); --ruleline: rgba(34, 48, 43, 0.035);
+  --onboard-red: var(--red);
+  --shadow: 0 10px 22px -16px rgba(30, 42, 54, 0.45), 0 1px 0 rgba(30, 42, 54, 0.12);
+  --glow: none; --pulse: rgba(133, 88, 16, 0.18);
+  color-scheme: light;
+}
+
+/* High contrast (dark): the editor's black, white ink everywhere, bright hues, the theme's
+   contrast border on every rule; no paper tint, ruling, glow or shadow. */
+body.vscode-high-contrast:not(.vscode-high-contrast-light) {
+  --board: var(--vscode-editor-background, #000000); --board2: var(--vscode-editor-background, #000000);
+  --chalk: #FFFFFF; --chalk2: #FFFFFF; --dust: transparent; --faint: #E6E6E6;
+  --line: var(--vscode-contrastBorder, #6FC3DF); --line2: var(--vscode-contrastBorder, #6FC3DF);
+  --yellow: #FFD75E; --pink: #FF9EBB; --mint: #7EE787; --teal: #2EE6D6; --violet: #D5B8FF; --blue: #8EC5FF;
+  --coral: #FF9E6E; --amber: #FFB000;
+  --card: var(--vscode-editor-background, #000000); --cardink: #FFFFFF; --cardmuted: #E6E6E6;
+  --cardline: var(--vscode-contrastBorder, #6FC3DF); --cardline2: var(--vscode-contrastBorder, #6FC3DF);
+  --cardsoft: var(--vscode-editor-background, #000000);
+  --gridmm: transparent; --ruleline: transparent;
+  --red: #FF8A80; --pen: #8EC5FF; --orange: #FF9E6E; --leaf: #7EE787; --plum: #D5B8FF;
+  --ochre: #FFB000; --ochre-ink: #FFB000; --slate: #7FFFF0; --refgrey: #C0C0C0;
+  --onboard-red: #FF8A80;
+  --shadow: none; --glow: none; --pulse: transparent;
+  color-scheme: dark;
+}
+/* High contrast light: the editor's white, black ink, dark hues, the contrast border. */
+body.vscode-high-contrast-light {
+  --board: var(--vscode-editor-background, #FFFFFF); --board2: var(--vscode-editor-background, #FFFFFF);
+  --chalk: #000000; --chalk2: #000000; --dust: transparent; --faint: #333333;
+  --line: var(--vscode-contrastBorder, #0F4A85); --line2: var(--vscode-contrastBorder, #0F4A85);
+  --yellow: #7A3300; --pink: #8A0F05; --mint: #024B2B; --teal: #00544C; --violet: #3D1F80; --blue: #0B3D91;
+  --coral: #8A2000; --amber: #7A3300;
+  --card: var(--vscode-editor-background, #FFFFFF); --cardink: #000000; --cardmuted: #333333;
+  --cardline: var(--vscode-contrastBorder, #0F4A85); --cardline2: var(--vscode-contrastBorder, #0F4A85);
+  --cardsoft: var(--vscode-editor-background, #FFFFFF);
+  --gridmm: transparent; --ruleline: transparent;
+  --red: #8A0F05; --pen: #0B3D91; --orange: #8A2000; --leaf: #024B2B; --plum: #3D1F80;
+  --ochre: #7A3300; --ochre-ink: #7A3300; --slate: #00544C; --refgrey: #5A5A5A;
+  --onboard-red: #8A0F05;
+  --shadow: none; --glow: none; --pulse: transparent;
+  color-scheme: light;
+}
+
+/* --- 2. board tokens (on <body>) -------------------------------------------------------- */
+
+body {
+  --ht-bg: var(--board);
+  --ht-fg: var(--chalk);
+  --ht-muted: var(--chalk2);
+  --ht-faint: var(--faint);
+  --ht-line: var(--line);
+  --ht-line-strong: var(--line2);
+  --ht-surface: var(--board2);
+  --ht-sunken: var(--board2);
+  /* Links are marked by colour only (nothing is underlined in the panel). */
+  --ht-link: var(--teal);
+  --ht-link-hover: var(--yellow);
+  --ht-focus: var(--yellow);
+  /* The one accent of the board; the semantic hues are the charter's pastels. */
+  --ht-accent: var(--yellow); --ht-accent-ink: var(--yellow);
+  --ht-warn: var(--amber); --ht-bad: var(--pink); --ht-seal: var(--violet); --ht-info: var(--blue); --ht-ok: var(--mint);
+  --ht-c-ref: var(--refgrey); --ht-div-neg: var(--orange); --ht-div-pos: var(--pen);
+  --ht-strong-ink: var(--board);
+  --ht-button-bg: var(--yellow); --ht-button-fg: var(--board);
+  --ht-button-border: var(--vscode-button-border, var(--vscode-contrastBorder, var(--yellow)));
+  --ht-button2-bg: var(--board2); --ht-button2-fg: var(--chalk);
+  --ht-button2-border: var(--vscode-button-border, var(--vscode-contrastBorder, var(--line2)));
+  --ht-input-bg: var(--board2); --ht-input-fg: var(--chalk); --ht-input-border: var(--line2);
+  --ht-card-border: var(--vscode-contrastBorder, var(--cardline));
+  --ht-contrast: var(--vscode-contrastBorder, transparent);
+  --ht-surface-mix: 0%;
+
+  /* Scale: spacing, type, radii (the six type sizes are the panel's whole scale). */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+  --t-cap: 11px; --t-meta: 12px; --t-body: var(--vscode-font-size, 13px); --t-title: 15px; --t-h: 18px; --t-num: 24px;
+  --r-chip: 3px; --r-card: 3px; --r-pill: 999px;
+}
+
+/* --- 3. paper tokens (cards, figures, tooltips, dialogs) -------------------------------- */
+
+.card, .ht-paper, .ht-modal, .ht-tooltip, .ht-figure {
+  --ht-bg: var(--card);
+  --ht-fg: var(--cardink);
+  --ht-muted: var(--cardmuted);
+  --ht-faint: var(--cardmuted);
+  --ht-line: var(--cardline);
+  --ht-line-strong: var(--cardline2);
+  --ht-surface: var(--card);
+  --ht-sunken: var(--cardsoft);
+  --ht-link: var(--ochre-ink);
+  --ht-link-hover: var(--slate);
+  --ht-focus: var(--ochre-ink);
+  --ht-accent: var(--pen); --ht-accent-ink: var(--slate);
+  --ht-warn: var(--ochre-ink); --ht-bad: var(--red); --ht-seal: var(--plum); --ht-info: var(--pen); --ht-ok: var(--leaf);
+  --ht-strong-ink: #FFFFFF;
+  --ht-button-bg: var(--slate); --ht-button-fg: var(--card);
+  --ht-button-border: var(--vscode-button-border, var(--vscode-contrastBorder, var(--slate)));
+  --ht-button2-bg: var(--card); --ht-button2-fg: var(--cardink);
+  --ht-button2-border: var(--vscode-button-border, var(--vscode-contrastBorder, var(--cardline2)));
+  --ht-input-bg: var(--card); --ht-input-fg: var(--cardink); --ht-input-border: var(--cardline2);
+  color: var(--ht-fg);
+}
+
+/* Derived tokens: recomputed wherever the base changes (the board and every paper). */
+body, .card, .ht-paper, .ht-modal, .ht-tooltip, .ht-figure {
+  --ht-line-faint: color-mix(in srgb, var(--ht-fg) 8%, var(--ht-bg));
   --ht-accent-tint: color-mix(in srgb, var(--ht-accent) 11%, var(--ht-bg));
   --ht-warn-tint: color-mix(in srgb, var(--ht-warn) 12%, var(--ht-bg));
   --ht-bad-tint: color-mix(in srgb, var(--ht-bad) 10%, var(--ht-bg));
   --ht-seal-tint: color-mix(in srgb, var(--ht-seal) 11%, var(--ht-bg));
   --ht-info-tint: color-mix(in srgb, var(--ht-info) 10%, var(--ht-bg));
   --ht-ok-tint: color-mix(in srgb, var(--ht-ok) 11%, var(--ht-bg));
-  /* Chart roles: one mark colour, the reference grey, the null band, grid and axis. */
+  /* Chart roles: one mark colour (the pen on paper), the reference grey, the null band. */
   --ht-c-mark: var(--ht-accent);
   --ht-c-band: color-mix(in srgb, var(--ht-fg) 10%, var(--ht-bg));
   --ht-c-grid: color-mix(in srgb, var(--ht-fg) 8%, var(--ht-bg));
-  --ht-c-axis: color-mix(in srgb, var(--ht-fg) 35%, var(--ht-bg));
-  /* Every card, chip and button keeps a visible border in a high contrast theme. */
-  --ht-contrast: var(--vscode-contrastBorder, transparent);
-  --ht-card-border: var(--vscode-contrastBorder, var(--ht-line));
-  --ht-button-border: var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
-  --ht-button2-border: var(--vscode-button-border, var(--vscode-contrastBorder, var(--ht-line-strong)));
-  --ht-button-bg: var(--ht-host-button-bg);
-  --ht-button-fg: var(--ht-host-button-fg);
-  --ht-button2-bg: var(--ht-host-button2-bg);
-  --ht-button2-fg: var(--ht-host-button2-fg);
-  --ht-input-bg: var(--ht-host-input-bg);
-  --ht-input-fg: var(--ht-host-input-fg);
-  --ht-input-border: var(--ht-host-input-border);
+  --ht-c-axis: color-mix(in srgb, var(--ht-fg) 45%, var(--ht-bg));
 
-  /* Scale: spacing, type, radii. */
-  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
-  --t-cap: 11px; --t-meta: 12px; --t-body: var(--vscode-font-size, 13px); --t-title: 15px; --t-h: 18px; --t-num: 24px;
-  --r-chip: 4px; --r-card: 8px; --r-pill: 999px;
-
-  /* v0.2 names, kept as aliases so every view reads the same system. */
+  /* v0.2 and v0.3 names, kept as aliases so every view reads the same system. */
   --ht-border: var(--ht-line);
   --ht-baseline: var(--ht-c-ref);
   --ht-done-bg: var(--ht-accent-tint);
   --ht-warn-bg: var(--ht-warn-tint);
-  --ht-warn-border: color-mix(in srgb, var(--ht-warn) 45%, var(--ht-bg));
+  --ht-warn-border: color-mix(in srgb, var(--ht-warn) 55%, var(--ht-bg));
   --ht-warn-fg: var(--ht-fg);
   --ht-error-bg: var(--ht-bad-tint);
-  --ht-error-border: color-mix(in srgb, var(--ht-bad) 45%, var(--ht-bg));
+  --ht-error-border: color-mix(in srgb, var(--ht-bad) 55%, var(--ht-bg));
   --ht-error-fg: var(--ht-bad);
   --ht-experiment-bg: var(--ht-seal-tint);
   --ht-experiment-fg: var(--ht-seal);

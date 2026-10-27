@@ -45,8 +45,10 @@ def test_tabs_of_a_later_stage_are_absent(open_panel, binary, stage):
     if stage == 'v0':
         # v0: one page, no tablist, the v0 sections only.
         assert page.locator('[role="tablist"]').count() == 0
-        # WP-A5: the next move first, then the plan; the junior recap under Details.
-        assert page.locator('main [data-ov]').first.get_attribute('data-ov') == 'hero'
+        # WP-A5: the next move first (lesson style, 2026-10-27: on the board above the content,
+        # after the journey rail), then the plan; the junior recap under Details.
+        assert page.locator('[data-band] [data-ov]').first.get_attribute('data-ov') == 'hero'
+        assert page.locator('main [data-ov]').first.get_attribute('data-ov') == 'map'
         assert page.locator('[data-recap-details] li').count() == 5
         assert page.locator('[data-proposal-card]').count() == 1
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())

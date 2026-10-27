@@ -198,16 +198,6 @@ def rationale(view: Mapping, decision: str) -> str:
               "de l'analyste.")
 
 
-def progress_line(view: Mapping, index: int, action: Mapping, outcome: str) -> str:
-    """One progress line of ``automation run --progress`` (stderr), in the study language."""
-    lang = view.get('language') or 'en'
-    what = (audience.activity_words(action.get('activity'), lang) if action.get('kind') == 'run'
-            else audience.decision_words(action.get('decision'), lang)
-            if action.get('decision') else str(action.get('kind')))
-    head = _t(lang, 'Automatic mode', 'Mode automatique')
-    return f'{head} · {index} · {what} · {outcome}'
-
-
 # --- the runner -----------------------------------------------------------------------------
 
 def _step(revision: int, action: Mapping, outcome: str) -> dict:
@@ -219,16 +209,6 @@ def _step(revision: int, action: Mapping, outcome: str) -> dict:
 def _view(study_dir: Path) -> dict:
     from . import lock, read, view as view_mod
     return view_mod.build(read.open(study_dir), leases=lock.probe_leases(study_dir))
-
-
-def _write(progress: TextIO | None, line: str) -> None:
-    if progress is None:
-        return
-    try:
-        progress.write(line + '\n')
-        progress.flush()
-    except (OSError, ValueError):         # progress never changes the run's outcome
-        pass
 
 
 def _stale(current: int, expected: int):
@@ -248,7 +228,7 @@ def run(study_dir, *, request_id: str, expected_revision: int,
     study stands and never replays a different request."""
     from mlkit.reliability import CommandRefused
 
-    from . import commands as cmd, executions, guard, read
+    from . import automation_words, commands as cmd, executions, guard, read
     from .errors import StudyError
 
     guard.assert_writable()
@@ -258,14 +238,21 @@ def run(study_dir, *, request_id: str, expected_revision: int,
         raise _stale(state['revision'], expected_revision)
     steps: list[dict] = []
     status, reason, refusal, stopped_at = 'stopped', None, None, None
+    # R23 (owner session 2026-10-27): what is going on, in the study language, on stderr.
+    narrator = automation_words.Narrator(progress)
     if st.automation_of(state) is None or st.automation_in_force(state) is None:
         reason = 'automation_not_set'
         view = _view(study_dir)
         stopped_at = view['next_action']
-        return _payload(study_dir, view, status, reason, None, stopped_at, steps, None)
+        payload = _payload(study_dir, view, status, reason, None, stopped_at, steps, None)
+        narrator.closing(view, payload)
+        return payload
     for index in range(1, MAX_STEPS + 1):
         view = _view(study_dir)
         state = read.open(study_dir).state
+        if index == 1:
+            narrator.header(view, state)
+        narrator.result(view)
         action = view['next_action']
         kind = action.get('kind')
         revision = view['revision']
@@ -273,10 +260,12 @@ def run(study_dir, *, request_id: str, expected_revision: int,
         if kind == 'show_data_card':
             # Informational: the data card is shown in the report; the next step is the
             # prediction moment, as the card's message says.
-            action = {**action, 'kind': 'propose', 'decision': 'prediction_time'}
+            recommended = junior_recommended(view, state)
+            action = {**action, 'kind': 'propose', 'decision': 'prediction_time',
+                      'recommended': recommended}
             action['auto_value'] = auto_value(view, state, {
                 'kind': 'propose', 'decision': 'prediction_time',
-                'recommended': junior_recommended(view, state)})
+                'recommended': recommended})
             kind = 'propose'
         if not st.action_covered(state, action):
             stopped_at = action
@@ -290,20 +279,20 @@ def run(study_dir, *, request_id: str, expected_revision: int,
                 options = {**(action.get('options') or {})}
                 if action.get('rules'):
                     options['rules'] = list(action['rules'])
-                _write(progress, progress_line(view, index, action, _t(
-                    view.get('language'), 'run', 'calcul')))
+                narrator.computing(view, action['activity'])
                 kwargs = {}
                 if progress_interval is not None:
                     kwargs['progress_interval'] = progress_interval
                 out = executions.run(study_dir, action['activity'], options, request_id=rid,
                                      expected_revision=revision, render=False,
-                                     progress=progress, **kwargs).payload
+                                     progress=narrator.activities, **kwargs).payload
                 outcome = out.get('status')
                 steps.append(_step(revision, action, outcome))
                 if outcome not in ('promoted', 'already_current'):
                     status, reason, stopped_at = 'stopped', 'not_promoted', action
                     refusal = {'code': 'not_promoted', 'status': outcome,
                                'error': out.get('error')}
+                    narrator.due = None
                     break
             elif kind in ('propose', 'reconfirm'):
                 value = action.get('auto_value')
@@ -319,8 +308,7 @@ def run(study_dir, *, request_id: str, expected_revision: int,
                 cmd.apply(study_dir, action=cmd.ACTION_PROPOSE, params=params,
                           request_id=rid, expected_revision=revision, quiet=True)
                 steps.append(_step(revision, action, 'proposed'))
-                _write(progress, progress_line(view, index, action, _t(
-                    lang, 'proposed', 'proposée')))
+                narrator.proposed(view, state, action, value)
             elif kind == 'await_user_words':
                 params = {'proposal_id': action['proposal_id'], 'user_words': None,
                           'channel': 'cli', 'actor': st.AUTOMATIC_ACTOR,
@@ -330,9 +318,9 @@ def run(study_dir, *, request_id: str, expected_revision: int,
                 opening = (out.get('result') or {}).get('opening')
                 outcome = 'confirmed' if not opening else f'confirmed, opening {opening["status"]}'
                 steps.append(_step(revision, action, outcome))
-                _write(progress, progress_line(view, index, action, _t(
-                    view.get('language'), 'recorded as automatic',
-                    'enregistrée comme automatique')))
+                narrator.recorded(view, action)
+                if opening:
+                    narrator.opened()
                 if opening and opening.get('status') not in ('promoted', 'opened'):
                     reason, stopped_at = 'not_promoted', action
                     refusal = {'code': 'opening_not_promoted', 'status': opening.get('status'),
@@ -357,10 +345,13 @@ def run(study_dir, *, request_id: str, expected_revision: int,
                   expected_revision=state['revision'], quiet=True)
         status = 'ended'
     view = _view(study_dir)
+    narrator.result(view)
     artifacts = _render(study_dir, view) if steps or status == 'ended' else None
     if artifacts is not None:
         view = _view(study_dir)
-    return _payload(study_dir, view, status, reason, refusal, stopped_at, steps, artifacts)
+    payload = _payload(study_dir, view, status, reason, refusal, stopped_at, steps, artifacts)
+    narrator.closing(view, payload)
+    return payload
 
 
 def junior_recommended(view: Mapping, state: Mapping) -> dict | None:

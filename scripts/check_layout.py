@@ -146,7 +146,7 @@ def companion_terminal_errors(sources):
 # v0.3 narrowing (ADR 0004 amendment; owner decision R23, integrator decision I2): the
 # panel records no decision. No client source may invoke `decide confirm`, `decide
 # withdraw`, or `decide propose`, neither as an argv array ('decide', 'confirm') nor as a
-# command string ("decide confirm"); W4-W7 are its only writes.
+# command string ("decide confirm"); W4, W5 and W7 are its only writes (W6: below, R31).
 DECIDE_WRITE = re.compile(r"""['"`]decide['"`]\s*,\s*['"`](?:confirm|withdraw|propose)['"`]"""
                           r'|\bdecide\s+(?:confirm|withdraw|propose)\b')
 
@@ -155,6 +155,19 @@ def companion_decide_errors(sources):
     """Errors of the narrowing rule over ``{relative path: text}`` of the client sources."""
     return [f'Companion client source invokes a withdrawn decide write (W1-W3): {rel}'
             for rel, text in sorted(sources.items()) if DECIDE_WRITE.search(text)]
+
+
+# Owner decision R31 (2026-10-27, ADR 0004 amendment): W6 is withdrawn; the panel takes no
+# words of the junior and never acknowledges an interrupted execution. No client source may
+# build `run --acknowledge-interruption` (as an argv array or a command string) or keep an
+# acknowledgement builder; W4, W5 and W7 are its only writes.
+ACKNOWLEDGE_WRITE = re.compile(r'--acknowledge-interruption\b|\backnowledge(?:Interruption)?Argv\b')
+
+
+def companion_acknowledge_errors(sources):
+    """Errors of the R31 rule over ``{relative path: text}`` of the client sources."""
+    return [f'Companion client source builds a withdrawn acknowledgement write (W6): {rel}'
+            for rel, text in sorted(sources.items()) if ACKNOWLEDGE_WRITE.search(text)]
 
 
 # The same narrowing in the words the extension shows before it runs (R9UX-3): its name,
@@ -210,6 +223,7 @@ def check_companion_client(errors):
     texts = {p.relative_to(folder).as_posix(): p.read_text(encoding='utf-8') for p in sources}
     errors.extend(companion_terminal_errors(texts))
     errors.extend(companion_decide_errors(texts))
+    errors.extend(companion_acknowledge_errors(texts))
     return len(sources)
 
 def main():

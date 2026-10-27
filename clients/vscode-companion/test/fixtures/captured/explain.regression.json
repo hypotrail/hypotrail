@@ -397,7 +397,7 @@
    {
     "id": "target_look",
     "term": "Look at the target",
-    "definition": "An analysis that read the variable to predict, such as its rate or its distribution, the special values read with it, or a summary of it by group. Each one is counted. The more looks, the more a pattern found among them can be chance. For example, the quality check of the columns reads no target and is not a look; the distribution of the variable to predict is one.",
+    "definition": "An analysis that read the variable to predict, such as its distribution or its summary, the special values read with it, or its mean by group. Each one is counted. The more looks, the more a pattern found among them can be chance. For example, the quality check of the columns reads no target and is not a look; the distribution of the variable to predict is one.",
     "example": null,
     "example_status": "none",
     "steps": [

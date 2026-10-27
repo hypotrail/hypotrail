@@ -6,10 +6,20 @@ and the junior then adopts or changes each automatic decision and opens the fina
 themselves; ``full_demo`` also opens the final test and concludes, with its banners, and its
 review marks a change as made after the final test. ADR 0005 and ADR 0006 amendments of
 2026-10-26; CLI-CONTRACT §5.5.
+
+Owner session 2026-10-27 (R23, R24 of the fourth session of 2026-10-26): both module runs pass
+``--progress``, and the tests below read what it tells on stderr (the header, one line per
+decision with its value in words and why, each computation's key result with registered
+figures, the closing summary), the readable summary ``--format text`` prints, and the review
+pause (adopt, change, explain; nothing recommended; the reviewed decision's step).
 """
 from __future__ import annotations
 
+import contextlib
+import io
 import json
+import os
+import re
 import shutil
 import subprocess
 import sys
@@ -18,8 +28,8 @@ from pathlib import Path
 import pytest
 
 import flowkit as fk
-from mlkit.study import (automation, cmd_export, notebook_view, read, state as st,
-                         view as view_mod)
+from mlkit.study import (automation, cite, cli, cmd_export, notebook_view, read,
+                         state as st, view as view_mod)
 from mlkit.study.errors import StudyError
 
 REPO = Path(__file__).resolve().parents[3]
@@ -37,11 +47,15 @@ def _created(study: Path, *more) -> fk.Flow:
     return f
 
 
-def _ran(base: Path, mode: str, lang: str) -> tuple[Path, dict]:
+def _ran(base: Path, mode: str, lang: str) -> tuple[Path, dict, str]:
+    """The run through the CLI's code path with ``--progress``: the study, the JSON
+    document, and what the run told on stderr (R23)."""
     f = _created(base / mode, '--lang', lang, '--automation', mode)
-    out = f.call('automation', 'run', '--request-id', 'auto', '--expected-revision', f.rev(),
-                 '--study', f.study)
-    return f.study, out
+    told = io.StringIO()
+    with contextlib.redirect_stderr(told):
+        out = f.call('automation', 'run', '--progress', '--request-id', 'auto',
+                     '--expected-revision', f.rev(), '--study', f.study)
+    return f.study, out, told.getvalue()
 
 
 @pytest.fixture(scope='module')
@@ -179,7 +193,7 @@ def test_automatic_basis_is_never_a_human_basis(until, tmp_path):
     ``automatic`` (``actor: assistant``, no words), never the junior's own words nor a
     delegation; the final test stays sealed; the report, the notebook and the summary say the
     study is not defensible until reviewed."""
-    study, out = until
+    study, out, _ = until
     assert (out['status'], out['reason'], out['refusal']) == ('ended', 'reached_end', None), out
     assert tuple(out) == automation.PAYLOAD_KEYS
     assert all(tuple(s) == automation.STEP_KEYS for s in out['steps'])
@@ -272,7 +286,7 @@ def test_full_demo_opens_once_and_banners(demo, tmp_path):
     """``full_demo`` opens the final test with ``basis: automatic`` and concludes from the
     criterion judged on the final test; the French banners say so; the opening is never
     redone."""
-    study, out = demo
+    study, out, _ = demo
     assert (out['status'], out['reason'], out['refusal']) == ('ended', 'reached_end', None), out
     state = read.open(study).state
     assert st.final_test_opened(state) and st.opened_automatically(state)
@@ -364,7 +378,14 @@ def test_the_runner_honours_holds_and_refusals_and_stops_one_way(tmp_path, monke
                           capture_output=True, text=True, env=fk.env(), timeout=600)
     out = json.loads(proc.stdout)
     assert len(proc.stdout.strip().splitlines()) == 1
-    assert 'Automatic mode · 1 · the prediction moment · proposed' in proc.stderr
+    # R23: the decisions recorded before the hold, each once, then why the run stopped.
+    assert proc.stderr.startswith('Automatic mode · up to the final test · Auto MPG · UCI\n')
+    assert '\n1 · Decision · The prediction moment: ' in proc.stderr
+    assert '\n2 · Decision · The feature availability: keep ' in proc.stderr
+    assert 'proposed' not in proc.stderr and 'recorded as automatic' not in proc.stderr
+    assert 'Summary · I stopped: what comes next needs your answer.' in proc.stderr
+    assert 'Decisions to review (2): the prediction moment and the feature availability.' \
+        in proc.stderr
     assert (out['status'], out['reason']) == ('stopped', 'needs_junior'), out
     assert out['stopped_at']['kind'] == 'resolve_hold'
     state = f.state()
@@ -426,3 +447,193 @@ def test_auto_value_rules():
         assert out['verdict'] == verdict and not any(c.isdigit() for c in out['text'])
     assert automation.auto_value({}, state, {'kind': 'propose', 'decision': 'prediction_time',
                                              'recommended': None}) is None
+
+
+# --- R23: what the run tells, and its readable summary ----------------------------------------
+
+def _figure(view: dict, slot: str, lang: str) -> str:
+    """The registered out-of-fold mean absolute error of ``slot``, as the study language
+    writes it."""
+    models = view['results']['evaluate.regression']['values']['models']
+    return cite.format_value(models[slot]['mae'], 'f2', lang) + ' mpg'
+
+
+@pytest.mark.parametrize('which', ['until', 'demo'])
+def test_progress_tells_what_is_going_on(which, request, tmp_path):
+    """R23: on stderr, in the study language, a header (mode, case, what is done, where it
+    stops); one line per decision, once, with its value in words and why, never raw JSON, an
+    id or the propose/confirm pair; after each computation its key result with registered
+    figures formatted in the study language; a closing summary (the decisions to review, the
+    model kept and its figure, what the junior does next)."""
+    study, out, told = request.getfixturevalue(which)
+    lang = 'en' if which == 'until' else 'fr'
+    v = view_mod.build(read.open(study))
+    lines = told.splitlines()
+    T = (lambda en, fr: fr if lang == 'fr' else en)
+    head = T('Automatic mode · up to the final test · Auto MPG · UCI',
+             'Mode automatique · démonstration complète · Auto MPG · UCI')
+    assert lines[0] == head, lines[:3]
+    assert lines[1].startswith(T('What I do: I take each decision', 'Ce que je fais : je prends'))
+    assert lines[3].startswith(T('Where I stop: before the final test, which stays sealed.',
+                                 "Où je m'arrête : à la fin. Cette démonstration ouvre aussi"))
+    # One line per decision recorded, numbered with the computations, each with its why.
+    decision_lines = [x for x in lines if re.match(r'\d+ · ' + T('Decision', 'Décision') + ' · ',
+                                                   x)]
+    recorded = [s['decision'] for s in out['steps'] if s['kind'] == 'await_user_words']
+    assert len(decision_lines) == len(recorded) == len(v['review_queue']), decision_lines
+    for line, decision in zip(decision_lines, recorded):
+        from mlkit.study import audience
+        words = audience.decision_words(decision, lang)
+        assert (words[:1].upper() + words[1:]) in line, (decision, line)
+        assert T(' Why: ', ' Pourquoi : ') in line, line
+        assert '{' not in line and '"' not in line and 'p_' not in line, line
+        assert decision not in line or decision in words, line
+    numbers = [int(x.split(' · ', 1)[0]) for x in lines if re.match(r'\d+ · ', x)]
+    assert numbers == list(range(1, len(numbers) + 1))
+    for noise in (' · proposed', ' · proposée', 'recorded as automatic', 'enregistrée comme '
+                  'automatique', 'model_choice', 'feature_availability', 'fit.'):
+        assert noise not in told, noise
+    split = T('    Result: 5 folds in time order, ', '    Résultat : 5 plis dans l\'ordre du temps, ')
+    assert any(x.startswith(split) for x in lines), told
+    quality = next(x for x in lines if 'horsepower)' in x and x.lstrip().startswith(
+        T('Result:', 'Résultat :')))
+    assert T('6 of 318 rows with a missing value (horsepower)',
+             '6 sur 318 lignes avec une valeur manquante (horsepower)') in quality
+    assert T('rare categories in car_name', 'catégories rares dans car_name') in quality
+    for slot in ('fit.baseline', 'fit.linear', 'fit.variant:2'):
+        mae = _figure(v, slot, lang)
+        assert T(f'    Result: mean absolute error out of fold {mae}',
+                 f'    Résultat : erreur absolue moyenne hors pli {mae}') in told, (slot, mae)
+    advice = v['model_selection']['advice']['texts'][lang]
+    assert any(advice in x for x in lines if x.lstrip().startswith(T('Result:', 'Résultat :')))
+    assert T('2 flags: a shape the linear model does not follow (horsepower and weight)',
+             '2 signaux : une forme que le modèle linéaire ne suit pas (horsepower et weight)') \
+        in told
+    if lang == 'fr':
+        final = v['results']['final_test.evaluation']['values']['models']['fit.linear']['mae']
+        assert ('Résultat : le test final est ouvert, une fois, sur 80 lignes : erreur absolue '
+                f'moyenne {cite.format_value(final, "f2", "fr")} mpg pour le modèle linéaire') \
+            in told
+        assert '7,16' in told and '7.16' not in told
+        assert '· La conclusion : adopter le modèle choisi. Pourquoi : ' in told
+    # The closing summary.
+    start = next(i for i, x in enumerate(lines) if x.startswith(T('Summary · ', 'Bilan · ')))
+    closing = '\n'.join(lines[start:])
+    assert T('Summary · I stopped before the final test, as planned.',
+             "Bilan · La démonstration est allée jusqu'au bout, comme prévu.") in closing
+    queue = len(v['review_queue'])
+    assert T(f'Decisions to review ({queue}): the prediction moment, ',
+             f'Décisions à relire ({queue}) : le moment de la prédiction, ') in closing
+    kept = v['decisions']['model_choice']['value']
+    assert T(f'Model kept: the linear model (one-standard-error rule), mean absolute error out '
+             f'of fold {_figure(v, kept, lang)}',
+             f"Modèle retenu : le modèle linéaire (règle d'une erreur type), erreur absolue "
+             f'moyenne hors pli {_figure(v, kept, lang)}') in closing
+    assert T('The final test stays sealed', 'Le test final a été ouvert automatiquement') \
+        in closing
+    assert T('Next: review each decision in the chat, starting with the prediction moment',
+             'Et maintenant : relisez chaque décision dans le chat, en commençant par le '
+             'moment de la prédiction') in closing
+    # Every figure the results and the summary cite is a registered value, written as the
+    # study language writes it: the engine's own check traces each one.
+    cited = tmp_path / 'cited.txt'
+    cited.write_text('\n'.join(x.strip() for x in lines if x.lstrip().startswith(
+        (T('Result:', 'Résultat :'), T('Model kept:', 'Modèle retenu :')))), encoding='utf-8')
+    check = _flow(study).call('check', '--text', cited, '--study', study)
+    assert check['clean'] is True, check['findings']
+
+
+def test_the_text_summary_and_the_terminal_default(until, tmp_path):
+    """R23: ``--format text`` prints a readable summary instead of the JSON document; on a
+    terminal it is the default of ``automation run`` only, ``--json`` keeps the JSON there, and
+    stdout that is not a terminal always gets the JSON document (CLI-CONTRACT §1)."""
+    study, out, _ = until
+    text = cli._text(out)
+    assert text.startswith('Automatic mode · up to the final test · Auto MPG · UCI · revision '
+                           f'{out["revision"]}\n')
+    assert 'Recorded by the automatic mode, to review:' in text
+    assert '  - The split: cross-validation on the development rows: 5 folds' in text
+    assert '  - The feature availability: keep cylinders, ' in text
+    assert 'Model kept: the linear model (one-standard-error rule)' in text
+    assert 'The full JSON document: add --json.' in text
+    assert '"schema"' not in text and '{' not in text
+
+    class Terminal(io.StringIO):
+        def isatty(self):
+            return True
+    run = ['automation', 'run', '--request-id', 'a', '--expected-revision', '1', '--study', 's']
+    assert cli._wanted_format(run, Terminal()) == 'text'
+    assert cli._wanted_format(run + ['--json'], Terminal()) == 'json'
+    assert cli._wanted_format(run + ['--format', 'json'], Terminal()) == 'json'
+    assert cli._wanted_format(run, io.StringIO()) == 'json'
+    assert cli._wanted_format(run + ['--format', 'text'], io.StringIO()) == 'text'
+    assert cli._wanted_format(['status', '--study', 's'], Terminal()) == 'json'
+    assert cli.TEXT_ON_A_TERMINAL == (('automation', 'run'),)
+    # In a real process on a terminal (a study without automation: nothing to do).
+    import pty
+    plain = _created(tmp_path / 'plain')
+    for extra, readable in (((), True), (('--json',), False)):
+        master, slave = pty.openpty()
+        try:
+            proc = subprocess.run([sys.executable, '-m', 'mlkit.study.cli', 'automation', 'run',
+                                   *extra, '--request-id', 'p', '--expected-revision',
+                                   str(plain.rev()), '--study', str(plain.study)],
+                                  stdout=slave, stderr=subprocess.PIPE, text=True,
+                                  env=fk.env(), timeout=600)
+            os.close(slave)
+            shown = os.read(master, 1 << 16).decode('utf-8').replace('\r\n', '\n')
+        finally:
+            os.close(master)
+        assert proc.returncode == 0 and proc.stderr == '', proc.stderr
+        if readable:
+            assert shown.startswith('Automatic mode · Auto MPG · UCI · revision 1\n'), shown
+            assert 'Nothing was done: this study has no automatic mode in force.' in shown
+        else:
+            assert json.loads(shown)['reason'] == 'automation_not_set'
+
+
+# --- R24: the review pause is an adoption pause --------------------------------------------
+
+@pytest.mark.parametrize('which', ['until', 'demo'])
+def test_the_review_pause_offers_adopt_change_explain(which, request, tmp_path):
+    """R24: after the run, the review pause offers adopt, change, explain with the engine's
+    localized labels, recommends nothing, quotes the recorded value in words, and names the
+    reviewed decision's step (never ``final_test``); once the value is proposed again, the
+    pause holds the proposal, still without a recommendation."""
+    study, out, _ = request.getfixturevalue(which)
+    lang = 'en' if which == 'until' else 'fr'
+    labels = {'en': ('I adopt this decision', 'Change something', 'Explain first'),
+              'fr': ("J'adopte cette décision", 'Changer quelque chose', "Expliquer d'abord")}
+    for nxt in (out['next_action'], view_mod.build(read.open(study))['next_action']):
+        assert (nxt['kind'], nxt['decision'], nxt['review']) == ('reconfirm', 'prediction_time',
+                                                                 True)
+        pause = nxt['pause']
+        assert pause['kind'] == 'decision' and pause['recommended_option'] is None
+        assert pause['options'] == ['adopt', 'change', 'explain']
+        assert tuple(pause['option_labels'].values()) == labels[lang]
+        assert pause['position']['step_id'] == 'prediction_time'
+        value = nxt['default_value']
+        assert pause['proposal_text'] == (
+            f'The prediction moment: {value} (value recorded by the automatic mode, not yet in '
+            'your words).' if lang == 'en' else
+            f'Le moment de la prédiction : {value} (valeur enregistrée par le mode automatique, '
+            'pas encore avec vos mots).')
+        closed = 'Do you adopt this decision?' if lang == 'en' else 'Adoptez-vous cette décision ?'
+        # (A French surface writes a no-break space before the question mark.)
+        assert pause['question'].replace('\xa0', ' ') == f'{pause["proposal_text"]}\n\n{closed}'
+    # The value proposed again: the pause holds the open proposal, nothing recommended.
+    f = _copy(study, tmp_path)
+    p = _propose(f, 'prediction_time', out['next_action']['default_value'])['result']
+    nxt = f.view()['next_action']
+    assert (nxt['kind'], nxt['review']) == ('await_user_words', True)
+    pause = nxt['pause']
+    assert (pause['kind'], pause['proposal_id'], pause['recommended_option']) == (
+        'decision', p['proposal_id'], None)
+    assert pause['position']['step_id'] == 'prediction_time'
+    # The next review names its own step (the feature availability), not the current one.
+    _confirm(f, p['proposal_id'])
+    nxt = f.view()['next_action']
+    assert nxt['review'] and nxt['pause']['position']['step_id'] == nxt['decision'] \
+        == 'feature_availability'
+    assert ('garder ' if lang == 'fr' else 'keep ') in nxt['pause']['proposal_text']
+    assert '{' not in nxt['pause']['proposal_text']

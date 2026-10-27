@@ -1,7 +1,7 @@
 'use strict';
-// Overview tests (scope U, WP-U1; COMPANION-ADVANCED §6.1, §3.3 reviewer, §7 W5 and W6):
-// the SummaryModel extensions, the CheckModel, and the Overview handler (`load: check`,
-// `render`, `acknowledge`, `switch_study`) through the real controller with the fixture
+// Overview tests (scope U, WP-U1; COMPANION-ADVANCED §6.1, §3.3 reviewer, §7 W5; W6 withdrawn
+// by R31): the SummaryModel extensions, the CheckModel, and the Overview handler (`load: check`,
+// `render`, `switch_study`) through the real controller with the fixture
 // CLI (test/fixture-cli.js). No process is started. Requirement ids are in the test names.
 
 const test = require('node:test');
@@ -224,64 +224,22 @@ test('OV-8: exit 3 is "ok with problems", with the messages verbatim, not a fail
   assert.match(copy, /regeneratedProblems: 'Regenerated with problems'/);
 });
 
-// --- handler: acknowledge (W6) ----------------------------------------------------------------
+// --- R31: no acknowledgement in the panel (the former W6) -------------------------------------
 
-test('HE-1: an acknowledgement typed in the panel runs the exact argv of W6 and records the words', async () => {
-  const words = 'I know the policy run was cut off and nobody knows what it did.';
-  const { c, tails, last } = make({ route: health() });
-  await c.handle({ v: 2, type: 'ready' });
-  await c.handle({ v: 2, type: 'acknowledge', executionId: INTERRUPTED, words, revision: 26 });
-  const run = tails().find(t => t[0] === 'run');
-  assert.deepEqual(run, ['run', '--acknowledge-interruption', INTERRUPTED, `--user-words=${words}`,
-    '--channel=webview', '--request-id', UUID, '--expected-revision', '26', '--json', '--study', AGENT.studyDir]);
-  const o = last('outcome');
-  assert.equal(o.op, 'W6');
-  assert.equal(o.kind, 'ok');
-  assert.equal(o.target, INTERRUPTED);
-  assert.equal(o.recorded.userWords, words);
-  assert.equal(o.recorded.status, 'acknowledged');
-});
-
-test('HE-1: the suspected execution can be acknowledged too; a late one cannot', async () => {
-  const { c, tails, last } = make({ route: health() });
-  await c.handle({ v: 2, type: 'ready' });
-  await c.handle({ v: 2, type: 'acknowledge', executionId: SUSPECTED, words: 'I know it stopped; its outcome is unknown.', revision: 26 });
-  assert.equal(tails().filter(t => t[0] === 'run').length, 1);
-  await c.handle({ v: 2, type: 'acknowledge', executionId: LATE, words: 'I know.', revision: 26 });
-  assert.equal(tails().filter(t => t[0] === 'run').length, 1, 'nothing ran');
-  assert.equal(last('outcome').kind, 'invalid');
-  assert.match(last('outcome').message, /not waiting for an acknowledgement.*Nothing was recorded\./);
-});
-
-test('HE-1: a bare "ok" is refused by the engine and shown verbatim; the panel never pre-refuses it', async () => {
-  const refusal = payload('error.bare_acknowledgement');
-  const { c, tails, last } = make({ route: health(tail => (tail[0] === 'run' ? 'error.bare_acknowledgement' : undefined)) });
-  await c.handle({ v: 2, type: 'ready' });
-  await c.handle({ v: 2, type: 'acknowledge', executionId: INTERRUPTED, words: 'ok', revision: 26 });
-  assert.ok(tails().some(t => t[0] === 'run' && t.includes('--user-words=ok')), 'sent as typed');
-  const o = last('outcome');
-  assert.equal(o.kind, 'refused');
-  assert.equal(o.refusal.code, 'ambiguous_confirmation');
-  assert.equal(o.refusal.reason, 'bare_acknowledgement');
-  assert.equal(o.refusal.engineMessage, refusal.error.message);
-  assert.match(o.refusal.human, /Nothing was recorded\.$/);
-  assert.doesNotMatch(o.refusal.human, /type|write ["“']/i, 'never suggests words');
-  assert.equal(tails().at(-1)[0], 'status', 'refreshed after the refusal');
-});
-
-test('HE-1, INV-5: blank or unknown acknowledgements are invalid and run nothing', async () => {
-  const { c, runCli, last } = make({ route: health() });
+test('HE-1 (R31, owner decision 2026-10-27): the panel takes no acknowledgement; an `acknowledge` message is dropped and runs nothing', async () => {
+  const { c, runCli, posted } = make({ route: health() });
   await c.handle({ v: 2, type: 'ready' });
   const before = runCli.calls.length;
-  await c.handle({ v: 2, type: 'acknowledge', executionId: INTERRUPTED, words: '   \n', revision: 26 });
-  assert.equal(last('outcome').kind, 'invalid');
-  assert.match(last('outcome').message, /Type your own reply first\. Nothing was recorded\./);
-  assert.equal(runCli.calls.length, before);
-  await c.handle({ v: 2, type: 'acknowledge', executionId: 'e_unknown', words: 'I know.', revision: 26 });
-  assert.equal(last('outcome').kind, 'invalid');
-  assert.ok(!runCli.calls.some(x => x.tail[0] === 'run'));
-  await c.handle({ v: 2, type: 'acknowledge', executionId: 'e 1; rm', words: 'I know.', revision: 26 });
-  assert.equal(c.diagnostics().ignored, 1, 'a malformed id never reaches the handler');
+  await c.handle({ v: 2, type: 'acknowledge', executionId: INTERRUPTED, words: 'I know the run was cut off.', revision: 26 });
+  assert.equal(runCli.calls.length, before, 'no process');
+  assert.equal(c.diagnostics().ignored, 1, 'an unknown message type');
+  assert.equal(posted.filter(m => m.type === 'outcome').length, 0, 'no outcome: nothing was asked');
+  assert.equal(overview.acknowledgeable, undefined);
+  const l10n = require('../lib/l10n');
+  for (const key of ['ackEmpty', 'ackTooLong', 'ackNotWaiting']) {
+    assert.equal(l10n.EN ? l10n.EN[key] : undefined, undefined, key);
+    assert.equal(l10n.FR[key], undefined, key);
+  }
 });
 
 test('HE-2: no write of the Overview restarts or runs an activity', () => {
@@ -291,7 +249,8 @@ test('HE-2: no write of the Overview restarts or runs an activity', () => {
     fs.readFileSync(path.join(ROOT, 'media', 'copy', 'overview.js'), 'utf8');
   assert.doesNotMatch(view, /'(Restart|Run|Rerun)\b[^']*'/);
   assert.doesNotMatch(view, /type: 'run_eda'|type: 'propose'/);
-  assert.deepEqual(Object.keys(overview.types).sort(), ['acknowledge', 'open_artifact', 'open_marimo', 'render', 'switch_study']);
+  assert.deepEqual(Object.keys(overview.types).sort(), ['open_artifact', 'open_marimo', 'render', 'switch_study']);
+  assert.doesNotMatch(src, /acknowledge-interruption|acknowledgeArgv/);
 });
 
 // --- reviewer (RV-2) -------------------------------------------------------------------------
@@ -300,11 +259,10 @@ test('RV-2: reviewer mode refuses every write type with "Read-only reviewer mode
   const { c, runCli, posted } = make({ settings: { stage: 'v3', reviewer: true }, route: health() });
   await c.handle({ v: 2, type: 'ready' });
   const before = runCli.calls.length;
-  // v0.3 narrowing: W1-W3 are no message types any more (protocol.test.js); W4-W6 remain.
+  // v0.3 narrowing: W1-W3 are no message types any more (protocol.test.js), nor W6 since R31.
   const writes = [
     [{ type: 'run_eda', activity: 'eda.distribution', column: 'age', revision: 26 }, 'W4'],
     [{ type: 'render' }, 'W5'],
-    [{ type: 'acknowledge', executionId: INTERRUPTED, words: 'I know it stopped.', revision: 26 }, 'W6'],
   ];
   for (const [m, op] of writes) {
     await c.handle({ v: 2, ...m });
@@ -386,27 +344,12 @@ test('copy: English strings without digits, decision-rule vocabulary, or suggest
       assert.doesNotMatch(s, /!/, s);
       assert.doesNotMatch(s, /\d/, `no digit outside placeholders: ${s}`);
     }
-    assert.match(copy.replyHint, /'ok' alone is not enough\.$/);
+    // R31: the acknowledgement is made in the chat; the card says so, and records nothing.
+    assert.match(copy.ackInChat, /'ok' alone is not enough\. This panel records nothing\.$/);
+    for (const key of ['reply', 'replyHint', 'acknowledge', 'acknowledgedEarlier']) assert.equal(copy[key], undefined, key);
   } finally {
     globalThis.Hypotrail = saved;
   }
 });
 
-test('R9UX-6: the W6 pre-check refusals follow the extension\'s language (lib/l10n.js)', async () => {
-  const l10n = require('../lib/l10n');
-  const { MAX_WORDS } = require('../lib/cli');
-  const { c, runCli, last } = make({ route: health(), settings: { stage: 'v1', language: 'fr' } });
-  await c.handle({ v: 2, type: 'ready' });
-  const before = runCli.calls.length;
-  await c.handle({ v: 2, type: 'acknowledge', executionId: INTERRUPTED, words: '   ', revision: 26 });
-  assert.equal(last('outcome').message, l10n.FR.ackEmpty);
-  // Over the limit: the protocol drops it before the handler, which refuses it too.
-  const invalid = [];
-  await require('../lib/handlers/overview').types.acknowledge(
-    { executionId: INTERRUPTED, words: 'x'.repeat(MAX_WORDS + 1), revision: 26 },
-    { invalid: (...a) => invalid.push(a), say: (key, ...args) => l10n.say('fr', key, ...args) });
-  assert.deepEqual(invalid, [['W6', `Votre réponse dépasse ${MAX_WORDS} caractères. Rien n'a été enregistré.`, INTERRUPTED]]);
-  await c.handle({ v: 2, type: 'acknowledge', executionId: LATE, words: 'Je sais.', revision: 26 });
-  assert.equal(last('outcome').message, l10n.FR.ackNotWaiting);
-  assert.ok(!runCli.calls.slice(before).some(x => x.tail[0] === 'run'), 'nothing ran');
-});
+

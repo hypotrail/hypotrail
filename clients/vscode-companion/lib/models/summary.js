@@ -156,7 +156,7 @@ function choiceOptionsOf(raw) {
  * Owner session 2026-10-26 (L7, D15): `next_action.after_study` on `done`, read only: the
  * engine's junior text (the study language; no command, id or revision) and whether the
  * Azure ML export plan is available from the chat (`azureml.supported`). The commands it
- * carries are the agent's and are not kept: the panel offers no new write (W4-W7 only).
+ * carries are the agent's and are not kept: the panel offers no new write (W4, W5, W7 only).
  * Null when absent or without a junior text.
  */
 function afterStudyOf(raw) {
@@ -358,6 +358,10 @@ function toSummaryModel(summary) {
       // (the conclusion, the model choice): the values the engine accepts now, labelled in
       // the study language (`next_action.choice_options`, CLI-CONTRACT §3.1). Read only.
       choiceOptions: choiceOptionsOf(next.choice_options),
+      // R24 (owner session 2026-10-27): the review of a decision the automatic mode recorded
+      // (`next_action.review`, a `reconfirm` or an `await_user_words`): an adoption question,
+      // not a change underneath (CLI-CONTRACT §3.1, §5.5). Read only.
+      review: next.review === true && ['reconfirm', 'await_user_words'].includes(str(next.kind)),
       // L7 (D15): what comes after the study, at `done` (CLI-CONTRACT §3.1). Read only.
       afterStudy: next.kind === 'done' ? afterStudyOf(next.after_study) : null },
     artifacts,

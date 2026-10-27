@@ -27,26 +27,31 @@ No pandas, numpy, or scikit-learn.
 """
 from __future__ import annotations
 
+import contextlib
+import contextvars
 import html
 import json
 import re
-from importlib import resources
 from typing import Any, Mapping
 
-from . import audience, cite, render_charts, render_diagnostics, texts
+from . import audience, cite, render_charts, texts
 from . import state as st
 
 BANNER_START = '<!--hypotrail:banner-->'
 BANNER_END = '<!--/hypotrail:banner-->'
-# L6 (R8): the narrative report (chapters and a table of contents).
-TEMPLATE_VERSION = 3
+# L6 (R8): the narrative report (chapters and a table of contents). Version 4 (owner decision
+# 2026-10-27, R25 to R30): the lesson-style report, both languages in one file
+# (:mod:`mlkit.study.render_lesson`).
+TEMPLATE_VERSION = 4
 # ``structure``: a count recorded in the study state rather than computed by an activity
 # (the sealed final test, the dataset rows); ``data_row``: a cell of the five development
 # rows shown as recorded in the file; ``axis``: a chart tick, exempt only inside an SVG
 # (WP-A6, :mod:`mlkit.study.render_charts`).
 LITERAL_KINDS = ('revision', 'ordinal', 'user_words', 'proposal', 'decision_value', 'case',
                  'identifier', 'parameter', 'environment', 'setting', 'message', 'category',
-                 'structure', 'data_row', 'axis')
+                 'structure', 'data_row', 'axis',
+                 # v4 (R25): an excerpt of a generated notebook cell, shown as code.
+                 'code')
 
 e = html.escape
 
@@ -56,63 +61,65 @@ def lit(kind: str, text: Any, tag: str = 'span') -> str:
     return f'<{tag} data-literal="{kind}">{e(str(text))}</{tag}>'
 
 
+# v4 (R27): the report holds both languages; each edition is written with the report
+# language set to its own language (``texts.report_language``). The study language is the
+# language of the recorded words (the junior's words, the decision values written as text,
+# the restatements the agent gave in it): shown as recorded in the other edition, with a
+# marker naming their language. The display names of the models (R26: a variant is named by
+# its family) are set per edition (:func:`model_names_context`).
+_STUDY_LANGUAGE = contextvars.ContextVar('hypotrail_report_study_language', default=None)
+_MODEL_NAMES = contextvars.ContextVar('hypotrail_report_model_names', default=None)
+
+
+@contextlib.contextmanager
+def study_language_context(language: str | None):
+    token = _STUDY_LANGUAGE.set(language if language in ('en', 'fr') else 'en')
+    try:
+        yield
+    finally:
+        _STUDY_LANGUAGE.reset(token)
+
+
+@contextlib.contextmanager
+def model_names_context(names: Mapping | None):
+    token = _MODEL_NAMES.set(dict(names or {}))
+    try:
+        yield
+    finally:
+        _MODEL_NAMES.reset(token)
+
+
+def study_language() -> str:
+    return _STUDY_LANGUAGE.get() or texts.report_language()
+
+
+def foreign(language: str | None = None) -> str | None:
+    """The language of recorded words when it differs from the edition's, else None."""
+    lang = language or study_language()
+    return lang if lang != texts.report_language() else None
+
+
+def marker(language: str | None = None) -> str:
+    """``(fr)`` or ``(en)`` after recorded words written in the other language (R27)."""
+    lang = foreign(language)
+    return f' <span class="recl" lang="{lang}">({lang})</span>' if lang else ''
+
+
+def recorded(kind: str, text: Any, tag: str = 'span', language: str | None = None) -> str:
+    """Recorded words (a literal of ``kind``) in their own language: in the other edition
+    they carry ``lang`` and a marker."""
+    lang = foreign(language)
+    if not lang:
+        return lit(kind, text, tag)
+    return (f'<{tag} data-literal="{kind}" lang="{lang}">{e(str(text))}</{tag}>'
+            f'{marker(language)}')
+
+
 def _css() -> str:
-    from .render_narrative import CSS as NARRATIVE_CSS
-    base = (resources.files('mlkit') / 'assets' / 'design.css').read_text(encoding='utf-8')
-    return base + REPORT_CSS + render_charts.CHART_CSS + render_diagnostics.CSS + NARRATIVE_CSS
+    from .render_lesson import css
+    return css()
 
 
-REPORT_CSS = '''
-.report h2{scroll-margin-top:16px}
-data{font-variant-numeric:tabular-nums;font-weight:650;border-bottom:1px dotted var(--muted);color:var(--ink)}
-.badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.02em;border:1px solid var(--line);border-radius:6px;padding:2px 8px;margin-right:8px;background:var(--soft);color:var(--ink)}
-.badge.confirmed{border-color:var(--accent)}
-.badge.proposed,.badge.reconfirm_required,.badge.stale,.badge.failed,.badge.delegated{border-style:dashed;border-color:var(--amber)}
-.words.delegated{border-left-color:var(--amber);border-left-style:dashed}
-.status-label{font-weight:650;color:var(--ink)}
-.plan li{margin:10px 0}
-.plan li.current{border-left:3px solid var(--accent);padding-left:10px}
-.term{color:var(--ink)}
-q[data-literal]{font-style:italic;color:var(--ink)}
-.words{border-left:3px solid var(--accent);padding:8px 14px;margin:8px 0;background:var(--soft);border-radius:6px;color:var(--ink)}
-.stale-banner{margin:0;border-radius:0}
-.surfaces td:first-child,.metrics td:first-child{font-weight:650}
-.muted{color:var(--muted)}
-dl.figures{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 18px;max-width:640px}
-dl.figures dt{color:var(--muted)}dl.figures dd{margin:0;text-align:right}
-.page-footer{max-width:1300px;margin:0 auto 40px;padding:20px 28px 0}
-.card.verdict{border-left:4px solid var(--accent)!important}
-dl.facts{display:grid;grid-template-columns:minmax(0,200px) minmax(0,1fr);gap:4px 18px;max-width:none}
-dl.facts dt{color:var(--muted)}dl.facts dd{margin:0;color:var(--ink)}
-.dictionary td:first-child,.availability td:first-child{white-space:nowrap}
-.verdict .conclusion{font-size:18px;color:var(--ink);margin:4px 0 10px}
-.verdict q{display:block;margin:6px 0 12px;color:var(--ink)}
-.verdict .limits li{margin:4px 0}
-.badge.met{border-color:var(--accent);color:var(--accent)}
-.badge.uncertain,.badge.not_met,.badge.not_assessed{border-style:dashed;border-color:var(--amber);color:var(--amber)}
-.chip{display:inline-block;font-size:11px;font-weight:650;border-radius:999px;padding:1px 9px;margin-right:6px;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
-.chip.delegated_default{border-style:dashed;border-color:var(--amber)}
-.dictionary td:nth-child(2){min-width:220px}
-.rows td,.rows th{white-space:nowrap;font-size:12px}
-details.ledger{margin:12px 0}
-details.annex{margin:28px 0}
-details.annex>summary{font-size:20px;font-weight:700;color:var(--ink)}
-details>summary{cursor:pointer}
-@media (max-width:640px){dl.facts{grid-template-columns:minmax(0,1fr)}dl.facts dd{margin-bottom:8px}}
-.scroll-hint{display:none}
-.report main section,.report main details{overflow-wrap:anywhere;min-width:0}
-.report main table{overflow-wrap:normal}
-@media (max-width:640px){.scroll-hint{display:block}.dictionary th,.dictionary td{padding:10px}.dictionary td:nth-child(2){min-width:150px}.dictionary td{overflow-wrap:anywhere}}
-'''
-
-# L6: the page follows the system theme by default (also without script, through the
-# ``prefers-color-scheme`` rule of the report's CSS); the toggle records an explicit choice,
-# written as ``dark`` or ``light`` on the body so that the CSS rule yields to it.
-THEME_SCRIPT = '''(function(){var b=document.body,k="hypotrail-theme",t=document.querySelector("[data-theme-toggle]");
-function set(d){b.classList.toggle("dark",d);b.classList.toggle("light",!d);if(t){t.setAttribute("aria-pressed",d?"true":"false");}}
-var s=null;try{s=window.localStorage.getItem(k);}catch(x){}
-set(s?s==="dark":!!(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches));
-if(t){t.addEventListener("click",function(){var d=!b.classList.contains("dark");set(d);try{window.localStorage.setItem(k,d?"dark":"light");}catch(x){}});}})();'''
 # C9: shown on an open proposal whose stored origin is ``{channel: webview}``.
 # C10: opening the report at ``#r-<result_id>`` unfolds that annex row (an anchor only).
 ANCHOR_SCRIPT = '''(function(){function o(){var h=window.location.hash;if(h.indexOf("#r-")!==0){return;}
@@ -266,12 +273,21 @@ def _recorded(conf: Mapping) -> str:
             f'{lit("revision", conf.get("revision"))}. {e(labels["not_authenticated"])}</span>')
 
 
-def _restatement(text: Any, english: Any) -> str:
+def _restatement(text: Any, english: Any, language: str | None = None) -> str:
     """A restatement the agent wrote (L3): in the study language when the agent gave it in
-    that language, else its English words, labelled ``lang="en"`` in a French report."""
+    that language, else its English words, labelled ``lang="en"`` in a French report.
+    v4 (R27): ``language`` is the language of ``text`` when known (the other edition of the
+    report reads the restatement given in its language, else the study language's, marked)."""
     shown = text or english or ''
-    other = ' lang="en"' if _french() and shown == english else ''
+    if language and language != texts.report_language():
+        return recorded('proposal', shown, language=language)
+    other = ' lang="en"' if _french() and shown == english and not language else ''
     return f'<span data-literal="proposal"{other}>{e(str(shown))}</span>'
+
+
+def _words_of(conf: Mapping, key: str = 'user_words', tag: str = 'q') -> str:
+    """The junior's recorded words, in the study language (marked in the other edition)."""
+    return recorded('user_words', conf.get(key) or '', tag)
 
 
 def _confirmation(conf: Mapping) -> str:
@@ -283,26 +299,26 @@ def _confirmation(conf: Mapping) -> str:
                 f'<span class="small">{e(labels["automatic_note"])}</span>'
                 f'<br>{_recorded(conf)}'
                 f'<br><span class="small">{e(labels["automatic_restatement"])}: '
-                f'{_restatement(conf.get("label"), conf.get("restatement", ""))}</span></div>')
+                f'{_restatement(conf.get("label"), conf.get("restatement", ""), conf.get("label_language"))}</span></div>')
     if conf.get('basis') == 'delegated_default':
         return (f'<div class="words delegated" data-basis="delegated_default">'
                 f'{_chip(conf)}{_badge("delegated", labels["delegated"])}'
                 f'<strong>{e(labels["delegated_words"])}:</strong> '
-                f'<q data-literal="user_words">{e(conf["user_words"])}</q>'
+                f'{_words_of(conf)}'
                 f'<br><span class="small">{e(labels["delegated_note"])}</span>'
                 f'<br>{_recorded(conf)}'
                 f'<br><span class="small">{e(labels["delegated_restatement"])}: '
-                f'{_restatement(conf.get("label"), conf.get("restatement", ""))}</span>'
+                f'{_restatement(conf.get("label"), conf.get("restatement", ""), conf.get("label_language"))}</span>'
                 f'{_concern(conf)}'
                 f'{_warnings(conf)}</div>')
     return (f'<div class="words" data-basis="explicit">{_chip(conf)}'
             f'<strong>{e(labels["user_words"])}:</strong> '
-            f'<q data-literal="user_words">{e(conf["user_words"])}</q>{_reason_note(conf)}'
+            f'{_words_of(conf)}{_reason_note(conf)}'
             + (f'<br><span class="small" data-adopted-from="automatic">'
                f'{e(labels["adopted_note"])}</span>' if conf.get('adopted_from') else '')
             + f'<br>{_recorded(conf)}'
             f'<br><span class="small">{e(labels["restatement"])}: '
-            f'{_restatement(conf.get("label"), conf.get("restatement", ""))}</span>'
+            f'{_restatement(conf.get("label"), conf.get("restatement", ""), conf.get("label_language"))}</span>'
             f'{_concern(conf)}'
             f'{_warnings(conf)}</div>')
 
@@ -343,21 +359,21 @@ def _note(n: Mapping) -> str:
     if n.get('kind') == 'correction':             # R3 (ADR 0005): a later correction
         return (f'<div class="words" data-note="{e(n["note_id"])}" data-status="recorded" '
                 f'data-kind="correction"><strong>{e(labels["correction"])}:</strong> '
-                f'<q data-literal="user_words">{e(n["user_words"])}</q>'
+                f'{recorded("user_words", n["user_words"], "q")}'
                 f'<br><span class="small">{e(labels["correction_note"])}</span></div>')
     if n['status'] == 'open':
         return (f'<div class="words delegated" data-note="{e(n["note_id"])}" data-status="open">'
                 f'{_badge("proposed", labels["hold_open"])}'
-                f'<q data-literal="user_words">{e(n["user_words"])}</q>'
+                f'{recorded("user_words", n["user_words"], "q")}'
                 f'<br><span class="small">{e(labels["hold_open_note"])}</span></div>')
     resolution = n.get('resolution') or {}
     withdrawn = n['status'] == 'withdrawn'          # D5: a hold the junior dropped
     return (f'<div class="words" data-note="{e(n["note_id"])}" data-status="{e(n["status"])}">'
             f'{_badge("confirmed", labels["hold_withdrawn" if withdrawn else "hold_resolved"])}'
-            f'<q data-literal="user_words">{e(n["user_words"])}</q>'
+            f'{recorded("user_words", n["user_words"], "q")}'
             f'<br><span class="small">'
             f'{e(labels["hold_withdrawn_by" if withdrawn else "hold_resolved_by"])}: </span>'
-            f'<q data-literal="user_words">{e(resolution.get("user_words", ""))}</q></div>')
+            f'{recorded("user_words", resolution.get("user_words", ""), "q")}</div>')
 
 
 def _availability_table(view: Mapping, variables: list[dict]) -> str:
@@ -424,24 +440,30 @@ def decision_card(view: Mapping, did: str, variables: list[dict],
     titles = titles if titles is not None else _step_titles(view.get('task'))
     d = view['decisions'][did]
     status = d['status']
-    parts = [f'<h3>{e(titles.get(did, did))} {_badge(status, labels["decision_status"][status])}</h3>']
+    conf = d.get('confirmation') or {}
+    # R26: a decision recorded by the automatic mode is never shown as a confirmed decision:
+    # its status reads "automatic, to review" until the junior adopts it in their own words.
+    if conf.get('basis') == st.AUTOMATIC and status in ('confirmed', 'reconfirm_required'):
+        shown_status = _badge('proposed', labels['automatic'])
+    else:
+        shown_status = _badge(status, labels['decision_status'][status])
+    parts = [f'<h3>{e(titles.get(did, did))} {shown_status}</h3>']
     if d['value'] is not None and did != 'feature_availability':
         if did == 'conclusion' and isinstance(d['value'], dict):
             verdict = labels['verdict'].get(d['value'].get('verdict'), d['value'].get('verdict'))
             parts.append(f'<p><strong>{e(verdict)}.</strong> '
-                         f'{lit("decision_value", d["value"].get("text", ""), "q")}</p>')
+                         f'{recorded("decision_value", d["value"].get("text", ""), "q")}</p>')
             parts.append(_credit(view, titles))
         else:
+            words = value_words(did, d['value'], view.get('task'))
+            # v4 (R27): a value recorded as free text is in the study language.
+            shown = (recorded('decision_value', words) if isinstance(d['value'], str)
+                     and words == d['value'] else lit('decision_value', words))
             parts.append(f'<p class="choice-value" data-value="{e(_value_text(d["value"]))}">'
-                         f'{lit("decision_value", value_words(did, d["value"], view.get("task")))}'
-                         f'</p>')
+                         f'{shown}</p>')
     if did == 'feature_availability':
+        # v4: the column-by-column table is the figure of chapter two, next to the card
         parts.append(_availability_summary(view, variables))
-        table = _availability_table(view, variables)
-        if table:
-            parts.append(f'<details class="availability-detail"><summary>'
-                         f'{e(labels["narrative"]["availability_detail"])}</summary>{table}'
-                         f'</details>')
     if did == 'preprocessing' and isinstance(d['value'], Mapping):
         parts.append(_motivation(view, d['value']))
     if d['confirmation'] and status in ('confirmed', 'reconfirm_required'):
@@ -461,7 +483,7 @@ def decision_card(view: Mapping, did: str, variables: list[dict],
                          f'</span> ' if origin.get('channel') == 'webview' else '')
             parts.append(f'<div class="feedback" data-proposal="{e(p["proposal_id"])}">'
                          f'{_badge("proposed", labels["proposal_waiting"])}'
-                         f'{companion}{_restatement(p.get("label"), p["restatement"])}'
+                         f'{companion}{_restatement(p.get("label"), p["restatement"], p.get("label_language"))}'
                          f'<br><span class="small">'
                          f'{lit("proposal", p["rationale"])}</span></div>')
     return (f'<article class="decision" data-decision="{e(did)}" data-status="{e(status)}">'
@@ -613,10 +635,18 @@ def _table(citer: cite.Citer, rid: str, table: Mapping, items: list) -> str:
             f'<tbody>{"".join(body)}</tbody></table></div>')
 
 
+def slot_title(slot: str) -> str:
+    """The title of a result in the edition's language: a variant by its family (R26), else
+    the activity's label."""
+    if slot.startswith('fit.variant'):
+        return model_name(slot)
+    return texts.activity(slot).get('label') or _labels().get('slot_labels', {}).get(slot, slot)
+
+
 def _result_block(view: Mapping, citer: cite.Citer, slot: str) -> str:
     labels = _labels()
     spec = texts.activity(slot)
-    title = spec.get('label') or labels.get('slot_labels', {}).get(slot, slot)
+    title = slot_title(slot)
     item = view['results'].get(slot)
     if item is None:
         return (f'<div data-slot="{e(slot)}" data-state="pending"><h4>{e(title)}</h4>'
@@ -632,7 +662,8 @@ def _result_block(view: Mapping, citer: cite.Citer, slot: str) -> str:
             f'<h4 data-result="{e(item["result_id"])}" '
             f'data-partition="{e(str(item["partition"]))}">{e(title)}</h4>{asked}'
             f'{_concept(spec.get("glossary")) if spec.get("glossary") else ""}'
-            f'<p class="small">Rows read: {e(_rows_words(item["partition"]))}.</p>'
+            f'<p class="small">{e(labels["words"]["rows_read"])} '
+            f'{e(_rows_words(item["partition"]))}.</p>'
             f'{_figures(citer, item["result_id"], spec)}</div>')
 
 
@@ -704,7 +735,8 @@ def _policy(view: Mapping, citer: cite.Citer) -> str:
     rules = {str(k): v for k, v in (rules or {}).items() if isinstance(v, Mapping)}
     level = ''
     if citer.has(rid, 'bootstrap.level'):
-        level = f' Intervals: {citer.num(rid, "bootstrap.level", "pct0")} percentile intervals.'
+        level = (f' {e(labels["words"]["intervals"])} {citer.num(rid, "bootstrap.level", "pct0")} '
+                 f'{e(labels["words"]["percentile_intervals"])}')
     rows, paired = [], []
     for key, item in rules.items():
         prefix = ['rules', key]
@@ -827,9 +859,10 @@ def _model_comparison(view: Mapping, citer: cite.Citer) -> str:
     metrics = texts.regression_metrics()
     level = ''
     if citer.has(rid, 'bootstrap.level'):
-        level = f' Intervals: {citer.num(rid, "bootstrap.level", "pct0")} percentile intervals.'
+        level = (f' {e(labels["words"]["intervals"])} {citer.num(rid, "bootstrap.level", "pct0")} '
+                 f'{e(labels["words"]["percentile_intervals"])}')
     unit = values.get('unit')
-    unit_note = f' Unit: {lit("case", unit)}.' if unit else ''
+    unit_note = f' {e(labels["words"]["unit"])} {lit("case", unit)}.' if unit else ''
     rows, paired = [], []
     models = values.get('models') if isinstance(values.get('models'), Mapping) else {}
     for model in models:
@@ -993,10 +1026,9 @@ def _annex(view: Mapping, citer: cite.Citer) -> str:
     for slot in sorted(view['results']):
         item = view['results'][slot]
         rid = item['result_id']
-        spec = texts.activity(slot)
-        title = spec.get('label') or labels.get('slot_labels', {}).get(slot, slot)
-        head = (f'<summary>{lit("identifier", slot, "code")} · {e(title)}'
-                f' · result {lit("identifier", rid[:12], "code")}</summary>')
+        head = (f'<summary>{lit("identifier", slot, "code")} · {e(slot_title(slot))}'
+                f' · {e(labels["words"]["result"])} {lit("identifier", rid[:12], "code")}'
+                '</summary>')
         if not citer.citable(rid):
             state = 'stale' if item['integrity'] == 'ok' else item['integrity']
             blocks.append(f'<details data-slot="{e(slot)}" data-state="stale">{head}<p>'
@@ -1108,6 +1140,10 @@ def value_words(decision_id: str, value: Any, task: str | None) -> str:
         return (words['with_model'].format(words=text, model=audience.model_words(model, lang))
                 if sep and model else text)
     if decision_id == 'model_choice':
+        named = (_MODEL_NAMES.get() or {}).get(value)
+        if named and str(value).startswith('fit.variant'):
+            # R26: the variant named by its family.
+            return words['use_model'].format(model=_lower_first(named))
         ordinal = {'fit.variant:2': 'second', 'fit.variant:3': 'third'}.get(value)
         if ordinal:
             return words['later_variant'].format(ordinal=words['ordinals'][ordinal])
@@ -1189,7 +1225,40 @@ MODEL_NAMES_EXTRA = {'fit.variant:2': 'Second variant', 'fit.variant:3': 'Third 
 
 
 def _model_name(model: str) -> str:
+    named = (_MODEL_NAMES.get() or {}).get(model)
+    if named:
+        return named
     return _labels().get('model_names', {}).get(model, MODEL_NAMES_EXTRA.get(model, model))
+
+
+def model_name(model: str) -> str:
+    """The display name of a model slot in the edition's language (R26: a variant by its
+    family: "EBM variant (readable non-linear model)", never "variant of the linear
+    model")."""
+    return _model_name(model)
+
+
+def model_phrase(model: str) -> str:
+    """A model named inside a sentence, with its article: "the linear model", "la variante
+    EBM (modèle non linéaire lisible)"."""
+    lang = texts.report_language()
+    if model in ('fit.linear', 'fit.logistic', 'fit.baseline'):
+        return audience.model_words(model, lang)
+    return ('la ' if lang == 'fr' else 'the ') + _lower_first(_model_name(model))
+
+
+def model_short(model: str) -> str:
+    """A short name of a model for a chart label ("linear", "EBM")."""
+    named = (_MODEL_NAMES.get() or {}).get('short:' + str(model))
+    if named:
+        return named
+    key = {'fit.linear': 'linear', 'fit.logistic': 'logistic',
+           'fit.baseline': 'baseline'}.get(str(model), 'other')
+    return texts.say(texts.lesson(f'models_short.{key}'))
+
+
+def capital(text: str) -> str:
+    return text[:1].upper() + text[1:] if text else text
 
 
 def _rows_words(partition: Any) -> str:
@@ -1259,7 +1328,7 @@ def _regression_figures(citer: cite.Citer, chosen: str = 'fit.linear') -> list[t
         interval = (card['mae_interval'].format(low=citer.num(rid, iv + '.low', 'f2'),
                                                 high=citer.num(rid, iv + '.high', 'f2'))
                     if citer.has(rid, iv + '.low') else '')
-        rows.append((card['mae_of'].format(model=_model_name(model).lower()),
+        rows.append((card['mae_of'].format(model=_lower_first(_model_name(model))),
                      f'{citer.num(rid, path, "f2")}{interval}'))
     d = cite.format_path(['deltas', chosen, 'mae'])
     if citer.has(rid, d + '.point'):
@@ -1378,7 +1447,10 @@ def _verdict(view: Mapping, citer: cite.Citer) -> str:
 
 
 def _lower_first(text: str) -> str:
-    return text[:1].lower() + text[1:] if text else text
+    """``text`` with a lower-case first letter, except an acronym ("EBM variant")."""
+    if not text or (len(text) > 1 and text[1].isupper()):
+        return text
+    return text[:1].lower() + text[1:]
 
 
 def _out_of_fold(citer: cite.Citer, task: str) -> bool:
@@ -1414,7 +1486,7 @@ def _final_rows(view: Mapping, citer: cite.Citer, task: str) -> list[tuple[str, 
                 if citer.has(rid, path):
                     # B6c (Low): the error is in the target's unit; say which.
                     unit = values.get('unit')
-                    rows.append((f'{card["final_mae"]}, {_model_name(slot).lower()}',
+                    rows.append((f'{card["final_mae"]}, {_lower_first(_model_name(slot))}',
                                  citer.num(rid, path, 'f2')
                                  + (f' {lit("case", unit)}' if unit else '')))
         else:
@@ -1508,11 +1580,11 @@ def _who_decided(view: Mapping, name: str) -> tuple[str, str, str]:
     return shown, who, 'confirmed' if basis == 'discussed' else 'stale'
 
 
-def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
-          sample: Mapping | None) -> str:
+def data_facts(view: Mapping, citer: cite.Citer, variables: list[dict]) -> list[tuple[str, str]]:
+    """``(label, value html)`` of the data card: row unit, development rows, columns, the
+    final test, the target."""
     labels = _labels()
     ds = labels['data_section']
-    parts = [f'<h2>{e(labels["sections"]["data"])}</h2>']
     facts = []
     unit = _fact_value(view, 'observation_unit')
     if unit:
@@ -1554,8 +1626,15 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
     if target:
         facts.append((ds['target'], f'{lit("identifier", target["name"], "code")}: '
                                     f'{lit("case", target.get("description", ""))}'))
-    parts.append('<dl class="facts">' + ''.join(f'<dt>{e(k)}</dt><dd>{v}</dd>'
-                                                  for k, v in facts) + '</dl>')
+    return facts
+
+
+def data_dictionary(view: Mapping, citer: cite.Citer, variables: list[dict]) -> str:
+    """The case variables grouped, with their meaning, type and unit, missing cells (cited
+    from ``eda.quality``), and availability with who decided it."""
+    labels = _labels()
+    ds = labels['data_section']
+    parts = []
     # the grouped dictionary
     quality = citer.slot_rid('eda.quality')
     missing_index = {}
@@ -1567,10 +1646,6 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
     for v in variables:
         groups.setdefault(v.get('group') or ds['ungrouped'], []).append(v)
     head = ds['head']
-    # L6: the data card (the grouped dictionary and the example rows) is folded under the
-    # summary; it stays in chapter one.
-    parts.append(f'<details class="data-card"><summary>{e(ds["dictionary"])}, '
-                 f'{e(_lower_first(ds["rows"]))}</summary>')
     # WP-A9 (M6): a narrow screen scrolls the tables sideways; say so where it shows.
     parts.append(f'<p class="small scroll-hint" data-scroll-hint>{e(ds["scroll_hint"])}</p>')
     for group, items in groups.items():
@@ -1592,8 +1667,8 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
                     doubt = (f' <span class="case-doubt" data-case-availability='
                              f'"{e(case_value)}">{e(ds["case_" + case_value])}</span>')
                 avail = (f'{_badge(cls, shown)}'
-                         f'<br><span class="small">{e(who)}. Case: {e(case_label)}.{doubt}'
-                         f'</span>')
+                         f'<br><span class="small">{e(who)}. {e(ds["case_word"])}: '
+                         f'{e(case_label)}.{doubt}</span>')
             else:
                 role = v.get('role', '')
                 avail = f'<span class="small">{e(labels.get("roles", {}).get(role, role))}</span>'
@@ -1611,8 +1686,13 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
                      f'<th>{e(head["type"])}</th><th>{e(ds["missing"])}</th>'
                      f'<th>{e(labels["availability_head"]["status"])}</th></tr></thead>'
                      f'<tbody>{"".join(rows)}</tbody></table></div>')
-    # five fixed development rows
-    parts.append(f'<h3>{e(ds["rows"])}</h3>')
+    return ''.join(parts)
+
+
+def data_rows(sample: Mapping | None) -> str:
+    """The five fixed development rows, target first (``cmd_render.sample_rows``)."""
+    ds = _labels()['data_section']
+    parts = [f'<h3>{e(ds["rows"])}</h3>']
     if sample and sample.get('rows'):
         cols = sample['columns']
         head_html = ''.join(f'<th>{lit("identifier", c)}</th>' for c in cols)
@@ -1623,8 +1703,19 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
                      f'<p class="small">{e(ds["rows_note"])}</p>')
     else:
         parts.append(f'<p class="muted">{e(ds["rows_missing"])}</p>')
-    parts.append('</details>')
-    return f'<section class="card" id="data">{"".join(parts)}</section>'
+    return ''.join(parts)
+
+
+def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
+          sample: Mapping | None) -> str:
+    labels = _labels()
+    ds = labels['data_section']
+    facts = data_facts(view, citer, variables)
+    return (f'<section class="card" id="data"><h2>{e(labels["sections"]["data"])}</h2>'
+            '<dl class="facts">' + ''.join(f'<dt>{e(k)}</dt><dd>{v}</dd>' for k, v in facts)
+            + f'</dl><details class="data-card"><summary>{e(ds["dictionary"])}, '
+              f'{e(_lower_first(ds["rows"]))}</summary>'
+            + data_dictionary(view, citer, variables) + data_rows(None) + '</details></section>')
 
 
 # --- v0.2a (WP-A6): charts -----------------------------------------------------------------
@@ -1711,74 +1802,31 @@ def _looks(view: Mapping) -> str:
 def build(view: Mapping, *, surfaces: Mapping | None = None,
           variables: list[dict] | None = None,
           sample: Mapping | None = None,
-          understanding: str = '') -> tuple[str, list[str]]:
+          understanding: str = '', twin: Mapping | None = None) -> tuple[str, list[str]]:
     """``(html, consumed result ids)`` of the report for ``view``.
 
-    ``surfaces`` gives the status of each deliverable for the revision banner; the
-    report itself is described as written at this revision. ``variables`` is the case
-    variable dictionary (for the data section and the availability table). ``sample``
-    holds the five fixed development rows of the data section (``{columns, rows}``, read
-    by :mod:`mlkit.study.cmd_render`). Raises ``untraceable_number`` when a cited number
-    cannot be traced.
+    ``surfaces`` gives the status of each deliverable for the annex; the report itself is
+    described as written at this revision. ``variables`` is the case variable dictionary
+    (for the data card and the availability table). ``sample`` holds the five fixed
+    development rows of the data card (``{columns, rows}``, read by
+    :mod:`mlkit.study.cmd_render`). Raises ``untraceable_number`` when a cited number cannot
+    be traced.
 
-    Order (L6, R8; :mod:`mlkit.study.render_narrative`): the verdict card first, a short
-    "how to read" note, then nine chapters in the order of the study (the question and the
-    data; the framing; how it is evaluated; the exploration; the preparation; the models; the
-    decision rule or, in regression, the model choice; the final test; the conclusion and
-    its limits), each with the choice, why, the evidence and what remains uncertain, then
-    the annex (the results, the plan, the case statements, the history, the surfaces), with
-    a table of contents. ``understanding`` (ADR 0008) is the separate section of the
-    understanding review, already escaped (:func:`mlkit.study.understanding.render.section`),
-    placed after the conclusion; empty when the review was never enabled.
+    v4 (owner decision 2026-10-27, R25 to R30; :mod:`mlkit.study.render_lesson`): the report
+    is a lesson in the "tableau noir" charter, and holds both languages (R27): an edition in
+    the study language, shown first and alone without script, then an edition in the other
+    language, written from ``twin`` (the same study read in that language,
+    ``view.build(..., language=...)``; derived from ``view`` when not given). Order of an
+    edition (:mod:`mlkit.study.render_narrative`): "How to read this report", the verdict,
+    nine chapters in the order of the study, then the summary, the questions to say out
+    loud, the decisions to review, and the appendix, with a sticky table of contents and a
+    position line. ``understanding`` (ADR 0008) is the separate section of the
+    understanding review, already escaped, placed after the conclusion; empty when the
+    review was never enabled.
     """
-    with texts.study_context(view), texts.report_language_context(view.get('language')):
-        return _build(view, surfaces=surfaces, variables=variables, sample=sample,
-                      understanding=understanding)
-
-
-def _build(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | None,
-           sample: Mapping | None = None, understanding: str = '') -> tuple[str, list[str]]:
-    from . import render_narrative as narrative
-
-    labels = _labels()
-    words = labels['narrative']
-    citer = cite.Citer.from_view(view)
-    surfaces = dict(surfaces or {})
-    surfaces.setdefault('report', {'status': 'ok', 'revision': view['revision']})
-    mobile, side, body = narrative.body(view, citer, surfaces=surfaces,
-                                        variables=variables or [], sample=sample,
-                                        understanding=understanding)
-    if _french():
-        # L3 (owner session 2026-10-26, R4): the renderers' own English phrases (charts,
-        # diagnostics, table heads) in French (:mod:`mlkit.study.l10n_report`).
-        from . import l10n_report
-        mobile, side, body = (l10n_report.french(mobile), l10n_report.french(side),
-                              l10n_report.french(body))
-
-    consumed = sorted({c['result_id'] for c in citer.cited})
-    snapshot_json = json.dumps(view.get('presentation'), sort_keys=True,
-                               separators=(',', ':'), ensure_ascii=False).replace('<', '\\u003c')
-    case = view['case']
-    page = (
-        f'<!doctype html>\n<html lang="{e(view.get("language", "en"))}"><head><meta charset="utf-8">'
-        '<meta name="viewport" content="width=device-width,initial-scale=1">'
-        '<meta name="color-scheme" content="light dark">'
-        f'<meta name="hypotrail-revision" content="{view["revision"]}">'
-        f'<meta name="hypotrail-template-version" content="{TEMPLATE_VERSION}">'
-        f'<title>{e(labels["title"])}</title><style>{_css()}</style></head>\n'
-        f'<body class="report" data-revision="{view["revision"]}">{BANNER_START}{BANNER_END}\n'
-        f'<a class="skip" href="#verdict">{e(words["skip"])}</a>'
-        f'<header><span class="brand">Hypotrail</span>'
-        f'<span>{e(labels["title"])} · {lit("case", case.get("id", ""))}</span>'
-        f'<button type="button" data-theme-toggle aria-pressed="false">{e(labels["theme_toggle"])}</button>'
-        f'</header>\n{mobile}<div class="layout">{side}'
-        f'<main><p class="lead">{e(labels["subtitle"])}</p>{automation_banner(view)}'
-        f'{body}</main></div>\n'
-        f'<footer class="page-footer">{e(labels["generated_by_for_revision"])} '
-        f'{lit("revision", view["revision"])}. {e(labels["no_controls"])}</footer>\n'
-        f'<script type="application/json" id="hypotrail-presentation">{snapshot_json}</script>'
-        f'<script>{THEME_SCRIPT}\n{ANCHOR_SCRIPT}\n{narrative.SCRIPT}</script></body></html>\n')
-    return page, consumed
+    from . import render_lesson
+    return render_lesson.page(view, surfaces=surfaces, variables=variables, sample=sample,
+                              understanding=understanding, twin=twin)
 
 
 def automation_banner(view: Mapping) -> str:

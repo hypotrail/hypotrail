@@ -1036,7 +1036,8 @@ CLAUDE_CODE_INTENDED_CHANGES = {
     'L9 (R20): the automatic mode (rule 4), without the credit sentence': (
         '     with the plan.\n'
         '   - **Automatic mode** (`automation.status` `running`, chosen at `init`). Run\n'
-        '     `automation run --progress`, relay its lines, then its `reason` in one sentence;\n'
+        '     `automation run --progress --json`, relay its lines, then its `reason` in one '
+        'sentence;\n'
         '     only the runner passes `--basis automatic`. A `next_action` with `review: true` is\n'
         '     the review: propose its value again and ask the closed question; the junior adopts\n'
         '     or changes it. Until none is left, the study is not defensible. Their "stop" is\n'
@@ -1117,7 +1118,10 @@ def test_the_automatic_mode_rule(task):
     from mlkit.study import automation, cli
     rule4 = _rule(Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task)), 4)
     for phrase in ('**Automatic mode** (`automation.status` `running`, chosen at `init`)',
-                   '`automation run --progress`', 'only the runner passes `--basis automatic`',
+                   # R23 (2026-10-27): on a terminal the runner prints its readable summary
+                   # by default; the agent reads the JSON document.
+                   '`automation run --progress --json`',
+                   'only the runner passes `--basis automatic`',
                    '`review: true`', 'ask the closed question; the junior adopts or changes it',
                    'the study is not defensible', '`automation stop`'):
         assert phrase in rule4, phrase

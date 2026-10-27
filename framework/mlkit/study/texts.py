@@ -35,7 +35,10 @@ CONTENT_FILES = ('glossary', 'steps', 'steps_fr', 'activities', 'report', 'repor
                  # WP-E3 drafts.
                  'digest', 'drafts', 'evidence', 'learn',
                  # v0.2b (WP-B2): the concept terms of the training confirmation mode.
-                 'concepts')
+                 'concepts',
+                 # Owner decision 2026-10-27 (R25 to R30): the lesson-style report, every
+                 # text in English and French side by side.
+                 'lesson')
 BINARY, REGRESSION = 'binary', 'regression'
 _TASK = contextvars.ContextVar('hypotrail_texts_task', default=BINARY)
 # B6c (M3): the evaluation scheme of the study. Under cross-validation every development
@@ -298,10 +301,15 @@ def _report(task: str, scheme: str = VALIDATION, language: str = 'en') -> dict:
         french = load('report_fr')
         out = _merge(out, {k: v for k, v in french.items()
                            if k not in ('schema', REGRESSION, CROSS_VALIDATION)})
+        # the same order as the English: the task, then the scheme, then the task's scheme
+        # (a French regression under cross-validation reads "out-of-fold predictions" too)
         if task == REGRESSION:
-            out = _merge(out, french.get(REGRESSION, {}))
+            out = _merge(out, {k: v for k, v in (french.get(REGRESSION) or {}).items()
+                               if k != CROSS_VALIDATION})
         if scheme == CROSS_VALIDATION:
             out = _merge(out, french.get(CROSS_VALIDATION, {}))
+            if task == REGRESSION:
+                out = _merge(out, (french.get(REGRESSION) or {}).get(CROSS_VALIDATION, {}))
     return out
 
 
@@ -411,3 +419,38 @@ def policy_metrics() -> list[dict]:
 
 def regression_metrics() -> list[dict]:
     return list(load('activities').get('regression_metrics', []))
+
+
+# --- the lesson-style report (owner decision 2026-10-27, R25 to R30) -------------------------
+
+@functools.cache
+def _lesson(task: str) -> dict:
+    data = load('lesson')
+    base = {k: v for k, v in data.items() if k not in ('schema', REGRESSION, BINARY)}
+    return _merge(base, data.get(task) or {})
+
+
+def lesson(path: str, task: str | None = None):
+    """The node of ``content/lesson.yaml`` at the dotted ``path`` for the study's task (its
+    ``regression`` or ``binary`` overlay merged over the shared texts). A leaf stays a
+    ``{en, fr}`` mapping: :func:`say` picks the language. KeyError when absent."""
+    node = _lesson(current_task(task))
+    for part in path.split('.'):
+        node = node[part]
+    return node
+
+
+def has_lesson(path: str, task: str | None = None) -> bool:
+    try:
+        lesson(path, task)
+    except (KeyError, TypeError):
+        return False
+    return True
+
+
+def say(node, language: str | None = None) -> str:
+    """The text of a ``{en, fr}`` leaf in ``language`` (the report language by default)."""
+    lang = language or report_language()
+    if isinstance(node, dict) and ('en' in node or 'fr' in node):
+        return node.get(lang) or node.get('en') or ''
+    return '' if node is None else str(node)

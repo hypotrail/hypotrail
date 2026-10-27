@@ -12,6 +12,7 @@
     title: 'Hypotrail study',
     product: 'Hypotrail',
     experimental: 'Experimental · feature flag on',
+    stage: s => `stage ${s}`,
     regression: 'regression',
     reviewer: 'Reviewer, read-only',
     switchStudy: name => `Study: ${name} ▾`,
@@ -84,7 +85,6 @@
     done: {
       W4: 'Ran on training rows.',
       W5: 'Regenerated the report and notebook.',
-      W6: 'Acknowledged in your words.',
       W7: 'Exported the handoff pack.',
     },
     modalCancel: 'Cancel',

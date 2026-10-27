@@ -36,6 +36,7 @@ import hypotrail_runtime  # noqa: E402
 from hypotrail_runtime import wheel as rw  # noqa: E402
 
 import flowkit as fk  # noqa: E402
+from lesson_page import editions  # noqa: E402
 from mlkit.study import (activities as act, code_compat, governance, numtrace,  # noqa: E402
                          read, registry, state as st, view as view_mod)
 from test_review_round2_training_exclusions import (CRITERION, OPEN, VARIANT,  # noqa: E402
@@ -686,7 +687,9 @@ def test_next_action_runs_as_given_from_init_to_done(tmp_path, monkeypatch, kind
     check = f.call('check', '--study', f.study, expect=None)
     assert check['counts'] == {'error': 0, 'warning': 0}, check['findings'][:5]
     import html
-    report = html.unescape(next((Path(f.study) / 'reports').glob('*.html')).read_text('utf-8'))
+    page = next((Path(f.study) / 'reports').glob('*.html')).read_text('utf-8')
+    # v4 (R27): the French edition (the page also holds the English one)
+    report = html.unescape(editions(page)[language])
     if language == 'fr':
         leaked = [w for w in ENGLISH_IN_FRENCH if w in report]
         assert not leaked, leaked

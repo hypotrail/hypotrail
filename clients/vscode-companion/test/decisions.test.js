@@ -253,19 +253,16 @@ test('INV-8: refusal explanations never suggest words: no quotation, no example,
   }
 });
 
-test('refusal contexts: W4 run, W6 acknowledge, W7 export, from the payload command (no W3 since v0.3)', () => {
+test('refusal contexts: W4 run, W7 export, from the payload command (no W3 since v0.3, no W6 since R31)', () => {
   assert.equal(refusals.BY_CONTEXT.propose, undefined);
-  assert.equal(refusals.contextOf({ command: 'decide propose' }, 'stale_revision', null, {}), null);
+  // R31 (2026-10-27): the panel sends no acknowledgement, so there is no acknowledge context.
+  assert.equal(refusals.BY_CONTEXT.acknowledge, undefined);
+  assert.equal(refusals.contextOf({ command: 'decide propose' }), null);
   const c = refusals.describe(error('decide confirm', 'stale_revision', 'Revision is stale.'));
   assert.match(c.human, /read the proposal again before answering/);
   const run = refusals.describe(error('run', 'stale_revision', 'Revision is stale.'));
   assert.match(run.human, /before asking for a chart/);
-  const ack = refusals.describe(error('run', 'ambiguous_confirmation', 'A bare acknowledgement is not an acknowledgement.',
-    { reason: 'bare_acknowledgement', execution_id: 'e_1' }));
-  assert.match(ack.human, /acknowledged the interruption/);
-  assert.equal(refusals.contextOf({ command: 'run' }, 'unknown_execution', null, {}), 'acknowledge');
-  assert.equal(refusals.contextOf({ command: 'run' }, 'precondition_missing', null, {}), 'run');
-  assert.equal(refusals.contextOf({ command: 'run' }, 'execution_in_progress', null, { execution_id: 'e_1' }), 'run');
+  assert.equal(refusals.contextOf({ command: 'run' }), 'run');
   const exp = refusals.describe(payload('error.export_target_exists'));
   assert.equal(exp.code, 'export_target_exists');
   assert.match(exp.human, /^The chosen folder already holds files/);

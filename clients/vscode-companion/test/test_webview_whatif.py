@@ -16,8 +16,8 @@ from conftest import inline_styles_ok
 
 FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 THEMES = ['light', 'dark']
-# The panel's writes (W4-W7), and the message types W1-W3 had before the v0.3 narrowing.
-WRITES = {'confirm', 'withdraw', 'propose', 'run_eda', 'render', 'acknowledge', 'export_handoff'}
+# The panel's writes (W4, W5, W7; W6 withdrawn by R31), and the message types W1-W3 had before the v0.3 narrowing.
+WRITES = {'confirm', 'withdraw', 'propose', 'run_eda', 'render', 'acknowledge', 'export_handoff'}  # W1-W3 and W6: withdrawn messages
 
 
 @pytest.fixture(scope='module')

@@ -76,7 +76,9 @@ def result_ids(raw):
 
 TEXT_ABOVE = """limit => {
   const out = [];
-  const walker = document.createTreeWalker(document.getElementById('panel-overview'), NodeFilter.SHOW_TEXT);
+  // Lesson style (2026-10-27): the next move is the board callout above the tabs, so the
+  // whole panel is read, from its top.
+  const walker = document.createTreeWalker(document.getElementById('app'), NodeFilter.SHOW_TEXT);
   while (walker.nextNode()) {
     const n = walker.currentNode;
     if (!n.textContent.trim()) continue;
@@ -240,12 +242,13 @@ def test_forced_colors_keep_button_borders(open_panel, views):
 
 @pytest.mark.parametrize('theme', THEMES)
 def test_disabled_is_not_opacity_only(open_panel, model, theme):
-    # WP-E1: the Decisions card has no write control any more; the acknowledgement of an
-    # interrupted execution (W6, Overview) stays disabled until words are typed.
+    # WP-E1: the Decisions card has no write control any more; R31 (2026-10-27): nor has the
+    # interrupted execution (W6 withdrawn). While a write runs, Refresh is disabled.
     panel = panel_for(open_panel, theme, 900, model('summary', 'summary.binary.health'))
     page = panel.page
     page.locator('[role="tab"][data-tab="overview"]').click()
-    selector = 'button[data-write="acknowledge"]'
+    panel.send({'type': 'busy', 'busy': True, 'op': 'W5', 'target': 'render'})
+    selector = 'button[data-refresh]'
     button = page.locator(selector).first
     assert button.is_disabled()
     state = page.evaluate(BORDERS, selector)[0]

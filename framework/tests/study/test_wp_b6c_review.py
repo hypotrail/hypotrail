@@ -24,6 +24,7 @@ from mlkit.study import manifest as mf, policy, state as st
 
 import flowkit as fk
 from flowkit import Flow
+from lesson_page import editions, primary
 
 OPEN_WORDS = 'Yes, I open the final test now, because the model and the rule are fixed'
 
@@ -71,8 +72,16 @@ def _page(flow) -> str:
 
 
 def _section(page: str, sid: str) -> str:
-    return re.search(rf'<section class="card[^"]*" id="{sid}">.*?</section>', page,
-                     re.S).group(0)
+    """v4: the verdict block, or the data frame of chapter one, in the study language's
+    edition (the whole element)."""
+    page = primary(page)
+    m = re.search(rf'<(section|div) class="(?:blk|frame)"(?: [^>]*)? id="{sid}"', page)
+    tag, depth = m.group(1), 0
+    for t in re.finditer(rf'<(/?){tag}\b', page[m.start():]):
+        depth += -1 if t.group(1) else 1
+        if depth == 0:
+            return page[m.start():m.start() + t.end()]
+    raise AssertionError(f'unclosed {sid}')
 
 
 @pytest.fixture(scope='module')
@@ -177,8 +186,8 @@ def test_the_verdict_card_shows_one_judged_criterion(opened, tmp_path):
     assert crit['judged_status'] == crit['final_test']['status']
     verdict = _section(_page(Flow(fk.clone(opened.study, tmp_path / 'study'),
                                   opened.case_dir, prefix='h4')), 'verdict')
-    row = verdict[verdict.index('<dt>Success criterion</dt>'):]
-    row = row[:row.index('</dd>')]
+    row = verdict[verdict.index('<b>Success criterion</b>'):]
+    row = row[:row.index('</div>')]
     assert 'on the final test, where it is judged once the final test is opened' in row
     assert f'data-development-status="{crit["status"]}"' in row
     assert ('They differ because' in row) is (crit['status'] != crit['judged_status'])
@@ -254,6 +263,12 @@ TRAIN_VALIDATION = re.compile(r'validation|training rows?|training partition|tra
 # does with the rows it is fitted on (within a fold, the other folds' rows).
 ALLOWED = re.compile(r'cross-validat\w*|cross_validation|more rows than one validation set|'
                      r'validation folds?|training folds?', re.I)
+# v4 (R27): the report's French edition, in its own words.
+TRAIN_VALIDATION_FR = re.compile(r"validation|lignes? d.entraînement|partition d.entraînement|"
+                                 r"moyenne d.entraînement", re.I)
+ALLOWED_FR = re.compile(r"cross-validat\w*|validation croisée( imbriquée)?|"
+                        r"plus de lignes qu.un seul jeu de validation|plis? de validation|"
+                        r"plis? d.entraînement", re.I)
 GENERIC_TERMS = ('overfitting', 'regularisation', 'imputation', 'standardisation')
 
 
@@ -269,8 +284,10 @@ def _junior_text(page: str) -> str:
 
         def handle_starttag(self, tag, attrs):
             a = dict(attrs)
-            skip = tag in ('style', 'script') or a.get('id') == 'annex' or \
-                a.get('data-literal') in ('user_words', 'decision_value', 'case', 'proposal')
+            # v4: each edition's annex (``annex``, ``annex--fr``), and the notebook's code
+            skip = tag in ('style', 'script') or (a.get('id') or '').split('--')[0] == 'annex' \
+                or a.get('data-literal') in ('user_words', 'decision_value', 'case', 'proposal',
+                                             'code')
             if self.depth or skip:
                 self.depth += 1 if tag not in ('br', 'img', 'input', 'meta', 'link') else 0
 
@@ -287,17 +304,20 @@ def _junior_text(page: str) -> str:
     return ' '.join(' '.join(p.out).split())
 
 
-def _offending(text: str, allowed_sentences=()) -> list[str]:
+def _offending(text: str, allowed_sentences=(), lang: str = 'en') -> list[str]:
     for sentence in allowed_sentences:
         text = text.replace(' '.join(sentence.split()), ' ')
-    text = ALLOWED.sub(' ', text)
-    return [text[max(0, m.start() - 80):m.end() + 40] for m in TRAIN_VALIDATION.finditer(text)]
+    allowed, refused = (ALLOWED, TRAIN_VALIDATION) if lang == 'en' else \
+        (ALLOWED_FR, TRAIN_VALIDATION_FR)
+    text = allowed.sub(' ', text)
+    return [text[max(0, m.start() - 80):m.end() + 40] for m in refused.finditer(text)]
 
 
-def _generic_definitions(task: str) -> list[str]:
+def _generic_definitions(task: str, lang: str = 'en') -> list[str]:
     from mlkit.study import texts
+    key = 'definition' if lang == 'en' else 'definition_fr'
     with texts.task_context(task), texts.scheme_context('cross_validation'):
-        return [texts.glossary(t)['definition'] for t in GENERIC_TERMS if texts.glossary(t)]
+        return [texts.glossary(t)[key] for t in GENERIC_TERMS if texts.glossary(t)]
 
 
 @pytest.fixture(scope='module')
@@ -318,8 +338,10 @@ def test_a_cross_validated_study_speaks_of_folds_not_validation_rows(name, reque
     view = flow.view()
     assert view['decisions']['split']['value']['method'] in st.CV_METHODS
     page = _page(flow)
-    found = _offending(_junior_text(page), _generic_definitions(task))
-    assert not found, found
+    # v4 (R27): both editions of the page, each in its own words
+    for lang, edition in editions(page).items():
+        found = _offending(_junior_text(edition), _generic_definitions(task, lang), lang)
+        assert not found, (lang, found)
     # The plan, the next action, the limits and the junior recap.
     for step in view['plan']:
         assert not _offending(' '.join(str(step.get(k)) for k in

@@ -154,6 +154,22 @@ def _understanding(study: Path) -> str:
                 'status.</p></section>')
 
 
+def twin_view(study: Path, view: dict) -> dict | None:
+    """v4 (R27): the study read in the other language (no write, no clock), for the second
+    edition of the report: the plan, the limits and the next action in that language, the
+    restatements the agent gave in it (``view.language_texts`` reads the summary's the same
+    way). None when it cannot be built (the report then derives it from ``view``)."""
+    from . import read, view as view_model
+    try:
+        snapshot = read.open(study)
+        state = snapshot.state
+        other = 'fr' if (view.get('language') or 'en') == 'en' else 'en'
+        twin = read.Study.at_state(snapshot.study_dir, {**state, 'language': other})
+        return view_model.build(twin)
+    except Exception:
+        return None
+
+
 def _render_report(study: Path, view: dict, manifest: dict, surfaces: dict) -> dict:
     from . import render_html
     from .store import atomic_write
@@ -165,7 +181,8 @@ def _render_report(study: Path, view: dict, manifest: dict, surfaces: dict) -> d
         page, consumed = render_html.build(view, surfaces=surfaces,
                                            variables=_variables(view),
                                            sample=sample_rows(study, view),
-                                           understanding=_understanding(study))
+                                           understanding=_understanding(study),
+                                           twin=twin_view(study, view))
         data = page.encode('utf-8')
         atomic_write(path, data)
     except Exception as exc:

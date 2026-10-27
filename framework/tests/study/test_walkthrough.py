@@ -349,7 +349,9 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     tags.feed(page)
     controls = [t for t, a in tags.tags if t in ('input', 'form', 'select', 'textarea', 'option')]
     buttons = [a for t, a in tags.tags if t == 'button']
-    assert controls == [] and len(buttons) == 1 and 'data-theme-toggle' in buttons[0]
+    # v4 (R27, R28): the theme button and the language button, nothing else
+    assert controls == [] and len(buttons) == 2
+    assert 'data-lang-toggle' in buttons[0] and 'data-theme-toggle' in buttons[1]
     data = [a for t, a in tags.tags if t == 'data']
     assert len(data) > 50
     assert all(a.get('data-result-id') and a.get('data-path') for a in data)

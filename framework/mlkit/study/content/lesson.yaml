@@ -1,0 +1,922 @@
+# The lesson-style study report (owner decision 2026-10-27, R25 to R30): every text of the
+# page shell, the chapters and the guided reading of each figure, in English and in French
+# side by side ({en, fr}). The report holds both languages in one file (R27); a text is
+# picked in the language of the edition being written (mlkit.study.texts.lesson).
+#
+# No digits: every number is a placeholder ({name}) the renderer fills with a cited registry
+# value or a recorded literal. Placeholders are named; a missing one fails the render.
+# ``regression`` and ``binary`` are overlays merged over the shared texts for that task.
+schema: hypotrail.content.lesson/1
+
+ui:
+  h1: {en: "the study, end to end", fr: "l'étude, de bout en bout"}
+  crumb: {en: "study report · revision {revision}", fr: "rapport de l'étude · révision {revision}"}
+  sub:
+    en: "This report tells the study in the order it was carried out: the question, the framing, the evaluation, the exploration, the preparation, the models, the choice, the final test and the conclusion. Each chapter first says what the step does, introduces the statistical term, explains it on the rows of this study, states the choice and why, shows the evidence where the argument needs it, and ends with what remains uncertain. Each figure says why it is there and how to read it through to its conclusion; the top line always says where you are and what remains. The report describes the recorded state; it takes no decision."
+    fr: "Ce rapport raconte l'étude dans l'ordre où elle a été menée : la question, le cadrage, l'évaluation, l'exploration, la préparation, les modèles, le choix, le test final et la conclusion. Chaque chapitre dit d'abord ce que fait l'étape, introduit le terme statistique, puis l'explique sur les lignes de cette étude, dit le choix et pourquoi, montre la preuve à l'endroit où l'argument en a besoin, et termine par ce qui reste incertain. Chaque figure dit pourquoi elle est là et comment la lire jusqu'à sa conclusion ; la ligne du haut dit toujours où vous êtes et ce qui reste. Le rapport décrit l'état enregistré ; il ne prend aucune décision."
+  legend_folds: {en: "▸ foldable blocks: example, why it holds, code, where it breaks, what remains uncertain, learn more", fr: "▸ blocs à déplier : exemple, pourquoi ça tient, code, où ça casse, ce qui reste incertain, en savoir plus"}
+  lang_to: {en: FR, fr: EN}
+  lang_aria: {en: "Lire en français", fr: "Read in English"}
+  theme_white: {en: Whiteboard, fr: Tableau blanc}
+  theme_black: {en: Blackboard, fr: Tableau noir}
+  where: {en: Where you are, fr: Où vous en êtes}
+  contents: {en: Contents, fr: Sommaire}
+  contents_summary: {en: "Contents · {chapters} chapters · {done} executed", fr: "Sommaire · {chapters} chapitres · {done} exécutés"}
+  root: {en: The report, fr: Le rapport}
+  meter_steps: {en: Study steps, fr: Étapes de l'étude}
+  meter_chapters: {en: Chapters executed, fr: Chapitres exécutés}
+  meter_review: {en: Decisions to review, fr: Décisions à relire}
+  meter_review_count: {en: "{n} automatic", fr: "{n} automatiques"}
+  meter_reading: {en: Your reading, fr: Votre lecture}
+  toc_opening: {en: Opening, fr: Ouverture}
+  toc_chapters: {en: The nine chapters, fr: Les neuf chapitres}
+  toc_end: {en: To finish, fr: Pour finir}
+  toc_legend: {en: "✓ executed · ◔ in progress · … not yet · ○ ◇ ◐ ●: the chapter's evidence mark", fr: "✓ exécuté · ◔ en cours · … pas encore · ○ ◇ ◐ ● : la marque de preuve du chapitre"}
+  lesson_heading: {en: The study in nine chapters, fr: L'étude en neuf chapitres}
+  sections:
+    prereq: {en: How to read this report, fr: Pour lire ce rapport}
+    verdict: {en: The verdict, fr: Le verdict}
+    verdict_heading: {en: "The verdict, first", fr: "Le verdict, d'abord"}
+    summary: {en: Summary, fr: Résumé}
+    voice: {en: Say it out loud, fr: Dites-le à voix haute}
+    decisions: {en: Decisions to review, fr: Décisions à relire}
+    annex: {en: Appendix, fr: Annexe}
+    understanding: {en: Understanding and handover, fr: Compréhension et transmission}
+  status:
+    done: {en: "✓ executed", fr: "✓ exécuté"}
+    in_progress: {en: "◔ in progress", fr: "◔ en cours"}
+    pending: {en: "… not yet executed", fr: "… pas encore exécuté"}
+    absent: {en: "– not in this study's plan", fr: "– hors du plan de cette étude"}
+  sealed_toc: {en: "… sealed", fr: "… scellé"}
+  pos_opening: {en: Opening, fr: Ouverture}
+  pos_after: {en: After the chapters, fr: Après les chapitres}
+  pos_chapter: {en: "Chapter {n}/{total}", fr: "Chapitre {n}/{total}"}
+  pos_rest: {en: "remaining: {list}", fr: "reste : {list}"}
+  pos_next: {en: "next: {list}", fr: "à suivre : {list}"}
+  pos_awaits: {en: "the study awaits: {list}", fr: "l'étude attend : {list}"}
+  pos_review: {en: "{n} decisions to review", fr: "{n} décisions à relire"}
+  pos_final_test: {en: the final test, fr: le test final}
+  pos_conclusion: {en: the conclusion, fr: la conclusion}
+  pos_verdict: {en: the verdict, fr: le verdict}
+  pos_chapters: {en: the nine chapters, fr: les neuf chapitres}
+  pos_sealed: {en: "sealed, not yet executed", fr: "scellé, pas encore exécuté"}
+  pos_pending: {en: not yet executed, fr: pas encore exécuté}
+  pos_complete: {en: "every chapter is executed", fr: "tous les chapitres sont exécutés"}
+  short:
+    ch1: {en: question, fr: question}
+    ch2: {en: framing, fr: cadrage}
+    ch3: {en: evaluation, fr: évaluation}
+    ch4: {en: exploration, fr: exploration}
+    ch5: {en: preparation, fr: préparation}
+    ch6: {en: models, fr: modèles}
+    ch7: {en: choice, fr: choix}
+    ch8: {en: final test, fr: test final}
+    ch9: {en: conclusion, fr: conclusion}
+  in_study: {en: "In this study · ", fr: "Dans cette étude · "}
+  no_figure: {en: "No figure for this chapter: its step reads no data, or records nothing to draw.", fr: "Pas de figure pour ce chapitre : son étape ne lit aucune donnée, ou n'enregistre rien à dessiner."}
+  unit_unknown: {en: "not stated by the case", fr: "non précisé par le cas"}
+  at_step: {en: At this step, fr: À cette étape}
+  keep: {en: What we keep, fr: Ce qu'on garde}
+  done: {en: "Done:", fr: "Fait :"}
+  next: {en: Next, fr: Ensuite}
+  next_end: {en: "Then: the summary, the questions to say out loud, and the appendix.", fr: "Ensuite : le résumé, les questions à dire à voix haute, et l'annexe."}
+  chapter_ref: {en: "chapter {n}", fr: "chapitre {n}"}
+  src: {en: "Chapter {n} · {steps} · {lede}", fr: "Chapitre {n} · {steps} · {lede}"}
+  step_word: {en: step, fr: étape}
+  steps_word: {en: steps, fr: étapes}
+  fold:
+    example: {en: Example, fr: Exemple}
+    why: {en: Why it holds, fr: Pourquoi ça tient}
+    code: {en: Code, fr: Code}
+    breaks: {en: Where it breaks, fr: Où ça casse}
+    uncertain: {en: What remains uncertain, fr: Ce qui reste incertain}
+    more: {en: Learn more, fr: En savoir plus}
+    more_chapter: {en: the numbers in this chapter, fr: les nombres de ce chapitre}
+    more_report: {en: "every stamp, mark and abbreviation in this report", fr: "chaque tampon, chaque marque, chaque abréviation de ce rapport"}
+    step_texts: {en: "the step, as the plan explains it", fr: "l'étape, comme le plan l'explique"}
+  code_origin: {en: Excerpt from the generated notebook, fr: Extrait du notebook généré}
+  code_none: {en: "No code for this chapter: its step reads no data, or no recomputation cell exists for it yet. The generated notebook holds every cell.", fr: "Pas de code pour ce chapitre : son étape ne lit aucune donnée, ou aucune cellule de recalcul n'existe encore pour elle. Le notebook généré contient toutes les cellules."}
+  code_cut: {en: "The cell continues in the generated notebook.", fr: "La cellule continue dans le notebook généré."}
+  why_chart: {en: Why this chart, fr: Pourquoi ce graphique}
+  why_table: {en: Why this table, fr: Pourquoi ce tableau}
+  why_list: {en: Why this list, fr: Pourquoi cette liste}
+  frame_label: {en: "Frame", fr: "Cadre"}
+  how_to_read: {en: How to read it, fr: Comment le lire}
+  step_by_step: {en: step by step, fr: pas à pas}
+  conclude: {en: What we conclude, fr: Ce qu'on en conclut}
+  attention: {en: Watch out, fr: Attention}
+  figure: {en: Figure, fr: Figure}
+  table: {en: Table, fr: Tableau}
+  list: {en: List, fr: Liste}
+  stamps:
+    real: {en: report figures, fr: chiffres du rapport}
+    state: {en: report state, fr: état du rapport}
+    text: {en: report text, fr: texte du rapport}
+    auto: {en: "automatic, to review", fr: "automatique, à relire"}
+    sealed: {en: sealed, fr: scellé}
+    scenario: {en: scenario assumption, fr: hypothèse du scénario}
+    creation: {en: at study creation, fr: à la création de l'étude}
+    words: {en: your words, fr: vos mots}
+    delegated: {en: delegated, fr: délégué}
+  evidence:
+    none: {en: "○ no data read", fr: "○ aucune donnée lue"}
+    structural: {en: "◇ structural reading", fr: "◇ lecture structurelle"}
+    development: {en: "◐ development evidence", fr: "◐ preuve de développement"}
+    final: {en: "● final evidence", fr: "● preuve finale"}
+  frame_words:
+    none: {en: "○ no value read, only counts", fr: "○ aucune valeur lue, seulement des comptes"}
+    structural: {en: "◇ structural reading, the target is not read", fr: "◇ lecture structurelle, la cible n'est pas lue"}
+    development: {en: "◐ development", fr: "◐ développement"}
+    final: {en: "● final test, opened once", fr: "● test final, ouvert une fois"}
+    rows: {en: "{n} rows", fr: "{n} lignes"}
+    oof: {en: out-of-fold predictions, fr: prédictions hors pli}
+    validation: {en: validation rows, fr: lignes de validation}
+    no_final: {en: the final test is not in it, fr: le test final n'y est pas}
+    no_model: {en: no model, fr: aucun modèle}
+  choice: {en: The choice, fr: Le choix}
+  choice_case: {en: "The choice · case statement", fr: "Le choix · énoncé du cas"}
+  choice_automatic: {en: "The choice · automatic decisions", fr: "Le choix · décisions automatiques"}
+  choice_explorations: {en: "The choice · explorations run", fr: "Le choix · explorations menées"}
+  nothing_decided: {en: Nothing is decided at this step., fr: Rien n'est décidé à cette étape.}
+  sealed_at_creation: {en: "{n} rows were set aside as the final test when the study was created; nothing in the report reads them.", fr: "{n} lignes ont été mises de côté comme test final à la création de l'étude ; rien dans le rapport ne les lit."}
+  opened_at_creation: {en: "{n} rows were set aside as the final test when the study was created; they have been opened once.", fr: "{n} lignes ont été mises de côté comme test final à la création de l'étude ; elles ont été ouvertes une fois."}
+  marker: {en: "({lang})", fr: "({lang})"}
+  autoband_title: {en: Automatic mode, fr: Mode automatique}
+  autoband: {en: "Automatic study: to be reviewed, not yet defensible.", fr: "Étude automatique : à relire, pas encore défendable."}
+  autoband_detail: {en: "{n} decisions were taken by the automatic mode chosen at launch, with the engine's value, not in your words. Review each one: adopt it or change it in the chat.", fr: "{n} décisions ont été prises par le mode automatique choisi au lancement, avec la valeur du moteur, et non avec vos mots. Relisez chacune : adoptez-la ou changez-la dans le chat."}
+  autoband_link: {en: The list of decisions to review, fr: La liste des décisions à relire}
+  opened_band: {en: "The final test was opened automatically. The demonstration mode opened it, not your decision; its one evaluation stands.", fr: "Le test final a été ouvert automatiquement. C'est le mode démonstration qui l'a ouvert, et non votre décision ; son unique évaluation reste."}
+  footer: {en: "Generated by Hypotrail for study revision {revision}. This page does not update itself: the study state, read with hypotrail status, is the authority. There are no decision controls on this page; decisions are made in the chat.", fr: "Généré par Hypotrail pour la révision {revision} de l'étude. Cette page ne se met pas à jour seule : l'état de l'étude, lu avec hypotrail status, fait foi. Cette page ne contient aucun contrôle de décision ; les décisions se prennent dans le chat."}
+  read_from_start: {en: "Read the reasoning from the start →", fr: "Lire le raisonnement depuis le début →"}
+  all_limits: {en: All the limits, fr: Toutes les limites}
+  reveal: {en: "Click or press Enter to show the answer.", fr: "Cliquez ou appuyez sur Entrée pour voir la réponse."}
+
+# The basis of a recorded decision (R26: an automatic decision is never shown as confirmed).
+basis:
+  explicit: {en: "Decided in your words", fr: "Décidé avec vos mots"}
+  restated: {en: "Restated in your words", fr: "Reformulé avec vos mots"}
+  endorsed: {en: "Endorsed in your words", fr: "Approuvé avec vos mots"}
+  automatic: {en: "Automatic, to review", fr: "Automatique, à relire"}
+  delegated_default: {en: "Delegated to the assistant's default", fr: "Délégué au choix par défaut de l'assistant"}
+  adopted: {en: "Adopted in your words after the automatic mode", fr: "Adopté avec vos mots après le mode automatique"}
+
+prereq:
+  label: {en: What you need to read this report, fr: Ce qu'il faut pour lire ce rapport}
+  items:
+    - {en: "<b>A mean and a gap.</b> An error, a rate or a difference is always given with the rows it was computed on, and with an interval when the study has one.", fr: "<b>Une moyenne et un écart.</b> Une erreur, un taux ou une différence est toujours donné avec les lignes sur lesquelles il a été calculé, et avec un intervalle quand l'étude en a un."}
+    - {en: "<b>The four evidence marks.</b> ○ nothing was read; ◇ the structure was read, without the target; ◐ a development result, which was used to choose and is therefore optimistic; ● the final test, sealed, opened only once.", fr: "<b>Les quatre marques de preuve.</b> ○ rien n'a été lu ; ◇ la structure a été lue, sans la cible ; ◐ un résultat de développement, qui a servi à choisir et reste donc optimiste ; ● le test final, scellé, ouvert une seule fois."}
+    - {en: "<b>The code is optional.</b> The \"Code\" blocks reproduce cells of the generated notebook, which recompute recorded figures with pandas and scikit-learn and check the equality with assert. nv and RESULT_IDS are the notebook's helpers for reading the study.", fr: "<b>Le code est facultatif.</b> Les blocs « Code » reprennent des cellules du notebook généré, qui recalculent les chiffres enregistrés avec pandas et scikit-learn et vérifient l'égalité par assert. nv et RESULT_IDS sont les aides du notebook pour lire l'étude."}
+    - {en: "<b>Every number is cited.</b> Hover a number to see the recorded result and the path it comes from; the appendix lists every result.", fr: "<b>Chaque nombre est cité.</b> Survolez un nombre pour voir le résultat enregistré et le chemin dont il vient ; l'annexe liste chaque résultat."}
+    - {en: "<b>Where you are.</b> The line pinned at the top of the screen gives the chapter being read and what remains; the buttons on the right switch the report to the other language and to the whiteboard theme, for this visit only.", fr: "<b>Où vous êtes.</b> La ligne collée en haut de l'écran donne le chapitre lu et ce qui reste ; les boutons à droite passent le rapport dans l'autre langue et en tableau blanc, pour cette visite seulement."}
+  marks_heading: {en: The evidence marks, fr: Les marques de preuve}
+  marks:
+    none: {en: "The chapter reads no row: it fixes a rule, a frame, a decision on paper.", fr: "Le chapitre ne lit aucune ligne : il fixe une règle, un cadre, une décision sur papier."}
+    structural: {en: "Development rows were read, but not the target: counts, missing cells, out-of-range values, associations between predictors.", fr: "Des lignes de développement ont été lues, mais pas la cible : comptes, cellules manquantes, valeurs hors plage, liens entre prédicteurs."}
+    development: {en: "A result computed on the development rows. It was used to explore or to choose, so it is slightly optimistic.", fr: "Un résultat calculé sur les lignes de développement. Il a servi à explorer ou à choisir : il est donc un peu optimiste."}
+    final: {en: "A result measured on the sealed final test, opened only once after the choice.", fr: "Un résultat mesuré sur le test final scellé, ouvert une seule fois après le choix."}
+    status: {en: "The chapter's step was carried out and recorded, is in progress, or has not run yet.", fr: "L'étape du chapitre a été menée et enregistrée, est en cours, ou n'a pas encore tourné."}
+  stamps_heading: {en: The stamps, fr: Les tampons}
+  stamps:
+    real: {en: "Numbers cited from the results recorded by the engine, each traceable to its result and path.", fr: "Des nombres cités depuis les résultats enregistrés par le moteur, chacun traçable jusqu'à son résultat et son chemin."}
+    state: {en: "Counts recorded in the study state rather than computed by an activity (the sealed rows, the looks, the trials).", fr: "Des comptes enregistrés dans l'état de l'étude plutôt que calculés par une activité (les lignes scellées, les regards, les essais)."}
+    text: {en: "Sentences recorded by the engine, quoted as they are.", fr: "Des phrases enregistrées par le moteur, citées telles quelles."}
+    auto: {en: "A decision recorded by the automatic mode chosen at launch, with the engine's value. It is not yours until you adopt or change it in the chat.", fr: "Une décision enregistrée par le mode automatique choisi au lancement, avec la valeur du moteur. Elle n'est pas la vôtre tant que vous ne l'avez pas adoptée ou changée dans le chat."}
+    sealed: {en: "The final test: set aside at creation, not read until it is opened once.", fr: "Le test final : mis de côté à la création, non lu jusqu'à son unique ouverture."}
+    scenario: {en: "A statement made by the case, not a decision.", fr: "Un énoncé posé par le cas, pas une décision."}
+    creation: {en: "An action taken by the engine when the study was created.", fr: "Un geste fait par le moteur au moment où l'étude a été créée."}
+    words: {en: "A decision in your own words, recorded in the chat.", fr: "Une décision prise avec vos propres mots, enregistrée dans le chat."}
+    marker: {en: "Words recorded in the other language (yours, or the assistant's restatement), shown as they were written.", fr: "Des mots enregistrés dans l'autre langue (les vôtres, ou la reformulation de l'assistant), montrés tels qu'ils ont été écrits."}
+  abbr_heading: {en: Abbreviations and notation, fr: Les abréviations et notations}
+  abbr:
+    - {term: {en: "[a, b] · interval", fr: "[a ; b] · intervalle"}, def: {en: "A bootstrap interval: most resamples of the rows fall between a and b. It expresses the uncertainty that comes from which rows were drawn.", fr: "Un intervalle bootstrap : la plupart des rééchantillonnages des lignes tombent entre a et b. Il dit l'incertitude due au tirage des lignes."}}
+    - {term: {en: "out of fold", fr: "hors pli"}, def: {en: "A prediction made by a model fitted without the predicted row.", fr: "Une prédiction faite par un modèle ajusté sans la ligne prédite."}}
+    - {term: {en: "n", fr: "n"}, def: {en: "A number of rows.", fr: "Un nombre de lignes."}}
+    - {term: {en: "rev. · revision", fr: "rév. · révision"}, def: {en: "Each recorded change to the study increases its revision number; the report describes one revision.", fr: "Chaque changement enregistré de l'étude augmente son numéro de révision ; le rapport décrit une révision."}}
+    - {term: {en: "−  · decimals", fr: "−  · décimales"}, def: {en: "Negative numbers carry a true minus sign; decimals follow the language (a decimal point in English, a decimal comma in French).", fr: "Les nombres négatifs portent un vrai signe moins ; les décimales suivent la langue (un point en anglais, une virgule en français)."}}
+
+verdict:
+  label: {en: "Verdict · revision {revision}", fr: "Verdict · révision {revision}"}
+  none: {en: No conclusion yet., fr: Pas encore de conclusion.}
+  none_detail_chosen: {en: "Choice recorded: {model}{by}. The final test is {final_state}, and the conclusion is not written: every figure below is development evidence.", fr: "Choix enregistré : {model}{by}. Le test final est {final_state}, et la conclusion n'est pas écrite : tous les chiffres ci-dessous sont des preuves de développement."}
+  none_detail: {en: "No model is chosen yet, and the conclusion is not written: every figure below is development evidence.", fr: "Aucun modèle n'est encore choisi, et la conclusion n'est pas écrite : tous les chiffres ci-dessous sont des preuves de développement."}
+  by_automatic: {en: ", by the automatic mode", fr: ", par le mode automatique"}
+  final_states:
+    sealed: {en: still sealed, fr: encore scellé}
+    opened: {en: opened, fr: ouvert}
+    absent: {en: absent from this study, fr: absent de cette étude}
+  concluded_detail: {en: "The conclusion is written. The figures below separate development evidence from final evidence.", fr: "La conclusion est écrite. Les chiffres ci-dessous séparent les preuves de développement de la preuve finale."}
+  dev_title: {en: "◐ Development evidence", fr: "◐ Preuve de développement"}
+  dev_note: {en: "On the development rows; these figures were used for the choice, they are optimistic and they are not the final result.", fr: "Sur les lignes de développement ; ces chiffres ont servi au choix, ils sont optimistes et ne sont pas le résultat final."}
+  final_title: {en: "● Final evidence", fr: "● Preuve finale"}
+  final_note: {en: The only independent evidence of the study., fr: La seule preuve indépendante de l'étude.}
+  plan_label: {en: "Where the study stands · {done} steps of {total}", fr: "Où en est l'étude · {done} étapes sur {total}"}
+  here: {en: you are here, fr: vous êtes ici}
+  limits: {en: Main limits, fr: Limites principales}
+  criterion: {en: "Success criterion", fr: "Critère de succès"}
+  criterion_status:
+    met: {en: "met, in development only", fr: "atteint, en développement seulement"}
+    met_final: {en: "met on the final test", fr: "atteint sur le test final"}
+    uncertain: {en: "uncertain: the interval includes zero", fr: "incertain : l'intervalle contient zéro"}
+    not_met: {en: not met, fr: non atteint}
+    not_assessed: {en: not assessed yet, fr: pas encore évalué}
+  criterion_dev: {en: "The verdict will be read on the final test.", fr: "Le verdict se lira sur le test final."}
+
+# Glossary entries the glossary (glossary.yaml) does not hold: the term first, then its
+# definition.
+terms:
+  observation_unit:
+    term: {en: Unit of observation, fr: Unité d'observation}
+    def: {en: "What one row of the table describes. Everything depends on it: what we predict, what we count, and what can repeat from one row to another.", fr: "Ce que décrit une ligne du tableau. Tout en dépend : ce qu'on prédit, ce qu'on compte, et ce qui peut se répéter d'une ligne à l'autre."}
+  one_se:
+    term: {en: One-standard-error rule, fr: Règle d'une erreur type}
+    def: {en: "Among configurations compared on the same folds, keep the simplest one whose mean error is within one standard error of the best mean: a smaller gap is not told apart from the noise between folds.", fr: "Parmi des configurations comparées sur les mêmes plis, garder la plus simple dont l'erreur moyenne est à moins d'une erreur type de la meilleure moyenne : un écart plus petit ne se distingue pas du bruit entre les plis."}
+  exposure:
+    term: {en: Exposure, fr: Exposition}
+    def: {en: "The record of which rows were read, by which activity and why. Changing the split does not make rows already read unseen.", fr: "L'enregistrement des lignes lues, par quelle activité et pourquoi. Changer le découpage ne rend pas non vues des lignes déjà lues."}
+
+# One entry per chapter. ``terms``: glossary ids (or ``terms`` above), each followed by its
+# "In this study" sentence: the glossary's cited example when it is computable, else
+# ``here.<term>`` below. ``here``, ``example``, ``keep`` and ``plus`` take placeholders.
+chapters:
+  ch1:
+    intro: {en: "This step opens the study: before any computation, it fixes what the study must help decide, what one row of the file describes, and which rows are set aside unseen. It comes first because everything else depends on it: the target to predict, the errors to count, the rows that will judge the choice. You see the file and its parts; no decision is asked of you here, as the engine sealed the final test when the study was created.", fr: "Cette étape ouvre l'étude : avant tout calcul, elle fixe ce que l'étude doit aider à décider, ce que décrit une ligne du fichier, et quelles lignes sont mises de côté sans être regardées. Elle vient en premier parce que tout le reste en dépend : la cible à prédire, les erreurs à compter, les lignes qui jugeront le choix. Vous y voyez le fichier et ses parts ; aucune décision ne vous est demandée ici, le moteur a scellé le test final à la création de l'étude."}
+    terms: [observation_unit, development_rows, final_test]
+    here:
+      observation_unit: {en: "One row is: {unit}. The study estimates the target for each row: {target}.", fr: "Une ligne est : {unit}. L'étude estime la cible pour chaque ligne : {target}."}
+      development_rows: {en: "Of the {total} rows of the file, {dev} are development rows: they feed the exploration, the fits and the comparison.", fr: "Sur les {total} lignes du fichier, {dev} sont des lignes de développement : elles nourrissent l'exploration, les ajustements et la comparaison."}
+      final_test: {en: "{sealed} rows were sealed when the study was created. This report does not read them while the final test is sealed.", fr: "{sealed} lignes ont été scellées à la création de l'étude. Ce rapport ne les lit pas tant que le test final est scellé."}
+      final_test_absent: {en: "This study has no final test: it was created before the final test existed, so every row is a development row.", fr: "Cette étude n'a pas de test final : elle a été créée avant que le test final existe, donc chaque ligne est une ligne de développement."}
+      final_test_opened: {en: "{sealed} rows were set aside as the final test when the study was created. It has been opened once to measure the chosen configuration; only that evaluation and its diagnostics read its rows.", fr: "{sealed} lignes ont été mises à part comme test final à la création de l'étude. Il a été ouvert une fois pour mesurer la configuration choisie ; seules cette évaluation et ses diagnostics lisent ses lignes."}
+    example:
+      - {en: "<b>The first development row.</b> Read it from left to right in the table of figure {fig}: its target comes first, then the columns the model may use. The model must find its target without seeing it.", fr: "<b>La première ligne de développement.</b> Lisez-la de gauche à droite dans le tableau de la figure {fig} : sa cible vient d'abord, puis les colonnes que le modèle peut utiliser. Le modèle devra retrouver sa cible sans la voir."}
+      - {en: "<b>What repeats.</b> The case names a column that groups related rows: {group}. It flags rows that may repeat one another; it does not predict.", fr: "<b>Ce qui se répète.</b> Le cas nomme une colonne qui regroupe des lignes apparentées : {group}. Elle repère des lignes qui peuvent se répéter ; elle ne prédit pas."}
+      - {en: "<b>What orders.</b> The case names a time column, {time}: it places the rows in time, and the evaluation can follow it (the evaluation chapter).", fr: "<b>Ce qui ordonne.</b> Le cas nomme une colonne temporelle, {time} : elle range les lignes dans le temps, et l'évaluation peut la suivre (le chapitre de l'évaluation)."}
+    example_keys: [first_row, group, time]
+    why:
+      - {en: "Anything we look at can steer a choice: a shape seen in a chart, a model that \"works better\" on these rows. A set of rows that no activity has read cannot have steered the choice; it is the only measure of the choice that the choice does not flatter. It must therefore be set aside <b>before</b> any look, and the engine did so when the study was created.", fr: "Tout ce qu'on regarde peut orienter un choix : une forme vue dans un graphique, un modèle qui « marche mieux » sur ces lignes. Un ensemble de lignes qu'aucune activité n'a lu ne peut pas avoir orienté le choix ; c'est la seule mesure du choix qui ne soit pas flattée par lui. Il faut donc le mettre de côté <b>avant</b> tout regard, et le moteur l'a fait à la création de l'étude."}
+      - {en: "The unit of observation fixes what an error means: the mean error on one row as the file describes it. A row that stands for many cases counts as much as a rare one.", fr: "L'unité d'observation fixe ce que veut dire une erreur : l'erreur moyenne sur une ligne telle que le fichier la décrit. Une ligne qui représente beaucoup de cas compte autant qu'une ligne rare."}
+    breaks:
+      - {en: "<b>A row is not always independent of the others.</b> When a group column exists, the model may recognise a group rather than generalise (the evaluation chapter).", fr: "<b>Une ligne n'est pas toujours indépendante des autres.</b> Quand une colonne de groupe existe, le modèle peut « reconnaître » un groupe plutôt que généraliser (le chapitre de l'évaluation)."}
+      - {en: "<b>What the case does not document.</b> A statement of unknown status stays a doubt, whatever the model does with the column.", fr: "<b>Ce que le cas ne documente pas.</b> Un énoncé de statut inconnu reste un doute, quoi que le modèle fasse de la colonne."}
+    keep: {en: "One row is: {unit}. {dev} development rows are used to learn and choose everything; {sealed} stay sealed to judge once.", fr: "Une ligne est : {unit}. {dev} lignes de développement servent à tout apprendre et à tout choisir ; {sealed} restent scellées pour juger une fois."}
+    keep_absent: {en: "One row is: {unit}. Every one of the {dev} rows is a development row; nothing is kept apart to judge the choice.", fr: "Une ligne est : {unit}. Chacune des {dev} lignes est une ligne de développement ; rien n'est gardé à part pour juger le choix."}
+    keep_opened: {en: "One row is: {unit}. {dev} development rows are used to learn and choose everything; {sealed} rows, set aside, were opened once to judge the choice.", fr: "Une ligne est : {unit}. {dev} lignes de développement servent à tout apprendre et à tout choisir ; {sealed} lignes, mises à part, ont été ouvertes une fois pour juger le choix."}
+    done: {en: "we know what a row describes, what we predict, and which rows stay sealed.", fr: "on sait ce que décrit une ligne, ce qu'on prédit, et quelles lignes restent scellées."}
+    done_opened: {en: "we know what a row describes, what we predict, and which rows were set aside to judge once.", fr: "on sait ce que décrit une ligne, ce qu'on prédit, et quelles lignes ont été mises à part pour juger une fois."}
+    next: {en: "when the prediction would be made, and with which columns.", fr: "à quel moment la prédiction serait faite, et avec quelles colonnes."}
+    question: {en: "What does one row describe, and which rows does the study never read before the choice?", fr: "Que décrit une ligne, et quelles lignes l'étude ne lit-elle jamais avant le choix ?"}
+    plus:
+      parts: {en: "All the rows of the file; the development rows; the sealed rows.", fr: "Toutes les lignes du fichier ; les lignes de développement ; les lignes scellées."}
+      missing: {en: "Missing cells are counted on the development rows only (the exploration chapter).", fr: "Les cellules manquantes sont comptées sur les lignes de développement seulement (le chapitre de l'exploration)."}
+  ch2:
+    intro: {en: "Here we fix when the prediction would be made, and therefore which columns the model may see. This comes before any look at the data, because a column known too late would make the model look better than it will be. Two decisions are at stake: the moment and the availability of the variables.", fr: "On fixe ici quand la prédiction serait faite, et donc quelles colonnes le modèle a le droit de voir. Cela vient avant tout regard sur les données, parce qu'une colonne connue trop tard ferait paraître le modèle meilleur qu'il ne le sera. Deux décisions sont en jeu : le moment et la disponibilité des variables."}
+    terms: [prediction_time, feature_availability, leakage]
+    here:
+      prediction_time: {en: "The moment recorded for this study: {moment}.", fr: "Le moment enregistré pour cette étude : {moment}."}
+      prediction_time_open: {en: "The moment is not decided yet; the case proposes: {moment}.", fr: "Le moment n'est pas encore décidé ; le cas propose : {moment}."}
+      feature_availability: {en: "{n_available} variables are used by the model: {available}.", fr: "{n_available} variables sont utilisées par le modèle : {available}."}
+      feature_availability_excluded: {en: "Excluded: {excluded}.", fr: "Exclues : {excluded}."}
+      feature_availability_open: {en: "The availability of the variables is not decided yet.", fr: "La disponibilité des variables n'est pas encore décidée."}
+      leakage: {en: "A variable excluded here never enters a model, whatever its signal.", fr: "Une variable exclue ici n'entre jamais dans un modèle, quel que soit son signal."}
+    example:
+      - {en: "<b>A column known too late.</b> A measurement taken after the moment of prediction would let the model read part of the answer: its error on the development rows would look smaller than it can be in use.", fr: "<b>Une colonne connue trop tard.</b> Une mesure prise après le moment de la prédiction laisserait le modèle lire une partie de la réponse : son erreur sur les lignes de développement paraîtrait plus petite qu'elle ne peut l'être en usage."}
+      - {en: "<b>A doubtful column.</b> When the case does not say when a value becomes known, the cautious choice is to exclude it and to list the doubt as a limit.", fr: "<b>Une colonne douteuse.</b> Quand le cas ne dit pas quand une valeur devient connue, le choix prudent est de l'exclure et de noter le doute comme une limite."}
+    why:
+      - {en: "The data cannot prove that a column is known in time: availability is a decision about the use, taken before any model, so that no result can steer it.", fr: "Les données ne peuvent pas prouver qu'une colonne est connue à temps : la disponibilité est une décision sur l'usage, prise avant tout modèle, pour qu'aucun résultat ne puisse l'orienter."}
+    breaks:
+      - {en: "<b>A moment stated too vaguely</b> lets a late column slip in.", fr: "<b>Un moment énoncé trop vaguement</b> laisse passer une colonne tardive."}
+      - {en: "<b>A strong single-variable signal</b> is a question, not a proof: is this column truly known at the moment of prediction?", fr: "<b>Un signal fort d'une seule variable</b> est une question, pas une preuve : cette colonne est-elle vraiment connue au moment de la prédiction ?"}
+    keep: {en: "The prediction is made at the recorded moment; only the variables known then enter the model: {available}.", fr: "La prédiction est faite au moment enregistré ; seules les variables connues à ce moment entrent dans le modèle : {available}."}
+    keep_open: {en: "The moment of prediction and the variables it allows are not decided yet.", fr: "Le moment de la prédiction et les variables qu'il autorise ne sont pas encore décidés."}
+    done: {en: "we know when the prediction would be made and which columns it may use.", fr: "on sait quand la prédiction serait faite et quelles colonnes elle peut utiliser."}
+    next: {en: "how the rows are used to compare models, and the bar a model must clear.", fr: "comment les lignes servent à comparer les modèles, et la barre qu'un modèle doit franchir."}
+    question: {en: "At what moment is the prediction made, and why is a column known later excluded?", fr: "À quel moment la prédiction est-elle faite, et pourquoi exclut-on une colonne connue plus tard ?"}
+    plus:
+      available: {en: "The number of variables the model may use, after the exclusions.", fr: "Le nombre de variables que le modèle peut utiliser, après les exclusions."}
+  ch3:
+    intro: {en: "This step fixes how the development rows are used to compare models, and the bar a model must clear to be worth adopting. Both come before any model, so that no result can bend them. You see how the rows are divided and the criterion as recorded.", fr: "Cette étape fixe comment les lignes de développement servent à comparer les modèles, et la barre qu'un modèle doit franchir pour valoir la peine. Les deux viennent avant tout modèle, pour qu'aucun résultat ne puisse les plier. Vous voyez comment les lignes sont réparties et le critère tel qu'il est enregistré."}
+    terms: [cross_validation, out_of_fold, success_criterion]
+    here:
+      cross_validation: {en: "{split}.", fr: "{split}."}
+      cross_validation_open: {en: "The split is not decided yet.", fr: "Le découpage n'est pas encore décidé."}
+      out_of_fold: {en: "Each of the {dev} development rows gets one prediction from a model that did not see it; every error of the model chapters is computed on these predictions.", fr: "Chacune des {dev} lignes de développement reçoit une prédiction d'un modèle qui ne l'a pas vue ; toutes les erreurs des chapitres des modèles sont calculées sur ces prédictions."}
+      success_criterion: {en: "The criterion recorded: {criterion}.", fr: "Le critère enregistré : {criterion}."}
+      success_criterion_open: {en: "No success criterion is fixed yet.", fr: "Aucun critère de succès n'est encore fixé."}
+    example:
+      - {en: "<b>One fold.</b> In figure {fig}, take the first block: its rows are predicted by a model fitted on the other blocks only. Then the next block takes its turn, until every row has its out-of-fold prediction.", fr: "<b>Un pli.</b> Dans la figure {fig}, prenez le premier bloc : ses lignes sont prédites par un modèle ajusté sur les autres blocs seulement. Puis le bloc suivant prend son tour, jusqu'à ce que chaque ligne ait sa prédiction hors pli."}
+      - {en: "<b>The criterion before the result.</b> The bar is written down before any model is fitted, so a disappointing result cannot lower it afterwards.", fr: "<b>Le critère avant le résultat.</b> La barre est écrite avant tout ajustement, si bien qu'un résultat décevant ne peut pas l'abaisser après coup."}
+    why:
+      - {en: "A model judged on the rows it was fitted on looks better than it is. Predicting each row with a model that never saw it gives an honest development error on every row, without spending the sealed final test.", fr: "Un modèle jugé sur les lignes sur lesquelles il a été ajusté paraît meilleur qu'il ne l'est. Prédire chaque ligne avec un modèle qui ne l'a jamais vue donne une erreur de développement honnête sur chaque ligne, sans dépenser le test final scellé."}
+      - {en: "Choosing among models on these same predictions still flatters the chosen one a little: the out-of-fold figures stay development evidence.", fr: "Choisir entre des modèles sur ces mêmes prédictions flatte encore un peu celui qu'on retient : les chiffres hors pli restent des preuves de développement."}
+    breaks:
+      - {en: "<b>Groups across folds.</b> When related rows sit in several folds, a model may recognise a group it saw: the error looks smaller than for a new group.", fr: "<b>Des groupes à cheval sur les plis.</b> Quand des lignes apparentées sont dans plusieurs plis, un modèle peut reconnaître un groupe déjà vu : l'erreur paraît plus petite que pour un groupe nouveau."}
+      - {en: "<b>A criterion fixed after seeing results</b> would no longer test anything.", fr: "<b>Un critère fixé après avoir vu les résultats</b> ne testerait plus rien."}
+    keep: {en: "{split}. The bar was fixed before any model: {criterion}.", fr: "{split}. La barre a été fixée avant tout modèle : {criterion}."}
+    keep_open: {en: "How the rows are divided, or the criterion, is not decided yet.", fr: "La façon de répartir les lignes, ou le critère, n'est pas encore décidée."}
+    done: {en: "we know how each row gets an honest prediction and what bar a model must clear.", fr: "on sait comment chaque ligne reçoit une prédiction honnête et quelle barre un modèle doit franchir."}
+    next: {en: "what the development rows look like, without and then with the target.", fr: "à quoi ressemblent les lignes de développement, sans puis avec la cible."}
+    question: {en: "Why is every development row predicted by a model that did not see it, and why is the criterion fixed first?", fr: "Pourquoi chaque ligne de développement est-elle prédite par un modèle qui ne l'a pas vue, et pourquoi fixe-t-on le critère d'abord ?"}
+    plus:
+      folds: {en: "The number of folds and the rows in each; the rows of a fold are predicted by a model fitted on the others.", fr: "Le nombre de plis et les lignes de chacun ; les lignes d'un pli sont prédites par un modèle ajusté sur les autres."}
+  ch4:
+    intro: {en: "The exploration reads the development rows: first their structure, without the target, then the target itself. Each reading of the target is counted as a look, because the more we look, the more a pattern can be chance. You see what each exploration found; no decision is made here.", fr: "L'exploration lit les lignes de développement : d'abord leur structure, sans la cible, puis la cible elle-même. Chaque lecture de la cible est comptée comme un regard, parce que plus on regarde, plus un motif peut être dû au hasard. Vous voyez ce que chaque exploration a trouvé ; aucune décision n'est prise ici."}
+    terms: [target_look, distribution, special_value]
+    here:
+      target_look: {en: "The study has had {looks} looks at the target so far.", fr: "L'étude a eu {looks} regards sur la cible jusqu'ici."}
+      target_look_none: {en: "No look at the target is recorded yet.", fr: "Aucun regard sur la cible n'est encore enregistré."}
+    example:
+      - {en: "<b>Structure first.</b> Missing cells, rare categories and out-of-range values are counted without reading the target: these readings cannot steer a choice towards what works on these rows.", fr: "<b>La structure d'abord.</b> Les cellules manquantes, les catégories rares et les valeurs hors plage sont comptées sans lire la cible : ces lectures ne peuvent pas orienter un choix vers ce qui marche sur ces lignes."}
+      - {en: "<b>Then the target.</b> Each chart that reads the target adds one look to the count of figure {fig}.", fr: "<b>Puis la cible.</b> Chaque graphique qui lit la cible ajoute un regard au compteur de la figure {fig}."}
+    why:
+      - {en: "Exploring is how we learn the data, but every look at the target is also a chance to fit a pattern of these rows only. Counting the looks makes that risk visible; reading the structure without the target removes it for the preparation.", fr: "Explorer est la façon d'apprendre les données, mais chaque regard sur la cible est aussi une occasion de s'ajuster à un motif propre à ces lignes. Compter les regards rend ce risque visible ; lire la structure sans la cible le supprime pour la préparation."}
+    breaks:
+      - {en: "<b>A difference between groups is an association,</b> not an effect of the variable.", fr: "<b>Une différence entre groupes est une association,</b> pas un effet de la variable."}
+      - {en: "<b>Many looks</b> make one striking pattern less convincing.", fr: "<b>Beaucoup de regards</b> rendent un motif frappant moins convaincant."}
+    keep: {en: "The structure was read before the target; the target was looked at {looks} times, each look counted.", fr: "La structure a été lue avant la cible ; la cible a été regardée {looks} fois, chaque regard compté."}
+    keep_none: {en: "No exploration of the target is recorded yet.", fr: "Aucune exploration de la cible n'est encore enregistrée."}
+    done: {en: "we know what the development rows look like and how many looks the target had.", fr: "on sait à quoi ressemblent les lignes de développement et combien de regards la cible a eus."}
+    next: {en: "how the variables are prepared for the model, and which readings motivated it.", fr: "comment les variables sont préparées pour le modèle, et quelles lectures l'ont motivé."}
+    question: {en: "Why is the structure read before the target, and why are the looks at the target counted?", fr: "Pourquoi lit-on la structure avant la cible, et pourquoi compte-t-on les regards sur la cible ?"}
+    plus:
+      looks: {en: "Each exploration that read the target on the development rows counts as one look, and so does each diagnostic of the models.", fr: "Chaque exploration qui a lu la cible sur les lignes de développement compte comme un regard, de même que chaque diagnostic des modèles."}
+  ch5:
+    intro: {en: "This step decides how the model prepares the variables: missing values, rare categories, extreme values, skewed variables. It comes after the structure is read and is learnt on the rows each model is fitted on only. You see the preparation recorded and the readings that motivated it.", fr: "Cette étape décide comment le modèle prépare les variables : valeurs manquantes, catégories rares, valeurs extrêmes, variables asymétriques. Elle vient après la lecture de la structure et n'est apprise que sur les lignes sur lesquelles chaque modèle est ajusté. Vous voyez la préparation enregistrée et les lectures qui l'ont motivée."}
+    terms: [data_contingent_decision, imputation, standardisation]
+    here:
+      data_contingent_decision: {en: "The preparation recorded: {preparation}. {contingent}", fr: "La préparation enregistrée : {preparation}. {contingent}"}
+      data_contingent_decision_open: {en: "The preparation is not decided yet.", fr: "La préparation n'est pas encore décidée."}
+    contingent_yes: {en: "It was chosen after a look at the target, so the development figures may be slightly optimistic.", fr: "Elle a été choisie après un regard sur la cible : les chiffres de développement peuvent être un peu optimistes."}
+    contingent_no: {en: "It was chosen before any look at the target.", fr: "Elle a été choisie avant tout regard sur la cible."}
+    example:
+      - {en: "<b>A logarithm.</b> A variable whose values pile up on the left and stretch to the right is spread more evenly by its logarithm: a linear model then follows its shape better.", fr: "<b>Un logarithme.</b> Une variable dont les valeurs s'entassent à gauche et s'étirent vers la droite est étalée plus régulièrement par son logarithme : un modèle linéaire suit alors mieux sa forme."}
+      - {en: "<b>A missing value.</b> A missing cell becomes an indicator column and an imputed value, learnt on the fitted rows only, never an ordinary number.", fr: "<b>Une valeur manquante.</b> Une cellule manquante devient une colonne indicatrice et une valeur imputée, apprises sur les lignes d'ajustement seulement, jamais un nombre ordinaire."}
+    why:
+      - {en: "Each parameter of the preparation (a median, a cap, a category list) is learnt on the rows a model is fitted on, then applied unchanged to the rows it predicts: the prediction never borrows from the rows it is judged on.", fr: "Chaque paramètre de la préparation (une médiane, un plafond, une liste de catégories) est appris sur les lignes d'ajustement d'un modèle, puis appliqué tel quel aux lignes qu'il prédit : la prédiction n'emprunte jamais aux lignes sur lesquelles elle est jugée."}
+    breaks:
+      - {en: "<b>A preparation tuned after looking at the target</b> makes the development figures optimistic; the report stamps it as such.", fr: "<b>Une préparation réglée après avoir regardé la cible</b> rend les chiffres de développement optimistes ; le rapport la marque comme telle."}
+    keep: {en: "{preparation}.", fr: "{preparation}."}
+    keep_open: {en: "The preparation is not decided yet.", fr: "La préparation n'est pas encore décidée."}
+    done: {en: "we know how each variable is prepared, learnt on the fitted rows only.", fr: "on sait comment chaque variable est préparée, apprise sur les lignes d'ajustement seulement."}
+    next: {en: "the models, fitted and compared on the same out-of-fold predictions.", fr: "les modèles, ajustés et comparés sur les mêmes prédictions hors pli."}
+    question: {en: "Why is the preparation learnt on the fitted rows only?", fr: "Pourquoi la préparation est-elle apprise seulement sur les lignes d'ajustement ?"}
+    plus: {}
+  ch6:
+    intro: {en: "This step fits a reference model, the candidate model and the variants, and compares them on the same predictions. The reference says what an error looks like without any model; the diagnostics say where the candidate errs. You see the models side by side and what their diagnostics flagged.", fr: "Cette étape ajuste un modèle de référence, le modèle candidat et les variantes, et les compare sur les mêmes prédictions. La référence dit à quoi ressemble une erreur sans modèle ; les diagnostics disent où le candidat se trompe. Vous voyez les modèles côte à côte et ce que leurs diagnostics ont signalé."}
+    terms: [baseline, overfitting]
+    here:
+      baseline: {en: "The reference of this study: {baseline}.", fr: "La référence de cette étude : {baseline}."}
+    example:
+      - {en: "<b>Reading one error.</b> In the table of the largest errors, the first row shows an observed value, a prediction, and their difference: the residual.", fr: "<b>Lire une erreur.</b> Dans le tableau des plus grandes erreurs, la première ligne montre une valeur observée, une prédiction, et leur différence : le résidu."}
+      - {en: "<b>A variant.</b> A variant answers one question (a penalty, another family) and costs one trial of the budget.", fr: "<b>Une variante.</b> Une variante répond à une question (une pénalité, une autre famille) et coûte un essai du budget."}
+    why:
+      - {en: "Every model is compared on the same out-of-fold predictions of the same rows, so a difference between two models is not a difference between two sets of rows.", fr: "Chaque modèle est comparé sur les mêmes prédictions hors pli des mêmes lignes : un écart entre deux modèles n'est donc pas un écart entre deux ensembles de lignes."}
+    breaks:
+      - {en: "<b>More variants, more optimism.</b> The best of several trials owes a little to chance; the study counts the trials.", fr: "<b>Plus de variantes, plus d'optimisme.</b> La meilleure de plusieurs tentatives doit un peu au hasard ; l'étude compte les essais."}
+      - {en: "<b>A coefficient is an association</b> given the other variables, never the effect of changing a variable.", fr: "<b>Un coefficient est une association</b> à variables égales, jamais l'effet d'un changement de variable."}
+    keep_none: {en: "No model is fitted yet.", fr: "Aucun modèle n'est encore ajusté."}
+    done: {en: "we know how far each model is from the observed values, and where the candidate errs.", fr: "on sait à quelle distance chaque modèle est des valeurs observées, et où le candidat se trompe."}
+    next: {en: "the choice among the models, on paired differences.", fr: "le choix entre les modèles, sur des écarts appariés."}
+    question: {en: "Why compare every model on the same out-of-fold predictions, and what does the reference model tell?", fr: "Pourquoi comparer chaque modèle sur les mêmes prédictions hors pli, et que dit le modèle de référence ?"}
+    plus:
+      trials: {en: "Configurations fitted and compared on the same rows so far (a disclosure: the more there are, the more the best one may owe to chance).", fr: "Configurations ajustées et comparées sur les mêmes lignes jusqu'ici (une transparence : plus il y en a, plus la meilleure peut devoir au hasard)."}
+  ch7:
+    intro: {en: "This step chooses what the study will carry to the final test. The evidence is the out-of-fold figures of the previous chapter, compared pair by pair on the same rows with a bootstrap interval. The final test is still apart: the choice is made without it.", fr: "Cette étape choisit ce que l'étude portera au test final. La preuve est faite des chiffres hors pli du chapitre précédent, comparés deux à deux sur les mêmes lignes avec un intervalle bootstrap. Le test final reste à part : le choix se fait sans lui."}
+    terms: [paired_bootstrap, paired_difference, selection_on_validation]
+    example:
+      - {en: "<b>A paired difference.</b> For each row, take the error of one model minus the error of the other, then average: the rows that are hard for both cancel out, and the interval shrinks.", fr: "<b>Un écart apparié.</b> Pour chaque ligne, prenez l'erreur d'un modèle moins l'erreur de l'autre, puis faites la moyenne : les lignes difficiles pour les deux s'annulent, et l'intervalle se resserre."}
+    why:
+      - {en: "Two intervals that overlap do not prove that two models are equal: the paired difference, computed on the same rows, is sharper. An interval of the difference that excludes zero says the gap is not the noise of drawing the rows.", fr: "Deux intervalles qui se chevauchent ne prouvent pas que deux modèles se valent : l'écart apparié, calculé sur les mêmes lignes, est plus fin. Un intervalle de l'écart qui exclut zéro dit que l'écart n'est pas le bruit du tirage des lignes."}
+    breaks:
+      - {en: "<b>Chosen on these rows.</b> The figures that drove the choice are optimistic for the chosen one; only the final test is independent.", fr: "<b>Choisi sur ces lignes.</b> Les chiffres qui ont guidé le choix sont optimistes pour le modèle retenu ; seul le test final est indépendant."}
+    keep_none: {en: "Nothing is chosen yet.", fr: "Rien n'est encore choisi."}
+    done: {en: "we know what is chosen and on which paired evidence.", fr: "on sait ce qui est choisi et sur quelle preuve appariée."}
+    next: {en: "the final test, opened once for the chosen configuration.", fr: "le test final, ouvert une fois pour la configuration choisie."}
+    question: {en: "Why compare models with a paired difference rather than two separate intervals?", fr: "Pourquoi comparer les modèles par un écart apparié plutôt que par deux intervalles séparés ?"}
+    plus: {}
+  ch8:
+    intro: {en: "The final test is the set of rows sealed at creation. It is opened once, after the choice and with your answer in the chat, to measure the chosen configuration on rows nothing has seen. It is the only independent evidence of the study.", fr: "Le test final est l'ensemble des lignes scellées à la création. Il s'ouvre une fois, après le choix et avec votre réponse dans le chat, pour mesurer la configuration choisie sur des lignes que rien n'a vues. C'est la seule preuve indépendante de l'étude."}
+    terms: [final_test]
+    here:
+      final_test: {en: "{sealed} rows, {state}.", fr: "{sealed} lignes, {state}."}
+    state:
+      sealed: {en: "still sealed and never read", fr: "encore scellées et jamais lues"}
+      opened: {en: "opened once for the chosen configuration", fr: "ouvertes une fois pour la configuration choisie"}
+    example:
+      - {en: "<b>Why only once.</b> Opening the final test twice, and changing the model in between, would turn it into one more development set: its figure would be flattered by the second choice.", fr: "<b>Pourquoi une seule fois.</b> Ouvrir le test final deux fois, en changeant le modèle entre-temps, en ferait un ensemble de développement de plus : son chiffre serait flatté par le second choix."}
+    why:
+      - {en: "Rows that played no part in any choice measure the choice without flattering it. Everything changed after the opening is reported as changed after the final test.", fr: "Des lignes qui n'ont joué aucun rôle dans un choix mesurent ce choix sans le flatter. Tout ce qui change après l'ouverture est signalé comme changé après le test final."}
+    breaks:
+      - {en: "<b>A small final test</b> gives a wide interval: one figure, honest but imprecise.", fr: "<b>Un petit test final</b> donne un intervalle large : un chiffre honnête mais imprécis."}
+    keep_sealed: {en: "{sealed} rows stay sealed; the verdict will be read on them, once.", fr: "{sealed} lignes restent scellées ; le verdict se lira sur elles, une fois."}
+    keep_opened: {en: "The final test was opened once, on {n} rows nothing had seen.", fr: "Le test final a été ouvert une fois, sur {n} lignes que rien n'avait vues."}
+    keep_absent: {en: "This study has no final test.", fr: "Cette étude n'a pas de test final."}
+    done: {en: "we know the state of the only independent evidence.", fr: "on connaît l'état de la seule preuve indépendante."}
+    next: {en: "the conclusion and its limits.", fr: "la conclusion et ses limites."}
+    question: {en: "Why is the final test opened only once, and only after the choice?", fr: "Pourquoi le test final ne s'ouvre-t-il qu'une fois, et seulement après le choix ?"}
+    drift_regression: {en: "The final test was drawn by bins of the target across the whole file, without a declared order: it cannot show a drift of the error towards recent rows. The development residuals by period are the only view of such a drift.", fr: "Le test final a été tiré par tranches de la cible sur tout le fichier, sans ordre déclaré : il ne peut pas montrer une dérive de l'erreur vers les lignes récentes. Les résidus de développement par période sont la seule vue d'une telle dérive."}
+    plus: {}
+  ch9:
+    intro: {en: "The conclusion says what can be claimed, for which use, and with which limits. It is written in your words; keeping the reference or calling the study inconclusive are valid results. You see the conclusion when it exists, and every limit the study records.", fr: "La conclusion dit ce qu'on peut affirmer, pour quel usage, et avec quelles limites. Elle s'écrit avec vos mots ; garder la référence ou déclarer l'étude non concluante sont des résultats valables. Vous voyez la conclusion quand elle existe, et chaque limite que l'étude enregistre."}
+    terms: [confirmed_decision]
+    example:
+      - {en: "<b>A measured conclusion</b> names the evidence (development or final), the criterion and its status, and at least one limit.", fr: "<b>Une conclusion mesurée</b> nomme la preuve (de développement ou finale), le critère et son statut, et au moins une limite."}
+    why:
+      - {en: "The study ranks or estimates; it does not show what acting would change. A conclusion that stays within that frame can be defended.", fr: "L'étude classe ou estime ; elle ne montre pas ce qu'agir changerait. Une conclusion qui reste dans ce cadre peut se défendre."}
+    breaks:
+      - {en: "<b>A sentence about acting</b> (\"this variable lowers the target\") says more than the study shows.", fr: "<b>Une phrase causale</b> (« cette variable fait baisser la cible ») dit plus que ce que l'étude montre."}
+    keep_open: {en: "The conclusion is not written yet; {n} limits are recorded.", fr: "La conclusion n'est pas encore écrite ; {n} limites sont enregistrées."}
+    keep_done: {en: "The conclusion is written; {n} limits stay attached to it.", fr: "La conclusion est écrite ; {n} limites y restent attachées."}
+    done: {en: "we know what the study can and cannot say.", fr: "on sait ce que l'étude peut et ne peut pas dire."}
+    question: {en: "What can the study claim, for which use, and what can it not say?", fr: "Que peut affirmer l'étude, pour quel usage, et que ne peut-elle pas dire ?"}
+    plus: {}
+
+summary:
+  intro: {en: "Each line is what one chapter keeps.", fr: "Chaque ligne est ce qu'un chapitre garde."}
+  phrase_label: {en: "In one sentence", fr: "En une phrase"}
+  phrase_open: {en: "\"The study estimates {target}. On the development rows, {best}. These figures were used to choose; the verdict will come from the final test, and the conclusion is still to be written in my words.\"", fr: "« L'étude estime {target}. Sur les lignes de développement, {best}. Ces chiffres ont servi à choisir ; le verdict viendra du test final, et la conclusion reste à écrire avec mes mots. »"}
+  phrase_closed: {en: "\"The study estimates {target}. On the development rows, {best}. The final test, opened once, is the independent evidence; the conclusion lists its limits.\"", fr: "« L'étude estime {target}. Sur les lignes de développement, {best}. Le test final, ouvert une fois, est la preuve indépendante ; la conclusion en liste les limites. »"}
+  best_regression: {en: "{model} errs by {mae_model} on average, against {mae_base} for the mean baseline", fr: "{model} se trompe en moyenne de {mae_model}, contre {mae_base} pour la moyenne de référence"}
+  best_binary: {en: "{model} ranks the rows with an AUC of {auc}", fr: "{model} classe les lignes avec une AUC de {auc}"}
+  phrase_none: {en: "\"The study estimates {target}. No model figure is recorded yet.\"", fr: "« L'étude estime {target}. Aucun chiffre de modèle n'est encore enregistré. »"}
+voice:
+  intro: {en: "Answer each question out loud before you reveal the answer; the answer is the chapter's \"What we keep\".", fr: "Répondez à voix haute à chaque question avant de dévoiler la réponse ; la réponse est le « Ce qu'on garde » du chapitre."}
+decisions:
+  intro: {en: "Each decision below carries the engine's value, recorded by the automatic mode chosen at launch. It stays in the review queue, and the study stays not defensible, until you adopt it or change it in the chat. This page holds no decision control.", fr: "Chaque décision ci-dessous porte la valeur du moteur, enregistrée par le mode automatique choisi au lancement. Elle reste dans la file de relecture, et l'étude reste non défendable, jusqu'à ce que vous l'adoptiez ou la changiez dans le chat. Cette page ne contient aucun contrôle de décision."}
+  cols: {decision: {en: Decision, fr: Décision}, value: {en: Value recorded, fr: Valeur enregistrée}, basis: {en: Basis, fr: Base}, chapter: {en: Chapter, fr: Chapitre}}
+  next: {en: "Next action:", fr: "Prochaine action :"}
+annex:
+  intro: {en: "For checking a number; reading the reasoning does not need it. Every result the report cites, with its identity; hypotrail evidence with --result and the result's identifier shows every value recorded for it.", fr: "Pour vérifier un nombre ; lire le raisonnement n'en a pas besoin. Chaque résultat que le rapport cite, avec son identité ; hypotrail evidence avec --result et l'identifiant du résultat montre chaque valeur enregistrée pour lui."}
+
+# Display names of the models (R26: a variant is named by its family, never as "a variant of
+# the linear model" when it is another family).
+models:
+  tuned: {en: "Ridge variant (penalty chosen by nested cross-validation)", fr: "Variante ridge (pénalité choisie par validation croisée imbriquée)"}
+  tuned_binary: {en: "Penalised variant (penalty chosen by nested cross-validation)", fr: "Variante pénalisée (pénalité choisie par validation croisée imbriquée)"}
+  ebm: {en: "EBM variant (readable non-linear model)", fr: "Variante EBM (modèle non linéaire lisible)"}
+  hgb: {en: "Gradient boosting variant", fr: "Variante gradient boosting"}
+  other: {en: "Variant: {words}", fr: "Variante : {words}"}
+models_short:
+  linear: {en: linear, fr: linéaire}
+  logistic: {en: logistic, fr: logistique}
+  baseline: {en: baseline, fr: référence}
+  tuned: {en: ridge, fr: ridge}
+  tuned_binary: {en: penalised, fr: pénalisée}
+  ebm: {en: EBM, fr: EBM}
+  hgb: {en: boosting, fr: boosting}
+  other: {en: variant, fr: variante}
+
+# Guided readings, one per figure kind (R30). ``why`` answers "why this figure"; ``frame``
+# names the evidence, the rows and the model; ``read`` is the step-by-step reading;
+# ``conclude`` and ``attention`` take cited values. A kind may hold variants
+# (``conclude_<variant>``) that the renderer picks from the recorded values.
+figures:
+  parts:
+    title: {en: "The rows of the file, in parts", fr: "Les lignes du fichier, par parts"}
+    why: {en: "It answers \"which rows does the study work on, and which are off limits?\". Every figure in this report concerns one of the parts: they must be seen before reading any result.", fr: "Elle répond à « sur quelles lignes l'étude travaille-t-elle, et lesquelles lui sont interdites ? ». Tout chiffre de ce rapport porte sur l'une des parts : il faut les voir avant de lire le moindre résultat."}
+    read:
+      - {en: "Read the length of each part: development rows on the left, the sealed final test on the right.", fr: "Lisez la longueur de chaque part : les lignes de développement à gauche, le test final scellé à droite."}
+      - {en: "Compare the counts written at the end of each part.", fr: "Comparez les comptes écrits au bout de chaque part."}
+    conclude: {en: "{sealed} of the {total} rows are sealed; every analysis of the exploration and model chapters concerns the other {dev}.", fr: "{sealed} des {total} lignes sont scellées ; toutes les analyses des chapitres d'exploration et de modèles portent sur les {dev} autres."}
+    conclude_absent: {en: "All {total} rows are development rows: nothing is kept apart.", fr: "Les {total} lignes sont toutes des lignes de développement : rien n'est gardé à part."}
+    conclude_opened: {en: "{sealed} of the {total} rows were set aside as the final test and opened once; every analysis of the exploration and model chapters concerns the other {dev}.", fr: "{sealed} des {total} lignes ont été mises à part comme test final, puis ouvertes une fois ; toutes les analyses des chapitres d'exploration et de modèles portent sur les {dev} autres."}
+    attention: {en: "The bar does not show which rows are sealed: the draw is recorded by the engine, not drawn here.", fr: "La barre ne montre pas quelles lignes sont scellées : le tirage est enregistré par le moteur, il n'est pas dessiné ici."}
+    attention_opened: {en: "The bar does not show which rows were set aside: the draw is recorded by the engine, not drawn here.", fr: "La barre ne montre pas quelles lignes ont été mises à part : le tirage est enregistré par le moteur, il n'est pas dessiné ici."}
+  columns:
+    title: {en: "The columns, with their meaning and status", fr: "Les colonnes, avec leur sens et leur statut"}
+    why: {en: "Before predicting, we need to know what each column says, in which unit, how many cells are missing, and what the study may do with it. The second table makes these columns concrete on a few rows.", fr: "Avant de prédire, il faut savoir ce que dit chaque colonne, dans quelle unité, combien de cases manquent, et ce que l'étude a le droit d'en faire. Le second tableau rend ces colonnes concrètes sur quelques lignes."}
+    read:
+      - {en: "Read the last column of the first table: it says what the study does with each column.", fr: "Lisez la dernière colonne du premier tableau : elle dit ce que l'étude fait de chaque colonne."}
+      - {en: "Spot the missing counts: they are counted on the development rows only.", fr: "Repérez les cases manquantes : elles sont comptées sur les lignes de développement seulement."}
+      - {en: "In the second table, read one row from left to right: it is one observation.", fr: "Dans le second tableau, lisez une ligne de gauche à droite : c'est une observation."}
+    conclude: {en: "{n_columns} columns in all: the target, the candidate variables with their status, and the columns that order or group the rows.", fr: "{n_columns} colonnes en tout : la cible, les variables candidates avec leur statut, et les colonnes qui ordonnent ou regroupent les lignes."}
+    conclude_generic: {en: "The card says what one row describes, how many development rows the study reads, and what stays sealed.", fr: "La fiche dit ce que décrit une ligne, combien de lignes de développement l'étude lit, et ce qui reste scellé."}
+    attention: {en: "A few first rows are not representative: they show the columns, not the data.", fr: "Quelques premières lignes ne sont pas représentatives : elles montrent les colonnes, pas les données."}
+  availability:
+    title: {en: "Each variable and its status at the moment of prediction", fr: "Chaque variable et son statut au moment de la prédiction"}
+    why: {en: "It answers \"which variables may the model see, and who decided it?\", one line per variable, with what the case states.", fr: "Il répond à « quelles variables le modèle peut-il voir, et qui l'a décidé ? », une ligne par variable, avec ce que dit le cas."}
+    read:
+      - {en: "Read the status used: only the variables available at prediction time enter a model.", fr: "Lisez le statut retenu : seules les variables disponibles au moment de la prédiction entrent dans un modèle."}
+      - {en: "Read who decided: your words, the case, or the automatic mode.", fr: "Lisez qui a décidé : vos mots, le cas, ou le mode automatique."}
+    conclude: {en: "{n_available} variables enter the model; {n_excluded} are excluded.", fr: "{n_available} variables entrent dans le modèle ; {n_excluded} sont exclues."}
+    attention: {en: "What the case states is not proof: a variable the case calls available may still be known too late in practice.", fr: "Ce que dit le cas n'est pas une preuve : une variable que le cas dit disponible peut encore être connue trop tard en pratique."}
+  signal:
+    title: {en: "The signal of each variable alone", fr: "Le signal de chaque variable seule"}
+    why: {en: "A variable that predicts the outcome almost alone is the classic trace of a column known too late. The chart asks the question for each variable; it never selects variables.", fr: "Une variable qui prédit presque seule la cible est la trace classique d'une colonne connue trop tard. Le graphique pose la question pour chaque variable ; il ne sélectionne jamais de variables."}
+    read:
+      - {en: "Find the dashed line: chance. A bar starts there.", fr: "Repérez la ligne pointillée : le hasard. Une barre part de là."}
+      - {en: "Look for a flagged bar: strong enough to question.", fr: "Cherchez une barre signalée : assez forte pour être questionnée."}
+    conclude_flagged: {en: "A signal strong enough to question the availability: {flagged}.", fr: "Un signal assez fort pour questionner la disponibilité : {flagged}."}
+    conclude: {en: "No variable alone is strong enough to question its availability.", fr: "Aucune variable seule n'est assez forte pour questionner sa disponibilité."}
+    attention: {en: "A weak signal alone does not make a variable useless: it may matter together with others.", fr: "Un signal faible seul ne rend pas une variable inutile : elle peut compter avec les autres."}
+  folds:
+    title: {en: "Fold by fold", fr: "Pli par pli"}
+    why: {en: "It answers \"how are the development rows divided, and which rows does each model predict?\". Every out-of-fold figure of the model chapters comes from these blocks.", fr: "Elle répond à « comment les lignes de développement sont-elles réparties, et quelles lignes chaque modèle prédit-il ? ». Chaque chiffre hors pli des chapitres des modèles vient de ces blocs."}
+    read:
+      - {en: "Each block is one fold, with its rows; under a time order, its range of the time column.", fr: "Chaque bloc est un pli, avec ses lignes ; sous un ordre temporel, sa plage de la colonne de temps."}
+      - {en: "The rows of one block are predicted by a model fitted on all the other blocks.", fr: "Les lignes d'un bloc sont prédites par un modèle ajusté sur tous les autres blocs."}
+    conclude: {en: "{folds} folds cover the {dev} development rows; each row gets exactly one out-of-fold prediction.", fr: "{folds} plis couvrent les {dev} lignes de développement ; chaque ligne reçoit exactement une prédiction hors pli."}
+    conclude_holdout: {en: "{train} rows fit the models and {validation} rows judge them; the two sets never mix.", fr: "{train} lignes ajustent les modèles et {validation} lignes les jugent ; les deux ensembles ne se mélangent jamais."}
+    conclude_generic: {en: "The split is recorded; every model of the next chapters is judged on the rows it assigns.", fr: "Le découpage est enregistré ; chaque modèle des chapitres suivants est jugé sur les lignes qu'il attribue."}
+    attention: {en: "{shared} groups appear in several folds ({shared_rows} rows): a model may recognise a group it has seen, so the error on a new group may be larger.", fr: "{shared} groupes apparaissent dans plusieurs plis ({shared_rows} lignes) : un modèle peut reconnaître un groupe déjà vu, donc l'erreur sur un groupe nouveau peut être plus grande."}
+    attention_temporal: {en: "Blocks in time order are fitted on later rows too: a fold is predicted with knowledge of the future of the file, unlike in use.", fr: "Des blocs dans l'ordre du temps sont aussi ajustés sur des lignes plus récentes : un pli est prédit avec une connaissance de la suite du fichier, contrairement à l'usage."}
+  quality:
+    title: {en: "The quality of the development rows", fr: "La qualité des lignes de développement"}
+    why: {en: "Missing cells, repeated rows and out-of-range values decide how the variables must be prepared; they are read without the target.", fr: "Les cellules manquantes, les lignes répétées et les valeurs hors plage décident de la préparation des variables ; elles sont lues sans la cible."}
+    read:
+      - {en: "Read the missing cells by column.", fr: "Lisez les cellules manquantes par colonne."}
+      - {en: "Then the duplicated rows and the ranges against what the case declares.", fr: "Puis les lignes dupliquées et les plages comparées à ce que déclare le cas."}
+    conclude: {en: "{rows_missing} development rows hold at least one missing cell, out of {rows}.", fr: "{rows_missing} lignes de développement ont au moins une cellule manquante, sur {rows}."}
+    attention: {en: "A value coded as a marker (a question mark, a sentinel) is missing even when the cell is not empty.", fr: "Une valeur codée par un marqueur (un point d'interrogation, une valeur sentinelle) est manquante même quand la case n'est pas vide."}
+  target_summary:
+    title: {en: "The target on the development rows", fr: "La cible sur les lignes de développement"}
+    why: {en: "The mean of the target is the reference's prediction: every model is judged against it. The box shows how spread the target is.", fr: "La moyenne de la cible est la prédiction de la référence : chaque modèle est jugé face à elle. La boîte montre à quel point la cible est étalée."}
+    read:
+      - {en: "The box holds the middle half of the rows; the thick line is the median.", fr: "La boîte contient la moitié centrale des lignes ; le trait épais est la médiane."}
+      - {en: "The circle is the mean, with its interval.", fr: "Le cercle est la moyenne, avec son intervalle."}
+    conclude: {en: "The target has a mean of {mean} and a standard deviation of {sd}: a model must err less than the mean baseline to be useful.", fr: "La cible a une moyenne de {mean} et un écart-type de {sd} : un modèle doit se tromper moins que la moyenne de référence pour être utile."}
+    attention: {en: "This is a look at the target: it is counted.", fr: "C'est un regard sur la cible : il est compté."}
+  target_balance:
+    title: {en: "The outcome on the development rows", fr: "La cible sur les lignes de développement"}
+    why: {en: "The share of positive rows is what a model that does not rank would find: every rule is compared with it.", fr: "La part de lignes positives est ce que trouverait un modèle qui ne classe pas : chaque règle est comparée à elle."}
+    read:
+      - {en: "Compare the two bars: positive and other outcome.", fr: "Comparez les deux barres : positive et autre issue."}
+    conclude: {en: "The positive outcome occurs in {rate} of the rows.", fr: "L'issue positive survient dans {rate} des lignes."}
+    attention: {en: "This is a look at the target: it is counted.", fr: "C'est un regard sur la cible : il est compté."}
+  special_values:
+    title: {en: "The special values", fr: "Les valeurs spéciales"}
+    why: {en: "A special value (a code that means \"unknown\" or \"never\") is not an ordinary number: the table says how often each occurs and what the target looks like there.", fr: "Une valeur spéciale (un code qui veut dire « inconnu » ou « jamais ») n'est pas un nombre ordinaire : le tableau dit combien de fois chacune survient et à quoi ressemble la cible à cet endroit."}
+    read:
+      - {en: "Read each special value and its count of rows.", fr: "Lisez chaque valeur spéciale et son nombre de lignes."}
+    conclude: {en: "The special values become indicator columns in the model, never ordinary numbers.", fr: "Les valeurs spéciales deviennent des colonnes indicatrices dans le modèle, jamais des nombres ordinaires."}
+    attention: {en: "A small count is noisy: do not read its target alone.", fr: "Un petit compte est bruité : n'en lisez pas la cible seule."}
+  by_group:
+    title: {en: "The target by group", fr: "La cible par groupe"}
+    why: {en: "It answers \"does the target differ across the groups of one column, more than chance alone would draw?\".", fr: "Il répond à « la cible diffère-t-elle d'un groupe à l'autre d'une colonne, plus que le hasard seul ne le dessinerait ? »."}
+    read:
+      - {en: "Each dot is a group, with its interval; the shaded band is what shuffling the target draws.", fr: "Chaque point est un groupe, avec son intervalle ; la bande grisée est ce que dessine un mélange de la cible."}
+      - {en: "A dot outside its band is unlikely to be chance alone.", fr: "Un point hors de sa bande a peu de chances d'être dû au seul hasard."}
+    conclude: {en: "The groups are read against the overall value, the dashed line.", fr: "Les groupes se lisent par rapport à la valeur d'ensemble, la ligne pointillée."}
+    attention: {en: "An association between groups, not an effect of the variable; and each such chart is one more look.", fr: "Une association entre groupes, pas un effet de la variable ; et chaque graphique de ce type est un regard de plus."}
+  distribution:
+    title: {en: "The distribution of one column", fr: "La distribution d'une colonne"}
+    why: {en: "The shape of a column decides its preparation: a skewed column may need a logarithm, a special value its own indicator.", fr: "La forme d'une colonne décide de sa préparation : une colonne asymétrique peut demander un logarithme, une valeur spéciale sa propre indicatrice."}
+    read:
+      - {en: "Each bar is a bin or a group; its length is the share of the rows.", fr: "Chaque barre est une tranche ou un groupe ; sa longueur est la part des lignes."}
+    conclude: {en: "The column is read on {rows} development rows, without the target.", fr: "La colonne est lue sur {rows} lignes de développement, sans la cible."}
+    attention: {en: "Logarithmic bins are not of equal width: compare counts, not widths.", fr: "Des tranches logarithmiques n'ont pas la même largeur : comparez des comptes, pas des largeurs."}
+  correlation:
+    title: {en: "The associations between the predictors", fr: "Les liens entre les prédicteurs"}
+    why: {en: "Two predictors that carry nearly the same information make the coefficients unstable; the matrix finds them without reading the target.", fr: "Deux prédicteurs qui portent presque la même information rendent les coefficients instables ; la matrice les trouve sans lire la cible."}
+    read:
+      - {en: "A darker cell is a stronger association; an outlined cell reaches the collinearity level.", fr: "Une case plus foncée est un lien plus fort ; une case encadrée atteint le seuil de colinéarité."}
+    conclude: {en: "The flagged pairs are listed under the matrix with their value.", fr: "Les paires signalées sont listées sous la matrice avec leur valeur."}
+    attention: {en: "A strong association between predictors says nothing about the target.", fr: "Un lien fort entre prédicteurs ne dit rien de la cible."}
+  looks:
+    title: {en: "The look counter", fr: "Le compteur de regards"}
+    why: {en: "Each reading of the target is a chance to fit these rows only. The counter makes the number of looks visible, activity by activity.", fr: "Chaque lecture de la cible est une occasion de s'ajuster à ces seules lignes. Le compteur rend le nombre de regards visible, activité par activité."}
+    read:
+      - {en: "Each bar is one activity that read the target; its length is its number of looks.", fr: "Chaque barre est une activité qui a lu la cible ; sa longueur est son nombre de regards."}
+    conclude: {en: "{looks} looks at the target in all.", fr: "{looks} regards sur la cible en tout."}
+    attention: {en: "The diagnostics of the models count as looks too: they read the target of the development rows.", fr: "Les diagnostics des modèles comptent aussi comme des regards : ils lisent la cible des lignes de développement."}
+  models_table:
+    title: {en: "The models side by side", fr: "Les modèles côte à côte"}
+    why: {en: "It puts the configurations on the same measures, to answer \"by how much does each one do better than the reference, and does it err in one direction rather than the other?\".", fr: "Il met les configurations sur les mêmes mesures, pour répondre à « de combien chacune fait-elle mieux que la référence, et se trompe-t-elle dans un sens plutôt que dans l'autre ? »."}
+    read:
+      - {en: "Read the first error column: the smaller, the better.", fr: "Lisez la première colonne d'erreur : plus petite, mieux c'est."}
+      - {en: "Read the mean residual: near zero, the model is not biased overall.", fr: "Lisez le résidu moyen : près de zéro, le modèle n'est pas biaisé dans l'ensemble."}
+    conclude: {en: "The candidate errs by {mae_model} on average, against {mae_base} for the reference.", fr: "Le candidat se trompe de {mae_model} en moyenne, contre {mae_base} pour la référence."}
+    conclude_diag: {en: "{model}, shown in detail below, errs by {mae_model} on average; the other rows compare the variants on the same predictions.", fr: "{model}, montré en détail ci-dessous, se trompe en moyenne de {mae_model} ; les autres lignes comparent les variantes sur les mêmes prédictions."}
+    conclude_binary: {en: "{model}, shown in detail below, ranks the rows with an AUC of {auc}; the other rows compare the variants on the same predictions.", fr: "{model}, montré en détail ci-dessous, classe les lignes avec une AUC de {auc} ; les autres lignes comparent les variantes sur les mêmes prédictions."}
+    attention: {en: "These figures were used to choose: they are optimistic.", fr: "Ces chiffres ont servi à choisir : ils sont optimistes."}
+  fits:
+    title: {en: "The fitted models", fr: "Les modèles ajustés"}
+    why: {en: "It lists each fitted configuration with its recorded figures, so the diagnostics and the choice can be followed back to them.", fr: "Il liste chaque configuration ajustée avec ses chiffres enregistrés, pour que les diagnostics et le choix puissent y être rapportés."}
+    read:
+      - {en: "One block per model: what it read, then its figures.", fr: "Un bloc par modèle : ce qu'il a lu, puis ses chiffres."}
+    conclude: {en: "The candidate errs by {mae_model} on average, against {mae_base} for the reference.", fr: "Le candidat se trompe de {mae_model} en moyenne, contre {mae_base} pour la référence."}
+    conclude_binary: {en: "The candidate ranks the rows with an AUC of {auc}; the reference does not rank.", fr: "Le candidat classe les lignes avec une AUC de {auc} ; la référence ne classe pas."}
+    conclude_generic: {en: "Each model is recorded with the rows it read and its figures; the comparison comes in the next chapter.", fr: "Chaque modèle est enregistré avec les lignes qu'il a lues et ses chiffres ; la comparaison vient au chapitre suivant."}
+    attention: {en: "These figures were used to choose: they are optimistic.", fr: "Ces chiffres ont servi à choisir : ils sont optimistes."}
+  residuals_scatter:
+    title: {en: "Residuals against the prediction", fr: "Résidus en fonction de la prédiction"}
+    why: {en: "An error that grows or shifts with the prediction says where the model is weak; the mean error alone hides it.", fr: "Une erreur qui grandit ou se décale avec la prédiction dit où le modèle est faible ; l'erreur moyenne seule le cache."}
+    read:
+      - {en: "Each point is a row: above the zero line, the model predicted too low; below, too high.", fr: "Chaque point est une ligne : au-dessus de la ligne zéro, le modèle a prédit trop bas ; en dessous, trop haut."}
+      - {en: "The line is the mean residual of each bin of predictions.", fr: "La courbe est le résidu moyen de chaque tranche de prédictions."}
+    conclude_flagged: {en: "The size of the error grows with the prediction (rank correlation {corr}): one width of interval would be wrong for every row.", fr: "La taille de l'erreur grandit avec la prédiction (corrélation de rang {corr}) : une même largeur d'intervalle serait fausse pour chaque ligne."}
+    conclude: {en: "The size of the error does not clearly change with the prediction (rank correlation {corr}).", fr: "La taille de l'erreur ne change pas nettement avec la prédiction (corrélation de rang {corr})."}
+    attention: {en: "Only a sample of the rows is drawn; the line and the correlation use them all.", fr: "Seul un échantillon des lignes est dessiné ; la courbe et la corrélation les utilisent toutes."}
+  observed:
+    title: {en: "Predicted against observed values", fr: "Valeurs prédites en fonction des valeurs observées"}
+    why: {en: "The mean absolute error is the mean distance of these points to the diagonal: this chart makes the figure visible.", fr: "L'erreur absolue moyenne est la distance moyenne de ces points à la diagonale : ce graphique rend le chiffre visible."}
+    read:
+      - {en: "On the diagonal, a perfect prediction.", fr: "Sur la diagonale, une prédiction parfaite."}
+      - {en: "A cloud that bends away from the diagonal shows a shape the model does not follow.", fr: "Un nuage qui s'écarte de la diagonale montre une forme que le modèle ne suit pas."}
+    conclude: {en: "On average the points are {mae} away from the diagonal: the mean absolute error.", fr: "En moyenne, les points sont à {mae} de la diagonale : l'erreur absolue moyenne."}
+    attention: {en: "A point far from the diagonal is one row: the table of the largest errors names them.", fr: "Un point loin de la diagonale est une ligne : le tableau des plus grandes erreurs les nomme."}
+  qq:
+    title: {en: "Are the residuals normal?", fr: "Les résidus sont-ils normaux ?"}
+    why: {en: "Prediction intervals would assume normal residuals; the mean error and the coefficients do not need it with this many rows.", fr: "Des intervalles de prédiction supposeraient des résidus normaux ; l'erreur moyenne et les coefficients n'en ont pas besoin avec autant de lignes."}
+    read:
+      - {en: "On the diagonal, residuals as a normal distribution would draw them.", fr: "Sur la diagonale, des résidus tels qu'une loi normale les dessinerait."}
+      - {en: "Points that leave the diagonal at the ends show heavier tails.", fr: "Des points qui quittent la diagonale aux extrémités montrent des queues plus lourdes."}
+    conclude: {en: "Skewness {skew}, excess kurtosis {kurt}: both near zero for normal residuals.", fr: "Asymétrie {skew}, excès d'aplatissement {kurt} : les deux près de zéro pour des résidus normaux."}
+    attention: {en: "This study gives no prediction interval: the chart is a check, not a requirement.", fr: "Cette étude ne donne pas d'intervalle de prédiction : le graphique est un contrôle, pas une exigence."}
+  residual_summary:
+    title: {en: "The distribution of the residuals", fr: "La distribution des résidus"}
+    why: {en: "The mean residual is the bias; the spread says how far a typical error goes.", fr: "Le résidu moyen est le biais ; la dispersion dit jusqu'où va une erreur typique."}
+    read:
+      - {en: "Read the mean (bias), then the percentiles from left to right.", fr: "Lisez la moyenne (le biais), puis les percentiles de gauche à droite."}
+    conclude: {en: "Bias {mean}, standard deviation {sd}.", fr: "Biais {mean}, écart-type {sd}."}
+    attention: {en: "A bias near zero overall can hide opposite biases in two groups: read the residuals by variable.", fr: "Un biais proche de zéro dans l'ensemble peut cacher des biais opposés dans deux groupes : lisez les résidus par variable."}
+  hetero:
+    title: {en: "Does the error grow with the prediction?", fr: "L'erreur grandit-elle avec la prédiction ?"}
+    why: {en: "An error that grows with the prediction makes one interval width wrong for every row; the flag summarises the residual chart.", fr: "Une erreur qui grandit avec la prédiction rend une même largeur d'intervalle fausse pour chaque ligne ; le signal résume le graphique des résidus."}
+    read:
+      - {en: "Read the flag, then its two figures: the rank correlation and the ratio of spreads.", fr: "Lisez le signal, puis ses deux chiffres : la corrélation de rang et le rapport des dispersions."}
+    conclude_flagged: {en: "Flagged: the spread of the top third of the predictions is {ratio} times that of the bottom third.", fr: "Signalé : la dispersion du tiers haut des prédictions vaut {ratio} fois celle du tiers bas."}
+    conclude: {en: "Not flagged: the spread ratio is {ratio}.", fr: "Non signalé : le rapport des dispersions vaut {ratio}."}
+    attention: {en: "The mean error stays a fair summary even when the flag is raised.", fr: "L'erreur moyenne reste un résumé honnête même quand le signal est levé."}
+  nonlinearity:
+    title: {en: "Does the model follow the shape of {feature}?", fr: "Le modèle suit-il la forme de {feature} ?"}
+    why: {en: "A linear model draws a straight line in each variable; when the true shape bends, the error is systematic from one range to the next.", fr: "Un modèle linéaire trace une droite dans chaque variable ; quand la vraie forme se courbe, l'erreur est systématique d'une tranche à l'autre."}
+    read:
+      - {en: "Each bar is one range of the variable; its length is the gap between the observed value and the mean prediction there.", fr: "Chaque barre est une tranche de la variable ; sa longueur est l'écart entre la valeur observée et la prédiction moyenne à cet endroit."}
+      - {en: "The line spans plus or minus two standard errors: a bar whose line misses zero is a real gap.", fr: "Le trait couvre plus ou moins deux erreurs types : une barre dont le trait ne touche pas zéro est un vrai écart."}
+    conclude: {en: "The shape of {feature} is flagged: the linear model does not follow it, which motivates a variant of another family.", fr: "La forme de {feature} est signalée : le modèle linéaire ne la suit pas, ce qui motive une variante d'une autre famille."}
+    attention: {en: "A gap by range is an association given the model, not the effect of changing the variable.", fr: "Un écart par tranche est une association, pas l'effet d'un changement de la variable."}
+  by_feature:
+    title: {en: "Residuals by variable", fr: "Résidus par variable"}
+    why: {en: "It answers \"is the error larger, or biased, in one group of a variable?\".", fr: "Il répond à « l'erreur est-elle plus grande, ou biaisée, dans un groupe d'une variable ? »."}
+    read:
+      - {en: "For each variable, read the mean residual of each group: far from zero is a bias in that group.", fr: "Pour chaque variable, lisez le résidu moyen de chaque groupe : loin de zéro, c'est un biais dans ce groupe."}
+      - {en: "Skip the groups flagged as too small.", fr: "Laissez de côté les groupes signalés comme trop petits."}
+    conclude: {en: "The largest bias in a group large enough to read is {bias} ({column} = {group}).", fr: "Le plus grand biais dans un groupe assez grand pour être lu vaut {bias} ({column} = {group})."}
+    attention: {en: "Many groups, many chances: one extreme group among many can be chance.", fr: "Beaucoup de groupes, beaucoup de chances : un groupe extrême parmi beaucoup peut être dû au hasard."}
+  coefficients:
+    title: {en: "The model's weights, with their interval", fr: "Les poids du modèle, avec leur intervalle"}
+    why: {en: "It answers \"which variables weigh most in the prediction, and is the sign of each weight certain?\".", fr: "Il répond à « quelles variables pèsent le plus dans la prédiction, et le signe de chaque poids est-il certain ? »."}
+    read:
+      - {en: "Each dot is a coefficient, its line the interval; the vertical line is zero.", fr: "Chaque point est un coefficient, son trait l'intervalle ; la ligne verticale est zéro."}
+      - {en: "A line that does not cross zero gives a certain sign.", fr: "Un trait qui ne coupe pas zéro donne un signe certain."}
+    conclude_excludes: {en: "The largest weight in size is {term}, {value} [{low}, {high}]: its interval excludes zero, so its sign is certain on these rows.", fr: "Le plus grand poids en taille est {term}, {value} [{low} ; {high}] : son intervalle exclut zéro, son signe est donc certain sur ces lignes."}
+    conclude_includes: {en: "The largest weight in size is {term}, {value} [{low}, {high}]: its interval includes zero, so even its sign is uncertain.", fr: "Le plus grand poids en taille est {term}, {value} [{low} ; {high}] : son intervalle contient zéro, même son signe est donc incertain."}
+    attention: {en: "Associations given the other variables, never effects of changing a variable; correlated predictors share their weight.", fr: "Des associations à variables égales, jamais des effets d'un changement de variable ; des prédicteurs liés se partagent leur poids."}
+  largest:
+    title: {en: "The largest errors", fr: "Les plus grandes erreurs"}
+    why: {en: "The mean figures say how much the model errs; the largest errors say on which rows. The table answers \"who are the rows the model misses most, and do they have something in common?\".", fr: "Les chiffres moyens disent combien le modèle se trompe ; les plus grandes erreurs disent sur quelles lignes. Le tableau répond à « quelles sont les lignes que le modèle rate le plus, et ont-elles quelque chose en commun ? »."}
+    read:
+      - {en: "Read observed, predicted and the residual of each row; then its values.", fr: "Lisez observé, prédit et le résidu de chaque ligne ; puis ses valeurs."}
+    conclude: {en: "The largest error is {residual}, on row {row}.", fr: "La plus grande erreur vaut {residual}, sur la ligne {row}."}
+    attention: {en: "A few large errors weigh more in the RMSE than in the MAE.", fr: "Quelques grandes erreurs pèsent plus dans la RMSE que dans la MAE."}
+  confusion:
+    title: {en: "The confusion matrix at the rule", fr: "La matrice de confusion à la règle"}
+    why: {en: "It counts, at the rule, the positive rows found, the positive rows missed, and the selected rows that were not positive.", fr: "Elle compte, à la règle, les lignes positives trouvées, les positives manquées, et les lignes sélectionnées qui n'étaient pas positives."}
+    read:
+      - {en: "Read the selected column: positive rows found, then negative rows selected.", fr: "Lisez la colonne sélectionnée : les positives trouvées, puis les négatives sélectionnées."}
+    conclude: {en: "Precision {precision}, recall {recall} at the rule.", fr: "Précision {precision}, rappel {recall} à la règle."}
+    attention: {en: "A tie at the cut is counted pro rata: some counts are expected counts.", fr: "Un ex aequo au seuil est compté au prorata : certains comptes sont des comptes attendus."}
+  gain:
+    title: {en: "The gain curve", fr: "La courbe de gain"}
+    why: {en: "If the team acts on the best-scored rows first, what share of all positive rows does it find? The curve answers for every share acted on.", fr: "Si l'équipe agit d'abord sur les lignes les mieux notées, quelle part de toutes les positives trouve-t-elle ? La courbe répond pour chaque part traitée."}
+    read:
+      - {en: "The diagonal is acting at random; the higher the curve, the better the ranking.", fr: "La diagonale correspond à agir au hasard ; plus la courbe est haute, meilleur est le classement."}
+    conclude: {en: "AUC {auc}: the chance that a positive row is scored above a negative one.", fr: "AUC {auc} : la chance qu'une ligne positive soit notée au-dessus d'une négative."}
+    attention: {en: "A good ranking overall does not say the rule is well placed.", fr: "Un bon classement dans l'ensemble ne dit pas que la règle est bien placée."}
+  calibration:
+    title: {en: "Calibration", fr: "Calibration"}
+    why: {en: "When the model gives rows a score, do about that share of them turn out positive?", fr: "Quand le modèle donne un score à des lignes, à peu près cette part d'entre elles est-elle positive ?"}
+    read:
+      - {en: "On the diagonal, a score that reads as a probability.", fr: "Sur la diagonale, un score qui se lit comme une probabilité."}
+    conclude: {en: "Brier score {brier}, against {brier_base} for the constant base rate (lower is better).", fr: "Score de Brier {brier}, contre {brier_base} pour le taux de base constant (plus bas, mieux c'est)."}
+    attention: {en: "A ranking can be good with scores that are not probabilities.", fr: "Un classement peut être bon avec des scores qui ne sont pas des probabilités."}
+  segments:
+    title: {en: "Precision and recall by segment", fr: "Précision et rappel par segment"}
+    why: {en: "It answers \"does the rule work as well in every segment?\".", fr: "Il répond à « la règle marche-t-elle aussi bien dans chaque segment ? »."}
+    read:
+      - {en: "Read each segment's precision and recall with its interval; skip the small cells.", fr: "Lisez la précision et le rappel de chaque segment avec son intervalle ; laissez de côté les petites cases."}
+    conclude: {en: "The segments are chosen by the engine; their intervals say how far each figure can move.", fr: "Les segments sont choisis par le moteur ; leurs intervalles disent jusqu'où chaque chiffre peut bouger."}
+    attention: {en: "Many segments, many chances: an extreme one among many can be chance.", fr: "Beaucoup de segments, beaucoup de chances : un segment extrême parmi beaucoup peut être dû au hasard."}
+  examples:
+    title: {en: "Examples of errors", fr: "Exemples d'erreurs"}
+    why: {en: "Average figures hide the rows; the examples show the rows the rule got wrong.", fr: "Les chiffres moyens cachent les lignes ; les exemples montrent les lignes que la règle a ratées."}
+    read:
+      - {en: "Read the score and the values of each row.", fr: "Lisez le score et les valeurs de chaque ligne."}
+    conclude: {en: "The examples are listed in score order.", fr: "Les exemples sont listés dans l'ordre des scores."}
+    attention: {en: "A few examples are not a pattern.", fr: "Quelques exemples ne font pas un motif."}
+  fold_lines:
+    title: {en: "The configurations, fold by fold", fr: "Les configurations, pli par pli"}
+    why: {en: "A mean over folds hides how each configuration does fold by fold; comparing the lines on the same folds shows whether a gap is steady or the work of one fold.", fr: "Une moyenne sur les plis cache ce que fait chaque configuration pli par pli ; comparer les lignes sur les mêmes plis montre si un écart est régulier ou l'œuvre d'un seul pli."}
+    read:
+      - {en: "Each line is one configuration; each point its score on one fold.", fr: "Chaque ligne est une configuration ; chaque point son score sur un pli."}
+      - {en: "Lines that keep their order on every fold show a steady gap.", fr: "Des lignes qui gardent leur ordre sur chaque pli montrent un écart régulier."}
+    conclude: {en: "The best mean is {best} ({best_mean}); the candidate's is {candidate_mean}.", fr: "La meilleure moyenne est celle de {best} ({best_mean}) ; celle du candidat vaut {candidate_mean}."}
+    attention: {en: "A gap in the mean can be the work of one fold: the noise between folds is the scale to judge it, and the paired differences of the choice chapter are sharper.", fr: "Un écart de moyenne peut être l'œuvre d'un seul pli : le bruit entre les plis est l'échelle pour le juger, et les écarts appariés du chapitre du choix sont plus fins."}
+    attention_noise: {en: "The gaps between the configurations stay within the noise between folds (the advice of the comparison): no configuration is told apart from the candidate on these folds.", fr: "Les écarts entre les configurations restent dans le bruit entre les plis (le conseil de la comparaison) : aucune configuration ne se distingue du candidat sur ces plis."}
+  variants:
+    title: {en: "The configurations compared", fr: "Les configurations comparées"}
+    why: {en: "It answers \"which configuration has the best mean, and is the gap larger than the noise between folds?\".", fr: "Il répond à « quelle configuration a la meilleure moyenne, et l'écart dépasse-t-il le bruit entre les plis ? »."}
+    read:
+      - {en: "Read the mean and its standard error, then the difference with the candidate and its interval.", fr: "Lisez la moyenne et son erreur type, puis l'écart avec le candidat et son intervalle."}
+      - {en: "The last column says whether each configuration is within one standard error of the best.", fr: "La dernière colonne dit si chaque configuration est à moins d'une erreur type de la meilleure."}
+    conclude: {en: "The one-standard-error rule keeps {pick}; the best mean is {best}.", fr: "La règle d'une erreur type retient {pick} ; la meilleure moyenne est celle de {best}."}
+    conclude_generic: {en: "Each configuration is listed with what it asks; the comparison fold by fold appears once the variants are evaluated.", fr: "Chaque configuration est listée avec ce qu'elle demande ; la comparaison pli par pli apparaît une fois les variantes évaluées."}
+    attention: {en: "Each variant is one more trial on the same rows: the best one owes a little to chance (the approximate optimism).", fr: "Chaque variante est un essai de plus sur les mêmes lignes : la meilleure doit un peu au hasard (l'optimisme approximatif)."}
+  errors_bar:
+    title: {en: "The errors, and the criterion's bar", fr: "Les erreurs, et la barre du critère"}
+    why: {en: "The verdict comes down to one question: do the models get under the bar fixed before seeing them? This figure puts the mean errors on one ruler, with the bar, so the answer can be read at a glance.", fr: "Le verdict tient en une question : les modèles passent-ils sous la barre fixée avant de les voir ? Cette figure pose les erreurs moyennes sur une même règle, avec la barre, pour que la réponse se lise d'un coup d'œil."}
+    read:
+      - {en: "Find the dashed red line: the bar. To its left, in the green, a model meets the criterion.", fr: "Repérez le pointillé rouge : la barre. À sa gauche, dans le vert, un modèle atteint le critère."}
+      - {en: "Read each dot: the further left, the smaller the mean error.", fr: "Lisez chaque point : plus il est à gauche, plus l'erreur moyenne est petite."}
+      - {en: "Look at the lines: if they overlap, the models are not clearly told apart on this chart alone.", fr: "Regardez les traits : s'ils se chevauchent, les modèles ne se distinguent pas nettement sur ce seul graphique."}
+    conclude: {en: "The candidate errs by {mae_model} against {mae_base} for the reference; the criterion ({criterion}) is {status}.", fr: "Le candidat se trompe de {mae_model} contre {mae_base} pour la référence ; le critère ({criterion}) est {status}."}
+    attention: {en: "These figures were used to choose. Overlapping intervals do not prove two models are equal: the paired differences of the model choice chapter are sharper.", fr: "Ces chiffres ont servi à choisir. Des intervalles qui se chevauchent ne prouvent pas que deux modèles se valent : les écarts appariés du chapitre du choix sont plus fins."}
+    bar_note: {en: "The bar is drawn at the reference's error reduced by the criterion's share; its position is computed for the drawing only.", fr: "La barre est dessinée à l'erreur de la référence diminuée de la part du critère ; sa position est calculée pour le dessin seulement."}
+  paired:
+    title: {en: "The paired differences", fr: "Les écarts appariés"}
+    why: {en: "Two models are compared on the same rows: the difference of their errors, row by row, with a bootstrap interval, is the sharpest evidence of the choice.", fr: "Deux modèles sont comparés sur les mêmes lignes : l'écart de leurs erreurs, ligne par ligne, avec un intervalle bootstrap, est la preuve la plus fine du choix."}
+    read:
+      - {en: "Left of zero, the first model errs less; right of zero, more.", fr: "À gauche de zéro, le premier modèle se trompe moins ; à droite, plus."}
+      - {en: "An interval that does not cross zero is a gap the drawing of the rows does not explain.", fr: "Un intervalle qui ne coupe pas zéro est un écart que le tirage des lignes n'explique pas."}
+    conclude: {en: "Against the reference, the candidate's difference is {delta} [{low}, {high}].", fr: "Face à la référence, l'écart du candidat vaut {delta} [{low} ; {high}]."}
+    attention: {en: "A gap can be real and small: compare it with the size of the error, not only with zero.", fr: "Un écart peut être réel et petit : comparez-le à la taille de l'erreur, pas seulement à zéro."}
+    tension: {en: "Tension: the one-standard-error rule keeps {pick} for its simplicity, while the paired difference shows {other} better by {gap} with an interval [{low}, {high}] that excludes zero. Both are true: the gap is real on these rows but smaller than the noise between folds. The choice is a trade-off to state in your words.", fr: "Tension : la règle d'une erreur type garde {pick} pour sa simplicité, alors que l'écart apparié montre {other} meilleure de {gap}, avec un intervalle [{low} ; {high}] qui exclut zéro. Les deux sont vrais : l'écart est réel sur ces lignes mais plus petit que le bruit entre les plis. Le choix est un arbitrage à dire avec vos mots."}
+  residual_boxes:
+    title: {en: "The distribution of each model's residuals", fr: "La distribution des résidus de chaque modèle"}
+    why: {en: "Two models with close mean errors can err differently: the boxes show, model by model, how wide and how shifted the errors are.", fr: "Deux modèles d'erreurs moyennes proches peuvent se tromper différemment : les boîtes montrent, modèle par modèle, la largeur et le décalage des erreurs."}
+    read:
+      - {en: "The box holds the middle half of the residuals, the thick line is the median, the whiskers go from the fifth to the ninety-fifth percentile.", fr: "La boîte contient la moitié centrale des résidus, le trait épais est la médiane, les moustaches vont du cinquième au quatre-vingt-quinzième percentile."}
+      - {en: "A box away from the zero line is a biased model on these rows.", fr: "Une boîte écartée de la ligne zéro est un modèle biaisé sur ces lignes."}
+    conclude: {en: "The candidate's middle half of the residuals spans {q25} to {q75}; the reference's spans {base_q25} to {base_q75}.", fr: "La moitié centrale des résidus du candidat va de {q25} à {q75} ; celle de la référence va de {base_q25} à {base_q75}."}
+    attention: {en: "A narrower box does not mean a smaller mean error when the tails differ: read the boxes with the paired differences.", fr: "Une boîte plus étroite ne veut pas dire une erreur moyenne plus petite quand les queues diffèrent : lisez les boîtes avec les écarts appariés."}
+  residual_by_period:
+    title: {en: "Does the error drift with {column}?", fr: "L'erreur dérive-t-elle avec {column} ?"}
+    why: {en: "A model fitted on all the periods can still err in one direction on the recent ones: the mean residual by period shows a drift.", fr: "Un modèle ajusté sur toutes les périodes peut encore se tromper dans un sens sur les plus récentes : le résidu moyen par période montre une dérive."}
+    read:
+      - {en: "One row per period, one bar per model: to the right, the model predicted too low.", fr: "Une ligne par période, une barre par modèle : à droite, le modèle a prédit trop bas."}
+      - {en: "Bars that move steadily from one side to the other across periods show a drift.", fr: "Des barres qui passent régulièrement d'un côté à l'autre au fil des périodes montrent une dérive."}
+    conclude: {en: "The candidate's mean residual goes from {first} in the first period to {last} in the last.", fr: "Le résidu moyen du candidat passe de {first} sur la première période à {last} sur la dernière."}
+    attention: {en: "A period with few rows is noisy; and a final test drawn without order cannot confirm a drift.", fr: "Une période avec peu de lignes est bruitée ; et un test final tiré sans ordre ne peut pas confirmer une dérive."}
+  comparison:
+    title: {en: "The comparison table", fr: "Le tableau de comparaison"}
+    why: {en: "It gathers the recorded comparison: the errors with their intervals and the paired differences, every number cited.", fr: "Il rassemble la comparaison enregistrée : les erreurs avec leurs intervalles et les écarts appariés, chaque nombre cité."}
+    read:
+      - {en: "Read each model's error and interval, then the paired differences below.", fr: "Lisez l'erreur de chaque modèle et son intervalle, puis les écarts appariés dessous."}
+    conclude: {en: "The candidate's difference with the reference is {delta}.", fr: "L'écart du candidat avec la référence vaut {delta}."}
+    attention: {en: "Every figure here was used to choose.", fr: "Chaque chiffre ici a servi à choisir."}
+  policy:
+    title: {en: "The rules compared", fr: "Les règles comparées"}
+    why: {en: "A rule turns scores into actions; the table compares, at each rule, what the model finds against the baseline, with intervals.", fr: "Une règle transforme les scores en actions ; le tableau compare, à chaque règle, ce que le modèle trouve face à la référence, avec des intervalles."}
+    read:
+      - {en: "Read the precision of the model and of the baseline at each rule.", fr: "Lisez la précision du modèle et de la référence à chaque règle."}
+      - {en: "Then the paired gain, with its interval.", fr: "Puis le gain apparié, avec son intervalle."}
+    conclude: {en: "At the rule of the criterion, the model's precision is {precision} against {base_precision} for the baseline.", fr: "À la règle du critère, la précision du modèle vaut {precision} contre {base_precision} pour la référence."}
+    attention: {en: "The rule was chosen on these rows: its figures are optimistic.", fr: "La règle a été choisie sur ces lignes : ses chiffres sont optimistes."}
+  selection:
+    title: {en: "Positive rows found at each rule", fr: "Lignes positives trouvées à chaque règle"}
+    why: {en: "Among the rows each rule selects, how many positive rows does the model find, compared with the baseline?", fr: "Parmi les lignes que chaque règle sélectionne, combien de positives le modèle trouve-t-il, face à la référence ?"}
+    read:
+      - {en: "For each rule, compare the model's bar with the baseline's.", fr: "Pour chaque règle, comparez la barre du modèle à celle de la référence."}
+    conclude: {en: "The gap between the bars is what ranking adds over acting at random.", fr: "L'écart entre les barres est ce que le classement ajoute par rapport à agir au hasard."}
+    attention: {en: "The counts are optimistic: the rule was chosen on these rows.", fr: "Les comptes sont optimistes : la règle a été choisie sur ces lignes."}
+  final_state:
+    title: {en: "What is sealed, and what the opening will fill", fr: "Ce qui est scellé, et ce que l'ouverture remplira"}
+    title_opened: {en: "The final test, opened once", fr: "Le test final, ouvert une fois"}
+    why: {en: "It answers \"what does the study know about the final test right now?\".", fr: "Il répond à « que sait l'étude du test final en ce moment ? »."}
+    read:
+      - {en: "Read the rows set aside, then the rows read so far.", fr: "Lisez les lignes mises de côté, puis les lignes lues jusqu'ici."}
+    read_opened:
+      - {en: "Read the rows set aside, then the one evaluation that read them.", fr: "Lisez les lignes mises de côté, puis la seule évaluation qui les a lues."}
+    conclude_sealed: {en: "{sealed} rows are sealed and none is read: no final figure exists yet.", fr: "{sealed} lignes sont scellées et aucune n'est lue : aucun chiffre final n'existe encore."}
+    conclude_opened: {en: "The final test was opened once, on {n} rows.", fr: "Le test final a été ouvert une fois, sur {n} lignes."}
+    attention: {en: "The automatic mode never opens the final test, except in the demonstration mode, marked as such for good.", fr: "Le mode automatique n'ouvre jamais le test final, sauf en mode démonstration, marqué comme tel pour de bon."}
+  versus:
+    title: {en: "Development evidence and final evidence, side by side", fr: "Preuve de développement et preuve finale, côte à côte"}
+    why: {en: "The development figures helped choose; the final figure did not. Side by side, they show how much the choice flattered itself.", fr: "Les chiffres de développement ont aidé à choisir ; le chiffre final non. Côte à côte, ils montrent combien le choix s'est flatté."}
+    read:
+      - {en: "Compare each measure across the two columns.", fr: "Comparez chaque mesure entre les deux colonnes."}
+    conclude: {en: "The final column is the only independent evidence.", fr: "La colonne finale est la seule preuve indépendante."}
+    attention: {en: "A final test of few rows has a wide interval: a gap between the columns can be chance.", fr: "Un test final de peu de lignes a un intervalle large : un écart entre les colonnes peut être dû au hasard."}
+  limits:
+    title: {en: "What is not yet defensible", fr: "Ce qui n'est pas encore défendable"}
+    why: {en: "Before concluding, we need to know what is missing. The list answers \"what prevents defending this study today, and what will remain a limit even after?\".", fr: "Avant de conclure, il faut savoir ce qui manque. La liste répond à « qu'est-ce qui empêche aujourd'hui de défendre cette étude, et qu'est-ce qui restera une limite même après ? »."}
+    read:
+      - {en: "Read each item: some disappear with a decision in your words, others stay attached to the conclusion.", fr: "Lisez chaque point : certains disparaissent avec une décision prise avec vos mots, d'autres restent attachés à la conclusion."}
+    conclude: {en: "{n} limits are recorded.", fr: "{n} limites sont enregistrées."}
+    attention: {en: "An empty list would not make the study causal: it ranks or estimates, nothing more.", fr: "Une liste vide ne rendrait pas l'étude causale : elle classe ou estime, rien de plus."}
+
+# The words of the lesson report's own charts (render_charts).
+charts:
+  unit: {en: "Unit:", fr: "Unité :"}
+  residual_boxes_question: {en: "How far from the observed value are the predictions of each model?", fr: "À quelle distance de la valeur observée sont les prédictions de chaque modèle ?"}
+  residual_boxes_note: {en: "Residual: observed minus predicted. Line: from the fifth to the ninety-fifth percentile; box: the middle half; thick line: the median, cited at the right. A box away from the zero line means the model is biased on these rows.", fr: "Résidu : valeur observée moins prédiction. Trait : du cinquième au quatre-vingt-quinzième percentile ; boîte : la moitié centrale ; trait épais : la médiane, citée à droite. Une boîte écartée de la ligne zéro signifie que le modèle est biaisé sur ces lignes."}
+  residual_period_question: {en: "Does the error drift across the values of {column}?", fr: "L'erreur dérive-t-elle d'une valeur de {column} à l'autre ?"}
+  residual_period_note: {en: "Mean residual (observed minus predicted) of the rows of each period, one bar per model; the number at the right is the candidate's. A period with few rows is noisy.", fr: "Résidu moyen (valeur observée moins prédiction) des lignes de chaque période, une barre par modèle ; le nombre à droite est celui du candidat. Une période avec peu de lignes est bruitée."}
+  errors_question: {en: "Do the models get under the bar fixed before seeing them?", fr: "Les modèles passent-ils sous la barre fixée avant de les voir ?"}
+  errors_label: {en: "Each model's figure with its interval, and the criterion's bar", fr: "Le chiffre de chaque modèle avec son intervalle, et la barre du critère"}
+  errors_dot: {en: "the model's figure", fr: "le chiffre du modèle"}
+  errors_ci: {en: "its bootstrap interval", fr: "son intervalle bootstrap"}
+  errors_bar: {en: "the criterion's bar", fr: "la barre du critère"}
+  paired_question: {en: "Is the gap between two models larger than the noise of drawing the rows?", fr: "L'écart entre deux modèles dépasse-t-il le bruit du tirage des lignes ?"}
+  paired_label: {en: "Paired differences with their bootstrap intervals", fr: "Écarts appariés avec leurs intervalles bootstrap"}
+  paired_excludes: {en: "interval excludes zero", fr: "l'intervalle exclut zéro"}
+  paired_includes: {en: "interval includes zero", fr: "l'intervalle contient zéro"}
+  paired_note: {en: "Each row is one model minus another on the same rows; the number at the right is the difference. A filled dot: its interval excludes zero; an open dot: it includes zero.", fr: "Chaque ligne est un modèle moins un autre sur les mêmes lignes ; le nombre à droite est l'écart. Un point plein : son intervalle exclut zéro ; un point creux : il contient zéro."}
+  parts_question: {en: "On which rows does the study work, and which are sealed?", fr: "Sur quelles lignes l'étude travaille-t-elle, et lesquelles sont scellées ?"}
+  parts_label: {en: "The rows of the file in two parts", fr: "Les lignes du fichier en deux parts"}
+  parts_dev: {en: "development rows", fr: "lignes de développement"}
+  parts_sealed: {en: "sealed final test", fr: "test final scellé"}
+  parts_opened: {en: "final test, opened once", fr: "test final, ouvert une fois"}
+  fold: {en: one fold, fr: un pli}
+  folds_question: {en: "How are the development rows divided into folds?", fr: "Comment les lignes de développement sont-elles réparties en plis ?"}
+  folds_label: {en: "The folds of the split", fr: "Les plis du découpage"}
+  folds_note: {en: "One block per fold, its number above, its rows inside; under a time order, the range of the time column below.", fr: "Un bloc par pli, son numéro au-dessus, ses lignes dedans ; sous un ordre temporel, la plage de la colonne de temps dessous."}
+  folds_order: {en: "Order column:", fr: "Colonne d'ordre :"}
+  coefficients_question: {en: "Which variables weigh most, and is the sign of each weight certain?", fr: "Quelles variables pèsent le plus, et le signe de chaque poids est-il certain ?"}
+  coefficients_excludes: {en: "interval excludes zero", fr: "l'intervalle exclut zéro"}
+  coefficients_includes: {en: "interval includes zero", fr: "l'intervalle contient zéro"}
+  looks_question: {en: "How many times was the target read, and by which activity?", fr: "Combien de fois la cible a-t-elle été lue, et par quelle activité ?"}
+  looks_label: {en: "Looks at the target by activity", fr: "Regards sur la cible par activité"}
+
+# Regression: the overlay for a numeric target.
+regression:
+  prereq:
+    items:
+      - {en: "<b>An error and a gap.</b> An error or a difference is always given with the rows it was computed on, in the unit of the target, and with an interval when the study has one.", fr: "<b>Une erreur et un écart.</b> Une erreur ou une différence est toujours donnée avec les lignes sur lesquelles elle a été calculée, dans l'unité de la cible, et avec un intervalle quand l'étude en a un."}
+      - {en: "<b>The four evidence marks.</b> ○ nothing was read; ◇ the structure was read, without the target; ◐ a development result, which was used to choose and is therefore optimistic; ● the final test, sealed, opened only once.", fr: "<b>Les quatre marques de preuve.</b> ○ rien n'a été lu ; ◇ la structure a été lue, sans la cible ; ◐ un résultat de développement, qui a servi à choisir et reste donc optimiste ; ● le test final, scellé, ouvert une seule fois."}
+      - {en: "<b>The code is optional.</b> The \"Code\" blocks reproduce cells of the generated notebook, which recompute recorded figures with pandas and scikit-learn and check the equality with assert. nv and RESULT_IDS are the notebook's helpers for reading the study.", fr: "<b>Le code est facultatif.</b> Les blocs « Code » reprennent des cellules du notebook généré, qui recalculent les chiffres enregistrés avec pandas et scikit-learn et vérifient l'égalité par assert. nv et RESULT_IDS sont les aides du notebook pour lire l'étude."}
+      - {en: "<b>Every number is cited.</b> Hover a number to see the recorded result and the path it comes from; the appendix lists every result.", fr: "<b>Chaque nombre est cité.</b> Survolez un nombre pour voir le résultat enregistré et le chemin dont il vient ; l'annexe liste chaque résultat."}
+      - {en: "<b>Where you are.</b> The line pinned at the top of the screen gives the chapter being read and what remains; the buttons on the right switch the report to the other language and to the whiteboard theme, for this visit only.", fr: "<b>Où vous êtes.</b> La ligne collée en haut de l'écran donne le chapitre lu et ce qui reste ; les boutons à droite passent le rapport dans l'autre langue et en tableau blanc, pour cette visite seulement."}
+    abbr_task:
+      - {term: {en: "MAE", fr: "MAE"}, def: {en: "Mean absolute error: the mean of the absolute gap between observed and predicted, in the unit of the target.", fr: "Erreur absolue moyenne : la moyenne de l'écart absolu entre l'observé et le prédit, dans l'unité de la cible."}}
+      - {term: {en: "RMSE", fr: "RMSE"}, def: {en: "Root mean squared error, in the unit of the target; it weighs large errors more.", fr: "La racine de la moyenne des erreurs au carré, dans l'unité de la cible ; elle pèse davantage les grandes erreurs."}}
+      - {term: {en: "residual", fr: "résidu"}, def: {en: "Observed minus predicted: positive when the model predicted too low.", fr: "Observé moins prédit : positif quand le modèle a prédit trop bas."}}
+      - {term: {en: "EBM", fr: "EBM"}, def: {en: "Explainable Boosting Machine: a readable non-linear model, one curve per variable.", fr: "Explainable Boosting Machine : un modèle non linéaire lisible, une courbe par variable."}}
+      - {term: {en: "ridge · alpha", fr: "ridge · alpha"}, def: {en: "Penalised linear regression; alpha is the strength of the penalty.", fr: "Régression linéaire pénalisée ; alpha est la force de la pénalité."}}
+  chapters:
+    ch3:
+      terms: [cross_validation, out_of_fold, success_criterion]
+    ch4:
+      terms: [target_look, target_distribution, special_value]
+    ch6:
+      terms: [baseline, linear_regression, mae, residual]
+      here:
+        baseline: {en: "The mean baseline predicts the mean of the fitted rows for every row; its mean absolute error is {mae_base}.", fr: "La moyenne de référence prédit, pour chaque ligne, la moyenne des lignes d'ajustement ; son erreur absolue moyenne vaut {mae_base}."}
+      keep: {en: "Out of fold, the candidate errs by {mae_model} on average, the reference by {mae_base}.", fr: "Hors pli, le candidat se trompe en moyenne de {mae_model}, la référence de {mae_base}."}
+    ch7:
+      intro: {en: "This step chooses the model the study will carry to the final test, among the reference, the linear model and the variants. The evidence is the out-of-fold errors, compared pair by pair on the same rows with a bootstrap interval, and the one-standard-error rule over the folds. The final test is still apart: the choice is made without it.", fr: "Cette étape choisit le modèle que l'étude portera au test final, parmi la référence, le modèle linéaire et les variantes. La preuve est faite des erreurs hors pli, comparées deux à deux sur les mêmes lignes avec un intervalle bootstrap, et de la règle d'une erreur type sur les plis. Le test final reste à part : le choix se fait sans lui."}
+      terms: [paired_bootstrap, paired_difference, one_se]
+      here:
+        one_se: {en: "Here the rule keeps {pick}; the best mean is {best}.", fr: "Ici, la règle retient {pick} ; la meilleure moyenne est celle de {best}."}
+      keep: {en: "{chosen} is chosen; against the reference its paired difference is {delta} [{low}, {high}].", fr: "{chosen} est choisi ; face à la référence, son écart apparié vaut {delta} [{low} ; {high}]."}
+  figures:
+    nonlinearity:
+      read:
+        - {en: "Each bar is one range of the variable; its length is the observed value minus the mean prediction there, in the unit of the target.", fr: "Chaque barre est une tranche de la variable ; sa longueur est la valeur observée moins la prédiction moyenne à cet endroit, dans l'unité de la cible."}
+        - {en: "To the right, the model predicts too low in that range; to the left, too high. The line spans plus or minus two standard errors.", fr: "À droite, le modèle prédit trop bas dans cette tranche ; à gauche, trop haut. Le trait couvre plus ou moins deux erreurs types."}
+    fold_lines:
+      read:
+        - {en: "Each line is one configuration; each point its mean absolute error on one fold. Lower is better.", fr: "Chaque ligne est une configuration ; chaque point son erreur absolue moyenne sur un pli. Plus bas, mieux c'est."}
+        - {en: "Lines that keep their order on every fold show a steady gap.", fr: "Des lignes qui gardent leur ordre sur chaque pli montrent un écart régulier."}
+
+# Binary: the overlay for a yes/no outcome.
+binary:
+  prereq:
+    abbr_task:
+      - {term: {en: "precision", fr: "précision"}, def: {en: "Among the rows a rule selects, the share that are positive.", fr: "Parmi les lignes qu'une règle sélectionne, la part qui est positive."}}
+      - {term: {en: "recall", fr: "rappel"}, def: {en: "Among all positive rows, the share the rule selects.", fr: "Parmi toutes les lignes positives, la part que la règle sélectionne."}}
+      - {term: {en: "AUC", fr: "AUC"}, def: {en: "Area under the ROC curve: the chance that a positive row is scored above a negative one.", fr: "Aire sous la courbe ROC : la chance qu'une ligne positive soit notée au-dessus d'une négative."}}
+      - {term: {en: "points", fr: "points"}, def: {en: "Percentage points: the difference of two percentages.", fr: "Points de pourcentage : la différence de deux pourcentages."}}
+  chapters:
+    ch3:
+      terms: [cross_validation, out_of_fold, success_criterion]
+    ch4:
+      terms: [target_look, base_rate, special_value]
+    ch6:
+      terms: [baseline, logistic_regression, auc]
+      here:
+        baseline: {en: "The baseline does not rank: at any rule it finds positive rows at the base rate.", fr: "La référence ne classe pas : à toute règle, elle trouve des lignes positives au taux de base."}
+      keep: {en: "Out of fold, the candidate ranks the rows with an AUC of {auc}.", fr: "Hors pli, le candidat classe les lignes avec une AUC de {auc}."}
+    ch7:
+      intro: {en: "This step turns the scores into actions: a rule selects the rows the team acts on. The evidence is what each rule finds compared with the baseline, on the same out-of-fold predictions, with paired intervals. The final test is still apart: the rule is chosen without it.", fr: "Cette étape transforme les scores en actions : une règle sélectionne les lignes sur lesquelles l'équipe agit. La preuve est ce que chaque règle trouve face à la référence, sur les mêmes prédictions hors pli, avec des intervalles appariés. Le test final reste à part : la règle se choisit sans lui."}
+      terms: [policy, precision, paired_bootstrap]
+      keep: {en: "The rule recorded: {rule}; the model's precision there is {precision} against {base_precision} for the baseline.", fr: "La règle enregistrée : {rule} ; la précision du modèle y vaut {precision} contre {base_precision} pour la référence."}
+  figures:
+    errors_bar:
+      title: {en: "The precision at the rule, and the criterion's bar", fr: "La précision à la règle, et la barre du critère"}
+      why: {en: "The verdict comes down to one question: at the rule, does the model's precision clear the bar fixed before seeing it? This figure puts the precisions on one ruler, with the bar.", fr: "Le verdict tient en une question : à la règle, la précision du modèle franchit-elle la barre fixée avant de le voir ? Cette figure pose les précisions sur une même règle, avec la barre."}
+      read:
+        - {en: "Find the dashed red line: the bar. To its right, in the green, a model meets the criterion.", fr: "Repérez le pointillé rouge : la barre. À sa droite, dans le vert, un modèle atteint le critère."}
+        - {en: "Read each dot: the further right, the higher the precision.", fr: "Lisez chaque point : plus il est à droite, plus la précision est haute."}
+      conclude: {en: "At {rule}, the model's precision is {precision} against {base} for the baseline; the criterion ({criterion}) is {status}.", fr: "À la règle « {rule} », la précision du modèle vaut {precision} contre {base} pour la référence ; le critère ({criterion}) est {status}."}
+      bar_note: {en: "The bar is drawn at the baseline's precision raised by the criterion's points; its position is computed for the drawing only.", fr: "La barre est dessinée à la précision de la référence augmentée des points du critère ; sa position est calculée pour le dessin seulement."}
+    paired:
+      why: {en: "The model and the baseline are compared at the same rule on the same rows: the paired gain of precision, with a bootstrap interval, is the evidence of the rule.", fr: "Le modèle et la référence sont comparés à la même règle sur les mêmes lignes : le gain apparié de précision, avec un intervalle bootstrap, est la preuve de la règle."}
+      read:
+        - {en: "Right of zero, the model's precision beats the baseline's.", fr: "À droite de zéro, la précision du modèle dépasse celle de la référence."}
+        - {en: "An interval that does not cross zero is a gain the drawing of the rows does not explain.", fr: "Un intervalle qui ne coupe pas zéro est un gain que le tirage des lignes n'explique pas."}
+      conclude: {en: "At the rule, the paired gain of precision is {delta} points [{low}, {high}].", fr: "À la règle, le gain apparié de précision vaut {delta} points [{low} ; {high}]."}
+    fold_lines:
+      read:
+        - {en: "Each line is one configuration; each point its AUC on one fold. Higher is better.", fr: "Chaque ligne est une configuration ; chaque point son AUC sur un pli. Plus haut, mieux c'est."}
+        - {en: "Lines that keep their order on every fold show a steady gap.", fr: "Des lignes qui gardent leur ordre sur chaque pli montrent un écart régulier."}

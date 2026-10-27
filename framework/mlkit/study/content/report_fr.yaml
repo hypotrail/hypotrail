@@ -4,6 +4,12 @@ subtitle: Un rapport évolutif de l'étude. Il décrit l'état enregistré ; il 
 authority: Cette page ne se met pas à jour seule. L'état lu avec hypotrail status fait foi.
 no_controls: Cette page ne contient aucun contrôle de décision. Les décisions sont prises dans le chat ou avec hypotrail decide, à partir de votre réponse.
 theme_toggle: Changer de thème
+words:
+  rows_read: 'Lignes lues :'
+  intervals: 'Intervalles :'
+  percentile_intervals: intervalles des percentiles.
+  unit: 'Unité :'
+  result: résultat
 generated_for_revision: Généré pour la révision de l'étude
 generated_by_for_revision: Généré par Hypotrail pour la révision de l'étude
 last_written_for_revision: dernière génération pour la révision
@@ -191,6 +197,7 @@ data_section:
   ungrouped: Autres colonnes
   missing: Valeurs manquantes dans les lignes de développement
   scroll_hint: Sur un écran étroit, faites défiler chaque tableau horizontalement.
+  case_word: Cas
   head:
     name: Colonne
     meaning: Signification
@@ -219,6 +226,7 @@ value_words:
     fit.variant: Utiliser la variante du modèle linéaire
     fit.baseline: "Continuer à prédire la moyenne d'entraînement (le modèle de référence)"
   later_variant: 'Utiliser la {ordinal} variante'
+  use_model: 'Utiliser la {model}'
   ordinals:
     second: deuxième
     third: troisième
@@ -379,7 +387,7 @@ narrative:
     folds_label: Score hors pli de chaque pli, par configuration
     folds_point: Un pli
     folds_mean: Moyenne des plis
-    folds_note: Chaque point est le score hors pli d'un pli ; le trait est la moyenne des plis. Les configurations sont comparées sur les mêmes plis ; une configuration plus basse sur chaque pli classe moins bien les lignes.
+    folds_note: Chaque point est le score hors pli d'un pli ; le nombre à droite est la moyenne des plis. Les configurations sont comparées sur les mêmes plis ; une configuration plus basse sur chaque pli classe moins bien les lignes.
     nonlinearity_question: Le modèle suit-il la forme de {feature}, ou se trompe-t-il de façon systématique d'une tranche de valeurs à l'autre ?
     nonlinearity_label: Taux observé moins score moyen, par tranche de {feature}
     nonlinearity_bar: Taux observé moins score moyen
@@ -404,6 +412,14 @@ regression:
       ch7:
         title: Le choix du modèle
         lede: Les modèles comparés sur les mêmes lignes, leurs résidus, et le modèle choisi.
+    # R26: the regression words of these charts (an error, where lower is better; no rate).
+    charts:
+      folds_question: Une configuration se trompe-t-elle moins que le candidat, pli par pli ?
+      folds_label: Erreur absolue moyenne hors pli de chaque pli, par configuration
+      folds_note: Chaque point est l'erreur absolue moyenne hors pli d'un pli ; le nombre à droite est la moyenne des plis. Les configurations sont comparées sur les mêmes plis ; une configuration plus basse sur chaque pli se trompe moins.
+      nonlinearity_label: Valeur observée moins prédiction moyenne, par tranche de {feature}
+      nonlinearity_bar: Valeur observée moins prédiction moyenne
+      nonlinearity_note: Une barre à droite signifie que le modèle prédit trop bas dans cette tranche ; à gauche, trop haut. Une forme signalée est une forme que le modèle linéaire ne suit pas.
   model_missing: Aucune comparaison actuelle de modèles.
   model_note: Les erreurs sont calculées sur les lignes de validation après un choix fait sur elles, dans l'unité de la cible. Elles sont optimistes et ne prédisent pas l'erreur sur de futures lignes.
   model_note_oof: Les erreurs sont des prédictions hors pli sur les lignes de développement, après un choix fait sur elles, dans l'unité de la cible. Ce sont des preuves de développement optimistes ; seul le test final, ouvert une fois, est indépendant.
@@ -468,6 +484,8 @@ roles:
   group_id: Identifiant de groupe, pas une variable du modèle
   id: Identifiant de ligne, pas une variable du modèle
 slot_labels:
+  diag.binary: Diagnostics du modèle sur les prédictions hors pli
+  diag.regression: Diagnostics du modèle sur les prédictions hors pli
   eda.correlation: Associations entre les variables explicatives (sans lire la cible)
   eda.quality: Qualité des lignes de développement (sans lire la cible)
   eda.single_feature_signal: Signal de chaque variable seule sur les lignes d'entraînement
@@ -532,6 +550,8 @@ diagnostics:
   hetero_no: Non signalé
   largest_heading: Plus grandes erreurs
   smearing: Transformation de la cible
+  unit_word: 'Unité :'
+  scale_word: 'Échelle :'
   rule_source:
     adopted: la règle que vous avez adoptée
     proposed: la règle proposée au moment du calcul

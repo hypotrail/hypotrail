@@ -539,6 +539,23 @@
     return section('h-dc-history', c.historyTitle, children, stale ? { 'aria-busy': 'true' } : null);
   }
 
+  // --- lesson style (R30): the notions of this step ----------------------------------------
+
+  function decisionNotions(model, ctx, cards) {
+    const L = HT.copy.lesson.notions;
+    const P = L.proposal;
+    const waiting = arr(model.proposals);
+    const first = waiting[0];
+    const proposal = ctx.components.notion({ id: 'proposal', term: P.term, tag: 'rule', definition: P.definition,
+      here: P.here(ctx.format.number(waiting.length, 'int'), first ? str(first.decisionTitle) : null),
+      folds: [{ kind: 'why', body: P.why }, { kind: 'casse', body: P.casse }], keep: P.keep });
+    const automatic = Object.values(model.decisions || {}).filter(d => d && d.basis === 'automatic').length;
+    const A = L.automatic;
+    const auto = automatic ? ctx.components.notion({ id: 'automatic', term: A.term, tag: 'rule', definition: A.definition,
+      here: A.here(ctx.format.number(automatic, 'int')), folds: [{ kind: 'casse', body: A.casse }], keep: A.keep }) : null;
+    return ctx.components.notions([proposal, auto], { 'data-decision-notions': true });
+  }
+
   HT.register('decisions', {
     tab: 'decisions',
     stage: 'v0',
@@ -560,6 +577,8 @@
       const out = [
         section('h-proposals', c.waitingTitle, cards.length ? cards
           : [el('p', { className: 'muted', 'data-nothing-waiting': true, text: v1 ? c.nothingWaiting : c.nothingWaitingV0 })])];
+      const notions = decisionNotions(model, ctx);
+      if (notions) out.push(notions);
       if (arr(model.holds).length) {
         out.push(section('h-holds', c.holdsTitle, [el('ul', {}, arr(model.holds).map(h =>
           el('li', { 'data-hold-item': str(h.noteId), title: str(h.noteId) }, [`${str(h.decisionTitle)}: `, quote(h.userWords)])))]));
@@ -571,6 +590,9 @@
         const entry = read && read.model ? { ...read, model: localTitles(read.model, ctx.snapshot) } : read;
         if (entry && entry.model) out.push(queueSection(entry.model, ctx, c));
         out.push(historySection(entry && entry.model ? entry : null, ctx, c));
+        // R30: what the basis words of the history mean.
+        out.push(ctx.components.more('basis', HT.copy.lesson.more.basisTitle, [el('ul', {},
+          HT.copy.lesson.more.basis.map(t => el('li', { text: t })))]));
         observeCards(articles);
       }
       return out;

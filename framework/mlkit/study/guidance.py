@@ -6,6 +6,13 @@ shows the engine's words instead of the agent's translation; a free choice among
 values the engine accepts now (``next_action.choice_options``, the model choice and the
 conclusion when ``recommended`` is null) is the kind ``choice``, one option per value and
 none recommended.
+
+Owner session 2026-10-27 (R24): the review of a decision the automatic mode recorded
+(``next_action.review``, a ``reconfirm`` or an ``await_user_words``) is an adoption question,
+not a step change: a pause of kind ``decision`` with the options adopt, change, explain, none
+recommended (the value is the engine's, the junior adopts or changes it in their own words),
+the recorded value in words as the quoted block (``proposal_text``) when no proposal is open
+yet, and ``position.step_id`` the step of the reviewed decision.
 """
 from __future__ import annotations
 
@@ -35,7 +42,10 @@ def pause(view: Mapping) -> dict:
     source_kind = action.get('kind')
     proposal = next((p for p in view.get('open_proposals', [])
                      if p['proposal_id'] == action.get('proposal_id')), None)
+    review = bool(action.get('review')) and source_kind in ('reconfirm', 'await_user_words')
     if source_kind == 'await_user_words' and proposal is not None:
+        kind = 'decision'
+    elif review:
         kind = 'decision'
     elif source_kind == 'done':
         kind = 'complete'
@@ -54,6 +64,14 @@ def pause(view: Mapping) -> dict:
                    for item in (view.get('not_yet_defensible') or [])[:3]]
     proposal_text = ((proposal.get('label') or proposal.get('restatement'))
                      if proposal is not None else None)
+    step_id = view.get('current_step')
+    if review:
+        step_id = next((s.get('id') for s in plan if s.get('decision') == action.get('decision')),
+                       step_id)
+        if proposal_text is None:
+            from .automation_words import review_restatement
+            proposal_text = review_restatement(view, action.get('decision'),
+                                               action.get('default_value'))
     question = None
     options = []
     recommended = None
@@ -64,7 +82,8 @@ def pause(view: Mapping) -> dict:
         # interactive prompt self-contained so the decision is still visible.
         question = f'{proposal_text}\n\n{closed}' if proposal_text else closed
         options = ['adopt', 'change', 'explain']
-        recommended = 'adopt'
+        # R24: a review recommends nothing: the junior adopts or changes the automatic value.
+        recommended = None if review else 'adopt'
     elif kind == 'action':
         question = action.get('question') or action.get('junior_message')
         options = ['continue', 'explain']
@@ -82,7 +101,7 @@ def pause(view: Mapping) -> dict:
     return {
         'schema': SCHEMA, 'kind': kind, 'language': language,
         'revision': view['revision'],
-        'position': {'step_id': view.get('current_step'), 'completed': completed,
+        'position': {'step_id': step_id, 'completed': completed,
                      'total': len(plan)},
         'learned': [], 'limitations': limitations,
         'proposal_id': proposal['proposal_id'] if proposal is not None else None,

@@ -434,3 +434,17 @@ test('HO-3 (L7): the after-study blocks of Overview and Learn are text only (no 
     }
   }
 });
+
+// --- R24 (owner session 2026-10-27): the review of an automatic decision, read only ----------
+
+test('R24: the summary marks the review of an automatic decision (a reconfirm or an await_user_words with review), nothing else', () => {
+  const raw = JSON.parse(JSON.stringify(payload('captured/summary.binary.cv')));
+  raw.next_action = { kind: 'reconfirm', decision: 'prediction_time', review: true, message: 'Review.', audience: 'agent' };
+  assert.equal(toSummaryModel(raw).nextAction.review, true);
+  raw.next_action.kind = 'await_user_words';
+  assert.equal(toSummaryModel(raw).nextAction.review, true);
+  raw.next_action.kind = 'run';
+  assert.equal(toSummaryModel(raw).nextAction.review, false, 'only an adoption question is a review');
+  raw.next_action = { kind: 'reconfirm', decision: 'prediction_time', review: 'yes' };
+  assert.equal(toSummaryModel(raw).nextAction.review, false, 'only the boolean true counts');
+});

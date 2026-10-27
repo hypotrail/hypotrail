@@ -1,6 +1,6 @@
 # ADR 0004: The advanced companion, staged behind the flag
 
-- Status: accepted for specification (the owner approved the feature set, 18 October 2026). The open questions are answered (below). WP-0, the engine work packages E1 to E3, and the client work packages U1 to U5 are done and integrated (WP-I, decisions CI.1 to CI.17): stages v1 to v3 are **implemented behind the flag**, whose default stays off with stage `v0`. They are tested in Node, an offline browser, and on the real CLI with Bank and Auto MPG studies, and **not run inside a real VS Code** yet (the stage exit criteria below stay open). Amended by WP-A5 (v0.2a, 2026-10-19; editable-copy extension 2026-10-23): decision 7, "local launch" (the three Marimo launches), and the two-layer copy of the specification (§15.1). Amended by WP-E1 (v0.3, 2026-10-20): decision 8, the **narrowing** that withdraws W1, W2, and W3 (owner decision R23, integrator decision I2); the panel's writes are W4–W7. Amended by WP-E2 (v0.3): decision 9, W4 runs `eda.correlation` without a column, and the panel language (R21).
+- Status: accepted for specification (the owner approved the feature set, 18 October 2026). The open questions are answered (below). WP-0, the engine work packages E1 to E3, and the client work packages U1 to U5 are done and integrated (WP-I, decisions CI.1 to CI.17): stages v1 to v3 are **implemented behind the flag**, whose default stays off with stage `v0`. They are tested in Node, an offline browser, and on the real CLI with Bank and Auto MPG studies, and **not run inside a real VS Code** yet (the stage exit criteria below stay open). Amended by WP-A5 (v0.2a, 2026-10-19; editable-copy extension 2026-10-23): decision 7, "local launch" (the three Marimo launches), and the two-layer copy of the specification (§15.1). Amended by WP-E1 (v0.3, 2026-10-20): decision 8, the **narrowing** that withdraws W1, W2, and W3 (owner decision R23, integrator decision I2); the panel's writes are W4–W7. Amended by WP-E2 (v0.3): decision 9, W4 runs `eda.correlation` without a column, and the panel language (R21). Amended on 2026-10-27: decision 12, **W6 withdrawn** (owner decision R31); the panel's writes are W4, W5, and W7, and the panel takes the lesson style of the approved mockup (display only).
 - Date: 18 October 2026
 - Builds on: [ADR 0002](0002-companion-as-cli-client.md), the companion as a client of the CLI, and [ADR 0003](0003-companion-webview-v0.md), companion v0 and decisions CW.1–CW.12
 - Specification: [COMPANION-ADVANCED.md](../specs/COMPANION-ADVANCED.md)
@@ -163,7 +163,7 @@ Measured per stage, with the flag off as the baseline. The sources are `session-
 | 3 | **Chat.** `policy.evaluate` stays a chat act; the panel proposes evaluated rules only (CA.7). |
 | 4 | **Yes.** One `hypotrail.companion.stage` setting, no per-feature flags (CA.8). |
 | 5 | **Yes.** Reviewer mode may export a handoff pack (W7); every other write stays refused in reviewer mode (CA.9). |
-| 6 | **v1.** Regenerate (W5) and acknowledgement (W6) stay in v1 (CA.10). |
+| 6 | **v1.** Regenerate (W5) and acknowledgement (W6) stay in v1 (CA.10). W6 was later withdrawn (decision 12, R31). |
 | 7 | **Yes.** WP-E1 adds `task` to `status --summary --digest`, after `digest`; without `--digest` the summary is unchanged (CA.3). |
 | 8 | **Clipboard only.** The agent bridge copies to the clipboard. `chatInsert` stays off and hidden (not contributed in `package.json`, no environment override) until a real VS Code session verifies that insertion does not send (CA.8). |
 
@@ -177,6 +177,22 @@ The questions as they were asked:
 6. **Acknowledgement and Regenerate from the panel.** Both were approved under F. Should they move to v2, so that v1 stays closer to the v0 write set during the first observations?
 7. **`task` in `status --summary`.** It is a small additive key that removes the client's inference from step ids. Should WP-E1 add it?
 8. **Copilot chat insertion.** `workbench.action.chat.open` with `{query, isPartialQuery}` is unverified. If it cannot be verified as non-sending, should H stay copy-only?
+
+12. **W6 withdrawn; the lesson style (amendment, 2026-10-27; owner decision R31 and notes R27–R30 of [copilot-companion-2026-10-26](../acceptance/runs/copilot-companion-2026-10-26.md)).** The acknowledgement of an interrupted execution in typed words (W6, `run --acknowledge-interruption`) is **withdrawn at every stage**, for the same reason as decision 8: words that the engine records as the junior's are given in the chat only. The whitelist of decision 2 is now:
+
+   | Write | Stage | Status |
+   |---|---|---|
+   | confirm, withdraw, propose (W1, W2, W3) | — | **withdrawn** (R23, I2) |
+   | `run eda.*` on training rows, or `eda.correlation` without a column (W4) | v2 | kept |
+   | `render` (W5) | v1 | kept |
+   | `run --acknowledge-interruption` with typed words (W6) | — | **withdrawn** (R31) |
+   | `export handoff`, outside the study state (W7) | v3 | kept |
+
+   - **What replaces it.** The Overview still shows an interrupted execution (its reason, what it may have touched), read only: a line says that acknowledging it is done in the chat, in the junior's own words ("ok" alone is not enough), and "Ask the agent about this" copies a ready question for the chat (a clipboard copy, not a write). The engine's acknowledgement command, its word rules and its refusals are unchanged; only the panel's way to call it is removed.
+   - **Removed from the client.** The words field and its button, the `acknowledge` webview message (an earlier webview's message is dropped as unknown), the `acknowledgeArgv` builder and its timeout, the acknowledgement refusal texts specific to the panel, and the `ackDrafts` of `vscode.setState` (a state saved by an earlier panel loses them on load).
+   - **Checked.** `lib/cli.js` has exactly the builders W4, W5, and W7; `lib/protocol.js` lists `WRITE_OPS` W4, W5, W7; `scripts/check_layout.py` (`companion_acknowledge_errors`) refuses any client source that builds `--acknowledge-interruption` or defines an acknowledgement argv builder, next to `companion_decide_errors`.
+   - **The lesson style (display only).** The panel takes the look and the guidance of the owner-approved mockup `docs/plans/mockups/panel-lesson-style-fr.html` (specification §6.0, LS-1 to LS-6): a journey rail and a position line, "At this step" and "Next" on every tab, a guided reading for every chart, notions that put the term first and then the study's values, "Learn more" folds, and the board theme mapped from the VS Code theme class (High Contrast keeps the editor's colours). The next move's only new action, "Copy the question", is a clipboard copy. It adds no write, no message type that changes the study, no state, and no tab.
+   - **Consequences.** The v1 exit criterion and measurements that named the acknowledgement in the panel no longer apply to it; an interruption is acknowledged in the chat, where the engine's word rules apply. The default stage stays `v0`, the flag stays off by default, and the chat, report and notebook workflow stays complete without the panel. Bringing W6 back needs a new explicit owner request and a new amendment.
 
 ## Consequences
 

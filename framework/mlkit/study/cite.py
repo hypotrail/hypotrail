@@ -314,6 +314,9 @@ class Citer:
         self.facts = dict(facts or {})
         self.language = language if language in ('en', 'fr') else 'en'
         self.cited: list[dict] = []
+        # v4 (R25): the HTML report sets the hover title of a number from its attributes
+        # with its script, instead of repeating the result id in every element.
+        self.titles = True
         # L3: ``{"column=value": meaning}`` of the case's special values in ``language``.
         self.meanings: dict[str, str] = {}
 
@@ -378,9 +381,11 @@ class Citer:
         text = format_value(value, fmt, self.language)
         self.cited.append({'result_id': rid, 'path': path, 'value': value, 'text': text})
         scale = (f' data-scale="{SCALED_FORMATS[fmt]}"' if fmt in SCALED_FORMATS else '')
+        title = (f' title="result {html.escape(rid)} · {html.escape(path)}"'
+                 if self.titles else '')
         return (f'<data value="{html.escape(json.dumps(value))}" '
-                f'data-result-id="{html.escape(rid)}" data-path="{html.escape(path)}"{scale} '
-                f'title="result {html.escape(rid)} · {html.escape(path)}">{html.escape(text)}</data>')
+                f'data-result-id="{html.escape(rid)}" data-path="{html.escape(path)}"{scale}'
+                f'{title}>{html.escape(text)}</data>')
 
     def value(self, rid: str, path: str) -> float:
         """The number at ``path`` (for drawing a mark; a shown number goes through

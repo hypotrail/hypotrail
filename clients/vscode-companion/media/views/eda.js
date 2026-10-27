@@ -393,7 +393,10 @@
         valueText: text(ctx, d.nNegative), cited: d.nNegative ? { resultId: rid, path: d.nNegative.path, value: d.nNegative.value } : null },
     ];
     const box = el('div', { className: 'eda-stack' });
-    ctx.components.bars(box, { title: c.targetChart(d.target), items, max: 1, unit: c.measureHead });
+    // The two bars mix a rate and a count: the conclusion names the rate (lesson style, R30).
+    ctx.components.bars(box, { title: c.targetChart(d.target), items, max: 1, unit: c.measureHead,
+      guide: d.rate ? { concl: HT.copy.lesson.concl.one(d.positiveLabel, HT.components.quote(text(ctx, d.rate),
+        { resultId: rid, path: d.rate.path })) } : null });
     box.querySelector('[data-chart]').setAttribute('data-target-bars', 'true');
     const term = d.imbalanced ? [c.imbalanceTerm, c.imbalanceText] : [c.baseRateTerm, c.baseRateText];
     const example = ctx.learningLayer ? explainTerm(ctx, 'base_rate') : null;
@@ -771,21 +774,78 @@
     }
   }
 
-  function cardNode(ctx, c, card, i, task, expanded = false) {
+  // --- lesson style (R30): the frame of each card's charts, the notions of the step ----------
+
+  // The cards whose activity reads the outcome (one look each); the others read one column or
+  // the predictors only.
+  const TARGET_KINDS = ['target_rate', 'target_summary', 'special_values', 'rate_by', 'mean_by', 'signal'];
+
+  /** The frame, the rows and the model of a card's charts ("Why this chart"); the card's
+   *  own title is the question. */
+  function guideOf(ctx, card, cv) {
+    const L = HT.copy.lesson;
+    const d = card.data || {};
+    const frame = TARGET_KINDS.includes(card.kind) ? L.frames.target : card.kind === 'correlation' ? L.frames.predictors : L.frames.structural;
+    const n = d.nRows && typeof d.nRows.value === 'number' ? ctx.format.number(d.nRows.value, 'int') : null;
+    return { q: false, frame, rows: n ? (cv ? L.developmentRows(n) : L.trainingRows(n)) : null,
+      model: card.kind === 'signal' ? null : L.none };
+  }
+
+  function looksNotion(ctx, model) {
+    const N = HT.copy.lesson.notions.looks;
+    const looks = model && model.edaLooks && Number.isInteger(model.edaLooks.targetLooks) ? model.edaLooks.targetLooks : null;
+    if (looks === null) return null;
+    return ctx.components.notion({ id: 'looks', term: N.term, tag: 'tool', lead: N.lead, definition: N.definition,
+      here: N.here(ctx.format.number(looks, 'int')), folds: [{ kind: 'why', body: N.why }, { kind: 'casse', body: N.casse }], keep: N.keep });
+  }
+
+  function specialNotion(ctx) {
+    const N = HT.copy.lesson.notions.special;
+    const entry = ctx.data('data');
+    const d = entry && entry.model;
+    if (!d) return null;
+    const fr = meaningsFr(d);
+    for (const g of arr(d.groups)) {
+      for (const v of arr(g.variables)) {
+        const sv = arr(v.specialValues).find(x => x && x.value !== undefined && x.value !== null);
+        if (!sv) continue;
+        const meaning = fr && sv.meaningFr ? sv.meaningFr : sv.meaning;
+        return ctx.components.notion({ id: 'special', term: N.term, tag: 'tool', definition: N.definition,
+          here: N.here(el('code', { text: v.name }), el('code', { text: String(sv.value) }), meaning || '',
+            Number.isInteger(sv.nRows) ? count(ctx, sv.nRows) : null),
+          folds: [{ kind: 'ex', body: N.ex(v.name, String(sv.value)) }, { kind: 'why', body: N.why }, { kind: 'casse', body: N.casse }],
+          keep: N.keep });
+      }
+    }
+    return null;
+  }
+
+  function rareNotion(ctx, quality) {
+    const N = HT.copy.lesson.notions.rare;
+    const card = quality.find(k => k.current && k.data && arr(k.data.rare).some(r => arr(r.rare).length));
+    if (!card) return null;
+    const r = card.data.rare.find(x => arr(x.rare).length);
+    const list = r.rare.slice(0, 3).flatMap((x, j) => [j ? ', ' : '', `${x.value} (`, HT.components.quote(text(ctx, x.nRows),
+      x.nRows ? { resultId: card.resultId, path: x.nRows.path } : null), ')']);
+    return ctx.components.notion({ id: 'rare', term: N.term, tag: 'tool', definition: N.definition,
+      here: N.here(el('code', { text: r.column }), list), folds: [{ kind: 'casse', body: N.casse }], keep: N.keep });
+  }
+
+  function cardNode(ctx, c, card, i, task, expanded = false, cv = false) {
     const id = `eda-card-${i}`;
     const wide = card.kind === 'rate_by' || card.kind === 'mean_by' || card.kind === 'correlation'
       || (card.kind === 'distribution' && card.data && card.data.numeric && card.data.numeric.skewed)
       || (card.kind === 'special_values' && card.current);
-    let parts;
-    if (!card.current || !card.data) {
-      parts = { body: [el('p', { className: 'status status-stale', 'data-stale': true, text: c.stale })] };
-    } else if (card.kind === 'target_rate') parts = targetRate(ctx, c, card);
-    else if (card.kind === 'target_summary') parts = targetSummary(ctx, c, card);
-    else if (card.kind === 'special_values') parts = specialValues(ctx, c, card, task);
-    else if (card.kind === 'rate_by' || card.kind === 'mean_by') parts = byColumn(ctx, c, card, task);
-    else if (card.kind === 'signal') parts = signal(ctx, c, card, task);
-    else if (card.kind === 'correlation') parts = correlation(ctx, c, card);
-    else parts = distribution(ctx, c, card);
+    const parts = ctx.components.withGuide(guideOf(ctx, card, cv), () => {
+      if (!card.current || !card.data) return { body: [el('p', { className: 'status status-stale', 'data-stale': true, text: c.stale })] };
+      if (card.kind === 'target_rate') return targetRate(ctx, c, card);
+      if (card.kind === 'target_summary') return targetSummary(ctx, c, card);
+      if (card.kind === 'special_values') return specialValues(ctx, c, card, task);
+      if (card.kind === 'rate_by' || card.kind === 'mean_by') return byColumn(ctx, c, card, task);
+      if (card.kind === 'signal') return signal(ctx, c, card, task);
+      if (card.kind === 'correlation') return correlation(ctx, c, card);
+      return distribution(ctx, c, card);
+    });
     const column = ['rate_by', 'mean_by', 'distribution'].includes(card.kind) ? card.column : null;
     return edaCard(ctx, c, card, { id, eyebrow: eyebrowOf(c, card), title: titleOf(c, card), sub: subLine(ctx, column),
       body: parts.body || [], finding: parts.finding || null, why: parts.why || [], wide, expanded });
@@ -975,6 +1035,9 @@
       const quality = cards.filter(k => k.kind === 'quality');
       if (quality.length) out.push(el('h3', { className: 'ht-section eda-part-title', 'data-section': 'quality', text: c.qualityTitle }));
       quality.forEach((card, i) => out.push(qualityCard(ctx, c, card, i)));
+      // Lesson style (R30): the notions of this step, on the study's own values.
+      const notions = ctx.components.notions([specialNotion(ctx), rareNotion(ctx, quality), looksNotion(ctx, model)], { 'data-eda-notions': true });
+      if (notions) out.push(notions);
       const gallery = cards.filter(k => k.kind !== 'quality');
       out.push(el('h3', { className: 'ht-section eda-section-title', text: c.explorationTitle }));
       out.push(banner(ctx, c, data, model));
@@ -983,7 +1046,7 @@
       const grid = el('div', { className: 'eda-gallery', 'aria-label': c.galleryLabel });
       if (!gallery.length) out.push(el('div', { className: 'ht-empty', 'data-eda-empty': true, text: c.empty }));
       gallery.forEach((card, i) => grid.appendChild(cardNode(ctx, c, card, i, task,
-        i === gallery.length - 1)));
+        i === gallery.length - 1, cv)));
       grid.appendChild(requestCard(ctx, c, data, task));
       out.push(grid);
       return out;

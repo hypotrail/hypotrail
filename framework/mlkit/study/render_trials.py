@@ -15,7 +15,7 @@ from __future__ import annotations
 import html
 from typing import Any, Mapping
 
-from . import audience, cite, trials
+from . import cite, trials
 
 e = html.escape
 MAX_TERMS = 8
@@ -123,11 +123,12 @@ def _table(head: list[str], rows: list[str], cls: str = '') -> str:
 
 
 def _name(slot: str, words: str | None, lab: Mapping) -> str:
-    if words:
-        return words
+    """v4 (R26): a configuration by its display name in the report's language (a variant by
+    its family), never the recorded English words."""
+    from .render_html import model_name
     if slot in ('fit.logistic', 'fit.linear'):
         return lab['candidate']
-    return audience.model_words(slot)
+    return model_name(slot) if slot else (words or '')
 
 
 def _shortlist(view: Mapping, citer: cite.Citer, lab: Mapping, lang: str) -> str:
@@ -232,7 +233,8 @@ def _tuning(view: Mapping, citer: cite.Citer, lab: Mapping) -> str:
         tuning = (citer.results[rid].values or {}).get('tuning')
         if not isinstance(tuning, Mapping):
             continue
-        words = audience.model_words(slot)
+        from .render_html import model_name
+        words = model_name(slot)
         for i, f in enumerate(tuning.get('per_fold') or []):
             rows.append(f'<tr data-model="{e(slot)}"><td>{e(words)}</td>'
                         f'<td>{_lit("parameter", tuning.get("parameter", ""), "code")}</td>'
@@ -255,7 +257,8 @@ def _families(view: Mapping, citer: cite.Citer, lab: Mapping, lang: str = 'en') 
         if not isinstance(fd, Mapping):
             continue
         # Wave W2 integration (J-LANG): the variant named in the study language.
-        words = audience.model_words(slot, lang)
+        from .render_html import model_name
+        words = model_name(slot)
         if fd.get('kind') == 'ebm_terms':
             rows = []
             for i, t in enumerate((fd.get('terms') or [])[:MAX_TERMS]):

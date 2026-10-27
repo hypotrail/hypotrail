@@ -301,7 +301,7 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
   }
 
   /**
-   * ctx.write: one whitelisted write (W4-W7). `argv(requestId)` builds it with lib/cli.js;
+   * ctx.write: one whitelisted write (W4, W5, W7). `argv(requestId)` builds it with lib/cli.js;
    * `record(payload)` returns the `recorded` object of a success. Exclusive: reads wait;
    * a second write while one runs is `invalid`. Always refreshes after the outcome.
    */

@@ -12,6 +12,9 @@
 The agent side (the Copilot instructions) is pinned in ``test_agent_files.py``; the walkers
 of ``test_review_round6_engine.py`` and ``test_review_round5_engine.py`` check every free
 choice met from ``init`` to ``done``.
+
+R24 (owner session 2026-10-27): the review of an automatic decision is an adoption pause
+(``test_a_review_pause_is_an_adoption_pause``; on real runs, ``test_automation.py``).
 """
 from __future__ import annotations
 
@@ -63,6 +66,52 @@ def test_pause_option_labels_in_the_study_language(language):
     assert choice['option_labels'] == {'keep_baseline': 'Keep it', 'inconclusive': 'Not sure'}
     assert choice['question'] == 'Q?'
     assert list(decision)[list(decision).index('options') + 1] == 'option_labels'
+
+
+@pytest.mark.parametrize('language', ['en', 'fr'])
+def test_a_review_pause_is_an_adoption_pause(language):
+    """Owner session 2026-10-27 (R24): the review of an automatic decision (``review: true``,
+    a ``reconfirm`` before the value is proposed again, an ``await_user_words`` after) is a
+    ``decision`` pause: adopt, change, explain in the study language, nothing recommended,
+    the recorded value in words as the quoted block, and the reviewed decision's step as the
+    position (not the step the plan stands at). A reconfirmation that is not a review stays
+    a step change."""
+    labels = LABELS[language]
+    plan = [{'id': 'prediction_time', 'decision': 'prediction_time', 'status': 'done'},
+            {'id': 'feature_availability', 'decision': 'feature_availability',
+             'status': 'done'},
+            {'id': 'final_test', 'decision': 'final_test', 'status': 'ready'}]
+    value = {'acceleration': 'uncertain_excluded', 'weight': 'available_at_prediction'}
+    view = {**_view('reconfirm', language, decision='feature_availability', review=True,
+                    default_value=value),
+            'plan': plan, 'current_step': 'final_test'}
+    pause = guidance.pause(view)
+    assert (pause['kind'], pause['recommended_option'], pause['proposal_id']) == (
+        'decision', None, None)
+    assert pause['option_labels'] == {k: labels[k] for k in ('adopt', 'change', 'explain')}
+    assert pause['position'] == {'step_id': 'feature_availability', 'completed': 2, 'total': 3}
+    assert pause['proposal_text'] == {
+        'en': 'The feature availability: keep weight; exclude acceleration (its timing is '
+              'uncertain) (value recorded by the automatic mode, not yet in your words).',
+        'fr': 'La disponibilité des variables : garder weight ; exclure acceleration (moment '
+              'incertain) (valeur enregistrée par le mode automatique, pas encore avec vos '
+              'mots).'}[language]
+    closed = {'en': 'Do you adopt this decision?', 'fr': 'Adoptez-vous cette décision ?'}
+    assert pause['question'].replace('\xa0', ' ') == \
+        f'{pause["proposal_text"]}\n\n{closed[language]}'
+    # Proposed again: the pause holds the proposal, still without a recommendation.
+    again = guidance.pause({**view, 'next_action': {
+        'kind': 'await_user_words', 'decision': 'feature_availability', 'proposal_id': 'p_1',
+        'review': True}})
+    assert (again['kind'], again['recommended_option'], again['proposal_text']) == (
+        'decision', None, 'You keep X.')
+    assert again['position']['step_id'] == 'feature_availability'
+    # A reconfirmation after an invalidation (no review) is unchanged.
+    plain = guidance.pause({**view, 'next_action': {'kind': 'reconfirm',
+                                                    'decision': 'feature_availability',
+                                                    'question': 'Again?'}})
+    assert (plain['kind'], plain['recommended_option']) == ('action', 'continue')
+    assert plain['position']['step_id'] == 'final_test'
 
 
 @pytest.mark.parametrize('language', ['en', 'fr'])

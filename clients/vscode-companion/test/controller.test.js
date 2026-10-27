@@ -84,10 +84,10 @@ test('reviewer: every write of the study is refused as invalid, nothing runs; th
     await c.handle({ v: 2, ...m });
   }
   const outcomes = posted.filter(m => m.type === 'outcome');
-  // v0.3 narrowing: confirm, withdraw and propose are no message types any more; they are
-  // dropped unanswered, whatever the mode.
-  assert.deepEqual(outcomes.map(o => o.op), ['W4', 'W5', 'W6']);
-  assert.equal(c.diagnostics().ignored, 3);
+  // v0.3 narrowing: confirm, withdraw and propose are no message types any more; neither is
+  // acknowledge since R31 (2026-10-27). They are dropped unanswered, whatever the mode.
+  assert.deepEqual(outcomes.map(o => o.op), ['W4', 'W5']);
+  assert.equal(c.diagnostics().ignored, 4);
   assert.ok(outcomes.every(o => o.kind === 'invalid' && o.message === 'Read-only reviewer mode.'));
   assert.equal(runCli.calls.length, before);
   // ctx.write refuses too, whatever the caller.
