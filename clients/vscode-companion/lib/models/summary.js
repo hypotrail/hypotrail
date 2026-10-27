@@ -48,7 +48,16 @@ const SUMMARY_KEYS = ['study', 'revision', 'task', 'recap', 'goal', 'currentStep
   // language (media/core.js `localize`).
   'texts'];
 // The tables of `texts.<language>` (CLI-CONTRACT-COMPANION §1, `view.LANGUAGE_TEXT_KEYS`).
-const TEXT_TABLES = ['plan', 'moments', 'choice_options', 'limits', 'artifacts', 'digest', 'goal', 'proposals'];
+const TEXT_TABLES = ['plan', 'moments', 'choice_options', 'limits', 'artifacts', 'digest', 'goal', 'proposals',
+  // Contract P1 (CLI-CONTRACT §17.2.3): the headlines of the done steps, the data-contingent
+  // proposals' notes; `options` (ordered), `question`, `options_note`, `junior_digest` and
+  // `sample_note` are read apart below.
+  'headlines', 'data_contingent'];
+// Contract P1 (§17.2.2): the severities of the defensibility items, the kinds of the pill.
+const SEVERITIES = ['blocking', 'caveat', 'not_final', 'context'];
+const DEFENSIBILITY_KINDS = ['pending', 'warn', 'limits'];
+const CONFIG_STATUSES = ['met', 'uncertain', 'not_met', 'not_assessed'];
+const RESULT_CHANNELS = ['chat', 'webview', 'cli'];
 // The statuses of the success criterion (CLI-CONTRACT §11.4).
 const CRITERION_STATUSES = ['met', 'uncertain', 'not_met', 'not_assessed'];
 const num = x => (typeof x === 'number' && Number.isFinite(x) ? x : null);
@@ -184,7 +193,100 @@ function textsOf(raw) {
     }
     table.next_action = typeof t.next_action === 'string' && t.next_action.trim() ? t.next_action : null;
     table.recap = list(t.recap).filter(x => typeof x === 'string');
+    // Contract P1 (§17.2.3): the question the chat asks now, its options in the chat's order,
+    // the note on their order, and the term-first digest; null (or []) when absent.
+    const text = x => (typeof x === 'string' && x.trim() ? x : null);
+    table.question = text(t.question);
+    table.options = Object.entries(obj(t.options)).filter(([id, label]) => id && text(label)).map(([id, label]) => ({ id, label }));
+    table.options_note = text(t.options_note);
+    table.junior_digest = text(t.junior_digest);
+    table.sample_note = text(t.sample_note);
     out[lang] = table;
+  }
+  return out;
+}
+
+/** Contract P1 (§17.2.1): `automation`, or null for a study created without it. */
+function automationOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const ended = raw.ended && typeof raw.ended === 'object' && !Array.isArray(raw.ended)
+    ? { revision: int(raw.ended.revision), reason: strOrNull(raw.ended.reason) } : null;
+  return { variant: raw.variant === 'full_demo' ? 'full_demo' : 'until_final_test', active: raw.active === true,
+    startedRevision: int(raw.started_revision), ended };
+}
+
+/** Contract P1 (§17.2.1): `review_queue` as `{items, done, total}`, or null. */
+function reviewQueueOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const items = list(raw.items).filter(i => i && typeof i.decision_id === 'string').map(i => ({
+    decisionId: i.decision_id, status: str(i.status), value: showValue(i.value), proposalId: strOrNull(i.proposal_id),
+    revision: int(i.revision) }));
+  const total = int(raw.total);
+  const done = int(raw.done);
+  return { items, done: done === null ? 0 : done, total: total === null ? items.length : total };
+}
+
+/** Contract P1 (§17.2.2): the defensibility pill, the engine's reading; null when absent. */
+function defensibilityOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !DEFENSIBILITY_KINDS.includes(raw.kind)) return null;
+  return { kind: raw.kind, count: int(raw.count) === null ? 0 : int(raw.count),
+    items: list(raw.items).filter(i => i && typeof i.id === 'string' && i.id)
+      .map(i => ({ id: i.id, severity: SEVERITIES.includes(i.severity) ? i.severity : 'caveat' })) };
+}
+
+/** Contract P1 (§17.2.2): the counts of the path's ledger line; null when absent. */
+function ledgerOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const ft = raw.final_test && typeof raw.final_test === 'object' ? raw.final_test : null;
+  const looks = obj(raw.target_looks);
+  const conf = obj(raw.configurations);
+  return {
+    finalTest: ft ? { openings: int(ft.openings) || 0, max: int(ft.max) === null ? 1 : int(ft.max) } : null,
+    targetLooks: { eda: int(looks.eda) || 0, sample: int(looks.sample) || 0, total: int(looks.total) || 0 },
+    configurations: { tried: int(conf.tried) || 0, reference: conf.reference === true },
+  };
+}
+
+/** Contract P1 (§17.2.2): the step-1 sample's seed, keys, and whether its look is recorded. */
+function sampleOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  return { seed: str(raw.seed), rowKeys: list(raw.row_keys).map(str).filter(Boolean), recorded: raw.recorded === true };
+}
+
+/** Contract P1 (§17.2.2): `{step: {decisionId, basis, results}}` of the done steps; null when absent. */
+function headlinesOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const out = {};
+  for (const [step, h] of Object.entries(raw)) {
+    if (!h || typeof h !== 'object') continue;
+    out[step] = { decisionId: strOrNull(h.decision_id), basis: strOrNull(h.basis), results: list(h.results).map(str).filter(Boolean) };
+  }
+  return out;
+}
+
+/** Contract P1 (§17.2.4): the criterion per configuration with its absolute bound; null when absent. */
+function criterionConfigurationsOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const b = obj(raw.bound);
+  return {
+    metric: str(raw.metric), unit: strOrNull(raw.unit),
+    bound: { value: num(b.value), reference: num(b.reference), minimum: num(b.minimum), resultId: strOrNull(b.result_id),
+      path: str(b.path) },
+    configurations: list(raw.configurations).filter(c => c && typeof c.slot === 'string').map(c => ({
+      slot: c.slot, value: num(c.value), resultId: strOrNull(c.result_id), path: str(c.path),
+      pointMeetsBound: c.point_meets_bound === true, gain: num(c.gain), low: num(c.low), high: num(c.high),
+      status: CONFIG_STATUSES.includes(c.status) ? c.status : 'not_assessed',
+      judgedOn: c.judged_on === 'final_test' ? 'final_test' : 'development' })),
+  };
+}
+
+/** `results` of the summary: one entry per slot, with the digest's `channel` (P1.8) when sent. */
+function resultsOf(raw) {
+  const out = {};
+  for (const [slot, r] of Object.entries(obj(raw))) {
+    if (!r || typeof r !== 'object') continue;
+    out[slot] = { resultId: str(r.result_id), current: r.current === true, staleReason: strOrNull(r.stale_reason),
+      integrity: strOrNull(r.integrity), channel: RESULT_CHANNELS.includes(r.channel) ? r.channel : null };
   }
   return out;
 }
@@ -318,6 +420,9 @@ function toSummaryModel(summary) {
       restatement: str(p.restatement),
       revision: Number.isInteger(p.revision) ? p.revision : null,
       origin: p.origin && typeof p.origin === 'object' && typeof p.origin.channel === 'string' ? { channel: p.origin.channel } : null,
+      // Contract P1 (§17.2.6): the engine's mark of a result-dependent change (true, false,
+      // or null: not assessed, or an older engine).
+      dataContingent: typeof p.data_contingent === 'boolean' ? p.data_contingent : null,
       holds: holds.filter(h => h.decisionId === str(p.decision_id)).map(h => ({ noteId: h.noteId, userWords: h.userWords })),
       resolvedNotes: notes.filter(n => n.status === 'resolved' && n.decisionId === str(p.decision_id))
         .map(n => ({ noteId: n.noteId, userWords: n.userWords, resolutionWords: n.resolutionWords })),
@@ -325,7 +430,7 @@ function toSummaryModel(summary) {
   const items = (summary.artifacts && summary.artifacts.items) || {};
   const artifacts = Object.keys(ARTIFACT_PATHS).filter(name => items[name]).map(name => ({
     name, label: ARTIFACT_LABELS[name], path: ARTIFACT_PATHS[name],
-    status: str(items[name].status), message: str(items[name].message),
+    status: str(items[name].status), message: str(items[name].message), revision: int(items[name].revision),
     audience: audienceOf(items[name].audience),
     juniorMessage: juniorOf(items[name].message, items[name].audience, items[name].junior_message),
   }));
@@ -401,14 +506,25 @@ function toSummaryModel(summary) {
       ? { count: int(summary.trials.count) } : null,
     language: summary.language === 'fr' || summary.language === 'en' ? summary.language : null,
     texts: textsOf(summary.texts),
+    results: resultsOf(summary.results),
+    panelContract: int(summary.panel_contract),
+    automation: automationOf(summary.automation),
+    reviewQueue: reviewQueueOf(summary.review_queue),
+    defensibility: defensibilityOf(summary.defensibility),
+    ledger: ledgerOf(summary.ledger),
+    sample: sampleOf(summary.sample),
+    headlines: headlinesOf(summary.headlines),
+    criterionConfigurations: criterionConfigurationsOf(summary.criterion_configurations),
   };
 }
 
 const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary', 'summary.regression', 'summary.binary.health',
-  'captured/summary.binary.cv', 'captured/summary.binary.cv.opening'];
+  'captured/summary.binary.cv', 'captured/summary.binary.cv.opening',
+  // Contract P1, hand-built until the engine's recapture (PANEL-ONE-PAGE-PLAN E-8).
+  'p1/summary.step1', 'p1/summary.choice', 'p1/summary.reopened', 'p1/summary.review', 'p1/summary.done'];
 
 // v0 name, kept for the migrated tests and older callers.
 const toModel = toSummaryModel;
 
-module.exports = { toSummaryModel, toModel, currencyOf, juniorOf, choiceOptionsOf, afterStudyOf, textsOf, TEXT_TABLES, CRITERION_STATUSES, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
+module.exports = { toSummaryModel, toModel, currencyOf, SEVERITIES, DEFENSIBILITY_KINDS, juniorOf, choiceOptionsOf, afterStudyOf, textsOf, TEXT_TABLES, CRITERION_STATUSES, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
   SUMMARY_KEYS, ALERT_IDS, GENERATED, FIXTURES };

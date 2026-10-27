@@ -178,7 +178,7 @@
     empty: "Pas encore d'exploration. L'EDA se lance une fois le découpage confirmé.",
     galleryLabel: "Résultats d'EDA enregistrés",
     stale: 'Périmé · non cité',
-    chipLabel: rid8 => `Ouvrir le résultat ${rid8} dans Preuves`,
+    chipLabel: rid8 => `D’où vient le résultat ${rid8}`,
     specialTitle: 'Valeurs spéciales',
     specialTable: "Valeurs spéciales, lignes d'entraînement",
     together: (a, b) => [`${a} et ${b} sont les mêmes `, ' lignes.'],

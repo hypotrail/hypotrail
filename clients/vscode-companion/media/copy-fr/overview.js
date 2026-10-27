@@ -115,7 +115,7 @@
     thisSession: 'Cette session',
     sinceStart: "Depuis le début de l'étude",
     keptFits: 'Modèles inchangés, rien de réajusté.',
-    truncated: "Les changements plus anciens ne sont pas listés. L'onglet Décisions a l'historique complet.",
+    truncated: "Les changements plus anciens ne sont pas listés. Chaque étape du parcours a son historique complet.",
     nothingChanged: "Rien n'a changé depuis.",
     noDigest: 'Le moteur ne liste pas encore les changements entre deux sessions.',
     showSince: 'Afficher les changements depuis',

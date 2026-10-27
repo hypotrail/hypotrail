@@ -196,7 +196,7 @@ test('go to a result: one match navigates; none, several, or a failed read only 
   assert.equal(await c.command('go_to_result', {}), undefined, 'no prefix: nothing to do');
   assert.equal(runCli.calls.length, 0);
   assert.equal(await c.command('go_to_result', { prefix: 'D0AF48B2' }), LOGISTIC);
-  assert.deepEqual(posted.at(-1), { v: 2, type: 'navigate', tab: 'evidence', kind: 'result', id: LOGISTIC });
+  assert.deepEqual(posted.at(-1), { v: 2, type: 'navigate', anchor: 'path', kind: 'result', id: LOGISTIC });
   assert.equal(await c.command('go_to_result', { prefix: 'ffffffff' }), null);
   assert.equal(posted.at(-1).type, 'notice');
   assert.equal(posted.at(-1).text, 'No result of this study starts with ffffffff.');

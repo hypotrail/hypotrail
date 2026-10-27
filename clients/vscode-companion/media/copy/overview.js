@@ -130,7 +130,7 @@
     thisSession: 'This session',
     sinceStart: 'Since the start of the study',
     keptFits: 'Models unchanged, nothing refitted.',
-    truncated: 'Older changes are not listed. The Decisions tab has the full history.',
+    truncated: 'Older changes are not listed. Each step of the path has its full history.',
     nothingChanged: 'Nothing has changed since then.',
     noDigest: 'The study engine does not list the changes between sessions yet.',
     showSince: 'Show changes since',

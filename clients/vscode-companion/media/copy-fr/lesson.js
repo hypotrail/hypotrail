@@ -91,6 +91,7 @@
       diagonal: label => `La diagonale en pointillé est la référence : ${label}.`,
     },
     concl: {
+      none: "Aucune valeur ne se lit sur ces lignes : le chiffre n'est pas défini ici.",
       one: (label, v) => [label, ' : ', v, '.'],
       bars: (hi, hiV, lo, loV) => ['La plus longue : ', hi, ' (', hiV, '). La plus courte : ', lo, ' (', loV, ').'],
       points: (hi, hiV, lo, loV) => ['Le plus haut : ', hi, ' (', hiV, '). Le plus bas : ', lo, ' (', loV, ').'],

@@ -8,7 +8,7 @@ decisions CR.2 and CR.3, COMPANION-ADVANCED §6.1.5, §10, INV-5).
   W1; a state saved by an earlier panel loses them on load.
 * R31 (owner decision 2026-10-27, ADR 0004 amendment): the acknowledgement drafts
   (`ackDrafts`, CR.3's `{text, revision}`) went with W6; a state saved by an earlier panel
-  loses them on load, and the Overview's interrupted execution has no words field.
+  loses them on load, and To handle's interrupted execution has no words field (TODO-2).
 
 The one words field left is the question of "Ask the agent about this" (`askDraft`). This is
 not a VS Code session.
@@ -39,13 +39,13 @@ def health(model, study='/studies/bank'):
 def test_cr2_a_question_typed_in_study_a_never_appears_in_study_b(open_panel, model):
     panel = open_panel()
     reload_with(panel, {'study': STUDY_A, 'askDraft': WORDS_A})
-    panel.init(stage='v1', task='binary', study=STUDY_A)
+    panel.init(stage='v1', task='binary', study=STUDY_A, panelContract=2)
     panel.snapshot(health(model))
     saved = panel.state()
     assert saved['study'] == STUDY_A and saved['askDraft'] == WORDS_A
     # The study switch: the same webview loads the document again, with its state.
     reload_with(panel, saved)
-    panel.init(stage='v1', task='binary', study=STUDY_B)
+    panel.init(stage='v1', task='binary', study=STUDY_B, panelContract=2)
     panel.snapshot(health(model, '/other/study B'))
     assert WORDS_A not in json.dumps(panel.state())
     assert WORDS_A not in panel.page.locator('body').inner_text()
@@ -56,10 +56,10 @@ def test_cr2_a_question_typed_in_study_a_never_appears_in_study_b(open_panel, mo
 def test_cr2_the_same_study_keeps_its_question_across_a_reload(open_panel, model):
     panel = open_panel()
     reload_with(panel, {'study': STUDY_A, 'askDraft': WORDS_A})
-    panel.init(stage='v1', task='binary', study=STUDY_A)
+    panel.init(stage='v1', task='binary', study=STUDY_A, panelContract=2)
     panel.snapshot(health(model))
     reload_with(panel, panel.state())
-    panel.init(stage='v1', task='binary', study=STUDY_A)
+    panel.init(stage='v1', task='binary', study=STUDY_A, panelContract=2)
     panel.snapshot(health(model))
     assert panel.state()['askDraft'] == WORDS_A
     assert panel.clean()
@@ -69,7 +69,7 @@ def test_cr2_a_state_without_a_study_key_keeps_no_words(open_panel, model):
     s = health(model)
     panel = open_panel()
     reload_with(panel, {'askDraft': WORDS_A})
-    panel.init(stage='v1', task='binary', study=STUDY_A)
+    panel.init(stage='v1', task='binary', study=STUDY_A, panelContract=2)
     panel.snapshot(s)
     assert WORDS_A not in json.dumps(panel.state())
     assert panel.clean()
@@ -80,9 +80,8 @@ def test_wp_e1_confirmation_drafts_of_an_earlier_panel_are_dropped(open_panel, m
     pid = s['proposals'][0]['proposalId']
     panel = open_panel()
     reload_with(panel, {'study': STUDY_A, 'drafts': {pid: {'text': WORDS_A, 'revision': s['revision']}}})
-    panel.init(stage='v1', task='binary', study=STUDY_A)
+    panel.init(stage='v1', task='binary', study=STUDY_A, panelContract=2)
     panel.snapshot(s)
-    panel.page.locator('[role="tab"][data-tab="decisions"]').click()
     assert panel.page.locator('textarea').count() == 0
     assert 'drafts' not in (panel.state() or {})
     assert WORDS_A not in panel.page.locator('body').inner_text()
@@ -93,7 +92,7 @@ def test_r31_acknowledgement_drafts_of_an_earlier_panel_are_dropped_and_no_words
     s = health(model)
     panel = open_panel()
     reload_with(panel, {'study': STUDY_A, 'ackDrafts': {EID: {'text': WORDS_A, 'revision': s['revision']}}})
-    panel.init(stage='v1', task='binary', study=STUDY_A)
+    panel.init(stage='v1', task='binary', study=STUDY_A, panelContract=2)
     panel.snapshot(s)
     page = panel.page
     card = page.locator(f'[data-execution-card="{EID}"]')

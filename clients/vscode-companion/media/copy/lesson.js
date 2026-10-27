@@ -96,6 +96,7 @@
       diagonal: label => `The dashed diagonal is the reference: ${label}.`,
     },
     concl: {
+      none: 'No value can be read on these rows: the figure is not defined here.',
       one: (label, v) => [label, ': ', v, '.'],
       bars: (hi, hiV, lo, loV) => ['Largest: ', hi, ' (', hiV, '). Smallest: ', lo, ' (', loV, ').'],
       points: (hi, hiV, lo, loV) => ['Highest: ', hi, ' (', hiV, '). Lowest: ', lo, ' (', loV, ').'],

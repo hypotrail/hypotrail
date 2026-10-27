@@ -295,7 +295,8 @@ test('§6.7: every term id marked in the panel copy exists in the glossary of at
   require('../media/terms.js');
   const map = globalThis.Hypotrail.terms.MAP;
   delete globalThis.Hypotrail;
-  const glossary = new Set([...payload('explain.binary').terms, ...payload('explain.regression').terms].map(t => t.id));
+  const glossary = new Set(['explain.binary', 'explain.regression', 'captured/explain.binary', 'captured/explain.regression']
+    .flatMap(n => payload(n).terms).map(t => t.id));
   assert.ok(Object.keys(map).length >= 5);
   for (const [id, places] of Object.entries(map)) {
     assert.ok(glossary.has(id), `${id} is not a glossary id`);
@@ -423,16 +424,19 @@ test('HO-3 (L7): the summary keeps the junior text of after_study and whether th
   assert.equal(real.exportPlanAvailable, done.next_action.after_study.azureml.supported);
 });
 
-test('HO-3 (L7): the after-study blocks of Overview and Learn are text only (no control, no write)', () => {
-  for (const [file, fn] of [['overview.js', 'function afterStudyNode('], ['learn.js', 'function afterStudy(']]) {
-    const source = fs.readFileSync(path.join(__dirname, '..', 'media', 'views', file), 'utf8');
-    const start = source.indexOf(fn);
-    const body = source.slice(start, source.indexOf('\n  }\n', start));
-    assert.ok(start > 0, file);
-    for (const forbidden of ['data-write', 'onclick', 'ctx.send', 'HT.send', "type: 'button'", 'textarea', 'askButton']) {
-      assert.ok(!body.includes(forbidden), `${file}: ${forbidden}`);
+// The one page (ADR 0004 d13): after the study is Now's `done` card ("And after", NOW-11); the
+// hand-off drawer no longer repeats it. Its lines are text only (the browser checks the block:
+// test_webview_page.py, test_webview_wave1_real_cli.py).
+test('HO-3 (L7): the after-study lines of the page are text only (no control, no write)', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'media', 'views', 'page.js'), 'utf8');
+  const lines = source.split('\n').filter(l => l.includes("'data-after-study"));
+  assert.equal(lines.length, 2, 'the junior text and the export plan line');
+  for (const line of lines) {
+    for (const forbidden of ['data-write', 'onclick', 'ctx.send', 'HT.send', "type: 'button'", 'textarea', 'askButton', 'copyButton']) {
+      assert.ok(!line.includes(forbidden), forbidden);
     }
   }
+  assert.ok(!fs.readFileSync(path.join(__dirname, '..', 'media', 'views', 'learn.js'), 'utf8').includes('data-after-study'));
 });
 
 // --- R24 (owner session 2026-10-27): the review of an automatic decision, read only ----------

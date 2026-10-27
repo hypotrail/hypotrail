@@ -6,10 +6,13 @@ engine (``test/fixtures/captured``): the split Bank study, the cross-validated B
 final test was opened, and Auto MPG; under the Light Modern, Dark Modern and High Contrast
 variable sets (``themes.py``), at 900 and 420 px, in English and in French.
 
-The structural matrix (every tab, three widths, three themes, both languages) and the pixel
+The structural matrix (the page, four widths, three themes, both languages) and the pixel
 baselines moved to the WP-E3 gate, ``test_webview_gate.py``; the cases and the page probes are
-shared in ``panel_cases.py``. Requirement ids: R12,
-R17, R21, R26, R28, I1, A11Y-3. This is not a VS Code session.
+shared in ``panel_cases.py``. Re-pointed at the one page (ADR 0004 d13): the language is a radio
+of the "more" menu (LANG-1); the recap strip and the journey bar went with the tabs (§18: OV-1,
+LS-1 → PATH-2, PG-8), and their tests with them; the panel's explanation is the fold "How this
+panel works" of the tools. Requirement ids: R12, R17, R21, R26, R28, I1, A11Y-3. This is not a
+VS Code session.
 """
 from __future__ import annotations
 
@@ -18,7 +21,7 @@ import re
 
 import pytest
 
-from panel_cases import TABS, expand_eda, load_views, open_case
+from panel_cases import click_fold, expand_eda, goto, load_views, open_case, set_language
 
 @pytest.fixture(scope='module')
 def views(model, payload):
@@ -34,44 +37,47 @@ def test_the_served_document_holds_no_style_attribute(page_file):
 
 # --- R21: the panel language ---------------------------------------------------------------
 
-def test_the_language_toggle_is_ui_state_only(open_panel, views):
+def test_the_language_switch_is_ui_state_only(open_panel, views):
     panel = open_case(open_panel, views, lang=None)
     page = panel.page
+    heading = page.locator('[data-block="now"] h2').first
     assert page.evaluate('document.documentElement.lang') == 'en'
-    assert page.locator('[data-tab="overview"][role="tab"]').inner_text() == 'Overview'
+    assert heading.text_content().startswith('Now · ')
     before = len(panel.posted())
-    page.locator('[data-language="fr"]').click()
+    set_language(page, 'fr')
     assert page.evaluate('document.documentElement.lang') == 'fr'
-    assert page.locator('[data-tab="overview"][role="tab"]').inner_text() == "Vue d'ensemble"
-    assert page.locator('[data-language="fr"]').get_attribute('aria-pressed') == 'true'
+    assert heading.text_content().startswith('Maintenant · ')
+    page.locator('[data-more]').click()
+    assert page.locator('[data-more-menu] [data-language="fr"]').get_attribute('aria-checked') == 'true'
+    page.keyboard.press('Escape')
     assert panel.state()['language'] == 'fr'
     # Nothing is sent: no write, no read, no message at all for a language switch.
     assert panel.posted()[before:] == []
-    page.locator('[data-language="en"]').click()
-    assert page.locator('[data-tab="overview"][role="tab"]').inner_text() == 'Overview'
+    set_language(page, 'en')
+    assert heading.text_content().startswith('Now · ')
 
 
 def test_auto_follows_the_study_language_and_the_setting_overrides_it(open_panel, views):
     summary = copy.deepcopy(views['summary.binary'])
     summary['language'] = 'fr'
     panel = open_panel()
-    panel.init(stage='v1', task='binary')
+    panel.init(stage='v1', task='binary', panelContract=2)
     panel.snapshot(summary)
     assert panel.page.evaluate('document.documentElement.lang') == 'fr'
     panel.send({'type': 'init', 'stage': 'v1', 'reviewer': False, 'learningLayer': True, 'chatInsert': False,
-                'task': 'binary', 'study': '0123456789abcdef', 'language': 'en'})
+                'task': 'binary', 'study': '0123456789abcdef', 'language': 'en', 'panelContract': 2})
     assert panel.page.evaluate('document.documentElement.lang') == 'en'
 
 
 def test_an_english_engine_text_is_marked_in_a_french_panel(open_panel, views):
     panel = open_case(open_panel, views, lang='fr')
     page = panel.page
-    page.locator('[role="tab"][data-tab="eda"]').click()
-    markers = page.locator('#panel-eda [data-en-marker]')
+    goto(panel)
+    markers = page.locator('#main [data-en-marker]')
     assert markers.count() >= 1
     assert markers.first.inner_text() == '(en)'
     assert markers.first.evaluate('n => n.parentElement.getAttribute("lang")') == 'en'
-    page.locator('[data-language="en"]').click()
+    set_language(page, 'en')
     assert page.locator('[data-en-marker]').count() == 0
 
 
@@ -79,14 +85,14 @@ def test_the_dictionary_meanings_follow_the_panel_language_with_their_own_toggle
     """R12 merged into R21: the Meaning column names its language and switches alone."""
     panel = open_case(open_panel, views, lang='en')
     page = panel.page
-    page.locator('[role="tab"][data-tab="eda"]').click()
+    goto(panel)
     toggle = page.locator('[data-french-toggle]')
     if toggle.count() == 0:
         pytest.skip('the captured case has no French labels')
     assert page.locator('[data-description="en"]').count() > 0
     page.locator('[data-meanings="fr"]').click()
     assert page.locator('[data-description="fr"]').count() > 0
-    assert page.locator('[data-tab="overview"][role="tab"]').inner_text() == 'Overview', 'the panel stays English'
+    assert page.locator('[data-block="now"] h2').first.text_content().startswith('Now · '), 'the panel stays English'
 
 
 # --- R17, R28: the charts ------------------------------------------------------------------
@@ -94,8 +100,8 @@ def test_the_dictionary_meanings_follow_the_panel_language_with_their_own_toggle
 def test_a_skewed_distribution_shows_its_zeros_apart_on_log_bins(open_panel, views):
     panel = open_case(open_panel, views)
     page = panel.page
-    page.locator('[role="tab"][data-tab="eda"]').click()
-    card = page.locator('[data-eda-card="eda.distribution:previous"]')
+    goto(panel)
+    card = page.locator('[data-block="path"] [data-eda-card="eda.distribution:previous"]')
     assert card.count() == 1
     assert card.locator('[data-zero-tile]').count() == 1
     assert card.locator('[data-zero-tile] data[data-result-id]').first.get_attribute('data-path') == 'numeric.zeros.share'
@@ -114,9 +120,9 @@ def test_a_skewed_distribution_shows_its_zeros_apart_on_log_bins(open_panel, vie
 def test_the_rate_by_chart_is_a_point_an_interval_a_band_and_n(open_panel, views):
     panel = open_case(open_panel, views)
     page = panel.page
-    page.locator('[role="tab"][data-tab="eda"]').click()
+    goto(panel)
     expand_eda(page)
-    card = page.locator('[data-eda-card="eda.rate_by:job"]')
+    card = page.locator('[data-block="path"] [data-eda-card="eda.rate_by:job"]')
     rows = card.locator('[data-bar]')
     assert rows.count() > 3
     assert card.locator('[data-point]').count() == rows.count()
@@ -126,16 +132,16 @@ def test_the_rate_by_chart_is_a_point_an_interval_a_band_and_n(open_panel, views
     assert ' n ' in f" {rows.first.inner_text()} " or 'n ' in rows.first.inner_text() or 'n ' in rows.first.inner_text()
     # The caveats are behind "Why?", one disclosure per card.
     assert card.locator('details.ht-why').count() == 1
-    assert card.locator('[data-noncausal]').evaluate('n => n.closest("details").open') is False
+    assert card.locator('[data-noncausal]').evaluate('n => n.closest("details").dataset.foldDefault') == 'closed'
 
 
 def test_the_correlation_matrix_reads_no_target_and_outlines_collinear_pairs(open_panel, views):
     panel = open_case(open_panel, views)
     page = panel.page
-    page.locator('[role="tab"][data-tab="eda"]').click()
+    goto(panel)
     raw = next(r for r in views['raw.evidence.binary']['results'] if r['activity'] == 'eda.correlation')
     values = raw['values']
-    card = page.locator('[data-eda-card="eda.correlation"]')
+    card = page.locator('[data-block="path"] [data-eda-card="eda.correlation"]')
     assert card.count() == 1
     n = len(values['columns'])
     assert card.locator('[data-pair]').count() == n * (n - 1) // 2
@@ -153,9 +159,9 @@ def test_the_correlation_matrix_is_requested_as_w4_without_a_column(open_panel, 
     evidence = copy.deepcopy(views['eda.binary'])
     evidence['cards'] = [c for c in evidence['cards'] if c['activity'] != 'eda.correlation']
     panel = open_case(open_panel, views)
-    panel.view_data('eda', evidence)
     page = panel.page
-    page.locator('[role="tab"][data-tab="eda"]').click()
+    goto(panel)
+    panel.view_data('eda', evidence)
     page.locator('[data-whole="eda.correlation"] [data-write="run_eda"]').click()
     sent = [m for m in panel.posted() if m['type'] == 'run_eda'][-1]
     assert sent['activity'] == 'eda.correlation' and 'column' not in sent
@@ -164,7 +170,7 @@ def test_the_correlation_matrix_is_requested_as_w4_without_a_column(open_panel, 
 def test_the_confusion_matrix_is_a_two_by_two_with_counts_and_rates(open_panel, views):
     panel = open_case(open_panel, views, case='cv')
     page = panel.page
-    page.locator('[role="tab"][data-tab="evidence"]').click()
+    goto(panel)
     cm = page.locator('[data-confusion="development"]').first
     assert cm.locator('[data-cell]').count() == 4
     assert cm.locator('[data-cell] data[data-result-id]').count() == 4
@@ -175,7 +181,7 @@ def test_the_confusion_matrix_is_a_two_by_two_with_counts_and_rates(open_panel, 
 def test_a_curve_follows_its_container(open_panel, views):
     panel = open_case(open_panel, views, case='cv', width=900)
     page = panel.page
-    page.locator('[role="tab"][data-tab="evidence"]').click()
+    goto(panel)
     svg = page.locator('[data-diag-chart="calibration"] svg.ht-chart').first
     wide = float(svg.get_attribute('width'))
     page.set_viewport_size({'width': 420, 'height': 900})
@@ -192,7 +198,7 @@ def test_a_curve_follows_its_container(open_panel, views):
 def test_cards_put_provenance_in_a_faint_source_line(open_panel, views):
     panel = open_case(open_panel, views)
     page = panel.page
-    page.locator('[role="tab"][data-tab="eda"]').click()
+    goto(panel)
     expand_eda(page)
     for card in page.locator('[data-eda-card]').all():
         src = card.locator('.ht-card-f .ht-src')
@@ -201,37 +207,14 @@ def test_cards_put_provenance_in_a_faint_source_line(open_panel, views):
         assert card.locator('h3').count() == 1
 
 
-def test_the_recap_is_collapsed_and_shown_off_the_overview_only(open_panel, views):
+def test_how_this_panel_works_explains_the_panel_after_now(open_panel, views):
+    """I1 on the one page: "How this panel works" (the last fold of the tools, `tools:how`) says
+    what the panel is, that decisions are made in the chat; Now stays first."""
     panel = open_case(open_panel, views)
     page = panel.page
-    assert page.locator('[data-recap-strip]').count() == 0
-    page.locator('[role="tab"][data-tab="eda"]').click()
-    strip = page.locator('[data-recap-strip]')
-    assert strip.count() == 1
-    assert strip.locator('button').get_attribute('aria-expanded') == 'false'
-    assert strip.locator('li').count() == 0
-
-
-def test_the_journey_bar_lists_every_step_once_and_says_how_many_are_done(open_panel, views):
-    panel = open_case(open_panel, views)
-    page = panel.page
-    plan = views['summary.binary']['plan']
-    bar = page.locator('[data-ov="map"] .ht-journey')
-    assert bar.locator('li[data-step]').count() == len(plan)
-    assert [x for x in bar.locator('li[data-step]').evaluate_all('ls => ls.map(l => l.dataset.step)')] == [s['id'] for s in plan]
-    assert bar.locator('li[aria-current="step"]').count() <= 1
-    done = sum(1 for s in plan if s['status'] == 'done')
-    assert page.locator('[data-steps-done]').get_attribute('data-steps-done') == f'{done}/{len(plan)}'
-
-
-def test_the_overview_explains_the_panel_and_each_tab(open_panel, views):
-    panel = open_case(open_panel, views)
-    page = panel.page
-    guide = page.locator('[data-ov="guide"]')
-    assert guide.count() == 1
+    click_fold(page, 't-how')
+    guide = page.locator('details[data-fold-id="t-how"]')
+    assert guide.get_attribute('data-anchor') == 'tools:how'
     assert 'chat' in guide.inner_text()
-    guide.locator('details.ht-why summary').click()
-    assert guide.locator('dt').count() == len(TABS)
-    # The next move stays first.
-    assert page.locator('[data-ov="hero"]').evaluate('h => h.getBoundingClientRect().top') < \
+    assert page.locator('[data-block="now"]').evaluate('h => h.getBoundingClientRect().top') < \
         guide.evaluate('g => g.getBoundingClientRect().top')

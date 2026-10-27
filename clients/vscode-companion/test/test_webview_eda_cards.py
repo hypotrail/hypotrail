@@ -1,12 +1,15 @@
-"""EDA gallery cards and the "Run another chart" card (review 2026-10-24, panel minor items).
+"""EDA cards and the "Run another chart" card (review 2026-10-24, panel minor items; re-pointed
+by ADR 0004 d13: the cards are figures of the path, the request is in the Data drawer).
 
 Simulated browser on the captured payloads (``panel_cases.py``); not a VS Code session.
 
 * A per-column card and the request card ask the same question for the same chart: in
   English the engine's own question, in French the panel's translation of it; under
   cross-validation both name the development rows, never the training rows.
-* A card the junior opened (or closed) stays so across a view re-render and the language
-  toggle (view memory only, never study state).
+* A card the junior closed (or opened) stays so across a re-render and the language switch
+  (a fold of the page, FOLD-1: `setState` `folds`, never study state); "Show it" opens it.
+  The gallery's "only the last card open" default is withdrawn with the gallery: every
+  figure of the path opens with its analysis.
 """
 from __future__ import annotations
 
@@ -14,8 +17,7 @@ import copy
 
 import pytest
 
-from panel_cases import expand_eda, load_views, open_case
-from test_webview_gate import show
+from panel_cases import load_views, open_all, open_case, set_language, with_results
 
 PER_COLUMN = ('eda.distribution', 'eda.rate_by', 'eda.mean_by')
 
@@ -29,16 +31,22 @@ def gallery(views, case):
     return [c for c in views[f'eda.{case}']['cards'] if c['kind'] != 'quality']
 
 
+def show(panel, views, case):
+    """Every fold open: the figures of the path and the Data drawer (the former EDA tab)."""
+    open_all(panel, views, case)
+
+
 def title(page, slot):
-    return page.locator(f'[data-eda-card="{slot}"] summary h3').inner_text()
+    return page.locator(f'[data-block="path"] [data-eda-card="{slot}"] summary h3').inner_text().replace('\u202f', ' ')
 
 
 def eyebrow(page, slot):
-    return page.locator(f'[data-eda-card="{slot}"] [data-eyebrow]').inner_text()
+    return page.locator(f'[data-block="path"] [data-eda-card="{slot}"] [data-eyebrow]').inner_text()
 
 
 def request_question(page):
-    return page.locator('.eda-request-question').inner_text()
+    # French typography (§13.2) applies to the panel's copy, not to the engine's text: compared without it.
+    return page.locator('.eda-request-question').inner_text().replace('\u202f', ' ')
 
 
 def cv_views(views):
@@ -55,13 +63,15 @@ def cv_views(views):
             card['texts'][lang]['question'] = card['texts'][lang]['question'].replace(*words)
     eda['cards'].append(card)
     out['eda.cv'] = eda
+    # The one page files a chart under its step when the summary names its result (P1 §17.2).
+    out['summary.cv'] = with_results(views['summary.cv'], [card])
     return out, card
 
 
 @pytest.mark.parametrize('case', ['binary', 'regression'])
 def test_english_gallery_titles_are_the_engine_questions(open_panel, views, case):
     panel = open_case(open_panel, views, case=case, lang='en')
-    show(panel.page, 'eda')
+    show(panel, views, case)
     for card in gallery(views, case):
         assert title(panel.page, card['slot']) == card['question'], card['slot']
 
@@ -73,7 +83,7 @@ def test_english_gallery_titles_are_the_engine_questions(open_panel, views, case
 def test_the_request_card_asks_the_question_of_the_card_it_adds(open_panel, views, lang, case, column, activity):
     panel = open_case(open_panel, views, case=case, lang=lang)
     page = panel.page
-    show(page, 'eda')
+    show(panel, views, case)
     slot = f'{activity}:{column}'
     assert page.locator(f'[data-eda-card="{slot}"]').count() == 1, slot
     page.select_option('#eda-variable', column)
@@ -89,10 +99,10 @@ def test_french_cross_validated_titles_and_request_name_the_development_rows(ope
     v, card = cv_views(views)
     panel = open_case(open_panel, v, case='cv', lang='fr')
     page = panel.page
-    show(page, 'eda')
+    show(panel, v, 'cv')
     assert 'développement' in eyebrow(page, card['slot']).lower()
     t = title(page, card['slot'])
-    assert t == 'Comment les valeurs de age se répartissent-elles parmi les lignes de développement ?', t
+    assert t.replace('\u202f', ' ') == 'Comment les valeurs de age se répartissent-elles parmi les lignes de développement ?', t
     page.select_option('#eda-variable', 'age')
     page.select_option('#eda-chart', 'eda.distribution')
     q = request_question(page)
@@ -103,7 +113,7 @@ def test_english_cross_validated_request_is_the_engine_question(open_panel, view
     v, card = cv_views(views)
     panel = open_case(open_panel, v, case='cv', lang='en')
     page = panel.page
-    show(page, 'eda')
+    show(panel, v, 'cv')
     assert title(page, card['slot']) == card['question']
     page.select_option('#eda-variable', 'age')
     page.select_option('#eda-chart', 'eda.distribution')
@@ -112,63 +122,48 @@ def test_english_cross_validated_request_is_the_engine_question(open_panel, view
 
 
 def _details(page, slot):
-    return page.locator(f'[data-eda-card="{slot}"] details.eda-analysis')
+    return page.locator(f'[data-block="path"] [data-eda-card="{slot}"] details.eda-analysis')
 
 
-def test_an_opened_card_stays_open_across_a_rerender_and_the_language_toggle(open_panel, views):
+def test_fold1_a_closed_card_stays_closed_across_a_rerender_and_the_language_switch(open_panel, views):
     panel = open_case(open_panel, views, case='binary', lang='en')
     page = panel.page
-    show(page, 'eda')
+    show(panel, views, 'binary')
     first = _details(page, 'eda.target_rate')
-    assert first.get_attribute('open') is None          # collapsed by default (not the last card)
+    assert first.get_attribute('open') == '', 'a figure of the path opens with its analysis'
     first.locator(':scope > summary').click()
-    assert first.get_attribute('open') == ''
+    assert first.get_attribute('open') is None
     # A view-local re-render (the junior picks another variable in "Run another chart").
     page.select_option('#eda-variable', 'age')
-    assert first.get_attribute('open') == ''
+    assert first.get_attribute('open') is None
     # A new read of the view re-renders it too.
     panel.view_data('eda', views['eda.binary'])
-    assert first.get_attribute('open') == ''
-    page.locator('[data-language="fr"]').click()
-    assert first.get_attribute('open') == ''
-    page.locator('[data-language="en"]').click()
-    assert first.get_attribute('open') == ''
-    # The others keep their default: only the last card starts open.
-    slots = [c['slot'] for c in gallery(views, 'binary')]
-    for slot in slots[1:-1]:
-        assert _details(page, slot).get_attribute('open') is None, slot
-    assert _details(page, slots[-1]).get_attribute('open') == ''
+    assert first.get_attribute('open') is None
+    set_language(page, 'fr')
+    assert first.get_attribute('open') is None
+    set_language(page, 'en')
+    assert first.get_attribute('open') is None
+    assert panel.state()['folds']['eda-eda.target_rate'] is False, 'a fold of the page (FOLD-1), not study state'
+    # The others keep their default.
+    for slot in [c['slot'] for c in gallery(views, 'binary')][1:]:
+        if _details(page, slot).count():
+            assert _details(page, slot).get_attribute('open') == '', slot
+    first.locator(':scope > summary').click()
+    page.select_option('#eda-variable', 'job')
+    assert first.get_attribute('open') == '', 'opened again, it stays open'
 
 
-def test_a_closed_default_card_stays_closed_and_a_deep_link_opens_and_keeps_a_card(open_panel, views):
+def test_show_it_opens_a_closed_card_which_then_stays_open(open_panel, views):
     panel = open_case(open_panel, views, case='binary', lang='en')
     page = panel.page
-    show(page, 'eda')
-    slots = [c['slot'] for c in gallery(views, 'binary')]
-    last = _details(page, slots[-1])
-    assert last.get_attribute('open') == ''
-    last.locator(':scope > summary').click()
-    assert last.get_attribute('open') is None
-    page.select_option('#eda-variable', 'age')
-    assert last.get_attribute('open') is None
-    page.locator('[data-language="fr"]').click()
-    assert last.get_attribute('open') is None
-    # "Le montrer" / "Show it" opens a collapsed card (a deep link), which then stays open.
-    page.locator('[data-language="en"]').click()
+    show(panel, views, 'binary')
+    card = _details(page, 'eda.rate_by:job')
+    card.locator(':scope > summary').click()
+    assert card.get_attribute('open') is None
     page.select_option('#eda-variable', 'job')
     page.select_option('#eda-chart', 'eda.rate_by')
-    card = _details(page, 'eda.rate_by:job')
     assert card.get_attribute('open') is None
     page.locator('#eda-show').click()
     assert card.get_attribute('open') == ''
     page.select_option('#eda-variable', 'age')
     assert card.get_attribute('open') == ''
-
-
-def test_expand_eda_opens_every_card(open_panel, views):
-    panel = open_case(open_panel, views, case='regression', lang='fr')
-    show(panel.page, 'eda')
-    assert panel.page.locator('details.eda-analysis:not([open])').count() > 0
-    expand_eda(panel.page)
-    assert panel.page.locator('details.eda-analysis:not([open])').count() == 0
-    assert panel.page.locator('details.eda-analysis[open]').count() == len(gallery(views, 'regression'))

@@ -54,7 +54,7 @@ body {
 
 /* The whiteboard: VS Code light themes; a light page outside VS Code. */
 @media (prefers-color-scheme: light) {
-  body:not(.vscode-dark):not(.vscode-high-contrast):not(.vscode-high-contrast-light) {
+  body:not(.vscode-dark):not(.vscode-high-contrast):not(.vscode-high-contrast-light):not([data-theme="dark"]) {
     --board: #F1F3F1; --board2: #E4E8E4; --chalk: #1E2A36; --chalk2: #3E4A57; --dust: rgba(30, 42, 54, 0.35);
     --faint: #58636F; --line: rgba(30, 42, 54, 0.12); --line2: rgba(30, 42, 54, 0.3);
     --yellow: #855810; --pink: #A3304D; --mint: #17643A; --teal: #0B6B60; --violet: #6B46C1; --blue: #1F5FA8;
@@ -67,7 +67,11 @@ body {
     color-scheme: light;
   }
 }
-body.vscode-light {
+/* ADR 0004 d13 (THEME-1 to THEME-4): the panel's own theme control. `data-theme="light"` lays
+   the whiteboard and `"dark"` the blackboard (the default rule above) whatever the editor's
+   class; High Contrast keeps the editor's colours whatever the choice. */
+body.vscode-light:not([data-theme="dark"]),
+body[data-theme="light"]:not(.vscode-high-contrast):not(.vscode-high-contrast-light) {
   --board: #F1F3F1; --board2: #E4E8E4; --chalk: #1E2A36; --chalk2: #3E4A57; --dust: rgba(30, 42, 54, 0.35);
   --faint: #58636F; --line: rgba(30, 42, 54, 0.12); --line2: rgba(30, 42, 54, 0.3);
   --yellow: #855810; --pink: #A3304D; --mint: #17643A; --teal: #0B6B60; --violet: #6B46C1; --blue: #1F5FA8;
@@ -130,6 +134,7 @@ body {
   /* Links are marked by colour only (nothing is underlined in the panel). */
   --ht-link: var(--teal);
   --ht-link-hover: var(--yellow);
+  /* FOCUS-4: yellow on the dark board, ink blue on the light board and on paper. */
   --ht-focus: var(--yellow);
   /* The one accent of the board; the semantic hues are the charter's pastels. */
   --ht-accent: var(--yellow); --ht-accent-ink: var(--yellow);
@@ -151,6 +156,13 @@ body {
   --r-chip: 3px; --r-card: 3px; --r-pill: 999px;
 }
 
+body.vscode-light:not([data-theme="dark"]),
+body[data-theme="light"]:not(.vscode-high-contrast):not(.vscode-high-contrast-light) { --ht-focus: var(--pen); }
+@media (prefers-color-scheme: light) {
+  body:not(.vscode-dark):not(.vscode-high-contrast):not(.vscode-high-contrast-light):not([data-theme="dark"]) { --ht-focus: var(--pen); }
+}
+body.vscode-high-contrast, body.vscode-high-contrast-light { --ht-focus: var(--vscode-focusBorder, Highlight); }
+
 /* --- 3. paper tokens (cards, figures, tooltips, dialogs) -------------------------------- */
 
 .card, .ht-paper, .ht-modal, .ht-tooltip, .ht-figure {
@@ -164,7 +176,7 @@ body {
   --ht-sunken: var(--cardsoft);
   --ht-link: var(--ochre-ink);
   --ht-link-hover: var(--slate);
-  --ht-focus: var(--ochre-ink);
+  --ht-focus: var(--pen);
   --ht-accent: var(--pen); --ht-accent-ink: var(--slate);
   --ht-warn: var(--ochre-ink); --ht-bad: var(--red); --ht-seal: var(--plum); --ht-info: var(--pen); --ht-ok: var(--leaf);
   --ht-strong-ink: #FFFFFF;

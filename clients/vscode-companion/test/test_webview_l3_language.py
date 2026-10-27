@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from panel_cases import TABS, expand_eda, open_case
+from panel_cases import expand_eda, goto, open_case, set_language
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO / 'framework' / 'tests' / 'acceptance' / 'agent'))
@@ -62,14 +62,13 @@ def french_views(model):
 
 
 def _foreign(panel, lang: str) -> list[tuple[str, str]]:
+    """The whole page, every fold and drawer open (the former tabs, ADR 0004 d13)."""
     page = panel.page
+    goto(panel)
+    expand_eda(page)
     found = []
-    for tab in TABS:
-        page.locator(f'[role="tab"][data-tab="{tab}"]').click()
-        if tab == 'eda':
-            expand_eda(page)
-        for text in page.evaluate(PROSE, lang):
-            found += [(tab, s) for s in g.foreign_sentences(' '.join(text.split()), lang, 5)]
+    for text in page.evaluate(PROSE, lang):
+        found += [('page', s) for s in g.foreign_sentences(' '.join(text.split()), lang, 5)]
     return found
 
 
@@ -94,16 +93,16 @@ def test_an_english_panel_on_a_french_study_shows_the_engine_texts_in_english(op
     page = panel.page
     found = _foreign(panel, 'en')
     assert found == [], found
-    # The switch changes the engine's texts too: a limit the Evidence tab shows is the English
-    # table's, and back in French the French table's, without a new read.
+    # The switch changes the engine's texts too: a limit the page shows (the ledger fold) is the
+    # English table's, and back in French the French table's, without a new read.
     limits = french_views['summary.french']['texts']
     english = limits['en']['limits']['validation_is_not_independent']
     french = limits['fr']['limits']['validation_is_not_independent']
     assert english != french
-    page.locator('[role="tab"][data-tab="evidence"]').click()
-    shown = ' '.join(page.locator('#panel-evidence').inner_text().split())
+    goto(panel)
+    shown = ' '.join(page.locator('#main').inner_text().split())
     assert english in shown and french not in shown
-    page.locator('[data-language="fr"]').click()
-    page.locator('[role="tab"][data-tab="evidence"]').click()
-    shown = ' '.join(page.locator('#panel-evidence').inner_text().split())
+    set_language(page, 'fr')
+    goto(panel)
+    shown = ' '.join(page.locator('#main').inner_text().split()).replace('\u202f', ' ')
     assert french in shown and english not in shown

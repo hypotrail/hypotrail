@@ -186,7 +186,7 @@
     empty: 'No exploration yet. EDA runs after the split is confirmed.',
     galleryLabel: 'Registered EDA results',
     stale: 'Stale · not cited',
-    chipLabel: rid8 => `Open result ${rid8} in Evidence`,
+    chipLabel: rid8 => `Where result ${rid8} comes from`,
     specialTitle: 'Special values',
     specialTable: 'Special values, training rows',
     together: (a, b) => [`${a} and ${b} are the same `, ' rows.'],

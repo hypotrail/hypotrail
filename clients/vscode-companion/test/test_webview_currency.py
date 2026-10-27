@@ -5,13 +5,16 @@ A model read at the snapshot's revision but under another currency (a dataset ed
 deleted or edited deliverable, without a new revision) is not current: the webview asks
 for it again, and "If you confirm" is read again. The explicit Refresh makes every view
 read again, at the same revision and currency. A failed load is asked again at the next
-version, or with the view's Retry, never in a loop. This is not a VS Code session.
+version, or with the view's Retry, never in a loop. On the one page (ADR 0004 d13) a block
+reads only when it is shown: Now's "What your answer will change" and a step's history are
+opened first (§11). This is not a VS Code session.
 """
 from __future__ import annotations
 
 import copy
 
-from test_webview_decisions import card, effects_message, opened, wait_until
+from panel_cases import click_fold
+from test_webview_decisions import effects_message, open_effects, open_history, opened, wait_until
 
 CURRENCY_A = '00000000000000aa'
 CURRENCY_B = '00000000000000bb'
@@ -35,6 +38,12 @@ def wait_effects(panel, count, pid='p_5'):
     settle(panel)
 
 
+def shown(panel):
+    """Open what reads `decisions` and `preview effects`: Now's effects fold and a step's history."""
+    open_history(panel, 'policy')
+    return open_effects(panel)
+
+
 def with_currency(summary, currency):
     out = copy.deepcopy(summary)
     out['currency'] = currency
@@ -45,11 +54,12 @@ def test_cr1_a_new_currency_at_the_same_revision_reads_the_tab_and_the_effects_a
     a = with_currency(model('summary', 'summary.binary'), CURRENCY_A)
     panel = opened(open_panel, a)
     page = panel.page
+    effects = shown(panel)
     panel.view_data('decisions', model('decisions', 'decisions.binary'), revision=a['revision'])
     eff = model('effects', 'preview_effects.binary')
     panel.send({**effects_message(eff, a['revision']), 'currency': CURRENCY_A})
-    assert card(panel).locator('[data-effects-box="kept"]').count() == 1
-    assert card(panel).locator('[data-effects-updating]').count() == 0
+    assert effects.locator('[data-effects-box="kept"]').count() == 1
+    assert effects.locator('[data-effects-updating]').count() == 0
     assert page.locator('[data-updating]').count() == 0
     wait_effects(panel, 1)
     n_loads, n_effects = len(loads(panel, 'decisions')), len(effects_asked(panel))
@@ -63,11 +73,11 @@ def test_cr1_a_new_currency_at_the_same_revision_reads_the_tab_and_the_effects_a
     assert len(loads(panel, 'decisions')) == n_loads + 1
     wait_effects(panel, n_effects + 1)
     assert len(effects_asked(panel)) == n_effects + 1
-    assert card(panel).locator('[data-effects-updating]').count() == 1
+    assert effects.locator('[data-effects-updating]').count() == 1
     assert page.locator('[data-updating]').count() == 1
     panel.view_data('decisions', model('decisions', 'decisions.binary'), revision=a['revision'])
     panel.send({**effects_message(eff, a['revision']), 'currency': CURRENCY_B})
-    assert card(panel).locator('[data-effects-updating]').count() == 0
+    assert effects.locator('[data-effects-updating]').count() == 0
     assert page.locator('[data-updating]').count() == 0
     assert panel.clean()
 
@@ -75,10 +85,12 @@ def test_cr1_a_new_currency_at_the_same_revision_reads_the_tab_and_the_effects_a
 def test_cr1_the_explicit_refresh_reads_every_view_again_at_the_same_version(open_panel, model):
     a = with_currency(model('summary', 'summary.binary'), CURRENCY_A)
     panel = opened(open_panel, a)
+    shown(panel)
     panel.view_data('decisions', model('decisions', 'decisions.binary'), revision=a['revision'])
     panel.send({**effects_message(model('effects', 'preview_effects.binary'), a['revision']), 'currency': CURRENCY_A})
     wait_effects(panel, 1)
     n_loads, n_effects = len(loads(panel, 'decisions')), len(effects_asked(panel))
+    panel.page.locator('[data-more]').click()
     panel.page.locator('[data-refresh]').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'refresh'}
     panel.snapshot(a)   # the controller's answer: the same revision and currency
@@ -92,6 +104,7 @@ def test_cr1_a_failed_load_is_asked_again_at_the_next_currency_and_with_retry_ne
     a = with_currency(model('summary', 'summary.binary'), CURRENCY_A)
     panel = opened(open_panel, a)
     page = panel.page
+    open_history(panel, 'policy')
     before = len(loads(panel, 'decisions'))
     panel.send({'type': 'load_error', 'view': 'decisions', 'message': 'The hypotrail CLI failed.', 'detail': ''})
     panel.snapshot(a)
@@ -110,10 +123,11 @@ def test_cr1_a_failed_load_is_asked_again_at_the_next_currency_and_with_retry_ne
 def test_cr1_overview_check_and_evidence_follow_the_currency(open_panel, model):
     a = with_currency(model('summary', 'summary.binary'), CURRENCY_A)
     panel = open_panel()
-    panel.init(stage='v2', task='binary')
+    panel.init(stage='v2', task='binary', panelContract=2)
     panel.snapshot(a)
     page = panel.page
-    page.locator('[data-check-summary]').click()
+    click_fold(page, 't-deliverables')
+    click_fold(page, 'checks')
     wait_until(page, "window.__posted.some(m => m.type === 'load' && m.view === 'check')")
     assert len(loads(panel, 'check')) == 1
     panel.view_data('check', model('check', 'check.binary'), revision=a['revision'])
@@ -121,7 +135,7 @@ def test_cr1_overview_check_and_evidence_follow_the_currency(open_panel, model):
     assert len(loads(panel, 'check')) == 1
     panel.snapshot(with_currency(a, CURRENCY_B))
     assert len(loads(panel, 'check')) == 2, 'a deleted or edited deliverable: the checks are read again'
-    page.locator('[role="tab"][data-tab="evidence"]').click()
+    click_fold(page, 'ledger')
     n = len(loads(panel, 'evidence'))
     assert n >= 1
     panel.view_data('evidence', model('evidence', 'evidence.binary'), revision=a['revision'])
@@ -130,12 +144,13 @@ def test_cr1_overview_check_and_evidence_follow_the_currency(open_panel, model):
     assert panel.clean()
 
 
-def test_cr5_read_budget_of_the_decisions_tab_on_a_watch_event_at_v2(open_panel, model):
-    # §11 (decision CR.5): on a watch event the visible Decisions tab at v2 reads its two
-    # data views (`decisions`, and `evidence` for the chips) once each, and the preview of
-    # each visible card once, only when the version moved; nothing when it did not.
+def test_cr5_read_budget_of_the_shown_blocks_on_a_watch_event_at_v2(open_panel, model):
+    # §11 (decision CR.5): on a watch event the shown blocks at v2 read their data views
+    # (`decisions` for the history, `evidence` for Now's figure) once each, and the preview of
+    # the open proposal once, only when the version moved; nothing when it did not.
     a = with_currency(model('summary', 'summary.binary'), CURRENCY_A)
     panel = opened(open_panel, a, stage='v2')
+    shown(panel)
     panel.view_data('decisions', model('decisions', 'decisions.binary'), revision=a['revision'])
     panel.view_data('evidence', model('evidence', 'evidence.binary'), revision=a['revision'])
     panel.send({**effects_message(model('effects', 'preview_effects.binary'), a['revision']), 'currency': CURRENCY_A})

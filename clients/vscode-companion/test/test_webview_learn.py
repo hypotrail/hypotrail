@@ -1,9 +1,15 @@
-"""Browser tests of the Learn & hand off view and the agent bridge (scope S, simulated browser;
-WP-U5; COMPANION-ADVANCED §6.6, §6.7, §6.8, §10, §13). The real document under the real CSP,
-offline, with the stub ``acquireVsCodeApi`` of conftest.py, in both colour schemes, on the
-binary (Bank) and regression (Auto MPG) fixtures. Not a VS Code session: the clipboard, the
-chat, the folder dialog and globalState are the extension's, tested in test/learn.test.js
-and test/bridge.test.js.
+"""Browser tests of the learning layer, the hand-off and the agent bridge on the one page (scope S,
+simulated browser; WP-U5 re-pointed by ADR 0004 d13; COMPANION-ADVANCED §6.7.3, §6.7.4, §6.12,
+§A.6, §10, §13). The Learn tab became: the concept cards in the My notions drawer (LE-2, kept
+by the integrator's correction of 2026-10-27), "predict before you look" in Now at its step
+(LE-1), the export and the session report in the Deliverables drawer (HO-1, HO-2, SR-1). The
+glossary tooltips are withdrawn with their test: a marked term is a notion that expands in
+place (LE-4 → NOT-2, `test_webview_tools.py`).
+
+The real document under the real CSP, offline, with the stub ``acquireVsCodeApi`` of
+conftest.py, in both colour schemes, on the binary (Bank) and regression (Auto MPG) WP-0
+fixtures. Not a VS Code session: the clipboard, the chat, the folder dialog and globalState are
+the extension's, tested in test/learn.test.js and test/bridge.test.js.
 """
 from __future__ import annotations
 
@@ -14,6 +20,7 @@ import re
 import pytest
 
 from conftest import inline_styles_ok
+from panel_cases import click_fold
 
 expect = pytest.importorskip('playwright.sync_api').expect
 
@@ -42,7 +49,7 @@ def _send(panel, message: dict) -> None:
 
 def _init(panel, stage='v3', reviewer=False, learningLayer=True, chatInsert=False, task=None):  # noqa: N803
     _send(panel, {'type': 'init', 'stage': stage, 'reviewer': reviewer, 'learningLayer': learningLayer,
-                  'chatInsert': chatInsert, 'task': task})
+                  'chatInsert': chatInsert, 'task': task, 'panelContract': 2})
 
 
 def _snapshot(panel, model):
@@ -53,12 +60,14 @@ def _view_data(panel, view, model):
     _send(panel, {'type': 'view_data', 'view': view, 'revision': model.get('revision', 0), 'model': model})
 
 
-def _open(open_panel, fixtures, task='binary', scheme='light', learn=EMPTY, explain=True, **init):
+def _open(open_panel, fixtures, task='binary', scheme='light', learn=EMPTY, explain=True, summary=None, **init):
+    """The page at v3 with My notions open (it reads `explain`)."""
     panel = open_panel(color_scheme=scheme)
     _init(panel, stage='v3', task=task, **init)
-    _snapshot(panel, fixtures[task])
+    _snapshot(panel, summary or fixtures[task])
     _send(panel, {'type': 'learn_state', **learn})
-    panel.page.locator('[role="tab"][data-tab="learn"]').click()
+    if init.get('learningLayer', True):
+        click_fold(panel.page, 't-notions')
     if explain:
         _view_data(panel, 'explain', fixtures[f'explain.{task}'])
     return panel
@@ -68,34 +77,43 @@ def _posted(panel, type_):
     return [m for m in panel.posted() if m['type'] == type_]
 
 
-def _probe_term(page, term_id):
-    """A word of another view's copy, marked like media/terms.js marks it."""
-    page.evaluate("""id => { const s = globalThis.Hypotrail.terms.mark('the word', id); s.id = 'probe-term';
-      document.querySelector('[data-view="learn"]').appendChild(s); }""", term_id)
-    page.wait_for_timeout(50)
-    return page.locator('#probe-term')
+def _concept_title(explain, step, plan):
+    """The card's title: the first glossary term of the step, else the step's title."""
+    order = explain.get('termOrder') or list(explain['terms'])
+    term = next((explain['terms'][t]['term'] for t in order if step in (explain['terms'][t].get('steps') or [])), None)
+    return term or next(s['title'] for s in plan if s['id'] == step)
+
+
+def _at_train_eda(fixtures):
+    """The Bank study while its exploration runs: Now's step is `train_eda`."""
+    s = copy.deepcopy(fixtures['binary'])
+    s['proposals'] = []
+    s['nextAction'] = {**s['nextAction'], 'kind': 'run', 'step': 'train_eda', 'decision': None, 'proposalId': None,
+                       'activity': 'eda.target_rate'}
+    return s
 
 
 @pytest.mark.parametrize('scheme', ['light', 'dark'])
 @pytest.mark.parametrize('task', ['binary', 'regression'])
-def test_learn_tab_renders_cards_predictions_handoff_and_report_offline(open_panel, fixtures, scheme, task):
+def test_the_learning_parts_render_cards_predictions_handoff_and_report_offline(open_panel, fixtures, scheme, task):
     panel = _open(open_panel, fixtures, task=task, scheme=scheme)
     page = panel.page
-    learn = page.locator('#panel-learn')
-    assert learn.locator('h2').first.inner_text() == 'Learn & hand off'
-    assert _posted(panel, 'load')[-1] == {'v': 2, 'type': 'load', 'view': 'explain'}
-    step = fixtures[task]['currentStep']['id']
-    card = learn.locator(f'[data-concept-card="{task}:{step}"]')
+    assert {'v': 2, 'type': 'load', 'view': 'explain'} in _posted(panel, 'load')
+    step = page.locator('[data-block="now"]').get_attribute('data-now-step')
+    card = page.locator(f'[data-drawer="notions"] [data-concept-card="{task}:{step}"]')
     assert card.count() == 1
     assert card.get_attribute('data-nav') == f'step:{step}'
     assert 'Concept card, not a decision' in card.text_content()        # INV-6
-    assert learn.locator('[data-prediction]').count() >= 1
-    for box in learn.locator('[data-prediction]').all():
+    boxes = page.locator('[data-block="now"] [data-prediction]')
+    assert boxes.count() == (1 if task == 'binary' else 0), 'the prediction of Now\'s step only'
+    for box in boxes.all():
         assert box.locator('.ht-tag').first.text_content() == 'Optional · before you look'
         assert 'Kept on this computer only. Never written to the study.' in box.inner_text()
-    assert learn.locator('[data-write="export"]').inner_text() == 'Export a handoff pack'
-    assert learn.locator('[data-reviewer-line]').count() == 1
-    assert learn.locator('details[data-session-report] > summary').inner_text() == 'Session report (for an observed session)'
+    click_fold(page, 't-deliverables')
+    tools = page.locator('[data-drawer="deliverables"]')
+    assert tools.locator('[data-write="export"]').inner_text() == 'Export a handoff pack'
+    assert tools.locator('[data-reviewer-line]').count() == 1
+    assert tools.locator('details[data-session-report] > summary').inner_text() == 'Session report (for an observed session)'
     assert inline_styles_ok(page), 'no inline style attribute (CSP)'
     if task == 'regression':
         text = page.locator('body').inner_text()
@@ -105,10 +123,14 @@ def test_learn_tab_renders_cards_predictions_handoff_and_report_offline(open_pan
 
 def test_concept_card_puts_the_term_first_then_its_definition_and_the_study_texts(open_panel, fixtures):
     explain = copy.deepcopy(fixtures['explain.binary'])
-    explain['terms']['base_rate']['steps'] = ['conclusion']           # a term whose concept is the current step
+    explain['terms']['base_rate']['steps'] = ['policy']           # a term whose concept is Now's step
+    order = explain.get('termOrder') or list(explain['terms'])
+    for t in order:
+        if t != 'base_rate':
+            explain['terms'][t]['steps'] = [s for s in (explain['terms'][t].get('steps') or []) if s != 'policy']
     panel = _open(open_panel, fixtures, explain=False)
     _view_data(panel, 'explain', explain)
-    card = panel.page.locator('[data-concept-card="binary:conclusion"]')
+    card = panel.page.locator('[data-concept-card="binary:policy"]')
     heading = card.locator('h3')
     assert heading.inner_text() == 'Base rate'
     assert heading.locator('[data-term="base_rate"]').count() == 1
@@ -116,9 +138,9 @@ def test_concept_card_puts_the_term_first_then_its_definition_and_the_study_text
     assert order[0] == 'P:Concept card, not a decision'
     assert order[1] == 'H3:Base rate', 'the term first'
     assert order[2] == 'P:' + explain['terms']['base_rate']['definition'], 'then its definition'
-    assert order[3] == 'P:Step: Conclude proportionately'
+    assert order[3] == 'P:Step: Choose a decision policy'
     for key in ('concept', 'context', 'interpretation', 'consequence'):
-        segment_text = ''.join(s['text'] for s in explain['steps']['conclusion'][key])
+        segment_text = ''.join(s['text'] for s in explain['steps']['policy'][key])
         assert segment_text in card.inner_text(), key
     assert panel.clean()
 
@@ -133,13 +155,14 @@ def test_le2_a_card_seen_for_two_seconds_is_counted_once_and_collapses_after_two
         return p
     panel = _open(clocked, fixtures)
     page = panel.page
-    card = page.locator('[data-concept-card="binary:conclusion"]')
+    card_id = 'binary:policy'
+    card = page.locator(f'[data-concept-card="{card_id}"]')
     if page.evaluate("() => document.querySelector('[data-concept-card]').getBoundingClientRect().bottom > innerHeight"):
         page.clock.run_for(2300)
         assert page.locator('[data-seen-timing]').count() == 0
         assert not [m for m in _posted(panel, 'learn_set') if m['key'] == 'seen'], 'a card partly out of view is not seen'
     card.scroll_into_view_if_needed()
-    page.locator('[data-concept-card="binary:conclusion"][data-seen-timing]').wait_for()
+    page.locator(f'[data-concept-card="{card_id}"][data-seen-timing]').wait_for()
     # Pause a little ahead of now: the clock still runs between the read and the pause, and
     # pausing at a time it has already passed is refused ("Cannot fast-forward to the past").
     page.clock.pause_at((page.evaluate('() => Date.now()') + 100) / 1000)   # seconds in the Python API
@@ -147,20 +170,21 @@ def test_le2_a_card_seen_for_two_seconds_is_counted_once_and_collapses_after_two
     assert not [m for m in _posted(panel, 'learn_set') if m['key'] == 'seen'], 'not before two seconds'
     page.clock.run_for(600)
     seen = [m for m in _posted(panel, 'learn_set') if m['key'] == 'seen']
-    assert seen == [{'v': 2, 'type': 'learn_set', 'key': 'seen', 'id': 'binary:conclusion'}]
+    assert seen == [{'v': 2, 'type': 'learn_set', 'key': 'seen', 'id': card_id}]
     page.clock.resume()   # a paused clock also holds the page's message handling
-    _send(panel, {'type': 'learn_state', **{**EMPTY, 'seen': {'binary:conclusion': 1}}})
+    _send(panel, {'type': 'learn_state', **{**EMPTY, 'seen': {card_id: 1}}})
     page.clock.run_for(5000)
     assert page.locator('[data-seen-timing]').count() == 0, 'counted: no new timer'
     assert len([m for m in _posted(panel, 'learn_set') if m['key'] == 'seen']) == 1, 'not counted twice in one panel session'
-    assert page.locator('[data-concept-card="binary:conclusion"]').count() == 1, 'one sighting: still open'
+    assert page.locator(f'[data-concept-card="{card_id}"]').count() == 1, 'one sighting: still open'
     # The stored count is 2 (a reload reads it from globalState): one line, then open on demand.
-    _send(panel, {'type': 'learn_state', **{**EMPTY, 'seen': {'binary:conclusion': 2}}})
-    link = page.locator('[data-concept-card-link="binary:conclusion"] button')
-    assert link.inner_text() == 'Show the concept: Conclude proportionately'
-    assert page.locator('[data-concept-card="binary:conclusion"]').count() == 0
+    _send(panel, {'type': 'learn_state', **{**EMPTY, 'seen': {card_id: 2}}})
+    link = page.locator(f'[data-concept-card-link="{card_id}"] button')
+    title = _concept_title(fixtures['explain.binary'], 'policy', fixtures['binary']['plan'])
+    assert link.inner_text() == f'Show the concept: {title}'
+    assert page.locator(f'[data-concept-card="{card_id}"]').count() == 0
     link.click()
-    assert page.locator('[data-concept-card="binary:conclusion"]').count() == 1
+    assert page.locator(f'[data-concept-card="{card_id}"]').count() == 1
     # "Hide concept cards" is a preference, sent as learn_set prefs.
     page.locator('[data-hide-cards="true"]').click()
     assert _posted(panel, 'learn_set')[-1] == {'v': 2, 'type': 'learn_set', 'key': 'prefs', 'id': 'prefs', 'value': {'hideCards': True}}
@@ -170,10 +194,10 @@ def test_le2_a_card_seen_for_two_seconds_is_counted_once_and_collapses_after_two
     assert panel.clean()
 
 
-def test_predict_before_you_look_stores_locally_then_reveals(open_panel, fixtures):
-    panel = _open(open_panel, fixtures)
+def test_le1_predict_before_you_look_in_now_stores_locally_then_reveals(open_panel, fixtures):
+    panel = _open(open_panel, fixtures, summary=_at_train_eda(fixtures))
     page = panel.page
-    box = page.locator('[data-prediction="binary.train_eda.rare"]')
+    box = page.locator('[data-block="now"] [data-predict-now="train_eda"] [data-prediction="binary.train_eda.rare"]')
     assert box.locator('.ht-question').inner_text() == 'Is the positive outcome common or rare in the training rows?'
     assert box.locator('[data-reveal]').count() == 0, 'no reveal before an answer'
     box.locator('[data-choice="rare"]').click()
@@ -189,64 +213,38 @@ def test_predict_before_you_look_stores_locally_then_reveals(open_panel, fixture
     cited = reveal.locator('data[data-result-id]')
     assert cited.inner_text() == '11.5%'
     assert cited.get_attribute('data-result-id') == '744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8'
-    later = page.locator('[data-prediction="binary.policy.beats_baseline"] [data-reveal="later"]')
-    assert 'The answer appears once the engine has computed it.' in later.inner_text()
     page.locator('[data-reset-predictions]').click()
     assert _posted(panel, 'learn_set')[-1] == {'v': 2, 'type': 'learn_set', 'key': 'reset_predictions', 'id': 'study'}
+    # At the rule's step, the answer given waits for the engine's figure.
+    panel = _open(open_panel, fixtures, learn={**EMPTY, 'predictions': {'binary.policy.beats_baseline': 'yes'}})
+    later = panel.page.locator('[data-block="now"] [data-prediction="binary.policy.beats_baseline"] [data-reveal="later"]')
+    assert 'The answer appears once the engine has computed it.' in later.inner_text()
+    assert panel.page.locator('[data-block="now"] [data-prediction="binary.train_eda.rare"]').count() == 0, 'Now\'s step only'
     assert panel.clean()
 
 
-def test_le4_glossary_tooltip_on_focus_and_hover_term_first_with_the_cited_example_escape_closes(open_panel, fixtures):
-    panel = _open(open_panel, fixtures)
-    page = panel.page
-    term = _probe_term(page, 'base_rate')
-    assert 'ht-term' in term.get_attribute('class')
-    term.focus()
-    tip = page.locator('[role="tooltip"]')
-    assert tip.count() == 1
-    assert term.get_attribute('aria-describedby') == tip.get_attribute('id')
-    assert tip.locator('strong').inner_text() == 'Base rate'
-    children = tip.locator('[data-tooltip-term] > *').evaluate_all('ns => ns.map(n => n.tagName)')
-    assert children[0] == 'STRONG', 'the term comes first'
-    assert tip.locator('data[data-result-id]').inner_text() == '11.5%'
-    page.keyboard.press('Escape')
-    assert page.locator('[role="tooltip"]').count() == 0
-    term.blur()
-    term.hover()
-    assert page.locator('[role="tooltip"]').count() == 1
-    # A term outside this task's glossary is not marked.
-    other = page.evaluate("""() => { const s = globalThis.Hypotrail.terms.mark('mae', 'mae'); s.id = 'probe-mae';
-      document.querySelector('[data-view="learn"]').appendChild(s); return s.id; }""")
-    page.wait_for_timeout(50)
-    assert page.locator(f'#{other}').get_attribute('class') is None
-    assert page.locator(f'#{other}').get_attribute('aria-describedby') is None
-    # The intro's own marked term (confirmed_decision) has a tooltip too.
-    assert page.locator('#panel-learn [data-term="confirmed_decision"].ht-term').count() == 1
-    assert panel.clean()
-
-
-def test_le3_learning_layer_off_renders_no_tooltip_card_or_prediction_and_never_loads_explain(open_panel, fixtures):
+def test_le3_learning_layer_off_renders_no_notion_card_or_prediction_and_never_loads_explain(open_panel, fixtures):
     panel = _open(open_panel, fixtures, explain=False, learningLayer=False)
     page = panel.page
-    term = _probe_term(page, 'base_rate')
-    term.hover()
     page.wait_for_timeout(100)
     assert not any(m.get('view') == 'explain' for m in _posted(panel, 'load')), 'no explain call'
     _view_data(panel, 'explain', fixtures['explain.binary'])           # even if data arrived
-    assert page.locator('[role="tooltip"], .ht-term, [data-concept-card], [data-prediction], [data-learning-layer]').count() == 0
+    assert page.locator('.ht-term, [data-concept-card], [data-prediction], [data-learning-layer], [data-drawer="notions"]').count() == 0
+    click_fold(page, 't-deliverables')
     assert page.locator('[data-write="export"]').count() == 1, 'the hand off stays'
     assert panel.clean()
 
 
-def test_the_first_hover_of_a_term_in_another_tab_reads_explain_once(open_panel, fixtures):
+def test_not1_pressing_two_notions_reads_explain_once(open_panel, fixtures):
+    """NOT-1, §5: the first notion pressed reads `explain`; the next one reads nothing more."""
     panel = open_panel()
     _init(panel, stage='v3', task='binary')
     _snapshot(panel, fixtures['binary'])
     page = panel.page
-    page.evaluate("""() => { const s = globalThis.Hypotrail.terms.mark('base rate', 'base_rate'); s.id = 'probe-term';
-      document.querySelector('#panel-overview').appendChild(s); }""")
-    page.locator('#probe-term').hover()
-    page.locator('#probe-term').hover()
+    terms = page.locator('button.ht-term')
+    assert terms.count() >= 1
+    terms.first.click()
+    page.locator('button.ht-term').last.click()
     assert [m for m in _posted(panel, 'load') if m['view'] == 'explain'] == [{'v': 2, 'type': 'load', 'view': 'explain'}]
     assert panel.clean()
 
@@ -254,6 +252,7 @@ def test_the_first_hover_of_a_term_in_another_tab_reads_explain_once(open_panel,
 def test_ho1_export_button_outcome_files_open_folder_and_the_stale_report(open_panel, fixtures, payload):
     panel = _open(open_panel, fixtures)
     page = panel.page
+    click_fold(page, 't-deliverables')
     page.locator('[data-write="export"]').click()
     assert _posted(panel, 'export_handoff')[-1] == {'v': 2, 'type': 'export_handoff', 'revision': 26}
     out = payload('export.binary')['out']
@@ -279,7 +278,7 @@ def test_ho1_export_button_outcome_files_open_folder_and_the_stale_report(open_p
     _send(panel, {'type': 'outcome', 'op': 'W7', 'kind': 'ok_with_problems', 'target': 'handoff', 'exitCode': 3, 'revision': 26,
                 'artifacts': [], 'recorded': {'files': files[:2] + files[3:], 'out': out}})
     assert page.locator('[data-export-stale-report]').inner_text() == (
-        'The report was not current, so it is not in the pack. Regenerate it in Overview and export again if you need it.')
+        'The report was not current, so it is not in the pack. Regenerate it in Deliverables and export again if you need it.')
     error = payload('error.export_target_exists')['error']
     _send(panel, {'type': 'outcome', 'op': 'W7', 'kind': 'refused', 'target': 'handoff', 'exitCode': 2,
                 'refusal': {'code': error['code'], 'reason': None, 'engineMessage': error['message'],
@@ -294,10 +293,11 @@ def test_ho1_export_button_outcome_files_open_folder_and_the_stale_report(open_p
 def test_ho2_reviewer_keeps_only_the_export_write_and_the_bridge(open_panel, fixtures):
     panel = _open(open_panel, fixtures, reviewer=True)
     page = panel.page
+    click_fold(page, 't-deliverables')
     assert page.locator('[data-write]').evaluate_all('ns => ns.map(n => n.dataset.write)') == ['export']   # CA.9
     assert page.locator('[data-reviewer-line]').inner_text() == (
         'A reviewer can open this study read-only with "Hypotrail: open the study panel (reviewer, read-only)".')
-    assert page.locator('[data-ask]').count() >= 1, 'the agent bridge stays in reviewer mode'
+    assert page.locator('[data-ask], [data-copy-question]').count() >= 1, 'the agent bridge stays in reviewer mode'
     assert page.locator('textarea').count() == 0
     assert panel.clean()
 
@@ -305,11 +305,12 @@ def test_ho2_reviewer_keeps_only_the_export_write_and_the_bridge(open_panel, fix
 def test_sr1_session_report_shows_the_log_status_and_no_conversation_content(open_panel, fixtures, payload, model):
     panel = _open(open_panel, fixtures)
     page = panel.page
-    report = page.locator('details[data-session-report]')
+    click_fold(page, 't-deliverables')
     assert not any(m.get('view') == 'session_report' for m in _posted(panel, 'load')), 'read only when expanded'
-    report.locator('summary').click()
+    click_fold(page, 'session-report')
     page.wait_for_function("() => window.__posted.some(m => m.type === 'load' && m.view === 'session_report')")
     assert _posted(panel, 'load')[-1] == {'v': 2, 'type': 'load', 'view': 'session_report'}
+    report = page.locator('details[data-session-report]')
     assert 'Reading the session report...' in report.inner_text()
     _view_data(panel, 'session_report', fixtures['report'])
     report = page.locator('details[data-session-report]')
@@ -343,7 +344,8 @@ def test_sr1_session_report_shows_the_log_status_and_no_conversation_content(ope
     assert report.locator('[data-session-log-note]').inner_text() == note
     assert report.locator('[data-session-log-instruction]').inner_text() == (
         'Start the CLI once with HYPOTRAIL_SESSION_LOG=1 to turn it on; delete .hypotrail/session-log.jsonl to turn it off.')
-    assert not any(m['type'] not in ('ready', 'load', 'learn_set') for m in panel.posted()), 'the panel turns nothing on or off'
+    assert not any(m['type'] not in ('ready', 'load', 'learn_set', 'preview_effects') for m in panel.posted()), \
+        'the panel turns nothing on or off'
     assert panel.clean()
 
 
@@ -351,15 +353,13 @@ def test_sr1_session_report_shows_the_log_status_and_no_conversation_content(ope
 def test_ab_ask_the_agent_modal_sends_only_the_cited_object_and_the_question(open_panel, fixtures, chat_insert):
     panel = _open(open_panel, fixtures, chatInsert=chat_insert)
     page = panel.page
-    # AB-1: since WP-E1 a decision card has no words field at all; the bridge sends only
-    # the cited object and the typed question.
-    page.locator('[role="tab"][data-tab="decisions"]').click()
+    # AB-1: since WP-E1 a proposal has no words field at all; the bridge sends only the cited
+    # object and the typed question.
     assert page.locator('[data-proposal-card="p_5"] textarea').count() == 0
-    page.locator('[role="tab"][data-tab="learn"]').click()
-    page.locator('[data-concept-card="binary:conclusion"] [data-ask="step:conclusion"]').click()
+    page.locator('[data-concept-card="binary:policy"] [data-ask="step:policy"]').click()
     dialog = page.locator('[role="dialog"]')
     assert dialog.locator('h2').inner_text() == 'Ask the agent'
-    assert dialog.locator('[data-ask-about]').inner_text() == 'step conclusion (Conclude proportionately)'
+    assert dialog.locator('[data-ask-about]').inner_text() == 'step policy (Choose a decision policy)'
     area = dialog.locator('textarea')
     assert area.input_value() == '', 'the question starts empty'
     labels = dialog.locator('[data-modal-action]').all_inner_texts()
@@ -367,13 +367,13 @@ def test_ab_ask_the_agent_modal_sends_only_the_cited_object_and_the_question(ope
     area.fill('Why is this step needed?')
     dialog.locator('[data-modal-action="copy"]').click()
     ask = _posted(panel, 'ask_agent')[-1]
-    assert ask == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'step', 'id': 'conclusion'},
+    assert ask == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'step', 'id': 'policy'},
                    'question': 'Why is this step needed?', 'mode': 'copy'}
     assert not [m for m in panel.posted() if m['type'] in ('confirm', 'withdraw', 'propose')]
     assert 'askDraft' not in (panel.state() or {}), 'the question is not kept for another object'
     assert page.locator('[role="dialog"]').count() == 0
     if chat_insert:
-        page.locator('[data-ask="step:conclusion"]').click()
+        page.locator('[data-ask="step:policy"]').click()
         page.locator('[role="dialog"] [data-modal-action="insert"]').click()
         assert _posted(panel, 'ask_agent')[-1]['mode'] == 'insert'
     _send(panel, {'type': 'notice', 'text': 'Copied. Paste it into the chat with your assistant.', 'politeness': 'polite'})
@@ -381,12 +381,12 @@ def test_ab_ask_the_agent_modal_sends_only_the_cited_object_and_the_question(ope
     assert panel.clean()
 
 
-def test_the_learn_tab_is_absent_below_v3_and_the_bridge_below_v2(open_panel, fixtures):
+def test_my_notions_is_absent_below_v3_and_the_bridge_modal_below_v2(open_panel, fixtures):
     panel = open_panel()
     _init(panel, stage='v2', task='binary')
     _snapshot(panel, fixtures['binary'])
     page = panel.page
-    assert page.locator('[data-tab="learn"]').count() == 0
+    assert page.locator('[data-drawer="notions"], [data-concept-card], [data-prediction], button.ht-term').count() == 0
     assert page.evaluate("() => globalThis.Hypotrail.askButton({atLeast: s => s !== 'v3'}, {kind: 'step', id: 'x'}, '') !== null")
     assert page.evaluate("() => globalThis.Hypotrail.askButton({atLeast: s => s === 'v0' || s === 'v1'}, {kind: 'step', id: 'x'}, '')") is None
     assert panel.clean()
@@ -395,7 +395,7 @@ def test_the_learn_tab_is_absent_below_v3_and_the_bridge_below_v2(open_panel, fi
 def test_cr1_a_failed_explain_read_has_retry_and_is_asked_again_at_the_next_currency(open_panel, fixtures):
     panel = _open(open_panel, fixtures, explain=False)
     page = panel.page
-    asked = lambda: [m for m in _posted(panel, 'load') if m['view'] == 'explain']
+    asked = lambda: [m for m in _posted(panel, 'load') if m['view'] == 'explain']  # noqa: E731
     n = len(asked())
     assert n >= 1
     _send(panel, {'type': 'load_error', 'view': 'explain', 'message': 'The hypotrail CLI failed.', 'detail': ''})

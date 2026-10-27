@@ -1,7 +1,17 @@
-"""Browser tests of the Overview view (WP-U1; COMPANION-ADVANCED §6.1, §3.3, §13): scope S,
-simulated browser, real document and CSP, models from the real ``lib/models/*.js`` on the
-WP-0 fixtures. Every test checks that no remote request, page error, or CSP violation
-happened. Requirement ids are in the test names. Not a VS Code session.
+"""Browser tests of the former Overview on the one page (WP-U1 re-pointed by ADR 0004 d13;
+COMPANION-ADVANCED §6.3, §6.4, §6.6, §6.7.4, §3.3, §13): scope S, simulated browser, real
+document and CSP, models from the real ``lib/models/*.js`` on the WP-0 fixtures. Every test
+checks that no remote request, page error, or CSP violation happened. Not a VS Code session.
+
+Where the Overview's parts went (§18): the next move is Now (OV-0 → NOW-12); the study map is
+the path (OV-3, OV-4 → PATH-2, PATH-4); "Since your last session" is the fold "Since your last
+visit" (OV-5, OV-6 → SINCE-1, SINCE-2); the deliverables, their launches, Regenerate and the
+checks are the Deliverables drawer and To handle (OV-7, OV-8, HE-3 → TOOL-6, TODO-3, TODO-4);
+an interrupted run is an item of To handle, or Now when the next action is about it (HE-1,
+HE-2 → TODO-2). Withdrawn, with their tests: "Where we are" and its recap (OV-1, OV-2), the
+alert strip and its navigation, the "What you cannot claim yet" list (→ the defensibility
+pill, PG-6, `test_webview_header.py`), the tab's headings and accessibility scan (A11Y-1 on
+the whole page, `test_webview_header.py`).
 """
 from __future__ import annotations
 
@@ -11,11 +21,13 @@ import re
 import pytest
 
 from conftest import inline_styles_ok
+from panel_cases import click_fold, open_all
 
 FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 MOMENTS = ['Frame the change', 'Prepare evidence', 'Work and compare', 'Conclude and hand over']
 INTERRUPTED = 'e_4c1d9a7b2e3f5a6b7c8d9e0f'
 SUSPECTED = 'e_8e7d6c5b4a39281706f5e4d3'
+LATE = 'e_1f2e3d4c5b6a79880a1b2c3d'
 THEMES = ['light', 'dark']
 
 
@@ -55,9 +67,21 @@ def regression_health(model, payload):
 
 def opened(open_panel, summary, stage='v1', scheme='light', **init):
     panel = open_panel(color_scheme=scheme)
-    panel.init(stage=stage, task=summary['task'], **init)
+    panel.init(stage=stage, task=summary['task'], panelContract=2, **init)
     panel.snapshot(summary)
     return panel
+
+
+def deliverables(panel):
+    """Open the Deliverables drawer (TOOL-6)."""
+    click_fold(panel.page, 't-deliverables')
+    return panel.page.locator('[data-drawer="deliverables"]')
+
+
+def since(panel):
+    """Open "Since your last visit" (§6.4, v1)."""
+    click_fold(panel.page, 'since')
+    return panel.page.locator('[data-ov="since"]')
 
 
 def assert_clean(panel):
@@ -65,157 +89,100 @@ def assert_clean(panel):
     assert inline_styles_ok(panel.page), 'no inline style attribute (CSP)'
 
 
-def expand(page):
-    """Open "Checks of the deliverables" and wait for the view to ask for the check."""
-    page.locator('[data-check-summary]').click()
-    page.locator('[data-check-loading]').wait_for()
+def expand(panel):
+    """Open the checks of the deliverables and wait for the view to ask for the check."""
+    deliverables(panel)
+    click_fold(panel.page, 'checks')
+    panel.page.locator('[data-check-loading]').wait_for()
 
 
-def overview_text(page) -> str:
-    return page.locator('#panel-overview').inner_text()
-
-
-# --- Your next move (§6.1.0, WP-A5) -----------------------------------------------------------
+# --- OV-0 → NOW-12: the next move is Now --------------------------------------------------------
 
 @pytest.mark.parametrize('scheme', THEMES)
-def test_ov0_the_next_move_is_the_first_block_and_answers_in_decisions(open_panel, binary, scheme):
+def test_ov0_now12_the_next_move_is_now_in_the_panels_words(open_panel, binary, scheme):
     panel = opened(open_panel, binary, scheme=scheme)
     page = panel.page
-    # Lesson style (2026-10-27): the next move is the board callout of the band, above the tabs,
-    # after the journey rail; it is not repeated in the tab.
-    assert page.locator('[data-band] > *').evaluate_all('ns => ns.map(n => n.dataset.ov || (n.dataset.rail ? "rail" : ""))') == ['rail', 'hero']
-    assert page.evaluate('() => !!(document.querySelector("[data-band]").compareDocumentPosition(document.querySelector("[role=tablist]")) & Node.DOCUMENT_POSITION_FOLLOWING)')
-    assert page.locator('#panel-overview [data-ov="hero"]').count() == 0
-    hero = page.locator('[data-ov="hero"]')
-    assert hero.get_attribute('data-hero') == 'await_user_words'
-    assert hero.locator('[data-hero-eyebrow]').inner_text().upper() == 'YOUR NEXT MOVE · PAUSE 3 · BUSINESS TRADE-OFF'
-    assert hero.locator('[data-hero-title]').inner_text() == 'Answer the proposal on the decision rule'
-    assert hero.locator('[data-hero-restatement="p_5"]').inner_text() == binary['proposals'][0]['restatement']
-    value = hero.locator('[data-hero-value]')
+    blocks = page.locator('#main > [data-block]').evaluate_all('ns => ns.map(n => n.dataset.block)')
+    assert blocks.index('now') < blocks.index('path'), 'Now before the path'
+    now = page.locator('[data-block="now"]')
+    assert now.get_attribute('data-now') == 'proposal' and now.get_attribute('data-now-step') == 'policy'
+    assert now.locator('[data-restatement="p_5"]').inner_text() == binary['proposals'][0]['restatement']
+    value = now.locator('.ht-plainsay [data-value-raw]')
     assert value.inner_text() == 'Select the top 100 by score'
-    assert value.get_attribute('title') == 'Recorded value: capacity:100', 'the recorded value in the hover'
-    assert 'which cases to act on' in hero.locator('[data-hero-why="policy"]').inner_text()
-    # Two-layer copy: the engine's instruction to the assistant is under Details only.
-    agent = binary['nextAction']['message']
-    assert agent not in hero.inner_text()
-    assert agent in hero.locator('[data-hero-details]').text_content()
-    assert 'p_5' not in hero.inner_text() and 'capacity:100' not in hero.inner_text()
-    # Its one action copies a ready question for the chat; the way to the card stays beside it.
-    copy_button = hero.locator('[data-copy-question="await_user_words"]')
-    assert copy_button.inner_text() == 'Copy the question' and copy_button.get_attribute('data-write') is None
+    assert value.get_attribute('title') == 'capacity:100', 'the recorded value in the hover'
+    # Two-layer copy: the engine's instruction to the assistant is never in Now.
+    assert binary['nextAction']['message'] not in now.inner_text()
+    assert 'p_5' not in now.inner_text() and 'capacity:100' not in now.inner_text()
+    copy_button = now.locator('[data-copy-question="policy"]')
+    assert copy_button.get_attribute('data-write') is None
     copy_button.click()
-    assert panel.posted()[-1] == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'proposal', 'id': 'p_5'}, 'mode': 'copy',
-                                  'question': ('I am reading the proposal on the decision rule. Could you restate it so that '
-                                               'I adopt it or change it in my own words?')}
-    hero.locator('[data-hero-action="proposal:p_5"]').click()
-    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'decisions'
-    assert page.evaluate('document.activeElement.closest("[data-nav]").dataset.nav') == 'proposal:p_5'
+    assert panel.posted()[-1] == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'step', 'id': 'policy'}, 'mode': 'copy',
+                                  'question': page.evaluate('() => globalThis.Hypotrail.copy.page.askQuestions.policy')}
     assert_clean(panel)
 
 
-# --- Where we are (§6.1.1) -------------------------------------------------------------------
+# --- OV-3, OV-4 → PATH-2, PATH-3, PATH-4: the path ------------------------------------------------
 
 @pytest.mark.parametrize('scheme', THEMES)
-def test_ov1_where_we_are_goal_and_decisions_in_words_junior_recap_under_details(open_panel, binary, scheme):
-    panel = opened(open_panel, binary, scheme=scheme)
-    page = panel.page
-    section = page.locator('[data-ov="where"]')
-    assert section.locator('[data-recap-line="Goal"] dd').inner_text() == binary['recapJunior'][0][len('Goal: '):]
-    decided = section.locator('[data-decided-item]')
-    assert decided.evaluate_all('ds => ds.map(d => d.dataset.decidedItem)') == \
-        ['prediction_time', 'feature_availability', 'split', 'policy']
-    policy = section.locator('[data-decided-item="policy"] [data-value-raw]')
-    assert policy.inner_text() == 'Select every case scored 0.2 or more'
-    assert policy.get_attribute('data-value-raw') == 'threshold:0.2'
-    split = section.locator('[data-decided-item="split"] [data-value-raw]').inner_text()
-    assert split == 'Stratified random split, 30% of the rows for validation'
-    # OV-1 (amended): the junior recap, byte for byte, under Details; never the agent recap.
-    assert section.locator('[data-recap-details] li').all_text_contents() == binary['recapJunior']
-    text = page.locator('#panel-overview').text_content()
-    for line in binary['recap']:
-        if line not in binary['recapJunior']:
-            assert line not in text, line
-    assert_clean(panel)
-
-
-def test_ov2_without_a_recap_there_is_no_recap_details(open_panel, binary):
-    panel = opened(open_panel, {**binary, 'recap': [], 'recapJunior': []})
-    assert panel.page.locator('[data-recap-details]').count() == 0
-    assert panel.page.locator('[data-ov="where"] [data-recap-line="Goal"]').count() == 0
-    assert panel.page.locator('[data-ov="where"] [data-decided-item]').count() == 4
-    assert_clean(panel)
-
-
-# --- Study map (§6.1.2) ----------------------------------------------------------------------
-
-@pytest.mark.parametrize('scheme', THEMES)
-def test_ov3_ov4_study_map_has_four_moments_every_step_once_and_text_marks(open_panel, regression, scheme):
-    """OV-3 (v0.3, WP-E2): the journey bar lists every step once, in plan order, each with its
-    moment (one of the four) in its hover."""
+def test_ov3_ov4_path2_path4_the_path_has_four_moments_every_step_once_and_text_marks(open_panel, regression, scheme):
     panel = opened(open_panel, regression, scheme=scheme)
     page = panel.page
-    moments = page.locator('[data-map] [data-step]').evaluate_all('ss => ss.map(s => s.dataset.moment)')
-    assert set(moments) == set(MOMENTS)
-    steps = page.locator('[data-map] [data-step]').evaluate_all('ss => ss.map(s => s.dataset.step)')
+    open_all(panel)
+    path = page.locator('[data-block="path"]')
+    assert path.locator('.ht-phase-t').all_text_contents() == MOMENTS
+    steps = path.locator('[data-step]').evaluate_all('ss => ss.map(s => s.dataset.step)')
     assert steps == [s['id'] for s in regression['plan']]
     assert len(steps) == len(set(steps))
-    current = page.locator('[data-step][aria-current="step"]')
+    current = path.locator('[data-step][aria-current="step"]')
     assert current.count() == 1 and current.get_attribute('data-step') == 'model_choice'
-    for item in page.locator('[data-map] [data-step]').all():
-        assert item.locator('.ov-mark').get_attribute('aria-hidden') == 'true'
-        assert item.locator('[data-mark-text]').inner_text().strip() != '', 'OV-4: a text, not only a mark'
-    choice = page.locator('[data-step="model_choice"]')
-    assert '●' in choice.inner_text()
-    assert choice.locator('[data-mark-text]').text_content() == 'waiting for you: '
-    assert choice.locator('[data-sub]').inner_text() == 'pause 3 · waiting for you'
-    assert page.locator('[data-step="split"] [data-sub]').inner_text() == 'pause 2 · your words'
-    assert page.locator('[data-step="train_eda"] [data-sub]').count() == 0
-    assert page.locator('[data-step="conclusion"] [data-sub]').inner_text() == 'ready'
+    for item in path.locator('li[data-step]').all():
+        assert item.locator('.ht-mk').first.get_attribute('aria-hidden') == 'true'
+        assert item.locator('.sr-only').first.text_content().strip() != '', 'OV-4: a text, not only a mark'
+    choice = path.locator('li[data-step="model_choice"]')
+    assert '●' in choice.locator('.ht-mk').first.inner_text()
+    assert choice.locator('[data-badge="current"]').text_content() == 'waiting for you'
     assert_clean(panel)
 
 
-def test_ov3_map_labels_for_delegated_reconfirmation_and_blocked_steps(open_panel, binary):
-    plan = []
-    for s in binary['plan']:
-        s = dict(s)
-        if s['id'] == 'split':
-            s['basis'] = 'delegated_default'
-        if s['id'] == 'policy':
+def test_ov3_path3_badges_for_delegated_and_reconfirmation(open_panel, binary):
+    summary = copy.deepcopy(binary)
+    summary['decisions']['split'] = {**summary['decisions']['split'], 'basis': 'delegated_default'}
+    for s in summary['plan']:
+        if s['id'] == 'prediction_time':
             s['status'] = 'needs_reconfirmation'
-        if s['id'] == 'conclusion':
-            s['status'] = 'blocked'
-            s['after'] = {'id': 'policy', 'title': 'Choose a decision policy'}
-        plan.append(s)
-    panel = opened(open_panel, {**binary, 'plan': plan})
+    panel = opened(open_panel, summary)
     page = panel.page
-    assert page.locator('[data-step="split"] [data-sub]').inner_text() == 'pause 2 · delegated'
-    policy = page.locator('[data-step="policy"]')
-    assert '↺' in policy.inner_text()
-    assert policy.locator('[data-sub]').inner_text() == 'pause 3 · confirm again'
-    assert policy.locator('[data-mark-text]').text_content() == 'confirm again: '
-    blocked = page.locator('[data-step="conclusion"]')
-    assert blocked.locator('[data-sub]').inner_text() == 'after Choose a decision policy'
-    assert blocked.locator('[data-mark-text]').text_content() == 'blocked: '
+    open_all(panel)
+    split = page.locator('li[data-step="split"]')
+    assert split.get_attribute('data-step-state') == 'delegated'
+    assert split.locator('[data-badge="delegated"]').first.text_content().startswith('delegated')
+    moment = page.locator('li[data-step="prediction_time"]')
+    assert moment.get_attribute('data-step-state') == 'again'
+    assert '↺' in moment.locator('.ht-mk').first.inner_text()
+    assert moment.locator('[data-badge="again"]').text_content() == 'to confirm again'
     assert_clean(panel)
 
 
-def test_map_without_moments_lists_the_plan_in_order(open_panel, binary):
+def test_path_without_moments_lists_the_plan_in_order(open_panel, binary):
     panel = opened(open_panel, {**binary, 'moments': []})
-    steps = panel.page.locator('[data-map] [data-step]').evaluate_all('ss => ss.map(s => s.dataset.step)')
+    open_all(panel)
+    steps = panel.page.locator('[data-block="path"] [data-step]').evaluate_all('ss => ss.map(s => s.dataset.step)')
     assert steps == [s['id'] for s in binary['plan']]
     assert_clean(panel)
 
 
-# --- Since your last session (§6.1.3) --------------------------------------------------------
+# --- OV-5, OV-6 → SINCE-1, SINCE-2: since your last visit -------------------------------------------
 
 ITEMS = 'li[data-digest-item]:not([data-digest-item="deliverables"])'
 
 
 @pytest.mark.parametrize('scheme', THEMES)
-def test_ov5_ov6_digest_grouped_in_the_panels_words_engine_record_under_details(open_panel, binary, scheme):
+def test_ov5_ov6_since1_since2_digest_grouped_in_the_panels_words_engine_record_under_details(open_panel, binary, scheme):
     panel = opened(open_panel, binary, scheme=scheme)
     page = panel.page
-    section = page.locator('[data-ov="since"]')
+    fold = page.locator('details[data-block="since"]')
+    assert fold.get_attribute('open') is None, 'closed by default'
+    section = since(panel)
     rows = section.locator(f'[data-digest] {ITEMS}')
     got = rows.evaluate_all('is => is.map(i => [i.dataset.group, i.querySelector("[data-digest-text]").textContent])')
     assert got == [
@@ -230,14 +197,13 @@ def test_ov5_ov6_digest_grouped_in_the_panels_words_engine_record_under_details(
     replaced = section.locator('[data-digest-item="result_replaced"]')
     assert replaced.locator('strong[data-kept-fits]').inner_text() == 'Models unchanged, nothing refitted.'
     assert section.locator('strong[data-kept-fits]').count() == 1
-    deliverables = section.locator('[data-digest-item="deliverables"]')
-    assert deliverables.inner_text().endswith('The report and notebook are up to date.')
+    assert section.locator('[data-digest-item="deliverables"]').inner_text().endswith('The report and notebook are up to date.')
     # Two-layer copy: the engine's third-person record, verbatim, under Details only.
     assert section.locator('[data-digest-details] li').all_text_contents() == [i['text'] for i in binary['digest']['items']]
     assert "junior's" not in section.inner_text()
     header = section.locator('[data-since-header]').inner_text()
     assert header.startswith('Since ') and header != 'This session'
-    # OV-6: no revision number outside the select's option labels.
+    # OV-6, SINCE-2: no revision number outside the select's option labels.
     text = section.evaluate("s => { const c = s.cloneNode(true); c.querySelectorAll('option').forEach(o => o.remove());"
                             " return c.textContent; }")
     assert not re.search(r'revision \d', text), text
@@ -249,7 +215,8 @@ def test_ov5_ov6_digest_grouped_in_the_panels_words_engine_record_under_details(
 def test_ov5_choosing_the_start_of_the_study_rereads_the_summary_with_since(open_panel, binary):
     panel = opened(open_panel, binary)
     page = panel.page
-    page.locator('[data-since-select]').select_option('1')
+    section = since(panel)
+    section.locator('[data-since-select]').select_option('1')
     assert panel.posted()[-1] == {'v': 2, 'type': 'load', 'view': 'summary', 'since': 1}
     assert page.locator('[data-updating="summary"]').inner_text() == 'Updating...'
     older = copy.deepcopy(binary)
@@ -257,7 +224,6 @@ def test_ov5_choosing_the_start_of_the_study_rereads_the_summary_with_since(open
                        'items': [{**older['digest']['items'][0], 'text': 'The split was confirmed in the junior\'s words.'}]
                        + older['digest']['items']}
     panel.view_data('summary', older)
-    section = page.locator('[data-ov="since"]')
     assert section.locator('[data-since-header]').inner_text() == 'Since the start of the study'
     # Beyond four changes the rest is collapsed under "Show all N changes".
     assert section.locator(f'[data-digest] {ITEMS}').count() == 4
@@ -266,8 +232,8 @@ def test_ov5_choosing_the_start_of_the_study_rereads_the_summary_with_since(open
     assert more.locator('summary').inner_text() == 'Show all 5 changes'
     assert more.get_attribute('open') is None
     assert section.locator('[data-truncated]').inner_text() == \
-        'Older changes are not listed. The Decisions tab has the full history.'
-    page.locator('[data-since-select]').select_option('23')
+        'Older changes are not listed. Each step of the path has its full history.'
+    section.locator('[data-since-select]').select_option('23')
     assert section.locator(ITEMS).count() == 4
     assert section.locator('[data-digest-more]').count() == 0
     assert_clean(panel)
@@ -275,18 +241,20 @@ def test_ov5_choosing_the_start_of_the_study_rereads_the_summary_with_since(open
 
 def test_digest_of_one_session_truncated_and_empty(open_panel, regression, binary):
     panel = opened(open_panel, regression)
-    section = panel.page.locator('[data-ov="since"]')
+    section = since(panel)
     assert section.locator('[data-since-header]').inner_text() == 'This session'
     assert section.locator('[data-truncated]').count() == 1
     assert section.locator('[data-since-select]').count() == 0, 'the boundary is already the start'
+    # §6.4: the fold is absent when the digest has no item since the boundary, and with an
+    # engine without the digest (C1, CA.14).
     panel.snapshot({**binary, 'revision': 27, 'digest': {**binary['digest'], 'items': [], 'since': 27, 'until': 27}})
-    assert section.locator('[data-nothing-changed]').inner_text() == 'Nothing has changed since then.'
+    assert panel.page.locator('[data-block="since"]').count() == 0
     panel.snapshot({**binary, 'revision': 28, 'digest': None})
-    assert section.locator('[data-no-digest]').count() == 1, 'an engine without C1 (CA.14)'
+    assert panel.page.locator('[data-block="since"]').count() == 0
     assert_clean(panel)
 
 
-# --- Deliverables (§6.1.4) -------------------------------------------------------------------
+# --- OV-7, OV-8 → TOOL-6, TODO-3: the Deliverables drawer --------------------------------------------
 
 MARIMO = {'kernel': '/opt/hypotrail/framework/.venv',
           'notebook': 'uv run --project /opt/hypotrail/framework marimo run notebooks/study_generated.py',
@@ -300,79 +268,74 @@ MARIMO_EDITABLE = {**MARIMO,
 def test_ov7_deliverables_junior_messages_open_file_and_marimo_launches(open_panel, binary, scheme, stage):
     panel = opened(open_panel, binary, scheme=scheme, stage=stage, marimo=MARIMO)
     page = panel.page
-    rows = page.locator('[data-ov="deliverables"] [data-artifact]')
+    drawer = deliverables(panel)
+    rows = drawer.locator('[data-ov="deliverables"] [data-artifact]')
     assert rows.evaluate_all('rs => rs.map(r => r.dataset.artifact)') == ['report', 'notebook', 'editable', 'workbench']
     for a in binary['artifacts']:
-        row = page.locator(f'[data-ov="deliverables"] [data-artifact="{a["name"]}"]')
+        row = drawer.locator(f'[data-artifact="{a["name"]}"]')
         # Two-layer copy: the junior variant; the engine message (it names paths) in the hover.
-        # The editable copy shows its engine junior message too (it is not official evidence);
-        # the workbench row says nothing beyond its description.
         expected = '' if a['name'] == 'workbench' else a['juniorMessage']
         assert row.locator('[data-message]').inner_text() == expected
         if a['name'] == 'editable':
             assert expected and 'not official evidence' in expected
         assert row.locator('[data-message]').get_attribute('title') == a['message']
-    assert page.locator('[data-ov="deliverables"] [data-artifact="report"] .ov-deliverable-label').inner_text() == \
-        'Report · study.html'
-    assert page.locator('[data-artifact="workbench"] [data-status-chip]').inner_text() == 'yours'
+    assert drawer.locator('[data-artifact="report"] .ov-deliverable-label').inner_text() == 'Report · study.html'
+    assert drawer.locator('[data-artifact="workbench"] [data-status-chip]').inner_text() == 'yours'
     assert page.locator('[data-write="render"]').count() == 0
-    page.get_by_role('button', name='Open the report in the browser').click()
+    drawer.get_by_role('button', name='Open the report in the browser').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'report'}
-    page.get_by_role('button', name='Open workbench in the editor').click()
+    drawer.get_by_role('button', name='Open workbench in the editor').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'workbench'}
     # The local launch (ADR 0004 "local launch"): read the generated notebook, edit the workbench.
-    page.get_by_role('button', name='Open in Marimo (read)').click()
+    drawer.get_by_role('button', name='Open in Marimo (read)').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_marimo', 'artifact': 'notebook'}
-    page.locator('[data-artifact="workbench"]').get_by_role('button', name='Open in Marimo (edit)').click()
+    drawer.locator('[data-artifact="workbench"]').get_by_role('button', name='Open in Marimo (edit)').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_marimo', 'artifact': 'workbench'}
     # The two "edit" buttons have distinct accessible names that name their deliverable, and
     # each starts with its visible text.
-    names = page.locator('[data-ov="deliverables"] [data-marimo]').evaluate_all(
+    names = drawer.locator('[data-marimo]').evaluate_all(
         'bs => bs.map(b => [b.dataset.marimo, b.getAttribute("aria-label"), b.textContent])')
     assert names == [['notebook', 'Open in Marimo (read): Study notebook', 'Open in Marimo (read)'],
                      ['editable', 'Open in Marimo (edit): Editable study copy', 'Open in Marimo (edit)'],
                      ['workbench', 'Open in Marimo (edit): Your workbench', 'Open in Marimo (edit)']]
-    page.get_by_role('button', name='Open in Marimo (edit): Editable study copy', exact=True).click()
+    drawer.get_by_role('button', name='Open in Marimo (edit): Editable study copy', exact=True).click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_marimo', 'artifact': 'editable'}
-    page.get_by_role('button', name='Open in Marimo (edit): Your workbench', exact=True).click()
-    assert panel.posted()[-1] == {'v': 2, 'type': 'open_marimo', 'artifact': 'workbench'}
-    assert page.locator('[data-launch="notebook"]').inner_text() == MARIMO['notebook']
-    assert page.locator('[data-launch="workbench"]').inner_text() == MARIMO['workbench']
-    assert MARIMO['kernel'] in page.locator('[data-kernel]').inner_text()
+    assert drawer.locator('[data-launch="notebook"]').inner_text() == MARIMO['notebook']
+    assert drawer.locator('[data-launch="workbench"]').inner_text() == MARIMO['workbench']
+    assert MARIMO['kernel'] in drawer.locator('[data-kernel]').inner_text()
     assert_clean(panel)
 
 
 def test_ov7_reviewer_has_no_marimo_edit(open_panel, binary):
     panel = opened(open_panel, binary, reviewer=True, marimo=MARIMO)
-    page = panel.page
-    assert page.locator('[data-marimo="workbench"]').count() == 0
-    assert page.locator('[data-marimo="notebook"]').count() == 1
+    drawer = deliverables(panel)
+    assert drawer.locator('[data-marimo="workbench"]').count() == 0
+    assert drawer.locator('[data-marimo="notebook"]').count() == 1
     assert_clean(panel)
 
 
 def test_ov7_editable_study_notebook_opens_for_editing_and_reviewer_cannot_edit(open_panel, binary):
     summary = copy.deepcopy(binary)
-    # The engine emits the editable study notebook (main, 506180a); the fixture carries it.
     editable = next(a for a in summary['artifacts'] if a['name'] == 'editable')
     assert editable['path'] == 'notebooks/study_editable.py'
-
     panel = opened(open_panel, summary, marimo=MARIMO_EDITABLE)
-    row = panel.page.locator('[data-artifact="editable"]')
+    row = deliverables(panel).locator('[data-artifact="editable"]')
     assert row.locator('[data-status-chip]').inner_text() == 'yours'
     row.locator('[data-marimo="editable"]').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_marimo', 'artifact': 'editable'}
     assert panel.page.locator('[data-launch="editable"]').inner_text() == MARIMO_EDITABLE['editable']
     assert_clean(panel)
-
     reviewer = opened(open_panel, summary, reviewer=True, marimo=MARIMO_EDITABLE)
-    assert reviewer.page.locator('[data-marimo="editable"]').count() == 0
+    assert deliverables(reviewer).locator('[data-marimo="editable"]').count() == 0
     assert_clean(reviewer)
 
 
-def test_ov7_ov8_regenerate_when_stale_busy_and_outcome_with_problems(open_panel, health, payload):
+def test_ov7_ov8_todo3_regenerate_when_stale_busy_and_outcome_with_problems(open_panel, health, payload):
     panel = opened(open_panel, health)
     page = panel.page
-    button = page.locator('[data-write="render"]')
+    drawer = deliverables(panel)
+    assert page.locator('[data-block="todo"] [data-write="render"]').count() == 1, 'TODO-3: also in To handle'
+    button = drawer.locator('[data-write="render"]')
     assert button.inner_text() == 'Regenerate the report and notebook'
     button.click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'render'}
@@ -385,66 +348,57 @@ def test_ov7_ov8_regenerate_when_stale_busy_and_outcome_with_problems(open_panel
     panel.send({'type': 'outcome', 'op': 'W5', 'kind': 'ok_with_problems', 'target': 'render', 'exitCode': 3,
                 'revision': 26, 'artifacts': artifacts})
     panel.send({'type': 'busy', 'busy': False, 'op': 'W5', 'target': 'render'})
-    out = page.locator('[data-ov="deliverables"] [data-outcome="ok_with_problems"]')
+    out = drawer.locator('[data-ov="deliverables"] [data-outcome="ok_with_problems"]')
     assert out.locator('.title').inner_text() == 'Regenerated with problems'
     assert out.locator('li').all_inner_texts() == [a['message'] for a in artifacts]
-    assert page.locator('#outcome [data-outcome]').count() == 0, 'shown in place, not twice'
+    assert page.locator('#outcome [data-outcome]').count() == 0, 'shown in place, not in a global region'
     assert_clean(panel)
 
 
 def test_ov8_regenerate_success_lists_each_message(open_panel, health, payload):
     panel = opened(open_panel, health)
+    drawer = deliverables(panel)
     done = payload('render.binary')['artifacts']
     artifacts = [{'name': n, 'status': a['status'], 'message': a['message']} for n, a in done.items()]
     panel.send({'type': 'outcome', 'op': 'W5', 'kind': 'ok', 'target': 'render', 'exitCode': 0, 'revision': 26,
                 'artifacts': artifacts})
-    out = panel.page.locator('[data-ov="deliverables"] [data-outcome="ok"]')
+    out = drawer.locator('[data-ov="deliverables"] [data-outcome="ok"]')
     assert out.locator('.title').inner_text() == 'Regenerated the report and notebook.'
     assert out.locator('li').all_inner_texts() == [a['message'] for a in artifacts]
     assert_clean(panel)
 
 
-# --- Health (§6.1.5) -------------------------------------------------------------------------
+# --- HE-1, HE-2 → TODO-2: interrupted runs ------------------------------------------------------------
 
 @pytest.mark.parametrize('scheme', THEMES)
-def test_he1_he2_execution_cards_are_read_only_ask_in_the_chat_and_copy_a_question(open_panel, health, scheme):
+def test_he1_he2_todo2_interrupted_runs_are_read_only_and_copy_a_question(open_panel, health, scheme):
     """R31 (owner decision 2026-10-27, ADR 0004 amendment): the acknowledgement of an
-    interrupted execution is made in the chat. The card says so, explains why words and not an
-    "ok" button, and copies a ready question; it has no words field and no write."""
+    interrupted execution is made in the chat. Each run says so and copies a ready question; no
+    words field, no write, no restart (HE-2)."""
     panel = opened(open_panel, health, scheme=scheme)
     page = panel.page
-    cards = page.locator('[data-execution-card]')
-    assert cards.evaluate_all('cs => cs.map(c => c.dataset.executionCard)') == [INTERRUPTED, SUSPECTED]
-    card = page.locator(f'[data-execution-card="{INTERRUPTED}"]')
-    # WP-I: the engine names the activity policy.evaluation (policy.evaluate is the CLI alias).
-    assert card.locator('h4').inner_text() == 'policy.evaluation: the outcome is unknown. Nothing will be restarted.'
-    assert card.locator('textarea').count() == 0, 'no words field: the panel takes no words'
+    items = page.locator('[data-block="todo"] [data-execution-card]')
+    assert items.evaluate_all('cs => cs.map(c => c.dataset.executionCard)') == [INTERRUPTED, SUSPECTED, LATE]
+    run = page.locator(f'[data-execution-card="{INTERRUPTED}"]')
+    what = page.evaluate("() => globalThis.Hypotrail.copy.page.activities['policy.evaluation']")
+    assert what, 'the activity in words'
+    assert run.inner_text().startswith('Interrupted run · ')
+    assert f'{what} stopped before it finished; its outcome is unknown. Say so in the chat, in your own words: ' \
+           'this panel records nothing.' in run.inner_text()
+    assert page.locator('textarea').count() == 0, 'no words field: the panel takes no words'
     assert page.locator('[data-write="acknowledge"]').count() == 0
-    assert page.get_by_role('button', name='Acknowledge in my words').count() == 0
-    assert card.locator('[data-ack-in-chat]').inner_text() == (
-        'Acknowledging this interruption is done in the chat, in your own words: say there that you know this run '
-        "was interrupted and that its outcome is unknown. 'ok' alone is not enough. This panel records nothing.")
-    more = card.locator('details[data-more="ack"]')
-    assert more.locator('summary').inner_text().endswith('Why words, and not an "ok" button?')
-    more.locator('summary').click()
-    assert 'only copies the question' in more.inner_text()
-    # HE-2: no restart and no run control; the line points to the chat.
-    assert card.locator('[data-rerun]').inner_text() == 'Ask in the chat, to acknowledge it or to run it again.'
-    names = page.locator('#panel-overview button').all_inner_texts()
-    assert not [n for n in names if re.match(r'(Restart|Run|Rerun)\b', n)], names
+    names = page.locator('#main button').all_inner_texts()
+    assert not [n for n in names if re.match(r'(Restart|Run|Rerun|Acknowledge)\b', n)], names
     assert page.locator('[data-write="run_eda"], [data-write="propose"]').count() == 0
-    # The one control copies a ready question for the chat (the agent bridge, not a write).
-    copy_button = card.locator(f'[data-ask-execution="{INTERRUPTED}"]')
-    assert copy_button.inner_text() == 'Copy the question' and copy_button.get_attribute('data-write') is None
+    copy_button = run.locator(f'[data-ask-execution="{INTERRUPTED}"]')
+    assert copy_button.get_attribute('data-write') is None
     copy_button.click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'execution', 'id': INTERRUPTED},
-                                  'question': ('A run stopped before it finished and its outcome is unknown: what do we do? '
-                                               'I want to acknowledge it in my own words, or run it again.'),
-                                  'mode': 'copy'}
+                                  'question': f'{what} was interrupted; what should we do?', 'mode': 'copy'}
     assert not [m for m in panel.posted() if m['type'] == 'acknowledge']
-    late = page.locator('[data-late-item]')
-    assert late.inner_text() == ('eda.rate_by: a result was computed for a state that no longer holds; '
-                                 'it is stored, not used.')
+    late = page.locator(f'[data-execution-card="{LATE}"]')
+    assert late.inner_text().startswith('Late result · ')
+    assert late.inner_text().endswith('a result was computed for a state that no longer holds; it is stored, not used.')
     assert late.locator('button, textarea').count() == 0
     assert_clean(panel)
 
@@ -461,41 +415,48 @@ def test_r31_an_acknowledgement_outcome_of_an_older_extension_is_dropped(open_pa
     assert_clean(panel)
 
 
-def test_he3_checks_load_on_expand_show_findings_counts_and_open(open_panel, health, model):
+# --- HE-3 → TOOL-6, TODO-4: the checks -----------------------------------------------------------------
+
+def test_he3_todo4_checks_load_on_expand_show_findings_counts_and_open(open_panel, health, model):
     panel = opened(open_panel, health)
     page = panel.page
+    deliverables(panel)
     summary = page.locator('[data-check-summary]')
     assert summary.inner_text() == 'Checks of the deliverables'
     assert not [m for m in panel.posted() if m.get('view') == 'check'], 'not read until expanded'
-    summary.click()
+    click_fold(page, 'checks')
     assert page.locator('[data-check-loading]').inner_text() == 'Running the checks...'
     assert panel.posted()[-1] == {'v': 2, 'type': 'load', 'view': 'check'}
     panel.view_data('check', model('check', 'check.binary'))
     assert summary.inner_text() == 'Checks of the deliverables · 1 error, 1 warning'
-    stale = page.locator('[data-finding="stale_number"]')
+    drawer = page.locator('[data-drawer="deliverables"]')
+    stale = drawer.locator('[data-finding="stale_number"]')
     assert stale.locator('.ov-severity').inner_text().lower() == 'error'
     assert stale.locator('[data-finding-message]').inner_text() == '11.0% cites result b7e3c1d0, which is not current.'
     assert stale.locator('[data-where]').inner_text() == 'reports/study.html'
+    # TODO-4: an error finding is also in To handle.
+    assert page.locator('[data-block="todo"] [data-todo="checks"] [data-finding="stale_number"]').count() == 1
     stale.get_by_role('button', name='Open reports/study.html').click()
     # WP-I (U1 request): from v1 the report opens at the cited result's anchor and an
     # editor deliverable at the finding's line (open_artifact.resultId and .line).
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'report',
                                   'resultId': 'b7e3c1d09a4f5e6b8c2d1f0e3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b'}
-    page.locator('[data-finding="causal_wording"]').get_by_role('button').click()
+    drawer.locator('[data-finding="causal_wording"]').get_by_role('button').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'workbench', 'line': 42}
     loads = [m for m in panel.posted() if m.get('view') == 'check']
     assert len(loads) == 1, 'cached per revision: one read'
     panel.view_data('check', model('check', 'check.binary.clean'))
     assert summary.inner_text() == 'Checks of the deliverables · clean'
+    assert page.locator('[data-todo="checks"]').count() == 0
     assert_clean(panel)
 
 
 def test_he3_at_v2_open_goes_to_the_cited_result_anchor(open_panel, health, model, payload):
     panel = opened(open_panel, health, stage='v2')
     page = panel.page
-    expand(page)
+    expand(panel)
     panel.view_data('check', model('check', 'check.binary'))
-    page.locator('[data-finding="stale_number"]').get_by_role('button').click()
+    page.locator('[data-drawer="deliverables"] [data-finding="stale_number"]').get_by_role('button').click()
     rid = payload('check.binary')['findings'][0]['details']['result_id']
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'report', 'resultId': rid}
     assert_clean(panel)
@@ -504,7 +465,7 @@ def test_he3_at_v2_open_goes_to_the_cited_result_anchor(open_panel, health, mode
 def test_checks_stale_and_failed_states(open_panel, health, model):
     panel = opened(open_panel, health)
     page = panel.page
-    expand(page)
+    expand(panel)
     panel.send({'type': 'load_error', 'view': 'check', 'message': 'The hypotrail CLI did not print one JSON document.',
                 'detail': 'stderr'})
     error = page.locator('[data-check-error]')
@@ -522,144 +483,65 @@ def test_checks_stale_and_failed_states(open_panel, health, model):
     assert stale.locator('[data-finding]').count() == 2, 'older findings stay visible while updating'
     panel.view_data('check', model('check', 'check.binary'), revision=27)
     assert page.locator('[data-updating="check"]').count() == 0, 'fresh findings are not marked'
-    assert page.locator('[data-finding]').count() == 2
+    assert page.locator('[data-drawer="deliverables"] [data-finding]').count() == 2
     assert_clean(panel)
 
 
-def test_not_yet_defensible_and_alert_navigation_to_health(open_panel, health):
-    panel = opened(open_panel, health)
-    page = panel.page
-    # WP-A5: every limit once, with its severity, blocking first; the junior variant (or
-    # the panel's words for an id) as text, never a text written for the agent.
-    nyd = page.locator('[data-health="nyd"]')
-    top = health['notYetDefensible']['top']
-    ids = nyd.locator('li[data-nyd]').evaluate_all('ls => ls.map(l => l.dataset.nyd)')
-    assert sorted(ids) == sorted([i['id'] for i in top] + health['notYetDefensible']['more'])
-    assert len(ids) == len(set(ids)), 'each limit is listed once'
-    severities = nyd.locator('li[data-nyd]').evaluate_all('ls => ls.map(l => l.dataset.severity)')
-    order = ['blocking', 'caveat', 'sealed', 'context']
-    assert severities == sorted(severities, key=order.index)
-    assert severities[0] == 'blocking'
-    for i in top:
-        text = nyd.locator(f'li[data-nyd="{i["id"]}"] [data-limit-text]').inner_text()
-        assert text == (i['juniorText'] or i['text'])
-        if i['audience'] == 'agent':
-            assert i['text'] not in nyd.inner_text()
-    assert nyd.locator('li[data-nyd="no_causality"] [data-chip]').inner_text() == 'context'
-    assert 'no_causality' not in nyd.inner_text(), 'no raw id as text'
-    page.locator('[role="tab"][data-tab="decisions"]').click()
-    assert page.locator('[data-alert="interrupted_executions"]').count() == 0, 'one alert per event'
-    page.locator('[data-alert="outcome_unknown"] button').click()
-    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'overview'
-    focused = page.evaluate('document.activeElement.closest("[data-nav]").dataset.nav')
-    assert focused == 'limit:outcome_unknown'
-    assert page.locator(f'[data-nav="limit:outcome_unknown"] [data-execution-card="{SUSPECTED}"]').count() == 1
-    navs = page.locator('#panel-overview [data-nav]').evaluate_all('ns => ns.map(n => n.dataset.nav)')
-    assert len(navs) == len(set(navs)), 'navigation targets are unique'
-    assert_clean(panel)
-
-
-def test_navigation_focuses_an_h4_heading_of_its_own_target(open_panel, health):
-    # WP-I (U1 request): the frame focuses the target's own h2, h3, or h4, never the
-    # heading of a navigation target nested inside it.
-    panel = opened(open_panel, health)
-    page = panel.page
-    panel.send({'type': 'navigate', 'tab': 'overview', 'kind': 'execution', 'id': INTERRUPTED})
-    assert page.evaluate('document.activeElement.tagName') == 'H4'
-    assert page.evaluate('document.activeElement.id') == f'ov-exec-{INTERRUPTED}'
-    panel.send({'type': 'navigate', 'tab': 'overview', 'kind': 'limit', 'id': 'outcome_unknown'})
-    assert page.evaluate('document.activeElement.dataset.nav') == 'limit:outcome_unknown'
-    assert_clean(panel)
-
-
-# --- states: reviewer, v0, loading, accessibility, vocabulary --------------------------------
+# --- states: reviewer, v0, loading, vocabulary ------------------------------------------------------
 
 @pytest.mark.parametrize('scheme', THEMES)
-def test_rv2_reviewer_overview_has_no_write_control_and_keeps_reads(open_panel, health, model, scheme):
+def test_rv2_reviewer_has_no_write_control_and_keeps_reads(open_panel, health, model, scheme):
     panel = opened(open_panel, health, reviewer=True, scheme=scheme)
     page = panel.page
+    drawer = deliverables(panel)
     assert page.locator('[data-write]').count() == 0
     assert page.locator('textarea').count() == 0
     assert page.get_by_role('button', name='Regenerate the report and notebook').count() == 0
-    assert page.get_by_role('button', name='Acknowledge in my words').count() == 0
-    assert page.locator('[data-execution-card]').count() == 2, 'the cards are still read'
-    page.get_by_role('button', name='Open the report in the browser').click()
+    assert page.locator('[data-execution-card]').count() == 3, 'the runs are still read'
+    drawer.get_by_role('button', name='Open the report in the browser').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'report'}
-    expand(page)
+    click_fold(page, 'checks')
     panel.view_data('check', model('check', 'check.binary'))
-    assert page.locator('[data-finding]').count() == 2
+    assert drawer.locator('[data-finding]').count() == 2
     assert_clean(panel)
 
 
 def test_v0_shows_the_v0_subset_only(open_panel, health):
     panel = opened(open_panel, health, stage='v0')
     page = panel.page
-    # WP-A5: v0 has the next move, the plan, where we are, the limits, and the deliverables.
-    # Lesson style: the next move is in the band above (every stage); the tab has the rest.
-    assert page.locator('[data-band] [data-ov]').evaluate_all('ss => ss.map(s => s.dataset.ov)') == ['hero']
-    assert page.locator('#panel-overview [data-ov]').evaluate_all('ss => ss.map(s => s.dataset.ov)') == \
-        ['map', 'where', 'limits', 'deliverables', 'guide']
-    assert page.locator('[data-recap-details] li').count() == 5
-    for hook in ['[data-digest]', '[data-check]', '[data-write="render"]', '[data-ov="health"]',
-                 '[data-write="acknowledge"]', '[data-stage]']:
+    open_all(panel)
+    for hook in ['[data-block="since"]', '[data-digest]', '[data-check]', '[data-write="render"]',
+                 '[data-write="acknowledge"]', '[data-stage]', '[data-fold-id="effects"]', '[data-history]']:
         assert page.locator(hook).count() == 0, hook
+    assert page.locator('[data-drawer="deliverables"] [data-artifact]').count() == 4
     assert_clean(panel)
 
 
-def test_v1_sections_carry_their_stage_and_loading_is_busy(open_panel, binary):
+def test_v1_blocks_carry_their_stage_and_loading_is_busy(open_panel, binary):
     panel = open_panel()
-    panel.init(stage='v1', task='binary')
+    panel.init(stage='v1', task='binary', panelContract=2)
     page = panel.page
-    assert page.locator('#panel-overview').get_attribute('aria-busy') == 'true'
-    assert page.locator('#panel-overview').inner_text() == 'Reading the study...'
+    assert page.locator('#main').get_attribute('aria-busy') == 'true'
+    assert 'Reading' in page.locator('#main').inner_text()
     panel.snapshot(binary)
-    for hook in ['where', 'map', 'deliverables']:
-        assert page.locator(f'[data-ov="{hook}"]').get_attribute('data-stage') == 'v1', hook
-    assert page.locator('.ov-grid').get_attribute('data-stage') == 'v1'
-    assert page.locator('[data-ov="hero"]').get_attribute('data-stage') is None, 'the next move is in every stage'
-    assert page.locator('[data-ov="health"]').count() == 0, 'Health shows nothing when nothing is wrong'
+    assert page.locator('#main').get_attribute('aria-busy') is None
+    assert page.locator('[data-block="since"]').get_attribute('data-stage') == 'v1'
+    assert page.locator('[data-fold-id="effects"]').get_attribute('data-stage') == 'v1'
+    assert page.locator('[data-block="now"]').get_attribute('data-stage') is None, 'Now is in every stage'
     assert_clean(panel)
 
 
 @pytest.mark.parametrize('scheme', THEMES)
-def test_a11y_names_labels_headings_and_tabindex(open_panel, health, scheme):
-    panel = opened(open_panel, health, scheme=scheme)
-    page = panel.page
-    expand(page)
-    unnamed = page.evaluate("""() => [...document.querySelectorAll(
-        '#panel-overview button, #panel-overview select, #panel-overview textarea, #panel-overview summary')].filter(e => {
-          const label = e.id && document.querySelector(`label[for="${e.id}"]`);
-          return !((e.getAttribute('aria-label') || '').trim() || (e.textContent || '').trim() || (label && label.textContent.trim()));
-        }).map(e => e.outerHTML)""")
-    assert unnamed == []
-    assert page.locator('#panel-overview [tabindex]:not([tabindex="-1"]):not([tabindex="0"])').count() == 0
-    # Lesson style (2026-10-27): section titles are chalk headings; the next move's title is in
-    # the band above the tabs, so the tab starts with what needs attention.
-    assert page.locator('[data-band] h2').all_text_contents() == ['A run stopped before it finished']
-    assert page.locator('#panel-overview h2').all_text_contents() == [
-        'Needs attention', 'The journey', 'Since your last session',
-        'What you cannot claim yet', 'Where we are', 'Your deliverables', 'How this panel works']
-    assert page.locator('#panel-overview section[aria-labelledby]').count() >= 5
-    button = page.get_by_role('button', name='Open the report in the browser')
-    button.focus()
-    page.keyboard.press('Shift+Tab')
-    page.keyboard.press('Tab')
-    assert page.evaluate('document.activeElement.getAttribute("aria-label")') == 'Open the report in the browser'
-    assert page.evaluate("getComputedStyle(document.activeElement).outlineStyle") != 'none', 'focus is visible'
-    assert_clean(panel)
-
-
-@pytest.mark.parametrize('scheme', THEMES)
-def test_inv12_regression_overview_holds_no_decision_rule_vocabulary(open_panel, regression, regression_health, model,
-                                                                    scheme):
+def test_inv12_regression_page_with_runs_and_a_stale_report_holds_no_decision_rule_vocabulary(
+        open_panel, regression, regression_health, model, scheme):
     for summary in (regression, regression_health):
         panel = opened(open_panel, summary, scheme=scheme)
         page = panel.page
-        expand(page)
+        open_all(panel)
         panel.view_data('check', model('check', 'check.binary.clean'))
         text = page.locator('body').inner_text()
         found = FORBIDDEN.search(text)
         assert not found, found and found.group(0)
         assert_clean(panel)
-    assert page.locator('[data-execution-card]').count() == 2
-    assert page.locator('[data-write="render"]').count() == 1
+    assert page.locator('[data-execution-card]').count() == 3
+    assert page.locator('[data-write="render"]').count() == 2, 'To handle and the drawer'

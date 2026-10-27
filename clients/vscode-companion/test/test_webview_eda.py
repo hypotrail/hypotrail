@@ -1,4 +1,7 @@
-"""Browser tests of the EDA tab (scope S, simulated browser; COMPANION-ADVANCED §6.3, WP-U4).
+"""Browser tests of the EDA figures (scope S, simulated browser; COMPANION-ADVANCED §A.3, WP-U4),
+re-pointed at the one page (ADR 0004 d13): the charts are folds of the exploration step in the
+path (PATH-5, PATH-7), the data card, quality check, banner and "Run another chart" are in the
+Data drawer (TOOL-1 to TOOL-3); ``panel_cases.show`` opens every fold as a reader would.
 
 The real document under the real CSP, offline, with the models of ``lib/models/eda.js`` built
 from the WP-0 fixtures ``evidence.binary`` (Bank values) and ``evidence.regression`` (Auto MPG
@@ -22,6 +25,7 @@ from pathlib import Path
 import pytest
 
 from conftest import inline_styles_ok
+from panel_cases import click_fold, show, with_results
 import yaml
 
 from mlkit.study import cite
@@ -49,12 +53,11 @@ NON_CAUSAL = {
 
 def open_eda(open_panel, model, task='binary', scheme='light', eda=None, reviewer=False):
     panel = open_panel(color_scheme=scheme)
-    panel.init(stage='v2', task=task, reviewer=reviewer)
-    panel.snapshot(model('summary', SUMMARY[task]))
-    panel.page.locator('[role="tab"][data-tab="eda"]').click()
-    assert {'v': 2, 'type': 'load', 'view': 'eda'} in panel.posted(), 'the tab asks for its data view'
+    panel.init(stage='v2', task=task, reviewer=reviewer, panelContract=2)
     eda_model = eda if eda is not None else model('eda', EVIDENCE[task])
-    panel.view_data('eda', eda_model)
+    panel.snapshot(with_results(model('summary', SUMMARY[task]), eda_model['cards']))
+    show(panel, eda=eda_model)
+    assert {'v': 2, 'type': 'load', 'view': 'eda'} in panel.posted(), 'an opened figure asks for its data view'
     return panel, eda_model
 
 
@@ -96,31 +99,29 @@ def _expected_format(formats, model_fmt, activity, path):
 
 @pytest.mark.parametrize('scheme', ['light', 'dark'])
 @pytest.mark.parametrize('task', ['binary', 'regression'])
-def test_gallery_shows_the_registered_eda_results_in_order(open_panel, model, task, scheme):
+def test_the_path_files_the_registered_eda_results_in_reading_order(open_panel, model, task, scheme):
+    """PATH-5, PATH-7 (ADR 0004 d13): the exploration step of the path lists the registered EDA
+    results in the reading order of the former gallery (the target, special values, the
+    signal, by-column charts, distributions); the gallery's "last card open" is withdrawn with
+    the tab: every figure is a fold of the path, opened here."""
     panel, eda = open_eda(open_panel, model, task, scheme)
     page = panel.page
-    slots = page.locator('[data-eda-card]').evaluate_all('cs => cs.map(c => c.dataset.edaCard)')
+    slots = page.locator('[data-block="path"] [data-eda-card]').evaluate_all('cs => cs.map(c => c.dataset.edaCard)')
     assert slots == ORDER[task]
     assert [c['slot'] for c in eda['cards'] if c['kind'] != 'quality'] == ORDER[task]
     # Each card names its activity and result id in its faint source line (v0.3, WP-E2: six
-    # characters, never in the prose); the source line opens Evidence.
-    gallery = [item for item in eda['cards'] if item['kind'] != 'quality']
+    # characters, never in the prose).
     for card in eda['cards']:
         hook = "data-quality-card" if card["kind"] == "quality" else "data-eda-card"
-        if card['kind'] != 'quality':
-            details = page.locator(f'[{hook}="{card["slot"]}"] details.eda-analysis')
-            is_open = details.get_attribute('open')
-            assert is_open == ('' if card['slot'] == gallery[-1]['slot'] else None)
-            if is_open is None:
-                details.locator(':scope > summary').click()
-        chip = page.locator(f'[{hook}="{card["slot"]}"] [data-chip]')
+        chip = page.locator(f'[data-drawer="data"] [{hook}="{card["slot"]}"] [data-chip]' if card['kind'] == 'quality'
+                            else f'[data-block="path"] [{hook}="{card["slot"]}"] [data-chip]')
         assert chip.get_attribute('data-chip') == card['resultId']
         assert card['resultId'][:6] in chip.inner_text()
         assert card['activity'] in chip.inner_text()
-    assert page.locator('#panel-eda [data-placeholder]').count() == 0
+    assert page.locator('#main [data-placeholder]').count() == 0
     assert inline_styles_ok(page), 'no inline style attribute (CSP)'
     # v0.3 (WP-E2): the charts are HTML grids (and SVG for the box plot), each an image with a name.
-    assert page.locator('#panel-eda [role="img"][aria-label]').count() >= 3
+    assert page.locator('#main [role="img"][aria-label]').count() >= 3
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
 
@@ -130,7 +131,7 @@ def test_ed4_every_number_is_the_engine_value_cited_with_its_result_and_precisio
     results = _values_by_rid(payload(EVIDENCE[task]))
     formats = _yaml_formats()
     model_fmt = json.loads(node("process.stdout.write(JSON.stringify(require('./lib/models/eda').FMT))"))
-    cited = panel.page.locator('#panel-eda [data-eda-card] [data-result-id]').evaluate_all(
+    cited = panel.page.locator('#main [data-eda-card] [data-result-id]').evaluate_all(
         """ns => ns.map(n => ({card: n.closest('[data-eda-card]').dataset.edaCard,
               rid: n.dataset.resultId, path: n.dataset.path, value: n.dataset.value,
               text: n.textContent, svg: n.namespaceURI.endsWith('svg')}))""")
@@ -221,12 +222,14 @@ def test_ed6_regression_cards_and_no_decision_rule_or_binary_vocabulary(open_pan
     page = panel.page
     assert page.locator('[data-eda-card="eda.target_summary"] svg.ht-boxplot').count() == 1
     assert page.locator('[data-eda-card="eda.mean_by:model_year"] [data-chart="intervals"]').count() == 1
-    text = page.locator('#panel-eda').text_content()  # v0.3: also the closed "Why?" texts
+    text = page.locator('#main').text_content()  # v0.3: also the closed "Why?" texts
     assert not FORBIDDEN.search(text), FORBIDDEN.search(text).group(0)
     # The panel's own copy has no binary vocabulary; engine texts (notes, warnings,
-    # table cells of meanings and labels) are task-aware already and shown verbatim.
+    # table cells of meanings and labels) are task-aware already and shown verbatim. The
+    # exploration's places on the page: its step in the path and the Data drawer.
     own = page.evaluate("""() => {
-      const panel = document.getElementById('panel-eda').cloneNode(true);
+      const panel = document.createElement('div');
+      for (const n of document.querySelectorAll('[data-step="train_eda"], [data-drawer="data"]')) panel.appendChild(n.cloneNode(true));
       // WP-A7: a card's title is the engine's question (engine text, shown as it is).
       for (const n of panel.querySelectorAll('[data-note], [data-warnings], td, [data-question]')) n.remove();
       return panel.textContent;
@@ -242,7 +245,6 @@ def test_ed6_regression_cards_and_no_decision_rule_or_binary_vocabulary(open_pan
 def test_binary_target_card_introduces_the_term_first(open_panel, model):
     panel, eda = open_eda(open_panel, model, 'binary')
     card = panel.page.locator('[data-eda-card="eda.target_rate"]')
-    card.locator('details.eda-analysis > summary').click()
     term = card.locator('[data-term]')
     assert term.get_attribute('data-term') == 'class_imbalance'
     assert term.inner_text() == 'Class imbalance: one value of the target is much rarer.'
@@ -292,10 +294,10 @@ def test_ed2_cross_validation_counts_the_development_rows_read_never_train_0(ope
     banner = page.locator('.eda-banner').text_content()
     assert banner.startswith('Development rows only.')
     assert 'Development rows used to compare and choose, out of fold:' in banner
-    text = page.locator('#panel-eda').inner_text()
+    text = page.locator('#main').inner_text()
     assert 'train 0' not in text and 'validation rows stay unexplored' not in text
     assert 'Validation rows are never used here' not in text
-    assert page.locator('.eda-section-title').text_content() == 'Exploration of the development rows'
+    assert page.locator('[data-drawer="data"] .eda-section-title').text_content() == 'Exploration of the development rows'
     assert panel.clean()
 
 
@@ -308,7 +310,7 @@ def test_the_quality_ranges_drop_meaningless_cells(open_panel, model, payload):
     for r in ranges:
         r['declared'] = None
     panel, _ = open_eda(open_panel, model, 'binary', eda=model('eda', raw))
-    table = panel.page.locator('[data-quality-card="eda.quality"] table')
+    table = panel.page.locator('[data-drawer="data"] [data-quality-card="eda.quality"] table')
     # v0.3 (WP-E2): the ranges table sits in a closed disclosure: read its text.
     heads = table.locator('th').all_text_contents()
     assert 'Outside the declared range' not in heads, heads
@@ -343,7 +345,8 @@ def test_request_lists_only_catalog_columns_and_posts_w4(open_panel, model, payl
     before = len(panel.posted())
     show.click()
     assert len(panel.posted()) == before, '"Show it" does not rerun'
-    assert page.evaluate('document.activeElement.closest("[data-eda-card]").dataset.edaCard') == 'eda.distribution:age'
+    # The one page: "Show it" goes to the chart's place in the path (NAV-1).
+    assert page.evaluate('document.activeElement.closest("[data-anchor]").dataset.anchor') == 'path:train_eda/eda.distribution:age'
     # The target y accepts a distribution only.
     page.locator('#eda-variable').select_option('y')
     assert page.locator('#eda-chart option').all_inner_texts() == ['Distribution']
@@ -355,11 +358,11 @@ def test_request_lists_only_catalog_columns_and_posts_w4(open_panel, model, payl
     assert panel.posted()[-1] == {'v': 2, 'type': 'run_eda', 'activity': 'eda.rate_by', 'column': 'balance',
                                   'revision': eda['revision']}
     # ED-5: no control names validation as a partition choice.
-    controls = page.locator('#panel-eda').locator('select, option, button, input, label').all_inner_texts()
+    controls = page.locator('#main').locator('select, option, button, input, label').all_inner_texts()
     assert not any('validation' in t.lower() for t in controls), controls
-    assert page.locator('#panel-eda input[type="radio"], #panel-eda [data-partition]').count() == 0
+    assert page.locator('#main input[type="radio"], #main [data-partition]').count() == 0
     # Free exploration: the workbench.
-    page.locator('[data-open="workbench"]').click()
+    page.locator('[data-drawer="data"] [data-open="workbench"]').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'workbench'}
     assert 'For free exploration, use your workbench notebook' in page.locator('[data-hint]').text_content()
     assert panel.clean()
@@ -407,12 +410,12 @@ def test_busy_refusal_and_not_promoted_outcomes_show_in_the_request_card(open_pa
 def test_reviewer_mode_has_no_run_control(open_panel, model):
     panel, _ = open_eda(open_panel, model, 'binary', reviewer=True)
     page = panel.page
-    assert page.locator('#panel-eda [data-write]').count() == 0
+    assert page.locator('#main [data-write]').count() == 0
     page.locator('#eda-variable').select_option('balance')
     assert page.locator('#eda-run').count() == 0
     page.locator('#eda-variable').select_option('age')
     assert page.locator('#eda-show').count() == 1, 'navigation stays'
-    assert page.locator('[data-open="workbench"]').count() == 1
+    assert page.locator('[data-drawer="data"] [data-open="workbench"]').count() == 1
 
 
 def test_stale_card_is_listed_without_figures(open_panel, model, payload):
@@ -420,14 +423,19 @@ def test_stale_card_is_listed_without_figures(open_panel, model, payload):
     for r in p['results']:
         if r['slot'] == 'eda.rate_by:job':
             r.update(current=False, stale_reason='upstream_changed', values=None, headline=None)
-    panel, _ = open_eda(open_panel, model, 'binary', eda=model('eda', p))
-    card = panel.page.locator('[data-eda-card="eda.rate_by:job"]')
-    card.locator('details.eda-analysis > summary').click()
-    assert card.get_attribute('data-current') == 'false'
-    assert card.locator('[data-stale]').inner_text() == 'Stale · not cited'
+    summary = model('summary', SUMMARY['binary'])
+    summary['results']['eda.rate_by:job'].update(current=False, staleReason='upstream_changed')
+    panel = open_panel()
+    panel.init(stage='v2', task='binary', panelContract=2)
+    panel.snapshot(summary)
+    show(panel, eda=model('eda', p))
+    # HON-4: on the one page a stale result is a line of its step, without figures.
+    card = panel.page.locator('[data-block="path"] [data-result-slot="eda.rate_by:job"]')
+    assert card.get_attribute('data-stale') == 'true'
+    assert card.locator('.ht-badge-stale').text_content() == 'Stale'
     assert card.locator('[data-result-id]').count() == 0
-    assert card.locator('svg').count() == 0
-    assert not re.search(r'\d', card.locator('h3').inner_text() + card.locator('[data-stale]').inner_text())
+    assert card.locator('svg, [role="img"], details').count() == 0
+    assert not re.search(r'\d', card.inner_text())
     # The request does not offer "Show it" for a stale result.
     page = panel.page
     page.locator('#eda-variable').select_option('job')
@@ -453,11 +461,11 @@ def test_empty_and_not_runnable_states(open_panel, model, payload):
 
 def test_loading_error_and_updating_states(open_panel, model):
     panel = open_panel()
-    panel.init(stage='v2', task='binary')
+    panel.init(stage='v2', task='binary', panelContract=2)
     snap = model('summary', 'summary.binary')
     panel.snapshot(snap)
     page = panel.page
-    page.locator('[role="tab"][data-tab="eda"]').click()
+    click_fold(page, 't-data')
     assert page.locator('[data-eda-loading]').get_attribute('aria-busy') == 'true'
     panel.send({'type': 'load_error', 'view': 'eda', 'message': 'integrity_error: the state failed its check.', 'detail': ''})
     alert = page.locator('[data-eda-error]')
@@ -469,13 +477,20 @@ def test_loading_error_and_updating_states(open_panel, model):
     assert page.locator('[data-updating]').inner_text() == 'Updating...'
 
 
-def test_chip_opens_the_result_in_evidence(open_panel, model):
+def test_chip_opens_where_the_result_comes_from_in_the_path(open_panel, model):
+    """NAV-1 (the one page; formerly "opens the result in Evidence"): a chart's source line
+    opens its "Where it comes from" fold, at the chart's anchor in the path."""
     panel, eda = open_eda(open_panel, model, 'binary')
     page = panel.page
-    card = page.locator('[data-eda-card="eda.rate_by:job"]')
-    card.locator('details.eda-analysis > summary').click()
-    card.locator('[data-chip]').click()
-    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'evidence'
+    page.evaluate("() => { Hypotrail.setFold('src-eda.rate_by:job', false); Hypotrail.rerender(); }")
+    assert page.locator('details[data-fold-id="src-eda.rate_by:job"][open]').count() == 0
+    card = page.locator('[data-block="path"] [data-eda-card="eda.rate_by:job"]')
+    chip = card.locator('[data-chip]')
+    assert chip.get_attribute('aria-label') == f"Where result {chip.get_attribute('data-chip')[:6]} comes from"
+    chip.click()
+    assert page.locator('details[data-fold-id="src-eda.rate_by:job"][open]').count() == 1
+    assert page.locator('[data-anchor="path:train_eda/eda.rate_by:job"]').count() == 1
+    assert panel.clean()
 
 
 def test_learning_layer_adds_the_explain_example_and_definition_when_already_read(open_panel, model):
@@ -491,7 +506,7 @@ def test_learning_layer_adds_the_explain_example_and_definition_when_already_rea
     example = page.locator('[data-example="base_rate"]')
     assert example.text_content() == 'Here 11.5%'
     assert example.locator('data').get_attribute('data-result-id') == rid
-    panel.init(stage='v2', task='binary', learningLayer=False)
+    panel.init(stage='v2', task='binary', learningLayer=False, panelContract=2)
     assert page.locator('[data-example]').count() == 0
 
     reg, _ = open_eda(open_panel, model, 'regression')

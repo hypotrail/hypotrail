@@ -7,7 +7,11 @@ session: VS Code's own webview host, theme variables, and message transport are 
 exercised.
 
 Migrated by WP-0 to protocol hypotrail.panel/2 (every message carries ``v: 2``, ``open``
-is ``open_artifact``, an outcome names its write ``op``); every v0 assertion is kept.
+is ``open_artifact``, an outcome names its write ``op``). Re-pointed at the one page (ADR 0004
+d13): the proposal is in Now, the stale report in To handle, the limits in the defensibility
+pill's popover, the deliverables in their drawer. The recap under Details went with OV-1/OV-2
+(withdrawn, COMPANION-ADVANCED §18); an open note shows when the engine waits for it
+(``resolve_hold``), no longer on the proposal card.
 
 Run: ``uv run --project framework python -m pytest -q clients/vscode-companion/test``
 (needs the ``browser`` group and Node.js).
@@ -17,6 +21,7 @@ from __future__ import annotations
 import pytest
 
 from conftest import NONCE
+from panel_cases import click_fold
 
 SUMMARY = {
     'schema': 'hypotrail.summary/1', 'ok': True, 'study': '/studies/my "study"', 'revision': 3,
@@ -87,43 +92,60 @@ def test_csp_blocks_a_script_without_the_nonce(opened):
     assert panel.violations(), 'and fired securitypolicyviolation'
 
 
-def test_the_proposal_card_is_read_only_and_asks_the_agent(opened, summary_model):
+def test_the_proposal_card_is_read_only_and_asks_the_agent(opened, summary_model, model):
     """WP-E1 (R23, ADR 0004 amendment): the v0 card has no words field and no write control."""
     page, requests, errors, _csp, _panel = opened
     _snapshot(page, summary_model)
-    card = page.locator('[data-proposal-card="p_1"]')
+    now = page.locator('[data-block="now"]')
+    assert now.get_attribute('data-now') == 'proposal'
+    card = now.locator('[data-proposal-card="p_1"]')
     # Study text is shown as text, never parsed as HTML.
     assert card.locator('blockquote[data-restatement="p_1"]').inner_text() == \
         'You predict <b>before</b> the first reminder.'
-    assert page.locator('b, i').count() == 0
-    assert 'wait for <i>my</i> manager' in card.locator('[data-hold="n_1"]').inner_text()
+    assert card.locator('blockquote b, blockquote i').count() == 0
     assert page.locator('textarea').count() == 0
     assert page.locator('[data-write], button[data-action]').count() == 0
-    assert card.locator('[data-answer-in-chat="p_1"] .title').inner_text() == 'Answer in the chat'
+    assert card.locator('[data-answer-in-chat]').inner_text().startswith('Answer in the chat')
     # No delegation control.
     assert page.locator('button').filter(has_text='delegat').count() == 0
-    card.locator('[data-ask-proposal="p_1"]').click()
-    assert _posted(page)[-1] == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'proposal', 'id': 'p_1'},
-                                 'question': 'Can you explain this proposal and what confirming it would change in my study?',
+    now.locator('[data-copy-question="prediction_time"]').click()
+    assert _posted(page)[-1] == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'step', 'id': 'prediction_time'},
+                                 'question': 'What does the prediction moment change in my study?',
                                  'mode': 'copy'}
+    # The junior's open note, when the engine waits for it, is text too.
+    held = model('summary', {**SUMMARY, 'next_action': {'kind': 'resolve_hold', 'decision': 'prediction_time',
+                                                         'message': 'Resolve the hold in the junior words.'}})
+    _snapshot(page, held)
+    hold = page.locator('[data-block="now"] [data-hold="n_1"]')
+    assert hold.inner_text() == 'wait for <i>my</i> manager'
+    assert hold.locator('i').count() == 0
     assert requests == [] and errors == []
 
 
 def test_panel_shows_recap_plan_artifacts_and_limits(opened, summary_model):
     page, *_ = opened
     _snapshot(page, summary_model)
-    # WP-A5: the first block is the next move; the recap of an engine without audience
-    # keys is kept, line by line, under Details.
-    assert page.locator('[data-recap-details] li').all_text_contents() == SUMMARY['recap']
-    hero = page.locator('[data-ov="hero"]')
-    assert hero.get_attribute('data-hero') == 'await_user_words'
-    assert hero.locator('[data-hero-title]').inner_text() == 'Answer the proposal on the prediction moment'
-    assert hero.locator('[data-hero-restatement="p_1"]').inner_text() == 'You predict <b>before</b> the first reminder.'
+    # Now holds the proposal; the path marks its step as the current one.
+    assert page.locator('[data-block="now"]').get_attribute('data-now-step') == 'prediction_time'
     assert page.locator('li[aria-current="step"]').count() == 1
     assert page.locator('li[aria-current="step"]').get_attribute('data-step') == 'prediction_time'
+    assert page.locator('[data-block="path"] [data-step]').evaluate_all('ns => ns.map(n => n.dataset.step)') == \
+        ['prediction_time', 'split']
+    # The stale report is in To handle.
+    assert page.locator('[data-block="todo"] [data-todo="deliverables"]').get_attribute('title') == \
+        'The report (reports/study.html) is stale.'
+    # The limits: the pill counts them, its popover lists each in words (PG-6, HON-9 fallback).
+    pill = page.locator('[data-pill="defensible"]')
+    assert pill.inner_text().endswith('· 2')
+    pill.click()
+    items = page.locator('[data-popover="def"] [data-item]')
+    assert items.evaluate_all('ns => ns.map(n => n.dataset.item)') == ['no_causality', 'workbench_not_tracked']
+    assert 'workbench_not_tracked' not in page.locator('[data-popover="def"]').inner_text(), 'in words'
+    # The deliverables' drawer opens the report.
+    page.keyboard.press('Escape')
+    assert page.locator('[data-popover="def"]').count() == 0
+    click_fold(page, 't-deliverables')
     assert page.locator('[data-artifact="report"] [data-status-chip]').inner_text() == 'out of date'
-    assert page.locator('[data-nyd="no_causality"] [data-limit-text]').inner_text() == 'Associations are not causes.'
-    assert page.locator('[data-nyd="workbench_not_tracked"]').count() == 1, 'the ids under "more" are listed in words'
     page.get_by_role('button', name='Open the report in the browser').click()
     assert _posted(page)[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'report'}
 
@@ -139,7 +161,8 @@ def test_a_new_revision_redraws_and_malformed_messages_are_ignored(opened, summa
     _send(page, {'type': 'busy', 'busy': True, 'op': 'W1', 'target': 'p_1'})
     page.evaluate('m => window.postMessage(m, "*")', {'type': 'snapshot', 'model': summary_model})
     assert page.locator('[data-proposal-card="p_1"]').count() == 1
-    assert page.locator('[data-revision]').get_attribute('data-revision') == '4'
+    page.locator('[data-more]').click()
+    assert 'revision 4' in page.locator('[data-more-menu] [data-refresh]').inner_text()
     assert page.evaluate('window.__x === undefined')
 
 

@@ -53,7 +53,7 @@
       notEvaluated: "Cette règle n'a pas encore été évaluée par le moteur : l'agent ne peut pas encore la proposer.",
       askEvaluate: rule => `Demander à l'agent d'évaluer la règle « ${rule} »`,
       askEvaluateQuestion: (rule, token) => `Pouvez-vous évaluer la règle « ${rule} » (${token}), pour que je la compare aux règles déjà évaluées ?`,
-      askProposeQuestion: (rule, token) => `Pouvez-vous proposer la règle de décision « ${rule} » (${token}) ? Je l'ai regardée dans l'onglet Et si ?, et je répondrai à votre proposition dans le chat.`,
+      askProposeQuestion: (rule, token) => `Pouvez-vous proposer la règle de décision « ${rule} » (${token}) ? Je l'ai regardée dans Et si ?, et je répondrai à votre proposition dans le chat.`,
       askAbout: rule => `règle ${rule}`,
       gain: {
         title: 'Courbe de gain : part des positifs atteints',
@@ -103,7 +103,7 @@
       noEvaluation: "Le moteur n'a pas encore comparé les modèles. L'agent les compare dans le chat.",
       propose: "Demander à l'agent de proposer ce modèle",
       notEvaluated: "Le moteur n'a pas encore évalué ce modèle : l'agent ne peut pas encore le proposer.",
-      askProposeQuestion: (model, slot) => `Pouvez-vous proposer d'adopter le ${model} (${slot}) ? Je l'ai regardé dans l'onglet Et si ?, et je répondrai à votre proposition dans le chat.`,
+      askProposeQuestion: (model, slot) => `Pouvez-vous proposer d'adopter le ${model} (${slot}) ? Je l'ai regardé dans Et si ?, et je répondrai à votre proposition dans le chat.`,
       askAbout: model => `modèle ${model}`,
     },
   };

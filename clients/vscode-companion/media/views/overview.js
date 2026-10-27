@@ -1,26 +1,16 @@
-// Overview view (COMPANION-ADVANCED §6.1; WP-U1, restructured by WP-A5). Mockups:
-// docs/design/companion-v0.2-mockups/overview.html and deliverables.html.
+// Overview parts (COMPANION-ADVANCED §6.4, §6.7.4, TODO-3, TODO-4; formerly the Overview tab,
+// WP-U1, WP-A5). The one page (ADR 0004 d13) places them through media/views/page.js:
 //
-// Lesson style (2026-10-27, owner-approved mockup docs/plans/mockups/panel-lesson-style-fr.html):
-// the Overview contributes the band above the tabs, shown on every tab and at every stage:
-// the journey rail (the four moments and their steps, the current one pulsing), what remains,
-// and "Your next move" (§6.1.0) on the board: the one thing that waits for the junior, why it
-// matters, what supports it, a link to where it is answered, and one action, "Copy the
-// question" for the chat. The tab itself, after "At this step" (the frame), holds:
+//   since         "Since your last visit" (§6.4): the engine's digest, grouped in the panel's
+//                 words, the engine record under a disclosure (SINCE-1, SINCE-2)
+//   deliverables  the Deliverables drawer (§6.7.4): Open, the three Marimo launches,
+//                 Regenerate (W5, from v1) and the checks, read when their fold opens (TODO-4)
+//   findings      the check findings of To handle (TODO-4)
 //
-//   stage v0   the journey (the plan, blocker-aware), the notions of the moment (the sealed
-//              final test, the success criterion), where we are (goal, decisions in words),
-//              what you cannot claim yet (limits by severity, once), deliverables (Open file,
-//              Open in Marimo)
-//   stage v1+  Health only when something is wrong (an interrupted execution: read only,
-//              acknowledged in the chat, R31; alerts), the journey as the study map
-//              (moments), the notions, since your last session (grouped), what you cannot
-//              claim yet, where we are, deliverables (Regenerate W5, checks)
-//
-// Two-layer copy (§15.1): the primary sentences are the panel's own (media/copy/junior.js,
-// keyed by kind and id) or the engine's junior variants; an engine text written for the
-// agent appears only under a "Details" disclosure. Study text is always set as text
-// (INV-9). The panel takes no words of the junior here (R23, R31). No control restarts a run (HE-2).
+// Two-layer copy (§15.1): the primary sentences are the panel's own (media/copy/junior.js) or
+// the engine's junior variants; an engine text written for the agent appears only under a
+// "Details" disclosure. Study text is always set as text (INV-9). The panel takes no words
+// of the junior here (R23, R31). No control restarts a run (HE-2).
 (function (HT) {
   'use strict';
   const el = HT.el;
@@ -29,25 +19,11 @@
   const copy = () => HT.copy.overview;
   const J = () => HT.copy.junior;
   const RENDER_TARGET = 'render';
-  const MAP_STATUSES = ['done', 'awaiting_confirmation', 'needs_reconfirmation', 'ready', 'blocked', 'reopened'];
   const MAX_DIGEST = 4;
-  // WP-A7: the success criterion and the data preparation are decisions too (WP-A4).
-  // WP-B5: and the variant and the opening of the final test (WP-B1).
-  const DECISIONS = ['prediction_time', 'feature_availability', 'split', 'success_criterion', 'preprocessing', 'model_variant',
-    'policy', 'model_choice', 'final_test', 'conclusion'];
-  const CRITERION_TONE = { met: 'ok', uncertain: 'stale', not_met: 'error', not_assessed: 'neutral' };
 
   // View-local, not persisted: the chosen digest boundary, the checks expansion, and the
   // reads asked per version.
   const local = { since: null, checksOpen: false, asked: {} };
-
-  const taskOf = (model, ctx) => model.task || ctx.task || null;
-
-  /** A section of the board: its title in chalk, its content on an index card (lesson style). */
-  function section(id, title, children, attrs) {
-    return el('section', { 'aria-labelledby': id, className: 'ov-section', ...(attrs || {}) },
-      [el('h2', { id, text: title }), el('div', { className: 'card ov-body' }, children)]);
-  }
 
   /** Ask once per (view, version, variant) for a data view (CR.1: revision, currency, epoch). */
   function askOnce(ctx, view, extra) {
@@ -65,544 +41,12 @@
       el('summary', { text: label }),
       el('ul', {}, items.map(r => el('li', { 'data-engine-text': r.id || '' }, [
         r.label ? el('span', { className: 'muted', text: `${r.label}: ` }) : null,
-        el('span', { text: str(r.text) })]))),
+        // The engine's record is written for the assistant, in English (two-layer copy, §15.1).
+        HT.components.engineText(str(r.text), { lang: r.lang || 'en' })]))),
     ]);
   }
 
-  // --- the decision in words ----------------------------------------------------------------
-
-  /** A decision value as the junior reads it; the recorded value in its hover (title). */
-  function valueNode(decisionId, raw, task, attrs) {
-    const readable = J().value(decisionId, raw, task);
-    const text = readable || str(raw);
-    return el('span', { className: readable ? 'ht-value-words' : 'ht-value-raw', title: readable && str(raw) ? `${J().nextMove.engineLabel}: ${str(raw)}` : null,
-      'data-value-raw': str(raw), ...(attrs || {}), text });
-  }
-
-  // --- the step that waits for the junior ----------------------------------------------------
-
-  /**
-   * The step the journey marks as current: the decision of the next action when it waits
-   * for the junior (an open proposal, a reconfirmation), else the engine's current step.
-   */
-  function currentStepId(model) {
-    return HT.currentStepId(model);
-  }
-
-  /** A step whose decision is done but has a new open proposal is reopened (visibly). */
-  function displayStatus(step, model) {
-    if (step.status === 'done' && arr(model.proposals).some(p => p.decisionId === step.id)) return 'reopened';
-    return MAP_STATUSES.includes(step.status) ? step.status : 'ready';
-  }
-
-  // --- Your next move (§6.1.0) ---------------------------------------------------------------
-
-  function supporting(model, ctx, proposal) {
-    if (!proposal || !ctx.atLeast('v2')) return null;
-    const got = ctx.data('evidence');
-    ctx.want('evidence');
-    const m = got && got.model;
-    const u = m && m.uncertainty;
-    if (!u) return null;
-    const c = copy().hero;
-    const pct = x => ctx.format.number(x, 'pct1');
-    const cite = (text, path, value) => ctx.components.cited(text, { resultId: u.resultId, path, value });
-    const oof = u.evaluation === 'out_of_fold';
-    if (u.kind === 'policy' && proposal.decisionId === 'policy') {
-      const rule = arr(u.rules).find(r => r && r.rule === proposal.value);
-      const metric = rule && arr(rule.metrics).find(x => x && x.metric === 'precision');
-      const model0 = metric && arr(metric.models).find(x => x && x.fit !== u.reference && typeof x.point === 'number');
-      const base = metric && arr(metric.models).find(x => x && x.fit === u.reference && typeof x.point === 'number');
-      if (!model0) return null;
-      return el('p', { className: 'ov-hero-support', 'data-hero-support': 'policy' }, [
-        oof ? c.successShareOutOfFold : c.successShare, cite(pct(model0.point), model0.path, model0.point),
-        typeof model0.low === 'number' && typeof model0.high === 'number'
-          ? [c.interval(u.bootstrap && typeof u.bootstrap.level === 'number' ? ctx.format.number(u.bootstrap.level, 'pct0') : null), cite(pct(model0.low), model0.path, model0.low), c.to, cite(pct(model0.high), model0.path, model0.high), c.close] : null,
-        base ? [c.againstBaseline, cite(pct(base.point), base.path, base.point), '.'] : '.',
-      ]);
-    }
-    if (u.kind === 'regression' && proposal.decisionId === 'model_choice') {
-      const metric = arr(u.metrics).find(x => x && x.metric === 'mae');
-      const chosen = metric && arr(metric.models).find(x => x && x.fit === proposal.value && typeof x.point === 'number');
-      const other = metric && arr(metric.models).find(x => x && x.fit !== proposal.value && typeof x.point === 'number');
-      if (!chosen) return null;
-      const f2 = x => ctx.format.number(x, 'f2');
-      const unit = u.unit ? ` ${u.unit}` : '';
-      return el('p', { className: 'ov-hero-support', 'data-hero-support': 'model_choice' }, [
-        (oof ? c.averageErrorOutOfFold : c.averageError)(J().modelName(chosen.fit, 'regression')),
-        cite(`${f2(chosen.point)}${unit}`, chosen.path, chosen.point),
-        other ? [c.againstOther(J().modelName(other.fit, 'regression')), cite(`${f2(other.point)}${unit}`, other.path, other.point), '.'] : '.',
-      ]);
-    }
-    return null;
-  }
-
-  /** L7 (D15): `next_action.after_study` as text only (`data-after-study`), or null. */
-  function afterStudyNode(after, N) {
-    if (!after || !str(after.juniorText)) return null;
-    return el('div', { className: 'ov-hero-after', 'data-after-study': after.exportPlanAvailable ? 'export_plan' : 'handoff' }, [
-      el('p', { className: 'ov-hero-why' }, [el('strong', { text: `${N.afterStudyTitle}. ` }), after.juniorText]),
-      after.exportPlanAvailable ? el('p', { className: 'muted', 'data-after-study-export': true, text: N.exportPlanInChat }) : null,
-    ]);
-  }
-
-  /**
-   * `compact` (lesson style: the band on a tab other than the Overview): the eyebrow, the
-   * title and the actions only, so the tab's content stays in the first screen; the why, the
-   * support and the details are on the Overview.
-   */
-  function hero(model, ctx, { compact = false } = {}) {
-    const c = copy().hero;
-    const N = J().nextMove;
-    const task = taskOf(model, ctx);
-    const next = model.nextAction || {};
-    // R16 (owner session 2026-10-26, D20): a choice the chat asks before any proposal (the
-    // conclusion, the model choice) waits for the junior: "answer in the chat", and from v1
-    // a button to its read-only card in Decisions.
-    const choice = next.kind === 'propose' && arr(next.choiceOptions).length > 0;
-    const kind = choice ? 'choice' : N[next.kind] ? next.kind : 'other';
-    const step = arr(model.plan).find(s => s.id === (next.decision || next.step));
-    // WP-B5: the opening of the final test is a chat act: its own words, and no action.
-    const opening = (next.decision || next.step) === 'final_test';
-    // R24 (owner session 2026-10-27): the review of an automatic decision is an adoption
-    // question (adopt or change, in the chat), not a change underneath it.
-    const review = next.review === true && ['reconfirm', 'await_user_words'].includes(kind) && Boolean(N.review);
-    const spec = opening && kind === 'await_user_words' ? N.finalTest.await
-      : opening && ['propose', 'run', 'blocked'].includes(kind) ? N.finalTest.propose
-        : review && !opening ? N.review : N[kind];
-    const pause = step && Number.isInteger(step.pause) ? step.pause : null;
-    const proposal = next.kind === 'await_user_words'
-      ? arr(model.proposals).find(p => p.proposalId === next.proposalId) || arr(model.proposals)[0] || null : null;
-    const decision = next.decision || (proposal && proposal.decisionId) || null;
-    const name = decision ? J().decisionName(decision, task) : '';
-    const title = opening ? spec.title() : kind === 'await_user_words' || kind === 'reconfirm' || kind === 'choice' ? spec.title(name)
-      : kind === 'propose' || kind === 'run' || kind === 'blocked' ? spec.title(step ? str(step.title) : c.nextStep) : spec.title();
-    const eyebrow = [N.eyebrow, pause ? c.pause(pause, task) : null].filter(Boolean).join(' · ');
-    // v0.3 (WP-E3, R23): the answer is given in the chat; only the training mode asks for the
-    // junior's own words (ADR 0005). An unknown or absent mode reads as guided, the default.
-    const lead = model.mode === 'training' && spec.leadTraining ? spec.leadTraining : spec.lead;
-    const children = [
-      el('p', { className: 'ov-eyebrow', 'data-hero-eyebrow': true, text: eyebrow }),
-      el('h2', { id: 'ov-hero-title', 'data-hero-title': kind, text: title }),
-      compact ? null : el('p', { className: 'ov-hero-lead', 'data-hero-lead': true, text: lead }),
-    ];
-    if (proposal && !compact) {
-      // L3 (D4b): the chat's wording, marked when it is not in the panel language.
-      const panel = HT.language ? HT.language() : 'en';
-      const said = proposal.restatementLang || (HT.studyLanguage ? HT.studyLanguage() : 'en');
-      const wording = said !== panel ? ((HT.copy.decisions && HT.copy.decisions.chatWording) || {})[said] : null;
-      children.push(el('blockquote', { className: 'ov-hero-quote', 'data-hero-restatement': proposal.proposalId,
-        lang: said !== panel ? said : null }, [proposal.restatement,
-        wording ? el('span', { className: 'ht-en-marker', 'data-chat-wording': said, text: ` ${wording}` }) : null]));
-      const readable = J().value(proposal.decisionId, proposal.value, task);
-      if (readable) {
-        children.push(el('p', { className: 'ov-hero-short' }, [el('span', { className: 'muted', text: `${N.proposedValue}: ` }),
-          valueNode(proposal.decisionId, proposal.value, task, { 'data-hero-value': true })]));
-      }
-    }
-    if (decision && J().why(decision, task) && !compact) {
-      children.push(el('p', { className: 'ov-hero-why', 'data-hero-why': decision }, [
-        el('strong', { text: `${N.whyTitle}. ` }), J().why(decision, task)]));
-    }
-    if (!compact && kind === 'reconfirm' && !review && model.decisions && model.decisions[decision] && model.decisions[decision].reason) {
-      children.push(el('p', { className: 'muted', 'data-hero-reason': true, text: c.becauseChanged }));
-    }
-    const support = compact ? null : supporting(model, ctx, proposal);
-    if (support) children.push(support);
-    // L7 (owner session 2026-10-26, D15): at `done`, what comes after the study, read only:
-    // the engine's junior text and, when the model is supported, that the Azure ML export
-    // plan is asked for in the chat. No control: the panel's writes stay W4, W5, W7.
-    const after = kind === 'done' && !compact ? afterStudyNode(next.afterStudy, N) : null;
-    if (after) children.push(after);
-    // The action: where the junior answers.
-    const actions = [];
-    const target = opening ? null
-      : kind === 'await_user_words' && proposal ? { tab: 'decisions', kind: 'proposal', id: proposal.proposalId }
-      : kind === 'reconfirm' && decision ? { tab: 'decisions', kind: 'decision', id: decision }
-      : kind === 'choice' && decision && ctx.atLeast('v1') ? { tab: 'decisions', kind: 'decision', id: decision }
-        : (kind === 'outcome_unknown' || kind === 'acknowledge_interruption') && next.executionId && ctx.atLeast('v1')
-          ? { tab: 'overview', kind: 'execution', id: next.executionId } : null;
-    // Lesson style (2026-10-27): the one action of the next move is "Copy the question", a
-    // ready question for the chat (the agent bridge: a clipboard copy, never a write); the
-    // way to the card in Decisions or to the run stays a link-like button beside it.
-    const copyButton = HT.askButton(ctx, heroAbout(model, next, kind, proposal, decision, step),
-      title, { label: HT.copy.lesson.copyQuestion, question: heroQuestion(next, kind, opening, name, step, c, review), stage: 'v0', direct: true,
-        attrs: { className: 'ov-hero-copy', 'data-copy-question': kind } });
-    if (copyButton) actions.push(copyButton);
-    if (target && spec.action) {
-      actions.push(el('button', { type: 'button', className: 'ov-hero-action secondary', 'data-hero-action': `${target.kind}:${target.id}`,
-        text: spec.action, onclick: () => ctx.navigate(target) }));
-    } else if (compact) {
-      // The compact band says nothing more: the Overview has the explanation.
-    } else if (kind === 'outcome_unknown' || kind === 'acknowledge_interruption') {
-      children.push(el('p', { className: 'muted', text: N.inChat }));
-    } else if (opening && kind === 'await_user_words') {
-      children.push(el('p', { className: 'ov-hero-chat', 'data-hero-chat': 'final_test', text: c.finalChat }));
-    }
-    if (actions.length) children.push(el('div', { className: 'ov-hero-actions' }, actions));
-    // Layer 2: the engine's own words, for whoever wants them.
-    const engine = [];
-    if (next.juniorMessage && next.juniorMessage !== lead) engine.push({ id: 'next_action', text: next.juniorMessage });
-    if (next.audience === 'agent' && next.message) engine.push({ id: 'next_action.agent', label: N.engineSays, text: next.message });
-    else if (next.message && next.message !== next.juniorMessage) engine.push({ id: 'next_action', text: next.message });
-    if (proposal && proposal.value) engine.push({ id: proposal.proposalId, label: N.engineLabel, text: `${proposal.value} (${proposal.proposalId})` });
-    if (!compact) children.push(details(N.details, engine, { 'data-hero-details': true }));
-    return el('section', { className: `ov-hero${compact ? ' ov-hero-compact' : ''}`, 'aria-labelledby': 'ov-hero-title', 'data-ov': 'hero',
-      'data-hero': kind, 'data-hero-review': review ? 'true' : null, 'data-hero-compact': compact ? 'true' : null }, children);
-  }
-
-  /** What the copied question is about (§4.2 kinds; the bridge labels it from the snapshot). */
-  function heroAbout(model, next, kind, proposal, decision, step) {
-    if (proposal) return { kind: 'proposal', id: proposal.proposalId };
-    if ((kind === 'outcome_unknown' || kind === 'acknowledge_interruption') && next.executionId) {
-      return { kind: 'execution', id: String(next.executionId) };
-    }
-    if (decision && (kind === 'reconfirm' || kind === 'choice')) return { kind: 'decision', id: decision };
-    const id = (step && step.id) || next.step || (model.currentStep && model.currentStep.id) || 'next';
-    return { kind: 'step', id: String(id) };
-  }
-
-  /** The ready question of the next move, in the panel language (media/copy/lesson.js and its French twin). */
-  function heroQuestion(next, kind, opening, name, step, c, review = false) {
-    const Q = HT.copy.lesson.questions;
-    if (opening) return kind === 'await_user_words' ? Q.final_await() : Q.final_next();
-    if (review && Q.review) return Q.review(name);
-    if (kind === 'await_user_words') return Q.await_user_words(name);
-    if (kind === 'reconfirm') return Q.reconfirm(name);
-    if (kind === 'choice') return Q.choice(name);
-    if (kind === 'outcome_unknown' || kind === 'acknowledge_interruption') return Q.outcome_unknown();
-    if (kind === 'done') return Q.done();
-    return Q.next(step ? str(step.title) : c.nextStep);
-  }
-
-  // --- the journey rail (lesson style, R30): on every tab, above the tabs --------------------
-
-  const RAIL_CLASS = { done: 'done', automatic: 'auto', awaiting_confirmation: 'wait', needs_reconfirmation: 'wait',
-    reopened: 'wait', ready: 'ready', blocked: 'later' };
-
-  /**
-   * The rail: the four moments of the engine (`moments`), each a track of its steps; the
-   * current step pulses, a step recorded by the automatic mode is dashed. Words come with
-   * every mark (a hover, a screen-reader text, and the legend): never colour alone.
-   */
-  function rail(model, ctx) {
-    const R = HT.copy.lesson.rail;
-    const plan = arr(model.plan);
-    if (!plan.length) return null;
-    // Each plan step in its moment; a step no moment lists joins the moment of the step before
-    // it (the engine's moments may lag a new step). Moments must stay contiguous in plan
-    // order, else the rail is one track.
-    const momentOf = {};
-    for (const m of arr(model.moments)) for (const id of arr(m.steps)) momentOf[id] = m;
-    let groups = [];
-    let last = null;
-    for (const s of plan) {
-      const m = momentOf[s.id] || last;
-      last = m;
-      const g = groups[groups.length - 1];
-      if (g && g.moment === m) g.steps.push(s);
-      else groups.push({ moment: m, id: m ? str(m.id) : 'plan', title: m ? str(m.title) : '', steps: [s] });
-    }
-    const ids = groups.map(g => g.id);
-    if (!arr(model.moments).length || groups.some(g => !g.moment) || new Set(ids).size !== ids.length) {
-      groups = [{ id: 'plan', title: '', steps: plan }];
-    }
-    const currentId = currentStepId(model);
-    const pos = HT.journeyPosition(model);
-    const labels = copy().journeyLabels || {};
-    const classOf = s => (s.id === currentId ? 'cur' : RAIL_CLASS[HT.stepState(s, model)] || 'ready');
-    const moments = groups.map(g => {
-      const current = g.steps.some(s => s.id === currentId);
-      const done = g.steps.every(s => s.status === 'done');
-      const short = R.moments[g.id] || g.title;
-      return el('li', { className: `ht-mom${current ? ' ht-cur' : ''}`, 'data-moment': g.id, css: { '--n': String(g.steps.length) } }, [
-        g.title ? el('div', { className: 'ht-mt', title: g.title }, [el('span', { className: 'ht-long', text: g.title }),
-          el('span', { className: 'ht-short', 'aria-hidden': 'true', text: short })]) : null,
-        el('ol', { className: `ht-track${done ? ' ht-done' : ''}` }, g.steps.map(s => {
-          const cls = classOf(s);
-          const words = R.states[cls];
-          return el('li', { className: `ht-st ht-s-${cls}`, 'data-rail-step': s.id, 'data-rail-state': cls,
-            title: `${str(s.title)} · ${words}` }, [
-            el('span', { className: 'sr-only', text: `${str(s.title)}: ${words}` }),
-            el('span', { className: 'ht-sl', 'aria-hidden': 'true', text: labels[s.id] || str(s.title) }),
-          ]);
-        })),
-      ]);
-    });
-    const W = HT.copy.lesson.where;
-    const cap = pos && pos.step ? el('p', { className: 'ht-railcap', 'data-rail-caption': true }, [
-      el('span', {}, [el('strong', { text: R.step(pos.index, pos.total) }), ` · ${str(pos.step.title)}`]),
-      pos.state !== 'done' && W.states[pos.state] ? el('span', { text: `· ${W.states[pos.state]}` }) : null]) : null;
-    // On a tab other than the Overview the rail is the track only: the position line under
-    // the tabs says the step and what remains.
-    const full = !ctx.tab || ctx.tab === 'overview';
-    return el('nav', { className: 'ht-railbox', 'aria-label': R.label, 'data-rail': full ? 'full' : 'track' }, [
-      el('ol', { className: 'ht-rail' }, moments),
-      full ? cap : null,
-      full ? remainLine(model, ctx, pos) : null,
-      full ? el('ul', { className: 'ht-rlegend', 'aria-label': R.legendLabel }, ['done', 'auto', 'cur', 'ready', 'later'].map(k =>
-        el('li', {}, [el('span', { className: `ht-s-${k}`, 'aria-hidden': 'true' }), R.legend[k]]))) : null,
-    ]);
-  }
-
-  /** What remains (R30): the step that waits (answered in the chat), then the next ones. */
-  function remainLine(model, ctx, pos) {
-    const R = HT.copy.lesson.rail;
-    if (!pos) return null;
-    const labels = copy().journeyLabels || {};
-    const name = s => labels[s.id] || str(s.title);
-    if (!pos.remaining.length && !(pos.step && pos.step.status !== 'done')) {
-      return el('p', { className: 'ht-remain', 'data-remain': 'none', text: R.remainNone });
-    }
-    const waits = pos.step && ['awaiting_confirmation', 'needs_reconfirmation', 'reopened', 'automatic'].includes(pos.state);
-    const kids = [el('strong', { text: R.remain }), ': '];
-    if (waits) kids.push(`${str(pos.step.title)}, ${R.remainNow}`);
-    // The current step first when it is still to do (and not already said as waiting).
-    const todo = [...(pos.step && !waits && pos.step.status !== 'done' ? [{ step: pos.step, n: pos.index }] : []), ...pos.remaining];
-    const shown = todo.slice(0, 4);
-    shown.forEach((x, i) => {
-      if (waits || i) kids.push(' → ');
-      kids.push(el('strong', { text: String(x.n) }), ` ${name(x.step)}`);
-    });
-    if (todo.length > shown.length) kids.push(R.more(ctx.format.number(todo.length - shown.length, 'int')));
-    if (!waits && !shown.length) kids.push(R.remainNone);
-    else kids.push('.');
-    if (ctx.atLeast('v3')) kids.push(` ${R.handoff}`);
-    return el('p', { className: 'ht-remain', 'data-remain': String(pos.remaining.length) }, kids);
-  }
-
-  // --- the journey (§6.1.2, blocker-aware) --------------------------------------------------
-
-  function subLabel(step, status) {
-    const c = copy();
-    const p = Number.isInteger(step.pause) ? step.pause : null;
-    switch (status) {
-      case 'done':
-        if (p !== null && step.decisionStatus === 'confirmed') {
-          // ADR 0005: endorsed and restated are the junior's own words, like explicit.
-          if (['explicit', 'endorsed', 'restated'].includes(step.basis)) return c.pauseWords(p);
-          if (step.basis === 'delegated_default') return c.pauseDelegated(p);
-          if (step.basis === 'automatic') return c.pauseAutomatic(p);     // L9 (R20)
-        }
-        return '';
-      case 'reopened': return p !== null ? c.pauseReopened(p) : c.reopened;
-      case 'awaiting_confirmation': return p !== null ? c.pauseWaiting(p) : c.waitingForYou;
-      case 'needs_reconfirmation': return p !== null ? c.pauseAgain(p) : c.confirmAgain;
-      case 'ready': return c.ready;
-      case 'blocked': return step.after ? c.after(str(step.after.title)) : c.blocked;
-      default: return '';
-    }
-  }
-
-  /**
-   * v0.3 (WP-E2): one step of the journey bar. The segment's tint is the status (done,
-   * now, reopened, sealed, to do); the mark's words are never colour alone (OV-4).
-   */
-  function stepItem(step, model, currentId, momentTitle) {
-    const c = copy();
-    const status = displayStatus(step, model);
-    const current = currentId === step.id;
-    const label = subLabel(step, status);
-    const tone = status === 'done' ? 'ht-j-done' : current ? 'ht-j-now'
-      : status === 'reopened' || status === 'needs_reconfirmation' ? 'ht-j-reopened'
-        : step.id === 'final_test' ? 'ht-j-seal' : 'ht-j-todo';
-    // v0.3 (WP-K): a short label in the bar (no word broken at 420 px); the plan's title in
-    // the hover with the moment, and for screen readers.
-    const title = str(step.title);
-    const short = (c.journeyLabels && c.journeyLabels[step.id]) || title;
-    const hover = [title !== short ? title : null, momentTitle || null].filter(Boolean).join(' · ');
-    return el('li', { className: `ov-step ov-step-${status} ${tone}`, 'data-step': step.id, 'data-status': step.status,
-      'data-display-status': status, 'data-nav': `step:${step.id}`, 'aria-current': current ? 'step' : null,
-      'data-moment': momentTitle || null, title: hover || null }, [
-      el('span', { className: 'sr-only', 'data-mark-text': true, text: `${c.markText[status]}: ` }),
-      el('strong', { className: 'ov-step-title', 'data-step-label': short }, [el('span', { className: 'ov-mark', 'aria-hidden': 'true', text: `${c.marks[status]} ` }),
-        title !== short ? el('span', { 'aria-hidden': 'true', text: short }) : short,
-        title !== short ? el('span', { className: 'sr-only', text: title }) : null]),
-      label ? el('span', { className: 'ov-sub', 'data-sub': true, text: label }) : null,
-    ]);
-  }
-
-  /** The journey bar (replaces the four-column map): every plan step in plan order. */
-  function journey(model, title) {
-    const c = copy();
-    const plan = arr(model.plan);
-    const momentOf = {};
-    for (const m of arr(model.moments)) for (const sid of arr(m.steps)) momentOf[sid] = str(m.title);
-    const currentId = currentStepId(model);
-    const done = plan.filter(s => s.status === 'done').length;
-    const statuses = plan.map(s => displayStatus(s, model));
-    const reopened = statuses.some(st => st === 'reopened' || st === 'needs_reconfirmation');
-    return section('ov-map', title, [
-      el('p', { className: 'ht-sub', 'data-steps-done': `${done}/${plan.length}`, text: c.stepsDone(String(done), String(plan.length)) }),
-      el('ol', { className: 'ht-journey ov-steps', 'data-map': true },
-        plan.map(s => stepItem(s, model, currentId, momentOf[s.id] || null))),
-      reopened ? el('p', { className: 'ht-note ht-note-warn', 'data-reopened-why': true, text: c.reopenedWhy }) : null,
-    ], { 'data-ov': 'map' });
-  }
-
-  function studyMap(model) {
-    return journey(model, copy().mapTitle);
-  }
-
-  /**
-   * v0.3 (owner addition, I1): "How this panel works": what the panel is, what it never
-   * does, and one line per tab (the same lead sentence each tab shows at its top).
-   */
-  function panelGuide(model, ctx) {
-    const g = copy().guide;
-    const leads = HT.copy.core.tabLeads || {};
-    const tabs = ctx.atLeast('v1') ? HT.TAB_ORDER.filter(t => HT.registered().some(v => v.tab === t && ctx.atLeast(v.stage))) : [];
-    return el('section', { className: 'card ov-guide', 'aria-labelledby': 'ov-guide-title', 'data-ov': 'guide' }, [
-      el('span', { className: 'ht-cap', text: g.eyebrow }),
-      el('h2', { id: 'ov-guide-title', text: g.title }),
-      el('p', { text: g.lead }),
-      el('ul', { className: 'ov-guide-list' }, g.points.map(t => el('li', { text: t }))),
-      tabs.length ? ctx.components.why([el('dl', { className: 'ov-guide-tabs' }, tabs.flatMap(t => [
-        el('dt', { text: HT.copy.core.tabs[t] }), el('dd', { text: leads[t] || '' })]))], g.tabsLabel) : null,
-    ]);
-  }
-
-  // --- Where we are (§6.1.1) ----------------------------------------------------------------
-
-  const lineOf = (lines, label) => {
-    const line = arr(lines).map(str).find(l => l.startsWith(`${label}: `));
-    return line ? line.slice(label.length + 2) : null;
-  };
-
-  /**
-   * WP-A7: the success criterion against the current evaluation (CLI-CONTRACT §11.4): the
-   * criterion in words, its status (met, uncertain, not met, not assessed yet), and the
-   * engine's gain with its paired interval, cited to the evaluation it was read from. The
-   * panel computes nothing: the gain, the interval and the status are the engine's.
-   */
-  function criterionRow(model, ctx) {
-    const k = model.criterion;
-    if (!k || !k.value) return null;
-    const c = copy().criterion;
-    const task = taskOf(model, ctx);
-    const share = k.unit === 'share';
-    const fmt = x => ctx.format.number(x, share ? 'pct1' : 'f1');
-    const signed = x => `${x > 0 ? '+' : ''}${fmt(x)}`;
-    const cite = (x, path) => (k.resultId
-      ? ctx.components.cited(signed(x), { resultId: k.resultId, path, value: x }) : signed(x));
-    const has = x => typeof x === 'number' && Number.isFinite(x);
-    const rule = k.rule ? J().value('policy', k.rule, task) : null;
-    const figure = has(k.gain) ? el('p', { className: 'ov-criterion-figure', 'data-criterion-gain': true }, [
-      share ? c.reduction : c.gain(rule ? rule.charAt(0).toLowerCase() + rule.slice(1) : null),
-      cite(k.gain, 'criterion.gain'), share ? '' : c.points,
-      has(k.low) && has(k.high) ? [c.interval, cite(k.low, 'criterion.low'), c.to, cite(k.high, 'criterion.high'), c.close] : null,
-      '.',
-    ]) : null;
-    return el('div', { className: 'ov-recap-row', 'data-recap-line': 'Criterion', 'data-criterion': k.status }, [
-      el('dt', { text: c.title }),
-      el('dd', {}, [
-        valueNode('success_criterion', k.value, task),
-        ' ', el('span', { className: `ht-status ht-st-${CRITERION_TONE[k.status] || 'neutral'}`, 'data-criterion-status': k.status,
-          text: c.status[k.status] || k.status }),
-        el('p', { className: 'muted ov-criterion-why', text: c.why[k.status] || '' }),
-        figure,
-        k.contradictsVerdict ? el('p', { className: 'hold', role: 'status', 'data-criterion-contradicts': true, text: c.contradicts }) : null,
-      ]),
-    ]);
-  }
-
-  /**
-   * WP-B5: the final test in "Where we are": sealed, opened once (when, in whose words), or
-   * changed after the opening, with the success criterion judged on it (the engine's gain
-   * and interval, cited). Its opening stays a chat act: nothing here is a control.
-   */
-  function finalTestRow(model, ctx) {
-    const F = J().finalTest;
-    const ft = model.finalTest;
-    const state = J().finalTestState(ft);
-    if (!state) return null;
-    const task = taskOf(model, ctx);
-    const int = n => (n === null || n === undefined ? '' : ctx.format.number(n, 'int'));
-    const kids = [el('span', { className: `ht-status ${state === 'sealed' ? 'ht-st-sealed' : state === 'opened' ? 'ht-st-ok'
-      : state === 'absent' ? 'ht-st-neutral' : 'ht-st-stale'}`, 'data-final-state': state, text: F.titles[state] })];
-    if (state === 'sealed') kids.push(el('p', { className: 'muted', text: F.sealed(int(ft.rows), ft.method) }));
-    if (state === 'absent') kids.push(el('p', { className: 'muted', text: F.absent }));
-    if (state === 'interrupted') kids.push(el('p', { className: 'muted', text: F.interrupted }));
-    if ((state === 'opened' || state === 'changed') && ft.opening) {
-      kids.push(el('p', {}, [F.opened(ft.opening.revision), ' ',
-        el('span', { className: 'ov-quoted', 'data-opening-words': true }, ['“', ft.opening.userWords || '', '”'])]));
-      const k = model.criterion && model.criterion.finalTest;
-      if (k && typeof k.gain === 'number' && k.resultId) {
-        const share = k.unit === 'share';
-        const fmt = x => `${x > 0 ? '+' : ''}${ctx.format.number(x, share ? 'pct1' : 'f1')}`;
-        const cite = (x, p) => ctx.components.cited(fmt(x), { resultId: k.resultId, path: p, value: x });
-        const has = x => typeof x === 'number';
-        const C = copy().criterion;
-        kids.push(el('p', { 'data-final-criterion': k.status }, [F.criterion,
-          el('span', { className: `ht-status ht-st-${CRITERION_TONE[k.status] || 'neutral'}`, text: C.status[k.status] || k.status }), ' · ',
-          cite(k.gain, 'criterion.gain'), share ? '' : C.points,
-          has(k.low) && has(k.high) ? [C.interval, cite(k.low, 'criterion.low'), C.to, cite(k.high, 'criterion.high'), C.close] : null, '.']));
-      }
-    }
-    if (state === 'changed') {
-      kids.push(el('p', { className: 'hold', 'data-changed-after': true,
-        text: F.changed(arr(ft.changedAfter).map(x => J().changedName(x, task)).join(', ')) }));
-    }
-    return el('div', { className: 'ov-recap-row', 'data-recap-line': 'FinalTest', 'data-final-test-row': state }, [
-      el('dt', { text: copy().finalTestTitle }), el('dd', {}, kids)]);
-  }
-
-  /**
-   * WP-B5: what counts as an answer in this study's mode (ADR 0005), a row of "Where we
-   * are"; changing the mode is a chat act, so there is no control.
-   */
-  function modeRow(model, ctx) {
-    const M = J().modes;
-    const mode = str(model.mode);
-    if (!['guided', 'training', 'express'].includes(mode)) return null;
-    const finalTest = arr(model.plan).some(s => s.id === 'final_test');
-    return el('div', { className: 'ov-recap-row', 'data-recap-line': 'Mode', 'data-mode-explainer': mode }, [
-      el('dt', { text: copy().modeTitle }),
-      el('dd', {}, [
-        el('p', {}, [el('span', { className: 'ht-status ht-st-needs', 'data-mode-chip': mode, text: M.names[mode] }), ' ',
-          M.line(M.names[mode])]),
-        el('ul', { className: 'ov-mode-rules', 'data-mode-rules': true }, M.rules(mode, taskOf(model, ctx), finalTest).map(t => el('li', { text: t }))),
-        el('p', { className: 'muted', 'data-mode-change': true, text: M.change }),
-      ]),
-    ]);
-  }
-
-  function whereWeAre(model, ctx) {
-    const c = copy();
-    const task = taskOf(model, ctx);
-    const junior = arr(model.recapJunior);
-    const goal = lineOf(junior.length ? junior : (model.recapAudience === 'agent' ? [] : model.recap), 'Goal');
-    const decided = arr(model.plan).filter(s => DECISIONS.includes(s.id) && model.decisions && model.decisions[s.id]
-      && ['confirmed', 'reconfirm_required'].includes(model.decisions[s.id].status));
-    const rows = [];
-    if (goal) rows.push(el('div', { className: 'ov-recap-row', 'data-recap-line': 'Goal' }, [el('dt', { text: c.goal }), el('dd', {}, [HT.components.engineText(goal)])]));
-    rows.push(el('div', { className: 'ov-recap-row', 'data-recap-line': 'Decided' }, [
-      el('dt', { text: c.decided }),
-      el('dd', {}, [decided.length ? el('ul', { className: 'ov-decided', 'data-decided': true }, decided.map(s => {
-        const d = model.decisions[s.id];
-        const tag = d.status === 'reconfirm_required' ? c.toConfirmAgain : d.basis === 'delegated_default' ? c.delegated
-          : d.basis === 'automatic' ? c.automatic : null;
-        return el('li', { 'data-decided-item': s.id }, [
-          el('span', { className: 'ov-decided-name', text: `${J().decisionName(s.id, task)}: ` }),
-          valueNode(s.id, d.value, task),
-          tag ? el('span', { className: 'ht-status ht-st-needs', text: tag }) : null,
-        ]);
-      })) : el('span', { className: 'muted', text: c.nothingDecided })]),
-    ]));
-    const criterion = criterionRow(model, ctx);
-    if (criterion) rows.push(criterion);
-    const final = finalTestRow(model, ctx);
-    if (final) rows.push(final);
-    const mode = modeRow(model, ctx);
-    if (mode) rows.push(mode);
-    const body = el('dl', { className: 'ov-recap', 'data-recap-list': true }, rows);
-    // The engine's recap under Details: its junior variant; an older engine's recap (no
-    // audience) as it is; never a recap written for the agent.
-    const recap = junior.length ? junior : model.recapAudience === 'agent' ? [] : arr(model.recap);
-    return section('ov-where', c.whereTitle, [body,
-      details(c.recapDetails, recap.map((line, i) => ({ id: `recap:${i}`, text: line })), { 'data-recap-details': true })],
-    { 'data-ov': 'where' });
-  }
+  const taskOf = (model, ctx) => model.task || ctx.task || null;
 
   // --- Since your last session (§6.1.3, grouped) ------------------------------------------------
 
@@ -641,10 +85,7 @@
   function sinceSection(model, ctx) {
     const c = copy();
     const base = model.digest;
-    if (!base) {
-      return section('ov-since', c.sinceTitle, [el('p', { className: 'muted', 'data-no-digest': true, text: c.noDigest })],
-        { 'data-ov': 'since' });
-    }
+    if (!base) return el('div', { 'data-ov': 'since' }, [el('p', { className: 'muted', 'data-no-digest': true, text: c.noDigest })]);
     const boundary = Number.isInteger(base.boundary) ? base.boundary : base.since;
     const wanted = local.since !== null && local.since !== boundary ? local.since : null;
     let digest = base;
@@ -699,49 +140,7 @@
     } else {
       children.push(el('p', { className: 'muted', 'data-nothing-changed': true, text: c.nothingChanged }));
     }
-    return section('ov-since', c.sinceTitle, children, { 'data-ov': 'since' });
-  }
-
-  // --- What you cannot claim yet (limits by severity, listed once) ---------------------------
-
-  function limitItems(model) {
-    const nyd = model.notYetDefensible || {};
-    const seen = new Set();
-    const items = [];
-    for (const i of arr(nyd.top)) {
-      if (seen.has(i.id)) continue;
-      seen.add(i.id);
-      items.push({ id: i.id, text: i.juniorText || J().limitText[i.id] || J().limitFallback(i.id), engine: i.text, audience: i.audience,
-        fromEngine: Boolean(i.juniorText) });
-    }
-    for (const id of arr(nyd.more)) {
-      if (seen.has(id)) continue;
-      seen.add(id);
-      items.push({ id, text: J().limitText[id] || J().limitFallback(id), engine: null });
-    }
-    const order = J().SEVERITY_ORDER;
-    const sev = id => J().SEVERITY[id] || 'context';
-    return items.map((x, n) => ({ ...x, severity: sev(x.id), n }))
-      .sort((a, b) => order.indexOf(a.severity) - order.indexOf(b.severity) || a.n - b.n);
-  }
-
-  function limits(model, navUsed) {
-    const c = copy();
-    const items = limitItems(model);
-    if (!items.length) return null;
-    return section('ov-limits', c.limitsTitle, [
-      el('ul', { className: 'ov-limits', 'data-limits': true }, items.map(i => {
-        const nav = navUsed.has(i.id) ? null : `limit:${i.id}`;
-        navUsed.add(i.id);
-        return el('li', { 'data-nyd': i.id, 'data-severity': i.severity, 'data-nav': nav }, [
-          el('span', { className: `ht-tag ht-sev-${i.severity}`, 'data-chip': i.severity, text: J().severityLabel[i.severity] }), ' ',
-          i.fromEngine ? HT.components.engineText(i.text, { attrs: { 'data-limit-text': true } })
-            : el('span', { 'data-limit-text': true, text: i.text }),
-        ]);
-      })),
-      details(c.limitsDetails, items.filter(i => i.engine && i.engine !== i.text)
-        .map(i => ({ id: i.id, label: i.audience === 'agent' ? c.forAgent : null, text: i.engine })), { 'data-limits-details': true }),
-    ], { 'data-ov': 'limits', 'data-health': 'nyd' });
+    return el('div', { className: 'ov-since', 'data-ov': 'since' }, children);
   }
 
   // --- Deliverables (§6.1.4, with the local launch) ------------------------------------------
@@ -839,60 +238,10 @@
     const o = ctx.outcome(RENDER_TARGET);
     if (o) children.push(renderOutcomeW5(o, ctx));
     if (ctx.atLeast('v1')) children.push(el('div', { className: 'ov-sub-section', 'data-health': 'checks' }, [checks(model, ctx)]));
-    return section('ov-deliverables', c.deliverablesTitle, children, { 'data-ov': 'deliverables' });
+    return el('div', { className: 'ov-deliverables', 'data-ov': 'deliverables' }, children);
   }
 
   // --- Health (§6.1.5): only when something is wrong -----------------------------------------
-
-  /**
-   * An execution with an unknown outcome, read only (owner decision R31, 2026-10-27): the
-   * acknowledgement in the junior's own words is made in the chat, never here. The card says
-   * so, explains why words and not an "ok" button (Learn more), and copies a ready question.
-   */
-  function executionCard(e, model, ctx) {
-    const c = copy();
-    const L = HT.copy.lesson;
-    const id = str(e.executionId);
-    const titleId = `ov-exec-${id}`;
-    return el('article', { className: 'card ov-execution', 'data-execution-card': id, 'data-nav': `execution:${id}`,
-      'aria-labelledby': titleId }, [
-      el('h4', { id: titleId, text: c.unknownOutcome(str(e.activity)) }),
-      e.reason ? el('details', { className: 'ht-details' }, [el('summary', { text: copy().detailsLabel }),
-        el('p', { className: 'muted', 'data-reason': true, text: str(e.reason) })]) : null,
-      // The acknowledgement itself takes the junior's words (in the chat): its explanation is
-      // the one place outside the training mode where the panel says so (`ov-ack`).
-      el('div', { className: 'ov-ack' }, [el('p', { 'data-ack-in-chat': true, text: c.ackInChat }),
-        HT.components.more('ack', L.more.ackTitle, L.more.ack)]),
-      el('p', { className: 'muted', 'data-rerun': true, text: c.rerunInChat }),
-      el('div', { className: 'ov-exec-actions' }, [HT.askButton(ctx, { kind: 'execution', id }, c.unknownOutcome(str(e.activity)),
-        { label: L.copyQuestion, question: L.questions.outcome_unknown(), stage: 'v1', direct: true,
-          attrs: { 'data-ask-execution': id } })]),
-    ]);
-  }
-
-  function executions(model, ctx, navUsed) {
-    const c = copy();
-    const ex = model.executions || {};
-    const pending = [...arr(ex.interrupted), ...arr(ex.suspected)];
-    const late = arr(ex.late);
-    if (!pending.length && !late.length) return null;
-    const next = model.nextAction || {};
-    const children = [el('h3', { id: 'ov-executions', text: c.executionsTitle })];
-    for (const e of pending) {
-      const card = executionCard(e, model, ctx);
-      if (next.kind === 'outcome_unknown' && next.executionId === e.executionId && !navUsed.has('outcome_unknown')) {
-        navUsed.add('outcome_unknown');
-        children.push(el('div', { 'data-nav': 'limit:outcome_unknown' }, [card]));
-      } else children.push(card);
-    }
-    if (late.length) {
-      children.push(el('ul', { className: 'ov-late', 'data-late': true }, late.map(e =>
-        el('li', { 'data-late-item': str(e.executionId), text: c.lateResult(str(e.activity)) }))));
-    }
-    navUsed.add('interrupted_executions');
-    return el('section', { className: 'ov-sub-section', 'aria-labelledby': 'ov-executions', 'data-nav': 'limit:interrupted_executions',
-      'data-health': 'executions' }, children);
-  }
 
   function checksSummary(model, ctx) {
     const c = copy();
@@ -926,131 +275,50 @@
     ]);
   }
 
+  /** The findings of the check read (HE-3), as a list; To handle shows the errors (TODO-4). */
+  function findingsList(ctx, findings) {
+    const c = copy();
+    return findings.length ? el('ul', { className: 'ov-findings', 'data-findings': true }, findings.map(f => findingItem(f, ctx)))
+      : el('p', { className: 'muted', text: c.checksNone });
+  }
+
+  /** "Checks of the deliverables" (v1): a fold of the page; opening it reads `check` (§5). */
   function checks(model, ctx) {
     const c = copy();
-    const got = ctx.data('check');
-    const error = ctx.error('check');
-    const body = [];
-    if (local.checksOpen) {
+    return ctx.fold('checks', { summary: checksSummary(model, ctx), className: 'ov-checks', attrs: { 'data-check': true },
+      summaryAttrs: { 'data-check-summary': true } }, () => {
+      const got = ctx.data('check');
+      const error = ctx.error('check');
       const fresh = ctx.fresh(got);
       if (!fresh) askOnce(ctx, 'check');
       if (error && !fresh) {
-        body.push(el('div', { className: 'card alert', role: 'alert', 'data-check-error': true }, [
+        return el('div', { className: 'card alert', role: 'alert', 'data-check-error': true }, [
           el('p', { className: 'title', text: c.checksFailed }),
           el('p', { text: str(error.message) }),
           error.detail ? el('pre', { text: str(error.detail) }) : null,
           el('button', { type: 'button', className: 'secondary', text: c.retry, onclick: () => { ctx.retry('check'); ctx.load('check'); } }),
-        ]));
-      } else if (!got) {
-        body.push(el('p', { className: 'muted', 'aria-busy': 'true', 'data-check-loading': true, text: c.checksRunning }));
-      } else {
-        const findings = arr(got.model.findings);
-        const list = findings.length ? el('ul', { className: 'ov-findings', 'data-findings': true }, findings.map(f => findingItem(f, ctx)))
-          : el('p', { className: 'muted', text: c.checksNone });
-        // Older findings are dimmed while the new ones are read; no "Updating" label next to
-        // content that is current.
-        if (!fresh) body.push(el('div', { className: 'ht-stale', 'aria-busy': 'true', 'data-updating': 'check' }, [list]));
-        else body.push(list);
+        ]);
       }
-    }
-    const node = el('details', { className: 'ov-checks', 'data-check': true, open: local.checksOpen ? true : null }, [
-      el('summary', { id: 'ov-check-summary', 'data-check-summary': true, text: checksSummary(model, ctx) }),
-      ...body,
-    ]);
-    node.addEventListener('toggle', () => {
-      if (node.open === local.checksOpen) return;
-      local.checksOpen = node.open;
-      ctx.rerender();
+      if (!got) return el('p', { className: 'muted', 'aria-busy': 'true', 'data-check-loading': true, text: c.checksRunning });
+      const list = findingsList(ctx, arr(got.model.findings));
+      // Older findings are dimmed while the new ones are read; no "Updating" next to current content.
+      return fresh ? list : el('div', { className: 'ht-stale', 'aria-busy': 'true', 'data-updating': 'check' }, [list]);
     });
-    return node;
-  }
-
-  function health(model, ctx, navUsed) {
-    const c = copy();
-    const ex = executions(model, ctx, navUsed);
-    const alerts = arr(model.alerts).filter(a => a.id !== 'outcome_unknown' && a.id !== 'interrupted_executions');
-    if (!ex && !alerts.length) return null;
-    const children = [ex];
-    if (alerts.length) {
-      children.push(el('ul', { className: 'ov-health-alerts', 'data-health': 'alerts' }, alerts.map(a => {
-        const nav = navUsed.has(a.id) ? null : `limit:${a.id}`;
-        navUsed.add(a.id);
-        return el('li', { 'data-nav': nav, 'data-health-alert': a.id }, [
-          el('span', { className: 'ht-tag ht-sev-blocking', text: J().severityLabel.blocking }), ' ',
-          a.juniorText ? HT.components.engineText(a.juniorText) : J().limitText[a.id] || J().limitFallback(a.id)]);
-      })));
-    }
-    return section('ov-health', c.healthTitle, children, { 'data-ov': 'health', 'data-nav': 'limit:health' });
-  }
-
-  // --- notions of the moment (lesson style: the term first, then "In this study") ------------
-
-  function sealedNotion(model, ctx) {
-    const N = HT.copy.lesson.notions.sealed;
-    const ft = model.finalTest;
-    const state = J().finalTestState(ft);
-    const rows = ft && Number.isInteger(ft.rows) ? ctx.format.number(ft.rows, 'int') : null;
-    if (!rows || !['sealed', 'opened', 'changed'].includes(state)) return null;
-    return ctx.components.notion({ id: 'sealed', term: N.term, tag: 'rule', lead: N.lead, definition: N.definition,
-      here: state === 'sealed' ? N.here(rows) : N.hereOpened(rows),
-      folds: [{ kind: 'why', body: N.why }, { kind: 'casse', body: N.casse }], keep: N.keep });
-  }
-
-  function criterionNotion(model, ctx) {
-    const N = HT.copy.lesson.notions.criterion;
-    const k = model.criterion;
-    if (!k || !k.value) return null;
-    const task = taskOf(model, ctx);
-    const words = J().value('success_criterion', k.value, task) || str(k.value);
-    const status = copy().criterion.status[k.status] || '';
-    return ctx.components.notion({ id: 'criterion', term: N.term, tag: 'rule', definition: N.definition,
-      here: N.here(words, status), folds: [{ kind: 'why', body: N.why }, { kind: 'casse', body: N.casse }], keep: N.keep });
-  }
-
-  function notionsOf(model, ctx) {
-    return ctx.components.notions([sealedNotion(model, ctx), criterionNotion(model, ctx)], { 'data-ov-notions': true });
   }
 
   // --- registration -------------------------------------------------------------------------
 
-  function journeyV0(model) {
-    return journey(model, copy().journeyTitle);
-  }
-
-  function renderV0(model, ctx) {
-    const navUsed = new Set();
-    return [journeyV0(model), notionsOf(model, ctx), whereWeAre(model, ctx), limits(model, navUsed), deliverables(model, ctx),
-      panelGuide(model, ctx)];
-  }
-
-  function renderV1(model, ctx) {
-    const gate = node => ctx.gate('v1', node);
-    const navUsed = new Set();
-    const healthNode = health(model, ctx, navUsed);
-    return [
-      healthNode ? gate(healthNode) : null,
-      gate(studyMap(model)),
-      notionsOf(model, ctx),
-      gate(el('div', { className: 'ov-grid' }, [sinceSection(model, ctx), limits(model, navUsed)])),
-      gate(whereWeAre(model, ctx)),
-      gate(deliverables(model, ctx)),
-      panelGuide(model, ctx),
-    ];
-  }
-
-  HT.register('overview', {
-    tab: 'overview',
-    stage: 'v0',
-    views: [],
-    outcomes: ['W5'],
-    // Lesson style (2026-10-27): the journey rail and the next move, above the tabs.
-    band(model, ctx) {
-      return [rail(model, ctx), hero(model, ctx, { compact: Boolean(ctx.tab) && ctx.tab !== 'overview' })];
-    },
-    render(model, ctx) {
-      return ctx.atLeast('v1') ? renderV1(model, ctx) : renderV0(model, ctx);
-    },
-  });
+  // The one page (ADR 0004 d13): the Overview tab is gone; its parts are placed by
+  // media/views/page.js: since your last visit (§6.4), the deliverables (§6.7.4) with the
+  // checks (TODO-4), and the outcome of Regenerate (W5).
+  HT.register('overview', { stage: 'v0', outcomes: ['W5'] });
+  HT.parts = HT.parts || {};
+  HT.parts.overview = {
+    since: ctx => sinceSection(ctx.snapshot, ctx),
+    deliverables: ctx => deliverables(ctx.snapshot, ctx),
+    findings: (ctx, list) => findingsList(ctx, list),
+    renderOutcomeW5,
+  };
 
   // Test hook: the view-local state (not persisted, not a study fact).
   HT._overview = local;

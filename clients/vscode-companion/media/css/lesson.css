@@ -6,61 +6,10 @@
    and the "Next" line at the end of each tab. Tokens of tokens.css only; no inline style. */
 
 /* --- the journey rail (on the board, above the tabs) -------------------------------------- */
-.ht-railbox { margin: var(--s2) 0 0; }
-.ht-rail { display: flex; gap: var(--s2); margin: 0; padding: 0; list-style: none; }
-.ht-mom { flex: var(--n, 1) 1 0; min-width: 0; margin: 0; }
-.ht-mom:last-child { min-width: 66px; }
-.ht-mt { font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ht-faint);
-  line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ht-mt .ht-long { display: none; }
-.ht-mom.ht-cur .ht-mt { color: var(--yellow); }
-.ht-track { position: relative; display: flex; justify-content: space-around; align-items: center; height: 24px; margin: 0; padding: 0;
-  list-style: none; }
-.ht-track::before { content: ""; position: absolute; left: 0; right: 0; top: 11px; height: 2px; background: var(--chalk2); opacity: 0.45;
-  filter: url(#ht-chalk); }
-.ht-track.ht-done::before { background: var(--chalk); opacity: 0.85; }
-.ht-st { position: relative; z-index: 1; width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid var(--chalk2);
-  background: var(--board); flex: 0 0 auto; margin: 0; }
-.ht-st.ht-s-done { background: var(--chalk); border-color: var(--chalk); }
-.ht-st.ht-s-auto { border: 2px dashed var(--amber); background: var(--board); }
-.ht-st.ht-s-cur { border: 2px solid var(--yellow); background: var(--board); box-shadow: 0 0 0 4px var(--pulse);
-  animation: ht-pulse 2.4s ease-in-out infinite; }
-.ht-st.ht-s-cur::after { content: ""; position: absolute; inset: 2px; border-radius: 50%; background: var(--yellow); }
-.ht-st.ht-s-wait { border: 2px solid var(--yellow); }
-.ht-st.ht-s-later { border-style: dashed; opacity: 0.6; }
+
 @keyframes ht-pulse { 50% { box-shadow: 0 0 0 7px transparent; } }
-.ht-sl { display: none; position: absolute; top: 17px; left: 50%; transform: translateX(-50%); font-size: var(--t-cap);
-  color: var(--ht-faint); width: max-content; max-width: 62px; text-align: center; line-height: 1.15; }
-.ht-st.ht-s-cur .ht-sl { color: var(--yellow); font-weight: 600; }
-.ht-mom:first-child .ht-st:first-child .ht-sl { left: 0; transform: none; }
-.ht-mom:last-child .ht-st:last-child .ht-sl { left: auto; right: 0; transform: none; text-align: right; }
-.ht-mom:first-child .ht-st:first-child .ht-sl { text-align: left; }
-.ht-railcap { display: flex; flex-wrap: wrap; gap: 2px var(--s3); margin-top: 6px; font-size: var(--t-meta); color: var(--ht-muted); }
-.ht-railcap strong { color: var(--ht-fg); font-weight: 600; }
-.ht-remain { margin: 4px 0 0; font-size: var(--t-meta); color: var(--ht-muted); }
-.ht-remain strong { color: var(--ht-fg); font-weight: 600; }
-.ht-rlegend { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: var(--t-cap); color: var(--ht-faint); margin: 2px 0 0; padding: 0; list-style: none; }
-.ht-rlegend li { margin: 0; }
-.ht-rlegend li > span { display: inline-block; width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--chalk2); vertical-align: -1px; margin-right: 3px; }
-.ht-rlegend span.ht-s-done { background: var(--chalk); border-color: var(--chalk); }
-.ht-rlegend span.ht-s-auto { border: 1.5px dashed var(--amber); }
-.ht-rlegend span.ht-s-cur { border-color: var(--yellow); background: var(--yellow); }
-.ht-rlegend span.ht-s-later { border-style: dashed; opacity: 0.6; }
-@media (min-width: 700px) {
-  .ht-mt .ht-long { display: block; overflow: hidden; text-overflow: ellipsis; } .ht-mt .ht-short { display: none; }
-  .ht-sl { display: block; }
-  .ht-track { margin-bottom: 30px; }
-}
 
 /* --- the sticky position line under the tabs ---------------------------------------------- */
-.ht-where { position: sticky; top: 0; z-index: 8; margin: 0 calc(-1 * var(--s4)); padding: 6px var(--s4); background: var(--board2);
-  border-bottom: 1.5px solid var(--line2); box-shadow: 0 8px 14px -12px rgba(0, 0, 0, 0.6); font-size: var(--t-meta);
-  line-height: 1.45; color: var(--ht-muted); }
-.ht-where strong { color: var(--yellow); font-weight: 600; }
-.ht-where .ht-rest { color: var(--ht-faint); }
-.ht-where button.ht-link { font-size: var(--t-meta); margin-left: 4px; }
-@media (max-width: 559px) { .ht-where .ht-wl { display: none; } }
-@media (max-width: 600px) { .ht-where { margin: 0 -12px; padding: 6px 12px; } }
 
 /* --- "At this step" and the lead on the board --------------------------------------------- */
 .ht-intro { margin: var(--s2) 0 var(--s3); border-left: 2px solid var(--teal); padding: 3px 0 3px var(--s3); font-family: var(--serif);
@@ -143,24 +92,16 @@ body.vscode-light details.ht-ex, body.vscode-light details.ht-casse { --fold: va
 .card .ht-trap { border-color: var(--red); background: color-mix(in srgb, var(--red) 6%, var(--card)); }
 .ht-trap .ht-tt { display: block; font-size: var(--t-cap); font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--onboard-red); }
 .card .ht-trap .ht-tt { color: var(--red); }
-.ht-onboard { background: var(--board2); color: var(--chalk); border-left: 2px solid var(--yellow); padding: var(--s2) var(--s3); font-family: var(--serif);
-  font-size: var(--t-title); line-height: 1.45; text-shadow: 0 0 1px var(--dust); border-radius: 0 var(--r-card) var(--r-card) 0; margin: var(--s3) 0; }
-.ht-onboard small { display: block; font: var(--t-meta) var(--ht-font); color: var(--chalk2); text-shadow: none; margin-top: 3px; }
 
 /* High contrast and reduced motion: no pulse, no chalk filter, no tilt. */
-body.vscode-high-contrast .ht-st.ht-s-cur, body.vscode-high-contrast-light .ht-st.ht-s-cur { animation: none; box-shadow: none; }
-body.vscode-high-contrast .ht-track::before, body.vscode-high-contrast-light .ht-track::before { filter: none; opacity: 1; }
+
 body.vscode-high-contrast .ht-trap, body.vscode-high-contrast-light .ht-trap { transform: none; }
 body.vscode-high-contrast details.ht-fold, body.vscode-high-contrast-light details.ht-fold { border: 1px solid var(--vscode-contrastBorder, CanvasText);
   border-left-width: 4px; box-shadow: none; }
 @media (prefers-reduced-motion: reduce) {
-  .ht-st.ht-s-cur { animation: none; }
-  .ht-track::before { filter: none; }
   .ht-trap { transform: none; }
 }
 @media (forced-colors: active) {
-  .ht-st { border: 1.5px solid CanvasText; forced-color-adjust: none; }
-  .ht-st.ht-s-cur, .ht-st.ht-s-done { background: Highlight; }
   .ht-pq, .ht-concl, .ht-attn, details.ht-fold, .ht-trans { border: 1px solid CanvasText; }
 }
 
@@ -175,6 +116,4 @@ body.vscode-high-contrast details.ht-fold, body.vscode-high-contrast-light detai
 /* A narrow panel keeps the next move in its first screen: the rail's caption (the position
    line under the tabs says the same) and its legend (each mark has its words in its hover
    and for screen readers) are left out below 560 px. */
-@media (max-width: 559px) {
-  .ht-railcap, .ht-rlegend { display: none; }
-}
+

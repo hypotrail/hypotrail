@@ -1,5 +1,8 @@
-"""WP-A7 views (scope S, simulated browser): the Data & EDA tab, the Decisions mode and bases,
-the header's final-test chip, and the success criterion on the Overview.
+"""WP-A7 views (scope S, simulated browser), re-pointed at the one page (ADR 0004 d13): the data
+card and the exploration (the Data drawer, the path's figures), the answer rules and the bases
+(Now's fold, the path's histories), the final-test seal (PG-5), and the criterion line (NOW-8).
+DA-2's five fixed rows are replaced by the seeded sample (SAMPLE-1, `test_webview_page.py`);
+their test went with them.
 
 The real document under the real CSP, offline, on the **captured** payloads of the real
 engine (``test/fixtures/captured``) and on the hand-written fixtures, in the Light+, Dark+ and
@@ -21,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from conftest import inline_styles_ok
-from panel_cases import expand_eda
+from panel_cases import OPEN_ONE, expand_eda, goto
 
 import themes
 
@@ -69,17 +72,24 @@ def open_tab(open_panel, views, task, tab, theme='light', width=900, summary=Non
     panel.page.set_viewport_size({'width': width, 'height': 900})
     themes.apply(panel.page, theme)
     snap = summary or views[f'summary.{task}']
-    panel.init(stage=stage, task=snap['task'], **init)
+    panel.init(stage=stage, task=snap['task'], panelContract=2, **init)
     panel.snapshot(snap)
     if tab != 'overview':
-        panel.page.locator(f'[role="tab"][data-tab="{tab}"]').click()
+        goto(panel)
     return panel
 
 
 def feed_eda(panel, views, task, eda=None):
-    panel.view_data('data', views[f'data.{task}'])
-    panel.view_data('eda', eda or views[f'eda.{task}'])
-    expand_eda(panel.page)
+    """The data and EDA reads, every fold then open (the path's charts, the Data drawer)."""
+    for _ in range(10):
+        panel.view_data('data', views[f'data.{task}'])
+        panel.view_data('eda', eda or views[f'eda.{task}'])
+        if panel.page.evaluate(OPEN_ONE) == 0:
+            break
+        panel.page.wait_for_timeout(30)
+
+
+DRAWER = '[data-drawer="data"] '
 
 
 def clean(panel):
@@ -91,18 +101,18 @@ def clean(panel):
 # --- the data card -------------------------------------------------------------------------
 
 @pytest.mark.parametrize('task', ['binary', 'regression'])
-def test_da1_the_tab_reads_the_data_card_and_shows_it_first(open_panel, views, task):
-    """DA-1: the Data & EDA tab asks for `data`, and the data card comes before the exploration."""
+def test_da1_tool1_the_data_drawer_reads_the_data_card_and_shows_it_first(open_panel, views, task):
+    """DA-1 → TOOL-1: the Data drawer asks for `data`, and the data card comes before the
+    exploration (the quality check, the banner, the charts' links to the path)."""
     panel = open_tab(open_panel, views, task, 'eda')
     page = panel.page
-    assert page.locator('[role="tab"][data-tab="eda"]').inner_text() == 'Data & EDA'
     assert {'v': 2, 'type': 'load', 'view': 'data'} in panel.posted()
     assert page.locator('[data-data-loading]').count() == 1, 'a loading state until the read answers'
     feed_eda(panel, views, task)
     card = page.locator('[data-data-card]')
     assert card.count() == 1
     order = page.evaluate("""() => {
-      const all = [...document.querySelectorAll('[data-data-card], [data-quality-card], .eda-banner, [data-eda-card]')];
+      const all = [...document.querySelectorAll('[data-drawer="data"] :is([data-data-card], [data-quality-card], .eda-banner, [data-chart-links] li)')];
       return all.map(n => n.matches('[data-data-card]') ? 'data' : n.matches('[data-quality-card]') ? 'quality'
         : n.matches('.eda-banner') ? 'banner' : 'chart');
     }""")
@@ -120,29 +130,6 @@ def test_da1_the_tab_reads_the_data_card_and_shows_it_first(open_panel, views, t
     assert card.locator('[data-data-note]').inner_text() == raw['note']['text']
     clean(panel)
     shot(page, f'data-card-{task}-light-900')
-
-
-@pytest.mark.parametrize('task', ['binary', 'regression'])
-def test_da2_five_rows_target_first_and_excluded_columns_marked(open_panel, views, task):
-    """DA-2: the five fixed rows, the target column first, each excluded column marked (not by colour only)."""
-    panel = open_tab(open_panel, views, task, 'eda')
-    feed_eda(panel, views, task)
-    page = panel.page
-    raw = views[f'raw.data.{task}']
-    heads = page.locator('[data-five-rows] thead th').evaluate_all('ts => ts.map(t => t.dataset.column)')
-    assert heads == raw['rows']['columns'] and heads[0] == raw['target']['column']
-    assert page.locator('[data-five-rows] tbody tr').count() == raw['rows']['n_rows'] == 5
-    first = raw['rows']['items'][0]['values']
-    # v0.3 (WP-E2): the five rows sit in a closed "Five example rows" disclosure: read their text.
-    cells = page.locator('[data-five-rows] tbody tr').first.locator('td').all_text_contents()
-    assert cells == ['(missing)' if first[c] is None else str(first[c]) for c in heads]
-    decided = {v['name']: (v['decided'] or {}).get('value') for g in raw['groups'] for v in g['variables']}
-    excluded = [c for c in heads if decided.get(c) in ('not_available', 'uncertain_excluded')]
-    assert excluded, 'the capture excludes columns'
-    for name in excluded:
-        assert page.locator(f'[data-five-rows] th[data-column="{name}"]').text_content() == f'{name} ✗'
-    assert page.locator('[data-excluded-legend]').count() == 1
-    clean(panel)
 
 
 @pytest.mark.parametrize('task', ['binary', 'regression'])
@@ -306,7 +293,7 @@ def test_ed10_the_quality_check_reads_development_rows_without_the_target(open_p
     panel = open_tab(open_panel, views, task, 'eda')
     feed_eda(panel, views, task)
     page = panel.page
-    card = page.locator('[data-quality-card="eda.quality"]')
+    card = page.locator(DRAWER + '[data-quality-card="eda.quality"]')
     values = next(r for r in views[f'raw.evidence.{task}']['results'] if r['slot'] == 'eda.quality')['values']
     # v0.3 (WP-E2): the eyebrow says it, the "Why?" says it in a sentence.
     assert card.locator('[data-eyebrow]').text_content() == ('Quality · development rows, no outcome' if task == 'binary'
@@ -367,7 +354,7 @@ def test_ed13_regression_data_and_eda_hold_no_decision_rule_vocabulary(open_pane
     feed_eda(panel, views, 'regression')
     page = panel.page
     page.locator('[data-french-toggle]').click()
-    text = page.locator('#panel-eda').inner_text()
+    text = page.locator('#main').inner_text()
     assert not FORBIDDEN.search(text), FORBIDDEN.search(text)
     clean(panel)
 
@@ -386,10 +373,9 @@ def test_dc7_the_mode_line_says_what_counts_as_an_answer(open_panel, views):
     assert 'A reason is optional, also for the decision rule and the conclusion' in text
     assert 'changes only in the chat' in text
     assert mode.locator('button, select, input, textarea, [data-write]').count() == 0
-    card = page.locator('[data-proposal-card][data-decision="policy"]')
-    # WP-E1: the card has no words field, so no reason hint; it points to the chat.
-    assert card.locator('[data-reason-hint]').count() == 0
-    assert card.locator('[data-answer-in-chat]').count() == 1
+    # NOW-7: the mode is the fold "What counts as your answer" of Now; Now has no words field.
+    assert mode.locator('xpath=ancestor::details[@data-fold-id="answer-rules"]').count() == 1
+    assert page.locator('[data-block="now"] [data-reason-hint], [data-block="now"] textarea').count() == 0
     clean(panel)
 
 
@@ -433,42 +419,44 @@ def test_dc9_the_two_governance_decisions_read_in_words(open_panel, views):
     assert crit.inner_text() == 'Adopt only if precision beats the baseline by at least 5 points'
     prep = page.locator('[data-history-row^="preprocessing:"] [data-value-raw]').first
     assert prep.inner_text().startswith('Missing values not flagged')
-    assert not re.search(r'\{"', page.locator('[data-history]').inner_text()), 'no raw JSON value'
+    assert not re.search(r'\{"', page.locator('#main').inner_text()), 'no raw JSON value'
     clean(panel)
 
 
 # --- the header and the Overview ----------------------------------------------------------------
 
-@pytest.mark.parametrize('tab', ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn'])
-def test_fr1_the_final_test_chip_is_on_every_tab(open_panel, views, tab):
-    panel = open_tab(open_panel, views, 'binary', tab, stage='v3')
-    chip = panel.page.locator('header [data-final-test]')
-    assert chip.get_attribute('data-final-test') == 'sealed'
-    assert chip.inner_text() == 'Final test sealed · 904 rows'
-    assert chip.get_attribute('title')
+@pytest.mark.parametrize('stage', ['v0', 'v1', 'v2', 'v3'])
+def test_fr1_pg5_the_final_test_seal_is_in_the_sticky_header_at_every_stage(open_panel, views, stage):
+    """FR-1 → PG-5: the seal pill is in the sticky header, so it stays in view on every part of
+    the page; its hover names the rows set aside."""
+    panel = open_tab(open_panel, views, 'binary', 'overview', stage=stage)
+    chip = panel.page.locator('[data-block="header"] [data-pill="seal"]')
+    assert chip.get_attribute('data-seal') == 'sealed'
+    assert chip.text_content() == '🔒 Final test sealed'
+    assert '904' in chip.get_attribute('title')
     clean(panel)
 
 
-def test_fr1_v0_shows_the_chip_and_a_legacy_study_says_no_final_test(open_panel, views):
+def test_fr1_a_legacy_study_says_no_final_test(open_panel, views):
     panel = open_tab(open_panel, views, 'binary', 'overview', stage='v0')
-    assert panel.page.locator('header [data-final-test]').inner_text() == 'Final test sealed · 904 rows'
     legacy = copy.deepcopy(views['summary.binary'])
     legacy['finalTest'] = {'status': 'absent', 'rows': None, 'method': None, 'fraction': None, 'developmentRows': None}
     panel.snapshot({**legacy, 'revision': legacy['revision'] + 1})
-    chip = panel.page.locator('header [data-final-test]')
-    assert chip.get_attribute('data-final-test') == 'absent' and chip.inner_text() == 'No final test'
+    chip = panel.page.locator('[data-block="header"] [data-pill="seal"]')
+    assert chip.get_attribute('data-seal') == 'absent' and chip.text_content() == 'No final test'
     clean(panel)
     shot(panel.page, "overview-legacy-no-final-test")
 
 
-def test_ov9_where_we_are_shows_the_success_criterion_status(open_panel, views):
-    """OV-9: the criterion in words, its status (met), and the engine's gain with its interval, cited."""
-    panel = open_tab(open_panel, views, 'binary', 'overview', summary=views['hand.summary'], stage='v1')
+def test_ov9_now8_the_criterion_line_shows_its_status_and_the_cited_gain(open_panel, views):
+    """OV-9 → NOW-8: without `criterion_configurations`, Now's criterion line falls back to
+    `summary.criterion` for the one model it names: the criterion in words, its status (met),
+    and the engine's gain with its interval, cited (v2)."""
+    panel = open_tab(open_panel, views, 'binary', 'overview', summary=views['hand.summary'], stage='v2')
     page = panel.page
-    row = page.locator('[data-recap-line="Criterion"]')
-    assert row.get_attribute('data-criterion') == 'met'
-    assert row.locator('[data-criterion-status]').inner_text() == 'met'
-    assert 'Adopt only if precision beats the baseline by at least 5 points' in row.inner_text()
+    row = page.locator('[data-block="now"] [data-criterion="single"]')
+    assert row.get_attribute('data-criterion-status') == 'met'
+    assert row.inner_text().startswith('Your criterion, adopt only if precision beats the baseline by at least 5 points: met.')
     cited = row.locator('[data-criterion-gain] [data-result-id]').evaluate_all('ns => ns.map(n => n.textContent)')
     assert cited == ['+30.5', '+21.4', '+40.2']
     assert 'when you select the top 100 by score' in row.inner_text()
@@ -478,7 +466,7 @@ def test_ov9_where_we_are_shows_the_success_criterion_status(open_panel, views):
         changed['criterion']['status'] = status
         changed['revision'] += 1
         panel.snapshot(changed)
-        assert row.get_attribute('data-criterion') == status
+        assert row.get_attribute('data-criterion-status') == status
     clean(panel)
 
 
@@ -487,8 +475,8 @@ def test_ov9_the_regression_criterion_reads_as_a_share(open_panel, views, model,
     raw['criterion'].update({'status': 'uncertain', 'gain': 0.123, 'low': -0.02, 'high': 0.25, 'minimum': 0.1,
                              'result_id': 'a' * 64})
     summary = model('summary', raw)
-    panel = open_tab(open_panel, views, 'regression', 'overview', summary=summary, stage='v1')
-    row = panel.page.locator('[data-recap-line="Criterion"]')
+    panel = open_tab(open_panel, views, 'regression', 'overview', summary=summary, stage='v2')
+    row = panel.page.locator('[data-block="now"] [data-criterion="single"]')
     assert row.locator('[data-criterion-gain] [data-result-id]').all_inner_texts() == ['+12.3%', '-2.0%', '+25.0%']
     assert not FORBIDDEN.search(row.inner_text())
     clean(panel)
@@ -506,20 +494,20 @@ def test_a11y3_the_new_views_under_every_theme_and_420px(open_panel, views, task
     feed_eda(panel, views, task)
     page = panel.page
     assert page.evaluate('document.scrollingElement.scrollWidth <= window.innerWidth + 1'), 'Data & EDA scrolls sideways'
-    sizes = page.evaluate("""() => [...document.querySelectorAll('#panel-eda svg.ht-chart')].filter(s => s.getBoundingClientRect().width > 0)
+    sizes = page.evaluate("""() => [...document.querySelectorAll('#main svg.ht-chart')].filter(s => s.getBoundingClientRect().width > 0)
       .map(svg => { const vb = svg.getAttribute('viewBox').split(/\\s+/).map(Number);
         return svg.getBoundingClientRect().width / vb[2]; })""")
     # v0.3 (WP-E2): the bars and histograms are HTML grids; an SVG (the box plot) is never upscaled.
-    assert page.locator('#panel-eda [role="img"][aria-label]').count() > 0
+    assert page.locator('#main [role="img"][aria-label]').count() > 0
     assert max(sizes, default=0) <= 1.0001
-    chip = page.locator('header [data-final-test]')
+    chip = page.locator('[data-block="header"] [data-pill="seal"]')
     assert float(chip.evaluate('n => parseFloat(getComputedStyle(n).borderTopWidth)')) >= 1
     shot(page, f'eda-{task}-{theme}-{width}')
-    page.locator('[role="tab"][data-tab="decisions"]').click()
+    goto(panel)
     panel.view_data('decisions', views[f'decisions.{task}'])
     assert page.evaluate('document.scrollingElement.scrollWidth <= window.innerWidth + 1'), 'Decisions scrolls sideways'
     shot(page, f'decisions-{task}-{theme}-{width}')
-    page.locator('[role="tab"][data-tab="overview"]').click()
+    goto(panel)
     assert page.evaluate('document.scrollingElement.scrollWidth <= window.innerWidth + 1'), 'Overview scrolls sideways'
     clean(panel)
     shot(page, f'overview-{task}-{theme}-{width}')

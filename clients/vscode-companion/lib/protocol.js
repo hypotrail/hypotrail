@@ -13,7 +13,8 @@ function protocolFactory() {
   'use strict';
   const VERSION = 2;
   const STAGES = ['v0', 'v1', 'v2', 'v3'];
-  const TABS = ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn'];
+  // ADR 0004 d13 (CLI-CONTRACT §17.1.1): the places of the one page are named by anchors.
+  const ANCHOR = '^(now|todo:(execution|deliverables|checks|sources|integrity)|path|path:[a-z_]+(/[A-Za-z0-9_.:-]+)?|tools:(data|whatif|notions|deliverables|how))$';
   // WP-A7: `data`, the data card of the Data & EDA tab (`hypotrail data`). WP-B5:
   // `scenario`, the teaching scenario's defaults (`status --json`, view.scenario_defaults).
   // v0.3 (WP-K): `trials`, the trial budget and the model-family shortlist of the same read
@@ -157,6 +158,9 @@ function protocolFactory() {
           fields: { kernel: { t: 'str', nullable: true }, notebook: { t: 'str', nullable: true },
             editable: { t: 'str', nullable: true, opt: true }, workbench: { t: 'str', nullable: true } },
         },
+        // ADR 0004 d13 (CLI-CONTRACT §17.1.5): the contract version the panel speaks
+        // (lib/flag.js PANEL_CONTRACT), compared with the digest's `panel_contract` (skew line).
+        panelContract: { t: 'int', min: 1, opt: true },
       },
     },
     // CR.1: `currency` is the version, with the revision, a model was read at.
@@ -213,7 +217,10 @@ function protocolFactory() {
         currency, model },
     },
     learn_state: { fields: { prefs: { t: 'obj' }, seen: { t: 'obj' }, predictions: { t: 'obj' } } },
-    navigate: { fields: { tab: { t: 'enum', values: TABS }, kind: { t: 'enum', values: NAV_KINDS }, id: { t: 'str', min: 1, max: 100 } } },
+    // ADR 0004 d13 (§4.3): a place of the one page (an anchor), and what it names; the tabbed
+    // form `{tab, kind, id}` is dropped as invalid.
+    navigate: { fields: { anchor: { t: 'str', min: 1, max: 200, re: ANCHOR }, kind: { t: 'enum', values: NAV_KINDS, opt: true },
+      id: { t: 'str', min: 1, max: 100, opt: true } } },
     notice: { fields: { text: { t: 'str' }, politeness: { t: 'enum', values: ['polite', 'assertive'] } } },
   };
 
@@ -322,7 +329,7 @@ function protocolFactory() {
   }
 
   return {
-    VERSION, STAGES, TABS, VIEWS, WRITE_OPS, OUTCOME_KINDS, NAV_KINDS, ARTIFACTS, MAX_WORDS,
+    VERSION, STAGES, ANCHOR, VIEWS, WRITE_OPS, OUTCOME_KINDS, NAV_KINDS, ARTIFACTS, MAX_WORDS,
     PROPOSAL_ID, RESULT_ID, RULE, TO_EXTENSION, TO_WEBVIEW,
     validateIncoming, validateOutgoing, explain, stageRank, stageAllows, stageOf, envelope,
     explainIncoming: m => explain(TO_EXTENSION, m),

@@ -189,7 +189,7 @@ test('argv: taken from agent.json, paths with spaces and quotes, execFile withou
   await opened.controller.handle({ v: 2, type: 'ready' });
   assert.equal(calls.length, 1);
   assert.equal(calls[0].file, CLI[0]);
-  assert.deepEqual(calls[0].args, [...CLI.slice(1), 'status', '--summary', '--json', '--study', dir]);
+  assert.deepEqual(calls[0].args, [...CLI.slice(1), 'status', '--summary', '--digest', '--json', '--study', dir]);
   assert.equal(calls[0].options.shell, false);
   assert.equal(calls[0].options.cwd, dir);
   const snapshot = fake.calls.panels[0].posted.find(m => m.type === 'snapshot');

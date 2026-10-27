@@ -46,7 +46,7 @@
     exportFile: (file, bytes) => `${file} · ${bytes} octets`,
     exportOut: out => `Dossier : ${out}`,
     exportIncomplete: words => `Le dossier est incomplet : ${words}.`,
-    exportStaleReport: "Le rapport n'était pas à jour : il n'est pas dans le dossier. Régénérez-le dans Vue d'ensemble et exportez de nouveau si vous en avez besoin.",
+    exportStaleReport: "Le rapport n'était pas à jour : il n'est pas dans le dossier. Régénérez-le dans Livrables et exportez de nouveau si vous en avez besoin.",
     openFolder: 'Ouvrir le dossier',
     // L7 (session du 2026-10-26, D15) : la suite de l'étude, en lecture seule.
     afterStudyTitle: "Après l'étude",

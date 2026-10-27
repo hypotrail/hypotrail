@@ -33,7 +33,7 @@ const TO_EXTENSION = {
   learn_set: [{ key: 'prediction', id: 'binary.train_eda.rare', value: 'rare' }, ['key', 'words']],
 };
 const TO_WEBVIEW = {
-  init: [{ stage: 'v1', reviewer: false, learningLayer: true, chatInsert: false, task: null }, ['stage', 'v9']],
+  init: [{ stage: 'v1', reviewer: false, learningLayer: true, chatInsert: false, task: null, panelContract: 2 }, ['stage', 'v9']],
   snapshot: [{ revision: 3, model: MODEL }, ['model', []]],
   view_data: [{ view: 'decisions', revision: 3, model: MODEL }, ['view', 'nope']],
   load_error: [{ view: null, message: 'm', detail: '' }, ['detail', null]],
@@ -44,7 +44,8 @@ const TO_WEBVIEW = {
   effects: [{ proposalId: 'p_1', revision: 3, model: MODEL }, ['proposalId', 1]],
   draft_result: [{ decisionId: 'policy', value: 'capacity:100', revision: 3, model: MODEL }, ['decisionId', 'conclusion']],
   learn_state: [{ prefs: {}, seen: {}, predictions: {} }, ['seen', []]],
-  navigate: [{ tab: 'evidence', kind: 'result', id: RID }, ['tab', 'nowhere']],
+  // ADR 0004 d13 (§4.3, §8.2): an anchor of CLI-CONTRACT §17.1.1, and what it names.
+  navigate: [{ anchor: 'path:models/fit.linear', kind: 'result', id: RID }, ['anchor', 'tab:evidence']],
   notice: [{ text: 'Copied.', politeness: 'polite' }, ['politeness', 'loud']],
 };
 
@@ -78,6 +79,15 @@ test('webview -> extension: every type validates, an extra field or a wrong type
 
 test('extension -> webview: every type validates, an extra field or a wrong type is dropped', () => {
   cases(protocol.TO_WEBVIEW, protocol.validateOutgoing, TO_WEBVIEW);
+  // ADR 0004 d13: the tabbed form of `navigate` is dropped; every anchor of the grammar passes.
+  assert.equal(protocol.validateOutgoing({ v: 2, type: 'navigate', tab: 'evidence', kind: 'result', id: RID }), null);
+  for (const anchor of ['now', 'todo:execution', 'todo:checks', 'path', 'path:train_eda', 'path:train_eda/eda.rate_by:job',
+    'path:model_variant/fit.variant:2', 'tools:data', 'tools:whatif', 'tools:notions', 'tools:deliverables']) {
+    assert.ok(protocol.validateOutgoing({ v: 2, type: 'navigate', anchor }), anchor);
+  }
+  for (const anchor of ['', 'later', 'todo:nothing', 'path:Train', 'tools:charts', 'path:split/a b']) {
+    assert.equal(protocol.validateOutgoing({ v: 2, type: 'navigate', anchor }), null, anchor);
+  }
 });
 
 test('field rules: questions, rules, load, learn_set', () => {
@@ -141,7 +151,8 @@ test('media/protocol.js is the generated copy of lib/protocol.js', () => {
 test('round trip: every model of every lib/models/*.js fixture passes as view_data and snapshot', () => {
   const dir = path.join(__dirname, '..', 'lib', 'models');
   let checked = 0;
-  for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.js') && f !== 'common.js')) {
+  // page.js places a SummaryModel (test/page.test.js); it projects no CLI payload.
+  for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.js') && f !== 'common.js' && f !== 'page.js')) {
     const mod = require(path.join(dir, file));
     const fn = Object.entries(mod).find(([k, v]) => /^to[A-Z]\w*Model$/.test(k) && typeof v === 'function');
     assert.ok(fn, `${file} exports a to<Name>Model function`);

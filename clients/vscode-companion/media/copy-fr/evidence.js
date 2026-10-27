@@ -119,7 +119,7 @@
 
     finalTitle: 'Test final',
     finalLead: {
-      sealed: "Chaque chiffre de cet onglet vient des lignes de développement. Elles ont servi à choisir le modèle et la règle : les chiffres sont donc optimistes. Le test final donne le seul chiffre indépendant ; il s'ouvre une fois, sur votre décision dans le chat, une fois le modèle et la règle confirmés.",
+      sealed: "Chaque chiffre ici vient des lignes de développement. Elles ont servi à choisir le modèle et la règle : les chiffres sont donc optimistes. Le test final donne le seul chiffre indépendant ; il s'ouvre une fois, sur votre décision dans le chat, une fois le modèle et la règle confirmés.",
       opened: "Le test final a été ouvert une fois. Son chiffre est la preuve indépendante de l'étude ; les chiffres de développement ci-dessous restent optimistes.",
       changed: "Le test final a été ouvert une fois, puis l'étude a changé. Son chiffre décrit la configuration mesurée alors, pas l'étude telle qu'elle est maintenant.",
       interrupted: "L'ouverture a commencé mais aucun résultat n'a été enregistré. Le test final est consommé : il n'est pas ouvert une seconde fois.",

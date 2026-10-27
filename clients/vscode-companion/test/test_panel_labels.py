@@ -1,21 +1,40 @@
-"""The engine's picture of the panel equals the panel (owner session 2026-10-26, R1).
+"""The engine's picture of the panel equals the panel (owner session 2026-10-26, R1; the one page,
+ADR 0004 d13, PANEL-ONE-PAGE-PLAN P-8).
 
 ``mlkit.study.companion_env`` tells the agent, in ``next_action.panel``, whether the panel is
-on, at which stage, and the tab that shows the current step, with the panel's own labels in
-the study language. This test reads the panel's sources with regular expressions (as
-``test_contract_keys.py`` reads the engine's key lists) and fails when one of them drifts:
-the flag and its environment variables (``lib/flag.js``), the tab order and the stage from
-which tabs show (``media/core.js``), the stage of each tab (``media/views/*.js``), and the
-title and tab labels (``media/copy/core.js``, ``media/copy-fr/core.js``).
+on, at which stage, and the place of the page that shows the current step (an anchor: Now, To
+handle, the path, a drawer), with the panel's own labels in the study language (CLI-CONTRACT
+§17.1.4). This test reads the panel's copy (``media/copy/page.js``, ``media/copy-fr/page.js``,
+run in Node) and the contract's tables, and fails when one of them drifts; the engine's copy of
+the labels (``ANCHOR_LABELS``, ``CONTENT_LABELS``, ``TODO_LABELS``, ``DRAWER_LABELS``) is
+compared too once the engine has it (E-1), and the flag and its environment variables
+(``lib/flag.js``) always. The tabbed panel's tab and section labels went with the tabs.
 """
 from __future__ import annotations
 
+import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
+
+import pytest
 
 from mlkit.study import companion_env as ce
 
 CLIENT = Path(__file__).resolve().parents[1]
+CONTRACT = CLIENT.parents[1] / 'docs' / 'specs' / 'CLI-CONTRACT.md'
+COPY = """
+const fs = require('fs');
+const out = {};
+for (const [lang, file] of [['en', 'media/copy/page.js'], ['fr', 'media/copy-fr/page.js']]) {
+  const HT = { copy: {} };
+  new Function('globalThis', fs.readFileSync(file, 'utf8'))({ Hypotrail: HT });
+  const c = lang === 'fr' ? HT.copyFr.page : HT.copy.page;
+  out[lang] = { anchors: c.anchors, contents: c.contents, todoKinds: c.todoKinds, drawers: c.drawers };
+}
+process.stdout.write(JSON.stringify(out));
+"""
 
 
 def _read(rel: str) -> str:
@@ -26,34 +45,58 @@ def _js_strings(body: str) -> list[str]:
     return [a or b for a, b in re.findall(r"'((?:[^'\\]|\\.)*)'|\"((?:[^\"\\]|\\.)*)\"", body)]
 
 
-def _copy(rel: str) -> tuple[str, dict]:
-    text = _read(rel)
-    title = re.search(r"^\s*title:\s*(['\"])(.*?)\1,\s*$", text, re.M).group(2)
-    body = re.search(r'^\s*tabs:\s*\{(.*?)\},\s*$', text, re.M | re.S).group(1)
-    pairs = re.findall(r"(\w+):\s*(?:'((?:[^'\\]|\\.)*)'|\"((?:[^\"\\]|\\.)*)\")", body)
-    return title, {key: a or b for key, a, b in pairs}
+@pytest.fixture(scope='module')
+def page_copy():
+    node = shutil.which('node')
+    if not node:
+        pytest.skip('node is not installed')
+    return json.loads(subprocess.run([node, '-e', COPY], cwd=CLIENT, capture_output=True, text=True, check=True).stdout)
 
 
-def test_the_titles_and_tab_labels_equal_the_panel_copy():
-    for lang, rel in (('en', 'media/copy/core.js'), ('fr', 'media/copy-fr/core.js')):
-        title, tabs = _copy(rel)
-        assert title == ce.TITLES[lang], lang
-        assert tabs == ce.TAB_LABELS[lang], lang
-        assert list(tabs) == list(ce.TAB_ORDER), lang
+def _table(heading: str) -> dict:
+    """A three-column table of CLI-CONTRACT §17.1.4 after the header that starts with `heading`."""
+    text = CONTRACT.read_text(encoding='utf-8')
+    section = text[text.index('#### 17.1.4'):text.index('#### 17.1.5')]
+    rows = {}
+    block = section[section.index(f'| {heading}'):].split('\n\n', 1)[0]
+    for line in block.splitlines()[2:]:
+        cells = [c.strip() for c in line.strip().strip('|').split('|')]
+        if len(cells) == 3 and cells[1] and cells[2]:
+            key = cells[0].strip('`').split(' ')[0].strip('`')
+            rows[key] = {'en': cells[1], 'fr': cells[2]}
+    return rows
 
 
-def test_the_tabs_of_each_stage_equal_the_panel_views():
-    core = _read('media/core.js')
-    order = re.search(r'const TAB_ORDER = \[([^\]]*)\]', core).group(1)
-    assert tuple(_js_strings(order)) == ce.TAB_ORDER
-    assert re.search(r"const tabbed = \(\) => atLeast\('(v\d)'\);", core).group(1) == \
-        ce.TABBED_FROM
-    stages = {}
-    for path in sorted((CLIENT / 'media' / 'views').glob('*.js')):
-        for tab, stage in re.findall(
-                r"HT\.register\('\w+', \{\s*tab: '(\w+)',\s*stage: '(v\d)'", path.read_text()):
-            stages.setdefault(tab, set()).add(stage)
-    assert {tab: min(found) for tab, found in stages.items()} == ce.TAB_STAGE
+def test_the_page_labels_equal_the_contract_tables(page_copy):
+    """CLI-CONTRACT §17.1.4: the contents of Now, the kinds of To handle and the drawers are the
+    panel's copy, verbatim, in both languages."""
+    for heading, key in (('Content (`now`)', 'contents'), ('`todo` kind', 'todoKinds'), ('Drawer', 'drawers')):
+        table = _table(heading)
+        assert table, heading
+        for lang in ('en', 'fr'):
+            assert {k: v[lang] for k, v in table.items()} == page_copy[lang][key], (heading, lang)
+
+
+def test_the_anchor_names_open_the_contract_lines(page_copy):
+    """The place names of the panel line (§17.1.4 "In the panel: Now, …") are the copy's anchors."""
+    lines = _table('Anchor')
+    for lang, start in (('en', 'In the panel: '), ('fr', 'Dans le panneau : ')):
+        names = page_copy[lang]['anchors']
+        assert lines['now'][lang].strip('`').startswith(f'{start}{names["now"]},'), lang
+        assert lines['todo:<kind>'][lang].strip('`').startswith(f'{start}{names["todo"]},'), lang
+        assert lines['path'][lang].strip('`').startswith(f'{start}{names["path"]},'), lang
+        assert lines['tools:<drawer>'][lang].strip('`').startswith(f'{start}{names["tools"]} →'), lang
+
+
+def test_the_engine_labels_equal_the_page(page_copy):
+    """The engine's copy of the labels (E-1); skipped while the engine still names tabs."""
+    if not hasattr(ce, 'ANCHOR_LABELS'):
+        pytest.skip('companion_env still names the tabbed panel; E-1 gives it the anchors (CLI-CONTRACT §17.1.4)')
+    for lang in ('en', 'fr'):
+        assert ce.ANCHOR_LABELS[lang] == page_copy[lang]['anchors'], lang
+        assert ce.CONTENT_LABELS[lang] == page_copy[lang]['contents'], lang
+        assert ce.TODO_LABELS[lang] == page_copy[lang]['todoKinds'], lang
+        assert ce.DRAWER_LABELS[lang] == page_copy[lang]['drawers'], lang
 
 
 def test_the_flag_and_the_stage_are_read_as_the_extension_reads_them():
@@ -71,62 +114,3 @@ def test_the_flag_and_the_stage_are_read_as_the_extension_reads_them():
     assert "if (env[ENV_VAR] === '1') return true;" in flag
     assert 'return setting(vscode, SETTING_KEY, false) === true;' in flag
     assert 'raw.match(/^v([0-9]{1,3})$/)' in flag
-
-
-# --- R1b: the sections ``next_action.panel.shown`` names --------------------------------------
-
-SECTION_KEYS = {
-    'media/copy{}/eda.js': {'data_card': 'cardTitle', 'quality': 'qualityTitle'},
-    'media/copy{}/decisions.js': {'waiting': 'waitingTitle', 'choice': 'waitingTitle',
-                                  'holds': 'holdsTitle', 'history': 'historyTitle',
-                                  'mode': 'modeTitle'},
-    'media/copy{}/evidence.js': {'development': 'developmentTitle',
-                                 'diagnostics': 'diagnosticsTitle', 'final_test': 'finalTitle'},
-}
-# The eyebrow key of each EDA card (media/views/eda.js ``eyebrowOf``).
-EYEBROW_KEYS = {'eda.target_rate': 'targetRate', 'eda.target_summary': 'targetSummary',
-                'eda.special_values': 'special', 'eda.rate_by': 'rateBy', 'eda.mean_by': 'meanBy',
-                'eda.single_feature_signal': 'signal', 'eda.correlation': 'correlation',
-                'eda.distribution': 'distribution'}
-
-
-def _string_key(text: str, key: str) -> str:
-    found = re.findall(rf"^\s*{key}:\s*(?:'((?:[^'\\]|\\.)*)'|\"((?:[^\"\\]|\\.)*)\"),", text, re.M)
-    assert len(found) == 1, (key, found)
-    return found[0][0] or found[0][1]
-
-
-def test_the_section_labels_equal_the_panel_copy():
-    """Each section heading the engine names is the panel's copy, verbatim, in both languages,
-    and is a heading the views render (``media/views/*.js``)."""
-    for lang, suffix in (('en', ''), ('fr', '-fr')):
-        seen = set()
-        for pattern, keys in SECTION_KEYS.items():
-            text = _read(pattern.format(suffix))
-            for section, key in keys.items():
-                assert ce.SECTION_LABELS[lang][section] == _string_key(text, key), (lang, section)
-                seen.add(section)
-        assert seen == set(ce.SECTION_LABELS[lang]), lang
-        eda = _read(f'media/copy{suffix}/eda.js')
-        body = re.search(r'^\s*eyebrows:\s*\{(.*?)\},\s*$', eda, re.M | re.S).group(1)
-        pairs = re.findall(r"(\w+):\s*(?:'((?:[^'\\]|\\.)*)'|\"((?:[^\"\\]|\\.)*)\")", body)
-        eyebrows = {key: a or b for key, a, b in pairs}
-        assert set(eyebrows) == set(EYEBROW_KEYS.values()), lang
-        for activity, key in EYEBROW_KEYS.items():
-            assert ce.EDA_CARD_LABELS[lang][activity] == eyebrows[key].split(' · ')[0], \
-                (lang, activity)
-    # Rendered as headings: the data card and the quality check (Data & EDA), the waiting,
-    # holds, history and mode sections (Decisions), the development evidence, diagnostics and
-    # final test (Evidence).
-    eda = _read('media/views/eda.js')
-    assert "'data-section': 'data_card', text: c.data.cardTitle" in eda
-    assert "'data-section': 'quality', text: c.qualityTitle" in eda
-    decisions = _read('media/views/decisions.js')
-    for key in ('waitingTitle', 'holdsTitle', 'historyTitle', 'modeTitle'):
-        assert f'c.{key}' in decisions, key
-    evidence = _read('media/views/evidence.js')
-    for key in ('developmentTitle', 'diagnosticsTitle', 'finalTitle'):
-        assert f"text: c.{key} }}" in evidence, key
-    for name in ('targetRate', 'targetSummary', 'special', 'rateBy', 'meanBy', 'signal',
-                 'correlation', 'distribution'):
-        assert f'e.{name}' in eda, name

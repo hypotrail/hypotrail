@@ -21,14 +21,14 @@ test('the authority is <publisher>.<name> of package.json', () => {
 });
 
 test('parseDeepLink: result, decision, and proposal links, with an optional absolute study', () => {
-  assert.deepEqual(parseDeepLink({ path: `/result/${RID}`, query: '' }), { tab: 'evidence', kind: 'result', id: RID, study: null });
+  assert.deepEqual(parseDeepLink({ path: `/result/${RID}`, query: '' }), { kind: 'result', id: RID, study: null });
   // VS Code hands the handler a decoded query (vscode.Uri.query): the path is taken as is.
   assert.deepEqual(parseDeepLink({ authority: AUTHORITY, path: `/result/${RID}`, query: 'study=/studies/bank marketing' }),
-    { tab: 'evidence', kind: 'result', id: RID, study: '/studies/bank marketing' });
+    { kind: 'result', id: RID, study: '/studies/bank marketing' });
   for (const id of ['prediction_time', 'feature_availability', 'split', 'policy', 'model_choice', 'conclusion']) {
-    assert.deepEqual(parseDeepLink({ path: `/decision/${id}`, query: '' }), { tab: 'decisions', kind: 'decision', id, study: null });
+    assert.deepEqual(parseDeepLink({ path: `/decision/${id}`, query: '' }), { kind: 'decision', id, study: null });
   }
-  assert.deepEqual(parseDeepLink({ path: '/proposal/p_12', query: '?study=/s' }), { tab: 'decisions', kind: 'proposal', id: 'p_12', study: '/s' });
+  assert.deepEqual(parseDeepLink({ path: '/proposal/p_12', query: '?study=/s' }), { kind: 'proposal', id: 'p_12', study: '/s' });
 });
 
 test('parseDeepLink: anything else is not a link (EV-3)', () => {
@@ -51,7 +51,7 @@ test('parseDeepLink: `+`, `&`, `=`, `%` and spaces of the decoded query are part
   // the whole rest of the query after `study=`, exactly as VS Code decoded it.
   for (const study of ['/studies/a+b', '/studies/r&d', '/studies/x=1&y=2', '/studies/100% sure', '/studies/a b+c&d']) {
     assert.deepEqual(parseDeepLink({ path: '/proposal/p_3', query: `study=${study}` }),
-      { tab: 'decisions', kind: 'proposal', id: 'p_3', study }, study);
+      { kind: 'proposal', id: 'p_3', study }, study);
   }
   // Another parameter is not a separate option: it is part of the path, which must then be
   // a discovered study (or the quick pick asks); a link never carries anything else.
@@ -98,7 +98,7 @@ test.afterEach(() => {
   delete process.env.HYPOTRAIL_COMPANION_STAGE;
 });
 
-test('EV-3: a result link opens the panel on Evidence with that result; an invalid one opens nothing', async () => {
+test('EV-3, NAV-1: a result link opens the panel and asks for its place in the path (its head before the first summary); an invalid one opens nothing', async () => {
   process.env.HYPOTRAIL_COMPANION = '1';
   process.env.HYPOTRAIL_COMPANION_STAGE = 'v2';
   const calls = fakeExec();
@@ -108,7 +108,7 @@ test('EV-3: a result link opens the panel on Evidence with that result; an inval
   const opened = await fake.uriHandlers[0].handleUri({ path: `/result/${RID}`, query: '' });
   assert.ok(opened);
   assert.equal(fake.calls.panels.length, 1);
-  assert.deepEqual(fake.calls.panels[0].posted.at(-1), { v: 2, type: 'navigate', tab: 'evidence', kind: 'result', id: RID });
+  assert.deepEqual(fake.calls.panels[0].posted.at(-1), { v: 2, type: 'navigate', anchor: 'path', kind: 'result', id: RID });
   assert.equal(calls.length, 0, 'a link reads nothing by itself and never writes');
 
   fake = createFake({ folders: [makeStudy('badlink')] });
@@ -142,6 +142,6 @@ test('go to a result: a pasted prefix is resolved through evidence and navigates
   const { extension, context } = load(fake);
   extension.activate(context);
   assert.equal(await fake.commands.executeCommand('hypotrail.companion.goToResult'), RID);
-  assert.deepEqual(fake.calls.panels[0].posted.at(-1), { v: 2, type: 'navigate', tab: 'evidence', kind: 'result', id: RID });
+  assert.deepEqual(fake.calls.panels[0].posted.at(-1), { v: 2, type: 'navigate', anchor: 'path', kind: 'result', id: RID });
   assert.deepEqual(calls.map(a => a.slice(CLI.length - 1, CLI.length + 1)), [['evidence', '--json']]);
 });

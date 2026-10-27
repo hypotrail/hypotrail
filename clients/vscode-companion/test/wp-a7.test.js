@@ -24,7 +24,9 @@ function make(settings = { stage: 'v2' }) {
   return { c, posted, runCli, last: type => posted.filter(m => m.type === type).at(-1) };
 }
 
-test('DataModel: keys, development rows, groups in order, five rows with the target first', () => {
+// DA-2 -> SAMPLE-1 (ADR 0004 d13): the rows are the engine's, five first rows from an older
+// engine, the seeded sample of eight under contract P1 (p1/data.regression).
+test('DataModel: keys, development rows, groups in order, the engine\'s rows with the target first', () => {
   for (const name of FIXTURES) {
     const p = payload(name);
     const m = toDataModel(p);
@@ -32,7 +34,8 @@ test('DataModel: keys, development rows, groups in order, five rows with the tar
     assert.equal(m.development.rows, p.development.rows);
     assert.deepEqual(m.groups.map(g => g.group), p.groups.map(g => g.group));
     assert.equal(m.rows.columns[0], p.target.column);
-    assert.equal(m.rows.items.length, 5);
+    assert.equal(m.rows.items.length, p.rows.items.length);
+    assert.equal(m.rows.items.length, p.rows.seed ? 8 : 5);
     assert.ok(m.rows.items.every(r => r.cells.length === m.rows.columns.length));
     assert.equal(m.hasFrench, true);
     assert.equal(m.finalTest.status, 'sealed');
@@ -44,6 +47,15 @@ test('DataModel: keys, development rows, groups in order, five rows with the tar
   const pdays = b.groups.flatMap(g => g.variables).find(v => v.name === 'pdays');
   assert.deepEqual(pdays.specialValues.map(s => s.value), ['-1']);
   assert.throws(() => toDataModel(payload('summary.binary')), /hypotrail.data\/1/);
+  // SAMPLE-1, SAMPLE-3 (contract P1 §17.3, §17.4): the seed, whether the target is shown, and
+  // the special-value rows without the target.
+  const s = toDataModel(payload('p1/data.regression'));
+  assert.equal(s.rows.seed, '5f0c2a9e41d7b3a6');
+  assert.equal(s.rows.targetShown, true);
+  assert.deepEqual(s.rows.exposure, { exposureId: 'x_1', purpose: 'development_target_sample', recorded: true });
+  assert.equal(s.specialRows.nRows, 6);
+  assert.ok(!s.specialRows.columns.includes('mpg'));
+  assert.equal(toDataModel(payload('data.binary')).specialRows, null, 'an older engine: no special rows');
 });
 
 test('DataModel: a note written for the agent is not kept; a missing cell stays null', () => {

@@ -23,8 +23,9 @@ function make({ settings = {}, route, handlers, host = {} } = {}) {
   return { c, posted, runCli, last: type => posted.filter(m => m.type === type).at(-1) };
 }
 
-test('ready: init, then the summary; v0 reads without --digest, v1 with it', async () => {
-  for (const [stage, digest, revision] of [['v0', false, 26], ['v1', true, 26]]) {
+// ADR 0004 d13 (§5): the one page reads the summary with --digest at every stage (its P1 keys).
+test('ready: init, then the summary; every stage reads with --digest', async () => {
+  for (const [stage, digest, revision] of [['v0', true, 26], ['v1', true, 26]]) {
     const { c, posted, runCli } = make({ settings: { stage } });
     await c.handle({ v: 2, type: 'ready' });
     assert.equal(posted[0].type, 'init');
@@ -35,7 +36,9 @@ test('ready: init, then the summary; v0 reads without --digest, v1 with it', asy
         editable: '/opt/py/bin/python -m marimo edit notebooks/study_editable.py',
         workbench: '/opt/py/bin/python -m marimo edit notebooks/workbench.py' },
       // v0.3 (WP-E2, R21): the panel language setting, `auto` by default.
-      language: 'auto' });
+      language: 'auto',
+      // ADR 0004 d13 (CLI-CONTRACT §17.1.5): the contract the panel speaks.
+      panelContract: 2 });
     assert.equal(runCli.calls[0].tail.includes('--digest'), digest);
     const snap = posted.find(m => m.type === 'snapshot');
     assert.equal(snap.revision, revision);
@@ -262,7 +265,7 @@ test('handler registry: a type or a view claimed twice, or a core type, is refus
   assert.equal(typeof c.handle, 'function');
 });
 
-test('settings: updateSettings posts init again; navigate validates its target', async () => {
+test('settings: updateSettings posts init again; navigate resolves and validates its anchor (§4.3)', async () => {
   const { c, posted } = make({ settings: { stage: 'v1' } });
   c.updateSettings({ stage: 'v2', chatInsert: true });
   assert.deepEqual(posted.at(-1), { v: 2, type: 'init', stage: 'v2', reviewer: false, learningLayer: true, chatInsert: true, task: null,
@@ -270,9 +273,11 @@ test('settings: updateSettings posts init again; navigate validates its target',
     marimo: { kernel: '/opt/py/bin/python', notebook: '/opt/py/bin/python -m marimo run notebooks/study_generated.py',
         editable: '/opt/py/bin/python -m marimo edit notebooks/study_editable.py',
         workbench: '/opt/py/bin/python -m marimo edit notebooks/workbench.py' },
-    language: 'auto' });
-  assert.equal(c.navigate({ tab: 'evidence', kind: 'result', id: 'a'.repeat(64) }), true);
-  assert.equal(c.navigate({ tab: 'nowhere', kind: 'result', id: 'x' }), false);
+    language: 'auto', panelContract: 2 });
+  // A result id the summary does not list (no snapshot yet) opens the path's head.
+  assert.equal(c.navigate({ kind: 'result', id: 'a'.repeat(64) }), true);
+  assert.equal(posted.at(-1).anchor, 'path');
+  assert.equal(c.navigate({ anchor: 'nowhere', kind: 'result', id: 'x' }), false);
   assert.equal(await c.command('go_to_result', {}), undefined, 'no handler registers it in WP-0');
 });
 

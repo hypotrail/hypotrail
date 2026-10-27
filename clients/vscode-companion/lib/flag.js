@@ -29,6 +29,9 @@ const STAGES = ['v0', 'v1', 'v2', 'v3'];
 // CR.8: false until a real VS Code session shows that the chat insertion does not send.
 const CHAT_INSERT_VERIFIED = false;
 const DEFAULTS = Object.freeze({ stage: 'v0', learningLayer: true, reviewer: false, chatInsert: false, language: 'auto' });
+// ADR 0004 d13 (CLI-CONTRACT §17.1.5): the contract of the one page the panel speaks; the
+// digest's `panel_contract` is compared with it, and a difference shows the skew line.
+const PANEL_CONTRACT = 2;
 // v0.3 (WP-E2, R21): the panel language; `auto` follows the study language.
 const LANGUAGES = Object.freeze(['auto', 'en', 'fr']);
 
@@ -95,5 +98,5 @@ function settings(vscode, env = process.env, { forceReviewer = false } = {}) {
 
 module.exports = {
   isEnabled, stage, normalizeStage, stageRank, stageAtLeast, learningLayer, reviewer, chatInsert, language, settings, LANGUAGES,
-  CHAT_INSERT_VERIFIED, SETTING_SECTION, SETTING_KEY, ENV_VAR, STAGE_ENV, LEARNING_ENV, REVIEWER_ENV, DISABLED_MESSAGE, STAGES, DEFAULTS,
+  CHAT_INSERT_VERIFIED, PANEL_CONTRACT, SETTING_SECTION, SETTING_KEY, ENV_VAR, STAGE_ENV, LEARNING_ENV, REVIEWER_ENV, DISABLED_MESSAGE, STAGES, DEFAULTS,
 };

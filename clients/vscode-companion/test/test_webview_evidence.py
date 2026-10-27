@@ -1,7 +1,11 @@
-"""Browser tests of the Evidence view (scope S, simulated browser; WP-U3; COMPANION-ADVANCED
-§6.4, EV-1 to EV-6, INV-7, INV-12, §13). The real document under the real CSP, offline, with
-models produced by lib/models/evidence.js from the WP-0 fixtures, in both fallback themes.
-Not a VS Code session.
+"""Browser tests of the evidence figures (scope S, simulated browser; WP-U3; COMPANION-ADVANCED
+§A.4, EV-2 to EV-6, EV-15, INV-7, INV-12, §13), re-pointed at the one page (ADR 0004 d13): a
+result's figure and "Where it comes from" are folds of its step in the path (PATH-5), the
+exposure ledger is the ledger fold (PATH-1), a deep link is `navigate {anchor}` (NAV-1). The
+Current/Stale filter of the tabbed panel (EV-1) is withdrawn with its test; a stale result is a
+line of its step without figures (HON-4, `test_webview_eda.py`, `test_webview_page.py`). The
+real document under the real CSP, offline, with models produced by lib/models/evidence.js from
+the WP-0 fixtures, in both fallback themes. Not a VS Code session.
 """
 from __future__ import annotations
 
@@ -11,10 +15,10 @@ import re
 import pytest
 
 from conftest import inline_styles_ok
+from panel_cases import click_fold, open_result, show as open_folds, with_results
 
 LOGISTIC = 'd0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5'
 EVALUATION = 'ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02'
-STALE = 'b7e3c1d09a4f5e6b8c2d1f0e3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b'
 REGRESSION_EVAL = '142ac050de162499aa31cd03b837cd162f25d7cfef4d83b9b3d6e8d3cbef5301'
 FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 THEMES = ['light', 'dark']
@@ -43,11 +47,11 @@ def detail_payload(payload, name, rid, consumers=('report', 'notebook')):
     return p
 
 
-def opened(open_panel, summary, scheme='light', task='binary'):
+def opened(open_panel, summary, ev, scheme='light', task='binary', reviewer=False):
+    """The page at v2 on a WP-0 summary completed with the evidence's result slots."""
     panel = open_panel(scheme)
-    panel.init(stage='v2', task=task)
-    panel.snapshot(summary)
-    panel.page.locator('[role="tab"][data-tab="evidence"]').click()
+    panel.init(stage='v2', task=task, reviewer=reviewer, panelContract=2)
+    panel.snapshot(with_results(summary, ev['results']))
     return panel
 
 
@@ -63,46 +67,18 @@ def show(panel, evidence_model, rid=None):
 
 
 @pytest.mark.parametrize('scheme', THEMES)
-def test_ev1_registry_filters_and_stale_results_carry_no_figure(open_panel, model, binary, scheme):
-    panel = opened(open_panel, binary, scheme)
-    page = panel.page
-    assert page.locator('#panel-evidence [data-loading="evidence"]').count() == 1
-    assert loads(panel) == [{'v': 2, 'type': 'load', 'view': 'evidence'}]
-    ev = model('evidence', 'evidence.binary')
-    show(panel, ev)
-    items = page.locator('[data-result-item]')
-    current = [r['resultId'] for r in ev['results'] if r['promoted'] and r['current']]
-    assert items.evaluate_all('xs => xs.map(x => x.dataset.resultItem)') == current
-    assert page.locator('[data-result-item] [data-stale]').count() == 0
-    assert page.locator('[data-result-item] data[data-result-id]').count() > 0, 'current headlines are cited'
-    page.locator('#ht-ev-filter-stale').check()
-    assert items.evaluate_all('xs => xs.map(x => x.dataset.resultItem)') == [STALE]
-    stale = page.locator(f'[data-result-item="{STALE}"]')
-    assert 'Not cited' in stale.inner_text() and 'stale' in stale.inner_text()
-    assert stale.locator('data').count() == 0
-    assert not re.search(r'\d', stale.inner_text()), 'no figure for a stale result (INV-7)'
-    page.locator('#ht-ev-filter-all').check()
-    assert items.count() == len(ev['results'])
-    page.locator('[role="tab"][data-tab="overview"]').click()
-    page.locator('[role="tab"][data-tab="evidence"]').click()
-    assert panel.state()['evidenceFilter'] == 'all'
-    assert len(loads(panel)) == 1, 'a filter change reads nothing'
-    assert inline_styles_ok(page)
-    assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
-
-
-@pytest.mark.parametrize('scheme', THEMES)
 def test_detail_facts_lineage_ev6_and_ledger_ev2(open_panel, model, binary, scheme):
-    panel = opened(open_panel, binary, scheme)
+    ev = model('evidence', 'evidence.binary')
+    panel = opened(open_panel, binary, ev, scheme)
     page = panel.page
-    show(panel, model('evidence', 'evidence.binary'))
-    page.locator(f'[data-result-item="{LOGISTIC}"]').click()
+    fig = open_result(panel, 'fit.logistic')
+    assert fig.get_attribute('data-anchor') == 'path:models/fit.logistic'
     assert loads(panel)[-1] == {'v': 2, 'type': 'load', 'view': 'evidence', 'resultId': LOGISTIC}
-    assert panel.state()['selectedResult'] == LOGISTIC
-    assert 'Reading this result' in page.locator('.ht-ev-detail').inner_text()
+    show(panel, ev)
+    assert 'Reading this result' in fig.locator('.ht-ev-detail').inner_text()
     show(panel, model('evidence', 'evidence.binary.detail'), LOGISTIC)
     detail = page.locator(f'[data-detail="{LOGISTIC}"]')
-    assert detail.locator('h2').inner_text() == 'fit.logistic'
+    assert detail.locator('h4').first.inner_text() == 'fit.logistic'
     assert detail.locator('[data-currency]').inner_text() == 'd0af48b2… · current'
     facts = dict(zip(detail.locator('dt').all_inner_texts(), detail.locator('dd').all_inner_texts()))
     assert facts['Evaluated on'] == 'validation · 1,357 rows · 156 positive rows'
@@ -124,14 +100,15 @@ def test_detail_facts_lineage_ev6_and_ledger_ev2(open_panel, model, binary, sche
         'dataset', 'split', 'feature_availability', 'fit.logistic', 'policy.evaluation', 'report', 'notebook']
     assert 'bank.csv · sha ok' in chain.nth(0).inner_text()
     assert 'your decision' in chain.nth(1).inner_text()
-    assert page.locator('.ht-chain-arrow[aria-hidden="true"]').count() == 6
+    assert fig.locator('.ht-chain-arrow[aria-hidden="true"]').count() == 6
     impact = page.locator('[data-impact="feature_availability"]').inner_text()
     assert impact == ('Changing feature availability (a change that alters the set of usable features) would make '
                       'fit.logistic, policy.evaluation stale; fit.baseline would stay current.')
-    page.get_by_role('button', name='Show as a table').click()
-    tables = page.locator('#ht-ev-lineage-table table')
+    fig.get_by_role('button', name='Show as a table').click()
+    tables = page.locator(f'#ht-ev-lineage-table-{LOGISTIC[:8]} table')
     assert tables.count() == 2 and tables.first.locator('tbody tr').count() == 7
-    # Exposure ledger (EV-2).
+    # Exposure ledger (EV-2): the ledger fold of the path (PATH-1).
+    click_fold(page, 'ledger')
     rows = page.locator('[data-ledger-row]')
     assert rows.evaluate_all('xs => xs.map(x => x.dataset.ledgerRow)') == [
         'structural_inspection:all', 'train_eda:train', 'train_fit:train', 'validation_model_evaluation:validation',
@@ -140,7 +117,7 @@ def test_detail_facts_lineage_ev6_and_ledger_ev2(open_panel, model, binary, sche
         'Structural inspection', 'EDA', 'Model fitting', 'Model evaluation', 'Rule selection']
     assert rows.evaluate_all('xs => xs.map(x => x.cells[2].textContent)') == ['4,521', '3,164', '3,164', '1,357', '1,357']
     assert page.locator('tr.ht-ledger-selection').get_attribute('data-ledger-row') == 'validation_policy_selection:validation'
-    assert page.locator('[data-limit]').evaluate_all('xs => xs.map(x => x.dataset.limit)') == [
+    assert page.locator('[data-ledger] [data-limit]').evaluate_all('xs => xs.map(x => x.dataset.limit)') == [
         'validation_is_not_independent', 'public_data_already_explored']
     assert page.locator('[data-split-unseen]').count() == 0
     assert inline_styles_ok(page)
@@ -148,16 +125,17 @@ def test_detail_facts_lineage_ev6_and_ledger_ev2(open_panel, model, binary, sche
 
 
 def test_ev4_show_in_report_is_disabled_without_an_anchor(open_panel, model, payload, binary):
-    panel = opened(open_panel, binary)
+    ev = model('evidence', 'evidence.binary')
+    panel = opened(open_panel, binary, ev)
     p = copy.deepcopy(payload('evidence.binary.detail'))
     p['detail']['report_anchor'] = None
-    show(panel, model('evidence', 'evidence.binary'))
-    panel.page.locator(f'[data-result-item="{LOGISTIC}"]').click()
+    open_result(panel, 'fit.logistic')
     show(panel, model('evidence', p), LOGISTIC)
     button = panel.page.locator(f'[data-show-in-report="{LOGISTIC}"]')
     assert button.is_disabled()
-    assert panel.page.locator('#ht-ev-not-in-report').inner_text() == 'This result is not cited in the current report'
-    assert button.get_attribute('aria-describedby') == 'ht-ev-not-in-report'
+    note = f'ht-ev-not-in-report-{LOGISTIC[:8]}'
+    assert panel.page.locator(f'#{note}').inner_text() == 'This result is not cited in the current report'
+    assert button.get_attribute('aria-describedby') == note
 
 
 @pytest.mark.parametrize('scheme', THEMES)
@@ -167,12 +145,11 @@ def test_ev5_intervals_have_a_values_table_and_the_chance_sentence(open_panel, m
     ev['values']['rules']['capacity:100']['deltas']['fit.logistic']['recall'] = {
         'point': 0.02, 'low': -0.03, 'high': 0.07, 'undefined_replicates': 0}
     p['detail']['values'] = ev['values']
-    panel = opened(open_panel, binary, scheme)
+    panel = opened(open_panel, binary, model('evidence', 'evidence.binary'), scheme)
     page = panel.page
-    show(panel, model('evidence', 'evidence.binary'))
-    page.locator(f'[data-result-item="{EVALUATION}"]').click()
+    fig = open_result(panel, 'policy.evaluation')
     show(panel, model('evidence', p), EVALUATION)
-    unc = page.locator('[data-uncertainty="policy"]')
+    unc = fig.locator('[data-uncertainty="policy"]')
     # WP-E1 (R26): the rule in words, the token in the hover.
     assert unc.locator('h4').all_inner_texts() == ['Rule top 100 rows', 'Rule score at least 0.2']
     assert unc.locator('h4').evaluate_all('hs => hs.map(h => h.title)') == ['capacity:100', 'threshold:0.2']
@@ -190,60 +167,69 @@ def test_ev5_intervals_have_a_values_table_and_the_chance_sentence(open_panel, m
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
 
-def test_ev3_navigation_selects_and_focuses_the_result(open_panel, model, binary):
-    panel = opened(open_panel, binary)
+def test_ev3_navigation_opens_and_focuses_the_result_in_the_path(open_panel, model, binary):
+    """EV-3 → NAV-1: a deep link to a result opens its step and its figure and focuses it; the
+    detail is read for that result."""
+    ev = model('evidence', 'evidence.binary')
+    panel = opened(open_panel, binary, ev)
     page = panel.page
-    page.locator('[role="tab"][data-tab="overview"]').click()
-    panel.send({'type': 'navigate', 'tab': 'evidence', 'kind': 'result', 'id': LOGISTIC})
-    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'evidence'
+    page.evaluate("() => globalThis.Hypotrail.setFold('src-fit.logistic', true)")
+    panel.send({'type': 'navigate', 'anchor': 'path:models/fit.logistic', 'kind': 'result', 'id': LOGISTIC})
     assert loads(panel)[-1] == {'v': 2, 'type': 'load', 'view': 'evidence', 'resultId': LOGISTIC}
     show(panel, model('evidence', 'evidence.binary.detail'), LOGISTIC)
-    assert page.evaluate('document.activeElement.closest("[data-nav]").dataset.nav') == f'result:{LOGISTIC}'
-    assert page.locator(f'[data-result-item="{LOGISTIC}"]').get_attribute('aria-pressed') == 'true'
+    assert page.evaluate('document.activeElement.closest("[data-anchor]").dataset.anchor') == 'path:models/fit.logistic'
+    assert page.locator('details[data-anchor="path:models/fit.logistic"][open]').count() == 1
+    assert page.locator(f'[data-detail="{LOGISTIC}"]').count() == 1
 
 
 def test_select_the_id_selects_the_full_id_and_never_writes_the_clipboard(open_panel, model, binary):
     # WP-I, decision CI.5: the panel writes the clipboard only through the agent bridge (§12).
-    panel = opened(open_panel, binary)
+    panel = opened(open_panel, binary, model('evidence', 'evidence.binary'))
     page = panel.page
-    show(panel, model('evidence', 'evidence.binary'))
-    page.locator(f'[data-result-item="{LOGISTIC}"]').click()
+    fig = open_result(panel, 'fit.logistic')
     show(panel, model('evidence', 'evidence.binary.detail'), LOGISTIC)
-    page.get_by_role('button', name='Select the id').click()
+    fig.get_by_role('button', name='Select the id').click()
     assert page.evaluate('() => String(window.getSelection())') == LOGISTIC
-    assert page.locator('details.ht-ev-fullid').evaluate('d => d.open')
-    assert page.locator('[data-select-note]').inner_text() == 'The id is highlighted: copy it with the keyboard.'
+    assert fig.locator('details.ht-ev-fullid').evaluate('d => d.open')
+    assert fig.locator('[data-select-note]').inner_text() == 'The id is highlighted: copy it with the keyboard.'
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
 
-def test_an_unknown_result_shows_the_engine_refusal_and_returns_to_the_list(open_panel, model, binary):
-    panel = opened(open_panel, binary)
+def test_an_unknown_result_shows_the_engine_refusal_in_place(open_panel, model, binary):
+    """A deep link to a result the study does not hold (NAV-2): the path opens, the engine's
+    refusal is shown where the detail would be, as an alert."""
+    panel = opened(open_panel, binary, model('evidence', 'evidence.binary'))
     page = panel.page
-    panel.send({'type': 'navigate', 'tab': 'evidence', 'kind': 'result', 'id': 'a' * 64})
+    fig = open_result(panel, 'fit.logistic')
     panel.send({'type': 'load_error', 'view': 'evidence', 'message': 'unknown_result: No result has this id.', 'detail': ''})
-    error = page.locator('[data-evidence-error]')
+    error = fig.locator('[data-evidence-error]').first
     assert error.get_attribute('role') == 'alert'
     assert 'unknown_result: No result has this id.' in error.inner_text()
-    error.get_by_role('button', name='Show the list of results').click()
-    assert loads(panel)[-1] == {'v': 2, 'type': 'load', 'view': 'evidence'}
 
 
 @pytest.mark.parametrize('scheme', THEMES)
 def test_regression_evidence_holds_no_decision_rule_vocabulary(open_panel, model, payload, regression, scheme):
-    panel = opened(open_panel, regression, scheme, task='regression')
+    ev = model('evidence', 'evidence.regression')
+    # The model choice made: its evaluation is a figure of its step in the path (PATH-5); while
+    # the choice waits, Now shows its one figure (NOW-1).
+    decided = copy.deepcopy(regression)
+    for step in decided['plan']:
+        if step['id'] == 'model_choice':
+            step['status'] = 'done'
+    panel = opened(open_panel, decided, ev, scheme, task='regression')
     page = panel.page
-    show(panel, model('evidence', 'evidence.regression'))
-    page.locator('#ht-ev-filter-all').check()
-    page.locator(f'[data-result-item="{REGRESSION_EVAL}"]').click()
+    fig = open_result(panel, 'evaluate.regression')
     show(panel, model('evidence', detail_payload(payload, 'evidence.regression', REGRESSION_EVAL)), REGRESSION_EVAL)
-    unc = page.locator('[data-uncertainty="regression"]')
+    unc = fig.locator('[data-uncertainty="regression"]')
     assert unc.locator('[data-metric]').evaluate_all('xs => xs.map(x => x.dataset.metric)') == ['mae', 'rmse']
-    # WP-I: each metric is named by its glossary term, for the learning layer's hovers (§6.7).
-    assert unc.locator('[data-metric] h4 [data-term]').evaluate_all('xs => xs.map(x => x.dataset.term)') == ['mae', 'rmse']
+    # WP-I: each metric is named by its glossary term; below v3 the term is marked as text
+    # (`data-term-text`), a notion button from v3 (NOT-1).
+    assert unc.locator('[data-metric] h4 [data-term-text]').evaluate_all('xs => xs.map(x => x.dataset.termText)') == ['mae', 'rmse']
     assert unc.locator('[data-delta-sentence="one_side"]').count() == 2
-    page.get_by_role('button', name='Show as a table').click()
-    for button in page.locator('#panel-evidence .ht-figure button[aria-controls]').all():
+    fig.get_by_role('button', name='Show as a table').click()
+    for button in fig.locator('.ht-figure button[aria-controls]').all():
         button.click()
+    click_fold(page, 'ledger')
     text = page.locator('body').inner_text()
     assert not FORBIDDEN.search(text), FORBIDDEN.search(text).group(0)
     assert page.locator('tr.ht-ledger-selection').get_attribute('data-ledger-row') == 'validation_model_evaluation:validation'
@@ -252,32 +238,30 @@ def test_regression_evidence_holds_no_decision_rule_vocabulary(open_panel, model
 
 
 def test_evidence_controls_are_named_and_reviewer_mode_keeps_the_reads(open_panel, model, binary):
-    panel = open_panel()
-    panel.init(stage='v2', reviewer=True)
-    panel.snapshot(binary)
+    ev = model('evidence', 'evidence.binary')
+    panel = opened(open_panel, binary, ev, reviewer=True)
     page = panel.page
-    page.locator('[role="tab"][data-tab="evidence"]').click()
-    show(panel, model('evidence', 'evidence.binary'))
-    page.locator(f'[data-result-item="{LOGISTIC}"]').click()
+    open_folds(panel, evidence=ev)
+    fig = open_result(panel, 'fit.logistic')
     show(panel, model('evidence', 'evidence.binary.detail'), LOGISTIC)
     assert page.locator('[data-write]').count() == 0
-    assert page.locator('[data-show-in-report]').is_enabled(), 'reads and navigation stay in reviewer mode'
+    assert fig.locator('[data-show-in-report]').is_enabled(), 'reads and navigation stay in reviewer mode'
     # A11Y-1: every control has an accessible name, and no positive tabindex.
-    unnamed = page.evaluate("""() => [...document.querySelectorAll('#panel-evidence button, #panel-evidence input')]
+    unnamed = page.evaluate("""() => [...document.querySelectorAll('#main button, #main input')]
       .filter(b => !(b.textContent.trim() || b.getAttribute('aria-label') || (b.labels && b.labels.length))).length""")
     assert unnamed == 0
-    assert page.locator('#panel-evidence [tabindex]:not([tabindex="0"]):not([tabindex="-1"])').count() == 0
+    assert page.locator('#main [tabindex]:not([tabindex="0"]):not([tabindex="-1"])').count() == 0
 
 
 # --- EV-15 (owner session 2026-10-26, R11): one card per compared variant ---------------------
 
 def _families(open_panel, model, payload, lang='en', raw=None):
-    from panel_cases import load_views, open_case
+    from panel_cases import load_views, open_all, open_case
     views = load_views(model, payload)
     if raw is not None:
         views['evidence.families'] = model('evidence', raw)
     panel = open_case(open_panel, views, case='families', lang=lang)
-    panel.page.locator('[role="tab"][data-tab="evidence"]').click()
+    open_all(panel, views, 'families')
     return panel, views['evidence.families']
 
 
@@ -332,7 +316,7 @@ def test_ev15_every_compared_variant_has_its_own_card(open_panel, model, payload
             'Which terms carry the explainable boosting model, and with what shape?'
         assert ebm.locator('[data-variant-changes]').inner_text() == 'Another model family: Explainable boosting.'
     else:
-        assert reg.locator('h3').inner_text() == 'Que change cette pénalité dans le modèle ?'
+        assert reg.locator('h3').inner_text() == 'Que change cette pénalité dans le modèle\u202f?'
         assert "Valeur du nombre de termes d'interaction choisie dans chaque pli externe" in tuning.inner_text()
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 

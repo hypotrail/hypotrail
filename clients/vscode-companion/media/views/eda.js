@@ -1,14 +1,18 @@
-// Data & EDA view (COMPANION-ADVANCED §6.3; stage v2; WP-A7; v0.3 WP-E2 design system). The
-// tab opens on the data card (`hypotrail data`: what one row describes, the grouped
-// dictionary, five fixed rows with the target first, the sealed final test) and the structural
-// quality check of the development rows; then the exploration: a gallery of the registered
-// EDA results only, one card each (an eyebrow, the question it answers as its title, the
-// column's meaning, the chart, one sentence, and a footer with "Why?" and a faint source
-// line). Every chart is an engine result, every number is an engine value cited with its
-// result id (INV-7), and bar lengths are geometry (INV-14). "Run another chart" offers the
-// per-column training-row activities and the whole-study `eda.correlation` of the engine's
-// `eda_catalog` and sends `run_eda` (W4); the controller checks it again before any `run`.
-// There is no partition control: free exploration belongs in the workbench notebook.
+// Data and exploration parts (COMPANION-ADVANCED §6.7.1, §6.9, §A.3; stage v2; WP-A7, WP-E2;
+// the Data & EDA tab became these parts of the one page, ADR 0004 d13), placed by page.js:
+//
+//   nowCard  the data card in Now at step 1 (§6.5.2): the facts, the seeded sample of eight
+//            rows (SAMPLE-1 to SAMPLE-5, HON-6), the special rows, the dictionary
+//   drawer   the Data drawer (TOOL-1 to TOOL-3): the data card after step 1, the quality
+//            check, the rows the exploration read (ED-2), the charts as links to their place
+//            in the path, and "Run another chart" (W4)
+//   cardFor  one EDA chart, in its step's detail in the path (PATH-5, PATH-7)
+//
+// Every chart is an engine result, every number is an engine value cited with its result id
+// (INV-7), and bar lengths are geometry (INV-14). "Run another chart" offers the per-column
+// training-row activities and the whole-study `eda.correlation` of the engine's `eda_catalog`
+// and sends `run_eda` (W4); the controller checks it again before any `run`. There is no
+// partition control: free exploration belongs in the workbench notebook.
 (function (HT) {
   'use strict';
   const el = HT.el;
@@ -26,7 +30,7 @@
   // the last W4 outcome (rendered in the Request card, `outcomes: ['W4']`), the language
   // of the dictionary's meanings (null: the panel language), and the cards the junior opened
   // or closed (slot -> open), so a re-render or the language toggle keeps them as they were.
-  const memory = { column: null, activity: null, outcome: null, meanings: null, open: new Map() };
+  const memory = { column: null, activity: null, outcome: null, meanings: null };
 
   function taskOf(data, ctx, model) {
     const t = (data && data.task) || ctx.task || (model && model.task);
@@ -107,13 +111,18 @@
     return el('button', { type: 'button', className: 'ht-link ht-src', 'data-chip': card.resultId,
       'aria-label': c.chipLabel(rid6), title: card.resultId,
       text: `${HT.copy.core.sourceWord} · ${card.activity} · ${rid6}`,
-      onclick: () => ctx.navigate({ tab: 'evidence', kind: 'result', id: card.resultId }) });
+      onclick: () => { ctx.setFold(`src-${card.slot}`, true); ctx.navigate({ anchor: anchorOf(ctx, card.slot) }); } });
   }
 
-  /** Whether the card of `slot` is open: the junior's last choice, else the default. */
-  function isOpen(slot, expanded) {
-    return memory.open.has(slot) ? memory.open.get(slot) : expanded;
+  /** The path anchor of a result slot (CLI-CONTRACT §17.1.1), from the page model's table. */
+  function anchorOf(ctx, slot) {
+    const plan = ((ctx.snapshot && ctx.snapshot.plan) || []).map(p => p.id);
+    const step = HT.pageModel ? HT.pageModel.stepOf(slot, plan) : null;
+    return step ? `path:${step}/${slot}` : 'path';
   }
+
+  /** The fold of a card's analysis (FOLD-1): kept by the page's fold state, like every fold. */
+  const foldOf = slot => `eda-${slot}`;
 
   /** One EDA card in the pattern of the design system. */
   function edaCard(ctx, c, card, { id, eyebrow, title, sub = null, body = [], finding = null, why = [], wide = false, expanded = false, attrs = {} }) {
@@ -121,14 +130,8 @@
     return el('section', { className: `card eda-card${wide ? ' eda-wide' : ''}`, 'aria-labelledby': id,
       'data-eda-card': card.slot, 'data-activity': card.activity, 'data-current': card.current ? 'true' : 'false',
       'data-nav': `result:${card.resultId}`, ...attrs }, [
-      el('details', { className: 'eda-analysis', open: isOpen(card.slot, expanded) ? true : null,
-        // Remembered only where it differs from the default, so a card that becomes the
-        // default open one later is not held closed by a choice nobody made.
-        ontoggle: e => {
-          if (e.target !== e.currentTarget) return;
-          if (e.currentTarget.open === expanded) memory.open.delete(card.slot);
-          else memory.open.set(card.slot, e.currentTarget.open);
-        } }, [
+      el('details', { className: 'eda-analysis', 'data-fold-id': foldOf(card.slot), 'data-fold-default': expanded ? 'open' : 'closed',
+        open: ctx.isOpen(foldOf(card.slot), expanded) ? true : null }, [
       el('summary', { className: 'ht-card-h' }, [el('div', {}, [
         el('span', { className: 'ht-cap', 'data-eyebrow': true, text: eyebrow }),
         // Each card is titled by the engine's question (ED-7). In a French panel a per-column
@@ -295,26 +298,125 @@
     ])]);
   }
 
-  /** The five fixed development rows, the target first, excluded columns marked. */
-  function fiveRows(ctx, c, d) {
-    const decided = {};
-    for (const g of d.groups) for (const v of g.variables) decided[v.name] = v.decided ? v.decided.value : null;
-    const excluded = name => EXCLUDED.includes(decided[name]);
-    const cols = d.rows.columns;
-    const table = el('table', { className: 'ht-tbl eda-rows', 'data-five-rows': true }, [
-      el('caption', { className: 'sr-only', text: c.data.rowsCaption }),
-      el('thead', {}, [el('tr', {}, cols.map((name, i) => el('th', { scope: 'col', className: [i === 0 ? 'eda-target-col' : '',
-        excluded(name) ? 'eda-excluded' : ''].join(' ').trim() || null, 'data-column': name,
-      title: excluded(name) ? c.data.excludedTitle : null, text: excluded(name) ? `${name} ✗` : name })))]),
-      el('tbody', {}, d.rows.items.map(r => el('tr', { 'data-row-key': r.rowKey }, r.cells.map((v, i) => el('td', {
-        className: [i === 0 ? 'eda-target-col' : '', excluded(cols[i]) ? 'eda-excluded' : ''].join(' ').trim() || null,
-        text: v === null ? c.data.missingCell : v }))))),
+  // --- the step-1 sample (SAMPLE-1 to SAMPLE-5; contract P1 §17.3, §17.4) ---------------------
+
+  /**
+   * The seeded sample of development rows (SAMPLE-1): the row key first, the target marked "to
+   * predict", then the case's columns, in a focusable region that may scroll sideways (NAR-2);
+   * under it, not folded, the line that says the look is counted (SAMPLE-2, HON-6). An older
+   * engine's first rows are labelled as such, target shown as before (HON-9).
+   */
+  function sampleBlock(ctx, c, d) {
+    const P = HT.copy.page;
+    const rows = d.rows;
+    const cols = rows.columns;
+    const target = d.target.column;
+    const seeded = rows.seed !== null && rows.seed !== undefined;
+    const shown = seeded ? rows.targetShown !== false : true;
+    const order = [target, ...cols.filter(x => x !== target)].filter(x => cols.includes(x));
+    const visible = shown ? order : order.filter(x => x !== target);
+    const n = rows.items.length;
+    const caption = seeded ? P.sample.caption(count(ctx, n), count(ctx, d.development.rows), null) : P.sample.firstRows(count(ctx, n));
+    const table = el('table', { className: 'ht-tbl ht-sample', 'data-sample': seeded ? 'seeded' : 'first' }, [
+      el('caption', { className: 'sr-only', text: caption }),
+      el('thead', {}, [el('tr', {}, [el('th', { scope: 'col', text: P.sample.rowKey }), ...visible.map(name => el('th', { scope: 'col',
+        className: name === target ? 'ht-tgt' : null, 'data-column': name, text: name === target ? P.sample.target(name) : name }))])]),
+      el('tbody', {}, rows.items.map(r => el('tr', { 'data-sample-row': r.rowKey }, [
+        el('td', { className: 'ht-key', text: r.rowKey }),
+        ...visible.map(name => {
+          const v = r.cells[cols.indexOf(name)];
+          return el('td', { className: [name === target ? 'ht-tgt' : '', /^-?[0-9.]+$/.test(String(v)) ? 'n' : ''].join(' ').trim() || null,
+            text: v === null || v === undefined ? c.data.missingCell : v });
+        })]))),
     ]);
-    const anyExcluded = cols.some(excluded);
-    return el('details', { className: 'ht-details eda-five', 'data-five-rows-box': true }, [
-      el('summary', { text: c.data.rowsTitle }),
-      el('div', { className: 'eda-scroll', 'data-scroll-ok': true }, [table]),
-      anyExcluded ? el('p', { className: 'ht-sub', 'data-excluded-legend': true, text: c.data.excludedLegend }) : null]);
+    return el('div', { className: 'ht-sample-box', 'data-sample-box': true }, [
+      el('p', { className: 'ht-sample-cap', 'data-sample-caption': true, text: caption }),
+      el('div', { className: 'ht-scrollx', 'data-scroll-ok': true, tabindex: '0', role: 'region', 'aria-label': P.sample.region }, [table]),
+      seeded ? el('p', { className: 'ht-frame', 'data-sample-look': shown ? 'counted' : 'not_shown' }, shown
+        ? [el('b', { text: P.sample.lookLabel }), ' ', P.sample.look(count(ctx, n), target)]
+        : [P.sample.notShown]) : null,
+    ]);
+  }
+
+  /** The development rows holding a declared special value, without the target (SAMPLE-3). */
+  function specialRowsFold(ctx, d) {
+    const P = HT.copy.page;
+    const sr = d.specialRows;
+    if (!sr || !sr.nRows) return null;
+    const value = sr.items.length && sr.items[0].specials.length ? sr.items[0].specials[0].value : '';
+    return ctx.fold('special-rows', { summary: P.specialFold(count(ctx, sr.nRows), value), className: 'ht-f' }, () => el('div', {}, [
+      el('div', { className: 'ht-scrollx', 'data-scroll-ok': true, tabindex: '0', role: 'region', 'aria-label': P.specialRegion }, [
+        el('table', { className: 'ht-tbl ht-sample', 'data-special-rows': String(sr.nRows) }, [
+          el('caption', { className: 'sr-only', text: P.specialRegion }),
+          el('thead', {}, [el('tr', {}, [el('th', { scope: 'col', text: P.sample.rowKey }), ...sr.columns.map(name => el('th', { scope: 'col', text: name }))])]),
+          el('tbody', {}, sr.items.map(r => el('tr', { 'data-special-row': r.rowKey }, [el('td', { className: 'ht-key', text: r.rowKey }),
+            ...r.cells.map((v, i) => el('td', { className: r.specials.some(x => x.column === sr.columns[i]) ? 'ht-q' : null,
+              text: v === null || v === undefined ? '' : v }))]))),
+        ])]),
+      el('p', { className: 'ht-frame', text: P.specialNote }),
+      sr.truncated ? el('p', { className: 'ht-faint', text: P.specialTruncated(count(ctx, sr.items.length), count(ctx, sr.nRows)) }) : null,
+    ]));
+  }
+
+  /** The step-1 card of Now (§6.5.2 `show_data_card`, v2): frame, facts, sample, anomaly, folds. */
+  function nowCard(ctx) {
+    const P = HT.copy.page;
+    const entry = ctx.data('data');
+    ctx.want('data');
+    const task = taskOf(null, ctx, ctx.snapshot);
+    const c = ctx.copy.eda[task];
+    if (!entry || !entry.model) {
+      const error = ctx.error('data');
+      return el('div', { className: 'card ht-ctx', 'data-context': 'data_card', 'aria-busy': error ? null : 'true' }, [
+        el('p', { className: 'ht-k', text: P.toAnswer }), el('h3', { text: P.dataCard }),
+        error ? el('p', { role: 'alert', text: `${c.data.loadError} ${error.message}` }) : el('p', { className: 'muted', text: c.data.loading })]);
+    }
+    const d = entry.model;
+    const fr = meaningsFr(d);
+    const unit = d.observationUnit;
+    const ft = d.finalTest;
+    const facts = [
+      el('span', { 'data-fact': 'unit' }, [(fr && unit.valueFr) || unit.value || c.data.notStated]),
+      el('span', { 'data-fact': 'columns' }, [el('b', { text: count(ctx, d.development.columns) }), P.facts.columns('', d.target.column)[1]]),
+      Number.isInteger(ft.rows) && ft.status !== 'absent'
+        ? el('span', { 'data-fact': 'final_test' }, [el('b', { text: count(ctx, ft.rows) }), ' ', HT.terms.mark(P.facts.sealed('')[1].trim(), 'final_test')]) : null,
+      el('span', { 'data-fact': 'development' }, [el('b', { text: count(ctx, d.development.rows) }), ' ',
+        HT.terms.mark(P.facts.development('')[1].trim(), 'development_rows')]),
+    ];
+    const anomalies = [];
+    for (const g of d.groups) {
+      for (const v of g.variables) {
+        for (const sv of v.specialValues) {
+          if (Number.isInteger(sv.nRows) && sv.nRows > 0) {
+            anomalies.push(el('p', { className: 'ht-head-line', 'data-anomaly': v.name },
+              [P.anomaly(v.name, sv.value, count(ctx, sv.nRows), count(ctx, d.development.rows))]));
+          }
+        }
+      }
+    }
+    const seeded = d.rows.seed !== null && d.rows.seed !== undefined;
+    return el('div', { className: 'card ht-ctx', 'data-context': 'data_card', 'data-data-card': true }, [
+      el('p', { className: 'ht-k', text: P.toAnswer }), el('h3', { text: P.dataCard }),
+      el('p', { className: 'ht-frame', 'data-frame': 'structural' }, [el('b', { text: P.frame.structural }), seeded ? P.frame.sample : '']),
+      el('div', { className: 'ht-facts' }, facts),
+      sampleBlock(ctx, c, d),
+      ...anomalies,
+      ctx.fold('cols', { summary: P.columnsFold(count(ctx, d.development.columns)), className: 'ht-f' }, () => dictionary(ctx, c, d, fr)),
+      specialRowsFold(ctx, d),
+      seeded ? ctx.fold('why-sample', { summary: P.whySampleFold, className: 'ht-f' }, () => {
+        const note = ctx.page && ctx.page.path.sampleNote;
+        return el('div', {}, [...P.whySample.map(t => el('p', { text: t })),
+          note ? el('p', { className: 'ht-faint' }, [ctx.components.engineText(note.text, { lang: note.lang })]) : null]);
+      }) : null,
+    ]);
+  }
+
+  /** The copy of the EDA cards for a read (its task, and the cross-validated variants). */
+  function copyFor(ctx, data) {
+    const task = taskOf(data && data.model, ctx, ctx.snapshot);
+    const base = ctx.copy.eda[task];
+    const cv = Boolean(data && data.model && data.model.rowsSeen && data.model.rowsSeen.scope === 'development');
+    return { task, cv, c: cv ? { ...base, ...base.cv, eyebrows: { ...base.eyebrows, ...(base.cv.eyebrows || {}) } } : base };
   }
 
   function stat(value, label, attrs = {}) {
@@ -362,7 +464,8 @@
       el('div', { className: 'ht-section-h' }, [el('h4', { text: c.data.dictionaryTitle(count(ctx, d.development.columns)) }), toggle]),
       d.hasFrench ? el('p', { className: 'ht-sub', 'data-meanings-hint': true, text: c.data.meaningsHint }) : null,
       dictionary(ctx, c, d, fr),
-      fiveRows(ctx, c, d),
+      sampleBlock(ctx, c, d),
+      specialRowsFold(ctx, d),
       d.note ? el('p', { className: 'ht-sub', 'data-data-note': true }, [lineOf(ctx, d.noteLines, d.note)]) : null,
     ]);
   }
@@ -436,7 +539,7 @@
         [num(ctx, d.meanInterval.low, rid), num(ctx, d.meanInterval.high, rid)])) : null,
       why: [
         el('p', { 'data-term': 'target_distribution' }, [el('strong', { text: c.summaryTerm }),
-          term && typeof term.definition === 'string' ? `: ${term.definition}` : null]),
+          term && typeof term.definition === 'string' ? [': ', ctx.components.engineText(term.definition, { lang: HT.studyLanguage ? HT.studyLanguage() : null })] : null]),
         el('p', {}, weave(c.summaryLine, [num(ctx, d.median, rid), num(ctx, d.q25, rid), num(ctx, d.q75, rid), num(ctx, d.min, rid),
           num(ctx, d.max, rid), num(ctx, d.mean, rid), num(ctx, d.nRows, rid)])),
         engine(ctx, d.note, { 'data-note': true }, card.langs.note),
@@ -791,46 +894,6 @@
       model: card.kind === 'signal' ? null : L.none };
   }
 
-  function looksNotion(ctx, model) {
-    const N = HT.copy.lesson.notions.looks;
-    const looks = model && model.edaLooks && Number.isInteger(model.edaLooks.targetLooks) ? model.edaLooks.targetLooks : null;
-    if (looks === null) return null;
-    return ctx.components.notion({ id: 'looks', term: N.term, tag: 'tool', lead: N.lead, definition: N.definition,
-      here: N.here(ctx.format.number(looks, 'int')), folds: [{ kind: 'why', body: N.why }, { kind: 'casse', body: N.casse }], keep: N.keep });
-  }
-
-  function specialNotion(ctx) {
-    const N = HT.copy.lesson.notions.special;
-    const entry = ctx.data('data');
-    const d = entry && entry.model;
-    if (!d) return null;
-    const fr = meaningsFr(d);
-    for (const g of arr(d.groups)) {
-      for (const v of arr(g.variables)) {
-        const sv = arr(v.specialValues).find(x => x && x.value !== undefined && x.value !== null);
-        if (!sv) continue;
-        const meaning = fr && sv.meaningFr ? sv.meaningFr : sv.meaning;
-        return ctx.components.notion({ id: 'special', term: N.term, tag: 'tool', definition: N.definition,
-          here: N.here(el('code', { text: v.name }), el('code', { text: String(sv.value) }), meaning || '',
-            Number.isInteger(sv.nRows) ? count(ctx, sv.nRows) : null),
-          folds: [{ kind: 'ex', body: N.ex(v.name, String(sv.value)) }, { kind: 'why', body: N.why }, { kind: 'casse', body: N.casse }],
-          keep: N.keep });
-      }
-    }
-    return null;
-  }
-
-  function rareNotion(ctx, quality) {
-    const N = HT.copy.lesson.notions.rare;
-    const card = quality.find(k => k.current && k.data && arr(k.data.rare).some(r => arr(r.rare).length));
-    if (!card) return null;
-    const r = card.data.rare.find(x => arr(x.rare).length);
-    const list = r.rare.slice(0, 3).flatMap((x, j) => [j ? ', ' : '', `${x.value} (`, HT.components.quote(text(ctx, x.nRows),
-      x.nRows ? { resultId: card.resultId, path: x.nRows.path } : null), ')']);
-    return ctx.components.notion({ id: 'rare', term: N.term, tag: 'tool', definition: N.definition,
-      here: N.here(el('code', { text: r.column }), list), folds: [{ kind: 'casse', body: N.casse }], keep: N.keep });
-  }
-
   function cardNode(ctx, c, card, i, task, expanded = false, cv = false) {
     const id = `eda-card-${i}`;
     const wide = card.kind === 'rate_by' || card.kind === 'mean_by' || card.kind === 'correlation'
@@ -882,7 +945,8 @@
         el('p', { className: 'ht-sub', 'data-request-question': entry.activity }, [`${c.answers} ${c.corr.request}`]),
         el('p', { className: 'ht-sub', text: c.corr.noLook }),
         shown ? el('button', { type: 'button', className: 'secondary', 'data-show-card': shown.slot, text: c.showIt,
-          onclick: () => ctx.navigate({ tab: 'eda', kind: 'result', id: shown.resultId }) })
+          // "Show it" is a deep link: the chart's place opens, and its card with it.
+          onclick: () => { ctx.setFold(foldOf(shown.slot), true); ctx.navigate({ anchor: anchorOf(ctx, shown.slot) }); } })
           : el('button', { type: 'button', className: 'secondary', 'data-write': 'run_eda', 'data-activity': entry.activity,
             disabled: ctx.busy ? true : null, 'aria-busy': working ? 'true' : null, text: working ? c.working : c.corr.run,
             onclick: () => ctx.send({ type: 'run_eda', activity: entry.activity, revision: data.revision }) }),
@@ -923,7 +987,8 @@
       const working = ctx.busyOp === 'W4';
       const action = shown
         ? el('button', { type: 'button', id: 'eda-show', 'data-show-card': shown.slot, text: c.showIt,
-          onclick: () => ctx.navigate({ tab: 'eda', kind: 'result', id: shown.resultId }) })
+          // "Show it" is a deep link: the chart's place opens, and its card with it.
+          onclick: () => { ctx.setFold(foldOf(shown.slot), true); ctx.navigate({ anchor: anchorOf(ctx, shown.slot) }); } })
         : el('button', { type: 'button', id: 'eda-run', 'data-write': 'run_eda', disabled: ctx.busy || !entry ? true : null,
           'aria-busy': working ? 'true' : null, text: working ? c.working : c.run,
           onclick: () => ctx.send({ type: 'run_eda', activity: entry.activity, column: memory.column, revision: data.revision }) });
@@ -956,6 +1021,21 @@
 
   // --- the tab --------------------------------------------------------------------------------
 
+  /** The figure of one EDA result in the path's step detail (PATH-5, PATH-7), open. */
+  function cardFor(ctx, slot) {
+    ctx.want('eda');
+    const data = ctx.data('eda');
+    const { c, task, cv } = copyFor(ctx, data);
+    if (!data || !data.model) return el('p', { className: 'muted', 'aria-busy': 'true', text: c.loading });
+    const cards = arr(data.model.cards).map(localCard);
+    const card = cards.find(k => k.slot === slot);
+    if (!card) return el('p', { className: 'muted', text: HT.copy.page.noFigure });
+    if (card.kind === 'quality') return qualityCard(ctx, c, card, 0);
+    return cardNode(ctx, c, card, cards.indexOf(card), task, true, cv);
+  }
+
+  /** The drawer "The data" (TOOL-1 to TOOL-3): the card, the quality check, the charts as links, W4. */
+  /** ED-2: the rows the exploration read, first in the Data drawer's charts. */
   function banner(ctx, c, data, model) {
     const seen = data.model.rowsSeen || {};
     const fmt = n => ctx.format.number(n, 'int');
@@ -989,67 +1069,84 @@
     ])]);
   }
 
+  function drawer(ctx, page) {
+    const P = HT.copy.page;
+    ctx.want('eda');
+    const data = ctx.data('eda');
+    const { c, task } = copyFor(ctx, data);
+    const out = [];
+    if (page.now.kind === 'data_card') out.push(el('p', { className: 'ht-faint', 'data-card-in-now': true, text: P.dataDrawerAtStep1 }));
+    else {
+      ctx.want('data');
+      out.push(dataSection(ctx, c, task));
+    }
+    const error = ctx.error('eda');
+    if (!data || !data.model) {
+      if (error) {
+        out.push(el('div', { className: 'card alert', role: 'alert', 'data-eda-error': true }, [
+          el('p', { className: 'title', text: c.loadError }), el('p', { text: error.message }),
+          error.detail ? el('details', { className: 'ht-details' }, [el('summary', { text: c.loadErrorDetail }), el('pre', { text: error.detail })]) : null,
+          el('button', { type: 'button', className: 'secondary', text: c.retry, onclick: () => { ctx.retry('eda'); ctx.load('eda'); } }),
+        ]));
+      } else out.push(el('p', { className: 'muted', 'aria-busy': 'true', 'data-eda-loading': true, text: c.loading }));
+      return el('div', { className: 'ht-drawer-body' }, out);
+    }
+    if (ctx.snapshot && !ctx.fresh(data)) out.push(el('p', { className: 'muted', 'data-updating': true, text: c.updating }));
+    if (error) out.push(el('p', { className: 'alert', role: 'alert', 'data-eda-error': true, text: `${c.loadError} ${error.message}` }));
+    const cards = arr(data.model.cards).map(localCard);
+    cards.filter(k => k.kind === 'quality').forEach((card, i) => out.push(qualityCard(ctx, c, card, i)));
+    const charts = cards.filter(k => k.kind !== 'quality' && k.current);
+    if (!cards.some(k => k.kind !== 'quality')) out.push(el('div', { className: 'ht-empty', 'data-eda-empty': true, text: c.empty }));
+    if (charts.length) {
+      out.push(el('h3', { className: 'ht-section eda-section-title', text: c.explorationTitle }));
+      out.push(banner(ctx, c, data, ctx.snapshot));
+      out.push(el('p', { className: 'ht-faint', text: P.chartsInPath }));
+      out.push(el('ul', { className: 'ht-links', 'data-chart-links': String(charts.length) }, charts.map(k => el('li', {}, [
+        el('button', { type: 'button', className: 'ht-link', 'data-goto': anchorOf(ctx, k.slot),
+          onclick: () => ctx.navigate({ anchor: anchorOf(ctx, k.slot) }) }, [P.seeInPathLink(''), HT.parts.eda.titleNode(ctx, k.slot)])]))));
+    }
+    const split = Boolean(ctx.snapshot.results && ctx.snapshot.results.split && ctx.snapshot.results.split.current);
+    if (!split) out.push(el('p', { className: 'ht-off', 'data-chart-after-split': true, text: P.anotherChartLater }));
+    else {
+      // In reviewer mode the card keeps its navigation ("Show it") and has no run (RV-2).
+      out.push(requestCard(ctx, c, data, task));
+      if (!ctx.reviewer) out.push(el('p', { className: 'ht-faint', 'data-chart-filed': true, text: P.anotherChartFiled }));
+    }
+    return el('div', { className: 'ht-drawer-body' }, out);
+  }
+
+  // The one page (ADR 0004 d13): the Data & EDA tab is gone. The data card is in Now at step
+  // 1 (`nowCard`), then in the Data drawer (`drawer`), with "Run another chart" (W4); each EDA
+  // chart is filed under its step in the path (`cardFor`).
   HT.register('eda', {
-    tab: 'eda',
     stage: 'v2',
-    views: ['eda', 'data'],
     outcomes: ['W4'],
     onMessage(m) {
       if (m.type === 'outcome' && m.op === 'W4') memory.outcome = m;
       return undefined;
     },
-    render(model, ctx) {
-      const data = ctx.data('eda');
-      const error = ctx.error('eda');
-      const task = taskOf(data && data.model, ctx, model);
-      // WP-E1 (R26): under cross-validation the exploration reads the development rows; the
-      // strings that name the rows or the validation partition take their `cv` variant.
-      const base = ctx.copy.eda[task];
-      const cv = Boolean(data && data.model && data.model.rowsSeen && data.model.rowsSeen.scope === 'development');
-      const c = cv ? { ...base, ...base.cv, eyebrows: { ...base.eyebrows, ...(base.cv.eyebrows || {}) } } : base;
-      // R1b (owner session 2026-10-26): the data card and the quality check carry the section
-      // headings the engine's panel line names ("Data & EDA → Data card", "→ Data quality").
-      const out = [el('h2', { text: c.heading }),
-        el('h3', { className: 'ht-section eda-part-title', 'data-section': 'data_card', text: c.data.cardTitle }),
-        dataSection(ctx, c, task)];
-      if (!data) {
-        if (error) {
-          out.push(el('div', { className: 'card alert', role: 'alert', 'data-eda-error': true }, [
-            el('p', { className: 'title', text: c.loadError }), el('p', { text: error.message }),
-            error.detail ? el('details', { className: 'ht-details' }, [el('summary', { text: c.loadErrorDetail }), el('pre', { text: error.detail })]) : null,
-            el('button', { type: 'button', className: 'secondary', text: c.retry, onclick: () => { ctx.retry('eda'); ctx.load('eda'); } }),
-          ]));
-          return out;
-        }
-        // Loading: skeleton cards until the first read answers.
-        out.push(el('div', { className: 'eda-gallery', 'aria-busy': 'true', 'data-eda-loading': true }, [
-          el('div', { className: 'card eda-skeleton' }, [el('p', { className: 'muted', text: c.loading })]),
-          el('div', { className: 'card eda-skeleton', 'aria-hidden': 'true' }),
-        ]));
-        return out;
-      }
-      // L3 (D4b): each card's engine texts in the panel language when the engine gave them.
-      const cards = arr(data.model.cards).map(localCard);
-      // The structural quality check reads the development rows without the target: it
-      // belongs with the data card, before the training-row exploration.
-      const quality = cards.filter(k => k.kind === 'quality');
-      if (quality.length) out.push(el('h3', { className: 'ht-section eda-part-title', 'data-section': 'quality', text: c.qualityTitle }));
-      quality.forEach((card, i) => out.push(qualityCard(ctx, c, card, i)));
-      // Lesson style (R30): the notions of this step, on the study's own values.
-      const notions = ctx.components.notions([specialNotion(ctx), rareNotion(ctx, quality), looksNotion(ctx, model)], { 'data-eda-notions': true });
-      if (notions) out.push(notions);
-      const gallery = cards.filter(k => k.kind !== 'quality');
-      out.push(el('h3', { className: 'ht-section eda-section-title', text: c.explorationTitle }));
-      out.push(banner(ctx, c, data, model));
-      if (ctx.snapshot && !ctx.fresh(data)) out.push(el('p', { className: 'muted', 'data-updating': true, text: c.updating }));
-      if (error) out.push(el('p', { className: 'alert', role: 'alert', 'data-eda-error': true, text: `${c.loadError} ${error.message}` }));
-      const grid = el('div', { className: 'eda-gallery', 'aria-label': c.galleryLabel });
-      if (!gallery.length) out.push(el('div', { className: 'ht-empty', 'data-eda-empty': true, text: c.empty }));
-      gallery.forEach((card, i) => grid.appendChild(cardNode(ctx, c, card, i, task,
-        i === gallery.length - 1, cv)));
-      grid.appendChild(requestCard(ctx, c, data, task));
-      out.push(grid);
-      return out;
-    },
   });
+  HT.parts = HT.parts || {};
+  HT.parts.eda = {
+    nowCard, drawer, cardFor,
+    /**
+     * The title of a slot as its card shows it (ED-7): in a French panel a per-column chart
+     * takes the panel's French question; else the engine's question, marked when it is in the
+     * other language (L3); else the panel's title.
+     */
+    titleNode(ctx, slot) {
+      const data = ctx.data('eda');
+      const { c } = copyFor(ctx, data);
+      const card = data && data.model ? arr(data.model.cards).map(localCard).find(k => k.slot === slot) : null;
+      if (!card) return el('span', { text: slot });
+      if (HT.language && HT.language() === 'fr' && PER_COLUMN.includes(card.activity) && card.column
+        && (!card.langs || card.langs.question !== 'fr')) {
+        return el('span', { 'data-question': true, text: c.requestQuestion(card.activity, card.column) });
+      }
+      if (card.question) {
+        return ctx.components.engineText(card.question, { lang: card.langs ? card.langs.question : 'en', attrs: { 'data-question': true } });
+      }
+      return el('span', { text: titleOf(c, card) });
+    },
+  };
 })(globalThis.Hypotrail = globalThis.Hypotrail || {});

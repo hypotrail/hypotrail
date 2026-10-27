@@ -348,18 +348,6 @@ test('DC-13: the summary carries the choice the chat asks, labels verbatim, malf
   assert.equal(m.waitingCount, toSummaryModel(payload('captured/summary.binary.cv.opening')).waitingCount);
 });
 
-test('DC-13: the choice card is read only: no write control, no words field, only the copy-only ask button', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'media', 'views', 'decisions.js'), 'utf8');
-  const start = source.indexOf('function choiceCard(');
-  const body = source.slice(start, source.indexOf('\n  }\n', start));
-  assert.ok(start > 0 && body.includes("ctx.atLeast('v1')"), 'from v1 only (D20)');
-  for (const forbidden of ['data-write', 'wordsArea', 'textarea', 'HT.send', 'ctx.send', "type: 'button'", 'onclick']) {
-    assert.ok(!body.includes(forbidden), forbidden);
-  }
-  assert.match(body, /HT\.askButton\([^)]*\{ kind: 'decision', id \}/);
-  assert.match(body, /direct: true/);
-});
-
 test('DC-13 (W1 integration): the captured conclusion of a real study is a choice; its values read as verdicts', () => {
   const raw = payload('captured/summary.binary.cv.conclusion');
   const m = toSummaryModel(raw);

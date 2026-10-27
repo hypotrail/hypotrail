@@ -1,9 +1,10 @@
-"""The captured-payload cases of the panel's visual tests (WP-E2, shared with the WP-E3 gate).
+"""The cases of the panel's browser tests (WP-E2, the WP-E3 gate; the one page of ADR 0004 d13).
 
 ``load_views(model, payload)`` builds the models of the captured payloads of the real engine
 (``test/fixtures/captured``): the split Bank study (``binary``), the cross-validated Bank study
 whose final test was opened (``cv``), the cross-validated Bank study with three variants
-(``families``, v0.3 WP-K), and Auto MPG (``regression``). ``open_case`` opens the
+(``families``, v0.3 WP-K), and Auto MPG (``regression``); and the five states of the approved
+mockup under contract P1 (``STATES``, test/fixtures/p1). ``open_case`` opens the
 panel on one of them under a theme of ``themes.py``, at a width, in a language, with every
 view's read delivered. The page scripts below are the structural probes of the gate
 (``test_webview_gate.py``). This is not a VS Code session.
@@ -11,8 +12,6 @@ view's read delivered. The page scripts below are the structural probes of the g
 from __future__ import annotations
 
 import themes
-
-TABS = ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn']
 
 # Records every setAttribute('style', ...) of the page (the CSP forbids inline style
 # attributes; CSSOM writes of custom properties are the one allowed way to size a mark).
@@ -74,11 +73,18 @@ UNDERLINED = """() => [...document.querySelectorAll('data[data-result-id]')]
 STYLE_ATTRS = """() => [...document.querySelectorAll('#app [style]')].map(n => n.getAttribute('style'))"""
 
 
+# The five states of the approved mockup (ADR 0004 d13), hand-built under contract P1 on the
+# captured Auto MPG study (test/fixtures/p1, until the engine's recapture, PANEL-ONE-PAGE-PLAN E-8).
+STATES = ['step1', 'choice', 'reopened', 'review', 'done']
+
+
 def load_views(model, payload) -> dict:
     out = {}
-    for key, s in [('binary', 'summary.binary'), ('regression', 'summary.regression'), ('cv', 'summary.binary.cv'),
-                   ('families', 'summary.binary.families')]:
-        out[f'summary.{key}'] = model('summary', f'captured/{s}')
+    for key, s in [('binary', 'captured/summary.binary'), ('regression', 'captured/summary.regression'),
+                   ('cv', 'captured/summary.binary.cv'), ('families', 'captured/summary.binary.families')]:
+        out[f'summary.{key}'] = model('summary', s)
+    for state in STATES:
+        out[f'summary.{state}'] = model('summary', f'p1/summary.{state}')
     # v0.3 (WP-K): `families` is the cross-validated Bank study with three variants (a stronger
     # penalty, an EBM, gradient boosting); `trials` is each study's full view at that point.
     for key, task, ev, dec, view in [
@@ -93,15 +99,27 @@ def load_views(model, payload) -> dict:
         out[f'data.{key}'] = model('data', f'captured/data.{task}')
         out[f'explain.{key}'] = model('explain', f'captured/explain.{task}')
         out[f'trials.{key}'] = model('trials', f'captured/{view}')
+    # The P1 states read the Auto MPG study's other payloads, and the seeded sample (§17.3).
+    for view in ['evidence', 'eda', 'whatif', 'decisions', 'explain', 'trials']:
+        out[f'{view}.p1'] = out[f'{view}.regression']
+    out['data.p1'] = model('data', 'p1/data.regression')
     out['raw.evidence.binary'] = payload('captured/evidence.binary')
     out['raw.summary.binary'] = payload('captured/summary.binary')
     return out
 
 
-def open_case(open_panel, views, case='binary', theme='light-modern', width=900, lang='en', stage='v3',
-              height=900, before=None):
-    """The panel on a captured case. ``before(page)`` runs after the page loaded and before
-    any message (the pixel baselines fix the font and the clock there)."""
+def set_language(page, lang):
+    """The language radio of the "more" menu (LANG-1), pressed as the junior does."""
+    page.locator('[data-more]').click()
+    page.locator(f'[data-more-menu] [data-language="{lang}"]').click()
+    page.keyboard.press('Escape')
+
+
+def open_case(open_panel, views, case='binary', theme='light-modern', width=900, lang='en', stage='v3', height=900,
+              before=None, reviewer=False, learning=True, panel_theme=None, deliver=True):
+    """The panel on a case (a captured study, or one of STATES) under a theme, at a width, in a
+    language, with every view's read delivered. ``before(page)`` runs after the page loaded and
+    before any message (the pixel baselines fix the font and the clock there)."""
     panel = open_panel(color_scheme=themes.scheme(theme))
     panel.page.evaluate(STYLE_GUARD)
     panel.page.set_viewport_size({'width': width, 'height': height})
@@ -109,18 +127,131 @@ def open_case(open_panel, views, case='binary', theme='light-modern', width=900,
     if before:
         before(panel.page)
     summary = views[f'summary.{case}']
-    panel.init(stage=stage, task=summary['task'])
+    reads = 'p1' if case in STATES else case
+    panel.init(stage=stage, task=summary['task'], reviewer=reviewer, learningLayer=learning, panelContract=2)
     panel.snapshot(summary)
     if lang:
-        # The toggle is UI state: press it as the junior would.
-        panel.page.locator(f'[data-language="{lang}"]').click()
-    for view in ['decisions', 'evidence', 'eda', 'whatif', 'explain', 'data', 'trials']:
-        panel.view_data(view, views[f'{view}.{case}'])
+        set_language(panel.page, lang)
+    if panel_theme:
+        panel.page.locator('[data-more]').click()
+        panel.page.locator(f'[data-more-menu] [data-theme="{panel_theme}"]').click()
+        panel.page.keyboard.press('Escape')
+    if deliver:
+        deliver_views(panel, views, reads)
+    # `goto` re-delivers the reads that opened folds ask for.
+    panel.case_views, panel.case_reads = views, reads
     return panel
 
 
+def goto(panel, *_):
+    """The tabbed tests' "open the tab" on the one page (ADR 0004 d13): every fold and drawer
+    open, as a reader who opens everything would see the page, so that the figures, cards and
+    controls of the former tab are laid out at their places (Now, the path, the drawers)."""
+    open_all(panel, getattr(panel, 'case_views', None), getattr(panel, 'case_reads', None))
+
+
 def expand_eda(page):
-    """Open every collapsed EDA card, as the junior does (only the last one starts open)."""
-    closed = page.locator('details.eda-analysis:not([open]) > summary')
-    while closed.count():
-        closed.first.click()
+    """Open every fold of the page, the EDA cards' analyses included."""
+    for _ in range(10):
+        if page.evaluate(OPEN_ONE) == 0:
+            break
+        page.wait_for_timeout(30)
+
+
+def click_fold(page, fold_id):
+    """Press a fold's summary as the junior does, and wait for its lazy body: the `toggle`
+    event, which re-renders the page with the body, is dispatched after the click."""
+    page.locator(f'details[data-fold-id="{fold_id}"] > summary').first.click()
+    page.wait_for_function("""id => { const d = document.querySelector(`details[data-fold-id="${id}"]`);
+      return d && (!d.open || d.getAttribute('data-lazy') !== 'true' || d.children.length > 1); }""", arg=fold_id)
+
+
+def deliver_views(panel, views, reads):
+    for view in ['decisions', 'evidence', 'eda', 'whatif', 'explain', 'data', 'trials']:
+        panel.view_data(view, views[f'{view}.{reads}'])
+
+
+# Opens every closed fold at once through the page's own fold state (FOLD-1), then renders once:
+# a lazy fold builds its body on that render (pressing them one by one would wait for each
+# toggle event). Details without a fold id are opened in place.
+OPEN_ONE = """() => {
+  const HT = globalThis.Hypotrail;
+  const closed = [...document.querySelectorAll('#app details:not([open])')]
+    .filter(d => !d.closest('[data-popover]'));
+  for (const d of closed) {
+    const id = d.getAttribute('data-fold-id');
+    if (id) HT.setFold(id, true); else d.open = true;
+  }
+  if (closed.some(d => d.getAttribute('data-fold-id'))) HT.rerender();
+  return closed.length;
+}"""
+
+
+ANCHOR_OF = """slot => {
+  const p = globalThis.Hypotrail.currentPage();
+  for (const ph of p.path.phases) for (const st of ph.steps)
+    for (const r of st.results || []) if (r.slot === slot) return `path:${st.id}/${slot}`;
+  return null;
+}"""
+
+
+def open_result(panel, slot):
+    """Go to a result's place in the path as a deep link does (NAV-1, `navigate {anchor}`) and
+    open its "Where it comes from" fold, which reads the result's detail. Returns the figure's
+    fold (``data-anchor="path:<step>/<slot>"``)."""
+    page = panel.page
+    anchor = page.evaluate(ANCHOR_OF, slot)
+    assert anchor, f'{slot} has no place in the path'
+    page.evaluate('s => globalThis.Hypotrail.setFold(`src-${s}`, true)', slot)
+    panel.send({'type': 'navigate', 'anchor': anchor})
+    return page.locator(f'[data-anchor="{anchor}"]')
+
+
+def with_results(summary, items):
+    """A WP-0 summary fixture with the result slots of a view model's cards or results that it
+    predates (the one page lists a figure under its step only when the summary's ``results``
+    name it, P1 §17.2). Captured fixtures need none of this."""
+    out = dict(summary)
+    results = dict(out.get('results') or {})
+    for item in items:
+        slot = item.get('slot')
+        if item.get('promoted') is False:
+            continue
+        if slot and slot not in results and item.get('resultId'):
+            results[slot] = {'resultId': item['resultId'], 'current': item.get('current') is not False,
+                             'staleReason': item.get('staleReason'), 'integrity': None, 'channel': None}
+    out['results'] = results
+    return out
+
+
+def show(panel, **models):
+    """The tabbed tests' "open the tab" on the one page (ADR 0004 d13): deliver the given view
+    models (``eda=..., evidence=...``) as the opened folds ask for them, opening every fold and
+    drawer, so that each figure, card and control of those views is laid out at its place (the
+    path's details, Now, the drawers). The first opening happens before any delivery, so the
+    reads the page asks for can be asserted."""
+    page = panel.page
+    for _ in range(10):
+        n = page.evaluate(OPEN_ONE)
+        page.wait_for_timeout(30)
+        for view, data in models.items():
+            panel.view_data(view, data)
+        if n == 0:
+            break
+    page.evaluate('() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))')
+    return panel
+
+
+def open_all(panel, views=None, reads=None, rounds=10):
+    """Open every fold and drawer of the page, as a junior who reads everything would: each
+    opening of a lazy fold re-renders the page with its body, which may hold more folds; the
+    reads its body asks for are delivered again when `views` is given."""
+    page = panel.page
+    for _ in range(rounds):
+        n = page.evaluate(OPEN_ONE)
+        page.wait_for_timeout(30)
+        if views is not None:
+            deliver_views(panel, views, reads)
+        if n == 0:
+            break
+    page.evaluate('() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))')

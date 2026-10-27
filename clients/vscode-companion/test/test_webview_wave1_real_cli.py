@@ -8,10 +8,14 @@ the study panel on at stage v3 and, on the payloads it really emits:
 * at the conclusion (and the model choice), with no recommendation, the summary carries
   ``choice_options``, the pause is of kind ``choice``, ``panel.shown`` names the choice card
   on a read while the write that led there names what it produced (D3), the panel's summary
-  model holds the same options, and the Decisions tab renders them as the read-only card;
-* HO-3: at ``done``, the summary carries ``after_study``; Overview ("Your next move") and the
-  Learn & hand off tab show its junior text read only, and the export plan line only when
-  the engine says the model is supported; no new write control appears.
+  model holds the same options, and Now lists them as plain text (NOW-4; the one page, ADR
+  0004 d13: the Decisions tab's choice card became Now);
+* HO-3: at ``done``, the summary carries ``after_study``; Now's "And after" (NOW-11) shows its
+  junior text read only, and the export plan line only when the engine says the model is
+  supported; no new write control appears, and the hand-off drawer's only write stays W7.
+
+``panel.shown`` is still the engine's tabbed form here; E-1 turns it into an anchor
+(CLI-CONTRACT §17.1), and this check then reads ``panel.anchor``.
 
 Simulated browser (headless Chromium, ``conftest.py``); not a VS Code or Copilot session.
 """
@@ -29,6 +33,7 @@ sys.path.insert(0, str(REPO / 'framework' / 'tests' / 'study'))
 
 import test_journey_walkthrough as journey  # noqa: E402
 from mlkit.study import companion_env as ce  # noqa: E402
+from panel_cases import click_fold  # noqa: E402
 
 CHOICE_SHOWN = {'en': {'tab': 'decisions', 'section': 'choice', 'label': 'Waiting for your answer',
                        'line': 'In the panel: Decisions → Waiting for your answer.'},
@@ -60,11 +65,10 @@ def _walk(tmp_path, monkeypatch, case, lang):
     return task, choices, done
 
 
-def _decisions_tab(open_panel, summary_model, stage='v3'):
+def _page(open_panel, summary_model, stage='v3'):
     panel = open_panel()
-    panel.init(stage=stage)
+    panel.init(stage=stage, panelContract=2)
     panel.snapshot(summary_model)
-    panel.page.locator('[role="tab"][data-tab="decisions"]').click()
     return panel
 
 
@@ -100,14 +104,14 @@ def test_w1_choice_card_and_after_study_on_a_real_study(tmp_path, monkeypatch, o
         if decision == 'conclusion':
             assert [o['value'] for o in m['nextAction']['choiceOptions']] == [o['id'] for o in options]
             assert ('adopt_model' if task == 'regression' else 'adopt_policy') in [o['id'] for o in options]
-        # The Decisions tab renders the read-only card with exactly those options.
-        panel = _decisions_tab(open_panel, m)
-        card = panel.page.locator(f'[data-choice-card="{decision}"]')
-        assert card.count() == 1, decision
-        assert card.locator('[data-choice-option]').all_inner_texts() == [o['label'] for o in options]
-        assert card.locator('textarea, input, select, [data-write]').count() == 0
-        assert card.locator('button').count() == 1                    # the copy-only ask button
-        assert panel.page.locator('[data-nothing-waiting]').count() == 0
+        # Now lists exactly those options, as plain text (NOW-4).
+        panel = _page(open_panel, m)
+        now = panel.page.locator('[data-block="now"]')
+        assert now.get_attribute('data-now-step') == decision, decision
+        assert now.locator('[data-options] [data-option]').all_inner_texts() == [o['label'] for o in options]
+        assert now.locator('textarea, input, select, [data-write]').count() == 0
+        assert now.locator('button:not(.ht-term):not(summary *)').evaluate_all(
+            'bs => bs.map(b => b.dataset.copyQuestion || "")') == [decision], 'the copy-only button'
         assert panel.clean(), (panel.requests, panel.errors, panel.csp)
 
     # L7 (D15): at done, what comes after the study, read only.
@@ -119,32 +123,25 @@ def test_w1_choice_card_and_after_study_on_a_real_study(tmp_path, monkeypatch, o
                                              'exportPlanAvailable': supported,
                                              'cloudStatus': 'not_qualified'}
     for stage in ('v0', 'v3'):
-        panel = open_panel()
-        panel.init(stage=stage)
-        panel.snapshot(m)
+        panel = _page(open_panel, m, stage=stage)
         page = panel.page
-        if stage != 'v0':
-            page.locator('[role="tab"][data-tab="overview"]').click()
-        hero = page.locator('[data-ov="hero"]')
-        assert hero.get_attribute('data-hero') == 'done'
-        block = hero.locator('[data-after-study]')
+        assert page.locator('[data-block="now"]').get_attribute('data-now') == 'done'
+        after_block = page.locator('[data-block="after"]')
+        block = after_block.locator('[data-after-study]')
         assert block.count() == 1 and after['junior_text'] in block.inner_text()
-        assert block.locator('[data-after-study-export]').count() == (1 if supported else 0)
-        assert block.locator('button, a, input, textarea, select, [data-write]').count() == 0
+        assert block.get_attribute('data-after-study') == ('export_plan' if supported else 'handoff')
+        assert after_block.locator('[data-after-study-export]').count() == (1 if supported else 0)
+        assert after_block.locator('a, input, textarea, select, [data-write]').count() == 0
+        assert after_block.locator('button').evaluate_all('bs => bs.map(b => b.dataset.copyQuestion || "")') == ['done']
         assert panel.clean(), (panel.requests, panel.errors, panel.csp)
-        hero_text = hero.inner_text()
-    page.locator('[role="tab"][data-tab="learn"]').click()
-    learn = page.locator('[data-view="learn"]')
-    block = learn.locator('[data-after-study]')
-    assert block.count() == 1 and after['junior_text'] in block.inner_text()
-    assert block.get_attribute('data-after-study') == ('export_plan' if supported else 'handoff')
-    assert block.locator('[data-after-study-export]').count() == (1 if supported else 0)
-    assert block.locator('button, a, input, textarea, select, [data-write]').count() == 0
-    # The tab's only write is still the handoff pack (W7).
-    assert [learn.locator('[data-write]').nth(i).get_attribute('data-write')
-            for i in range(learn.locator('[data-write]').count())] == ['export']
+        now_text = after_block.inner_text()
+    # The hand-off drawer's only write is still the handoff pack (W7).
+    click_fold(page, 't-deliverables')
+    page.wait_for_function("() => document.querySelector('[data-handoff]')")
+    handoff = page.locator('[data-handoff]')
+    assert handoff.locator('[data-write]').evaluate_all('ns => ns.map(n => n.dataset.write)') == ['export']
     # No command, id or revision of the engine reaches the panel's text.
-    text = learn.inner_text() + hero_text
+    text = handoff.inner_text() + now_text
     for raw in ('hypotrail ', '--expected-revision', 'export azureml', after['handoff']['command']):
         assert raw not in text, raw
     # The same payload where the engine says the model is not supported (a boosting model,
@@ -154,10 +151,7 @@ def test_w1_choice_card_and_after_study_on_a_real_study(tmp_path, monkeypatch, o
         supported=False, reason_id='family_not_supported', plan_command=None)
     m = model('summary', refused)
     assert m['nextAction']['afterStudy']['exportPlanAvailable'] is False
-    panel = open_panel()
-    panel.init(stage='v3')
-    panel.snapshot(m)
-    panel.page.locator('[role="tab"][data-tab="learn"]').click()
-    block = panel.page.locator('[data-view="learn"] [data-after-study]')
+    panel = _page(open_panel, m)
+    block = panel.page.locator('[data-block="after"] [data-after-study]')
     assert block.get_attribute('data-after-study') == 'handoff'
-    assert block.locator('[data-after-study-export]').count() == 0
+    assert panel.page.locator('[data-block="after"] [data-after-study-export]').count() == 0

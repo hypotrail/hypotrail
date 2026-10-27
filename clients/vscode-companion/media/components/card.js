@@ -74,7 +74,8 @@
     const marker = foreign && text ? (source === 'fr'
       ? HT.el('span', { className: 'ht-en-marker', 'data-fr-marker': true, text: '(fr)' })
       : HT.el('span', { className: 'ht-en-marker', 'data-en-marker': true, text: '(en)' })) : null;
-    return HT.el(tag, { ...attrs, lang: foreign ? source : null }, [text, marker]);
+    // `data-verbatim`: the panel's French typography leaves the engine's text as it came (NOW-1).
+    return HT.el(tag, { ...attrs, lang: foreign ? source : null, 'data-verbatim': '' }, [text, marker]);
   }
 
   Object.assign(HT.components, { card, why, source, chip, lead, engineText });

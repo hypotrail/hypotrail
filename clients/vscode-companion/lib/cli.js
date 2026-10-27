@@ -64,7 +64,7 @@ function mutation(id, rev) {
 
 // --- reads (COMPANION-ADVANCED §5) ----------------------------------------------------------
 
-/** `status --summary [--digest [--since N]] --json --study S`. v0 reads without --digest. */
+/** `status --summary [--digest [--since N]] --json --study S`. The one page reads with --digest at every stage (§5). */
 function statusArgv(agent, { digest = false, since = null } = {}) {
   const argv = [...agent.argv, 'status', '--summary'];
   if (digest) {

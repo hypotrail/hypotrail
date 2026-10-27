@@ -16,7 +16,8 @@
     const R = HT.copy.lesson && HT.copy.lesson.concl;
     if (!R) return null;
     const read = rows.filter(r => ok(r.point));
-    if (!read.length) return null;
+    // Nothing defined on these rows (an undefined paired difference): say so, never stay silent.
+    if (!read.length) return R.none ? [R.none] : null;
     const q = r => HT.components.quote([r.pointText, r.intervalText].filter(Boolean).join(' '));
     if (zero) {
       return read.map(r => {

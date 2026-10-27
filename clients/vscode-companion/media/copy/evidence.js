@@ -127,7 +127,7 @@
     // WP-B5: the final test first (sealed, opened, changed after, absent), then the ledger.
     finalTitle: 'Final test',
     finalLead: {
-      sealed: 'Every figure on this tab comes from the development rows. They were used to choose the model and the rule, so the figures are optimistic. The final test gives the one independent figure; it opens once, by your decision in the chat, after the model and the rule are confirmed.',
+      sealed: 'Every figure here comes from the development rows. They were used to choose the model and the rule, so the figures are optimistic. The final test gives the one independent figure; it opens once, by your decision in the chat, after the model and the rule are confirmed.',
       opened: 'The final test was opened once. Its figure is the study\'s independent evidence; the development figures below stay optimistic.',
       changed: 'The final test was opened once, then the study changed. Its figure describes the configuration measured then, not the study as it is now.',
       interrupted: 'The opening started but no result was recorded. The final test is used up: it is not opened a second time.',

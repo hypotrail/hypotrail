@@ -52,7 +52,7 @@
     exportFile: (file, bytes) => `${file} · ${bytes} bytes`,
     exportOut: out => `Folder: ${out}`,
     exportIncomplete: words => `The pack is incomplete: ${words}.`,
-    exportStaleReport: 'The report was not current, so it is not in the pack. Regenerate it in Overview and export again if you need it.',
+    exportStaleReport: 'The report was not current, so it is not in the pack. Regenerate it in Deliverables and export again if you need it.',
     openFolder: 'Open folder',
     // L7 (owner session 2026-10-26, D15): what comes after the study, read only.
     afterStudyTitle: 'After the study',

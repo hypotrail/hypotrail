@@ -1,21 +1,17 @@
-"""Browser tests of the WP-0 frame (scope S, simulated browser; COMPANION-ADVANCED §3.2, §4.1,
-§12, §13): stage gating of the tabs, the placeholders, reviewer mode, the WAI-ARIA tabs,
-the shared chart components, the real CSP, the regression vocabulary, and the contrast of
-the fallback theme tokens. Not a VS Code session.
+"""Browser tests of the shared frame (scope S, simulated browser; COMPANION-ADVANCED §4.1, §12,
+§13): the registered parts and their stages, the shared chart components, the palette-only SVG
+colours under the real CSP, and the contrast of the text tokens. Not a VS Code session.
+
+The tabbed frame's tests went with the tabs (ADR 0004 d13): the tab bar and its WAI-ARIA
+pattern, the recap strip and the alert strip are withdrawn (§18: LS-1, OV-1, OV-2); stage
+gating is PG-12 and the load error PG-11 (`test_webview_page.py`, `test_webview_header.py`);
+reviewer mode and the regression vocabulary are checked on the whole page (RV-2, INV-12).
 """
 from __future__ import annotations
-
-import re
-from pathlib import Path
 
 import pytest
 
 from conftest import inline_styles_ok
-
-TABS = ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn']
-STAGE_TABS = {'v0': [], 'v1': ['overview', 'decisions'],
-              'v2': ['overview', 'eda', 'decisions', 'evidence', 'whatif'], 'v3': TABS}
-FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 
 
 @pytest.fixture(scope='module')
@@ -23,139 +19,18 @@ def binary(model):
     return model('summary', 'summary.binary')
 
 
-@pytest.fixture(scope='module')
-def regression(model):
-    return model('summary', 'summary.regression')
-
-
-def _tabs(page):
-    return page.locator('[role="tab"]').evaluate_all('ts => ts.map(t => t.dataset.tab)')
-
-
-@pytest.mark.parametrize('stage', ['v0', 'v1', 'v2', 'v3'])
-def test_tabs_of_a_later_stage_are_absent(open_panel, binary, stage):
+def test_each_part_is_registered_at_its_stage(open_panel, binary):
+    """§3.2: one page renders; the other views are parts, registered at their stage (OP-1)."""
     panel = open_panel()
-    panel.init(stage=stage)
+    panel.init(stage='v3', panelContract=2)
     panel.snapshot(binary)
-    page = panel.page
-    assert _tabs(page) == STAGE_TABS[stage]
-    later = {'v0': ['v1', 'v2', 'v3'], 'v1': ['v2', 'v3'], 'v2': ['v3'], 'v3': []}[stage]
-    for s in later:
-        assert page.locator(f'[data-stage="{s}"]').count() == 0, s
-    if stage == 'v0':
-        # v0: one page, no tablist, the v0 sections only.
-        assert page.locator('[role="tablist"]').count() == 0
-        # WP-A5: the next move first (lesson style, 2026-10-27: on the board above the content,
-        # after the journey rail), then the plan; the junior recap under Details.
-        assert page.locator('[data-band] [data-ov]').first.get_attribute('data-ov') == 'hero'
-        assert page.locator('main [data-ov]').first.get_attribute('data-ov') == 'map'
-        assert page.locator('[data-recap-details] li').count() == 5
-        assert page.locator('[data-proposal-card]').count() == 1
-    assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
-
-
-def test_each_view_of_its_stage_is_registered_and_waits_busy_for_its_data(open_panel, binary):
-    # WP-I: every tab has its real view (U1-U5), so no WP-0 placeholder is left. Without
-    # its data a view waits, busy (§3.3 "Loading").
-    panel = open_panel()
-    panel.init(stage='v3')
-    panel.snapshot(binary)
-    page = panel.page
-    views = page.evaluate('() => globalThis.Hypotrail.registered()')
-    assert sorted(v['tab'] for v in views) == sorted(TABS), views
-    assert {v['tab']: v['stage'] for v in views} == {'overview': 'v0', 'decisions': 'v0', 'eda': 'v2', 'evidence': 'v2',
-                                                       'whatif': 'v2', 'learn': 'v3'}
-    for tab in ['eda', 'evidence', 'whatif', 'learn']:
-        page.locator(f'[role="tab"][data-tab="{tab}"]').click()
-        shown = page.locator(f'#panel-{tab}')
-        assert shown.is_visible()
-        assert shown.locator('[data-placeholder]').count() == 0, tab
-        assert shown.locator('[aria-busy="true"]').count() >= 1, tab
-        assert page.locator('[data-recap-strip]').count() == 1, 'the recap strip is on every tab but Overview'
-    page.locator('[role="tab"][data-tab="overview"]').click()
-    assert page.locator('[data-recap-strip]').count() == 0
+    views = panel.page.evaluate('() => globalThis.Hypotrail.registered()')
+    assert {v['name']: v['stage'] for v in views} == {'page': 'v0', 'overview': 'v0', 'decisions': 'v0', 'eda': 'v2',
+                                                       'evidence': 'v2', 'whatif': 'v2', 'learn': 'v3'}
+    assert panel.page.locator('[role="tablist"], [role="tab"], [role="tabpanel"], [data-placeholder]').count() == 0
     assert panel.clean()
 
 
-def test_tabs_follow_the_aria_pattern_and_remember_the_choice(open_panel, binary):
-    panel = open_panel()
-    panel.init(stage='v2')
-    panel.snapshot(binary)
-    page = panel.page
-    first = page.locator('[role="tab"][data-tab="overview"]')
-    assert first.get_attribute('aria-selected') == 'true'
-    assert first.get_attribute('aria-controls') == 'panel-overview'
-    first.focus()
-    page.keyboard.press('ArrowRight')
-    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'eda'
-    page.keyboard.press('End')
-    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'whatif'
-    page.keyboard.press('Home')
-    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'overview'
-    page.keyboard.press('ArrowLeft')
-    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'whatif'
-    assert panel.state()['tab'] == 'whatif'
-    assert page.locator('[role="tabpanel"]:not([hidden])').count() == 1
-    badge = page.locator('[role="tab"][data-tab="decisions"] .ht-count')
-    assert badge.get_attribute('aria-label') == f"{binary['waitingCount']} waiting for you"
-
-
-def test_reviewer_mode_renders_no_write_control(open_panel, binary):
-    panel = open_panel()
-    panel.init(stage='v3', reviewer=True)
-    panel.snapshot(binary)
-    page = panel.page
-    assert page.locator('[data-reviewer]').inner_text() == 'Reviewer, read-only'
-    for tab in STAGE_TABS['v3']:
-        page.locator(f'[role="tab"][data-tab="{tab}"]').click()
-        assert page.locator('[data-write]:not([data-write="export"])').count() == 0, tab
-        assert page.locator('textarea').count() == 0, tab
-
-
-def test_alert_strip_and_navigation_to_health(open_panel, model):
-    health = model('summary', 'summary.binary.health')
-    panel = open_panel()
-    panel.init(stage='v1')
-    panel.snapshot(health)
-    page = panel.page
-    alerts = page.locator('[data-alert]')
-    # WP-A5: not on the Overview (its first block is the next move); one alert per event
-    # elsewhere (the unknown outcome is the interrupted execution), in the junior's words.
-    assert alerts.count() == 0
-    page.locator('[role="tab"][data-tab="decisions"]').click()
-    assert alerts.evaluate_all('as => as.map(a => a.dataset.alert)') == ['outcome_unknown']
-    assert alerts.first.get_attribute('role') == 'alert'
-    assert alerts.first.locator('p').inner_text() == health['nextAction']['juniorMessage']
-    alerts.first.get_by_role('button').click()
-    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'overview'
-    panel.send({'type': 'navigate', 'tab': 'decisions', 'kind': 'proposal', 'id': 'p_5'})
-    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'decisions'
-    assert page.evaluate('document.activeElement.closest("[data-nav]").dataset.nav') == 'proposal:p_5'
-
-
-def test_load_error_replaces_the_content_and_gives_a_next_step(open_panel, binary):
-    # WP-A5: the error state replaces the content (nothing read before is shown as current),
-    # says what to do next, and keeps the CLI's message and stderr under Details.
-    panel = open_panel()
-    panel.init(stage='v1')
-    panel.snapshot(binary)
-    panel.send({'type': 'load_error', 'view': None, 'message': 'The hypotrail CLI could not be started.',
-                'detail': 'stderr text'})
-    banner = panel.page.locator('[data-load-error]')
-    assert banner.get_attribute('role') == 'alert'
-    assert f"Last read at revision {binary['revision']}" in banner.inner_text()
-    assert 'Press Retry' in banner.locator('[data-next-step]').inner_text()
-    assert banner.locator('details [data-error-message]').text_content() == 'The hypotrail CLI could not be started.'
-    assert banner.locator('details pre').text_content() == 'stderr text'
-    page = panel.page
-    assert page.locator('main [data-load-error]').count() == 1
-    assert page.locator('main section[data-tab]').count() == 0, 'no tab content under the error'
-    assert page.locator('[data-ov="hero"], [data-proposal-card], .ht-alerts, [data-recap-strip]').count() == 0
-    banner.get_by_role('button', name='Retry').click()
-    assert panel.posted()[-1] == {'v': 2, 'type': 'refresh'}
-    panel.snapshot(binary)
-    assert page.locator('[data-load-error]').count() == 0
-    assert page.locator('[data-ov="hero"]').count() == 1, 'the content is back once the study is read'
 
 
 def test_components_render_geometry_hatch_values_and_citations(open_panel):
@@ -211,16 +86,6 @@ def test_svg_colours_come_from_the_palette_only(open_panel):
         panel.page.evaluate("() => globalThis.Hypotrail.el('div', {style: 'color: red'})")
 
 
-def test_regression_frame_and_loading_views_hold_no_decision_rule_vocabulary(open_panel, regression):
-    panel = open_panel()
-    panel.init(stage='v3', task='regression')
-    panel.snapshot(regression)
-    page = panel.page
-    for tab in STAGE_TABS['v3']:
-        page.locator(f'[role="tab"][data-tab="{tab}"]').click()
-        text = page.locator('body').inner_text()
-        assert not FORBIDDEN.search(text), (tab, FORBIDDEN.search(text).group(0))
-    assert panel.clean()
 
 
 def _luminance(hex_colour: str) -> float:
@@ -272,34 +137,3 @@ def test_text_tokens_contrast_at_least_4_5_to_1_in_both_fallback_themes(open_pan
     for fg, bg, ratio in panel.page.evaluate(CONTRAST, TEXT_PAIRS):
         assert ratio >= 4.5, (scheme, theme, fg, bg, round(ratio, 2))
 
-
-def test_recap_strip_shows_the_junior_recap_with_decisions_in_words(open_panel, model):
-    # WP-A5 (two-layer copy): the strip on the other tabs is the engine's junior recap,
-    # except its Decided line, which the panel writes from the decisions (no rule token).
-    binary = model('summary', 'captured/summary.binary')
-    panel = open_panel()
-    panel.init(stage='v1', task='binary')
-    panel.snapshot(binary)
-    page = panel.page
-    page.locator('[role="tab"][data-tab="decisions"]').click()
-    # v0.3 (WP-E2): the strip is collapsed by default; the junior opens it.
-    toggle = page.locator('[data-recap-strip] button')
-    assert toggle.get_attribute('aria-expanded') == 'false' and page.locator('[data-recap-strip] li').count() == 0
-    toggle.click()
-    lines = page.locator('[data-recap-strip] li').all_inner_texts()
-    junior = binary['recapJunior']
-    assert [l.split(':')[0] for l in lines] == ['Goal', 'Decided', 'Now', 'Next', 'Limit']
-    assert lines[0] == junior[0] and lines[2:] == junior[2:]
-    assert lines[1] == ('Decided: the prediction moment: Before the first contact of the campaign, from the client file; '
-                        'the variables you may use: 11 available · 1 uncertain, kept (contact) · 4 excluded '
-                        '(campaign, day, duration, month); the split: Stratified random split, 30% of the rows for '
-                        'validation; the success criterion: Adopt only if precision beats the baseline by at least 5 '
-                        'points; the data preparation: Missing values not flagged, no capping, no log scale; '
-                        # WP-B1: the variant the policy compares, in words
-                        'the variant to compare: Compare with a more regularised variant; '
-                        # The explicit binary model choice (main, 506180a), in words
-                        'the model choice: Adopt the logistic model; '
-                        'the decision rule: Select every case scored 0.2 or more.')
-    strip = page.locator('[data-recap-strip]').inner_text()
-    assert 'threshold:0.2' not in strip and 'result ' not in strip
-    assert panel.clean()

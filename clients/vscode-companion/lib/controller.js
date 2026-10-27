@@ -36,6 +36,8 @@ const refusals = require('./refusals');
 const { studyKey } = require('./localstore');
 const launch = require('./launch');
 const l10n = require('./l10n');
+const page = require('./models/page');
+const flag = require('./flag');
 
 const HANDLERS_DIR = path.join(__dirname, 'handlers');
 const MAX_READS = 2;
@@ -162,6 +164,7 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     // `study` (CR.2): the study key, so the webview keeps draft words for this study only.
     send({ type: 'init', stage: active.stage, reviewer: active.reviewer === true, learningLayer: active.learningLayer !== false,
       chatInsert: active.chatInsert === true, task: snapshot ? snapshot.task : null, study: studyKey(agent.studyDir),
+      panelContract: flag.PANEL_CONTRACT,
       marimo: launch.display(agent),
       language: ['auto', 'en', 'fr'].includes(active.language) ? active.language : 'auto' });
   }
@@ -228,7 +231,8 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
   }
 
   async function loadSummary({ since = null } = {}) {
-    const digest = stageAtLeast('v1');
+    // ADR 0004 d13 (§5): the one page needs the digest's P1 keys from stage v0.
+    const digest = true;
     let res = await readProcess(cli.statusArgv(agent, { digest, since }));
     // An engine without C1 (CLI-CONTRACT-COMPANION §13 stub): fall back to the v0 read.
     if (digest && res.payload && res.payload.ok === false && res.payload.error &&
@@ -378,6 +382,21 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     say,
   };
 
+  /** The anchor of a navigation target (§4.3), from the last summary; the path's head when unknown. */
+  function anchorOf(target) {
+    if (target && typeof target.anchor === 'string') return target.anchor;
+    const kind = target && target.kind;
+    const id = target && target.id;
+    if (kind === 'result') return page.anchorOfResult(snapshot, id);
+    const plan = snapshot ? snapshot.plan.map(s => s.id) : [];
+    if (kind === 'decision' && plan.includes(id)) return `path:${id}`;
+    if (kind === 'proposal') {
+      const p = snapshot ? snapshot.proposals.find(x => x.proposalId === id) : null;
+      return p ? 'now' : 'path';
+    }
+    return 'path';
+  }
+
   async function handle(raw) {
     const message = protocol.validateIncoming(raw);
     if (!message) {
@@ -426,9 +445,13 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     settings: () => ({ ...active }),
     /** The language of the extension's words (lib/l10n.js). */
     language,
-    /** Post a navigation request (a deep link, "go to a result"); false when invalid. */
+    /**
+     * Post a navigation request (a deep link, "go to a result"; §4.3): the target's anchor,
+     * resolved from the last summary (a result to `path:<step>/<slot>`, a decision to its
+     * step line, an open proposal to Now); false when invalid.
+     */
     navigate(target) {
-      return send({ type: 'navigate', tab: target.tab, kind: target.kind, id: target.id });
+      return send({ type: 'navigate', anchor: anchorOf(target), kind: target.kind, id: target.id });
     },
     /** Run an extension command a handler registered; undefined when none did. */
     async command(name, args) {

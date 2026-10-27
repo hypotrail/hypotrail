@@ -1,16 +1,18 @@
-// What if? view (COMPANION-ADVANCED §6.5, stage v2). WP-U3.
+// What if? drawer (COMPANION-ADVANCED §6.7.2, §A.5, stage v2; WP-U3; the tab of the tabbed panel
+// became a drawer of the one page, ADR 0004 d13). page.js places `body` after the drawer's
+// warning (TOOL-4, HON-7).
 //
-// Every state of the tab carries the banner "Experiment, not adopted." (role="note",
-// data-experiment; WI-1). Binary: the policy sandbox. A segmented control (Threshold,
-// Capacity), a slider and a number input bound to it; each move asks `preview_policy` (the
-// controller debounces it and keeps the latest; this view drops an answer whose `seq` is
-// not its latest), a release asks it again with paired intervals. The comparison, the
-// intervals, and the "Ask the agent to propose this" area update in place, so the slider is
-// never re-created under the pointer. Regression: the residual explorer (no slider, none of
-// the decision-rule vocabulary). The panel proposes nothing (v0.3 narrowing, ADR 0004
-// amendment, integrator decision I2): for a value the engine evaluated, it shows the
-// engine's draft and copies a ready question for the chat; the agent proposes it there.
-// Rules are named in words ("top 20%"), the recorded token in the hover (R26).
+// Every state carries the banner "Experiment, not adopted." (role="note", data-experiment;
+// WI-1). Binary: the policy sandbox. A segmented control (Threshold, Capacity), a slider and a
+// number input bound to it; each move asks `preview_policy` (the controller debounces it and
+// keeps the latest; this view drops an answer whose `seq` is not its latest), a release asks
+// it again with paired intervals. The comparison, the intervals, and the "Ask the agent to
+// propose this" area update in place, so the slider is never re-created under the pointer.
+// Regression: the residual explorer (no slider, none of the decision-rule vocabulary). The
+// panel proposes nothing (v0.3 narrowing, ADR 0004 amendment, integrator decision I2): for a
+// value the engine evaluated, it shows the engine's draft and copies a ready question for the
+// chat; the agent proposes it there. Rules are named in words ("top 20%"), the recorded
+// token in the hover (R26).
 (function (HT) {
   'use strict';
   const RULE = /^(threshold:(0(\.[0-9]+)?|1(\.0+)?)|capacity:[1-9][0-9]{0,6}|share:(0\.[0-9]*[1-9][0-9]*|1(\.0+)?))$/;
@@ -629,7 +631,7 @@
 
   function render(summary, ctx) {
     const common = C().common;
-    const root = ctx.el('div', { className: 'ht-whatif' }, [ctx.el('h2', { className: 'sr-only', text: ctx.copy.core.tabs.whatif }), banner(ctx)]);
+    const root = ctx.el('div', { className: 'ht-whatif' }, [banner(ctx)]);
     const d = ctx.data('whatif');
     const error = ctx.error('whatif');
     if (error) {
@@ -678,12 +680,19 @@
       here: words ? R.here(words) : null, folds: [{ kind: 'why', body: R.why }, { kind: 'casse', body: R.casse }], keep: R.keep });
   }
 
+  // The one page (ADR 0004 d13): What if? is a drawer (§6.7.2); page.js puts the warning of
+  // TOOL-4 first and this body under it. It reads `whatif` and, for the gain curve, the
+  // case's teaching share (`scenario`, status --json) when the drawer is open (§5).
+  HT.parts = HT.parts || {};
+  HT.parts.whatif = {
+    body(ctx) {
+      ctx.want('whatif');
+      ctx.want('scenario');
+      return render(ctx.snapshot, ctx);
+    },
+  };
   HT.register('whatif', {
-    tab: 'whatif',
     stage: 'v2',
-    // WP-B5: `scenario`, the case's teaching share (status --json), for the gain curve.
-    views: ['scenario', 'whatif'],
-    render,
     onMessage(m, ctx) {
       if (m.type === 'preview_policy_result') {
         const sent = S.sent[m.seq];

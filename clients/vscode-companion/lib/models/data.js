@@ -1,12 +1,13 @@
 'use strict';
 // DataModel: a pure projection of `hypotrail.data/1` (CLI-CONTRACT §11.1) for the data card
-// at the top of the Data & EDA tab (WP-A7). It reads the development rows only: what one row
-// describes, the grouped dictionary, five fixed rows with the target first, and the sealed
-// final test. It never holds a target rate or a distribution: the engine sends none.
+// of step 1 and of the Data drawer (WP-A7; the one page, ADR 0004 d13). It reads the development
+// rows only: what one row describes, the grouped dictionary, the step-1 sample (contract P1: the
+// engine's seeded development rows, SAMPLE-1; the first rows from an older engine), and the
+// sealed final test. It never holds a target rate or a distribution: the engine sends none.
 //
 // Nothing is computed here. Counts (rows, columns, missing cells, distinct values, rows of a
 // special value) are the engine's own counts, shown as recorded literals (INV-7 c); a cell
-// of the five rows is the stored value, shown as text. A variable's `decided` is the
+// of the sample is the stored value, shown as text. A variable's `decided` is the
 // availability the junior's decision recorded, else null (the case's statement only).
 
 const { str, strOrNull, list, obj, int, expectSchema } = require('./common');
@@ -14,8 +15,11 @@ const { str, strOrNull, list, obj, int, expectSchema } = require('./common');
 const SCHEMA = 'hypotrail.data/1';
 const DATA_KEYS = ['revision', 'observationUnit', 'development', 'target', 'finalTest', 'groups', 'rows', 'note', 'hasFrench',
   // L3 (owner session 2026-10-26): the card's note in each language the engine gives it in.
-  'noteLines'];
-const FIXTURES = ['data.binary', 'data.regression'];
+  'noteLines',
+  // Contract P1 (CLI-CONTRACT §17.4): the development rows holding a declared special value,
+  // without the target, at most 50 (`truncated` when there are more).
+  'specialRows'];
+const FIXTURES = ['data.binary', 'data.regression', 'p1/data.regression'];
 
 /** A stored cell as text: a missing cell is null (shown as an empty cell, marked missing). */
 function cell(value) {
@@ -81,15 +85,33 @@ function toDataModel(payload) {
       lines: lines(ft.line, ft.junior_text) },
     groups,
     rows: {
-      columns, order: strOrNull(rows.order),
+      columns, order: strOrNull(rows.order), nRows: int(rows.n_rows),
       items: list(rows.items).map(r => {
         const values = obj(r && r.values);
         return { rowKey: str(r && r.row_key), cells: columns.map(c => cell(values[c])) };
       }),
+      // Contract P1 (§17.3): the seeded step-1 sample, whether its target values are shown
+      // (the look is recorded), and its exposure entry; null for an older engine (the first rows).
+      seed: strOrNull(rows.seed),
+      targetShown: typeof rows.target_shown === 'boolean' ? rows.target_shown : null,
+      exposure: rows.exposure && typeof rows.exposure === 'object'
+        ? { exposureId: strOrNull(rows.exposure.exposure_id), purpose: strOrNull(rows.exposure.purpose), recorded: rows.exposure.recorded === true }
+        : null,
     },
     note: (() => { const n = obj(p.note); return n.audience === 'agent' ? null : strOrNull(n.junior_text || n.text); })(),
     hasFrench: Boolean(target.description_fr) || groups.some(g => g.groupFr || g.variables.some(v => v.descriptionFr)),
     noteLines: (() => { const n = obj(p.note); return n.audience === 'agent' ? null : lines(n.text, n.junior_text); })(),
+    specialRows: (() => {
+      if (!p.special_rows || typeof p.special_rows !== 'object') return null;
+      const sr = obj(p.special_rows);
+      const cols = list(sr.columns).map(str).filter(Boolean);
+      return { columns: cols, nRows: int(sr.n_rows) || 0, truncated: sr.truncated === true,
+        items: list(sr.items).map(r => {
+          const values = obj(r && r.values);
+          return { rowKey: str(r && r.row_key), cells: cols.map(c => cell(values[c])),
+            specials: list(r && r.specials).map(x => ({ column: str(x && x.column), value: cell(x && x.value) || '' })) };
+        }) };
+    })(),
   };
 }
 

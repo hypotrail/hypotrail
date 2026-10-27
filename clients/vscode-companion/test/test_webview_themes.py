@@ -3,13 +3,16 @@ of VS Code's Light+, Dark+ and High Contrast themes (``themes.py``), at 900 and 
 on the **captured** payloads of the real engine (``test/fixtures/captured``), not only the
 hand-written fixtures.
 
-* the first 400 px of the Overview hold the next-move hero and no raw result id;
-* no text written for the agent is shown as primary content in any tab;
+* the first viewport below the sticky region holds Now's heading and no raw result id (NOW-12);
+* no text written for the agent is shown as primary content anywhere on the page, every fold
+  and drawer open (the engine's record stays under "Details");
 * chart text is drawn at most 2 px larger than the body text (no SVG upscaling), the
   baseline is grey and the model is the accent, intervals sit on an axis with 0 marked;
 * every primary button has a visible border in High Contrast (and under forced colours);
   a disabled control is not marked by opacity alone;
 * at 420 px nothing scrolls the page sideways and tables turn into cards.
+
+Re-pointed at the one page (ADR 0004 d13); the tab bar's wrapping went with the tabs.
 
 This is not a VS Code session: the variables are the built-in themes' values, set as the
 host sets them.
@@ -21,6 +24,7 @@ import re
 import pytest
 
 from conftest import inline_styles_ok
+from panel_cases import OPEN_ONE
 
 import themes
 
@@ -51,15 +55,19 @@ def panel_for(open_panel, theme, width, summary, stage='v3', **init):
     panel = open_panel(color_scheme=themes.scheme(theme))
     panel.page.set_viewport_size({'width': width, 'height': 900})
     themes.apply(panel.page, theme)
-    panel.init(stage=stage, task=summary['task'], **init)
+    panel.init(stage=stage, task=summary['task'], panelContract=2, **init)
     panel.snapshot(summary)
     return panel
 
 
 def feed(panel, views, task):
-    for view, key in [('decisions', 'decisions'), ('evidence', 'evidence'), ('eda', 'eda'), ('whatif', 'whatif'),
-                      ('explain', 'explain')]:
-        panel.view_data(view, views[f'{key}.{task}'])
+    """Every read delivered, every fold and drawer open (as a reader who opens everything)."""
+    for _ in range(10):
+        for view in ('decisions', 'evidence', 'eda', 'whatif', 'explain'):
+            panel.view_data(view, views[f'{view}.{task}'])
+        if panel.page.evaluate(OPEN_ONE) == 0:
+            break
+        panel.page.wait_for_timeout(30)
 
 
 def clean(panel):
@@ -96,27 +104,28 @@ TEXT_ABOVE = """limit => {
 @pytest.mark.parametrize('theme', THEMES)
 @pytest.mark.parametrize('width', WIDTHS)
 @pytest.mark.parametrize('name', SUMMARIES)
-def test_first_400px_hold_the_next_move_and_no_raw_result_id(open_panel, views, name, theme, width):
+def test_ov0_now12_the_first_viewport_holds_now_and_no_raw_result_id(open_panel, views, name, theme, width):
+    """OV-0 → NOW-12: Now's heading is in the first viewport (800 px), and no raw result id,
+    proposal id or rule token is there."""
     summary = views[name]
     stage = 'v0' if '.v0.' in name else 'v1'
     panel = panel_for(open_panel, theme, width, summary, stage=stage)
     page = panel.page
-    hero = page.locator('[data-ov="hero"]')
-    assert hero.count() == 1
-    assert hero.evaluate('h => h.getBoundingClientRect().top') < 400, 'the next move starts in the first 400 px'
-    top = page.evaluate(TEXT_ABOVE, 400)
-    assert hero.locator('[data-hero-title]').inner_text() in top
+    now = page.locator('[data-block="now"] h2').first
+    assert now.evaluate('h => h.getBoundingClientRect().top') < 800, 'Now starts in the first viewport'
+    top = page.evaluate(TEXT_ABOVE, 800)
+    assert now.text_content() in top
     for rid in result_ids(views['raw'][name]):
-        assert rid[:8] not in top, f'raw result id {rid[:8]} in the first 400 px'
+        assert rid[:8] not in top, f'raw result id {rid[:8]} in the first viewport'
     assert not re.search(r'\b[0-9a-f]{12,64}\b', top)
-    assert not re.search(r'\bp_\d+\b|\b(capacity|threshold):[0-9.]+', top), 'no raw token in the first 400 px'
+    assert not re.search(r'\bp_\d+\b|\b(capacity|threshold):[0-9.]+', top), 'no raw token in the first viewport'
     clean(panel)
 
 
 @pytest.mark.parametrize('theme', THEMES)
 @pytest.mark.parametrize('task, name', [('binary', 'summary.binary'), ('regression', 'summary.regression'),
                                         ('binary', 'summary.binary.health')])
-def test_no_agent_text_is_primary_content_in_any_tab(open_panel, views, task, name, theme):
+def test_no_agent_text_is_primary_content_anywhere(open_panel, views, task, name, theme):
     summary = views[name]
     raw = views['raw'][name]
     panel = panel_for(open_panel, theme, 900, summary)
@@ -131,12 +140,13 @@ def test_no_agent_text_is_primary_content_in_any_tab(open_panel, views, task, na
         agent += [line for line in raw['recap'] if line not in (raw.get('recap_junior') or [])]
     assert agent, 'the captured payload has agent texts to keep out'
     page = panel.page
-    for tab in page.locator('[role="tab"]').evaluate_all('ts => ts.map(t => t.dataset.tab)'):
-        page.locator(f'[role="tab"][data-tab="{tab}"]').click()
-        visible = page.locator('body').inner_text()       # closed <details> are not rendered
-        for text in agent:
-            assert text not in visible, (tab, text)
-        assert 'could not be read' not in visible, tab
+    # Every fold open; the engine's own record under "Details" (layer 2, §15.1) is left out.
+    visible = page.evaluate("""() => { const m = document.getElementById('app').cloneNode(true);
+      for (const d of m.querySelectorAll('details.ht-details')) d.remove();
+      document.body.appendChild(m); const t = m.innerText; m.remove(); return t; }""")
+    for text in agent:
+        assert text not in visible, text
+    assert 'could not be read' not in visible
     clean(panel)
 
 
@@ -159,18 +169,12 @@ def test_chart_text_is_never_larger_than_body_text_plus_2px(open_panel, views, t
     feed(panel, views, task)
     page = panel.page
     seen = 0
-    for tab in ['eda', 'evidence', 'whatif']:
-        page.locator(f'[role="tab"][data-tab="{tab}"]').click()
-        if tab == 'evidence':
-            first = page.locator('[data-result-row], .ht-ev-item').first
-            if first.count():
-                first.click()
-        for chart in page.evaluate(CHART_SIZES):
-            seen += 1
-            assert chart['scale'] <= 1.0001, chart
-            assert chart['max'] <= chart['body'] + 2, chart
-        # v0.3 (WP-E2): nothing scrolls sideways, neither a chart nor the page.
-        assert page.evaluate('document.scrollingElement.scrollWidth <= window.innerWidth + 1'), tab
+    for chart in page.evaluate(CHART_SIZES):
+        seen += 1
+        assert chart['scale'] <= 1.0001, chart
+        assert chart['max'] <= chart['body'] + 2, chart
+    # v0.3 (WP-E2): nothing scrolls sideways, neither a chart nor the page.
+    assert page.evaluate('document.scrollingElement.scrollWidth <= window.innerWidth + 1')
     assert seen > 0, 'charts were drawn'
     clean(panel)
 
@@ -179,12 +183,8 @@ def test_baseline_is_grey_model_is_the_accent_and_intervals_have_a_zero_axis(ope
     panel = panel_for(open_panel, 'light', 900, views['summary.regression'])
     feed(panel, views, 'regression')
     page = panel.page
-    page.locator('[role="tab"][data-tab="evidence"]').click()
     # v0.3 (WP-E2): interval rows are an HTML grid; each interval is a line (its background colour).
     lines = page.locator('.ht-intervals [data-interval][data-tone]')
-    if lines.count() == 0:
-        page.locator('[role="tab"][data-tab="whatif"]').click()
-        lines = page.locator('.ht-intervals [data-interval][data-tone]')
     assert lines.count() > 0, 'interval charts are drawn'
     tones = lines.evaluate_all('ls => ls.filter(l => l.getBoundingClientRect().width > 0).map(l => [l.dataset.tone, getComputedStyle(l).backgroundColor])')
     base = {s for t, s in tones if t == 'baseline'}
@@ -218,24 +218,22 @@ def test_high_contrast_primary_buttons_have_a_visible_border(open_panel, views, 
     feed(panel, views, 'binary')
     page = panel.page
     seen = 0
-    for tab in ['overview', 'decisions']:
-        page.locator(f'[role="tab"][data-tab="{tab}"]').click()
-        for b in page.evaluate(BORDERS, '#main button:not(.ht-link):not([role="tab"])'):
-            seen += 1
-            rgb, alpha = parse(b['color'])
-            assert b['width'] >= 1 and b['style'] != 'none', b
-            assert alpha > 0.5 and rgb != [0.0, 0.0, 0.0], f'the border shows against the black page: {b}'
+    for b in page.evaluate(BORDERS, '#app button:not(.ht-link):not(.ht-term)'):
+        seen += 1
+        rgb, alpha = parse(b['color'])
+        assert b['width'] >= 1 and b['style'] != 'none', b
+        assert alpha > 0.5 and rgb != [0.0, 0.0, 0.0], f'the border shows against the black page: {b}'
     assert seen >= 4
-    # The hero's action and the card's Confirm are primary buttons.
-    page.locator('[role="tab"][data-tab="overview"]').click()
-    assert page.locator('[data-hero-action]').evaluate('b => getComputedStyle(b).borderTopColor') == 'rgb(111, 195, 223)'
+    # Now's one action is a primary button: the High Contrast border colour.
+    assert page.locator('[data-block="now"] [data-copy-question]').evaluate('b => getComputedStyle(b).borderTopColor') == \
+        'rgb(111, 195, 223)'
     clean(panel)
 
 
 def test_forced_colors_keep_button_borders(open_panel, views):
     panel = panel_for(open_panel, 'light', 900, views['summary.binary'])
     panel.page.emulate_media(forced_colors='active')
-    for b in panel.page.evaluate(BORDERS, '#main button:not(.ht-link):not([role="tab"])'):
+    for b in panel.page.evaluate(BORDERS, '#app button:not(.ht-link):not(.ht-term)'):
         assert b['width'] >= 1 and b['style'] != 'none', b
     clean(panel)
 
@@ -246,8 +244,8 @@ def test_disabled_is_not_opacity_only(open_panel, model, theme):
     # interrupted execution (W6 withdrawn). While a write runs, Refresh is disabled.
     panel = panel_for(open_panel, theme, 900, model('summary', 'summary.binary.health'))
     page = panel.page
-    page.locator('[role="tab"][data-tab="overview"]').click()
     panel.send({'type': 'busy', 'busy': True, 'op': 'W5', 'target': 'render'})
+    page.locator('[data-more]').click()
     selector = 'button[data-refresh]'
     button = page.locator(selector).first
     assert button.is_disabled()
@@ -258,19 +256,13 @@ def test_disabled_is_not_opacity_only(open_panel, model, theme):
 
 
 @pytest.mark.parametrize('theme', THEMES)
-def test_420px_no_sideways_scroll_tables_are_cards_and_the_tab_bar_wraps(open_panel, views, theme):
-    """A11Y-3 (v0.3, WP-E2: the tab bar wraps instead of scrolling sideways, §13)."""
+def test_420px_no_sideways_scroll_and_tables_are_cards(open_panel, views, theme):
+    """A11Y-3 at 420 px, every fold and drawer open (NAR-1)."""
     panel = panel_for(open_panel, theme, 420, views['summary.binary'])
     feed(panel, views, 'binary')
     page = panel.page
-    for tab in page.locator('[role="tab"]').evaluate_all('ts => ts.map(t => t.dataset.tab)'):
-        page.locator(f'[role="tab"][data-tab="{tab}"]').click()
-        assert page.evaluate('document.scrollingElement.scrollWidth <= window.innerWidth + 1'), tab
-    tabs = page.locator('.ht-tabs')
-    assert tabs.evaluate('t => getComputedStyle(t).flexWrap') == 'wrap'
-    assert tabs.evaluate('t => t.scrollWidth <= t.clientWidth + 1'), 'every tab is visible, none hidden sideways'
-    page.locator('[role="tab"][data-tab="decisions"]').click()
-    table = page.locator('table[data-history]')
+    assert page.evaluate('document.scrollingElement.scrollWidth <= window.innerWidth + 1')
+    table = page.locator('table[data-history]').first
     assert table.evaluate('t => getComputedStyle(t.querySelector("tbody tr")).display') == 'block'
     assert table.locator('td[data-label="Your words"]').count() > 0
     clean(panel)
