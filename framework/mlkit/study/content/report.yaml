@@ -126,6 +126,8 @@ motivation:
   contingent: Chosen after looking at the outcome on training rows, so the validation figures may be slightly optimistic.
   looks: "The study had {n} look{s} at the outcome before this proposal."
   not_contingent: Chosen before any look at the outcome on training rows.
+  # Contract P1.13: a rule or a model choice changed after the earlier one's evaluation.
+  changed_after_validation: Changed after the earlier value's evaluation was seen, so the figures that guided the change may be slightly optimistic. It is recorded, not refused.
 # WP-A9 (H3): a words_contradict_value warning kept on the confirmation.
 contradiction:
   title: Words and value disagree

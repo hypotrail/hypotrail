@@ -156,6 +156,11 @@ def decision_html(study: read.Study, decision_id: str) -> str:
             out += f' <em data-reason-given="false">({e(labels["no_reason_given"])})</em>'
         if delegated:
             out += f' <em data-basis="delegated_default">{e(labels["delegated_note"])}</em>'
+    from . import panel_digest
+    if panel_digest.decision_marks(study, view_model.build(study)).get(decision_id):
+        # Contract P1.13: changed after the earlier value's evaluation was seen.
+        out += (f' <em data-contingent="true">'
+                f'{e(labels["motivation"]["changed_after_validation"])}</em>')
     return out + '</p>'
 
 

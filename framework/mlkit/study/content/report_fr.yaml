@@ -480,6 +480,7 @@ motivation:
   not_current: Une analyse antérieure qui n'est plus actuelle.
   looks: L'étude avait {n} regard{s} sur le résultat avant cette proposition.
   questions: "Questions à l'origine de cette préparation :"
+  changed_after_validation: Modifié après avoir vu l'évaluation de la valeur précédente ; les chiffres qui ont guidé ce changement peuvent donc être légèrement optimistes. C'est enregistré, pas refusé.
 roles:
   target: La cible
   time: Colonne temporelle, ordonne le découpage

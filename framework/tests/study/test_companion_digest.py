@@ -218,13 +218,20 @@ def test_since_the_current_revision_has_no_items_and_is_deterministic(binary):
 
 
 def test_digest_keeps_the_summary_and_appends_origin_last(binary):
+    """C9: ``origin`` after each open proposal's keys; contract P1 (§17.2.5, §17.2.6): then
+    ``data_contingent``, and ``channel`` last of each result; nothing else differs."""
     code, plain = cc.run('status', '--summary', '--study', binary.study)
     p = _digest(binary)
-    assert {k: v for k, v in p.items() if k in cc.SUMMARY_KEYS and k != 'open_proposals'} == {
-        k: v for k, v in plain.items() if k != 'open_proposals'}
-    assert [{k: v for k, v in o.items() if k != 'origin'} for o in p['open_proposals']] == \
-        plain['open_proposals']
+    inner = ('open_proposals', 'results')
+    assert {k: v for k, v in p.items() if k in cc.SUMMARY_KEYS and k not in inner} == {
+        k: v for k, v in plain.items() if k not in inner}
+    assert [{k: v for k, v in o.items() if k not in ('origin', 'data_contingent')}
+            for o in p['open_proposals']] == plain['open_proposals']
+    assert all(tuple(o)[-2:] == ('origin', 'data_contingent') for o in p['open_proposals'])
     assert p['open_proposals'][0]['origin'] == {'channel': 'chat'}
+    assert {s: {k: v for k, v in r.items() if k != 'channel'}
+            for s, r in p['results'].items()} == plain['results']
+    assert all(tuple(r)[-1] == 'channel' for r in p['results'].values())
 
 
 # --- Auto MPG: the regression vocabulary scan -----------------------------------------------

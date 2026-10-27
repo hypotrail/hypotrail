@@ -48,11 +48,34 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
 DIGEST_SUMMARY_KEYS = SUMMARY_KEYS + ('moments', 'pauses', 'last_session', 'digest', 'task',
                                       'currency',
                                       # L3 (owner session 2026-10-26, D4b): the junior texts
-                                      # of the summary in both languages, last.
-                                      'texts')
-# L3: the tables of ``texts.<language>`` (``view.LANGUAGE_TEXT_KEYS``).
+                                      # of the summary in both languages.
+                                      'texts',
+                                      # Contract P1 (CLI-CONTRACT §17.2, the one-page panel):
+                                      # after ``texts``, in this order.
+                                      'panel_contract', 'automation', 'review_queue',
+                                      'defensibility', 'ledger', 'sample', 'headlines',
+                                      'criterion_configurations')
+# L3: the tables of ``texts.<language>`` (``view.LANGUAGE_TEXT_KEYS``); contract P1 (§17.2.3)
+# appends the awaited question and its options, the explanation, the headlines, the
+# data-contingent marks and the sample's note.
 LANGUAGE_TEXT_KEYS = ('plan', 'moments', 'next_action', 'choice_options', 'limits',
-                      'artifacts', 'recap', 'digest', 'goal', 'proposals')
+                      'artifacts', 'recap', 'digest', 'goal', 'proposals', 'question',
+                      'options', 'options_note', 'junior_digest', 'headlines',
+                      'data_contingent', 'sample_note')
+# Contract P1 (CLI-CONTRACT §17.2): the keys of the digest additions, and the keys added
+# inside existing structures with ``--digest`` only.
+SUMMARY_AUTOMATION_KEYS = ('variant', 'active', 'started_revision', 'ended')
+SUMMARY_REVIEW_KEYS = ('items', 'done', 'total')
+SUMMARY_DEFENSIBILITY_KEYS = ('kind', 'count', 'items')
+SUMMARY_LEDGER_KEYS = ('final_test', 'target_looks', 'configurations')
+SUMMARY_SAMPLE_KEYS = ('seed', 'row_keys', 'recorded')
+HEADLINE_KEYS = ('decision_id', 'basis', 'results')
+SUMMARY_CRITERION_CONFIG_KEYS = ('metric', 'unit', 'bound', 'configurations')
+CRITERION_BOUND_KEYS = ('value', 'reference', 'minimum', 'result_id', 'path')
+CRITERION_CONFIGURATION_KEYS = ('slot', 'value', 'result_id', 'path', 'point_meets_bound',
+                                'gain', 'low', 'high', 'status', 'judged_on')
+DIGEST_RESULT_KEYS = ('result_id', 'current', 'stale_reason', 'integrity', 'channel')
+PANEL_CONTRACT = 2
 CURRENCY_HEX = 16
 CURRENCY_INPUT_KEYS = ('revision', 'sources', 'artifacts', 'sources_changed', 'alerts',
                        'next_action', 'executions', 'results')

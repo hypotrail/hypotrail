@@ -287,9 +287,12 @@ def run(study_dir, *, request_id: str, expected_revision: int,
                 kwargs = {}
                 if progress_interval is not None:
                     kwargs['progress_interval'] = progress_interval
+                # Contract P1.8 (CLI-CONTRACT §17.2.5): a computation of the automatic
+                # runner is recorded as coming from the command line, as its decisions are.
                 out = executions.run(study_dir, action['activity'], options, request_id=rid,
                                      expected_revision=revision, render=False,
-                                     progress=narrator.activities, **kwargs).payload
+                                     progress=narrator.activities, channel='cli',
+                                     **kwargs).payload
                 outcome = out.get('status')
                 steps.append(_step(revision, action, outcome))
                 if outcome not in ('promoted', 'already_current'):

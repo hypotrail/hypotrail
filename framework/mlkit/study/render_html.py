@@ -69,6 +69,18 @@ def lit(kind: str, text: Any, tag: str = 'span') -> str:
 # its family) are set per edition (:func:`model_names_context`).
 _STUDY_LANGUAGE = contextvars.ContextVar('hypotrail_report_study_language', default=None)
 _MODEL_NAMES = contextvars.ContextVar('hypotrail_report_model_names', default=None)
+# Contract P1.13: the rule or model choice changed after an evaluation of the earlier value
+# (``panel_digest.decision_marks``, read from the study's receipts by ``cmd_render``).
+_CHANGED_AFTER = contextvars.ContextVar('hypotrail_report_changed_after', default=None)
+
+
+@contextlib.contextmanager
+def changed_after_validation_context(marks: Mapping | None):
+    token = _CHANGED_AFTER.set(dict(marks or {}))
+    try:
+        yield
+    finally:
+        _CHANGED_AFTER.reset(token)
 
 
 @contextlib.contextmanager
@@ -466,6 +478,9 @@ def decision_card(view: Mapping, did: str, variables: list[dict],
         parts.append(_availability_summary(view, variables))
     if did == 'preprocessing' and isinstance(d['value'], Mapping):
         parts.append(_motivation(view, d['value']))
+    if (_CHANGED_AFTER.get() or {}).get(did):
+        parts.append(f'<p class="notice" data-contingent="true">'
+                     f'{lit("message", _labels()["motivation"]["changed_after_validation"])}</p>')
     if d['confirmation'] and status in ('confirmed', 'reconfirm_required'):
         parts.append(_confirmation(d['confirmation']))
     if d['reason']:

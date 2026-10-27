@@ -99,7 +99,9 @@ def test_c1_digest_keys_moments_pauses_and_last_session(binary):
     assert [i['revision'] for i in digest['items']] == sorted(i['revision']
                                                              for i in digest['items'])
     pids = [o['proposal_id'] for o in p['open_proposals']]
-    assert pids and all(tuple(o)[-1] == 'origin' for o in p['open_proposals'])
+    # C9: ``origin``, then ``data_contingent`` (contract P1, §17.2.6), last.
+    assert pids and all(tuple(o)[-2:] == ('origin', 'data_contingent')
+                        for o in p['open_proposals'])
 
 
 def test_c1_since_bounds(binary):

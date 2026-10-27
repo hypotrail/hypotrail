@@ -2076,10 +2076,19 @@ def _proposal_view(p: dict, language: str) -> dict:
 DIGEST_SUMMARY_KEYS = ('moments', 'pauses', 'last_session', 'digest', 'task', 'currency',
                        # L3 (owner session 2026-10-26, R4; D4b): the junior texts this summary
                        # shows, in both languages (:func:`language_texts`).
-                       'texts')
+                       'texts',
+                       # Contract P1 (CLI-CONTRACT §17.2, the one-page study panel): after
+                       # ``texts``, in this order (:mod:`mlkit.study.panel_digest`).
+                       'panel_contract', 'automation', 'review_queue', 'defensibility',
+                       'ledger', 'sample', 'headlines', 'criterion_configurations')
 # ``texts.<language>``: where each junior text of the summary is, by its id (L3, D4b).
 LANGUAGE_TEXT_KEYS = ('plan', 'moments', 'next_action', 'choice_options', 'limits',
-                      'artifacts', 'recap', 'digest', 'goal', 'proposals')
+                      'artifacts', 'recap', 'digest', 'goal', 'proposals',
+                      # Contract P1 (CLI-CONTRACT §17.2.3): the awaited question, its options
+                      # and why, the explanation, the headlines, the data-contingent marks,
+                      # the step-1 sample's note.
+                      'question', 'options', 'options_note', 'junior_digest', 'headlines',
+                      'data_contingent', 'sample_note')
 # Review fix H1: ``currency`` is the first CURRENCY_HEX hex characters of a sha256 over the
 # canonical JSON of :func:`currency_inputs` (CLI-CONTRACT-COMPANION §1.5).
 CURRENCY_HEX = 16
@@ -2523,23 +2532,40 @@ def with_digest(study: read.Study, built: dict, summary_out: dict, *,
                          f'--since must be between 0 and the current revision '
                          f'({study.revision}).',
                          details={'since': since, 'revision': study.revision})
+    from . import panel_digest
     state = study.state
-    session = last_session(study.revisions(0))
+    records = study.revisions(0)
+    session = last_session(records)
     out = dict(summary_out)
+    # Contract P1 (CLI-CONTRACT §17.2.5, §17.2.6): each result's channel, last; each open
+    # proposal's data-contingent mark, after ``origin`` (null when not assessed).
+    out['results'] = panel_digest.with_channels(summary_out['results'], built,
+                                                panel_digest.run_channels(records))
+    contingency = panel_digest.proposal_contingency(records)
     out['open_proposals'] = [{**p, 'origin': (state['proposals'].get(p['proposal_id']) or {})
-                              .get('origin')} for p in summary_out['open_proposals']]
+                              .get('origin'),
+                              'data_contingent': contingency.get(p['proposal_id'],
+                                                                 (None, None))[0]}
+                             for p in summary_out['open_proposals']]
     start = session['boundary_revision'] if since is None else since
     out.update({'moments': moments(built['task'], state), 'pauses': pauses(state),
                 'last_session': session,
                 'digest': digest(study, state, since=start),
                 'task': built['task'], 'currency': currency_digest(study, built)})
-    out['texts'] = language_texts(study, built, out, since=start, leases=leases)
+    extra = panel_digest.additions(study, built, out)
+    out['texts'] = language_texts(study, built, out, since=start, leases=leases,
+                                  contingency=contingency,
+                                  has_sample=extra['sample'] is not None)
+    out.update(extra)
     return out
 
 
-def _texts_of(built: dict, summary_out: dict, lang: str) -> dict:
+def _texts_of(built: dict, summary_out: dict, lang: str, *, contingency: Mapping | None = None,
+              has_sample: bool = False) -> dict:
     """The junior texts of one summary (and the view it was made from), by id."""
+    from . import panel_digest
     nxt = built.get('next_action') or {}
+    _, lines = panel_digest.headlines(built, summary_out, lang)
     return {
         'plan': {s['id']: s['title'] for s in built['plan']},
         'moments': {m['id']: m['title'] for m in summary_out.get('moments') or []},
@@ -2555,11 +2581,15 @@ def _texts_of(built: dict, summary_out: dict, lang: str) -> dict:
         'goal': {k: (v or {}).get('value') for k, v in (summary_out.get('goal') or {}).items()},
         'proposals': {p['proposal_id']: (p.get('labels') or {}).get(lang)
                       for p in built['open_proposals']},
+        # Contract P1 (CLI-CONTRACT §17.2.3).
+        **panel_digest.texts(built, lang, contingency=contingency or {},
+                             has_sample=has_sample, headline_lines=lines),
     }
 
 
 def language_texts(study: read.Study, built: dict, summary_out: dict, *, since: int,
-                   leases: dict | None = None) -> dict:
+                   leases: dict | None = None, contingency: Mapping | None = None,
+                   has_sample: bool = False) -> dict:
     """``texts`` of ``status --summary --digest`` (L3, owner session 2026-10-26; D4b):
     ``{"en": T, "fr": T}``, where ``T`` gives each junior text of the summary in that language
     by its id (:data:`LANGUAGE_TEXT_KEYS`): the step titles (``plan``), the ``moments``, the
@@ -2579,8 +2609,9 @@ def language_texts(study: read.Study, built: dict, summary_out: dict, *, since: 
     twin_summary = summary(twin_built)
     twin_summary['moments'] = moments(twin_built['task'], twin_state)
     twin_summary['digest'] = digest(twin, twin_state, since=since)
-    tables = {lang: _texts_of(built, summary_out, lang),
-              other: _texts_of(twin_built, twin_summary, other)}
+    extra = {'contingency': contingency, 'has_sample': has_sample}
+    tables = {lang: _texts_of(built, summary_out, lang, **extra),
+              other: _texts_of(twin_built, twin_summary, other, **extra)}
     return {k: tables[k] for k in (audience.EN, audience.FR)}
 
 

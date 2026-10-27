@@ -437,6 +437,37 @@ AGENT_LIMITS = ('unconfirmed_decisions', 'open_holds', 'conclusion_outdated',
                 'automatic_decisions_to_review', 'final_test_opened_automatically')
 
 
+# Contract P1.11 (CLI-CONTRACT §17.2.2): the severity of each ``not_yet_defensible`` id, which
+# the study panel's header pill reads (``status --summary --digest`` ``defensibility``), moved
+# from the panel's own table (``media/copy/junior.js`` ``SEVERITY``). ``blocking``: the study
+# cannot be defended while it holds; ``caveat``: a limit of the evidence; ``not_final``: a
+# step not done yet; ``context``: always true of such a study. An id not listed is a
+# ``caveat``. Two ids depend on the item (``panel_digest``): ``unconfirmed_decisions`` is
+# blocking when one of its decisions was reopened, ``stale_results`` when a decision cites
+# them. (Kept here, not in ``governance``, whose source is part of every fit's code
+# fingerprint: editing it would make every existing study's results stale.)
+BLOCKING, CAVEAT, NOT_FINAL, CONTEXT = 'blocking', 'caveat', 'not_final', 'context'
+SEVERITIES = (BLOCKING, CAVEAT, NOT_FINAL, CONTEXT)
+LIMIT_SEVERITY = {
+    'sources_changed': BLOCKING, 'result_integrity': BLOCKING,
+    'interrupted_executions': BLOCKING, 'stale_results': BLOCKING, 'code_changed': BLOCKING,
+    'automatic_decisions_to_review': BLOCKING, 'open_holds': BLOCKING,
+    'conclusion_outdated': BLOCKING, 'changed_after_final_test': BLOCKING,
+    'final_test_opening_interrupted': BLOCKING, 'inconclusive_without_choice': BLOCKING,
+    'adopted_rule_not_evaluated': BLOCKING, 'verdict_contradicts_criterion': BLOCKING,
+    'uncertain_features_included': CAVEAT, 'delegated_decisions': CAVEAT,
+    'small_validation_partition': CAVEAT, 'capacity_exceeds_validation': CAVEAT,
+    'high_cardinality_grouping': CAVEAT, 'grouped_split_unsupported': CAVEAT,
+    'delayed_labels_excluded': CAVEAT, 'capacity_assumed_for_exercise': CAVEAT,
+    'verdict_keeps_baseline_against_criterion': CAVEAT,
+    'data_contingent_preprocessing': CAVEAT, 'final_test_opened_automatically': CAVEAT,
+    'unconfirmed_decisions': NOT_FINAL, 'final_test_sealed': NOT_FINAL,
+    'validation_is_not_independent': NOT_FINAL,
+    'public_data_already_explored': CONTEXT, 'no_time_or_entity_identifier': CONTEXT,
+    'no_causality': CONTEXT, 'workbench_not_tracked': CONTEXT,
+}
+
+
 def limit(item: Mapping, lang: str = EN) -> dict:
     """A ``not_yet_defensible`` item with ``audience`` (of its ``text``) and
     ``junior_text``: the text itself when it is written for the junior, its junior

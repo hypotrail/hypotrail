@@ -1322,6 +1322,85 @@ def enrich(view: dict, state: Mapping, case=None, *, accepts=None) -> dict:
     return view
 
 
+# --- the study panel's texts (contract P1, CLI-CONTRACT §17.2.3) ----------------------------
+
+# The fixed words of a step's headline (``panel_digest.headlines``): a headline holds the
+# decision's value in words, these words, and figures of current results formatted by
+# ``cite.format_value``; nothing else.
+HEADLINES = {
+    'en': {'line': '{step}: {text}.', 'join': '; ',
+           'against': '{metric} {value} against {baseline} for the baseline',
+           'error': 'mean absolute error', 'precision': 'precision',
+           'quality': '{rows} development rows checked, {duplicates} duplicated',
+           'target_rate': 'outcome rate {value} on the explored rows',
+           'target_mean': 'mean target {value} on the explored rows'},
+    'fr': {'line': '{step} : {text}.', 'join': ' ; ',
+           'against': '{metric} {value} contre {baseline} pour le modèle de référence',
+           'error': 'erreur absolue moyenne', 'precision': 'précision',
+           'quality': '{rows} lignes de développement vérifiées, {duplicates} en double',
+           'target_rate': 'taux de résultat positif {value} sur les lignes explorées',
+           'target_mean': 'cible moyenne {value} sur les lignes explorées'},
+}
+# ``texts.*.options_note`` (``junior.options_note``).
+OPTIONS_NOTES = {
+    'en': {'choice': 'From the simplest to the most flexible; the order is not a '
+                     'recommendation.',
+           'recommended': 'Recommended: {value}.', 'none': 'No recommendation.'},
+    'fr': {'choice': "Du plus simple au plus souple ; l'ordre n'est pas une recommandation.",
+           'recommended': 'Recommandé : {value}.', 'none': 'Sans recommandation.'},
+}
+
+
+def options_note(view: Mapping, action: Mapping, lang: str = 'en') -> str | None:
+    """One sentence on the options' order and the recommendation (``texts.*.options_note``):
+    a free choice's options go from the simplest to the most flexible and none is
+    recommended; a recommended value is named, with its why; a review recommends nothing;
+    null otherwise (no question, or nothing to say)."""
+    from . import automation_words
+    lang = lang if lang in OPTIONS_NOTES else 'en'
+    notes = OPTIONS_NOTES[lang]
+    pause = action.get('pause') or {}
+    if action.get('kind') in ('run', 'blocked', 'done', 'outcome_unknown'):
+        return None
+    if pause.get('kind') == 'choice':
+        return notes['choice']
+    recommended = action.get('recommended')
+    if isinstance(recommended, Mapping) and recommended.get('value') is not None:
+        words = automation_words.value_words({**view, 'language': lang},
+                                             action.get('decision'), recommended['value'])
+        why = str(recommended.get('why') or '').strip()
+        return ' '.join(filter(None, (notes['recommended'].format(value=words), why)))
+    if pause.get('kind') == 'decision' and pause.get('recommended_option') is None:
+        return notes['none']
+    return None
+
+
+# Contract P1.13 (CLI-CONTRACT §17.2.6): a rule or a model choice proposed as a change after
+# an evaluation of the earlier value was seen.
+CHANGED_AFTER_VALIDATION = 'changed_after_validation'
+CHANGED_AFTER_VALIDATION_TEXT = {
+    'en': {'policy': 'This rule is proposed after you saw how the earlier one did on the '
+                     'validation rows: a change guided by those figures makes them slightly '
+                     'optimistic. It is recorded, not refused.',
+           'model_choice': 'This model is proposed after you saw how the earlier one did on '
+                           'the validation rows: a change guided by those figures makes them '
+                           'slightly optimistic. It is recorded, not refused.'},
+    'fr': {'policy': 'Cette règle est proposée après que vous avez vu les résultats de la '
+                     'précédente sur les lignes de validation : un changement guidé par ces '
+                     'chiffres les rend un peu optimistes. Il est enregistré, pas refusé.',
+           'model_choice': 'Ce modèle est proposé après que vous avez vu les résultats du '
+                           'précédent sur les lignes de validation : un changement guidé par '
+                           'ces chiffres les rend un peu optimistes. Il est enregistré, pas '
+                           'refusé.'},
+}
+
+
+def changed_after_validation_text(decision_id: str | None, lang: str = 'en') -> str:
+    """The junior's sentence of a rule or model changed after its evaluation was seen."""
+    table = CHANGED_AFTER_VALIDATION_TEXT.get(lang, CHANGED_AFTER_VALIDATION_TEXT['en'])
+    return table['model_choice' if decision_id == 'model_choice' else 'policy']
+
+
 __all__ = ['step_text', 'all_step_texts', 'limit_fr', 'LIMIT_IDS_FR', 'enrich',
            'availability_draft', 'final_test_line', 'duplicates_line', 'MAX_DIGEST_WORDS',
            'choice_options', 'CHOICE_OPTION_KEYS']

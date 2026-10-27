@@ -1240,6 +1240,67 @@ def _normalized_preprocessing(store, state: Mapping, value: Mapping) -> dict:
         raise _invalid(exc.message, **exc.details) from None
 
 
+# Contract P1.13 (CLI-CONTRACT §17.2.6): the decisions whose change after an evaluation is
+# assessed, and the evaluation that covers an earlier value of each.
+CHANGE_ASSESSED = ('policy', 'model_choice')
+
+
+def _covering_evaluation(store, state: Mapping, decision_id: str, previous: Any) -> str | None:
+    """The result id of the current evaluation that measured ``previous`` (a rule, with its
+    model, or a model), or None: ``policy.evaluation`` (a binary study's rules and models),
+    ``evaluate.regression`` (a regression study's models)."""
+    from . import registry
+    slot = ('evaluate.regression' if st.task_of(state) == st.REGRESSION
+            else 'policy.evaluation')
+    rid = (state.get('current') or {}).get(slot)
+    if rid is None or rid in (state.get('stale') or {}):
+        return None
+    try:
+        params = registry.get(store, rid).get('params') or {}
+    except StudyError:
+        return None
+    models = list(params.get('models') or [])
+    if decision_id == 'model_choice':
+        return rid if previous in models else None
+    rule, _, model = str(previous).partition('@')
+    rules = {rec.canonical_rule(r) for r in params.get('rules') or []}
+    if rec.canonical_rule(rule) not in rules or (model and model not in models):
+        return None
+    return rid
+
+
+def changed_after_validation(store, state: Mapping, decision_id: str,
+                             value: Any) -> tuple[bool, dict | None]:
+    """``(data_contingent, data_contingent_reason)`` of a rule or a model choice (contract
+    P1.13): true when the proposal changes the value of the latest earlier proposal of the
+    decision (proposed, confirmed, superseded or withdrawn) and a current validation or
+    out-of-fold evaluation that measured that earlier value exists; false otherwise. The mark
+    does not depend on how the change came (the panel's What if? records nothing)."""
+    earlier = [p for p in (state.get('proposals') or {}).values()
+               if p.get('decision_id') == decision_id
+               and p.get('revision', 0) <= state['revision']]
+    if not earlier:
+        return False, None
+    previous = max(earlier, key=lambda p: (p['revision'], p['proposal_id']))['value']
+    same = (rec.canonical_policy(previous) == rec.canonical_policy(value)
+            if decision_id == 'policy' else previous == value)
+    if same:
+        return False, None
+    evaluation = _covering_evaluation(store, state, decision_id, previous)
+    if evaluation is None:
+        return False, None
+    from . import junior
+    what = 'rule' if decision_id == 'policy' else 'model choice'
+    return True, {'kind': junior.CHANGED_AFTER_VALIDATION, 'previous_value': previous,
+                  'evaluation': evaluation,
+                  'text': f'This {what} changes the value proposed before ({previous}) after an '
+                          f'evaluation of that value was seen: the development figures that '
+                          f'guided the change are slightly optimistic. Say so to the junior '
+                          f'before presenting it.',
+                  'junior_text': junior.changed_after_validation_text(
+                      decision_id, st.language_of(state))}
+
+
 def data_contingency(store, state: Mapping, decision_id: str,
                      value: Any) -> tuple[bool | None, dict | None]:
     """v0.3 (WP-A, R32): ``(data_contingent, data_contingent_reason)`` of a proposal.
@@ -1269,6 +1330,8 @@ def data_contingency(store, state: Mapping, decision_id: str,
             why = {**why, 'junior_text': drafts.variant_contingency_text(
                 list(why.get('families') or []), st.language_of(state))}
         return contingent, why
+    if decision_id in CHANGE_ASSESSED:
+        return changed_after_validation(store, state, decision_id, value)
     if decision_id != st.PREPROCESSING or not isinstance(value, Mapping):
         return None, None
     contingent = bool(value.get('data_contingent'))

@@ -140,6 +140,16 @@ def sample_rows(study: Path, view: dict) -> dict | None:
         return None
 
 
+def _decision_marks(study: Path, view: dict) -> dict:
+    """Contract P1.13: the decisions changed after an evaluation of the earlier value
+    (``panel_digest.decision_marks``); empty when they cannot be read."""
+    from . import panel_digest, read
+    try:
+        return panel_digest.decision_marks(read.open(study), view)
+    except Exception:          # noqa: BLE001 - the report renders without the mark
+        return {}
+
+
 def _understanding(study: Path) -> str:
     """The understanding section (ADR 0008), empty when the study never enabled it."""
     from . import read
@@ -179,11 +189,12 @@ def _render_report(study: Path, view: dict, manifest: dict, surfaces: dict) -> d
     path = study / mf.ARTIFACTS['report']
     try:
         _inject('render_html')
-        page, consumed = render_html.build(view, surfaces=surfaces,
-                                           variables=_variables(view),
-                                           sample=sample_rows(study, view),
-                                           understanding=_understanding(study),
-                                           twin=twin_view(study, view))
+        with render_html.changed_after_validation_context(_decision_marks(study, view)):
+            page, consumed = render_html.build(view, surfaces=surfaces,
+                                               variables=_variables(view),
+                                               sample=sample_rows(study, view),
+                                               understanding=_understanding(study),
+                                               twin=twin_view(study, view))
         data = page.encode('utf-8')
         atomic_write(path, data)
     except Exception as exc:

@@ -1627,9 +1627,10 @@ def test_w2_contract(tmp_path):
     # L3: the translation sidecar and the view's tables of case statements.
     assert (l10n.SCHEMA, l10n.FILE, l10n.STATE_KEY, l10n.STATE_KEYS) == (
         'hypotrail.case_l10n/1', 'case.l10n.yaml', 'case_l10n', ('path', 'sha256'))
-    assert view.LANGUAGE_TEXT_KEYS == ('plan', 'moments', 'next_action', 'choice_options',
-                                       'limits', 'artifacts', 'recap', 'digest', 'goal',
-                                       'proposals')
+    # Contract P1 (§17.2.3) appends its keys after these (pinned in test_panel_contract_p1).
+    assert view.LANGUAGE_TEXT_KEYS[:10] == ('plan', 'moments', 'next_action', 'choice_options',
+                                            'limits', 'artifacts', 'recap', 'digest', 'goal',
+                                            'proposals')
     auto = REPO / 'use-cases' / 'auto-mpg'
     study = tmp_path / 'auto'
     assert _run('init', '--case', auto, '--study', study, '--lang', 'fr').exit_code == 0
