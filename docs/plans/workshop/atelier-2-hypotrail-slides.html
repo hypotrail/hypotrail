@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr" data-mode="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Atelier 2 · Hypotrail</title>
+<title>Atelier 2 · Déléguer avec méthode</title>
 <style>
 /* ===== tokens : charte « tableau noir / papier millimétré » posée sur les jetons du moteur de présentation =====
    Tableau noir par défaut (data-mode="dark"), T bascule vers le tableau blanc (data-mode="light"). */
@@ -307,50 +307,53 @@ body.presenter{cursor:auto}
 <div class="app" id="app"><div class="mid">
 <main class="stage" id="stage">
 
-<!-- =================================================================== 1. OUVERTURE -->
+<!-- =================================================================== 1. OUVERTURE : MOTIVATION → PROBLÈME → RÉPONSE -->
 <section class="screen" data-title="Titre" data-part="Ouverture" data-weight="0.5">
-  <div class="frame sect"><div class="num">Atelier 2 / 5</div><h2>Hypotrail : faire produire une étude ML, et reprendre la main sur ses décisions</h2>
+  <div class="frame sect"><div class="num">Atelier 2 / 5</div><h2>Déléguer une étude ML sans perdre la main : une méthode à discuter</h2>
   <p>Animation : l'organisateur et le lead Data Science · binômes mixtes</p><p class="when">9h30 – 12h30 · 180 min</p></div>
-  <div class="notes"><div class="n say">Bienvenue : trois heures pour faire produire une étude, la relire, puis dire ce que l'équipe veut préserver.</div><div class="n trap">Démarrer le chrono (↺ dans la fenêtre présentateur, touche P) à 9h30 pile.</div></div>
+  <div class="notes"><div class="n say">Bienvenue : trois heures pour essayer une façon de travailler avec un agent, et dire ce qu'on en pense.</div><div class="n trap">Démarrer le chrono (↺ dans la fenêtre présentateur, touche P) à 9h30 pile.</div></div>
 </section>
 
-<section class="screen" data-title="La série" data-part="Ouverture">
+<section class="screen" data-title="La série" data-part="Ouverture" data-weight="0.8">
   <div class="frame"><h3>Où nous en sommes dans la série</h3><div class="fx">
     <div class="timeline">
       <div><b>1</b>Indicateurs d'impact</div>
-      <div class="now"><b>2</b>Aujourd'hui : déléguer une étude ML et reprendre la main</div>
+      <div class="now"><b>2</b>Aujourd'hui : une méthode pour déléguer une étude ML</div>
       <div><b>3</b>Proposition de constitution</div>
       <div><b>4</b><span class="small">à venir</span></div>
       <div><b>5</b><span class="small">à venir</span></div>
     </div>
     <p class="quote big">Faire produire une étude, reprendre la main sur ses décisions, puis déterminer ce que l'équipe veut préserver lorsqu'elle délègue.<small>Le fil de la matinée</small></p>
   </div></div>
-  <div class="notes"><div class="n say">L'atelier 1 a posé les indicateurs d'impact ; ils serviront au pilote, pas à noter quelqu'un aujourd'hui.</div><div class="n say">Le fil a trois temps : produire, reprendre la main, préserver.</div></div>
+  <div class="notes"><div class="n say">L'atelier 1 a posé les indicateurs d'impact ; ils serviront au pilote, pas à noter quelqu'un aujourd'hui.</div></div>
 </section>
 
-<section class="screen" data-title="La promesse" data-part="Ouverture">
-  <div class="frame"><h3>La promesse, reformulée</h3><div class="fx">
-    <p class="quote big">Hypotrail fait suivre à une étude ML un parcours vérifiable : chaque choix important est explicite, attribué (à vous, au moteur ou au mode automatique) et relié à ses preuves, pour pouvoir le contester avant de conclure.</p>
-    <p class="lead"><b class="y">Il rend la validité examinable ; il ne la garantit pas.</b></p>
+<section class="screen" data-title="Le but de l'atelier" data-part="Ouverture">
+  <div class="frame"><h3>Le but de cette matinée</h3><div class="fx">
+    <p class="quote big">Faire réagir et faire naître des idées sur une façon de travailler avec un agent. Les objections sont les bienvenues : elles nourrissent les fondations communes.</p>
+    <div class="cols2">
+      <div class="card" style="--ac:var(--mint)"><h4>C'est</h4><p>Une méthode à essayer sur un cas, puis à discuter, critiquer, adapter.</p></div>
+      <div class="card" style="--ac:var(--pink)"><h4>Ce n'est pas</h4><p>Une formation à un outil, ni une décision d'adoption.</p></div>
+    </div>
   </div></div>
-  <div class="notes"><div class="n say">Lire la dernière phrase lentement : examinable, pas garantie.</div><div class="n q">« Alors à quoi bon ? » → à contester avant de conclure, avec les preuves sous les yeux.</div></div>
+  <div class="notes"><div class="n say">Le résultat attendu, ce sont vos réactions, pas une adhésion.</div><div class="n q">« C'est un outil à adopter ? » → non, une méthode à discuter ; l'outil sert d'illustration.</div></div>
 </section>
 
-<section class="screen" data-title="À la fin de la matinée" data-part="Ouverture">
-  <div class="frame"><h3>À la fin de la matinée, vous saurez</h3><div class="fx">
+<section class="screen" data-title="À la fin de la matinée" data-part="Ouverture" data-weight="0.7">
+  <div class="frame"><h3>Ce que vous aurez fait, à la fin de la matinée</h3><div class="fx">
     <ul class="b">
-      <li><b>expliquer</b> une décision importante de l'étude, avec vos mots ;</li>
+      <li><b>expliquer</b> une décision importante d'une étude, avec vos mots ;</li>
       <li><b>retrouver sa preuve</b> : un identifiant de résultat ou un nombre ;</li>
       <li><b>nommer une limite</b> de la conclusion ;</li>
-      <li><b>contester ou modifier</b> une proposition de l'agent ou du mode automatique ;</li>
-      <li><b>envisager un usage</b> professionnel, et les conditions qu'il demande.</li>
+      <li><b>contester ou modifier</b> une proposition de l'agent ou de l'automatisation ;</li>
+      <li><b>dire ce que vous garderiez, changeriez ou refuseriez</b> dans cette façon de travailler.</li>
     </ul>
   </div></div>
-  <div class="notes"><div class="n say">C'est exactement ce que demande le ticket de sortie, sans outil.</div></div>
+  <div class="notes"><div class="n say">Les trois premiers points sont ceux du ticket de sortie, sans outil.</div></div>
 </section>
 
-<section class="screen" data-title="Trois essais de l'organisateur" data-part="Ouverture" data-weight="4" data-dur="4 min">
-  <div class="frame"><h3>Trois essais, avant cet atelier <span class="stamp">à remplir par l'organisateur</span></h3><div class="fx">
+<section class="screen" data-title="Motivation : trois essais" data-part="Ouverture" data-weight="4" data-dur="4 min">
+  <div class="frame"><h3>Motivation : trois essais avec des agents <span class="stamp">à remplir par l'organisateur</span></h3><div class="fx">
     <div class="cols3">
       <div class="card" style="--ac:var(--teal)"><h4>Étude ML</h4><dl><dt>Problème</dt><dd class="ph">…</dd><dt>Résultat</dt><dd class="ph">…</dd><dt>Vérifié</dt><dd class="ph">…</dd><dt>Non vérifié</dt><dd class="ph">…</dd><dt>Reprise</dt><dd class="ph">… h de temps humain</dd></dl></div>
       <div class="card" style="--ac:var(--violet)"><h4>Chatbot RAG</h4><dl><dt>Problème</dt><dd class="ph">…</dd><dt>Résultat</dt><dd class="ph">…</dd><dt>Vérifié</dt><dd class="ph">…</dd><dt>Non vérifié</dt><dd class="ph">…</dd><dt>Reprise</dt><dd class="ph">… h de temps humain</dd></dl></div>
@@ -361,52 +364,90 @@ body.presenter{cursor:auto}
   <div class="notes"><div class="n say">Quatre minutes en tout, environ 1 min 20 par essai, les cinq rubriques dans l'ordre.</div><div class="n trap">Dire « estimé » pour tout temps de reprise qui n'a pas été chronométré.</div></div>
 </section>
 
-<section class="screen" data-title="Le problème en ML" data-part="Ouverture">
-  <div class="frame"><h3>En ML, l'agent change de méthode d'un essai à l'autre</h3><div class="fx">
+<section class="screen" data-title="Le problème" data-part="Ouverture">
+  <div class="frame"><h3>Le problème n'est plus de produire le code</h3><div class="fx">
+    <div class="cols2">
+      <div class="card" style="--ac:var(--mint)"><h4>Ce qui marche déjà <small>observation de l'organisateur, sprint</small></h4><p>Sur la refactorisation, les agents sont aujourd'hui excellents : produire et transformer du code n'est plus le point dur.</p></div>
+      <div class="card" style="--ac:var(--pink)"><h4>Ce qui reste le problème</h4><p>La <b>méthode</b> et les <b>décisions</b> : quoi mesurer, sur quelles données, avec quel critère, et qui l'a décidé.</p></div>
+    </div>
+    <p class="quote">Le code peut être juste et l'étude fausse : une fuite, un critère choisi après coup, un test regardé deux fois.</p>
+  </div></div>
+  <div class="notes"><div class="n say">C'est une observation du sprint, pas une mesure : la présenter comme telle.</div><div class="n q">« Et la qualité du code alors ? » → elle compte toujours ; ce n'est simplement plus là que ça casse le plus.</div></div>
+</section>
+
+<section class="screen" data-title="Le problème en ML" data-part="Ouverture" data-weight="0.8">
+  <div class="frame"><h3>En ML, la méthode change d'un essai à l'autre</h3><div class="fx">
     <div class="cols2">
       <div class="card" style="--ac:var(--sky)"><h4>Essai 1 <span class="stamp">illustratif</span></h4><ul><li>Découpage aléatoire 80 / 20</li><li>Critère choisi après les résultats</li><li><code>acceleration</code> gardée</li><li>Le meilleur score annoncé</li></ul></div>
       <div class="card" style="--ac:var(--coral)"><h4>Essai 2 <span class="stamp">illustratif</span></h4><ul><li>Plis par années de modèle</li><li>Critère fixé avant tout modèle</li><li><code>acceleration</code> exclue</li><li>Le modèle simple gardé</li></ul></div>
     </div>
-    <p class="quote">Deux chiffres, deux méthodes, rien pour dire laquelle a produit lequel. La question devient : <b>qu'est-ce qui a été choisi, par qui, et sur quelle preuve ?</b></p>
+    <p class="quote">Deux chiffres, deux méthodes, rien pour dire laquelle a produit lequel : <b>qu'est-ce qui a été choisi, par qui, et sur quelle preuve ?</b></p>
   </div></div>
   <div class="notes"><div class="n say">Rattacher à ce que l'essai ML de l'organisateur a réellement montré.</div><div class="n trap">Les deux colonnes sont un exemple construit, pas des sorties d'agent mesurées.</div></div>
 </section>
 
-<section class="screen" data-title="Trois rôles" data-part="Ouverture" data-weight="1.5">
-  <div class="frame"><h3>Trois rôles : l'agent, le moteur, vous</h3><div class="fx">
+<section class="screen" data-title="La réponse : une méthode" data-part="Ouverture" data-weight="1.3">
+  <div class="frame"><h3>Une réponse : une méthode</h3><div class="fx">
     <div class="cols3">
-      <div class="card" style="--ac:var(--violet)"><h4>L'agent <small>Copilot, dans le chat</small></h4><p>Introduit le terme, puis l'explique sur le cas. Propose, avec la preuve. Lance les commandes. <b>Ne décide pas.</b></p></div>
-      <div class="card" style="--ac:var(--teal)"><h4>Le moteur <small>la CLI <code>hypotrail</code></small></h4><p>Tient l'état et les révisions, scelle le test final, calcule, refuse ce que le protocole interdit, relie chaque chiffre à un résultat.</p></div>
-      <div class="card" style="--ac:var(--yellow)"><h4>Vous <small>l'humain</small></h4><p>Décidez avec vos mots. Ouvrez le test final une fois. Concluez, ou refusez de conclure.</p></div>
+      <div class="card" style="--ac:var(--teal)"><h4>Des choix explicites</h4><p>Chaque choix important est écrit, attribué (à vous, au moteur, à l'automatisation) et relié à ses preuves.</p></div>
+      <div class="card" style="--ac:var(--sky)"><h4>Des étapes structurées</h4><p>Cadrer, découper, explorer, préparer, comparer, choisir, juger une fois, conclure.</p></div>
+      <div class="card" style="--ac:var(--violet)"><h4>Deux sortes de preuves</h4><p>La preuve de développement sert à choisir ; la preuve finale, scellée, juge une seule fois.</p></div>
+      <div class="card" style="--ac:var(--yellow)"><h4>Vos mots</h4><p>Les décisions humaines sont prises avec vos propres mots, jamais par un « ok ».</p></div>
+      <div class="card" style="--ac:var(--coral)"><h4>Relire l'automatisé</h4><p>Ce qu'un agent a décidé reste à relire, et n'est pas défendable avant.</p></div>
+      <div class="card" style="--ac:var(--mint)"><h4>Transmettre</h4><p>Un collègue doit pouvoir reprendre l'étude, ses décisions et ses limites.</p></div>
     </div>
-    <p class="quote">« Le test est réservé par le protocole ; le fichier source local reste accessible. Les confirmations sont rapportées par l'agent, sans authentification indépendante. L'historique entre études n'est pas imposé. »<small>Message affiché par <code>hypotrail init</code> à la création de l'étude. Original : “The test is reserved by the protocol; the local source file remains accessible. Confirmations are agent-reported, not independently authenticated.”</small></p>
+    <p class="lead"><b class="y">Elle rend la validité examinable ; elle ne la garantit pas.</b></p>
   </div></div>
-  <div class="notes"><div class="n say">Le moteur ne croit pas l'agent sur parole, mais il ne peut pas non plus prouver que c'est vous qui avez tapé.</div><div class="n q">« Donc on peut tricher ? » → oui, localement : c'est un protocole coopératif, pas un coffre-fort.</div></div>
+  <div class="notes"><div class="n say">Six principes ; tout le reste de la matinée les met à l'épreuve.</div><div class="n q">« C'est nouveau ? » → non, c'est de la bonne pratique ; ce qui change, c'est de la tenir quand un agent travaille vite.</div></div>
 </section>
 
-<section class="screen" data-title="Ce qui existe aujourd'hui" data-part="Ouverture" data-weight="1.5">
-  <div class="frame"><h3>Ce qui existe aujourd'hui, et ce qui n'existe pas encore</h3><div class="fx">
+<section class="screen" data-title="Une illustration" data-part="Ouverture" data-weight="1.3">
+  <div class="frame"><h3>Une illustration de la méthode, pas un produit</h3><div class="fx">
+    <p class="lead">Pour l'essayer, on s'appuie sur un prototype, Hypotrail : il donne une idée de ce qui est possible. <b class="chalk">Tout y est adaptable</b> : les étapes, les règles, le panneau, le rapport, le niveau d'automatisation.</p>
+    <div class="cols3">
+      <div class="card" style="--ac:var(--violet)"><h4>L'agent <small>dans le chat</small></h4><p>Introduit le terme, puis l'explique sur le cas. Propose, avec la preuve. <b>Ne décide pas.</b></p></div>
+      <div class="card" style="--ac:var(--teal)"><h4>Le moteur <small>en ligne de commande</small></h4><p>Tient l'état, scelle le test final, calcule, refuse ce que le protocole interdit, relie chaque chiffre à un résultat.</p></div>
+      <div class="card" style="--ac:var(--yellow)"><h4>Vous <small>l'humain</small></h4><p>Décidez avec vos mots. Ouvrez le test final une fois. Concluez, ou refusez de conclure.</p></div>
+    </div>
+    <p class="quote" style="font-size:1.95cqw">« Le test est réservé par le protocole ; le fichier source local reste accessible. Les confirmations sont rapportées par l'agent, sans authentification indépendante. »<small>Ce que l'illustration affiche elle-même à la création d'une étude : ses limites font partie de la discussion.</small></p>
+  </div></div>
+  <div class="notes"><div class="n say">Une mention, pas une démonstration commerciale : on regarde la méthode à travers lui.</div><div class="n q">« C'est un outil à adopter ? » → non, une méthode à discuter ; l'outil sert d'illustration.</div><div class="n q">« Donc on peut tricher ? » → oui, localement : c'est un protocole coopératif, pas un coffre-fort.</div></div>
+</section>
+
+<section class="screen" data-title="Au-delà de ce cas" data-part="Ouverture">
+  <div class="frame"><h3>Au-delà du cas de ce matin</h3><div class="fx">
+    <div class="cols3">
+      <div class="card" style="--ac:var(--teal)"><h4>Classification et régression</h4><p>Ce que l'illustration couvre aujourd'hui ; ce matin, une régression.</p></div>
+      <div class="card" style="--ac:var(--sky)"><h4>D'autres types d'usage</h4><p>La méthode peut en intégrer d'autres : le clustering, par exemple, et d'autres encore. Les étapes et les preuves changent, les principes restent.</p></div>
+      <div class="card" style="--ac:var(--violet)"><h4>RAG <span class="tag wip">en cours</span></h4><p>Une méthode pour le RAG est en construction par l'organisateur, en test sur un cas d'usage.</p></div>
+    </div>
+  </div></div>
+  <div class="notes"><div class="n say">Le RAG est en cours : ne rien en montrer comme acquis.</div><div class="n q">« Le clustering, sans cible, comment juger ? » → c'est justement à construire : quelle preuve, quel critère, qui décide.</div></div>
+</section>
+
+<section class="screen" data-title="Ce qui existe aujourd'hui" data-part="Ouverture">
+  <div class="frame"><h3>L'illustration aujourd'hui : ce qui existe, et ce qui n'existe pas encore</h3><div class="fx">
     <div class="tblw"><table>
       <tr><th style="width:15%">Statut</th><th>Élément</th></tr>
-      <tr><td><span class="tag ok">disponible</span></td><td>Le moteur (CLI) · le mode automatique <code>until_final_test</code> et <code>full_demo</code> · le rapport HTML narratif · les notebooks Marimo · le panneau VS Code derrière un drapeau (étapes v0 à v3) · les fichiers d'agent Copilot avec sélecteur de réponse</td></tr>
+      <tr><td><span class="tag ok">disponible</span></td><td>Le moteur en ligne de commande · le mode automatique <code>until_final_test</code> et <code>full_demo</code> · le rapport HTML narratif · les notebooks Marimo · le panneau VS Code derrière un drapeau (étapes v0 à v3) · les fichiers d'agent Copilot avec sélecteur de réponse</td></tr>
       <tr><td><span class="tag ok">disponible</span> <span class="tag no">Azure non</span></td><td>L'export vers le gabarit Azure ML de l'équipe : projet généré et vérifié en local ; aucun job ni endpoint Azure</td></tr>
       <tr><td><span class="tag wip">en cours</span></td><td>Rapport et panneau « style leçon » · progression lisible du mode automatique et pause de relecture adopter / changer / expliquer · panneau sans prise d'acte par mots tapés</td></tr>
       <tr><td><span class="tag mock">maquette</span></td><td>Les deux pages HTML « style leçon » (rapport Auto MPG, panneau), approuvées, non implémentées</td></tr>
     </table></div>
     <p class="small">Ce qui est « en cours » n'est pas montré comme disponible, sauf s'il est fusionné avant l'atelier.</p>
   </div></div>
-  <div class="notes"><div class="n trap">Mettre ce tableau à jour la veille : rien d'« en cours » montré comme disponible.</div><div class="n q">« Copilot a-t-il été testé ? » → séances réelles du propriétaire sur Hotel ; le mode automatique n'a été testé que par tests unitaires et CLI, pas encore avec Copilot.</div></div>
+  <div class="notes"><div class="n trap">Mettre ce tableau à jour la veille : rien d'« en cours » montré comme disponible.</div><div class="n q">« Copilot a-t-il été testé ? » → séances réelles du propriétaire ; le mode automatique, seulement par tests unitaires et CLI.</div></div>
 </section>
 
-<section class="screen" data-title="Règles de la séance" data-part="Ouverture">
+<section class="screen" data-title="Règles de la séance" data-part="Ouverture" data-weight="0.8">
   <div class="frame"><h3>Règles de la séance</h3><div class="fx">
     <ul class="b">
-      <li><b>Ne pas adopter est un résultat légitime</b> : garder la référence, ou ne pas conclure, aussi.</li>
-      <li>On examine l'outil et les preuves, <b>pas les personnes</b>.</li>
+      <li>On discute <b>la méthode</b> ; l'outil n'est qu'une illustration.</li>
+      <li><b>Ne pas adopter est un résultat légitime</b> : un modèle, une proposition, ou cette façon de travailler.</li>
+      <li>Les <b>objections</b> sont bienvenues ; on examine les idées et les preuves, pas les personnes.</li>
       <li>Dans le chat, <b>vos mots</b> : l'agent propose, vous décidez.</li>
       <li>Un chiffre projeté vient de l'étude ; sinon il porte la mention <b>« illustratif »</b>.</li>
       <li>Les exigences de sécurité <b>ne se votent pas</b> : on discute du comment, pas du si.</li>
-      <li>Vous pouvez arrêter l'agent à tout moment.</li>
     </ul>
   </div></div>
   <div class="notes"><div class="n say">La règle sur la sécurité reviendra dans les fondations communes.</div></div>
@@ -415,7 +456,7 @@ body.presenter{cursor:auto}
 <section class="screen" data-title="Une attente, une crainte" data-part="Ouverture" data-weight="3" data-dur="3 min">
   <div class="frame"><h3>Une attente, une crainte</h3><div class="fx">
     <div class="cols2">
-      <div class="card" style="--ac:var(--mint)"><h4>Mon attente</h4><p class="ph">« J'espère que cet outil… »</p><p>&nbsp;</p></div>
+      <div class="card" style="--ac:var(--mint)"><h4>Mon attente</h4><p class="ph">« Travailler ainsi avec un agent, j'espère que… »</p><p>&nbsp;</p></div>
       <div class="card" style="--ac:var(--pink)"><h4>Ma crainte</h4><p class="ph">« Je crains que… »</p><p>&nbsp;</p></div>
     </div>
     <p class="lead">Seul, une phrase chacune, sans signer. On les relira au retour d'expérience.</p>
@@ -427,7 +468,7 @@ body.presenter{cursor:auto}
   <div class="frame"><h3>Binômes mixtes</h3><div class="fx">
     <div class="cols3">
       <div class="card" style="--ac:var(--teal)"><h4>La composition</h4><p>Un ML Engineer ou Data Scientist, avec un Data Engineer, un PM ou un Data Analyst. Un trio si le nombre est impair.</p></div>
-      <div class="card" style="--ac:var(--sky)"><h4>Le poste</h4><p>Un poste par binôme : VS Code, le chat Copilot avec l'agent Hypotrail, le panneau activé.</p></div>
+      <div class="card" style="--ac:var(--sky)"><h4>Le poste</h4><p>Un poste par binôme : VS Code, le chat Copilot avec l'agent de l'illustration, le panneau activé.</p></div>
       <div class="card" style="--ac:var(--yellow)"><h4>Les rôles</h4><p>Un référent, un questionneur ; on échange à <b>10h08</b>.</p></div>
     </div>
   </div></div>
@@ -435,12 +476,12 @@ body.presenter{cursor:auto}
 </section>
 
 <!-- =================================================================== 2. ÉTUDE A -->
-<section class="screen" data-title="Étude A guidée" data-part="Étude A guidée">
-  <div class="frame sect"><div class="num">2</div><h2>Étude A, guidée</h2><p>Auto MPG · deux arrêts · vos décisions dans le chat</p><p class="when">9h45 – 10h30 · 45 min</p></div>
-  <div class="notes"><div class="n say">Chaque binôme crée l'étude A ; l'agent conduit, vous décidez aux arrêts.</div></div>
+<section class="screen" data-title="Expérimenter la méthode" data-part="Expérimenter la méthode sur un cas">
+  <div class="frame sect"><div class="num">2</div><h2>Expérimenter la méthode sur un cas</h2><p>Auto MPG · deux arrêts · vos décisions, avec vos mots</p><p class="when">9h45 – 10h30 · 45 min</p></div>
+  <div class="notes"><div class="n say">Chaque binôme crée l'étude A : l'agent conduit, vous décidez aux arrêts.</div><div class="n say">Regardez la méthode au travail ; l'outil n'est que le support.</div></div>
 </section>
 
-<section class="screen" data-title="Le cas Auto MPG" data-part="Étude A guidée" data-weight="2">
+<section class="screen" data-title="Le cas Auto MPG" data-part="Expérimenter la méthode sur un cas" data-weight="2">
   <div class="frame"><h3>Le cas : Auto MPG</h3><div class="fx">
     <div class="cols2">
       <div class="card" style="--ac:var(--teal)"><h4>Les données</h4><p>Le fichier public UCI Auto MPG : <b>398 voitures</b>, années de modèle 1970 à 1982.</p><p>On estime <b>mpg</b>, miles par gallon : plus le nombre est haut, plus la voiture est sobre (23 mpg ≈ 10,2 L/100 km).</p></div>
@@ -451,7 +492,7 @@ body.presenter{cursor:auto}
   <div class="notes"><div class="n say">C'est un exercice : comparer des méthodes d'estimation, sans décision réelle derrière.</div><div class="n trap">Ces voitures ne décrivent pas les véhicules actuels.</div></div>
 </section>
 
-<section class="screen" data-title="Trois documents" data-part="Étude A guidée" data-weight="3" data-dur="3 min">
+<section class="screen" data-title="Trois documents" data-part="Expérimenter la méthode sur un cas" data-weight="3" data-dur="3 min">
   <div class="frame"><h3>Trois documents, et le lien entre eux</h3><div class="fx">
     <div class="flow">
       <div class="card" style="--ac:var(--violet)"><h4>Spécification métier</h4><p>Pourquoi l'étude, pour qui, quelle décision, quel coût d'erreur.</p></div>
@@ -465,7 +506,7 @@ body.presenter{cursor:auto}
   <div class="notes"><div class="n say">Trois minutes : qui a écrit quoi, et qu'est-ce qui passe d'un document à l'autre ?</div><div class="n q">« Le contrat décide-t-il à ma place ? » → non : il borne l'étude ; les décisions se prennent dans le chat.</div></div>
 </section>
 
-<section class="screen" data-title="Rôles dans le binôme" data-part="Étude A guidée" data-weight="1.2">
+<section class="screen" data-title="Rôles dans le binôme" data-part="Expérimenter la méthode sur un cas" data-weight="1.2">
   <div class="frame"><h3>Dans le binôme : un référent, un questionneur</h3><div class="fx">
     <div class="cols2">
       <div class="card" style="--ac:var(--yellow)"><h4>Le référent</h4><p>Répond le premier, ouvre la preuve, tape la décision dans le chat avec ses mots.</p></div>
@@ -476,7 +517,7 @@ body.presenter{cursor:auto}
   <div class="notes"><div class="n say">À 10h08, j'annonce l'échange à voix haute.</div></div>
 </section>
 
-<section class="screen" data-title="Le rituel de chaque arrêt" data-part="Étude A guidée" data-weight="1.5">
+<section class="screen" data-title="Le rituel de chaque arrêt" data-part="Expérimenter la méthode sur un cas" data-weight="1.5">
   <div class="frame"><h3>À chaque arrêt, le même rituel</h3><div class="fx">
     <div class="steps">
       <div class="card"><b>Seul, par écrit</b> : votre réponse et votre confiance de 1 à 5, <b>avant</b> l'agent.</div>
@@ -489,12 +530,12 @@ body.presenter{cursor:auto}
   <div class="notes"><div class="n say">La fiche papier garde la réponse d'avant ; on la comparera à la décision prise.</div></div>
 </section>
 
-<section class="screen" data-title="Démo : vos mots" data-part="Étude A guidée" data-demo="dec">
+<section class="screen" data-title="Démo : vos mots" data-part="Expérimenter la méthode sur un cas" data-demo="dec">
   <div class="frame demo"><h3>Une décision n'est enregistrée qu'avec vos mots</h3><div class="dbody"><div id="dec"></div></div><div class="fdots" aria-hidden="true"></div></div>
   <div class="notes"><div class="n say">→ proposition, preuve, « ok » refusé, « oui mais » refusé, question fermée, enregistré, trois bases.</div><div class="n trap">Un « oui » court suffit, mais seulement en réponse à la question fermée « Adoptez-vous cette décision ? ».</div><div class="n q">« Le moteur sait-il que c'est moi ? » → non : les mots sont rapportés par l'agent.</div></div>
 </section>
 
-<section class="screen" data-title="Arrêt 1 · Usage et données" data-part="Étude A guidée" data-weight="13" data-dur="13 min">
+<section class="screen" data-title="Arrêt 1 · Usage et données" data-part="Expérimenter la méthode sur un cas" data-weight="13" data-dur="13 min">
   <div class="frame"><h3>Arrêt 1 · Usage et données</h3><div class="fx">
     <p class="lead">Deux décisions : <b class="chalk">le moment de la prédiction</b> et <b class="chalk">les variables disponibles</b> à ce moment.</p>
     <div class="cols2">
@@ -506,7 +547,7 @@ body.presenter{cursor:auto}
   <div class="notes"><div class="n trap">acceleration : son moment est incertain ; laisser les DE le trouver dans le dictionnaire.</div><div class="n q">« Le cas dit-il qui utilise la prédiction ? » → non, c'est un exercice : nommer l'usage supposé, c'est déjà une limite.</div><div class="n say">Vers 10h08 : échange des rôles.</div></div>
 </section>
 
-<section class="screen" data-title="Arrêt 2 · Évaluation" data-part="Étude A guidée" data-weight="18" data-dur="18 min">
+<section class="screen" data-title="Arrêt 2 · Évaluation" data-part="Expérimenter la méthode sur un cas" data-weight="18" data-dur="18 min">
   <div class="frame"><h3>Arrêt 2 · Évaluation</h3><div class="fx">
     <p class="lead">Deux décisions : <b class="chalk">le découpage</b> et <b class="chalk">le critère de succès</b>, fixé avant tout modèle.</p>
     <div class="cols2">
@@ -517,38 +558,38 @@ body.presenter{cursor:auto}
   <div class="notes"><div class="n say">Terme d'abord : MAE ; exemple : 3,7 mpg d'erreur sur une voiture à 23 mpg, c'est environ un sixième.</div><div class="n trap">Fixée après avoir vu un modèle, la barre se place juste au-dessus du résultat.</div></div>
 </section>
 
-<section class="screen" data-title="Démo : plis par années" data-part="Étude A guidée" data-demo="folds">
+<section class="screen" data-title="Démo : plis par années" data-part="Expérimenter la méthode sur un cas" data-demo="folds">
   <div class="frame demo"><h3>Des plis par années ne sont pas une prévision</h3><div class="dbody"><div id="folds"></div></div><div class="fdots" aria-hidden="true"></div></div>
   <div class="notes"><div class="n say">→ cinq blocs, pli 1 (appris sur l'avenir), pli 3, pli 5, bilan, « en avançant », test final.</div><div class="n trap">« En avançant » est une illustration : l'étude ne l'a pas calculé.</div><div class="n q">« Pourquoi pas toujours en avançant ? » → moins de lignes pour apprendre au début ; c'est une décision à discuter selon l'usage.</div></div>
 </section>
 
 <!-- =================================================================== 3. BASCULE -->
-<section class="screen" data-title="Bascule automatique" data-part="Bascule automatique">
-  <div class="frame sect"><div class="num">3</div><h2>Bascule : le mode automatique</h2><p>Étude B, lancée en direct, relue ensuite</p><p class="when">10h30 – 10h37 · 7 min</p></div>
+<section class="screen" data-title="Déléguer davantage" data-part="Déléguer davantage, puis relire">
+  <div class="frame sect"><div class="num">3</div><h2>Déléguer davantage, puis relire</h2><p>La même étude, toutes les décisions confiées à l'automatisation jusqu'au test final</p><p class="when">10h30 – 10h37 · 7 min</p></div>
   <div class="notes"></div>
 </section>
 
-<section class="screen" data-title="Lancer l'étude B" data-part="Bascule automatique" data-weight="2">
-  <div class="frame"><h3>Étude B : le mode automatique, lancé en direct</h3><div class="fx">
+<section class="screen" data-title="Lancer l'étude B" data-part="Déléguer davantage, puis relire" data-weight="2">
+  <div class="frame"><h3>Étude B : tout déléguer jusqu'au test final, en direct</h3><div class="fx">
 <pre class="code s"><span class="cm"># le mode se choisit au lancement, et seulement là</span>
 hypotrail init --case use-cases/auto-mpg --study ~/etudes/mpg-b --lang fr --automation until_final_test
 hypotrail automation run --progress --study ~/etudes/mpg-b --request-id b1 --expected-revision 1</pre>
     <ul class="b">
       <li>Environ <b>30 s de calcul</b>, mesuré sur Auto MPG.</li>
-      <li>Le mode se termine dans un seul sens : on ne le rallume pas.</li>
+      <li>Le niveau d'automatisation est un <b>réglage</b> de la méthode : ici, le plus haut avant le test final.</li>
       <li>En cas de souci, on passe sur un état préparé, <b>annoncé comme tel</b>.</li>
     </ul>
   </div></div>
   <div class="notes"><div class="n say">Pendant le calcul, montrer les lignes de progression ; leur version lisible est encore en cours.</div><div class="n trap">Si on bascule sur l'état préparé, le dire à voix haute.</div></div>
 </section>
 
-<section class="screen" data-title="Démo : le mode automatique" data-part="Bascule automatique" data-demo="auto">
+<section class="screen" data-title="Démo : le mode automatique" data-part="Déléguer davantage, puis relire" data-demo="auto">
   <div class="frame demo"><h3>Le mode automatique décide, vous relisez</h3><div class="dbody"><div id="auto"></div></div><div class="fdots" aria-hidden="true"></div></div>
   <div class="notes"><div class="n say">→ lancement, cadrage, préparation, modèles, choix et arrêt (7 à relire), relecture, variante full_demo.</div><div class="n trap">La pause « adopter / changer / expliquer » est en cours ; aujourd'hui l'agent demande d'adopter ou de changer avec vos mots.</div><div class="n q">« Le mode choisit-il librement ? » → non : des règles fixes, diapo suivante.</div></div>
 </section>
 
-<section class="screen" data-title="Les règles du mode automatique" data-part="Bascule automatique" data-weight="1.7">
-  <div class="frame"><h3>Ce que le moteur a choisi pour vous, et selon quelles règles</h3><div class="fx">
+<section class="screen" data-title="Les règles du mode automatique" data-part="Déléguer davantage, puis relire" data-weight="1.7">
+  <div class="frame"><h3>Ce qui a été choisi pour vous, et selon quelles règles</h3><div class="fx">
     <div class="steps" style="grid-template-columns:repeat(3,minmax(0,1fr))">
       <div class="card"><b>La valeur rédigée</b> par le moteur pour cette décision (son brouillon).</div>
       <div class="card"><b>Sinon, sa recommandation.</b></div>
@@ -556,19 +597,19 @@ hypotrail automation run --progress --study ~/etudes/mpg-b --request-id b1 --exp
     </div>
     <div class="cols2">
       <div class="trap"><span class="l">Jamais</span>un choix libre de l'agent ; une valeur que le moteur refuserait n'est jamais proposée.</div>
-      <p class="quote" style="font-size:2.1cqw">Le contrat du cas a été écrit par un humain : une partie de ces « choix automatiques » vient de lui.</p>
+      <p class="quote" style="font-size:2.1cqw">Le contrat du cas a été écrit par un humain, et ces règles sont un choix de l'illustration : elles s'adaptent.</p>
     </div>
   </div></div>
   <div class="notes"><div class="n say">La règle de décision ne concerne pas MPG, qui est une régression.</div><div class="n q">« Et si le moteur n'a pas de valeur ? » → le mode s'arrête et vous répondez.</div></div>
 </section>
 
 <!-- =================================================================== 4. RELECTURE -->
-<section class="screen" data-title="Relecture et missions" data-part="Relecture et missions">
-  <div class="frame sect"><div class="num">4</div><h2>Relecture et missions</h2><p>Tronc commun, puis une mission par profil</p><p class="when">10h37 – 11h00 · 11 min + 12 min</p></div>
+<section class="screen" data-title="Relire et contester" data-part="Relire et contester">
+  <div class="frame sect"><div class="num">4</div><h2>Relire et contester</h2><p>Tronc commun, puis une mission par profil</p><p class="when">10h37 – 11h00 · 11 min + 12 min</p></div>
   <div class="notes"></div>
 </section>
 
-<section class="screen" data-title="Arrêt 3 · Résultat et choix" data-part="Relecture et missions" data-weight="4">
+<section class="screen" data-title="Arrêt 3 · Résultat et choix" data-part="Relire et contester" data-weight="4">
   <div class="frame"><h3>Arrêt 3 · Résultat et choix</h3><div class="fx">
     <div class="cols2" style="grid-template-columns:1.15fr 1fr">
       <div class="tblw"><table>
@@ -588,12 +629,12 @@ hypotrail automation run --progress --study ~/etudes/mpg-b --request-id b1 --exp
   <div class="notes"><div class="n say">Terme : EBM, un modèle non linéaire lisible, une courbe par variable.</div><div class="n trap">Ces chiffres ont servi à choisir : ce ne sont pas des résultats finaux.</div></div>
 </section>
 
-<section class="screen" data-title="Démo : la règle d'une erreur type" data-part="Relecture et missions" data-demo="onese">
+<section class="screen" data-title="Démo : la règle d'une erreur type" data-part="Relire et contester" data-demo="onese">
   <div class="frame demo"><h3>La règle d'une erreur type garde le plus simple</h3><div class="dbody"><div id="onese"></div></div><div class="fdots" aria-hidden="true"></div></div>
   <div class="notes"><div class="n say">→ quatre MAE et la barre du critère, erreurs types, bande d'une erreur type, écart apparié, la tension.</div><div class="n trap">Les erreurs types de la règle ne sont pas appariées : elles portent la difficulté commune des plis.</div><div class="n q">« L'export a-t-il poussé au linéaire ? » → non, la règle a choisi avant ; mais l'export ne qualifie que le linéaire, il faut le dire.</div></div>
 </section>
 
-<section class="screen" data-title="Une situation" data-part="Relecture et missions" data-weight="3.7">
+<section class="screen" data-title="Une situation" data-part="Relire et contester" data-weight="3.7">
   <div class="frame"><h3>Une situation</h3><div class="fx">
     <p class="quote big">« Un collègue propose d'utiliser le modèle pour de nouveaux véhicules. Que devons-nous examiner avant d'accepter ? »</p>
     <div class="cols2">
@@ -605,7 +646,7 @@ hypotrail automation run --progress --study ~/etudes/mpg-b --request-id b1 --exp
   <div class="notes"><div class="n say">Deux minutes en binôme avant de commenter les deux encadrés.</div><div class="n q">« Que faudrait-il pour accepter ? » → des données récentes, une évaluation en avançant dans le temps, un usage écrit.</div></div>
 </section>
 
-<section class="screen" data-title="Missions par profil" data-part="Relecture et missions" data-weight="9" data-dur="12 min">
+<section class="screen" data-title="Missions par profil" data-part="Relire et contester" data-weight="9" data-dur="12 min">
   <div class="frame"><h3>Missions par profil</h3><div class="fx">
     <div class="cols3">
       <div class="card" style="--ac:var(--sky)"><h4>ML / DS · Contester</h4><p>Prenez une décision automatique de l'étude B. Expliquez la règle qui l'a produite, proposez une alternative et dites ce qu'elle changerait.</p><p class="m">Exemples : plis en avançant, garder l'EBM.</p></div>
@@ -616,7 +657,7 @@ hypotrail automation run --progress --study ~/etudes/mpg-b --request-id b1 --exp
   <div class="notes"><div class="n say">Chaque mission finit sur la fiche de relecture, diapo suivante.</div><div class="n trap">Adopter ou changer se fait dans le chat ; le panneau ne fait que copier la question.</div></div>
 </section>
 
-<section class="screen" data-title="Fiche de relecture" data-part="Relecture et missions" data-weight="3">
+<section class="screen" data-title="Fiche de relecture" data-part="Relire et contester" data-weight="3">
   <div class="frame"><h3>La fiche de relecture, et trois lignes à rendre</h3><div class="fx">
     <div class="tblw"><table>
       <tr><th>Décision</th><th>Preuve citée <span style="text-transform:none">(id de résultat ou nombre)</span></th><th>Ce qui me ferait changer d'avis</th><th>Adopter ou modifier, en vos mots</th></tr>
@@ -633,13 +674,13 @@ hypotrail automation run --progress --study ~/etudes/mpg-b --request-id b1 --exp
 </section>
 
 <!-- =================================================================== 5. EXPORT -->
-<section class="screen" data-title="Après l'étude : la transmission" data-part="Démo export Azure ML">
-  <div class="frame sect"><div class="num">5</div><h2>Après l'étude : la transmission</h2><p>Démonstration de l'organisateur, sur l'étude MPG complète préparée</p><p class="when">11h00 – 11h06 · 6 min</p></div>
+<section class="screen" data-title="En aval : la transmission" data-part="En aval : une transmission vérifiable">
+  <div class="frame sect"><div class="num">5</div><h2>En aval : une transmission vérifiable</h2><p>Ce que la méthode permet après l'étude · démonstration de l'organisateur sur l'étude MPG complète</p><p class="when">11h00 – 11h06 · 6 min</p></div>
   <div class="notes"><div class="n say">Étude préparée : test final ouvert une fois, modèle linéaire choisi ; captures d'écran en secours.</div></div>
 </section>
 
-<section class="screen" data-title="Les commandes d'export" data-part="Démo export Azure ML" data-weight="2.7">
-  <div class="frame"><h3>Exporter vers le gabarit Azure ML de l'équipe</h3><div class="fx">
+<section class="screen" data-title="Les commandes d'export" data-part="En aval : une transmission vérifiable" data-weight="2.7">
+  <div class="frame"><h3>Transmettre vers le gabarit Azure ML de l'équipe</h3><div class="fx">
 <pre class="code s"><span class="cm"># dans l'étude : ce qui sera exporté, et ce qui manque pour Azure</span>
 hypotrail export azureml --study ~/etudes/mpg-complete --plan --expected-revision &lt;n&gt;
 hypotrail export azureml --study ~/etudes/mpg-complete --out ~/exports/mpg-aml --expected-revision &lt;n&gt;
@@ -654,7 +695,7 @@ python -m src.pipeline.utils.project predict --parity --output outputs/predictio
   <div class="notes"><div class="n say">Le plan lit une seule révision : sans --expected-revision, le refus donne le numéro à utiliser.</div></div>
 </section>
 
-<section class="screen" data-title="Démo : exporter n'est pas déployer" data-part="Démo export Azure ML" data-demo="export">
+<section class="screen" data-title="Démo : exporter n'est pas déployer" data-part="En aval : une transmission vérifiable" data-demo="export">
   <div class="frame demo"><h3>Exporter n'est pas déployer</h3><div class="dbody"><div id="export"></div></div><div class="fdots" aria-hidden="true"></div></div>
   <div class="notes"><div class="n say">→ étude, plan, projet, validate, parité, Azure (rien n'a tourné), candidat reconstruit.</div><div class="n trap">Dire mot pour mot : aucun job ni endpoint Azure n'a jamais tourné.</div><div class="n q">« Et la ridge ou l'EBM ? » → refusées par l'export (capability_not_supported), jamais remplacées par un autre modèle.</div></div>
 </section>
@@ -675,15 +716,15 @@ python -m src.pipeline.utils.project predict --parity --output outputs/predictio
   <div class="frame"><h3>Seul, d'abord</h3><div class="fx">
     <div class="cols2">
       <div class="card" style="--ac:var(--sky)"><h4>Sur votre fiche</h4><ul><li>Une observation précise de la matinée.</li><li>Une réaction : intérêt, frustration, sentiment de contrôle, inquiétude pour le maintien de vos compétences.</li></ul></div>
-      <div class="card" style="--ac:var(--pink)"><h4>Carte d'objection, anonyme</h4><p>Ce que vous n'oseriez pas dire en groupe, contre l'outil ou contre son usage. Dans l'urne.</p></div>
+      <div class="card" style="--ac:var(--pink)"><h4>Carte d'objection, anonyme</h4><p>Ce que vous n'oseriez pas dire en groupe, contre cette façon de travailler, contre l'outil ou contre leur usage. Dans l'urne.</p></div>
     </div>
   </div></div>
-  <div class="notes"><div class="n say">Les cartes d'objection sont lues sans chercher leur auteur.</div></div>
+  <div class="notes"><div class="n say">Les cartes d'objection sont lues sans chercher leur auteur.</div><div class="n q">« Faut-il l'adopter ? » → ce n'est pas la question du jour : dites ce que vous garderiez, changeriez ou refuseriez.</div></div>
 </section>
 
 <section class="screen" data-title="Pré-mortem" data-part="Retour d'expérience" data-weight="7" data-dur="7 min">
   <div class="frame"><h3>Pré-mortem, par table</h3><div class="fx">
-    <p class="quote big">« Dans six mois, l'usage d'Hypotrail a échoué, ou a causé un incident. Pourquoi ? »</p>
+    <p class="quote big">« Dans six mois, l'équipe a travaillé ainsi avec des agents, et cela a échoué ou causé un incident. Pourquoi ? »</p>
     <p class="lead">Une cause par post-it ; le plus de causes différentes possible ; pas encore de solution.</p>
   </div></div>
   <div class="notes"><div class="n say">Si une table sèche : la relecture bâclée, une étude transmise sans son auteur, un usage hors du cadre.</div></div>
@@ -694,15 +735,15 @@ python -m src.pipeline.utils.project predict --parity --output outputs/predictio
     <div class="cols3">
       <div class="card" style="--ac:var(--mint)"><h4>Observations du jour</h4><p class="m">Ce qui s'est passé, vu par plusieurs.</p></div>
       <div class="card" style="--ac:var(--yellow)"><h4>Hypothèses à tester</h4><p class="m">Ce qu'on croit, à vérifier dans un pilote.</p></div>
-      <div class="card" style="--ac:var(--sky)"><h4>Améliorations produit</h4><p class="m">Ce qu'Hypotrail devrait changer.</p></div>
+      <div class="card" style="--ac:var(--sky)"><h4>Changements à la méthode</h4><p class="m">Ce que la méthode, ou son illustration, devrait changer.</p></div>
     </div>
     <p class="small">Le taux de décisions validées sans justification, relevé pendant la pause, va dans la première colonne.</p>
   </div></div>
   <div class="notes"><div class="n trap">Ne pas transformer une observation d'un seul binôme en conclusion générale.</div></div>
 </section>
 
-<section class="screen" data-title="Usages professionnels" data-part="Retour d'expérience" data-weight="1.7">
-  <div class="frame"><h3>Des usages professionnels, en perspective</h3><div class="fx">
+<section class="screen" data-title="Usages, en perspective" data-part="Retour d'expérience" data-weight="1.7">
+  <div class="frame"><h3>Des usages de cette façon de travailler, en perspective</h3><div class="fx">
     <div class="cols4">
       <div class="card" style="--ac:var(--teal)"><h4>Découvrir</h4><p>un nouveau cas, ses données et ses pièges.</p></div>
       <div class="card" style="--ac:var(--sky)"><h4>Explorer</h4><p>pendant une absence, puis relire au retour.</p></div>
@@ -717,7 +758,7 @@ python -m src.pipeline.utils.project predict --parity --output outputs/predictio
 <!-- =================================================================== 8. FONDATIONS -->
 <section class="screen" data-title="Fondations communes" data-part="Fondations communes">
   <div class="frame sect"><div class="num">8</div><h2>Fondations communes</h2><p>Qu'est-ce que l'équipe veut préserver lorsqu'elle délègue ?</p><p class="when">11h35 – 12h25 · 50 min</p></div>
-  <div class="notes"><div class="n say">On quitte Hypotrail : les principes doivent tenir aussi pour un chatbot RAG et une application web.</div></div>
+  <div class="notes"><div class="n say">On quitte le cas et son illustration : les principes doivent tenir aussi pour un chatbot RAG et une application web.</div></div>
 </section>
 
 <section class="screen" data-title="Provocation" data-part="Fondations communes" data-weight="3" data-dur="3 min">
@@ -821,7 +862,7 @@ python -m src.pipeline.utils.project predict --parity --output outputs/predictio
 <section class="screen" data-title="Volontaires pour un pilote" data-part="Clôture" data-weight="1.5">
   <div class="frame"><h3>Volontaires pour un pilote</h3><div class="fx">
     <ul class="b">
-      <li>Un pilote <b>limité</b>, sur un cas réel au périmètre borné.</li>
+      <li>Un pilote <b>limité</b> de cette façon de travailler, sur un cas réel au périmètre borné.</li>
       <li>Mesuré avec les <b>indicateurs de l'atelier 1</b>.</li>
       <li>En comptant aussi le temps de <b>relecture</b>, de <b>correction</b> et de <b>transmission</b>.</li>
       <li>Avec le droit d'arrêter.</li>
@@ -847,7 +888,7 @@ python -m src.pipeline.utils.project predict --parity --output outputs/predictio
       <tr><th style="width:24%">Famille</th><th>Ce qu'on regarde</th></tr>
       <tr><td>Compréhension</td><td>Les trois réponses du ticket de sortie ; la réponse écrite avant l'agent comparée à la décision prise.</td></tr>
       <tr><td>Reprise de main</td><td>La part des décisions avec une preuve citée ; le taux de validations sans justification ; les propositions contestées ou modifiées.</td></tr>
-      <tr><td>Adoption et gouvernance</td><td>Les propositions de principes, les objections recueillies, les volontaires du pilote.</td></tr>
+      <tr><td>Réactions et gouvernance</td><td>Les objections et idées recueillies sur la méthode, les propositions de principes, les volontaires du pilote.</td></tr>
       <tr><td>Satisfaction</td><td>Un item séparé ; jamais un critère de réussite à lui seul.</td></tr>
       <tr><td>Productivité</td><td><b>Pilote seulement</b> : rien n'est mesuré aujourd'hui.</td></tr>
     </table></div>
@@ -891,7 +932,7 @@ python -m src.pipeline.utils.project predict --parity --output outputs/predictio
 <span class="keys">← → espace · N notes · O vue d'ensemble · F plein écran · T thème · H barre · P présentateur</span></footer>
 </div>
 <div class="overview" id="overview" hidden></div>
-<script>window.DECK_CONFIG={id:"atelier-2-hypotrail",plan:[["Ouverture",15],["Étude A guidée",45],["Bascule automatique",7],["Relecture et missions",23],["Démo export Azure ML",6],["Pause",9],["Retour d'expérience",20],["Fondations communes",50],["Clôture",5],["Annexe",0]]};var DEMOS={};</script>
+<script>window.DECK_CONFIG={id:"atelier-2-methode",plan:[["Ouverture",15],["Expérimenter la méthode sur un cas",45],["Déléguer davantage, puis relire",7],["Relire et contester",23],["En aval : une transmission vérifiable",6],["Pause",9],["Retour d'expérience",20],["Fondations communes",50],["Clôture",5],["Annexe",0]]};var DEMOS={};</script>
 <script>
 /* Espaces insécables du français (avant ; : ? ! % et après « ), pour les chaînes des démos. */
 function T(s){return String(s).replace(/ ([;:?!»%])/g," $1").replace(/« /g,"« ");}
