@@ -60,9 +60,9 @@ def _labels() -> dict:
 
 
 def _model_name(model: str) -> str:
-    from .render_html import MODEL_NAMES_EXTRA      # v0.3 (WP-F1)
-    names = texts.report().get('model_names') or {}
-    return names.get(model, MODEL_NAMES_EXTRA.get(model, model))
+    # v4 (R26): the report's display name (a variant by its family).
+    from .render_html import model_name
+    return model_name(model)
 
 
 def _concept(term_id: str) -> str:
@@ -296,6 +296,46 @@ def _segments(citer: cite.Citer, rid: str, base: list, segs: list) -> str:
             f'</p>{"".join(out)}')
 
 
+def coefficient_chart(citer: cite.Citer, rid: str, base: list, coef: Mapping) -> str:
+    """v4 (R25): the coefficients as a forest plot: one dot per term with its interval, the
+    zero line drawn; the value of each term cited at the right."""
+    terms = [(i, t) for i, t in enumerate((coef.get('terms') or [])[:MAX_COEFFICIENTS])
+             if cite.is_number(t.get('value'))]
+    if not terms:
+        return ''
+    edges = [0.0]
+    for _, t in terms:
+        edges += [v for v in (t.get('value'), t.get('low'), t.get('high')) if cite.is_number(v)]
+    lo, hi = min(edges), max(edges)
+    pad = (hi - lo) * 0.08 or 1
+    scale = render_charts.Scale(lo - pad, hi + pad, x1=render_charts.WIDTH - render_charts.RIGHT - 10)
+    body, y = [], render_charts.TOP
+    for i, t in terms:
+        cy = y + 11
+        p = base + ['coefficients', 'terms', str(i)]
+        body.append(svg_lit('identifier', render_charts.short(t.get('term', ''), 24),
+                            render_charts.LEFT - 8, cy + 4, 'end'))
+        if cite.is_number(t.get('low')) and cite.is_number(t.get('high')):
+            body.append(f'<line class="ci" x1="{scale(t["low"]):.1f}" y1="{cy}" '
+                        f'x2="{scale(t["high"]):.1f}" y2="{cy}"/>')
+        cls = 'm' if t.get('excludes_zero') else 'mo'
+        body.append(f'<circle class="{cls}" cx="{scale(t["value"]):.1f}" cy="{cy}" r="5">'
+                    f'<title>{e(str(t.get("term", "")))}</title></circle>')
+        body.append(citer.svg_num(rid, cite.format_path(p + ['value']), 'f2',
+                                  x=render_charts.WIDTH - render_charts.RIGHT + 4, y=cy + 4))
+        y += render_charts.ROW
+    x0 = scale(0)
+    body.append(f'<line class="zero" x1="{x0:.1f}" y1="{render_charts.TOP - 6}" x2="{x0:.1f}" '
+                f'y2="{y}"/>')
+    body.insert(0, scale.axis(render_charts.TOP - 6, y + 2))
+    svg = (f'<svg class="chart" viewBox="0 0 {render_charts.WIDTH} {y + render_charts.AXIS:.0f}" '
+           f'role="img" aria-label="Coefficients with their interval">{"".join(body)}</svg>')
+    words = texts.lesson('charts')
+    return figure('diag_coefficients', texts.say(words['coefficients_question']), svg,
+                  legend(('m', texts.say(words['coefficients_excludes'])),
+                         ('outline', texts.say(words['coefficients_includes']))))
+
+
 def _coefficients(citer: cite.Citer, rid: str, base: list, coef: Mapping) -> str:
     if not isinstance(coef, Mapping) or not coef.get('terms'):
         return ''
@@ -308,7 +348,7 @@ def _coefficients(citer: cite.Citer, rid: str, base: list, coef: Mapping) -> str
                     f'<td>{_num(citer, rid, p + ["value"], "f3")}'
                     f'{_interval(citer, rid, p + ["low"], p + ["high"], "f3")}</td>'
                     f'<td>{_lit("category", excl)}</td></tr>')
-    meta = (f'<p class="small">{e(lab["coefficients_note"])} Scale: '
+    meta = (f'<p class="small">{e(lab["coefficients_note"])} {e(lab["scale_word"])} '
             f'{_lit("message", coef.get("scale") or "")}. '
             + (f'{_num(citer, rid, base + ["coefficients", "replicates"], "int")} bootstrap '
                f'refits on {_num(citer, rid, base + ["coefficients", "n_rows"], "int")} rows, '
@@ -325,7 +365,8 @@ def _coefficients(citer: cite.Citer, rid: str, base: list, coef: Mapping) -> str
     if isinstance(check, Mapping) and check.get('consistent') is False:
         # WP-B6a: the stored coefficients are not the refit the intervals describe.
         meta += f'<p class="small warn">{_lit("message", check.get("note") or "")}</p>'
-    return (f'<details class="diag-more"><summary><strong>{e(lab["coefficients_heading"])}'
+    return (coefficient_chart(citer, rid, base, coef)
+            + f'<details class="diag-more"><summary><strong>{e(lab["coefficients_heading"])}'
             f'</strong></summary>{meta}'
             + _table(['Term', 'Coefficient [interval]', 'Interval excludes zero'], rows)
             + '</details>')
@@ -381,8 +422,20 @@ def _binary_models_table(citer: cite.Citer, rid: str, models: Mapping) -> str:
                       'Precision at the rule', 'Recall at the rule'], rows))
 
 
+def _plain(kind: str, body: str, **_) -> str:
+    """The default wrapper of a diagnostic piece: the piece itself."""
+    return body
+
+
+def _cited(citer: cite.Citer, rid: str, path: list, fmt: str) -> str | None:
+    p = cite.format_path(path)
+    return citer.num(rid, p, fmt) if citer.has(rid, p) else None
+
+
 def _binary_body(citer: cite.Citer, rid: str, values: Mapping, model: str,
-                 final: bool) -> str:
+                 final: bool, wrap=_plain) -> str:
+    """v4 (R30): each piece goes through ``wrap(kind, body, values=..., conclude=...,
+    what=...)``, which the lesson report uses to give it its guided reading."""
     from .render_html import rule_words
     lab = _labels()
     d = (values.get('models') or {}).get(model) or {}
@@ -398,20 +451,55 @@ def _binary_body(citer: cite.Citer, rid: str, values: Mapping, model: str,
              f'{" (" + e(source_text) + ")" if source_text else ""}. '
              f'<strong>{e(lab["model"])}:</strong> {e(_model_name(model))}.</p>']
     if len(values.get('models') or {}) > 1:
-        parts.append(_binary_models_table(citer, rid, values['models']))
-    parts.append(_confusion(citer, rid, base, conf))
-    parts.append(f'<h4>{e(lab["gain_heading"])}</h4>{_concept("gain_curve")}'
-                 f'{_concept("roc_curve")}')
-    parts.append(gain_chart(citer, rid, base, d.get('curve') or {}, share, final))
-    parts.append(f'<h4>{e(lab["calibration_heading"])}</h4>{_concept("calibration")}'
-                 f'{_concept("brier_score")}')
-    parts.append(calibration_chart(citer, rid, base, d.get('calibration') or {}))
-    parts.append(_calibration_table(citer, rid, base, d.get('calibration') or {}))
-    parts.append(_segments(citer, rid, base, d.get('segments') or []))
+        auc = _cited(citer, rid, base + ['roc_auc'], 'f3')
+        parts.append(wrap('models_table', _binary_models_table(citer, rid, values['models']),
+                          what='table', values={'model': e(_model_name(model)), 'auc': auc or ''},
+                          conclude='binary' if auc else 'none'))
+    c = base + ['confusion']
+    precision, recall = _cited(citer, rid, c + ['precision'], 'pct1'), \
+        _cited(citer, rid, c + ['recall'], 'pct1')
+    parts.append(wrap('confusion', _confusion(citer, rid, base, conf), what='table',
+                      values={'precision': precision or '', 'recall': recall or ''},
+                      conclude=None if precision and recall else 'none',
+                      attention=None if conf.get('selection') == 'expected' else 'none'))
+    auc = _cited(citer, rid, base + ['roc_auc'], 'f3')
+    parts.append(wrap('gain', f'{_concept("gain_curve")}{_concept("roc_curve")}'
+                      + gain_chart(citer, rid, base, d.get('curve') or {}, share, final),
+                      values={'auc': auc or ''}, conclude=None if auc else 'none'))
+    cal = d.get('calibration') or {}
+    brier = _cited(citer, rid, base + ['calibration', 'brier'], 'f4')
+    brier_base = _cited(citer, rid, base + ['calibration', 'brier_base_rate'], 'f4')
+    parts.append(wrap('calibration', f'{_concept("calibration")}{_concept("brier_score")}'
+                      + calibration_chart(citer, rid, base, cal)
+                      + _calibration_table(citer, rid, base, cal),
+                      values={'brier': brier or '', 'brier_base': brier_base or ''},
+                      conclude=None if brier and brier_base else 'none'))
+    segments = _segments(citer, rid, base, d.get('segments') or [])
+    if segments:
+        parts.append(wrap('segments', segments, what='table'))
     if not final:
-        parts.append(_coefficients(citer, rid, base, d.get('coefficients') or {}))
-    parts.append(_examples(citer, rid, base, d.get('examples') or {}))
+        coefficients = _coefficients(citer, rid, base, d.get('coefficients') or {})
+        if coefficients:
+            parts.append(wrap('coefficients', coefficients,
+                              **_coefficient_values(citer, rid, base, d.get('coefficients'))))
+    parts.append(wrap('examples', _examples(citer, rid, base, d.get('examples') or {}),
+                      what='table'))
     return ''.join(p for p in parts if p)
+
+
+def _coefficient_values(citer: cite.Citer, rid: str, base: list, coef) -> dict:
+    """The guided reading's values of the coefficients: the largest term in size."""
+    terms = ((coef or {}).get('terms') or []) if isinstance(coef, Mapping) else []
+    if not terms or not isinstance(terms[0], Mapping):
+        return {'conclude': 'none'}
+    p = base + ['coefficients', 'terms', '0']
+    value = _cited(citer, rid, p + ['value'], 'f2')
+    low, high = _cited(citer, rid, p + ['low'], 'f2'), _cited(citer, rid, p + ['high'], 'f2')
+    if not (value and low and high):
+        return {'conclude': 'none'}
+    return {'values': {'term': _lit('identifier', terms[0].get('term', ''), 'code'),
+                       'value': value, 'low': low, 'high': high},
+            'conclude': 'excludes' if terms[0].get('excludes_zero') else 'includes'}
 
 
 # --- regression -----------------------------------------------------------------------------
@@ -557,28 +645,96 @@ def _largest(citer: cite.Citer, rid: str, base: list, ex: Mapping) -> str:
                             [('observed', 'f2'), ('prediction', 'f2'), ('residual', 'f2')]))
 
 
+def _largest_bias(blocks: list) -> tuple[int, int] | None:
+    """``(block, group)`` of the largest mean residual in size among the groups large
+    enough to read alone."""
+    best, where = None, None
+    for i, block in enumerate(blocks or []):
+        for j, g in enumerate((block or {}).get('groups') or []):
+            if not isinstance(g, Mapping) or g.get('small_cell') \
+                    or not cite.is_number(g.get('mean_residual')):
+                continue
+            if best is None or abs(g['mean_residual']) > best:
+                best, where = abs(g['mean_residual']), (i, j)
+    return where
+
+
 def _regression_body(citer: cite.Citer, rid: str, values: Mapping, model: str,
-                     final: bool) -> str:
+                     final: bool, wrap=_plain) -> str:
+    """v4 (R30): each piece goes through ``wrap`` (see :func:`_binary_body`)."""
     lab = _labels()
     d = (values.get('models') or {}).get(model) or {}
     base = ['models', model]
     unit = values.get('unit')
     parts = [f'<p><strong>{e(lab["model"])}:</strong> {e(_model_name(model))}.'
-             f'{" Unit: " + _lit("case", unit) + "." if unit else ""}</p>']
+             + (f' {e(lab["unit_word"])} {_lit("case", unit)}.' if unit else '') + '</p>']
     if len(values.get('models') or {}) > 1:
-        parts.append(_regression_models_table(citer, rid, values['models']))
-    parts.append(f'<h4>{e(lab["residuals_heading"])}</h4>{_concept("residual")}')
-    parts.append(residual_chart(citer, rid, base, d, final))
-    parts.append(observed_chart(citer, rid, base, d, final))
-    parts.append(f'{_concept("qq_plot")}<p class="small">{_lit("message", values.get("normality_note") or "")}'
-                 f'</p>')
-    parts.append(qq_chart(citer, rid, base, d))
-    parts.append(_residual_summary(citer, rid, base))
-    parts.append(_hetero(citer, rid, base, d.get('heteroscedasticity') or {}))
-    parts.append(_by_feature(citer, rid, base, d.get('by_feature') or []))
+        mae = _cited(citer, rid, base + ['errors', 'mae'], 'f2')
+        parts.append(wrap('models_table', _regression_models_table(citer, rid, values['models']),
+                          what='table', values={'model': e(_model_name(model)), 'mae_model': mae or ''},
+                          conclude='diag' if mae else 'none'))
+    h = d.get('heteroscedasticity') or {}
+    hp = base + ['heteroscedasticity']
+    corr = _cited(citer, rid, hp + ['abs_residual_prediction_correlation'], 'f2')
+    chart = residual_chart(citer, rid, base, d, final)
+    if chart:
+        parts.append(wrap('residuals_scatter', f'{_concept("residual")}{chart}',
+                          values={'corr': corr or ''},
+                          conclude=('none' if not corr else
+                                    'flagged' if h.get('flag') else None)))
+    chart = observed_chart(citer, rid, base, d, final)
+    if chart:
+        mae = _cited(citer, rid, base + ['errors', 'mae'], 'f2')
+        parts.append(wrap('observed', chart, values={'mae': mae or ''},
+                          conclude=None if mae else 'none'))
+    chart = qq_chart(citer, rid, base, d)
+    if chart:
+        r = base + ['residuals']
+        skew, kurt = _cited(citer, rid, r + ['skewness'], 'f2'), \
+            _cited(citer, rid, r + ['excess_kurtosis'], 'f2')
+        parts.append(wrap('qq', f'{_concept("qq_plot")}<p class="small">'
+                          f'{_lit("message", values.get("normality_note") or "")}</p>{chart}',
+                          values={'skew': skew or '', 'kurt': kurt or ''},
+                          conclude=None if skew and kurt else 'none'))
+    mean = _cited(citer, rid, base + ['residuals', 'mean'], 'f2')
+    sd = _cited(citer, rid, base + ['residuals', 'sd'], 'f2')
+    parts.append(wrap('residual_summary', _residual_summary(citer, rid, base), what='table',
+                      values={'mean': mean or '', 'sd': sd or ''},
+                      conclude=None if mean and sd else 'none'))
+    ratio = _cited(citer, rid, hp + ['spread_ratio_top_bottom'], 'f2')
+    parts.append(wrap('hetero', _hetero(citer, rid, base, h), what='table',
+                      values={'ratio': ratio or ''},
+                      conclude=('none' if not ratio else 'flagged' if h.get('flag') else None)))
+    blocks = d.get('by_feature') or []
+    by_feature = _by_feature(citer, rid, base, blocks)
+    if by_feature:
+        where = _largest_bias(blocks)
+        bias_values, bias_conclude = {}, 'none'
+        if where:
+            i, j = where
+            bias = _cited(citer, rid, base + ['by_feature', str(i), 'groups', str(j),
+                                              'mean_residual'], 'f2')
+            if bias:
+                bias_values = {'bias': bias,
+                               'column': _lit('identifier', blocks[i].get('column', ''), 'code'),
+                               'group': _lit('category', blocks[i]['groups'][j].get('value', ''))}
+                bias_conclude = None
+        parts.append(wrap('by_feature', by_feature, what='table', values=bias_values,
+                          conclude=bias_conclude))
     if not final:
-        parts.append(_coefficients(citer, rid, base, d.get('coefficients') or {}))
-    parts.append(_largest(citer, rid, base, d.get('examples') or {}))
+        coefficients = _coefficients(citer, rid, base, d.get('coefficients') or {})
+        if coefficients:
+            parts.append(wrap('coefficients', coefficients,
+                              **_coefficient_values(citer, rid, base, d.get('coefficients'))))
+    ex = d.get('examples') or {}
+    largest = _largest(citer, rid, base, ex)
+    first = (ex.get('largest_errors') or [None])[0]
+    residual = (_cited(citer, rid, base + ['examples', 'largest_errors', '0', 'residual'], 'f2')
+                if isinstance(first, Mapping) else None)
+    parts.append(wrap('largest', largest, what='table',
+                      values={'residual': residual or '',
+                              'row': _lit('identifier', (first or {}).get('row_key', ''), 'code')},
+                      conclude=None if residual else 'none'))
     smearing = values.get('smearing') or {}
     parts.append(f'<h4>{e(lab["smearing"])}</h4>{_concept("smearing")}'
                  f'<p class="small">{_lit("message", smearing.get("note") or "")}</p>')
@@ -608,7 +764,8 @@ def _focus(view: Mapping, values: Mapping, task: str) -> str:
 _TERM = re.compile(r'<p><strong class="term">.*?</p>', re.S)
 
 
-def _part(view: Mapping, citer: cite.Citer, slot: str, task: str, final: bool) -> str:
+def _part(view: Mapping, citer: cite.Citer, slot: str, task: str, final: bool,
+          wrap=_plain) -> str:
     lab = _labels()
     item = view['results'].get(slot)
     if item is None:
@@ -622,7 +779,7 @@ def _part(view: Mapping, citer: cite.Citer, slot: str, task: str, final: bool) -
     values = item['values']
     model = values.get('model') if final else _focus(view, values, task)
     body = (_regression_body if task == 'regression' else _binary_body)(
-        citer, rid, values, model, final)
+        citer, rid, values, model, final, wrap)
     if final:
         # The terms are defined once, in the development part.
         body = _TERM.sub('', body)
@@ -645,14 +802,14 @@ def _opening_note(view: Mapping, item: Mapping | None) -> str:
             f'{e(lab["after_opening"] if after else lab["before_opening"])}</p>')
 
 
-def development_part(view: Mapping, citer: cite.Citer) -> str:
+def development_part(view: Mapping, citer: cite.Citer, wrap=_plain) -> str:
     """The development part (``#diagnostics-development``): labelled development evidence,
     with when it was computed relative to the opening; says so when nothing is computed."""
     lab = _labels()
     task = view.get('task') or 'binary'
     slot = DEVELOPMENT_SLOTS[task]
     dev_item = view['results'].get(slot)
-    dev = _part(view, citer, slot, task, final=False)
+    dev = _part(view, citer, slot, task, final=False, wrap=wrap)
     if not dev:
         dev = f'<p class="muted">{e(lab["pending"])}</p>'
     return (f'<h3 id="diagnostics-development">{_badge("confirmed", lab["development"])}</h3>'
@@ -660,7 +817,7 @@ def development_part(view: Mapping, citer: cite.Citer) -> str:
             f'{_opening_note(view, dev_item)}{dev}')
 
 
-def final_part(view: Mapping, citer: cite.Citer) -> str:
+def final_part(view: Mapping, citer: cite.Citer, wrap=_plain) -> str:
     """The final part (``#diagnostics-final``): only once the final test is opened."""
     lab = _labels()
     task = view.get('task') or 'binary'
@@ -671,13 +828,13 @@ def final_part(view: Mapping, citer: cite.Citer) -> str:
     elif status == 'sealed':
         parts.append(f'<p class="muted" data-final="sealed">{e(lab["final_sealed"])}</p>')
     else:
-        body = _part(view, citer, FINAL_SLOT, task, final=True)
+        body = _part(view, citer, FINAL_SLOT, task, final=True, wrap=wrap)
         parts.append(f'<p class="notice">{e(lab["final_note"])}</p>' + body if body else
                      f'<p class="muted" data-final="pending">{e(lab["final_pending"])}</p>')
     return ''.join(parts)
 
 
-def section(view: Mapping, citer: cite.Citer, *, final: bool = True) -> str:
+def section(view: Mapping, citer: cite.Citer, *, final: bool = True, wrap=_plain) -> str:
     """The "Model diagnostics" section (empty parts say what is missing). L6: the narrative
     report places the development part with the models (``final=False``) and the final part
     in the chapter of the final test (:func:`final_part`)."""
@@ -685,8 +842,8 @@ def section(view: Mapping, citer: cite.Citer, *, final: bool = True) -> str:
     lab = _labels()
     parts = [f'<section class="card diagnostics" id="diagnostics">'
              f'<h2>{e(labels["sections"]["diagnostics"])}</h2><p>{e(lab["intro"])}</p>',
-             development_part(view, citer)]
+             development_part(view, citer, wrap)]
     if final:
-        parts.append(final_part(view, citer))
+        parts.append(final_part(view, citer, wrap))
     parts.append('</section>')
     return ''.join(parts)

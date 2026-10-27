@@ -345,6 +345,12 @@ terms:
 # ``regression_terms`` where its definitions differ or are new (mlkit.study.texts).
 binary_only: [base_rate, class_imbalance, stratified_split, logistic_regression, score, policy, threshold, capacity, precision, recall, volume, tie_at_cut, auc, average_precision, lift, calibration, wilson_interval, confusion_matrix, gain_curve, roc_curve, brier_score]
 regression_terms:
+  # v4 (R26): no rate in a regression report.
+  target_look:
+    term: Look at the target
+    term_fr: regard sur la cible
+    definition: "An analysis that read the variable to predict, such as its distribution or its summary, the special values read with it, or its mean by group. Each one is counted. The more looks, the more a pattern found among them can be chance. For example, the quality check of the columns reads no target and is not a look; the distribution of the variable to predict is one."
+    definition_fr: "Une analyse qui a lu la variable à prédire, comme sa distribution ou son résumé, les valeurs spéciales lues avec elle, ou sa moyenne par groupe. Chacune est comptée. Plus il y a de regards, plus une forme trouvée parmi eux peut être due au hasard. Par exemple, le contrôle de qualité des colonnes ne lit pas la cible et n'est pas un regard ; la distribution de la variable à prédire en est un."
   forward_chaining:
     term: Forward-chaining cross-validation
     term_fr: "validation croisée progressive (forward chaining)"
