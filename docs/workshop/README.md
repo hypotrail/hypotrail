@@ -2,6 +2,8 @@
 
 Cette page s'adresse aux participants de l'atelier « Découvrir le développement ML assisté par agents ». **L'installation se fait avant l'atelier**, de préférence au plus tard trois jours avant : le jour J, on n'a plus qu'à créer son étude.
 
+Version mise en page : [README.html](README.html) (même contenu, à ouvrir dans un navigateur).
+
 Il y a deux façons de travailler :
 
 - **Option 1, recommandée : GitHub Codespaces.** VS Code tourne dans le navigateur, et rien n'est à installer sur votre poste.

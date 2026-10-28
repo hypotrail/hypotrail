@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier Hypotrail · Installation</title>
+<!-- Same content as README.md, in the design of the study report (reports/study.html):
+     blackboard, chalk headings, paper cards; a whiteboard theme behind the top-right button.
+     Self-contained, offline; keep it in step with README.md. -->
+<style>
+:root{--board:#20312C;--board2:#1A2925;--chalk:#EDE8DA;--chalk2:#C9C4B6;--dust:rgba(237,232,218,.55);
+--ink:#EDE8DA;--muted:#C9C4B6;--faint:#8F9A93;--line:rgba(237,232,218,.14);--line2:rgba(237,232,218,.3);
+--yellow:#F0D178;--pink:#EFA3B8;--mint:#B9E2C4;--blue:#A7CCEB;
+--card:#F5F1E6;--cardink:#22302B;--cardmuted:#4E5A55;--cardline:rgba(34,48,43,.14);--cardsoft:#ECE7D8;
+--gridmm:rgba(38,72,124,.045);--ruleline:rgba(34,48,43,.045);--red:#B8322A;--ochre:#B07418;--slate:#2E5446;--ok:#1F7A44;--pen:#1E4E9E;
+--serif:Georgia,"Iowan Old Style","Times New Roman",serif;--sans:"Avenir Next",Avenir,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace;color-scheme:dark}
+body.white{--board:#F1F3F1;--board2:#E4E8E4;--chalk:#1E2A36;--chalk2:#3E4A57;--dust:rgba(30,42,54,.6);
+--ink:#1E2A36;--muted:#3E4A57;--faint:#7C8896;--line:rgba(30,42,54,.12);--line2:rgba(30,42,54,.3);
+--yellow:#B7791F;--pink:#B93A5A;--mint:#1F7A44;--blue:#1F5FA8;
+--card:#FFFFFF;--cardsoft:#F1EFE9;--cardline:rgba(34,48,43,.12);--ruleline:rgba(34,48,43,.035);--gridmm:rgba(38,72,124,.035);color-scheme:light}
+@media (prefers-color-scheme: light){body:not(.black){--board:#F1F3F1;--board2:#E4E8E4;--chalk:#1E2A36;--chalk2:#3E4A57;--dust:rgba(30,42,54,.6);
+--ink:#1E2A36;--muted:#3E4A57;--faint:#7C8896;--line:rgba(30,42,54,.12);--line2:rgba(30,42,54,.3);
+--yellow:#B7791F;--pink:#B93A5A;--mint:#1F7A44;--blue:#1F5FA8;
+--card:#FFFFFF;--cardsoft:#F1EFE9;--cardline:rgba(34,48,43,.12);--ruleline:rgba(34,48,43,.035);--gridmm:rgba(38,72,124,.035);color-scheme:light}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--board);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;padding-bottom:20px;
+background-image:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.05),transparent 55%),radial-gradient(ellipse at 90% 100%,rgba(255,255,255,.04),transparent 50%)}
+body.white{background-image:none}
+a{color:inherit}
+p,li,dd,dt,td{overflow-wrap:anywhere}
+:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+.ledge{position:fixed;left:0;right:0;bottom:0;height:8px;background:linear-gradient(#5b4632,#3b2b1c);opacity:.9;z-index:5}
+body.white .ledge{background:linear-gradient(#c8ccd0,#9aa1a8)}
+.tb{font:500 13px var(--sans);color:var(--ink);background:var(--board2);border:1.5px solid var(--line2);border-radius:3px;padding:6px 12px;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px -8px rgba(0,0,0,.55)}
+.tb:hover{border-color:var(--yellow);color:var(--yellow)}
+.tools{position:fixed;top:10px;right:14px;z-index:30}
+.app{max-width:1180px;margin:0 auto;padding:18px clamp(16px,3vw,32px) 60px}
+.top{border-bottom:2px solid var(--line2);padding:40px 0 14px}
+.crumb{font-size:13px;color:var(--faint)}
+.top h1{font-family:var(--serif);font-weight:400;font-size:clamp(26px,3.6vw,38px);line-height:1.2;color:var(--chalk);text-shadow:0 0 1px var(--dust);margin:6px 0 0}
+.top h1 .ul{text-decoration:underline;text-decoration-color:var(--yellow);text-decoration-thickness:3px;text-underline-offset:6px}
+.sub{color:var(--muted);margin:14px 0 0;max-width:78ch;line-height:1.6;font-size:15.5px}
+.wrap{display:grid;grid-template-columns:230px minmax(0,1fr);gap:30px;margin-top:22px}
+main{min-width:0}
+.side{position:sticky;top:16px;align-self:start;font-size:13.5px;border-left:2px solid var(--yellow);padding:2px 0 8px 14px}
+.side .root{font-family:var(--serif);font-size:17px;color:var(--chalk);margin-bottom:8px}
+.side ol{list-style:none;margin:0;padding:0}
+.side li{border-left:1px solid var(--line2);padding:4px 0 4px 10px}
+.side li a{text-decoration:none;color:var(--chalk2)}
+.side li a:hover{color:var(--yellow)}
+.side li .n{font:600 11.5px var(--sans);color:var(--faint);margin-right:6px}
+@media(max-width:900px){.wrap{grid-template-columns:minmax(0,1fr)}.side{position:static}}
+.blk{margin:26px 0}
+.blk>h2{font-family:var(--serif);font-weight:400;font-size:25px;color:var(--chalk);text-shadow:0 0 1px var(--dust);margin:34px 0 12px}
+.blk>h2::before{content:"";display:inline-block;width:22px;height:2px;background:var(--ac,var(--yellow));vertical-align:middle;margin-right:12px}
+.blk>h3{font:600 13px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);margin:22px 0 6px}
+.blk>p{color:var(--muted);max-width:78ch}
+.card{background:repeating-linear-gradient(0deg,transparent 0 27px,var(--ruleline) 27px 28px),var(--card);color:var(--cardink);border-radius:3px;padding:16px 20px;box-shadow:0 14px 26px -14px rgba(0,0,0,.6),0 1px 0 rgba(0,0,0,.2);border-left:4px solid var(--ac,var(--ochre));margin:10px 0}
+.card .lbl{font:600 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--cardmuted);margin-bottom:6px}
+.card p,.card li{font-size:15px;line-height:1.55}
+.card p{margin:6px 0}
+.card ul,.card ol{padding-left:20px;margin:6px 0}.card li{margin:4px 0}
+.card a{color:var(--slate);text-decoration-color:var(--ochre)}
+.card.ok{--ac:var(--ok)}.card.warn{--ac:var(--red)}.card.pen{--ac:var(--pen)}
+code{font-family:var(--mono);font-size:.9em}
+.card code{background:var(--cardsoft);border-radius:2px;padding:0 3px}
+pre{background:#14201C;color:#EDE8DA;border-radius:3px;padding:12px 14px;margin:10px 0;overflow:auto;font:13.5px/1.55 var(--mono);border-left:3px solid var(--yellow)}
+pre code{background:none;padding:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px}
+.grid2>.card{margin:0}
+.stamp{display:inline-block;font:700 10.5px var(--sans);letter-spacing:.07em;text-transform:uppercase;border:1.5px solid currentColor;border-radius:2px;padding:1px 6px;transform:rotate(-1deg);white-space:nowrap;vertical-align:middle}
+.stamp.ok{color:var(--ok)}.stamp.no{color:var(--red)}.stamp.ask{color:var(--ochre)}.stamp.rec{color:var(--pen)}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{font:600 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--cardmuted);text-align:left;padding:8px 10px;border-bottom:1.5px solid var(--cardline)}
+td{padding:9px 10px;border-bottom:1px solid var(--cardline);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.steps{counter-reset:st;list-style:none;padding:0;margin:8px 0}
+.steps>li{counter-increment:st;position:relative;padding-left:34px;margin:10px 0}
+.steps>li::before{content:counter(st);position:absolute;left:0;top:1px;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--ochre);color:var(--ochre);font:700 12px/19px var(--sans);text-align:center}
+.say{font-family:var(--serif);font-size:19px;color:var(--cardink)}
+footer{color:var(--faint);font-size:13px;margin-top:40px;border-top:1px solid var(--line2);padding-top:12px}
+</style>
+</head>
+<body>
+<div class="ledge" aria-hidden="true"></div>
+<div class="tools"><button class="tb" id="themeBtn" type="button" aria-pressed="false">Tableau blanc</button></div>
+<div class="app">
+  <header class="top">
+    <div class="crumb">Atelier · Découvrir le développement ML assisté par agents</div>
+    <h1>Installer Hypotrail <span class="ul">avant l'atelier</span></h1>
+    <p class="sub">Faites l'installation au plus tard trois jours avant. Le jour J, il ne reste qu'à créer son étude. Deux options : <b>Codespaces</b> (recommandée, rien à installer) ou <b>en local</b>. Un poste qui fonctionne par binôme suffit.</p>
+  </header>
+
+  <div class="wrap">
+    <nav class="side" aria-label="Sommaire">
+      <div class="root">Sommaire</div>
+      <ol>
+        <li><a href="#prerequis"><span class="n">0</span>Pour tous</a></li>
+        <li><a href="#codespaces"><span class="n">1</span>Option 1 · Codespaces</a></li>
+        <li><a href="#local"><span class="n">2</span>Option 2 · En local</a></li>
+        <li><a href="#verif"><span class="n">3</span>Vérification commune</a></li>
+        <li><a href="#regle"><span class="n">4</span>La règle de l'agent</a></li>
+        <li><a href="#jourj"><span class="n">5</span>Le jour J</a></li>
+        <li><a href="#depannage"><span class="n">6</span>Dépannage</a></li>
+      </ol>
+    </nav>
+
+    <main>
+      <section class="blk" id="prerequis">
+        <h2>Pour tous</h2>
+        <div class="card">
+          <div class="lbl">Il vous faut</div>
+          <ul>
+            <li>un compte GitHub avec accès en lecture au dépôt <code>chadlis/hypotrail</code> (dépôt privé : l'organisateur vous invite) ;</li>
+            <li><b>GitHub Copilot</b> (licence de l'entreprise ou individuelle), avec le chat et le <b>mode Agent</b> ;</li>
+            <li>VS Code 1.109 ou plus récent, pour le sélecteur de réponses de l'agent. Le VS Code de Codespaces est toujours à jour.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="blk" id="codespaces" style="--ac:var(--mint)">
+        <h2>Option 1 · GitHub Codespaces <span class="stamp ok">recommandée</span></h2>
+        <p>VS Code tourne dans le navigateur ; rien n'est installé sur votre poste.</p>
+
+        <h3>1. Forker le dépôt</h3>
+        <div class="card ok">
+          <p>Sur la page du dépôt : <b>Fork</b>, puis <b>Create fork</b>, sous votre compte personnel. Gardez « Copy the <code>main</code> branch only » coché.</p>
+          <p>Le fork est votre propre copie : vos études n'y touchent pas le dépôt d'origine, et le codespace est rattaché à votre compte.</p>
+          <p class="lbl" style="margin-top:10px">Bon à savoir</p>
+          <p>Le codespace d'un fork personnel utilise <b>le quota gratuit de votre compte</b> : 120 heures-cœur par mois, soit 30 heures sur une machine à 4 cœurs, largement assez pour l'atelier. Si le bouton <i>Fork</i> est grisé, demandez à l'organisateur : le fork d'un dépôt privé doit être autorisé.</p>
+        </div>
+
+        <h3>2. Créer le codespace (avant l'atelier)</h3>
+        <div class="card ok">
+          <ol class="steps">
+            <li>Sur la page de <b>votre fork</b> : <b>Code</b>, puis <b>Codespaces</b>, puis <b>…</b>, puis <b>New with options</b>.</li>
+            <li>Choisissez la branche <code>main</code>, la région la plus proche (Europe West) et une machine <b>4-core</b>, puis <i>Create codespace</i>.</li>
+            <li>Attendez la fin du terminal « Configuring codespace » : <b>4 à 6 minutes</b> la première fois. Il installe l'environnement du moteur et le panneau d'étude.</li>
+            <li>Passez le délai d'inactivité à 60 minutes : sur github.com, <i>Settings</i>, puis <i>Codespaces</i>, puis <i>Default idle timeout</i>.</li>
+          </ol>
+          <p>Le jour J, il suffit de rouvrir ce codespace depuis github.com/codespaces.</p>
+        </div>
+
+        <h3>3. Vérifier (avant l'atelier)</h3>
+<pre><code>bash scripts/workshop/new-mpg-study.sh essai --open</code></pre>
+        <p>Puis passez à la <a href="#verif">vérification commune</a>.</p>
+      </section>
+
+      <section class="blk" id="local" style="--ac:var(--blue)">
+        <h2>Option 2 · En local</h2>
+
+        <h3>1. Prérequis</h3>
+        <div class="card pen">
+          <table>
+            <thead><tr><th>Système</th><th>À faire</th></tr></thead>
+            <tbody>
+              <tr><td><b>Linux</b></td><td>Rien de particulier.</td></tr>
+              <tr><td><b>macOS</b></td><td>Installer la commande <code>code</code> : dans VS Code, ouvrir la palette, puis <i>Shell Command: Install 'code' command in PATH</i>.</td></tr>
+              <tr><td><b>Windows</b></td><td>Le moteur ne fonctionne <b>pas</b> sous Windows natif. Installez <b>WSL2</b> (Ubuntu) et l'extension VS Code <b>WSL</b>. Faites toutes les étapes suivantes <b>dans WSL</b>, puis ouvrez VS Code en mode WSL (<code>code .</code> depuis le terminal WSL). Sans droits pour installer WSL2, prenez l'option 1.</td></tr>
+            </tbody>
+          </table>
+          <p class="lbl" style="margin-top:12px">Et aussi</p>
+          <ul>
+            <li><b>git</b> ;</li>
+            <li><b>uv</b>, qui installe lui-même Python 3.13 s'il manque : <code>curl -LsSf https://astral.sh/uv/install.sh | sh</code>, ou <code>brew install uv</code> sous macOS ;</li>
+            <li><b>Node.js 18 ou plus</b>, seulement pour fabriquer le panneau. Inutile si l'organisateur vous a fourni <code>hypotrail-companion-0.1.0.vsix</code>.</li>
+          </ul>
+        </div>
+
+        <h3>2. Cloner et installer l'environnement</h3>
+        <p>Clonez votre fork (ou le dépôt) dans un chemin <b>sans espaces</b> :</p>
+<pre><code>git clone https://github.com/&lt;votre-compte&gt;/hypotrail.git ~/hypotrail
+cd ~/hypotrail
+uv sync --project framework --group azureml</code></pre>
+        <div class="card">
+          <p>L'environnement fait environ <b>650 Mo</b> sur disque (pandas, scikit-learn, SciPy, Marimo, InterpretML…). Faites cette étape sur un bon réseau.</p>
+          <p><b>Derrière un proxy d'entreprise</b> : définissez <code>HTTPS_PROXY</code> et <code>UV_SYSTEM_CERTS=1</code> avant <code>uv sync</code>, ainsi que <code>UV_DEFAULT_INDEX</code> si l'entreprise a un miroir PyPI.</p>
+        </div>
+
+        <h3>3. Installer le panneau d'étude</h3>
+        <div class="grid2">
+          <div class="card pen">
+            <div class="lbl">Avec Node</div>
+<pre><code>bash scripts/workshop/install-panel.sh</code></pre>
+          </div>
+          <div class="card pen">
+            <div class="lbl">Sans Node, avec le fichier fourni</div>
+            <p>Dans VS Code : vue <i>Extensions</i>, menu <b>…</b>, puis <i>Install from VSIX…</i>, et choisissez <code>hypotrail-companion-0.1.0.vsix</code>.</p>
+          </div>
+        </div>
+        <p>Faites ensuite <i>Developer: Reload Window</i>. Pour mettre à jour un panneau déjà installé : <code>bash scripts/workshop/install-panel.sh --force</code>.</p>
+        <div class="card warn">
+          <p>Si l'installation est refusée (« extension not allowed »), c'est que la politique de l'entreprise filtre les extensions. Le panneau est optionnel : le chat et le rapport suffisent. Prévenez l'organisateur.</p>
+        </div>
+
+        <h3>4. Vérifier (avant l'atelier)</h3>
+        <p>Depuis le <b>terminal intégré de VS Code</b>, à la racine du clone :</p>
+<pre><code>bash scripts/workshop/new-mpg-study.sh essai --open</code></pre>
+        <p>Puis passez à la <a href="#verif">vérification commune</a>.</p>
+      </section>
+
+      <section class="blk" id="verif">
+        <h2>Vérification commune</h2>
+        <div class="card">
+          <ol class="steps">
+            <li>La fenêtre VS Code se rouvre sur <code>studies/essai</code>. Si VS Code le demande, <b>faites confiance au dossier</b>.</li>
+            <li>Ouvrez la palette (<code>Ctrl+Shift+P</code>, ou <code>Cmd+Shift+P</code> sur Mac) et lancez <b>Hypotrail: open the study panel</b>. Le panneau s'affiche.</li>
+            <li>Ouvrez le chat Copilot (<code>Ctrl+Alt+I</code>), passez en mode <b>Agent</b> et choisissez l'agent <b>hypotrail</b>. Dans <i>Configure Tools</i>, vérifiez que <code>vscode/askQuestions</code> est coché.</li>
+            <li>Écrivez <span class="say">« On commence »</span>. L'agent lance des commandes <code>uv run … hypotrail</code> et affiche la fiche des données.</li>
+            <li><b>Envoyez une capture d'écran à l'organisateur</b> (panneau et chat visibles), ou décrivez le blocage.</li>
+          </ol>
+          <p>Vous pouvez supprimer <code>studies/essai</code> ensuite : le jour J, on crée une étude neuve.</p>
+        </div>
+      </section>
+
+      <section class="blk" id="regle" style="--ac:var(--pink)">
+        <h2>La règle de l'agent, visible</h2>
+        <p>Le script installe dans l'étude une <b>règle de l'atelier</b>, un « hook » Copilot écrit dans <code>.github/hooks/hypotrail.json</code>. Elle s'applique avant chaque action de l'agent :</p>
+        <div class="grid2">
+          <div class="card ok"><span class="stamp ok">autorisé</span><p>Une commande simple du moteur, <code>uv run … hypotrail …</code>. Vous n'avez pas à valider chaque étape de l'étude.</p></div>
+          <div class="card warn"><span class="stamp no">refusé</span><p>Toute lecture directe du fichier de données brut (<code>auto-mpg.data</code>). Il contient aussi les lignes du test final, scellées. On regarde les données par le panneau, <code>hypotrail data</code> ou les notebooks, et l'étude compte ces regards.</p></div>
+          <div class="card"><span class="stamp ask">demandé</span><p>Tout le reste, comme d'habitude.</p></div>
+          <div class="card pen"><span class="stamp rec">noté</span><p>Chaque décision de la règle est écrite dans <code>.github/hooks/hypotrail-hook.log</code>, que l'on regardera ensemble.</p></div>
+        </div>
+        <div class="card warn">
+          <p>Les hooks sont une fonction <b>en préversion</b> de VS Code. Si VS Code vous demande quand même d'autoriser une commande <code>uv run … hypotrail</code>, lisez-la, puis choisissez <b>Allow in this Session</b>. N'utilisez pas « Allow all » : il autoriserait toutes les actions de l'agent, y compris les modifications de fichiers.</p>
+        </div>
+      </section>
+
+      <section class="blk" id="jourj" style="--ac:var(--yellow)">
+        <h2>Le jour J</h2>
+<pre><code>git pull
+bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open</code></pre>
+        <div class="card">
+          <ul>
+            <li>Remplacez <code>XX</code> par votre numéro de binôme.</li>
+            <li><b>En Codespaces</b>, si l'organisateur annonce une mise à jour, cliquez d'abord sur <i>Sync fork</i> sur la page GitHub de votre fork, puis faites <code>git pull</code>.</li>
+            <li><b>En local</b>, faites <code>git pull</code>, puis <code>bash scripts/workshop/install-panel.sh --force</code> si le panneau a changé.</li>
+          </ul>
+          <p>Dans le chat, écrivez : <span class="say">« Prépare l'étude à partir de la fiche du PO »</span>.</p>
+        </div>
+      </section>
+
+      <section class="blk" id="depannage" style="--ac:var(--red)">
+        <h2>Dépannage</h2>
+        <div class="card warn">
+          <table>
+            <thead><tr><th>Symptôme</th><th>À faire</th></tr></thead>
+            <tbody>
+              <tr><td>La commande « Hypotrail: open the study panel » n'existe pas</td><td><code>bash scripts/workshop/install-panel.sh</code>, puis <i>Developer: Reload Window</i>.</td></tr>
+              <tr><td>« Companion disabled (feature flag) »</td><td>Le dossier ouvert n'est pas une étude créée par le script : rouvrez <code>studies/&lt;nom&gt;</code>.</td></tr>
+              <tr><td>L'agent hypotrail n'apparaît pas</td><td>Le dossier ouvert doit être l'étude elle-même ; faites <i>Reload Window</i>. En secours : mode Agent par défaut, puis « Suis les instructions de .github/agents/hypotrail.agent.md. On commence. »</td></tr>
+              <tr><td>Pas de sélecteur de réponses</td><td>VS Code trop ancien, ou <code>vscode/askQuestions</code> décoché. L'agent pose alors ses questions en texte : on continue.</td></tr>
+              <tr><td><code>platform_unsupported</code></td><td>Vous êtes sous Windows natif : passez par WSL2 ou Codespaces.</td></tr>
+              <tr><td><code>uv sync</code> échoue (réseau)</td><td>Pour le proxy, voir l'étape 2 de l'option 2. Sinon, prenez Codespaces.</td></tr>
+              <tr><td>Marimo demande un jeton</td><td>Ouvrez le lien complet affiché dans le terminal.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Le panneau reste optionnel : le chat, le rapport HTML (<code>studies/&lt;nom&gt;/reports/study.html</code>) et le notebook suffisent.</p>
+      </section>
+
+      <footer>Même contenu que <code>docs/workshop/README.md</code>. Guide de l'organisateur (prébuild, coûts, démo) : <code>docs/workshop/CODESPACES.md</code>.</footer>
+    </main>
+  </div>
+</div>
+<script>
+(function () {
+  var btn = document.getElementById('themeBtn');
+  var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  function apply(white) {
+    document.body.classList.toggle('white', white);
+    document.body.classList.toggle('black', !white);
+    btn.textContent = white ? 'Tableau noir' : 'Tableau blanc';
+    btn.setAttribute('aria-pressed', String(white));
+  }
+  var saved = null;
+  try { saved = localStorage.getItem('ht-readme-theme'); } catch (e) {}
+  apply(saved ? saved === 'white' : prefersLight);
+  btn.addEventListener('click', function () {
+    var white = !document.body.classList.contains('white');
+    apply(white);
+    try { localStorage.setItem('ht-readme-theme', white ? 'white' : 'black'); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
