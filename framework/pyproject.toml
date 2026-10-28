@@ -23,6 +23,7 @@ dependencies = [
     "hypotrail-runtime",
     "pydantic>=2.7,<3",
     "pandera>=0.20",
+    "pypdf>=5",
 ]
 
 # interpret-core (MIT) is a core dependency since v0.3 (WP-F1, ADR 0007): the study engine

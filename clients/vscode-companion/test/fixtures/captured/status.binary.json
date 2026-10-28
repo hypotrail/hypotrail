@@ -8381,6 +8381,10 @@
      "fr": "Un client contacté pendant une campagne téléphonique"
     },
     "glossary_examples": true
+   },
+   "brief": {
+    "source": null,
+    "confirmed": null
    }
   }
  }

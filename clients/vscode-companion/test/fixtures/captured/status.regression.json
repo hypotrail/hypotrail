@@ -4325,6 +4325,10 @@
      "fr": "Un modèle de véhicule pour une année de modèle"
     },
     "glossary_examples": true
+   },
+   "brief": {
+    "source": null,
+    "confirmed": null
    }
   }
  }

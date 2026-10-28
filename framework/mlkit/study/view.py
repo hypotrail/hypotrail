@@ -70,7 +70,10 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              'automation', 'review_queue',
              # L3 (owner session 2026-10-26, R4; D4 A, D4b): the case's statements in both
              # languages from its translation sidecar (``l10n.case_texts``), or ``null``.
-             'case_texts')
+             'case_texts',
+             # R68 (minimal version, 2026-10-28): the product owner's PDF imported and the
+             # study's own brief confirmed (``case_brief.view_of``), each ``null`` until then.
+             'brief')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -1466,7 +1469,9 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     record = st.automation_of(state)
     out['automation'] = dict(record) if record is not None else None
     out['review_queue'] = review_queue(state)
-    out['case_texts'] = out.pop('case_texts')          # the last key (VIEW_KEYS order)
+    out['case_texts'] = out.pop('case_texts')          # VIEW_KEYS order
+    from . import case_brief
+    out['brief'] = case_brief.view_of(state)           # R68: the last key
     return out
 
 

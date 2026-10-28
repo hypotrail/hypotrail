@@ -173,7 +173,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              'automation', 'review_queue',
              # L3 (owner session 2026-10-26, R4; D4 A, D4b): the case's statements in both
              # languages from its translation sidecar, or null.
-             'case_texts')
+             'case_texts',
+             # R68 (minimal version, 2026-10-28): the imported PDF and the study's own brief.
+             'brief')
 # L3: the tables of ``view.case_texts`` (``mlkit.study.l10n.case_texts``).
 CASE_TEXTS_KEYS = ('facts', 'special_values', 'groups', 'availability', 'row_unit',
                    # W2 integration: the case declares the glossary's examples its own.
@@ -474,7 +476,9 @@ EXTENSIONS = {'run': 'mlkit.study.cmd_run', 'render': 'mlkit.study.cmd_render',
               # ADR 0008: the opt-in understanding and handover review.
               'understanding': 'mlkit.study.cmd_understanding',
               # L9 (R20): the automatic mode chosen at init (run, stop).
-              'automation': 'mlkit.study.cmd_automation'}
+              'automation': 'mlkit.study.cmd_automation',
+              # R68 (minimal version, 2026-10-28): the product owner's PDF and the brief.
+              'brief': 'mlkit.study.cmd_brief'}
 # Post-v0.1 observation kit: ``session-report`` and the opt-in session log.
 SESSION_REPORT_SCHEMA = 'hypotrail.session_report/1'
 SESSION_REPORT_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'sources', 'span',
@@ -714,7 +718,9 @@ def test_notes_hold_a_decision_until_the_junior_resolves_them(tmp_path, syntheti
                                     # L5 (D5): the structural-first plan generation.
                                     'exploration_order',
                                     # L9 (R20): the automatic mode chosen at init.
-                                    'automation')
+                                    'automation',
+                                    # R68: the product owner's PDF and the study's brief.
+                                    'brief')
     assert st.NOTE_KEYS == NOTE_STATE_KEYS and st.NOTE_RESOLUTION_KEYS == NOTE_RESOLUTION_KEYS
     assert st.NOTE_KINDS == ('hold', 'correction') and st.NOTE_STATUSES == NOTE_STATUSES
     assert view.NOTE_VIEW_KEYS == NOTE_VIEW_KEYS
