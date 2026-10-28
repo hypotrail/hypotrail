@@ -679,3 +679,12 @@ its warning.
   always a picker, including transitions"). Also seen in the same message: the plan recap says
   "puis l'exploration et la préparation" while the plan order is Qualité, Préparation,
   Exploration. Noted only, not fixed.
+- **R36 (cause found, 2026-10-28).** The second screenshot ("Le critère de succès est confirmé
+  … On lance le contrôle de qualité ?", typed question, no picker) shows the chat input
+  "Esc to focus or unfocus Claude": the session ran in **Claude Code** inside VS Code, not in
+  Copilot with the Hypotrail agent. The picker rule L1 (`vscode/askQuestions`) is in the
+  Copilot agent text only; the Claude Code instructions (`agent/CLAUDE.md.in`) have no picker
+  rule by design (D1b: the Claude Code copy kept byte for byte). So no picker is expected there.
+  Owner question for the batch: should the Claude Code flavour also close every closed question
+  with its own picker tool (`AskUserQuestion`), like Copilot? The plan-order remark of R36
+  stands. Also in this message: "validation croisée à k plis temporels" leaves k unstated.
