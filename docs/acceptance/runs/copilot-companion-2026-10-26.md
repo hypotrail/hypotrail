@@ -726,3 +726,12 @@ its warning.
   the automatic mode's summaries. Implementation: each engine draft or `junior_message` that
   cites a data fact names the registered result that shows it, so Now can place the figure.
   Noted only, not fixed.
+- **R41. Show the evidence for what is left unchanged too (owner remark, 2026-10-28).** At the
+  preparation proposal, only horsepower gets a transformation; the other columns keep the fixed
+  preparation, but nothing shows why. When a check was computed for every column (skewness,
+  quantiles, extreme tails, missing values, rare categories), the panel shows it for all of
+  them: a compact per-column view (small multiples or a table with sparklines) where each
+  column states its verdict and the threshold that decided it ("asymétrie 0,4 < 1 : pas de
+  log", "max ≤ 3 × q99 : pas de plafond", "aucune catégorie sous 30 lignes : pas de
+  regroupement"), the transformed columns first and highlighted. A "no change" is a decision
+  backed by the same figures as a change. Extends R39/R40. Noted only, not fixed.
