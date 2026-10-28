@@ -668,3 +668,14 @@ its warning.
   message. Engine side (`companion_env`: `shown`/`where.line` null for `now` except at a
   session's first message, the new line texts) and agent rule 6 in both flavours; this
   narrows R1. Noted only, not fixed.
+- **R36. No picker at the first transition again (`aa35da3`).** After "On commence", Copilot
+  closed the step-1 message with a typed question ("On passe au moment de la prédiction ?")
+  instead of the `vscode/askQuestions` picker, although the engine offers options ("On
+  continue · Expliquer d'abord", shown in the panel's Now). Same symptom as R1/R3, which L1 was
+  meant to fix: the rule is in the Copilot agent text but not followed at this transition. To
+  investigate: whether `next_action` carries `option_labels`/pause kind for the step-1
+  transition, and make rule L1 harder to skip (e.g. the engine's `junior_message` ends without
+  a typed question when options exist, and the agent text says "a question with options is
+  always a picker, including transitions"). Also seen in the same message: the plan recap says
+  "puis l'exploration et la préparation" while the plan order is Qualité, Préparation,
+  Exploration. Noted only, not fixed.
