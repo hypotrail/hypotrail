@@ -27,6 +27,9 @@ body.light{--board:#F1F3F1; --board2:#E4E8E4; --chalk:#1E2A36; --chalk2:#3E4A57;
   --now:#866600; --ok:#1F6B3D; --seal:#5B3AAE; --warn:#A12C24; --card:#FFFFFF; --csoft:#F1EFE9;
   --gridmm:rgba(38,72,124,.035); color-scheme:light}
 body.light .card,body.light .ev{border:1px solid var(--cline)}
+.defpop{margin:6px 0 2px;border:1px solid var(--line2);border-left:3px solid var(--now);border-radius:4px;padding:8px 10px;font-size:.84rem;color:var(--soft);background:var(--board)}
+.defpop b{color:var(--ink)} .defpop .dh{margin-top:6px;color:var(--ink);font-weight:600} .defpop ul{list-style:none;margin:3px 0 0} .defpop li{margin:2px 0} .defpop li.ok{color:var(--ok)} .defpop .dn{margin-top:6px;font-size:.78rem;color:var(--faint)}
+button.pill{cursor:pointer;font:inherit;font-size:.76rem}
 #themeToggle{position:fixed;top:10px;right:12px;z-index:50;background:var(--board2);color:var(--ink);border:1.5px solid var(--line2);border-radius:4px;padding:5px 11px;font:500 13px var(--sans);cursor:pointer;box-shadow:0 6px 16px -8px rgba(0,0,0,.5)}
 #themeToggle:hover{border-color:var(--now);color:var(--now)}
 
@@ -894,12 +897,14 @@ function reviewForm(n){
   h+=`<p class="limit rvlimit">${st.limit}</p>`;
   S=saved;F13=savedF;return h;
 }
+function defItems(c,op){return [['Les décisions de cadrage, prises avec vos mots',c>6],['Le modèle, choisi par vous',c>12],['Le test final, ouvert une fois',op||c>13],['La conclusion, écrite',c>14]]}
 function header(){
   const c=cur(),op=opened();
   const seal=op?`<span class="pill seal open" title="Ouvert une fois ; tout calcul fait ensuite est marqué « après le test final ».">test final ouvert · une fois</span>`:`<span class="pill seal" title="80 lignes mises de côté à la création ; aucun graphique ni calcul ne les lit.">🔒 test final scellé</span>`;
-  const pts=c<=6?4:c<=12?3:c===13?(op?1:2):1;
-  const def=c>14?`<span class="pill def ok" title="Limites : même période (1970–82) ; 80 voitures ; le scellé est un protocole, pas un verrou.">Défendable · 3 limites</span>`:`<span class="pill def" title="Ce qu'il faudra pour défendre l'étude">Défendable à la fin · ${pts} point${pts>1?'s':''}</span>`;
-  return `<div class="hd"><span class="name">mpg-1028</span>${seal}${def}</div>`;
+  const items=defItems(c,op),pts=items.filter(i=>!i[1]).length;
+  const def=c>14?`<button class="pill def ok" data-act="def" aria-expanded="${DEFOPEN}" aria-controls="defpop">Défendable · 3 limites ⓘ</button>`:`<button class="pill def" data-act="def" aria-expanded="${DEFOPEN}" aria-controls="defpop">Défendable à la fin · ${pts} point${pts>1?'s':''} ⓘ</button>`;
+  const pop=DEFOPEN?`<div class="defpop" id="defpop" role="note"><p><b>Défendable</b> veut dire que l'étude peut soutenir sa conclusion devant un relecteur : chaque décision prise avec vos mots, le modèle choisi par vous, le test final ouvert une seule fois, la conclusion écrite, et aucun chiffre périmé.</p>${c>14?`<p class="dh">L'étude est défendable, avec ces limites :</p><ul><li>le test final est tiré dans la même période (1970–82), pas dans le futur ;</li><li>80 voitures : environ ±0,5 mpg d'incertitude ;</li><li>le scellé est un protocole suivi par l'outil et par vous, pas un verrou.</li></ul>`:`<p class="dh">Ce qui reste à faire (${pts}) :</p><ul>${items.map(([t,ok])=>`<li class="${ok?'ok':''}">${ok?'✓':'○'} ${t}</li>`).join('')}</ul><p class="dn">Ce n'est pas une alerte : c'est la liste de ce que l'étude devra réunir d'ici la fin. Elle passe en corail seulement si quelque chose pose problème (décision à reconfirmer, chiffre périmé, décision automatique à relire).</p>`}</div>`:'';
+  return `<div class="hd"><span class="name">mpg-1028</span>${seal}${def}</div>${pop}`;
 }
 function prog(){
   const c=cur();
@@ -999,7 +1004,9 @@ document.addEventListener('toggle',e=>{const d=e.target;if(!(d instanceof HTMLDe
   // Path entries render their review form lazily: re-render when one opens.
   if(/^p\d+$/.test(id)&&d.open&&!was){const rv=d.querySelector('.rv');if(rv&&!rv.innerHTML){rv.innerHTML=reviewForm(+id.slice(1));const w=document.createTreeWalker(rv,NodeFilter.SHOW_TEXT);let t;while((t=w.nextNode()))if(/ [;:?!»]|« /.test(t.nodeValue))t.nodeValue=nb(t.nodeValue)}}
 },true);
+let DEFOPEN=false;
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.act==='def'){DEFOPEN=!DEFOPEN;render();return}
   if(b.dataset.s){S=+b.dataset.s;if(M==='review')scrollToPath=true;render(false)}
   else if(b.dataset.m){M=b.dataset.m;scrollToPath=M==='review';render(false)}
   else if(b.dataset.w){W=b.dataset.w;render(true)}

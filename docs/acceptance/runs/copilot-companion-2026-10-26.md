@@ -1032,3 +1032,11 @@ its warning.
   "Attention" fold keeps only reading traps (how a chart can mislead), not limits. The
   conclusions are engine or content-file texts bound to registered values, never written by
   the panel. Mockup updated.
+- **R65. Explain the defensibility pill (owner remark, 2026-10-28).** "Défendable à la fin ·
+  n points" is not self-explanatory. The pill (with an ⓘ) opens a short note: what
+  "défendable" means (the study can support its conclusion before a reviewer: every decision
+  in your words, the model chosen by you, the final test opened once, the conclusion written,
+  no stale figure), the checklist of what remains with ticks for what is done, and that it is
+  not an alarm (it turns coral only when something is a problem). At the end: "Défendable ·
+  3 limites" opens the limits. The list is the engine's (`defensibility.items`), never the
+  panel's own judgement. Shown in the all-steps mockup.
