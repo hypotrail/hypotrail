@@ -323,7 +323,7 @@ body.presenter{cursor:auto}
 <section class="screen" data-title="Titre" data-part="Ouverture" data-weight="0.5">
   <div class="frame sect"><div class="num">Atelier 2 / 5</div><h2>Découvrir le développement ML assisté par agents</h2>
   <p>Essayer, voir jusqu'où ça va, dire ce qu'on en pense · avec Hypotrail</p><p class="when">9h30 – 12h30 · 180 min</p></div>
-  <div class="notes"><div class="n say">Bienvenue : trois heures pour essayer une façon de travailler avec un agent, et dire ce qu'on en pense.</div><div class="n trap">Démarrer le chrono (↺ dans la fenêtre présentateur, touche P) à 9h30 pile.</div></div>
+  <div class="notes"><div class="n say">Bienvenue : trois heures pour essayer une façon de travailler avec un agent, et dire ce qu'on en pense.</div><div class="n trap">Démarrer le chrono (↺ dans la fenêtre présentateur, touche P) à 9h30 pile.</div><div class="n trap">Dès l'arrivée : lancer la création du codespace (fork, puis New codespace), elle prend 4 à 6 minutes.</div></div>
 </section>
 <section class="screen" data-title="La série" data-part="Ouverture" data-weight="0.6">
   <div class="frame"><h3>Où nous en sommes dans la série</h3><div class="fx">
@@ -452,34 +452,37 @@ body.presenter{cursor:auto}
   </div></div>
   <div class="notes"><div class="n trap">Ces voitures ne décrivent pas les véhicules actuels.</div></div>
 </section>
-<section class="screen" data-title="Ouvrir l'étude" data-part="Premier pas guidé" data-weight="3" data-dur="3 min">
-  <div class="frame"><h3>Ouvrir son étude</h3><div class="fx">
-<pre class="code s"><span class="cm"># dans le terminal VS Code, à la racine du dépôt (Codespaces ou clone local)</span>
-git pull
+<section class="screen" data-title="Installer et ouvrir" data-part="Premier pas guidé" data-weight="8" data-dur="8 min">
+  <div class="frame"><h3>Installer, puis ouvrir son étude</h3><div class="fx">
+    <div class="cols2">
+      <div class="card" style="--ac:var(--mint)"><h4>Option 1 · Codespaces <small>recommandée</small></h4><p>github.com/hypotrail/hypotrail → <b>Fork</b>, puis sur votre fork <b>Code → Codespaces → New with options</b>, machine 4 cœurs. Environ 5 minutes.</p></div>
+      <div class="card" style="--ac:var(--sky)"><h4>Option 2 · En local</h4><p>Linux, macOS ou WSL2 : <code>git clone</code>, <code>uv sync --project framework</code>, puis le panneau avec <code>install-panel.sh</code>.</p></div>
+    </div>
+<pre class="code s"><span class="cm"># dans le terminal VS Code, à la racine du dépôt</span>
 bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open</pre>
     <div class="steps" style="grid-template-columns:repeat(3,minmax(0,1fr))">
       <div class="card">VS Code se rouvre sur l'étude : <b>faire confiance au dossier</b>.</div>
       <div class="card">Palette : <b>Hypotrail: open the study panel</b>.</div>
       <div class="card">Chat Copilot : mode <b>Agent</b>, agent <b>hypotrail</b>.</div>
     </div>
-    <p class="small">Installation faite avant l'atelier : github.com/hypotrail/hypotrail · docs/workshop/README.md</p>
+    <p class="small">Le pas à pas : docs/workshop/README.md · un poste qui fonctionne par binôme suffit.</p>
   </div></div>
-  <div class="notes"><div class="n trap">Un poste en échec : la lead s'en occupe, ou le binôme travaille sur l'autre poste.</div></div>
+  <div class="notes"><div class="n trap">Faire lancer la création du codespace dès l'arrivée, pendant l'ouverture : elle prend 4 à 6 minutes.</div><div class="n trap">Un poste en échec : la lead s'en occupe, ou le binôme travaille sur l'autre poste.</div></div>
 </section>
-<section class="screen" data-title="La règle de l'agent" data-part="Premier pas guidé" data-weight="3" data-dur="3 min">
+<section class="screen" data-title="La règle de l'agent" data-part="Premier pas guidé" data-weight="2" data-dur="2 min">
   <div class="frame"><h3>Ce que l'agent peut faire seul : une règle écrite, visible</h3><div class="fx">
     <svg class="viz" viewBox="0 0 1000 300" role="img" aria-label="Chaque action de l'agent passe par la règle : autorisée, refusée ou demandée, et notée"><rect x="0" y="115" width="200" height="70" rx="35" style="fill:var(--violet)"/><text x="100" y="146" font-size="19" text-anchor="middle" class="k" font-weight="700">une action</text><text x="100" y="168" font-size="15" text-anchor="middle" class="k">de l'agent</text><line x1="204" y1="150" x2="296" y2="150" class="ar" marker-end="url(#ah)"/><rect x="300" y="95" width="256" height="110" rx="4" class="box"/><text x="428" y="135" font-size="20" text-anchor="middle" class="t" font-weight="700">la règle de l'atelier</text><text x="428" y="160" font-size="14" text-anchor="middle" class="m">.github/hooks/hypotrail.json</text><text x="428" y="182" font-size="14" text-anchor="middle" class="m">exécutée avant chaque action</text><path d="M560,150 C620,150 620,45 680,45" class="ar" marker-end="url(#ah)"/><rect x="684" y="19" width="300" height="52" rx="4" style="fill:var(--mint)"/><text x="700" y="41" font-size="17" class="k" font-weight="700">✓ autorisé</text><text x="700" y="62" font-size="14" class="k">uv run … hypotrail …</text><path d="M560,150 C620,150 620,150 680,150" class="ar" marker-end="url(#ah)"/><rect x="684" y="124" width="300" height="52" rx="4" style="fill:var(--coral)"/><text x="700" y="146" font-size="17" class="k" font-weight="700">✗ refusé</text><text x="700" y="167" font-size="14" class="k">lire auto-mpg.data : test scellé</text><path d="M560,150 C620,150 620,255 680,255" class="ar" marker-end="url(#ah)"/><rect x="684" y="229" width="300" height="52" rx="4" style="fill:var(--yellow)"/><text x="700" y="251" font-size="17" class="k" font-weight="700">? demandé</text><text x="700" y="272" font-size="14" class="k">tout le reste, comme d'habitude</text><line x1="428" y1="207" x2="428" y2="262" class="ar" marker-end="url(#ah)"/><text x="428" y="288" font-size="15" text-anchor="middle" class="m">chaque décision notée dans hypotrail-hook.log</text></svg>
     <p class="quote">On n'automatise que ce qu'on connaît. Si VS Code demande quand même : lire la commande, puis <b>« Allow in this Session »</b>, jamais « Allow all ».</p>
   </div></div>
   <div class="notes"><div class="n say">C'est déjà une question de gouvernance : qui a écrit cette règle, qui la relit ?</div><div class="n trap">Les hooks sont en préversion dans VS Code : vérifié en répétition, sinon la consigne « Allow in this Session » suffit.</div></div>
 </section>
-<section class="screen" data-title="Lire l'interface" data-part="Premier pas guidé" data-weight="4" data-dur="5 min">
+<section class="screen" data-title="Lire l'interface" data-part="Premier pas guidé" data-weight="4" data-dur="4 min">
   <div class="frame"><h3>Lire l'interface : le panneau montre, le chat décide</h3><div class="fx">
     <svg class="viz" viewBox="0 0 1000 400" role="img" aria-label="Schéma de VS Code : le panneau de l'étude à gauche, le chat à droite"><rect x="0" y="0" width="1000" height="380" rx="8" class="box"/><circle cx="22" cy="18" r="6" style="fill:var(--coral)"/><circle cx="42" cy="18" r="6" style="fill:var(--yellow)"/><circle cx="62" cy="18" r="6" style="fill:var(--mint)"/><line x1="0" y1="36" x2="1000" y2="36" class="ln"/><line x1="610" y1="36" x2="610" y2="380" class="ln"/><text x="24" y="64" font-size="14" class="m" letter-spacing="1.5">PANNEAU DE L'ÉTUDE</text><rect x="24" y="76" width="560" height="56" rx="4" style="fill:none;stroke:var(--yellow);stroke-width:2.5"/><text x="40" y="100" font-size="17" style="fill:var(--yellow)" font-weight="700">Maintenant</text><text x="40" y="122" font-size="14" class="t">où on en est · ce qui est attendu</text><g font-size="14" class="t"><circle cx="40" cy="158" r="7" style="fill:var(--mint)"/><text x="56" y="163">1 · la fiche du besoin</text><circle cx="40" cy="184" r="7" style="fill:var(--mint)"/><text x="56" y="189">2 · les données</text><circle cx="40" cy="210" r="7" style="fill:none;stroke:var(--yellow);stroke-width:2.5"/><text x="56" y="215">3 · le moment de la prédiction</text><circle cx="40" cy="236" r="7" style="fill:none;stroke:var(--line2);stroke-width:2"/><text x="56" y="241" class="m">… le parcours</text></g><rect x="300" y="146" width="284" height="214" rx="4" style="fill:var(--paper)"/><text x="314" y="168" font-size="13" style="fill:var(--cardmuted)" font-weight="700">LA CARTE D'ÉTAPE</text><rect x="318" y="226" width="22" height="40" style="fill:var(--sky)"/><rect x="346" y="196" width="22" height="70" style="fill:var(--sky)"/><rect x="374" y="210" width="22" height="56" style="fill:var(--sky)"/><rect x="402" y="236" width="22" height="30" style="fill:var(--sky)"/><text x="440" y="214" font-size="13" style="fill:var(--cardmuted)">la question,</text><text x="440" y="232" font-size="13" style="fill:var(--cardmuted)">les graphiques</text><g font-size="13"><rect x="314" y="280" width="4" height="18" style="fill:var(--mint)"/><text x="324" y="294" style="fill:var(--cardink)">ce qu'on voit</text><rect x="314" y="306" width="4" height="18" style="fill:var(--sky)"/><text x="324" y="320" style="fill:var(--cardink)">ce qu'on en conclut</text><rect x="314" y="332" width="4" height="18" style="fill:var(--coral)"/><text x="324" y="346" style="fill:var(--cardink)">ce qu'on ne peut pas conclure</text></g><text x="24" y="300" font-size="14" class="m">Livrables :</text><text x="24" y="322" font-size="14" class="t">rapport HTML</text><text x="24" y="344" font-size="14" class="t">notebook Marimo</text><text x="632" y="64" font-size="14" class="m" letter-spacing="1.5">CHAT · AGENT HYPOTRAIL</text><rect x="632" y="78" width="330" height="62" rx="10" style="fill:var(--violet)"/><text x="648" y="104" font-size="14" class="k">L'agent explique et propose,</text><text x="648" y="124" font-size="14" class="k">avec la preuve.</text><rect x="632" y="156" width="150" height="34" rx="17" style="fill:none;stroke:var(--chalk2);stroke-width:1.5"/><text x="707" y="178" font-size="14" text-anchor="middle" class="t">J'adopte</text><rect x="792" y="156" width="170" height="34" rx="17" style="fill:none;stroke:var(--chalk2);stroke-width:1.5"/><text x="877" y="178" font-size="14" text-anchor="middle" class="t">Explique d'abord</text><rect x="752" y="210" width="210" height="44" rx="10" style="fill:var(--yellow)"/><text x="766" y="238" font-size="14" class="k">ou vos propres mots</text><rect x="632" y="320" width="330" height="40" rx="6" style="fill:none;stroke:var(--line2);stroke-width:1.5"/><text x="646" y="345" font-size="14" class="m">« explique-moi … »</text><text x="305" y="398" font-size="17" text-anchor="middle" style="fill:var(--teal)" font-weight="700">le panneau montre</text><text x="805" y="398" font-size="17" text-anchor="middle" style="fill:var(--violet)" font-weight="700">le chat décide</text></svg>
   </div></div>
   <div class="notes"><div class="n say">Nommer chaque zone sur mon écran pendant que l'agent travaille ; ne pas faire de visite exhaustive.</div><div class="n say">Sous chaque graphique, la même lecture en trois temps.</div></div>
 </section>
-<section class="screen" data-title="Le premier pas" data-part="Premier pas guidé" data-weight="6" data-dur="7 min">
+<section class="screen" data-title="Le premier pas" data-part="Premier pas guidé" data-weight="5" data-dur="5 min">
   <div class="frame"><h3>Le premier pas, tous en même temps</h3><div class="fx">
     <p class="quote big">« Prépare l'étude à partir de la fiche du PO »</p>
     <div class="steps" style="grid-template-columns:repeat(3,minmax(0,1fr))">
@@ -496,7 +499,7 @@ bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open</pre>
   <div class="frame sect"><div class="num">3</div><h2>En autonomie, par binôme</h2><p>Avancer avec l'agent, aussi loin que le temps le permet</p><p class="when">10h05 – 10h50 · 45 min</p></div>
   <div class="notes"><div class="n say">Les animateurs circulent ; on n'interrompt pas la salle.</div></div>
 </section>
-<section class="screen" data-title="Binômes et mission" data-part="En autonomie" data-weight="2">
+<section class="screen" data-title="Binômes et mission" data-part="En autonomie" data-weight="40" data-dur="40 min">
   <div class="frame"><h3>Binômes mixtes, et une carte de mission</h3><div class="fx">
     <svg class="viz" viewBox="0 0 960 300" role="img" aria-label="Trois paliers de mission"><rect x="30" y="210" width="290" height="70" rx="3" style="fill:var(--mint)"/><text x="46" y="242" font-size="20" class="k" font-weight="700">Palier 1</text><text x="46" y="266" font-size="14" class="k">adopter la fiche, lire les données</text><rect x="330" y="135" width="290" height="145" rx="3" style="fill:var(--yellow)"/><text x="346" y="167" font-size="20" class="k" font-weight="700">Palier 2</text><text x="346" y="191" font-size="14" class="k">la mesure de l'erreur, et pourquoi</text><rect x="630" y="60" width="290" height="220" rx="3" style="fill:var(--violet)"/><text x="646" y="92" font-size="20" class="k" font-weight="700">Palier 3 · rapides</text><text x="646" y="116" font-size="14" class="k">Marimo, ou « qu'as-tu fait que…</text><text x="646" y="136" font-size="14" class="k">je n'ai pas vérifié ? »</text><line x1="0" y1="282" x2="960" y2="282" class="ln"/></svg>
     <div class="cols2">
@@ -506,10 +509,6 @@ bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open</pre>
     <p class="small">Pas d'obligation de finir. Bloqué plus de 3 minutes : appelez un animateur.</p>
   </div></div>
   <div class="notes"><div class="n trap">Binôme bloqué : étude de secours sans PDF, créée sur son poste (2 s).</div></div>
-</section>
-<section class="screen" data-title="Au travail" data-part="En autonomie" data-weight="35" data-dur="38 min">
-  <div class="frame sect"><div class="num">⏱</div><h2>À vous</h2><p>Échange des rôles à 10h25 · Miro à 10h45</p><p class="when">10h05 – 10h45</p></div>
-  <div class="notes"><div class="n say">Laisser cette diapo projetée pendant le travail.</div></div>
 </section>
 <section class="screen" data-title="Miro : aidé, gêné" data-part="En autonomie" data-weight="5" data-dur="5 min">
   <div class="frame"><h3>Avant la pause, sur le tableau Miro « Atelier »</h3><div class="fx">

@@ -88,8 +88,8 @@ footer{color:var(--faint);font-size:13px;margin-top:40px;border-top:1px solid va
 <div class="app">
   <header class="top">
     <div class="crumb">Atelier · Découvrir le développement ML assisté par agents · <a href="https://github.com/hypotrail/hypotrail">github.com/hypotrail/hypotrail</a></div>
-    <h1>Installer Hypotrail <span class="ul">avant l'atelier</span></h1>
-    <p class="sub">Faites l'installation au plus tard trois jours avant. Le jour J, il ne reste qu'à créer son étude. Deux options : <b>Codespaces</b> (recommandée, rien à installer) ou <b>en local</b>. Un poste qui fonctionne par binôme suffit.</p>
+    <h1>Installer Hypotrail <span class="ul">en début d'atelier</span></h1>
+    <p class="sub">L'installation se fait au début de l'atelier, pendant le premier pas guidé. En Codespaces, lancez la création du codespace dès votre arrivée : elle prend 4 à 6 minutes. Deux options : <b>Codespaces</b> (recommandée, rien à installer) ou <b>en local</b>. Un poste qui fonctionne par binôme suffit.</p>
   </header>
 
   <div class="wrap">
@@ -99,10 +99,9 @@ footer{color:var(--faint);font-size:13px;margin-top:40px;border-top:1px solid va
         <li><a href="#prerequis"><span class="n">0</span>Pour tous</a></li>
         <li><a href="#codespaces"><span class="n">1</span>Option 1 · Codespaces</a></li>
         <li><a href="#local"><span class="n">2</span>Option 2 · En local</a></li>
-        <li><a href="#verif"><span class="n">3</span>Vérification commune</a></li>
+        <li><a href="#verif"><span class="n">3</span>Ouvrir l'étude</a></li>
         <li><a href="#regle"><span class="n">4</span>La règle de l'agent</a></li>
-        <li><a href="#jourj"><span class="n">5</span>Le jour J</a></li>
-        <li><a href="#depannage"><span class="n">6</span>Dépannage</a></li>
+        <li><a href="#depannage"><span class="n">5</span>Dépannage</a></li>
       </ol>
     </nav>
 
@@ -131,7 +130,7 @@ footer{color:var(--faint);font-size:13px;margin-top:40px;border-top:1px solid va
           <p>Le codespace d'un fork personnel utilise <b>le quota gratuit de votre compte</b> : 120 heures-cœur par mois, soit 30 heures sur une machine à 4 cœurs, largement assez pour l'atelier.</p>
         </div>
 
-        <h3>2. Créer le codespace (avant l'atelier)</h3>
+        <h3>2. Créer le codespace (dès votre arrivée)</h3>
         <div class="card ok">
           <ol class="steps">
             <li>Sur la page de <b>votre fork</b> : <b>Code</b>, puis <b>Codespaces</b>, puis <b>…</b>, puis <b>New with options</b>.</li>
@@ -139,12 +138,11 @@ footer{color:var(--faint);font-size:13px;margin-top:40px;border-top:1px solid va
             <li>Attendez la fin du terminal « Configuring codespace » : <b>4 à 6 minutes</b> la première fois. Il installe l'environnement du moteur et le panneau d'étude.</li>
             <li>Passez le délai d'inactivité à 60 minutes : <a href="https://github.com/settings/codespaces">github.com/settings/codespaces</a>, <i>Default idle timeout</i>.</li>
           </ol>
-          <p>Le jour J, il suffit de rouvrir ce codespace depuis <a href="https://github.com/codespaces">github.com/codespaces</a>.</p>
         </div>
 
-        <h3>3. Vérifier (avant l'atelier)</h3>
-<pre><code>bash scripts/workshop/new-mpg-study.sh essai --open</code></pre>
-        <p>Puis passez à la <a href="#verif">vérification commune</a>.</p>
+        <h3>3. Créer votre étude</h3>
+<pre><code>bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open</code></pre>
+        <p>Remplacez <code>XX</code> par votre numéro de binôme, puis passez à <a href="#verif">Ouvrir l'étude</a>.</p>
       </section>
 
       <section class="blk" id="local" style="--ac:var(--blue)">
@@ -195,20 +193,20 @@ uv sync --project framework --group azureml</code></pre>
           <p>Si l'installation est refusée (« extension not allowed »), c'est que la politique de l'entreprise filtre les extensions. Le panneau est optionnel : le chat et le rapport suffisent. Prévenez l'organisateur.</p>
         </div>
 
-        <h3>4. Vérifier (avant l'atelier)</h3>
+        <h3>4. Créer votre étude</h3>
         <p>Depuis le <b>terminal intégré de VS Code</b>, à la racine du clone :</p>
-<pre><code>bash scripts/workshop/new-mpg-study.sh essai --open</code></pre>
-        <p>Puis passez à la <a href="#verif">vérification commune</a>.</p>
+<pre><code>bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open</code></pre>
+        <p>Remplacez <code>XX</code> par votre numéro de binôme, puis passez à <a href="#verif">Ouvrir l'étude</a>.</p>
       </section>
 
       <section class="blk" id="verif">
-        <h2>Vérification commune</h2>
+        <h2>Ouvrir l'étude</h2>
         <div class="card">
           <ol class="steps">
-            <li>La fenêtre VS Code se rouvre sur <code>studies/essai</code>. Si VS Code le demande, <b>faites confiance au dossier</b>.</li>
+            <li>La fenêtre VS Code se rouvre sur <code>studies/binome-XX</code>. Si VS Code le demande, <b>faites confiance au dossier</b>.</li>
             <li>Ouvrez la palette (<code>Ctrl+Shift+P</code>, ou <code>Cmd+Shift+P</code> sur Mac) et lancez <b>Hypotrail: open the study panel</b>. Le panneau s'affiche.</li>
             <li>Ouvrez le chat Copilot (<code>Ctrl+Alt+I</code>), passez en mode <b>Agent</b> et choisissez l'agent <b>hypotrail</b>. Dans <i>Configure Tools</i>, vérifiez que <code>vscode/askQuestions</code> est coché.</li>
-            <li>Écrivez <span class="say">« On commence »</span>. L'agent lance des commandes <code>uv run … hypotrail</code> et affiche la fiche des données.</li>
+            <li>Écrivez <span class="say">« Prépare l'étude à partir de la fiche du PO »</span>. L'agent lit le PDF, rédige la fiche du besoin et lance des commandes <code>uv run … hypotrail</code>.</li>
           </ol>
         </div>
       </section>
@@ -224,20 +222,6 @@ uv sync --project framework --group azureml</code></pre>
         </div>
         <div class="card warn">
           <p>Les hooks sont une fonction <b>en préversion</b> de VS Code. Si VS Code vous demande quand même d'autoriser une commande <code>uv run … hypotrail</code>, lisez-la, puis choisissez <b>Allow in this Session</b>. N'utilisez pas « Allow all » : il autoriserait toutes les actions de l'agent, y compris les modifications de fichiers.</p>
-        </div>
-      </section>
-
-      <section class="blk" id="jourj" style="--ac:var(--yellow)">
-        <h2>Le jour J</h2>
-<pre><code>git pull
-bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open</code></pre>
-        <div class="card">
-          <ul>
-            <li>Remplacez <code>XX</code> par votre numéro de binôme.</li>
-            <li><b>En Codespaces</b>, si l'organisateur annonce une mise à jour, cliquez d'abord sur <i>Sync fork</i> sur la page GitHub de votre fork, puis faites <code>git pull</code>.</li>
-            <li><b>En local</b>, faites <code>git pull</code>, puis <code>bash scripts/workshop/install-panel.sh --force</code> si le panneau a changé.</li>
-          </ul>
-          <p>Dans le chat, écrivez : <span class="say">« Prépare l'étude à partir de la fiche du PO »</span>.</p>
         </div>
       </section>
 

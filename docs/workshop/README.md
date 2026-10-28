@@ -1,6 +1,6 @@
 # Atelier Hypotrail : installation et démarrage (participants)
 
-Cette page s'adresse aux participants de l'atelier « Découvrir le développement ML assisté par agents ». **L'installation se fait avant l'atelier**, de préférence au plus tard trois jours avant : le jour J, on n'a plus qu'à créer son étude.
+Cette page s'adresse aux participants de l'atelier « Découvrir le développement ML assisté par agents ». **L'installation se fait au début de l'atelier**, pendant le premier pas guidé. En Codespaces, lancez la création du codespace **dès votre arrivée** : elle prend 4 à 6 minutes.
 
 Dépôt : [https://github.com/hypotrail/hypotrail](https://github.com/hypotrail/hypotrail). Version mise en page (même contenu) : [ouvrir dans le navigateur](https://htmlpreview.github.io/?https://github.com/hypotrail/hypotrail/blob/main/docs/workshop/README.html), ou le fichier [README.html](README.html).
 
@@ -27,7 +27,7 @@ Le fork vous donne votre propre copie : vos études et vos essais n'y touchent p
 
 > Le codespace d'un fork personnel utilise **le quota gratuit de votre compte** : 120 heures-cœur par mois, soit 30 heures sur une machine à 4 cœurs, largement assez pour l'atelier.
 
-### 2. Créer le codespace (avant l'atelier)
+### 2. Créer le codespace (dès votre arrivée)
 
 Sur la page de **votre fork**, cliquez sur **Code**, puis **Codespaces** et **…**, puis **New with options**. Choisissez :
 
@@ -37,19 +37,19 @@ Sur la page de **votre fork**, cliquez sur **Code**, puis **Codespaces** et **�
 
 Cliquez ensuite sur *Create codespace*.
 
-La première création prend **4 à 6 minutes**. Elle installe l'environnement du moteur et le panneau d'étude, et le terminal « Configuring codespace » doit se terminer sans erreur. Le jour J, il suffit de rouvrir ce codespace depuis [github.com/codespaces](https://github.com/codespaces).
+La première création prend **4 à 6 minutes**. Elle installe l'environnement du moteur et le panneau d'étude, et le terminal « Configuring codespace » doit se terminer sans erreur.
 
 Pour l'atelier, passez le délai d'inactivité à 60 minutes : [github.com/settings/codespaces](https://github.com/settings/codespaces), *Default idle timeout*.
 
-### 3. Vérifier (avant l'atelier)
+### 3. Créer votre étude
 
 Dans le terminal du codespace :
 
 ```sh
-bash scripts/workshop/new-mpg-study.sh essai --open
+bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open
 ```
 
-Puis faites la partie [Vérification commune](#vérification-commune).
+Remplacez `XX` par votre numéro de binôme, puis passez à [Ouvrir l'étude](#ouvrir-létude).
 
 ## Option 2 : en local
 
@@ -104,25 +104,25 @@ Pour mettre à jour un panneau déjà installé : `bash scripts/workshop/install
 
 > Si l'installation est refusée (« extension not allowed »), c'est que la politique de l'entreprise filtre les extensions. Le panneau est optionnel : le chat et le rapport suffisent. Prévenez l'organisateur.
 
-### 4. Vérifier (avant l'atelier)
+### 4. Créer votre étude
 
 Depuis le **terminal intégré de VS Code**, à la racine du clone :
 
 ```sh
-bash scripts/workshop/new-mpg-study.sh essai --open
+bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open
 ```
 
-Puis faites la partie [Vérification commune](#vérification-commune).
+Remplacez `XX` par votre numéro de binôme, puis passez à [Ouvrir l'étude](#ouvrir-létude).
 
-## Vérification commune
+## Ouvrir l'étude
 
-1. La fenêtre VS Code se rouvre sur le dossier `studies/essai`. Si VS Code le demande, **faites confiance au dossier**.
+1. La fenêtre VS Code se rouvre sur le dossier `studies/binome-XX`. Si VS Code le demande, **faites confiance au dossier**.
 2. Ouvrez la palette (`Ctrl+Shift+P`, ou `Cmd+Shift+P` sur Mac) et lancez **Hypotrail: open the study panel**. Le panneau s'affiche.
 3. Ouvrez le chat Copilot (`Ctrl+Alt+I`) :
    - passez en mode **Agent** ;
    - choisissez l'agent **hypotrail** ;
    - dans *Configure Tools*, vérifiez que `vscode/askQuestions` est coché.
-4. Écrivez « On commence ». L'agent lance des commandes `uv run … hypotrail` et affiche la fiche des données.
+4. Écrivez **« Prépare l'étude à partir de la fiche du PO »**. L'agent lit le PDF, rédige la fiche du besoin et lance des commandes `uv run … hypotrail`.
 
 
 ### Les autorisations de l'agent : une règle visible
@@ -136,19 +136,6 @@ Le script installe dans l'étude une **règle de l'atelier**, un « hook » Copi
 Chaque décision de la règle est notée dans `.github/hooks/hypotrail-hook.log`, que l'on regardera ensemble.
 
 Les hooks sont une fonction **en préversion** de VS Code. Si VS Code vous demande quand même d'autoriser une commande `uv run … hypotrail`, lisez-la, puis choisissez **Allow in this Session**. N'utilisez pas « Allow all », qui autoriserait toutes les actions de l'agent, y compris les modifications de fichiers.
-
-## Le jour J
-
-```sh
-git pull
-bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open
-```
-
-Remplacez `XX` par votre numéro de binôme.
-
-En Codespaces, faites `git pull` depuis votre fork : l'organisateur vous dira si une mise à jour est à récupérer avec *Sync fork* sur GitHub. En local, faites `git pull` dans votre clone, puis `bash scripts/workshop/install-panel.sh --force` si le panneau a changé.
-
-Dans le chat, écrivez : **« Prépare l'étude à partir de la fiche du PO »**.
 
 ## Dépannage
 
