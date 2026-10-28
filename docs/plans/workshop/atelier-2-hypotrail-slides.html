@@ -300,7 +300,19 @@ body.presenter{cursor:auto}
 .overview button{text-align:left}
 .toast{position:fixed;left:50%;top:1rem;transform:translateX(-50%);z-index:50;background:var(--chalk);color:var(--board);padding:.7rem 1rem;border-radius:4px;font-size:15px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.frame h3::before{filter:none}}
-</style></head><body>
+</style><style>
+.viz{width:100%;height:auto;display:block;overflow:visible}
+.viz text{font-family:var(--sans)}
+.viz .t{fill:var(--chalk)}.viz .m{fill:var(--faint)}.viz .k{fill:var(--board)}
+.viz .ln{stroke:var(--line2);fill:none}.viz .ar{stroke:var(--chalk2);fill:none;stroke-width:2.2}
+.viz .box{fill:var(--board2);stroke:var(--line2);stroke-width:1.5}
+.card .viz .t{fill:var(--cardink)}.card .viz .m{fill:var(--cardmuted)}
+</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--chalk2)"/></marker>
+<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="var(--coral)" opacity=".25"/><line x1="0" y1="0" x2="0" y2="8" stroke="var(--coral)" stroke-width="3"/></pattern>
+</defs></svg>
+</head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="chalkf" x="-2%" y="-2%" width="104%" height="104%">
 <feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="7" result="n"/>
 <feDisplacementMap in="SourceGraphic" in2="n" scale="1.2" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
@@ -328,24 +340,13 @@ body.presenter{cursor:auto}
 </section>
 <section class="screen" data-title="Le but et le programme" data-part="Ouverture" data-weight="1">
   <div class="frame"><h3>Le but de cette matinée, et son programme</h3><div class="fx">
-    <div class="cols2" style="align-items:start">
-      <div>
-        <div class="card" style="--ac:var(--mint)"><h4>C'est</h4><p>Découvrir le potentiel de ces méthodes, les essayer sur un cas, donner son avis.</p></div>
-        <div class="card" style="--ac:var(--pink)"><h4>Ce n'est pas</h4><p>Une formation à un outil, ni une décision d'adoption. <b>« Pas convaincu » est une réponse utile.</b></p></div>
-      </div>
-      <div class="tblw"><table>
-        <tr><td>9h30</td><td>Ouverture</td></tr>
-        <tr><td>9h45</td><td>Premier pas, tous ensemble</td></tr>
-        <tr><td>10h05</td><td>En autonomie, par binôme</td></tr>
-        <tr><td>10h50</td><td>Pause</td></tr>
-        <tr><td>11h00</td><td>Démo : tout automatique, jusqu'à l'export</td></tr>
-        <tr><td>11h15</td><td>Retour d'expérience</td></tr>
-        <tr><td>11h30</td><td>Ce qu'on veut préserver en déléguant</td></tr>
-        <tr><td>12h20</td><td>Clôture</td></tr>
-      </table></div>
+    <div class="cols2">
+      <div class="card" style="--ac:var(--mint)"><h4>C'est</h4><p>Découvrir le potentiel de ces méthodes, les essayer sur un cas, donner son avis.</p></div>
+      <div class="card" style="--ac:var(--pink)"><h4>Ce n'est pas</h4><p>Une formation à un outil, ni une décision d'adoption. <b>« Pas convaincu » est une réponse utile.</b></p></div>
     </div>
+    <svg class="viz" viewBox="0 0 1000 132" role="img" aria-label="Programme de la matinée, proportionnel au temps"><rect x="1.0" y="44" width="81.3" height="54" rx="3" style="fill:var(--teal)"/><text x="41.7" y="77" font-size="15" text-anchor="middle" class="k" font-weight="600">Ouverture</text><text x="41.7" y="122" font-size="14" text-anchor="middle" class="m">15 min</text><text x="0.0" y="32" font-size="14" text-anchor="start" class="m">9h30</text><rect x="84.3" y="44" width="109.1" height="54" rx="3" style="fill:var(--sky)"/><text x="138.9" y="77" font-size="15" text-anchor="middle" class="k" font-weight="600">Premier pas</text><text x="138.9" y="122" font-size="14" text-anchor="middle" class="m">20 min</text><text x="83.3" y="32" font-size="14" text-anchor="middle" class="m">9h45</text><rect x="195.4" y="44" width="248.0" height="54" rx="3" style="fill:var(--mint)"/><text x="319.4" y="77" font-size="17" text-anchor="middle" class="k" font-weight="600">Autonomie</text><text x="319.4" y="122" font-size="14" text-anchor="middle" class="m">45 min</text><text x="194.4" y="32" font-size="14" text-anchor="middle" class="m">10h05</text><rect x="445.4" y="44" width="53.6" height="54" rx="3" style="fill:var(--faint)"/><text x="472.2" y="77" font-size="13" text-anchor="middle" class="k" font-weight="600">Pause</text><text x="472.2" y="122" font-size="14" text-anchor="middle" class="m">10 min</text><text x="444.4" y="32" font-size="14" text-anchor="middle" class="m">10h50</text><rect x="501.0" y="44" width="81.3" height="54" rx="3" style="fill:var(--violet)"/><text x="541.7" y="77" font-size="15" text-anchor="middle" class="k" font-weight="600">Démo</text><text x="541.7" y="122" font-size="14" text-anchor="middle" class="m">15 min</text><text x="500.0" y="32" font-size="14" text-anchor="middle" class="m">11h00</text><rect x="584.3" y="44" width="81.3" height="54" rx="3" style="fill:var(--pink)"/><text x="625.0" y="77" font-size="15" text-anchor="middle" class="k" font-weight="600">Retour</text><text x="625.0" y="122" font-size="14" text-anchor="middle" class="m">15 min</text><text x="583.3" y="32" font-size="14" text-anchor="middle" class="m">11h15</text><rect x="667.7" y="44" width="275.8" height="54" rx="3" style="fill:var(--yellow)"/><text x="805.6" y="77" font-size="17" text-anchor="middle" class="k" font-weight="600">Préserver</text><text x="805.6" y="122" font-size="14" text-anchor="middle" class="m">50 min</text><text x="666.7" y="32" font-size="14" text-anchor="middle" class="m">11h30</text><rect x="945.4" y="44" width="53.6" height="54" rx="3" style="fill:var(--coral)"/><text x="972.2" y="77" font-size="13" text-anchor="middle" class="k" font-weight="600">Clôture</text><text x="972.2" y="122" font-size="14" text-anchor="middle" class="m">10 min</text><text x="944.4" y="32" font-size="14" text-anchor="middle" class="m">12h20</text></svg>
   </div></div>
-  <div class="notes"><div class="n say">Le résultat attendu, ce sont vos réactions, pas une adhésion.</div></div>
+  <div class="notes"><div class="n say">Le résultat attendu, ce sont vos réactions, pas une adhésion.</div><div class="n say">La moitié du temps est pratique ; l'autre moitié, c'est votre avis.</div></div>
 </section>
 <section class="screen" data-title="Motivation : trois essais" data-part="Ouverture" data-weight="2" data-dur="2 min">
   <div class="frame"><h3>Ce que j'ai essayé avec des agents <span class="stamp">à remplir par l'organisateur</span></h3><div class="fx">
@@ -360,49 +361,68 @@ body.presenter{cursor:auto}
 </section>
 <section class="screen" data-title="Spec engineering" data-part="Ouverture" data-weight="2" data-dur="2 min">
   <div class="frame"><h3>Travailler avec un agent : écrire la spécification, pas le code</h3><div class="fx">
-    <div class="steps" style="grid-template-columns:repeat(4,minmax(0,1fr))">
-      <div class="card" style="--ac:var(--teal)"><b>Le résultat attendu</b><p>Ce qu'on veut obtenir, pour qui.</p></div>
-      <div class="card" style="--ac:var(--sky)"><b>Les contraintes</b><p>Ce qui est permis, interdit, imposé.</p></div>
-      <div class="card" style="--ac:var(--violet)"><b>Les critères d'acceptation</b><p>À quoi on reconnaît que c'est fini et juste.</p></div>
-      <div class="card" style="--ac:var(--yellow)"><b>Les vérifications</b><p>Comment on le prouve : tests, contrôles, revue.</p></div>
-    </div>
-    <p class="quote">L'agent exécute ; <b>les vérifications ferment la boucle</b>.</p>
+    <svg class="viz" viewBox="0 0 1000 330" role="img" aria-label="La boucle : la spécification, l'agent qui exécute, les vérifications qui ferment la boucle">
+      <rect x="10" y="40" width="300" height="250" rx="4" style="fill:var(--paper)"/>
+      <text x="30" y="75" font-size="15" font-weight="700" letter-spacing="2" style="fill:var(--cardmuted)">LA SPÉCIFICATION</text>
+      <g font-size="19" style="fill:var(--cardink)">
+        <circle cx="38" cy="113" r="7" style="fill:var(--teal)"/><text x="56" y="120">le résultat attendu</text>
+        <circle cx="38" cy="163" r="7" style="fill:var(--sky)"/><text x="56" y="170">les contraintes</text>
+        <circle cx="38" cy="213" r="7" style="fill:var(--violet)"/><text x="56" y="220">les critères d'acceptation</text>
+        <circle cx="38" cy="263" r="7" style="fill:var(--yellow)"/><text x="56" y="270">les vérifications</text>
+      </g>
+      <text x="160" y="25" font-size="16" text-anchor="middle" class="m">vous l'écrivez</text>
+      <line x1="315" y1="165" x2="410" y2="165" class="ar" marker-end="url(#ah)"/>
+      <rect x="415" y="110" width="200" height="110" rx="55" style="fill:var(--violet)"/>
+      <text x="515" y="160" font-size="24" text-anchor="middle" class="k" font-weight="700">L'agent</text>
+      <text x="515" y="188" font-size="16" text-anchor="middle" class="k">exécute</text>
+      <line x1="620" y1="165" x2="715" y2="165" class="ar" marker-end="url(#ah)"/>
+      <polygon points="800,90 885,165 800,240 715,165" style="fill:var(--yellow)"/>
+      <text x="800" y="160" font-size="18" text-anchor="middle" class="k" font-weight="700">vérifier</text>
+      <text x="800" y="184" font-size="15" text-anchor="middle" class="k">tests · revue</text>
+      <path d="M800,242 C800,310 515,310 515,226" class="ar" marker-end="url(#ah)"/>
+      <text x="660" y="318" font-size="16" text-anchor="middle" style="fill:var(--coral)">✗ non : on corrige</text>
+      <line x1="887" y1="165" x2="955" y2="165" class="ar" marker-end="url(#ah)"/>
+      <text x="975" y="172" font-size="30" text-anchor="middle" style="fill:var(--mint)">✓</text>
+      <text x="800" y="70" font-size="16" text-anchor="middle" class="m">les vérifications ferment la boucle</text>
+    </svg>
   </div></div>
   <div class="notes"><div class="n say">C'est le « spec engineering » : le travail humain se déplace vers la spécification et la vérification.</div></div>
 </section>
 <section class="screen" data-title="Fiable quand c'est vérifiable" data-part="Ouverture" data-weight="2" data-dur="2 min">
   <div class="frame"><h3>Un agent est fiable quand le résultat est vérifiable</h3><div class="fx">
+    <svg class="viz" viewBox="0 0 1000 230" role="img" aria-label="Refactoriser : les tests signalent l'erreur. Une étude ML : tout passe, l'erreur de méthode reste invisible">
+      <text x="0" y="70" font-size="20" class="t" font-weight="700">Refactoriser</text>
+      <text x="0" y="94" font-size="14" class="m">un vérificateur existe</text>
+      <text x="0" y="180" font-size="20" class="t" font-weight="700">Une étude ML</text>
+      <text x="0" y="204" font-size="14" class="m">rien ne signale l'erreur</text>
+      <rect x="170" y="40" width="150" height="46" rx="23" style="fill:var(--sky)"/><text x="245.0" y="70" font-size="18" text-anchor="middle" class="k" font-weight="600">le code</text><line x1="324" y1="63" x2="372" y2="63" class="ar" marker-end="url(#ah)"/><rect x="376" y="40" width="190" height="46" rx="23" style="fill:var(--yellow)"/><text x="471.0" y="70" font-size="18" text-anchor="middle" class="k" font-weight="600">tests ✓ ✓ ✗</text><line x1="570" y1="63" x2="618" y2="63" class="ar" marker-end="url(#ah)"/><rect x="622" y="40" width="360" height="46" rx="23" style="fill:var(--mint)"/><text x="802.0" y="70" font-size="18" text-anchor="middle" class="k" font-weight="600">l'erreur se voit, en secondes</text><rect x="170" y="150" width="150" height="46" rx="23" style="fill:var(--sky)"/><text x="245.0" y="180" font-size="18" text-anchor="middle" class="k" font-weight="600">le code</text><line x1="324" y1="173" x2="372" y2="173" class="ar" marker-end="url(#ah)"/><rect x="376" y="150" width="190" height="46" rx="23" style="fill:var(--yellow)"/><text x="471.0" y="180" font-size="18" text-anchor="middle" class="k" font-weight="600">il tourne ✓</text><line x1="570" y1="173" x2="618" y2="173" class="ar" marker-end="url(#ah)"/><rect x="622" y="150" width="170" height="46" rx="23" style="fill:var(--yellow)"/><text x="707.0" y="180" font-size="18" text-anchor="middle" class="k" font-weight="600">score 0,92 ✓</text><rect x="806" y="150" width="176" height="46" rx="23" style="fill:none;stroke:var(--coral);stroke-width:2;stroke-dasharray:6 5"/><text x="894" y="180" font-size="18" text-anchor="middle" style="fill:var(--coral)" font-weight="600">fuite ? test vu ?</text>
+    </svg>
     <div class="cols2">
-      <div class="card" style="--ac:var(--mint)"><h4>Ce qui marche très bien aujourd'hui</h4><p>Refactoriser, corriger, produire du code : des tâches où <b>un vérificateur automatique</b> (tests, types, compilateur) dit tout de suite si c'est juste.</p><p class="m">Observation de l'organisateur, et nette progression des agents en 2026 sur les tâches logicielles.</p></div>
+      <div class="card" style="--ac:var(--mint)"><h4>Ce qui marche très bien aujourd'hui</h4><p>Refactoriser, corriger, produire du code : des agents très fiables quand des tests, des types ou un compilateur jugent tout de suite.</p></div>
       <div class="card" style="--ac:var(--pink)"><h4>Ce qui reste le problème</h4><p>La <b>méthode</b> et les <b>décisions</b> : quoi mesurer, sur quelles données, avec quel critère, et qui l'a décidé.</p></div>
     </div>
-    <p class="quote">Le code peut être juste et l'étude fausse.</p>
   </div></div>
-  <div class="notes"><div class="n trap">Ne pas donner de pourcentage de fiabilité : il n'existe pas de mesure récente qui fasse consensus.</div></div>
+  <div class="notes"><div class="n say">Observation de l'organisateur, et nette progression des agents en 2026 sur les tâches logicielles.</div><div class="n trap">Ne pas donner de pourcentage de fiabilité : il n'existe pas de mesure récente qui fasse consensus.</div></div>
 </section>
 <section class="screen" data-title="Pourquoi le ML est différent" data-part="Ouverture" data-weight="3" data-dur="3 min">
   <div class="frame"><h3>En ML, une erreur de méthode ne casse rien</h3><div class="fx">
     <div class="cols2">
       <div class="card" style="--ac:var(--coral)"><h4>Le code tourne, le score est bon</h4><ul><li>une <b>fuite</b> d'information de la cible ;</li><li>un <b>regard</b> sur le test avant la fin ;</li><li>une <b>métrique</b> sans lien avec le besoin ;</li><li>une méthode qui <b>varie</b> d'un essai à l'autre.</li></ul><p class="m">Aucun test ne les attrape.</p></div>
-      <div class="card" style="--ac:var(--sky)"><h4>Même les meilleurs agents, octobre 2026</h4><p>Epoch AI (InnovationEval) : chargés d'inventer une méthode d'entraînement, deux modèles de pointe ont relancé des essais presque identiques et <b>gardé le meilleur</b>. L'un annonçait environ <b>70 %</b> du gain de la référence humaine ; corrigé, environ <b>35 %</b>, et environ <b>15 %</b> en ne comptant que les changements conformes aux règles.</p><p class="m">Une tâche de recherche, pas une étude métier : un signal, pas une mesure de nos cas.</p></div>
+      <div class="card" style="--ac:var(--sky)"><h4>Même les meilleurs agents <small>Epoch AI, oct. 2026</small></h4><svg class="viz" viewBox="0 0 600 190" role="img" aria-label="Gain annoncé environ 70 %, corrigé environ 35 %, conforme aux règles environ 15 %"><text x="0" y="36" font-size="17" class="t">annoncé par l'agent</text><rect x="190" y="10" width="308.0" height="38" rx="2" style="fill:var(--coral)"/><text x="504.0" y="37" font-size="20" class="t" font-weight="700">≈ 70 %</text><text x="0" y="96" font-size="17" class="t">corrigé par Epoch</text><rect x="190" y="70" width="154.0" height="38" rx="2" style="fill:var(--yellow)"/><text x="350.0" y="97" font-size="20" class="t" font-weight="700">≈ 35 %</text><text x="0" y="156" font-size="17" class="t">conforme aux règles</text><rect x="190" y="130" width="66.0" height="38" rx="2" style="fill:var(--mint)"/><text x="262.0" y="157" font-size="20" class="t" font-weight="700">≈ 15 %</text></svg><p class="m">Part du gain de la référence humaine. Les agents ont relancé des essais presque identiques et gardé le meilleur.</p></div>
     </div>
     <p class="quote">D'où l'idée : <b>un parcours qui garde les décisions et les preuves</b>, pour qu'on puisse les relire.</p>
   </div></div>
-  <div class="notes"><div class="n trap">Vérifier le chiffre sur la publication d'Epoch AI avant l'atelier (lu via THE DECODER, 11 octobre 2026).</div><div class="n q">« Et vos agents à vous ? » → sur l'essai ML, la méthode a varié d'une exécution à l'autre : c'est une observation, pas une mesure.</div></div>
+  <div class="notes"><div class="n say">Une tâche de recherche, pas une étude métier : un signal, pas une mesure de nos cas.</div><div class="n trap">Vérifier les chiffres sur la publication d'Epoch AI avant l'atelier (lus via THE DECODER, 11 octobre 2026).</div></div>
 </section>
 <section class="screen" data-title="Hypotrail" data-part="Ouverture" data-weight="2" data-dur="2 min">
   <div class="frame"><h3>Hypotrail : un prototype pour essayer cette façon de travailler</h3><div class="fx">
-    <div class="cols3">
-      <div class="card" style="--ac:var(--violet)"><h4>L'agent <small>dans le chat</small></h4><p>Explique, propose avec la preuve, lance les calculs. <b>Ne décide pas à votre place.</b></p></div>
-      <div class="card" style="--ac:var(--teal)"><h4>Le moteur <small>en ligne de commande</small></h4><p>Structure les étapes, scelle le test final, calcule, garde chaque décision et chaque preuve.</p></div>
-      <div class="card" style="--ac:var(--yellow)"><h4>Vous</h4><p>Décidez avec vos mots, relisez ce qui a été automatisé, concluez ou refusez de conclure.</p></div>
-    </div>
+    <svg class="viz" viewBox="0 0 1000 280" role="img" aria-label="Vous parlez à l'agent, l'agent lance le moteur, le moteur produit les preuves que vous relisez"><rect x="20" y="60" width="240" height="96" rx="6" style="fill:var(--yellow)"/><text x="140" y="104" font-size="24" text-anchor="middle" class="k" font-weight="700">Vous</text><text x="140" y="132" font-size="15" text-anchor="middle" class="k">décidez avec vos mots</text><rect x="380" y="60" width="240" height="96" rx="6" style="fill:var(--violet)"/><text x="500" y="104" font-size="24" text-anchor="middle" class="k" font-weight="700">L'agent</text><text x="500" y="132" font-size="15" text-anchor="middle" class="k">explique, propose</text><rect x="740" y="60" width="240" height="96" rx="6" style="fill:var(--teal)"/><text x="860" y="104" font-size="24" text-anchor="middle" class="k" font-weight="700">Le moteur</text><text x="860" y="132" font-size="15" text-anchor="middle" class="k">calcule, scelle, garde</text><line x1="264" y1="95" x2="374" y2="95" class="ar" marker-end="url(#ah)"/><line x1="374" y1="122" x2="264" y2="122" class="ar" marker-end="url(#ah)"/><text x="319" y="48" font-size="15" text-anchor="middle" class="m">le chat</text><line x1="624" y1="108" x2="734" y2="108" class="ar" marker-end="url(#ah)"/><text x="679" y="48" font-size="15" text-anchor="middle" class="m">commandes</text><path d="M860,160 L860,225 L140,225 L140,162" class="ar" marker-end="url(#ah)"/><rect x="290" y="205" width="420" height="40" rx="20" class="box"/><text x="500" y="231" font-size="17" text-anchor="middle" class="t">panneau · rapport · notebook : les preuves</text></svg>
     <div class="tblw"><table>
       <tr><td><span class="tag ok">disponible</span></td><td>Le moteur, les modes automatiques, le rapport HTML, les notebooks Marimo, le panneau VS Code, le départ d'une fiche PO en PDF, l'export Azure ML (projet généré, aucun job lancé)</td></tr>
-      <tr><td><span class="tag wip">expérimental</span></td><td>Le parcours avec GitHub Copilot : <b>vous êtes les premiers à l'essayer</b></td></tr>
+      <tr><td><span class="tag ok">essayé</span></td><td>Le parcours dans le chat, avec <b>GitHub Copilot</b> et avec <b>Claude Code</b></td></tr>
     </table></div>
   </div></div>
-  <div class="notes"><div class="n say">Une illustration, pas un produit : tout y est adaptable.</div><div class="n q">« Donc on peut tricher ? » → oui, localement : c'est un protocole coopératif, pas un coffre-fort.</div></div>
+  <div class="notes"><div class="n say">Une illustration, pas un produit : tout y est adaptable.</div><div class="n say">L'agent ne décide pas à votre place : il propose avec la preuve.</div><div class="n q">« Donc on peut tricher ? » → oui, localement : c'est un protocole coopératif, pas un coffre-fort.</div></div>
 </section>
 <section class="screen" data-title="Miro : vos réserves" data-part="Ouverture" data-weight="3" data-dur="3 min">
   <div class="frame"><h3>Avant d'essayer : vos attentes et vos réserves</h3><div class="fx">
@@ -411,8 +431,8 @@ body.presenter{cursor:auto}
       <div class="card" style="--ac:var(--pink)"><h4>Mes réserves…</h4></div>
       <div class="card" style="--ac:var(--yellow)"><h4>Ce que je crains de perdre…</h4></div>
     </div>
-    <p class="lead">Tableau Miro <b class="chalk">« Réserves »</b> : un post-it par idée, trois au maximum. <b>Personne ne les voit avant 11h26.</b></p>
-    <p class="small">miro.com/app/board/uXjVEUPo50E= · l'anonymat n'est qu'à l'affichage : rien de confidentiel.</p>
+    <p class="lead">Tableau Miro <b class="chalk">« Réserves »</b> : un post-it par idée, trois au maximum. <b>Personne ne les voit avant 11h25.</b></p>
+    <p class="small">L'anonymat n'est qu'à l'affichage : rien de confidentiel.</p>
   </div></div>
   <div class="notes"><div class="n trap">La lead active le mode privé avant 9h42, avec « Make names anonymous » ; seule elle peut l'arrêter.</div><div class="n say">On les révélera au retour d'expérience.</div></div>
 </section>
@@ -424,9 +444,10 @@ body.presenter{cursor:auto}
 <section class="screen" data-title="Le cas Auto MPG" data-part="Premier pas guidé" data-weight="1.5">
   <div class="frame"><h3>Le cas : Auto MPG</h3><div class="fx">
     <div class="cols2">
-      <div class="card" style="--ac:var(--teal)"><h4>Les données</h4><p>Le fichier public UCI Auto MPG : <b>398 voitures</b>, années de modèle 1970 à 1982.</p><p>On estime <b>mpg</b>, miles par gallon : plus le nombre est haut, plus la voiture est sobre (23 mpg ≈ 10,2 L/100 km).</p></div>
-      <div class="card" style="--ac:var(--yellow)"><h4>Le point de départ</h4><p>Une <b>fiche du PO en PDF</b>, fictive : le besoin, l'usage, ce qui est gênant.</p><p>À la création, <b>80 voitures sont scellées</b> pour le test final, ouvert une fois, à la fin.</p></div>
+      <div class="card" style="--ac:var(--teal)"><h4>Les données</h4><p>Le fichier public UCI Auto MPG. On estime <b>mpg</b>, miles par gallon : plus le nombre est haut, plus la voiture est sobre (23 mpg ≈ 10,2 L/100 km).</p></div>
+      <div class="card" style="--ac:var(--yellow)"><h4>Le point de départ</h4><p>Une <b>fiche du PO en PDF</b>, fictive : le besoin, l'usage, ce qui est gênant.</p></div>
     </div>
+    <svg class="viz" viewBox="0 0 1000 120" role="img" aria-label="398 voitures : 318 de développement, 80 scellées pour le test final"><rect x="0" y="30" width="799" height="56" rx="3" style="fill:var(--teal)"/><rect x="801" y="30" width="199" height="56" rx="3" style="fill:url(#hatch);stroke:var(--coral);stroke-width:2"/><text x="20" y="66" font-size="20" class="k" font-weight="700">318 voitures de développement : explorer, ajuster, choisir</text><text x="900" y="66" font-size="20" text-anchor="middle" class="t" font-weight="700">80 scellées</text><text x="900" y="112" font-size="15" text-anchor="middle" class="m">le test final, ouvert une fois</text><text x="0" y="18" font-size="15" class="m">398 voitures, années 1970 à 1982 · partage fait à la création de l'étude</text></svg>
     <p class="quote">Un exercice sur des données historiques, <b>pas</b> la validation d'un service pour des véhicules futurs.</p>
   </div></div>
   <div class="notes"><div class="n trap">Ces voitures ne décrivent pas les véhicules actuels.</div></div>
@@ -447,33 +468,16 @@ bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open</pre>
 </section>
 <section class="screen" data-title="La règle de l'agent" data-part="Premier pas guidé" data-weight="3" data-dur="3 min">
   <div class="frame"><h3>Ce que l'agent peut faire seul : une règle écrite, visible</h3><div class="fx">
-    <div class="cols4">
-      <div class="card" style="--ac:var(--mint)"><span class="tag ok">autorisé</span><p>Une commande simple du moteur, <code>uv run … hypotrail …</code></p></div>
-      <div class="card" style="--ac:var(--coral)"><span class="tag no">refusé</span><p>Lire le fichier brut <code>auto-mpg.data</code> : il contient le test final scellé.</p></div>
-      <div class="card" style="--ac:var(--yellow)"><span class="tag wip">demandé</span><p>Tout le reste, comme d'habitude.</p></div>
-      <div class="card" style="--ac:var(--sky)"><span class="tag mock">noté</span><p>Chaque décision dans <code>hypotrail-hook.log</code>.</p></div>
-    </div>
-<pre class="code s"><span class="cm"># .github/hooks/hypotrail.json : un hook Copilot exécuté avant chaque action de l'agent</span>
-{"hooks": {"PreToolUse": [{"type": "command", "command": "… pretool.py --repo … --data-file auto-mpg.data --log …"}]}}</pre>
+    <svg class="viz" viewBox="0 0 1000 300" role="img" aria-label="Chaque action de l'agent passe par la règle : autorisée, refusée ou demandée, et notée"><rect x="0" y="115" width="200" height="70" rx="35" style="fill:var(--violet)"/><text x="100" y="146" font-size="19" text-anchor="middle" class="k" font-weight="700">une action</text><text x="100" y="168" font-size="15" text-anchor="middle" class="k">de l'agent</text><line x1="204" y1="150" x2="296" y2="150" class="ar" marker-end="url(#ah)"/><rect x="300" y="95" width="256" height="110" rx="4" class="box"/><text x="428" y="135" font-size="20" text-anchor="middle" class="t" font-weight="700">la règle de l'atelier</text><text x="428" y="160" font-size="14" text-anchor="middle" class="m">.github/hooks/hypotrail.json</text><text x="428" y="182" font-size="14" text-anchor="middle" class="m">exécutée avant chaque action</text><path d="M560,150 C620,150 620,45 680,45" class="ar" marker-end="url(#ah)"/><rect x="684" y="19" width="300" height="52" rx="4" style="fill:var(--mint)"/><text x="700" y="41" font-size="17" class="k" font-weight="700">✓ autorisé</text><text x="700" y="62" font-size="14" class="k">uv run … hypotrail …</text><path d="M560,150 C620,150 620,150 680,150" class="ar" marker-end="url(#ah)"/><rect x="684" y="124" width="300" height="52" rx="4" style="fill:var(--coral)"/><text x="700" y="146" font-size="17" class="k" font-weight="700">✗ refusé</text><text x="700" y="167" font-size="14" class="k">lire auto-mpg.data : test scellé</text><path d="M560,150 C620,150 620,255 680,255" class="ar" marker-end="url(#ah)"/><rect x="684" y="229" width="300" height="52" rx="4" style="fill:var(--yellow)"/><text x="700" y="251" font-size="17" class="k" font-weight="700">? demandé</text><text x="700" y="272" font-size="14" class="k">tout le reste, comme d'habitude</text><line x1="428" y1="207" x2="428" y2="262" class="ar" marker-end="url(#ah)"/><text x="428" y="288" font-size="15" text-anchor="middle" class="m">chaque décision notée dans hypotrail-hook.log</text></svg>
     <p class="quote">On n'automatise que ce qu'on connaît. Si VS Code demande quand même : lire la commande, puis <b>« Allow in this Session »</b>, jamais « Allow all ».</p>
   </div></div>
   <div class="notes"><div class="n say">C'est déjà une question de gouvernance : qui a écrit cette règle, qui la relit ?</div><div class="n trap">Les hooks sont en préversion dans VS Code : vérifié en répétition, sinon la consigne « Allow in this Session » suffit.</div></div>
 </section>
 <section class="screen" data-title="Lire l'interface" data-part="Premier pas guidé" data-weight="4" data-dur="5 min">
   <div class="frame"><h3>Lire l'interface : le panneau montre, le chat décide</h3><div class="fx">
-    <div class="cols3">
-      <div class="card" style="--ac:var(--violet)"><h4>Le chat</h4><ul><li>des choix cliquables ;</li><li>ou vos propres mots ;</li><li>« explique-moi » à tout moment.</li></ul></div>
-      <div class="card" style="--ac:var(--teal)"><h4>Le panneau</h4><ul><li><b>Maintenant</b> : où on en est, ce qui est attendu ;</li><li>le <b>parcours</b> : les étapes faites et à venir ;</li><li>chaque <b>étape</b> : sa question, ses graphiques.</li></ul></div>
-      <div class="card" style="--ac:var(--yellow)"><h4>Les livrables</h4><ul><li>le <b>rapport</b> HTML, qui raconte l'étude ;</li><li>le <b>notebook</b> Marimo, qui montre les calculs.</li></ul></div>
-    </div>
-    <div class="steps" style="grid-template-columns:repeat(3,minmax(0,1fr))">
-      <div class="card" style="--ac:var(--mint)"><b>Ce qu'on voit</b></div>
-      <div class="card" style="--ac:var(--sky)"><b>Ce qu'on en conclut</b></div>
-      <div class="card" style="--ac:var(--pink)"><b>Ce qu'on ne peut pas conclure</b></div>
-    </div>
-    <p class="small">Sous chaque graphique, la même lecture en trois temps.</p>
+    <svg class="viz" viewBox="0 0 1000 400" role="img" aria-label="Schéma de VS Code : le panneau de l'étude à gauche, le chat à droite"><rect x="0" y="0" width="1000" height="380" rx="8" class="box"/><circle cx="22" cy="18" r="6" style="fill:var(--coral)"/><circle cx="42" cy="18" r="6" style="fill:var(--yellow)"/><circle cx="62" cy="18" r="6" style="fill:var(--mint)"/><line x1="0" y1="36" x2="1000" y2="36" class="ln"/><line x1="610" y1="36" x2="610" y2="380" class="ln"/><text x="24" y="64" font-size="14" class="m" letter-spacing="1.5">PANNEAU DE L'ÉTUDE</text><rect x="24" y="76" width="560" height="56" rx="4" style="fill:none;stroke:var(--yellow);stroke-width:2.5"/><text x="40" y="100" font-size="17" style="fill:var(--yellow)" font-weight="700">Maintenant</text><text x="40" y="122" font-size="14" class="t">où on en est · ce qui est attendu</text><g font-size="14" class="t"><circle cx="40" cy="158" r="7" style="fill:var(--mint)"/><text x="56" y="163">1 · la fiche du besoin</text><circle cx="40" cy="184" r="7" style="fill:var(--mint)"/><text x="56" y="189">2 · les données</text><circle cx="40" cy="210" r="7" style="fill:none;stroke:var(--yellow);stroke-width:2.5"/><text x="56" y="215">3 · le moment de la prédiction</text><circle cx="40" cy="236" r="7" style="fill:none;stroke:var(--line2);stroke-width:2"/><text x="56" y="241" class="m">… le parcours</text></g><rect x="300" y="146" width="284" height="214" rx="4" style="fill:var(--paper)"/><text x="314" y="168" font-size="13" style="fill:var(--cardmuted)" font-weight="700">LA CARTE D'ÉTAPE</text><rect x="318" y="226" width="22" height="40" style="fill:var(--sky)"/><rect x="346" y="196" width="22" height="70" style="fill:var(--sky)"/><rect x="374" y="210" width="22" height="56" style="fill:var(--sky)"/><rect x="402" y="236" width="22" height="30" style="fill:var(--sky)"/><text x="440" y="214" font-size="13" style="fill:var(--cardmuted)">la question,</text><text x="440" y="232" font-size="13" style="fill:var(--cardmuted)">les graphiques</text><g font-size="13"><rect x="314" y="280" width="4" height="18" style="fill:var(--mint)"/><text x="324" y="294" style="fill:var(--cardink)">ce qu'on voit</text><rect x="314" y="306" width="4" height="18" style="fill:var(--sky)"/><text x="324" y="320" style="fill:var(--cardink)">ce qu'on en conclut</text><rect x="314" y="332" width="4" height="18" style="fill:var(--coral)"/><text x="324" y="346" style="fill:var(--cardink)">ce qu'on ne peut pas conclure</text></g><text x="24" y="300" font-size="14" class="m">Livrables :</text><text x="24" y="322" font-size="14" class="t">rapport HTML</text><text x="24" y="344" font-size="14" class="t">notebook Marimo</text><text x="632" y="64" font-size="14" class="m" letter-spacing="1.5">CHAT · AGENT HYPOTRAIL</text><rect x="632" y="78" width="330" height="62" rx="10" style="fill:var(--violet)"/><text x="648" y="104" font-size="14" class="k">L'agent explique et propose,</text><text x="648" y="124" font-size="14" class="k">avec la preuve.</text><rect x="632" y="156" width="150" height="34" rx="17" style="fill:none;stroke:var(--chalk2);stroke-width:1.5"/><text x="707" y="178" font-size="14" text-anchor="middle" class="t">J'adopte</text><rect x="792" y="156" width="170" height="34" rx="17" style="fill:none;stroke:var(--chalk2);stroke-width:1.5"/><text x="877" y="178" font-size="14" text-anchor="middle" class="t">Explique d'abord</text><rect x="752" y="210" width="210" height="44" rx="10" style="fill:var(--yellow)"/><text x="766" y="238" font-size="14" class="k">ou vos propres mots</text><rect x="632" y="320" width="330" height="40" rx="6" style="fill:none;stroke:var(--line2);stroke-width:1.5"/><text x="646" y="345" font-size="14" class="m">« explique-moi … »</text><text x="305" y="398" font-size="17" text-anchor="middle" style="fill:var(--teal)" font-weight="700">le panneau montre</text><text x="805" y="398" font-size="17" text-anchor="middle" style="fill:var(--violet)" font-weight="700">le chat décide</text></svg>
   </div></div>
-  <div class="notes"><div class="n say">Nommer chaque zone sur mon écran pendant que l'agent travaille ; ne pas faire de visite exhaustive.</div></div>
+  <div class="notes"><div class="n say">Nommer chaque zone sur mon écran pendant que l'agent travaille ; ne pas faire de visite exhaustive.</div><div class="n say">Sous chaque graphique, la même lecture en trois temps.</div></div>
 </section>
 <section class="screen" data-title="Le premier pas" data-part="Premier pas guidé" data-weight="6" data-dur="7 min">
   <div class="frame"><h3>Le premier pas, tous en même temps</h3><div class="fx">
@@ -494,16 +498,10 @@ bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open</pre>
 </section>
 <section class="screen" data-title="Binômes et mission" data-part="En autonomie" data-weight="2">
   <div class="frame"><h3>Binômes mixtes, et une carte de mission</h3><div class="fx">
-    <div class="cols2" style="align-items:start">
-      <div>
-        <div class="card" style="--ac:var(--teal)"><h4>Dans le binôme</h4><p>L'un tape dans le chat, l'autre suit le panneau et le rapport. <b>On échange à 10h25.</b></p></div>
-        <div class="card" style="--ac:var(--sky)"><h4>Data Analysts, Data Engineers</h4><p>Demandez « explique-moi » à chaque terme inconnu.</p></div>
-      </div>
-      <div>
-        <div class="card" style="--ac:var(--mint)"><h4>Palier 1</h4><p>Adopter la fiche du besoin, lire la fiche des données.</p></div>
-        <div class="card" style="--ac:var(--yellow)"><h4>Palier 2</h4><p>Arriver au choix de la mesure de l'erreur, et dire en une phrase pourquoi.</p></div>
-        <div class="card" style="--ac:var(--violet)"><h4>Palier 3 <small>pour les rapides</small></h4><p>Ouvrir le notebook dans Marimo, ou demander à l'agent : « qu'as-tu fait que je n'ai pas vérifié ? »</p></div>
-      </div>
+    <svg class="viz" viewBox="0 0 960 300" role="img" aria-label="Trois paliers de mission"><rect x="30" y="210" width="290" height="70" rx="3" style="fill:var(--mint)"/><text x="46" y="242" font-size="20" class="k" font-weight="700">Palier 1</text><text x="46" y="266" font-size="14" class="k">adopter la fiche, lire les données</text><rect x="330" y="135" width="290" height="145" rx="3" style="fill:var(--yellow)"/><text x="346" y="167" font-size="20" class="k" font-weight="700">Palier 2</text><text x="346" y="191" font-size="14" class="k">la mesure de l'erreur, et pourquoi</text><rect x="630" y="60" width="290" height="220" rx="3" style="fill:var(--violet)"/><text x="646" y="92" font-size="20" class="k" font-weight="700">Palier 3 · rapides</text><text x="646" y="116" font-size="14" class="k">Marimo, ou « qu'as-tu fait que…</text><text x="646" y="136" font-size="14" class="k">je n'ai pas vérifié ? »</text><line x1="0" y1="282" x2="960" y2="282" class="ln"/></svg>
+    <div class="cols2">
+      <div class="card" style="--ac:var(--teal)"><h4>Dans le binôme</h4><p>L'un tape dans le chat, l'autre suit le panneau et le rapport. <b>On échange à 10h25.</b></p></div>
+      <div class="card" style="--ac:var(--sky)"><h4>Data Analysts, Data Engineers</h4><p>Demandez « explique-moi » à chaque terme inconnu.</p></div>
     </div>
     <p class="small">Pas d'obligation de finir. Bloqué plus de 3 minutes : appelez un animateur.</p>
   </div></div>
@@ -521,7 +519,7 @@ bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open</pre>
       <div class="card" style="--ac:var(--sky)"><h4>Ma question</h4></div>
     </div>
     <p class="lead">Un post-it par idée, à la couleur de votre profil : <b class="y">jaune</b> ML / DS, <b class="chalk">bleu</b> Data Engineer, <b class="chalk">vert</b> Data Analyst.</p>
-    <p class="small">miro.com/app/board/uXjVEUP_k5M= · zone « Autonomie »</p>
+    <p class="small">Zone « Autonomie »</p>
   </div></div>
   <div class="notes"><div class="n say">Ce tableau n'a pas de mode privé : les post-its sont visibles tout de suite.</div></div>
 </section>
@@ -567,14 +565,10 @@ bash scripts/workshop/new-mpg-study.sh demo --automation full_demo --open
 </section>
 <section class="screen" data-title="Le résultat" data-part="Démo : jusqu'à l'export" data-weight="2">
   <div class="frame"><h3>Le résultat, et ce qu'il reste à faire</h3><div class="fx">
-    <div class="cols3">
-      <div class="card" style="--ac:var(--mint)"><h4>Test final</h4><p><b>2,88 mpg</b> d'erreur moyenne, contre <b>6,64</b> pour la référence (prédire la moyenne).</p></div>
-      <div class="card" style="--ac:var(--yellow)"><h4>Le modèle gardé</h4><p>Le <b>linéaire</b>, par la règle d'une erreur type, alors que l'EBM fait mieux en moyenne (3,40 contre 3,69 mpg hors pli).</p></div>
-      <div class="card" style="--ac:var(--pink)"><h4>À relire</h4><p><b>10 décisions automatiques</b>, marquées comme telles. L'étude n'est pas défendable tant que personne ne les a relues.</p></div>
-    </div>
-    <p class="quote">Le test final a été ouvert par le mode démonstration, pas par votre décision : c'est écrit pour toujours dans l'étude.</p>
+    <svg class="viz" viewBox="0 0 1000 340" role="img" aria-label="Erreur moyenne en mpg : développement 7,16 3,69 3,40 ; test final 6,64 et 2,88"><text x="0" y="22" font-size="15" class="m">erreur absolue moyenne, en mpg (plus bas = mieux)</text><rect x="40" y="62.359999999999985" width="90" height="207.64000000000001" rx="2" style="fill:var(--faint)"/><text x="85" y="54.359999999999985" font-size="20" text-anchor="middle" class="t" font-weight="700">7,16</text><text x="85" y="296" font-size="15" text-anchor="middle" class="m">référence</text><rect x="150" y="162.99" width="90" height="107.01" rx="2" style="fill:var(--yellow)"/><text x="195" y="154.99" font-size="20" text-anchor="middle" class="t" font-weight="700">3,69</text><text x="195" y="296" font-size="15" text-anchor="middle" class="m">linéaire ✓</text><rect x="260" y="171.4" width="90" height="98.6" rx="2" style="fill:var(--violet)"/><text x="305" y="163.4" font-size="20" text-anchor="middle" class="t" font-weight="700">3,40</text><text x="305" y="296" font-size="15" text-anchor="middle" class="m">EBM</text><text x="200" y="330" font-size="17" text-anchor="middle" class="t" font-weight="700">développement, hors pli</text><rect x="560" y="77.44" width="90" height="192.56" rx="2" style="fill:var(--faint)"/><text x="605" y="69.44" font-size="20" text-anchor="middle" class="t" font-weight="700">6,64</text><text x="605" y="296" font-size="15" text-anchor="middle" class="m">référence</text><rect x="670" y="186.48000000000002" width="90" height="83.52" rx="2" style="fill:var(--mint)"/><text x="715" y="178.48000000000002" font-size="20" text-anchor="middle" class="t" font-weight="700">2,88</text><text x="715" y="296" font-size="15" text-anchor="middle" class="m">linéaire</text><text x="660" y="330" font-size="17" text-anchor="middle" class="t" font-weight="700">test final, ouvert une fois</text><line x1="0" y1="270" x2="1000" y2="270" class="ln"/><line x1="470" y1="40" x2="470" y2="320" class="ln" stroke-dasharray="4 6"/><rect x="800" y="70" width="190" height="120" rx="4" style="fill:var(--coral)"/><text x="895" y="122" font-size="40" text-anchor="middle" class="k" font-weight="700">10</text><text x="895" y="152" font-size="15" text-anchor="middle" class="k">décisions automatiques</text><text x="895" y="172" font-size="15" text-anchor="middle" class="k">à relire</text></svg>
+    <p class="quote">Le moteur garde le <b>linéaire</b> (règle d'une erreur type) alors que l'EBM fait mieux en moyenne ; le test final a été ouvert par le mode démonstration, et c'est écrit pour toujours.</p>
   </div></div>
-  <div class="notes"><div class="n say">Montrer le panneau et le rapport, pas le terminal.</div><div class="n trap">Vérifier ces chiffres sur l'étude de démo de la veille.</div></div>
+  <div class="notes"><div class="n say">Montrer le panneau et le rapport, pas le terminal.</div><div class="n say">L'étude n'est pas défendable tant que personne n'a relu les 10 décisions.</div><div class="n trap">Vérifier ces chiffres sur l'étude de démo de la veille.</div></div>
 </section>
 <section class="screen" data-title="Les commandes d'export" data-part="Démo : jusqu'à l'export" data-weight="1.5">
   <div class="frame"><h3>Transmettre vers le gabarit Azure ML de l'équipe</h3><div class="fx">
@@ -733,7 +727,7 @@ hypotrail export handoff --study studies/demo --out ~/exports/mpg-handoff --expe
     <div class="tblw"><table>
       <tr><th style="width:24%">Famille</th><th>Ce qu'on regarde</th></tr>
       <tr><td>Découverte</td><td>Le palier atteint par chaque binôme ; ce qui a aidé et gêné.</td></tr>
-      <tr><td>Réserves</td><td>Les réserves du début, et ce qui a changé à 11h26.</td></tr>
+      <tr><td>Réserves</td><td>Les réserves du début, et ce qui a changé à 11h25.</td></tr>
       <tr><td>Fondations</td><td>Les propositions complètes, testées hors ML ; les questions ouvertes.</td></tr>
       <tr><td>Adoption</td><td>Les volontaires du pilote.</td></tr>
       <tr><td>Productivité</td><td><b>Pilote seulement</b> : rien n'est mesuré aujourd'hui.</td></tr>
