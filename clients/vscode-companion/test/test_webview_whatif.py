@@ -14,7 +14,7 @@ import re
 import pytest
 
 from conftest import inline_styles_ok
-from panel_cases import click_fold, open_all
+from panel_cases import open_all
 
 FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 THEMES = ['light', 'dark']
@@ -34,10 +34,12 @@ def regression(model):
 
 def opened(open_panel, summary, scheme='light', task='binary', reviewer=False):
     panel = open_panel(scheme)
-    panel.init(stage='v2', task=task, reviewer=reviewer, panelContract=2)
+    # Lot 2026-10-28 (PA-12): the compact sandbox left the page's drawer, which keeps only the
+    # calm line and the button; What if? is the read-only editor tab (R51, ADR 0004 decision
+    # 14): the same document with `surface: whatif`. These tests now drive the tab.
+    panel.send({'type': 'init', 'stage': 'v2', 'reviewer': reviewer, 'learningLayer': True, 'chatInsert': False,
+                'task': task, 'panelContract': 2, 'surface': 'whatif'})
     panel.snapshot(summary)
-    # The one page (ADR 0004 d13): What if? is a drawer of the tools (TOOL-4), read when opened.
-    click_fold(panel.page, 't-whatif')
     return panel
 
 
@@ -46,7 +48,7 @@ def sent(panel, kind):
 
 
 def banner_ok(page):
-    banner = page.locator('[data-drawer="whatif"] [data-experiment][role="note"]').first
+    banner = page.locator('[data-whatif-tab] [data-experiment][role="note"]').first
     assert ('Experiment, not adopted. Nothing here changes the study. Computed from saved predictions; no model is '
             'refitted.') in banner.text_content()
     return True
@@ -87,9 +89,9 @@ def test_sandbox_starts_at_the_proposed_rule_and_shows_the_experiment(open_panel
     assert share.locator('[data-literal="parameter"]').inner_text() == '7.4%'
     assert sent(panel, 'preview_policy') == [{'v': 2, 'type': 'preview_policy', 'rules': ['capacity:100'], 'intervals': True, 'seq': 1}]
     assert sent(panel, 'draft') == [{'v': 2, 'type': 'draft', 'decisionId': 'policy', 'value': 'capacity:100', 'revision': 26}]
-    # Budget: closing and opening the drawer again asks nothing more at the same revision.
-    click_fold(page, 't-whatif')
-    click_fold(page, 't-whatif')
+    # Budget: the tab drawn again at the same revision (the same snapshot again) asks nothing more.
+    panel.snapshot(binary)
+    panel.snapshot(binary)
     assert len(sent(panel, 'preview_policy')) == 1 and len(sent(panel, 'draft')) == 1
     assert len([m for m in sent(panel, 'load') if m['view'] == 'whatif']) == 1
     # The preview answer: bars, counts, the tie note, paired intervals.
@@ -117,7 +119,7 @@ def test_sandbox_starts_at_the_proposed_rule_and_shows_the_experiment(open_panel
     assert rows.evaluate_all('xs => xs.map(x => x.dataset.evaluatedRule)') == ['capacity:100', 'threshold:0.2']
     heading = page.locator('#ht-wi-cmp-h')
     assert heading.inner_text() == 'Model and baseline at top 100 rows' and heading.get_attribute('title') == 'capacity:100'
-    assert 'capacity:100' not in page.locator('[data-drawer="whatif"]').inner_text()
+    assert 'capacity:100' not in page.locator('[data-whatif-tab]').inner_text()
     assert rows.first.locator('data[data-result-id]').count() == 4
     assert page.locator('.ht-wi-evaluated th').all_text_contents()[2] == 'Positives (y)'
     # The engine's draft, read only, then "Ask the agent to propose this rule": a ready
@@ -204,25 +206,30 @@ def test_ask_the_agent_for_an_unevaluated_rule_uses_an_empty_question(open_panel
 
 
 def test_wi5_preview_values_are_never_shown_outside_the_drawer(open_panel, model, payload, binary):
-    """WI-5, TOOL-5: preview values never leave the What if? drawer of the one page."""
+    """WI-5, TOOL-5: preview values are shown in the What if? tab only, never on the one page (PA-12:
+    the page's drawer holds the calm line and the button; the sandbox is the tab's)."""
     panel = opened(open_panel, binary)
     page = panel.page
     panel.view_data('whatif', model('whatif', 'evidence.binary'))
     p = copy.deepcopy(payload('preview.binary'))
     p['evaluations']['capacity:100']['fit.logistic']['precision'] = 0.4321
     panel.send({'type': 'preview_policy_result', 'seq': 1, 'revision': 26, 'model': model('preview', p)})
-    assert '43.2%' in page.locator('[data-drawer="whatif"]').inner_text()
-    # Every other fold of the page open: the preview value appears in the drawer only.
-    views = {'evidence': model('evidence', 'evidence.binary'), 'eda': model('eda', 'evidence.binary')}
-    open_all(panel)
+    assert '43.2%' in page.locator('[data-whatif-tab]').inner_text()
+    # The one page, every fold open, with every read and the same preview answer delivered:
+    # the preview value appears nowhere, and nothing there is marked as an experiment.
+    one = open_panel()
+    one.init(stage='v2', task='binary', panelContract=2)
+    one.snapshot(binary)
+    views = {'evidence': model('evidence', 'evidence.binary'), 'eda': model('eda', 'evidence.binary'),
+             'whatif': model('whatif', 'evidence.binary')}
+    open_all(one)
     for view, data in views.items():
-        panel.view_data(view, data)
-    outside = page.evaluate("""() => { const m = document.getElementById('main').cloneNode(true);
-      for (const d of m.querySelectorAll('[data-drawer="whatif"]')) d.remove(); return m.innerText; }""")
-    assert '43.2%' not in outside
-    assert page.locator('#main [data-experiment]:not([data-drawer="whatif"] *)').count() == 0
-    click_fold(page, 't-whatif')
-    assert '43.2%' not in page.locator('body').inner_text(), 'closed, the drawer shows nothing'
+        one.view_data(view, data)
+    one.send({'type': 'preview_policy_result', 'seq': 1, 'revision': 26, 'model': model('preview', p)})
+    open_all(one)
+    assert one.page.locator('[data-drawer="whatif"] [data-open-whatif]').count() == 1
+    assert '43.2%' not in one.page.locator('body').inner_text()
+    assert one.page.locator('#main [data-experiment]').count() == 0
 
 
 @pytest.mark.parametrize('scheme', THEMES)
@@ -256,7 +263,7 @@ def test_wi4_regression_renders_the_residual_explorer_without_rule_vocabulary(op
     assert button.inner_text() == 'Ask the agent to propose this model'
     assert page.locator('[data-write]').count() == 0
     assert page.locator('[data-draft-restatement]').text_content() == draft['restatement']
-    for toggle in page.locator('[data-drawer="whatif"] .ht-figure button[aria-controls]').all():
+    for toggle in page.locator('[data-whatif-tab] .ht-figure button[aria-controls]').all():
         toggle.click()
     text = page.locator('body').inner_text()
     assert not FORBIDDEN.search(text), FORBIDDEN.search(text).group(0)
@@ -302,13 +309,13 @@ def test_regression_names_every_model_in_words(open_panel, model, payload, regre
     panel.view_data('whatif', model('whatif', _regression_with_variant(payload, family)))
     selector = page.locator('[data-model-selector] label')
     assert [x.strip() for x in selector.all_inner_texts()] == labels
-    text = page.locator('[data-drawer="whatif"]').inner_text()
+    text = page.locator('[data-whatif-tab]').inner_text()
     assert 'fit.variant' not in text and 'fit.baseline' not in text
     assert 'training mean' not in text and "moyenne d'entraînement" not in text and 'du moyenne' not in text
     page.locator('#ht-wi-fit-fit-baseline').check()
-    for toggle in page.locator('[data-drawer="whatif"] .ht-figure button[aria-controls]').all():
+    for toggle in page.locator('[data-whatif-tab] .ht-figure button[aria-controls]').all():
         toggle.click()
-    assert residuals in page.locator('[data-drawer="whatif"]').inner_text()
+    assert residuals in page.locator('[data-whatif-tab]').inner_text()
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
 

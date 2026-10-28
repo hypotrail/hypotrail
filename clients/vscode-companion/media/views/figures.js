@@ -617,7 +617,11 @@
     ]);
     if (!snap) return [head, el('main', { id: 'main', 'aria-busy': 'true' }, [el('p', { className: 'muted', text: HT.copy.page.reading })])];
     setStudyVariants(snap);
-    const body = snap.task === 'regression' ? residualExplorer(ctx) : [PARTS('whatif').body ? PARTS('whatif').body(ctx) : null];
+    // Lot 2026-10-28 (PA-12): the compact sandbox left the page's drawer and lives here only:
+    // the binary rule sandbox, and for a regression the residual explorer then the sandbox's
+    // model comparison, its draft and "Ask the agent to propose this" (WI-1 to WI-5).
+    const sandbox = PARTS('whatif').body ? PARTS('whatif').body(ctx) : null;
+    const body = snap.task === 'regression' ? [...residualExplorer(ctx), sandbox] : [sandbox];
     return [head, el('main', { id: 'main', className: 'ht-whatif-tab', 'data-whatif-tab': snap.task }, body.filter(Boolean))];
   }
 
