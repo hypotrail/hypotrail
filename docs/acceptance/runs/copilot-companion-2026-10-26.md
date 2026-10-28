@@ -825,3 +825,12 @@ its warning.
   numbers. Also: the limit line still speaks of out-of-fold development predictions at the
   conclusion (R43: the limit must fit the step; here: what the final test does and does not
   establish). Noted only, not fixed.
+- **R48 (end state, 2026-10-28).** After adoption, "Ce que l'étude peut affirmer" does show the
+  development vs final table and the criterion line, so the content exists, but: (1) still a
+  table and a ten-line paragraph, no chart (draw the table as dots with intervals on one scale,
+  development and final side by side, the final-test bound as a line); (2) the conclusion text
+  is one dense block (split into "ce que l'étude établit" / "ce qu'elle n'établit pas" / "et
+  après", the numbers carried by the chart); (3) the criterion line says "si l'erreur de
+  validation est inférieure …, jugé sur le test final", which mixes the two frames: say "l'erreur
+  sur le test final" when judged there; (4) "moyenne d'entraînement" again (R45: "référence
+  (prédire la moyenne)"). Noted only, not fixed.
