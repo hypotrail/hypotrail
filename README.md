@@ -34,7 +34,7 @@ Optional study panel (VS Code 1.90 or later, flag off by default): `HYPOTRAIL_CO
 | [clients/vscode-companion/](clients/vscode-companion/README.md) | Study panel for VS Code, a client of the `hypotrail` CLI behind a feature flag that is off by default (stages v0 to v3, default v0) |
 | [experimental/companion/](experimental/companion/README.md) | Paused browser and VS Code companion experiment |
 | [docs/](docs/START-HERE.md) | Product specification, architecture, design review, and implementation handoff |
-| `scripts/` | Repository maintenance checks |
+| `scripts/` | Repository maintenance checks; `scripts/workshop/` prepares workshop studies ([participant guide](docs/workshop/README.md), in French: Codespaces after a fork, or local) |
 
 ## Development
 
