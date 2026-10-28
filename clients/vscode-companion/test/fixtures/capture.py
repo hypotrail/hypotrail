@@ -47,7 +47,9 @@ BANK = REPO / 'use-cases' / 'bank-marketing'
 AUTO = REPO / 'use-cases' / 'auto-mpg'
 SHOPPERS = REPO / 'use-cases' / 'online-shoppers'
 # The path the captured payloads show instead of the temporary study directory.
-STUDY_PLACEHOLDER = {# E-8: the one-page Auto MPG studies (listed before ``regression``, their prefix).
+STUDY_PLACEHOLDER = {# Lot P (R39-R53): the cross-validated Auto MPG study (listed first, a prefix of ``regression``).
+                     'regression-cv': '/studies/auto mpg cv',
+                     # E-8: the one-page Auto MPG studies (listed before ``regression``, their prefix).
                      'regression-onepage': '/studies/auto mpg', 'regression-reopened': '/studies/auto mpg',
                      'regression-automatic': '/studies/auto mpg automatic',
                      'binary': '/studies/bank marketing "demo"', 'regression': '/studies/auto mpg',
@@ -576,6 +578,89 @@ def one_page(cap: Capture) -> None:
     assert summary['review_queue'] and summary['review_queue']['items'], summary['review_queue']
 
 
+CV_VARIANTS = {'variants': [
+    {'kind': 'tuned', 'question': 'Does a ridge penalty chosen by nested cross-validation predict with a smaller error '
+                                  'than the unpenalised linear model?'},
+    {'kind': 'family', 'family': 'ebm',
+     'question': 'Does an explainable boosting machine follow the curve of horsepower and weight?'}]}
+
+
+def cross_validated_regression(cap: Capture) -> None:
+    """Lot P (owner remarks R39 to R53, 2026-10-28): Auto MPG as the owner ran it, with the
+    default protocol (80 rows sealed for the final test, five time-ordered folds), the
+    engine's drafted preparation, two variants (a tuned ridge and an EBM), the model choice,
+    the end, and the Azure ML export plan (``export azureml --plan``, which writes nothing).
+    The states the panel shows its figures at: the preparation proposal, the variants
+    proposal, the choice (the trial budget reads 2 of 3, R47) and the end."""
+    from mlkit.study import state as st
+
+    study = cap.root / 'regression-cv'
+    flow = fk.Flow(study, AUTO, prefix='v')
+    flow.init()
+    flow.decide('prediction_time', 'when the technical characteristics of a new model are fixed, '
+                                   'before its fuel efficiency is measured')
+    flow.decide('feature_availability', fk.availability(AUTO))
+    flow.decide('split', st.b1_default_value(flow.state(), 'split'))
+    state = flow.state()
+    if state['decisions']['success_criterion']['status'] != 'confirmed':
+        flow.decide('success_criterion', fk.criterion(state))
+    nxt = _run_pending(flow)
+    assert nxt['kind'] == 'propose' and nxt['decision'] == 'preprocessing', nxt
+    code, out = run('decide', 'propose', 'preprocessing', '--value-json', json.dumps(nxt['default_value']),
+                    '--restatement', 'You keep the drafted preparation: each change rests on the quality check.',
+                    '--rationale', 'The quality check motivates it.', '--request-id', 'v-prep',
+                    '--expected-revision', flow.rev(), '--study', study)
+    assert code == 0, out
+    _summary(cap, 'summary.regression.cv.preparation', study,
+             'Auto MPG (five time-ordered folds, 80 rows sealed): the drafted preparation proposed.')
+    flow.call('decide', 'confirm', out['result']['proposal_id'], '--user-words', fk.default_words('preprocessing'),
+              '--request-id', flow.rid(), '--expected-revision', flow.rev(), '--study', study)
+    nxt = _run_pending(flow)
+    assert nxt['kind'] == 'propose' and nxt['decision'] == 'model_variant', nxt
+    code, out = run('decide', 'propose', 'model_variant', '--value-json', json.dumps(CV_VARIANTS),
+                    '--restatement', 'You compare a tuned ridge and an EBM with the linear model.',
+                    '--rationale', 'The diagnostics show a curve for horsepower and weight.', '--request-id', 'v-var',
+                    '--expected-revision', flow.rev(), '--study', study)
+    assert code == 0, out
+    _summary(cap, 'summary.regression.cv.variants', study,
+             'Auto MPG: two variants proposed (a tuned ridge, an EBM) after the linear diagnostics.')
+    # The reads at the proposal: the diagnostics behind it, and the budget before any variant (0 of 3).
+    note = 'The cross-validated Auto MPG study at the variants proposal (lot P).'
+    for name, argv in (('evidence', ['evidence']), ('status', ['status'])):
+        cap.read(f'{name}.regression.cv.variants', 'regression', study, *argv, '--json', note=note)
+    flow.call('decide', 'confirm', out['result']['proposal_id'], '--user-words', fk.default_words('model_variant'),
+              '--request-id', flow.rid(), '--expected-revision', flow.rev(), '--study', study)
+    nxt = _run_pending(flow)
+    assert nxt['kind'] == 'propose' and nxt['decision'] == 'model_choice', nxt
+    _summary(cap, 'summary.regression.cv.choice', study,
+             'Auto MPG at the model choice after two confirmed variants: the budget reads 2 of 3 (R47).')
+    note = 'The cross-validated Auto MPG study at the model choice (lot P).'
+    for name, argv in (('evidence', ['evidence']), ('decisions', ['decisions']), ('status', ['status']),
+                       ('data', ['data'])):
+        cap.read(f'{name}.regression.cv', 'regression', study, *argv, '--json', note=note)
+    flow.decide('model_choice', 'fit.linear', words=CHOICE_WORDS)
+    nxt = _run_pending(flow)
+    if nxt.get('decision') == 'final_test':
+        value = st.b1_default_value(flow.state(), 'final_test')
+        code, out = run('decide', 'propose', 'final_test', '--value-json', json.dumps(value), '--restatement',
+                        'You open the sealed final test once, for the chosen model.', '--rationale',
+                        'The model is chosen.', '--request-id', 'v-open', '--expected-revision', flow.rev(),
+                        '--study', study)
+        assert code == 0, out
+        flow.call('decide', 'confirm', out['result']['proposal_id'], '--user-words', OPEN_WORDS,
+                  '--request-id', flow.rid(), '--expected-revision', flow.rev(), '--study', study)
+        nxt = _run_pending(flow)
+    assert nxt['kind'] == 'propose' and nxt['decision'] == 'conclusion', nxt
+    flow.decide('conclusion', {**nxt['choice_options'][0]['value'], 'text': CONCLUSION_TEXT})
+    done = _summary(cap, 'summary.regression.cv.done', study, 'The cross-validated Auto MPG study at the end.')
+    assert done['next_action']['kind'] == 'done', done['next_action']
+    note = 'The cross-validated Auto MPG study at the end (lot P).'
+    for name, argv in (('evidence', ['evidence']), ('status', ['status'])):
+        cap.read(f'{name}.regression.cv.done', 'regression', study, *argv, '--json', note=note)
+    cap.read('export.azureml.plan', 'regression', study, 'export', 'azureml', '--expected-revision', flow.rev(),
+             '--plan', '--json', note='R49: the Azure ML export plan at the end (writes nothing).', expect=(0, 2))
+
+
 def capture(root: Path) -> dict[str, dict]:
     """Every captured scenario: ``{name: {about, payload}}`` (the studies live in ``root``)."""
     cap = Capture(root)
@@ -587,6 +672,7 @@ def capture(root: Path) -> dict[str, dict]:
         regression(cap)
         french(cap)
         one_page(cap)
+        cross_validated_regression(cap)
     return cap.items
 
 

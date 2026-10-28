@@ -1,0 +1,671 @@
+{
+ "about": {
+  "schema": "hypotrail.azureml_export/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "export",
+   "azureml",
+   "--expected-revision",
+   "45",
+   "--plan",
+   "--json"
+  ],
+  "note": "R49: the Azure ML export plan at the end (writes nothing)."
+ },
+ "payload": {
+  "schema": "hypotrail.azureml_export/1",
+  "ok": true,
+  "plan": true,
+  "study_revision": 45,
+  "snapshot_id": "9e82df38517cc170bccbc9501f6e9768a8df7ea4fc051a281415ca68cdd7d6db",
+  "export_id": "49546e836f3832d14fbfa8589e3d91c4b037ea35f65c6d1e61eec2aeca099d79",
+  "out": null,
+  "template": {
+   "id": "team-azureml-v1",
+   "version": "1.0.0",
+   "sha256": "bddb850871bdee12e8b2800e707ae31bebb528237247e26ce05589093b391af7"
+  },
+  "files": [
+   {
+    "path": ".amlignore",
+    "kind": "added",
+    "sha256": "06b0e21972e26f2b09e7a86e36d73cb0554cbae44a8c57550f175ea3cb8ffaa0",
+    "bytes": 640
+   },
+   {
+    "path": ".ci/deploy-pipeline.yml",
+    "kind": "rendered",
+    "sha256": "d5d5e0bb86fc31e604e345223c7ffb980e557c13fcc1a572446fab5e10d508dc",
+    "bytes": 1352
+   },
+   {
+    "path": ".ci/pipeline.yml",
+    "kind": "adapted",
+    "sha256": "225826738cbbb53750d8dfe18c1d88c6db25b45888389955b8455f0e326b8f9a",
+    "bytes": 1159
+   },
+   {
+    "path": ".gitignore",
+    "kind": "adapted",
+    "sha256": "0f37a9a2297236e908ea4f007ccde104d31baa722a795316344a8e2da92d7921",
+    "bytes": 1708
+   },
+   {
+    "path": ".pre-commit-config.yaml",
+    "kind": "preserved",
+    "sha256": "a8d05c3132ac3ab98c2f46b872c01d40fa3d971fe1829e6be3e04f113c0e0252",
+    "bytes": 106
+   },
+   {
+    "path": ".vscode/extensions.json",
+    "kind": "preserved",
+    "sha256": "839c8115daf3284f93fa962f0eca76562fb50b0b7b566717a42c13a9f8519672",
+    "bytes": 348
+   },
+   {
+    "path": ".vscode/launch.json",
+    "kind": "adapted",
+    "sha256": "754506e34247a2235375474a3a7e92a8298361dfb1cc30ba44a6c610db920d79",
+    "bytes": 2301
+   },
+   {
+    "path": ".vscode/settings.json",
+    "kind": "rendered",
+    "sha256": "9519fcf43168e58a340798a3ba4cec90011b072b323ba371de9c0402e1f4adf0",
+    "bytes": 594
+   },
+   {
+    "path": ".vscode/tasks.json",
+    "kind": "adapted",
+    "sha256": "6c9fc41f1fe9db239d1b4a83780f002ff252305b88a32f422e13a420f67c5983",
+    "bytes": 6283
+   },
+   {
+    "path": "Makefile",
+    "kind": "adapted",
+    "sha256": "82e88f1e69645fdd39793e4130df183b77fc15d0fd3a064c1afe474723698652",
+    "bytes": 1085
+   },
+   {
+    "path": "README.md",
+    "kind": "rendered",
+    "sha256": "614ea306a85de91127eff44ad1f1bcba205f7cbcbf19e9a8c08b0a8ade958f35",
+    "bytes": 9627
+   },
+   {
+    "path": "aml/components/data_preparation.yml",
+    "kind": "rendered",
+    "sha256": "a7c0c27794b9cd61b1869b43b85ec437f78a78e5d1a3ad0eb379f9af974be324",
+    "bytes": 616
+   },
+   {
+    "path": "aml/components/data_splitting.yml",
+    "kind": "rendered",
+    "sha256": "7eef1daa4e141b02786f5ffe56c6855dd72fb4b0acab52888f582245b47a5959",
+    "bytes": 700
+   },
+   {
+    "path": "aml/components/evaluation.yml",
+    "kind": "rendered",
+    "sha256": "a284b2ffd7caa1b099bc32c5d73935675133862fe865fba46d056e7f3994e35f",
+    "bytes": 660
+   },
+   {
+    "path": "aml/components/training.yml",
+    "kind": "rendered",
+    "sha256": "17a4e5d3dc61b220d9f995ae20226e3a7ef63d617c07069fd70a11ff0e7ac723",
+    "bytes": 661
+   },
+   {
+    "path": "aml/pipelines/training/aml-environment.yml",
+    "kind": "rendered",
+    "sha256": "4993294f60c6bcbf9c077fb11cf732326dfb824ba4488b6a6e2f17b431640f66",
+    "bytes": 433
+   },
+   {
+    "path": "aml/pipelines/training/data.yml",
+    "kind": "rendered",
+    "sha256": "cfe90ef33f3f16e8619a45c8308c6b0105678b1258e75dd78810252405515c28",
+    "bytes": 605
+   },
+   {
+    "path": "aml/pipelines/training/pipeline-job.yml",
+    "kind": "rendered",
+    "sha256": "67a9454b5450690973fcb5d1cc892fe81d83f2f609efb308587ceecb53cfbfe3",
+    "bytes": 771
+   },
+   {
+    "path": "aml/pipelines/training/pipeline.yml",
+    "kind": "rendered",
+    "sha256": "e8a7acf2c2cf3f49c52a86a7daa2a6eec042cfbcc1e1f4d745f4d3a9110028cf",
+    "bytes": 1734
+   },
+   {
+    "path": "aml/pipelines/training/requirements.lock",
+    "kind": "generated",
+    "sha256": "d080446ad913b1f7ba310748de120d9623942e1abc3d37ccc14c0ea82673c88a",
+    "bytes": 1140
+   },
+   {
+    "path": "aml/pipelines/training/runtime/Dockerfile",
+    "kind": "rendered",
+    "sha256": "53453c7a830aa60473759989f8325a150650c8a00a0029b086c55a8039e89883",
+    "bytes": 426
+   },
+   {
+    "path": "aml/pipelines/training/runtime/README.md",
+    "kind": "added",
+    "sha256": "3b7e24f7f58e3ebadc960bebff49310ce919625a85e27d9d192b1edf5f710597",
+    "bytes": 468
+   },
+   {
+    "path": "aml/pipelines/training/runtime/hypotrail_runtime-1.0.0-py3-none-any.whl",
+    "kind": "copied",
+    "sha256": "22f6a4c0b8c69152fd1e3cbb523805500d29b7e153506c634dc8221bd759f625",
+    "bytes": 64886
+   },
+   {
+    "path": "aml/pipelines/training/runtime/requirements.lock",
+    "kind": "generated",
+    "sha256": "d080446ad913b1f7ba310748de120d9623942e1abc3d37ccc14c0ea82673c88a",
+    "bytes": 1140
+   },
+   {
+    "path": "cli-aliases.sh",
+    "kind": "adapted",
+    "sha256": "25a6f4c66d2f2a4a97309bc3b9587d6328c8a9dfbf0e8d3ddf510925aa111e87",
+    "bytes": 957
+   },
+   {
+    "path": "data/.gitignore",
+    "kind": "preserved",
+    "sha256": "bee61d1d6d047baa1f2ff1d3402747d2af1257b3e3e7bd7c61ece650a7836130",
+    "bytes": 58
+   },
+   {
+    "path": "data/hypotrail/SHA256SUMS",
+    "kind": "generated",
+    "sha256": "35df49de3443d0d71738b3fff5d71cce553045b587561a8623c51c6cc179dc84",
+    "bytes": 1856
+   },
+   {
+    "path": "data/hypotrail/contracts/data-contract.json",
+    "kind": "generated",
+    "sha256": "eac9460d6ccf53e8536ecc78aea9e09e15d2563adc29c982b644ff2946a07aa0",
+    "bytes": 2658
+   },
+   {
+    "path": "data/hypotrail/contracts/deployment-snapshot.json",
+    "kind": "generated",
+    "sha256": "8e0cf82a8b45432aeeb363a0c683ab460100400b13f3fea6c700bda1f4bfdeec",
+    "bytes": 5766
+   },
+   {
+    "path": "data/hypotrail/contracts/development-plan.json",
+    "kind": "generated",
+    "sha256": "bcd0082b331dd749a2b913f7916dc4b837fc490b9e326db333efee4a23ce2e98",
+    "bytes": 7337
+   },
+   {
+    "path": "data/hypotrail/contracts/export-manifest.json",
+    "kind": "generated",
+    "sha256": "efb0359d7e198732a27d8c7bc0c3f8ac64057e784ffad49f7b9f8fa34399d6ae",
+    "bytes": 20490
+   },
+   {
+    "path": "data/hypotrail/contracts/model-recipe.json",
+    "kind": "generated",
+    "sha256": "4f614bf0bdabd1f87ac17326df295784889949432a4161d56633f233336cd7d5",
+    "bytes": 2304
+   },
+   {
+    "path": "data/hypotrail/contracts/readiness.json",
+    "kind": "generated",
+    "sha256": "99d6e56f551c4a913599f18cec0ee14c61b7368bc3afbd6d2ef3bce504875181",
+    "bytes": 871
+   },
+   {
+    "path": "data/hypotrail/contracts/scientific-projection.json",
+    "kind": "generated",
+    "sha256": "dceb5df44c7c92a11e11669ee4065144882a7112847dbad85767e15635e128db",
+    "bytes": 2729
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/computation_context.json",
+    "kind": "copied",
+    "sha256": "6d0690689ff94b2a57f5ee879a4a48abbd25fe3b102574a920266d422feb1ff0",
+    "bytes": 1052
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/data_contract.json",
+    "kind": "copied",
+    "sha256": "07c0ca8977d3ca8c57976eff8847d658ffbc452d8ae7f1f672f9f4f04861530a",
+    "bytes": 1889
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/environment/requirements.lock",
+    "kind": "copied",
+    "sha256": "2fe6657d33c36b9c88dfc60b207bc6972d503e0036467b9191dfca9ac18196bb",
+    "bytes": 387
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/evidence/binding-1.json",
+    "kind": "copied",
+    "sha256": "43a47a89d304466610643471e055862619d251fd817f043b9e1ad98d4b3650dc",
+    "bytes": 415
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/parity/expected_outputs.json",
+    "kind": "copied",
+    "sha256": "c23c370df72dca51015b46b46ee6a4af83d7b008a785ccf525883e47b889c5fe",
+    "bytes": 1040
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/parity/features.json",
+    "kind": "copied",
+    "sha256": "59d5a21dbbaa629e521db5bf28b36553dfe830016713bf25e5adcd86acfc4856",
+    "bytes": 1780
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/payload/model.pkl",
+    "kind": "copied",
+    "sha256": "b429e09648759c97be2846021f8f3ee14435c01d7cd71b9102ad939d12bd595c",
+    "bytes": 3800
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/predictor.json",
+    "kind": "copied",
+    "sha256": "a63f902d1c4450daef43477c2d2ebbf6bfe27d9486deeae090139b430c817026",
+    "bytes": 2721
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/predictor_bundle.json",
+    "kind": "copied",
+    "sha256": "00e311c6359d420203c1a2bd9ddf4d5e5e1469da8fa6dc0a3bb206c121f61da4",
+    "bytes": 1990
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/recipe.json",
+    "kind": "copied",
+    "sha256": "ea0c75ae652926059804f9494eca6e0f95df8e7b649720e3d0b63369616eb647",
+    "bytes": 1537
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/runtime/hypotrail_runtime-1.0.0-py3-none-any.whl",
+    "kind": "copied",
+    "sha256": "22f6a4c0b8c69152fd1e3cbb523805500d29b7e153506c634dc8221bd759f625",
+    "bytes": 64886
+   },
+   {
+    "path": "docs/media/.gitkeep",
+    "kind": "preserved",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+   },
+   {
+    "path": "docs/pages/.order",
+    "kind": "adapted",
+    "sha256": "88bdc923f86f59ef10d51c95d697d04798b310889cbd6c22c0f0e4d492674186",
+    "bytes": 45
+   },
+   {
+    "path": "docs/pages/architecture.md",
+    "kind": "rendered",
+    "sha256": "f7ea7bbdd3a4c5e966d637794e6598b412db2b3ebc11c6653f9cde4b246a6abf",
+    "bytes": 962
+   },
+   {
+    "path": "docs/pages/code.md",
+    "kind": "rendered",
+    "sha256": "9a23ab34ba6ff86f41b34f6e84e3420ca5d044d677ac33a244d669dd9b7b56a7",
+    "bytes": 894
+   },
+   {
+    "path": "docs/pages/data.md",
+    "kind": "rendered",
+    "sha256": "5441662cec5e1f27e9ec06a47d811c98c5e17910cfe74d8d42af5a6f6adeb9ff",
+    "bytes": 1143
+   },
+   {
+    "path": "docs/pages/deployment.md",
+    "kind": "rendered",
+    "sha256": "0cce9786166497a79a4c15f88e139267b79f316547c4bcd599b408a89f1f0ac4",
+    "bytes": 3179
+   },
+   {
+    "path": "docs/pages/references.md",
+    "kind": "rendered",
+    "sha256": "82360462b48b2cddf1f7fe0dbc5a435ba361e3703f3a5ce69e8ccc45cc3694cb",
+    "bytes": 597
+   },
+   {
+    "path": "environment.yml",
+    "kind": "rendered",
+    "sha256": "118c827532fd9b8505f3e9d4daa920975bc620243f2ff3462eeaa411f75c2fc8",
+    "bytes": 579
+   },
+   {
+    "path": "notebooks/01_first_draft.ipynb",
+    "kind": "generated",
+    "sha256": "f12faf7383270329384fb03e76aef0cf6b6d41f4b9c0244528040fa557163183",
+    "bytes": 2487
+   },
+   {
+    "path": "pyproject.toml",
+    "kind": "rendered",
+    "sha256": "06144363d71617daca8f612b03648258a1559d829b555530aa289cdb294e5d8d",
+    "bytes": 4323
+   },
+   {
+    "path": "src/conf/azure/target.yaml",
+    "kind": "generated",
+    "sha256": "e3f171d6d993d7a8ab5c69bdf7233d9941995a6f00c41d1f990cf55444670ace",
+    "bytes": 765
+   },
+   {
+    "path": "src/conf/base_config.yaml",
+    "kind": "rendered",
+    "sha256": "8a215b7db6350227068b3ee8889fda93d75147fa48e645dc1052b99d70fa829e",
+    "bytes": 844
+   },
+   {
+    "path": "src/conf/components/data_preparation/default.yaml",
+    "kind": "rendered",
+    "sha256": "7012bd6c575a79f61423035df6d99e8a7860ac5d69e30f0416b7fea1a47835fb",
+    "bytes": 692
+   },
+   {
+    "path": "src/conf/components/data_splitting/default.yaml",
+    "kind": "rendered",
+    "sha256": "48b6a3ffe274bfe969a4f13fef29d83629a7c74877d792e93c0fd1268ac91843",
+    "bytes": 370
+   },
+   {
+    "path": "src/conf/components/evaluation/default.yaml",
+    "kind": "rendered",
+    "sha256": "073dbad3041c779cca62ca0505aa8892445838be964f453310ebc59d4f0dbfa4",
+    "bytes": 197
+   },
+   {
+    "path": "src/conf/components/training/default.yaml",
+    "kind": "rendered",
+    "sha256": "81629ff58bdb86387eedaff44acf5e6e44b8a2046a1fdcfd70d161e1ab2aed43",
+    "bytes": 1200
+   },
+   {
+    "path": "src/conf/components/training/random_forest.yaml",
+    "kind": "rendered",
+    "sha256": "21d632419921f1ca9df78b3c05d8e504372b2b6e83b8a4b4f58243df51bb4c17",
+    "bytes": 1260
+   },
+   {
+    "path": "src/conf/config.yaml",
+    "kind": "rendered",
+    "sha256": "21f699bdfb16755d04689b897be7b12f07f50e597cc5f57596d4b105754df776",
+    "bytes": 744
+   },
+   {
+    "path": "src/conf/hydra/job_logging/custom.yaml",
+    "kind": "preserved",
+    "sha256": "202f6131117427c9565bf3edc5c7fff59d483c78483ca9b0dc7055b9c532a994",
+    "bytes": 412
+   },
+   {
+    "path": "src/conf/hypotrail/contracts/data-contract.json",
+    "kind": "generated",
+    "sha256": "eac9460d6ccf53e8536ecc78aea9e09e15d2563adc29c982b644ff2946a07aa0",
+    "bytes": 2658
+   },
+   {
+    "path": "src/conf/hypotrail/contracts/model-recipe.json",
+    "kind": "generated",
+    "sha256": "4f614bf0bdabd1f87ac17326df295784889949432a4161d56633f233336cd7d5",
+    "bytes": 2304
+   },
+   {
+    "path": "src/conf/hypotrail/replay.yaml",
+    "kind": "rendered",
+    "sha256": "fb0d5c7d71dd0e32937aa0c54b9a2e4fdc5f608742bfebca3e9cf174c75dce4e",
+    "bytes": 890
+   },
+   {
+    "path": "src/conf/logging_config.yaml",
+    "kind": "preserved",
+    "sha256": "2512617b44fc7d0f7cae77fde7df449f2c7bb7c2b08c452e981f1683755f0c79",
+    "bytes": 76
+   },
+   {
+    "path": "src/pipeline/data_preparation/main.py",
+    "kind": "adapted",
+    "sha256": "58e3730e1d977d98f9aa78906c993f62887ae70e89b55c08bdfdac8801381f15",
+    "bytes": 1612
+   },
+   {
+    "path": "src/pipeline/data_splitting/main.py",
+    "kind": "adapted",
+    "sha256": "16ce33042dcc5aff3c32fc03918658ac4355354a28cc08a634f7d3118423b690",
+    "bytes": 1575
+   },
+   {
+    "path": "src/pipeline/evaluation/main.py",
+    "kind": "adapted",
+    "sha256": "11d4d0255dfa4df36b23e1f2c31d69875f90dbf0339b4adc618647a6d2989b03",
+    "bytes": 1608
+   },
+   {
+    "path": "src/pipeline/training/main.py",
+    "kind": "adapted",
+    "sha256": "38585644cf92bb96e5f59055d0761136c48671841946ce697bc00b0981070522",
+    "bytes": 1593
+   },
+   {
+    "path": "src/pipeline/utils/data_management.py",
+    "kind": "adapted",
+    "sha256": "0999b4cd10eb52a89f3f4bef2101a06506d779e1e86317f00c00638f3dbc825b",
+    "bytes": 3895
+   },
+   {
+    "path": "src/pipeline/utils/enums.py",
+    "kind": "preserved",
+    "sha256": "54d940775ef19f65f7f9fa94c3426b58d03164821ac3e57d413b2f2fcf655f34",
+    "bytes": 531
+   },
+   {
+    "path": "src/pipeline/utils/hypotrail/__init__.py",
+    "kind": "added",
+    "sha256": "7c283f3d8ca2d40a6e41ce507c7cebaec7fb3df2d519a92504dd281373674f0d",
+    "bytes": 738
+   },
+   {
+    "path": "src/pipeline/utils/hypotrail/azure_yaml.py",
+    "kind": "shared",
+    "sha256": "e34fd82ea31a074fc2750b8a0a80223f4b27468da7c4aa1b0ea1dc556ab8cd55",
+    "bytes": 8708
+   },
+   {
+    "path": "src/pipeline/utils/hypotrail/canonical.py",
+    "kind": "shared",
+    "sha256": "1b59efe0e065953ac93b6892d4339748be063206ccd3e90bff282054b4828df0",
+    "bytes": 3127
+   },
+   {
+    "path": "src/pipeline/utils/hypotrail/config.py",
+    "kind": "added",
+    "sha256": "8871b068e09eb1924773bd8648f835a486ef9b4ab8a49f5904559871fb7214da",
+    "bytes": 5433
+   },
+   {
+    "path": "src/pipeline/utils/hypotrail/contracts.py",
+    "kind": "added",
+    "sha256": "f057e167e60082c815661101d866ebddb8098563551ae3cc779222473cc36de7",
+    "bytes": 33434
+   },
+   {
+    "path": "src/pipeline/utils/hypotrail/errors.py",
+    "kind": "added",
+    "sha256": "8bf7f8d53df49507dc82d9268a0c0c6a5f161c1e7b5e841eb96ecfae2217e493",
+    "bytes": 4787
+   },
+   {
+    "path": "src/pipeline/utils/hypotrail/mlflow_packaging.py",
+    "kind": "shared",
+    "sha256": "b141da685febc768ef7fa7338876e42995f516ab6d2f8b1d2792d68a446aacac",
+    "bytes": 76959
+   },
+   {
+    "path": "src/pipeline/utils/hypotrail/projection.py",
+    "kind": "shared",
+    "sha256": "6687a73e0af86296af618679bdbf2a91910612f3928c38359cf340683eb02abf",
+    "bytes": 10309
+   },
+   {
+    "path": "src/pipeline/utils/hypotrail/runtime_bridge.py",
+    "kind": "added",
+    "sha256": "03a74d02e0e0f691fb99e647d4ff962ea276966aa0434eaf0a5096198018b2e7",
+    "bytes": 2157
+   },
+   {
+    "path": "src/pipeline/utils/hypotrail/steps.py",
+    "kind": "added",
+    "sha256": "5425f6d23d12c31aa920301e563f46e61cc2ab7dc7c3a574682106b866f4f67c",
+    "bytes": 22077
+   },
+   {
+    "path": "src/pipeline/utils/hypotrail/transfer.py",
+    "kind": "shared",
+    "sha256": "8b181f7151a50ed2c23564d2a170983252ec7d637ada111379d8880301b0b5cf",
+    "bytes": 3834
+   },
+   {
+    "path": "src/pipeline/utils/project.py",
+    "kind": "added",
+    "sha256": "3d7aa9b3fdea373f0a8742e31def4d3a73a8f86117a46fedb54a79e90ab4126e",
+    "bytes": 40006
+   },
+   {
+    "path": "src/pipeline/utils/schemas.py",
+    "kind": "rendered",
+    "sha256": "d89a9b0241ed524a4789f409ebb445571aeabfe83c6879fb60f2525a5b2add6c",
+    "bytes": 1418
+   },
+   {
+    "path": "src/pipeline/utils/tracking.py",
+    "kind": "preserved",
+    "sha256": "2f6e83c16489707cbe03a9dd6a646953d10db148f53d2a9a547aada4021b1166",
+    "bytes": 752
+   },
+   {
+    "path": "tests/conftest.py",
+    "kind": "preserved",
+    "sha256": "7fd0e7d0d1685d1e9763f5dc52ed7eec6b7425d222fd2fa24221a036913f6cd4",
+    "bytes": 599
+   },
+   {
+    "path": "tests/pipeline/__init__.py",
+    "kind": "preserved",
+    "sha256": "6048b487bed1619bcaee6aa462c89b942489e4feb57dae6fcf48415c066dd024",
+    "bytes": 42
+   },
+   {
+    "path": "tests/pipeline/data_preparation/__init__.py",
+    "kind": "preserved",
+    "sha256": "a0d9dca678f2998f0acb5babd7bc407630221675ff33f44e8eb4fa14e8b11fb2",
+    "bytes": 50
+   },
+   {
+    "path": "tests/pipeline/data_preparation/test_main.py",
+    "kind": "adapted",
+    "sha256": "af33f33ed7a35552cfe76728b518f9afabec56e717c3fec0be3cdde2664bbc51",
+    "bytes": 2824
+   },
+   {
+    "path": "tests/test_export_contract.py",
+    "kind": "added",
+    "sha256": "b3d273179549323e238ebc5d8455da622985d7e88a4ed8565e70fa60c8f455a9",
+    "bytes": 4743
+   }
+  ],
+  "configuration_status": "draft",
+  "artifact_status": "captured",
+  "checks": [
+   {
+    "id": "family_supported",
+    "status": "passed"
+   },
+   {
+    "id": "selection_confirmed",
+    "status": "passed"
+   },
+   {
+    "id": "selected_results_current",
+    "status": "passed"
+   },
+   {
+    "id": "plan_rows_are_training_rows",
+    "status": "passed"
+   },
+   {
+    "id": "bundle_verified",
+    "status": "passed"
+   },
+   {
+    "id": "bundle_recipe_matches",
+    "status": "passed"
+   },
+   {
+    "id": "mlflow_package_present",
+    "status": "missing",
+    "detail": "The bundle has no MLflow package; the native predictor is transported, no MLflow model is announced."
+   },
+   {
+    "id": "layout_conforms",
+    "status": "not_run"
+   },
+   {
+    "id": "azure_qualification",
+    "status": "not_run",
+    "detail": "Generated files are not an Azure run."
+   }
+  ],
+  "missing_fields": [
+   "subscription_id",
+   "resource_group",
+   "workspace",
+   "compute",
+   "data_asset.name",
+   "data_asset.version",
+   "environment.name",
+   "environment.version",
+   "environment.base_image",
+   "identity.mode"
+  ],
+  "warnings": [
+   "mlflow_package_missing",
+   "draft_not_ready_to_submit"
+  ],
+  "next_commands": [
+   {
+    "command": "python -m src.pipeline.utils.project validate --offline",
+    "scope": "local",
+    "purpose": "check the folder: checksums, Hydra freeze, Azure YAML graph, upload, model parity"
+   },
+   {
+    "command": "python -m src.pipeline.utils.project predict --parity --output outputs/predictions.json",
+    "scope": "local",
+    "purpose": "predict with the evaluated model; no fit"
+   },
+   {
+    "command": "python -m src.pipeline.utils.project materialize --source <original dataset file>",
+    "scope": "local",
+    "purpose": "extract the development rows (no final-test row)"
+   },
+   {
+    "command": "python -m src.pipeline.utils.project run-local --mode rebuild_final_candidate",
+    "scope": "local",
+    "purpose": "fit a new candidate; it does not inherit the verdict"
+   }
+  ]
+ }
+}
