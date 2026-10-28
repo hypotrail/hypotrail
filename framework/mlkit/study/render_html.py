@@ -1715,7 +1715,8 @@ def data_rows(sample: Mapping | None) -> str:
         body = ''.join(f'<tr data-row-key="{e(str(r["row_key"]))}">'
                        + ''.join(f'<td>{lit("data_row", r["values"].get(c, ""))}</td>'
                                  for c in cols) + '</tr>' for r in sample['rows'])
-        hidden = '' if sample.get('target_shown', True) else f' {e(ds["rows_hidden"])}'
+        hidden = '' if sample.get('target_shown', True) else \
+            f' {e(ds["rows_withheld" if sample.get("withheld") else "rows_hidden"])}'
         # The seed in groups of four, so it never reads as a result id.
         grouped = ' '.join(str(sample.get('seed') or '')[i:i + 4] for i in range(0, 16, 4))
         seed = (f' {e(ds["rows_seed"])} {lit("identifier", grouped.strip(), "code")}.'

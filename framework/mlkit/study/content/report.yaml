@@ -244,6 +244,7 @@ data_section:
   rows_note: Development rows only, drawn at random from a seed fixed for this study, so the data card, this report and the notebook show the same rows. Their target values are a look at the target before the split, recorded in the exposure ledger.
   rows_seed: 'Seed of the draw:'
   rows_hidden: The target of these rows is shown once a write records that look.
+  rows_withheld: The target of these rows is not shown, the split was confirmed before this study recorded a look at them.
   rows_missing: The example rows could not be read.
   ungrouped: Other columns
   missing: Missing in development rows

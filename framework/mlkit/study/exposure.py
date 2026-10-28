@@ -150,16 +150,44 @@ def current_sample(store, state: Mapping, entries: list[Mapping] | None = None) 
     return partition.study_sample(state, read_blob, entries)
 
 
+SPLIT_DECISION = 'split'
+# Why a sample is shown without its target although it could be recorded (``data --json``
+# ``rows.exposure.withheld``): the split was confirmed before the study first recorded it.
+WITHHELD_AFTER_SPLIT = 'split_confirmed'
+
+
+def split_confirmed(state: Mapping) -> bool:
+    """True once the split decision was confirmed (still confirmed, to confirm again, or
+    superseded after a confirmation)."""
+    decision = ((state or {}).get('decisions') or {}).get(SPLIT_DECISION) or {}
+    return decision.get('status') in ('confirmed', 'reconfirm_required', 'superseded') \
+        or decision.get('confirmation') is not None
+
+
+def sample_withheld(state: Mapping, entries: Iterable[Mapping], seed: str | None
+                    ) -> str | None:
+    """:data:`WITHHELD_AFTER_SPLIT` when the sample of ``seed`` has no record and the split is
+    confirmed: it will never be recorded, so its target stays hidden; else None."""
+    if seed is None or sample_records(entries, seed) or not split_confirmed(state):
+        return None
+    return WITHHELD_AFTER_SPLIT
+
+
 def ensure_sample(store: StudyStore, state: Mapping | None = None) -> dict | None:
     """Record the look at the step-1 sample's target values, once per seed (contract P1.9):
-    ``init`` for every study it creates, and the first write command of a study created
-    before (``decide``, ``run``, ``render``, ``mode set``, ``automation run``), before its own
-    work. Call under the writer lock; ``state`` is read when not given. Returns the new
-    record, or None when the seed's record exists already or no sample can be drawn. A read
-    never calls it."""
+    ``init`` for every study it creates, and, for a study created before, the first write
+    command that commits (``decide``, ``run``, ``mode set``, ``automation run`` through them)
+    right after its commit, under the same writer lock, and ``render``. A refused write (a
+    stale revision, invalid arguments, a replay) records nothing, and a read never calls it.
+    A study whose split is already confirmed records nothing: its sample was never shown
+    before the split, so the note "shown at step 1, before the split" would be false; the
+    target stays hidden (:func:`sample_withheld`). Call under the writer lock; ``state`` is
+    read when not given. Returns the new record, or None when nothing is recorded."""
     from . import partition
     if state is None:
         state = store.load_state()
+    if split_confirmed(state):
+        return None
     entries = records(store)
     drawn = current_sample(store, state, entries)
     if drawn is None or sample_records(entries, drawn['seed']):
@@ -177,11 +205,11 @@ def ensure_sample(store: StudyStore, state: Mapping | None = None) -> dict | Non
                   sample_seed=drawn['seed'])
 
 
-def ensure_sample_locked(study_dir) -> dict | None:
-    """:func:`ensure_sample` under the writer lock, for a write command that takes the lock
-    itself afterwards. A study that cannot be read is left to the command's own refusal."""
-    store = StudyStore(study_dir)
-    if not store.exists():
-        return None
-    with store.writing() as state:
+def ensure_sample_after_commit(store: StudyStore, state: Mapping) -> dict | None:
+    """:func:`ensure_sample` for a write that has just committed, under its lock: the write
+    stands whatever happens here (an unrecorded look leaves the target hidden, and the next
+    write records it)."""
+    try:
         return ensure_sample(store, state)
+    except Exception:                    # noqa: BLE001 - the committed write is not undone
+        return None

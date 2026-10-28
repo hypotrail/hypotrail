@@ -13,9 +13,10 @@ It shows no target rate and no distribution: reading the outcome across rows is
 exploration, done on training rows after the split. The rows shown are development rows
 only (ADR 0006), whose structure ``init`` already recorded as exposure
 (``structural_inspection``). The sample's target values are a counted look, recorded once per
-seed by ``init`` or by the first write of an older study (``development_target_sample``,
-:func:`mlkit.study.exposure.ensure_sample`); this read records nothing, so until that record
-exists the sample is shown without its target (``target_shown: false``).
+seed by ``init`` or by the first committed write of an older study still before its split
+(``development_target_sample``, :func:`mlkit.study.exposure.ensure_sample`); this read records
+nothing, so until that record exists the sample is shown without its target (``target_shown:
+false``), for good when the split came first (``exposure.withheld``).
 
 Payload ``hypotrail.data/1``, keys in order: :data:`PAYLOAD_KEYS`. ``--format text``
 prints a readable card (not a contract).
@@ -131,6 +132,8 @@ def sample_rows(study, frame, case) -> dict:
     keys = [k for k in (drawn or {}).get('row_keys', []) if k in frame.index]
     recorded = partition.sample_records(entries, drawn['seed']) if drawn else []
     shown = bool(recorded)
+    from . import exposure
+    withheld = exposure.sample_withheld(state, entries, drawn['seed'] if drawn else None)
     target = case.target_column
     columns = ([target] if shown else []) + [n for n in case.column_names if n != target]
     return {'columns': columns, 'n_rows': len(keys), 'order': ROWS_ORDER,
@@ -139,7 +142,10 @@ def sample_rows(study, frame, case) -> dict:
                       for k in keys],
             'seed': drawn['seed'] if drawn else None, 'target_shown': shown,
             'exposure': {'exposure_id': recorded[0]['exposure_id'] if shown else None,
-                         'purpose': partition.SAMPLE_PURPOSE, 'recorded': shown}}
+                         'purpose': partition.SAMPLE_PURPOSE, 'recorded': shown,
+                         # Why the target stays hidden for good (the split was confirmed
+                         # before the study recorded the look), or null.
+                         'withheld': withheld}}
 
 
 def _special_rows(case, frame, special_masks: Mapping[str, list]) -> dict:
@@ -274,7 +280,10 @@ TEXT_WORDS = {
            'first': '{n} development rows drawn at random, target included (a counted look '
                     'at the target), seed {seed}:',
            'hidden': '{n} development rows drawn at random, seed {seed}; their target is shown '
-                     'once a write records the look:', 'row': 'row'},
+                     'once a write records the look:',
+           'withheld': '{n} development rows drawn at random, seed {seed}, without their '
+                       'target: the split was confirmed before this study recorded a look at '
+                       'them, so they are not shown with their target:', 'row': 'row'},
     'fr': {'one_row': 'Une ligne', 'not_stated': 'non indiqué par le cas',
            'development': "Lignes de l'échantillon de développement : {rows}, colonnes : "
                           "{columns}", 'target': 'Cible', 'in': 'en',
@@ -284,6 +293,9 @@ TEXT_WORDS = {
                     'compté sur la cible), graine {seed} :',
            'hidden': '{n} lignes de développement tirées au hasard, graine {seed} ; leur cible '
                      "s'affiche quand une écriture enregistre ce regard :",
+           'withheld': '{n} lignes de développement tirées au hasard, graine {seed}, sans leur '
+                       "cible : le découpage a été confirmé avant que l'étude n'enregistre un "
+                       "regard sur elles, elles ne sont donc pas montrées avec leur cible :",
            'row': 'ligne'},
 }
 
@@ -342,7 +354,8 @@ def text(payload: Mapping) -> str:
                          .join(['    ', '']) + ', '.join(repr(x) for x in v['examples']))
     lines.append('')
     rows = payload['rows']
-    lines.append(w['first' if rows.get('target_shown') else 'hidden'].format(
+    lines.append(w['first' if rows.get('target_shown') else
+                   'withheld' if (rows.get('exposure') or {}).get('withheld') else 'hidden'].format(
         n=rows['n_rows'], seed=rows.get('seed')))
     lines.append(' | '.join([w['row']] + rows['columns']))
     for r in rows['items']:

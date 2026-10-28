@@ -31,7 +31,7 @@ import pytest
 import flowkit as fk
 import test_automation as ta
 import test_journey_walkthrough as jw
-from mlkit.study import cite, notebook_view, panel_digest as pd, read
+from mlkit.study import cite, companion_env, notebook_view, panel_digest as pd, read
 from mlkit.study import view as view_mod
 
 PRECISION_WORDS = 'Yes, I adopt that rule because the desk can act on that share'
@@ -77,6 +77,36 @@ def _assert_headlines(f: fk.Flow, digest: dict, tmp_path: Path) -> None:
                 path.write_text(line, encoding='utf-8')
                 check = f.call('check', '--text', path, '--study', f.study, expect=None)
                 assert check['clean'], (line, check['findings'])
+
+
+def _assert_final_configuration(crit: dict, view: dict, metric: str) -> None:
+    """``criterion_configurations.final_test`` (§17.2.4): judged on the final test, every
+    figure is a registered value of the current final evaluation (its bound from the final
+    test's own baseline), never the development bound or value."""
+    final = crit['final_test']
+    evaluation = view['results']['final_test.evaluation']
+    values = evaluation['values']
+    assert tuple(final) == pd.FINAL_CONFIGURATION_KEYS
+    assert tuple(final['bound']) == pd.CRITERION_BOUND_KEYS
+    assert final['slot'] == view['criterion']['model'] == values['model']
+    assert final['result_id'] == final['bound']['result_id'] == evaluation['result_id']
+    assert final['value'] == cite.resolve(values, cite.parse_path(final['path']))
+    reference = cite.resolve(values, cite.parse_path(final['bound']['path']))
+    assert final['bound']['path'] == f'models.[fit.baseline].{metric}'
+    assert final['bound']['reference'] == reference
+    minimum = final['bound']['minimum']
+    if metric == 'mae':
+        assert final['bound']['value'] == pytest.approx((1 - minimum) * reference)
+        assert final['point_meets_bound'] == (final['value'] <= final['bound']['value'] + 1e-12)
+    else:
+        assert final['bound']['value'] == pytest.approx(reference + minimum / 100)
+        assert final['point_meets_bound'] == (final['value'] >= final['bound']['value'] - 1e-12)
+    for key in ('gain', 'low', 'high'):
+        assert final[key] == values['criterion'][key], key
+    assert final['status'] == view['criterion']['final_test']['status']
+    # not the development figures
+    assert final['bound']['result_id'] != crit['bound']['result_id']
+    assert final['bound']['value'] != crit['bound']['value']
 
 
 @pytest.fixture(scope='module')
@@ -175,6 +205,7 @@ def test_the_binary_walkthrough(binary, tmp_path):
             assert c['status'] == view['criterion']['final_test']['status']
         else:
             assert c['judged_on'] == 'development'
+    _assert_final_configuration(crit, view, 'precision')
 
     # channels: the chat's runs, then a chart requested from the panel (W4)
     assert {r['channel'] for r in d['results'].values()} == {'chat'}
@@ -183,7 +214,22 @@ def test_the_binary_walkthrough(binary, tmp_path):
     _call(f, 'run', 'eda.distribution', '--column', column, '--channel', 'webview')
     d = _digest(f)
     assert d['results'][f'eda.distribution:{column}']['channel'] == 'webview'
-    assert list(d['results']['split'])[-1] == 'channel'
+    assert list(d['results']['split'])[-2:] == ['step', 'channel']
+    # The step of every result is the engine's (§17.1.1, §17.2.5), target-aware: a feature's
+    # distribution under the quality step, the target's (a W4 chart) under the exploration.
+    target = f.call('data', '--study', f.study)['target']['column']
+    _call(f, 'run', 'eda.distribution', '--column', target, '--channel', 'webview')
+    d = _digest(f)
+    assert d['results'][f'eda.distribution:{column}']['step'] == 'structural_eda'
+    assert d['results'][f'eda.distribution:{target}']['step'] == 'train_eda'
+    view = f.view()
+    for slot, item in d['results'].items():
+        found = view['results'][slot]
+        assert item['step'] == companion_env.step_of(
+            found['activity'], slot, view['plan'],
+            companion_env.target_read_of(found['activity'], found['values'])), slot
+    assert d['results']['final_test.evaluation']['step'] == 'final_test'
+    assert d['results']['policy.evaluation']['step'] == 'policy'
 
     # P1.13: the first rule was not marked; a changed rule after its evaluation is.
     assert first['propose:policy']['result']['data_contingent'] is False
@@ -234,8 +280,15 @@ def test_the_regression_walkthrough(regression, tmp_path):
     assert d['defensibility']['count'] == len(caveats)
     _assert_headlines(f, d, tmp_path)
     # The French table carries its own typography (CLI-CONTRACT §17.2.3): a narrow no-break
-    # space before the colon, as the panel shows it verbatim.
-    assert d['texts']['fr']['headlines']['model_choice'].startswith('Choix\u202f: ')
+    # space before the semicolon, as the panel shows it verbatim. A line holds no step name
+    # (the panel prints it beside the line): no "Choix : Choix : …" on the path.
+    choice = d['texts']['fr']['headlines']['model_choice']
+    assert '\u202f; ' in choice and choice.startswith('Le modèle linéaire')
+    for lang in ('en', 'fr'):
+        for step_id, line in d['texts'][lang]['headlines'].items():
+            name = companion_env.step_label(step_id, lang)
+            assert not line.startswith(name + ':') and not line.startswith(name + '\u202f:'), \
+                (lang, step_id, line)
     fr = d['texts']['fr']
     shown = json.dumps({k: fr[k] for k in view_mod.FRENCH_TYPOGRAPHY_KEYS}, ensure_ascii=False)
     for sign in ';:?!\u00bb':
@@ -262,6 +315,7 @@ def test_the_regression_walkthrough(regression, tmp_path):
             assert c['status'] in ('met', 'uncertain', 'not_met') and c['low'] <= c['high']
     chosen = next(c for c in crit['configurations'] if c['slot'] == view['criterion']['model'])
     assert chosen['judged_on'] == 'final_test'
+    _assert_final_configuration(crit, view, 'mae')
 
     assert first['propose:model_choice']['result']['data_contingent'] is False
     other = next(m for m in evaluation['params']['models']

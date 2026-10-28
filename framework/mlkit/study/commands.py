@@ -2466,9 +2466,6 @@ def apply(study_dir, *, action: str, params: dict, request_id: str, expected_rev
     if not store.exists():
         raise StudyError('study_missing', f'No study here: {store.state_path} does not exist.',
                          details={'study': str(store.study_dir)})
-    # Contract P1.9: a study created before the step-1 sample records its look on its first
-    # write, before the write's own work (once per seed).
-    exposure.ensure_sample_locked(store.study_dir)
     request = {'request_id': request_id, 'expected_revision': expected_revision,
                'action': action, 'params': params}
     available = handlers(Context(store, request_id))
@@ -2476,7 +2473,11 @@ def apply(study_dir, *, action: str, params: dict, request_id: str, expected_rev
     if optional and action in available:
         handler = available[action]
         available[action] = Handler(handler.params | optional, handler.run, handler.check)
-    receipt = store.execute(request, available)
+    # Contract P1.9 (§17.3): a study created before the step-1 sample records its look with
+    # its first write that commits, under the same lock; a refused write records nothing.
+    receipt = store.execute(request, available,
+                            on_commit=lambda state: exposure.ensure_sample_after_commit(store,
+                                                                                      state))
     payload = {'schema': SCHEMAS['decide'], 'ok': True, 'study': str(store.study_dir),
                'action': action, 'request_id': request_id,
                'replayed': bool(receipt.get('replayed')), 'revision': receipt['revision'],

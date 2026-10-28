@@ -60,7 +60,7 @@ from mlkit.reliability import CommandRefused, Handler
 from . import activities as act
 from . import commands as cmd
 from . import dependencies as dep
-from . import exposure, guard, lock, partition, progress as progress_mod, registry
+from . import companion_env, exposure, guard, lock, partition, progress as progress_mod, registry
 from . import records as rec
 from . import state as st
 from .errors import StudyError
@@ -496,14 +496,9 @@ def _outcome(store: StudyStore, payload: dict, *, render: bool,
 
 
 def _target_read(payload: Mapping) -> bool | None:
-    """Whether a run's result read the target: its ``target_read`` value, or for a
-    distribution whether its column is the target; None when the result does not say."""
+    """Whether a run's result read the target (``companion_env.target_read_of``)."""
     values = payload.get('values') if isinstance(payload.get('values'), Mapping) else {}
-    if isinstance(values.get('target_read'), bool):
-        return values['target_read']
-    if str(payload.get('activity') or '') == 'eda.distribution' and values.get('role'):
-        return values['role'] == 'target'
-    return None
+    return companion_env.target_read_of(payload.get('activity'), values)
 
 
 def describe(store: StudyStore, state: Mapping, request_id: str, *,
@@ -604,9 +599,6 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
     options = act.normalize_options(activity, options)
     eid = execution_id(request_id)
     with store.writing() as state:
-        # Contract P1.9: a study created before the step-1 sample records its look on its
-        # first write, before the write's own work (once per seed).
-        exposure.ensure_sample(store, state)
         if activity == act.CAPTURE and not options:
             # Round 5 (review E, R5E-3): a capture run again without --profile or --packager
             # keeps the options of the capture it replaces, so an MLflow package is never
@@ -630,6 +622,10 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
         except BaseException:
             lease.release()
             raise
+        # Contract P1.9 (§17.3): a study created before the step-1 sample records its look
+        # once the run's reservation commits, under the same lock; a refused run, a replay
+        # and an already-current result record nothing.
+        exposure.ensure_sample_after_commit(store, state)
         plan = _PLANS.pop(eid)
         _history(store, eid, state['executions']['active'][eid])
         reporter = (progress_mod.Reporter(progress, st.language_of(state),

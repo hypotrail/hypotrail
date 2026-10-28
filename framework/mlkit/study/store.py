@@ -292,14 +292,19 @@ class StudyStore:
             yield state
 
     def execute(self, request: Mapping, handlers: Mapping[str, reliability.Handler], *,
-                timeout: float = lock.DEFAULT_TIMEOUT) -> dict:
+                timeout: float = lock.DEFAULT_TIMEOUT, on_commit=None) -> dict:
         """Apply one command under the writer lock; return its receipt.
 
-        Refusals raise :class:`mlkit.reliability.CommandRefused`.
+        Refusals raise :class:`mlkit.reliability.CommandRefused`. ``on_commit(state)``, when
+        given, runs under the same lock right after the command commits (never for a refusal
+        or a replay); the committed command stands whatever it does.
         """
         guard.assert_writable()
         with self.writing(timeout=timeout) as state:
-            return reliability.apply_command(self, state, request, handlers)
+            receipt = reliability.apply_command(self, state, request, handlers)
+            if on_commit is not None and not receipt.get('replayed'):
+                on_commit(state)
+            return receipt
 
     # immutable objects
 

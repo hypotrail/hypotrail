@@ -70,11 +70,13 @@ SUMMARY_DEFENSIBILITY_KEYS = ('kind', 'count', 'items')
 SUMMARY_LEDGER_KEYS = ('final_test', 'target_looks', 'configurations')
 SUMMARY_SAMPLE_KEYS = ('seed', 'row_keys', 'recorded')
 HEADLINE_KEYS = ('decision_id', 'basis', 'results')
-SUMMARY_CRITERION_CONFIG_KEYS = ('metric', 'unit', 'bound', 'configurations')
+SUMMARY_CRITERION_CONFIG_KEYS = ('metric', 'unit', 'bound', 'configurations', 'final_test')
 CRITERION_BOUND_KEYS = ('value', 'reference', 'minimum', 'result_id', 'path')
 CRITERION_CONFIGURATION_KEYS = ('slot', 'value', 'result_id', 'path', 'point_meets_bound',
                                 'gain', 'low', 'high', 'status', 'judged_on')
-DIGEST_RESULT_KEYS = ('result_id', 'current', 'stale_reason', 'integrity', 'channel')
+FINAL_CONFIGURATION_KEYS = ('slot', 'value', 'result_id', 'path', 'point_meets_bound', 'gain',
+                            'low', 'high', 'status', 'bound')
+DIGEST_RESULT_KEYS = ('result_id', 'current', 'stale_reason', 'integrity', 'step', 'channel')
 PANEL_CONTRACT = 2
 CURRENCY_HEX = 16
 CURRENCY_INPUT_KEYS = ('revision', 'sources', 'artifacts', 'sources_changed', 'alerts',

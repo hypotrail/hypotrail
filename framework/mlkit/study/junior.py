@@ -1328,13 +1328,14 @@ def enrich(view: dict, state: Mapping, case=None, *, accepts=None) -> dict:
 # decision's value in words, these words, and figures of current results formatted by
 # ``cite.format_value``; nothing else.
 HEADLINES = {
-    'en': {'line': '{step}: {text}.', 'join': '; ',
+    # The line holds no step name: the panel prints the step's short name beside it.
+    'en': {'line': '{text}.', 'join': '; ',
            'against': '{metric} {value} against {baseline} for the baseline',
            'error': 'mean absolute error', 'precision': 'precision',
            'quality': '{rows} development rows checked, {duplicates} duplicated',
            'target_rate': 'outcome rate {value} on the explored rows',
            'target_mean': 'mean target {value} on the explored rows'},
-    'fr': {'line': '{step} : {text}.', 'join': ' ; ',
+    'fr': {'line': '{text}.', 'join': ' ; ',
            'against': '{metric} {value} contre {baseline} pour le modèle de référence',
            'error': 'erreur absolue moyenne', 'precision': 'précision',
            'quality': '{rows} lignes de développement vérifiées, {duplicates} en double',

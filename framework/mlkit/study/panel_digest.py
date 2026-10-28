@@ -32,10 +32,15 @@ LEDGER_LOOK_KEYS = ('eda', 'sample', 'total')
 LEDGER_CONFIGURATION_KEYS = ('tried', 'reference')
 SUMMARY_SAMPLE_KEYS = ('seed', 'row_keys', 'recorded')
 HEADLINE_KEYS = ('decision_id', 'basis', 'results')
-SUMMARY_CRITERION_CONFIG_KEYS = ('metric', 'unit', 'bound', 'configurations')
+SUMMARY_CRITERION_CONFIG_KEYS = ('metric', 'unit', 'bound', 'configurations',
+                                 # The configuration judged on the opened final test, with
+                                 # its own bound from the final test's baseline (§17.2.4).
+                                 'final_test')
 CRITERION_BOUND_KEYS = ('value', 'reference', 'minimum', 'result_id', 'path')
 CRITERION_CONFIGURATION_KEYS = ('slot', 'value', 'result_id', 'path', 'point_meets_bound',
                                 'gain', 'low', 'high', 'status', 'judged_on')
+FINAL_CONFIGURATION_KEYS = ('slot', 'value', 'result_id', 'path', 'point_meets_bound', 'gain',
+                            'low', 'high', 'status', 'bound')
 CHANNEL_DEFAULT = 'chat'
 BASELINE = 'fit.baseline'
 TOLERANCE = 1e-12
@@ -163,11 +168,18 @@ def run_channels(records: Iterable[Mapping]) -> dict[str, str]:
 
 
 def with_channels(results: Mapping, built: Mapping, channels: Mapping) -> dict:
-    """The summary's ``results`` with ``channel`` as each slot's last key."""
+    """The summary's ``results`` with ``step`` (the plan step that files the result,
+    ``companion_env.step_of``, target-aware: §17.1.1) and ``channel`` as each slot's last
+    two keys. The panel files a result under ``step`` and computes no step itself."""
     out = {}
+    plan = built.get('plan') or []
     for slot, item in results.items():
-        eid = ((built.get('results') or {}).get(slot) or {}).get('execution_id')
-        out[slot] = {**item, 'channel': channels.get(eid, CHANNEL_DEFAULT)}
+        found = (built.get('results') or {}).get(slot) or {}
+        activity = found.get('activity') or str(slot).split(':')[0]
+        step = companion_env.step_of(activity, slot, plan,
+                                     companion_env.target_read_of(activity, found.get('values')))
+        out[slot] = {**item, 'step': step,
+                     'channel': channels.get(found.get('execution_id'), CHANNEL_DEFAULT)}
     return out
 
 
@@ -359,9 +371,11 @@ def headlines(built: Mapping, summary_out: Mapping, lang: str | None = None
         figures, results = _figures(step['id'], built, lang)
         if value is None and figures is None:
             continue
-        name = companion_env.step_label(step['id'], lang)
         parts = [p for p in (value, figures) if p]
-        lines[step['id']] = words['line'].format(step=name, text=words['join'].join(parts))
+        text = words['join'].join(parts)
+        # Without the step's name (the panel prints it beside the line), first letter up.
+        text = text[:1].upper() + text[1:] if text[:1].islower() else text
+        lines[step['id']] = words['line'].format(text=text)
         out[step['id']] = {'decision_id': decision_id,
                            'basis': (decisions.get(decision_id) or {}).get('basis')
                            if decision_id else None,
@@ -482,11 +496,53 @@ def criterion_configurations(built: Mapping) -> dict | None:
     if out is None:
         return None
     final = crit.get('final_test')
+    out['final_test'] = None
     if crit.get('judged_on') == 'final_test' and isinstance(final, Mapping):
         for item in out['configurations']:
             if item['slot'] == crit.get('model'):
                 item.update(judged_on='final_test', status=final.get('status') or item['status'])
+        out['final_test'] = _final_configuration(built, value, crit, final)
     return {k: out[k] for k in SUMMARY_CRITERION_CONFIG_KEYS}
+
+
+def _final_configuration(built: Mapping, value: Mapping, crit: Mapping,
+                         final: Mapping) -> dict | None:
+    """``criterion_configurations.final_test``: the configuration the opened final test
+    measured, every figure from the current ``final_test.evaluation`` (never a development
+    one): its metric, the bound computed from the final test's own baseline, its gain and
+    interval (``values.criterion``) and the status the criterion is judged by. None when the
+    evaluation does not register them."""
+    item = _citable(built, 'final_test.evaluation')
+    if item is None:
+        return None
+    values = item['values']
+    slot = values.get('model') or crit.get('model')
+    models = values.get('models') or {}
+    regression = built.get('task') == 'regression'
+    metric = 'mae' if regression else criterion_mod.DELTA_METRIC.get(value.get('metric'),
+                                                                      'precision')
+    reference = (models.get(BASELINE) or {}).get(metric)
+    mine = (models.get(slot) or {}).get(metric)
+    minimum = value.get('min_share' if regression else 'min_points')
+    if not (cite.is_number(reference) and cite.is_number(mine)
+            and isinstance(minimum, (int, float))):
+        return None
+    if regression:
+        bound = (1 - minimum) * reference
+        meets = mine <= bound + TOLERANCE
+    else:
+        bound = reference + minimum / 100
+        meets = mine >= bound - TOLERANCE
+    registered = values.get('criterion') if isinstance(values.get('criterion'), Mapping) else {}
+    figure = {k: registered.get(k) if cite.is_number(registered.get(k)) else None
+              for k in ('gain', 'low', 'high')}
+    return {'slot': slot, 'value': mine, 'result_id': item['result_id'],
+            'path': cite.format_path(['models', slot, metric]),
+            'point_meets_bound': bool(meets), **figure,
+            'status': final.get('status') or 'not_assessed',
+            'bound': {'value': bound, 'reference': reference, 'minimum': minimum,
+                      'result_id': item['result_id'],
+                      'path': cite.format_path(['models', BASELINE, metric])}}
 
 
 # --- the texts of §17.2.3 ------------------------------------------------------------------

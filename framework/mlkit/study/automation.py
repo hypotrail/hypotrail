@@ -236,10 +236,8 @@ def run(study_dir, *, request_id: str, expected_revision: int,
     state = read.open(study_dir).state
     if state['revision'] != expected_revision:
         raise _stale(state['revision'], expected_revision)
-    # Contract P1.9: a study created before the step-1 sample records its look on its first
-    # write, before the runner's own work (once per seed).
-    from . import exposure
-    exposure.ensure_sample_locked(study_dir)
+    # Contract P1.9: a study created before the step-1 sample records its look with the
+    # runner's first write that commits (``commands.apply``, ``executions.run``).
     steps: list[dict] = []
     status, reason, refusal, stopped_at = 'stopped', None, None, None
     # R23 (owner session 2026-10-27): what is going on, in the study language, on stderr.

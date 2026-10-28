@@ -103,7 +103,7 @@ def _variables(view: dict) -> list[dict]:
 def sample_rows(study: Path, view: dict) -> dict | None:
     """The seeded step-1 sample of the report's data section (contract P1.9, CLI-CONTRACT
     §17.3): eight development rows drawn at random, target first, as recorded (text), with
-    the seed (``{columns, rows, seed, target_shown}``).
+    the seed (``{columns, rows, seed, target_shown, withheld}``).
 
     The same rows as ``hypotrail data`` (``partition.sample``), read with the standard library
     so that a render never imports pandas, and only those lines. Development rows only: the
@@ -119,6 +119,7 @@ def sample_rows(study: Path, view: dict) -> dict | None:
         if drawn is None:
             return None
         shown = bool(exposure.sample_records(entries, drawn['seed']))
+        withheld = exposure.sample_withheld(snapshot.state, entries, drawn['seed'])
         case = c.load_case(view['case']['path'], verify_data=False)
         lines = case.dataset_path.read_bytes().decode(case.dataset['encoding']).split('\n')
         first = 2 if case.dataset['header'] else 1
@@ -135,7 +136,7 @@ def sample_rows(study: Path, view: dict) -> dict | None:
             record = dict(zip(names, fields))
             rows.append({'row_key': key, 'values': {col: record[col] for col in columns}})
         return {'columns': columns, 'rows': rows, 'seed': drawn['seed'],
-                'target_shown': shown}
+                'target_shown': shown, 'withheld': withheld}
     except Exception:          # the report still renders, without the example rows
         return None
 
@@ -261,7 +262,8 @@ def render_all(study_dir) -> dict:
     # changes (cached template); most commits render without importing it.
     with lock.writer_lock(study):
         # Contract P1.9: render is a write; a study created before the step-1 sample records
-        # its look here when no write did, so the report shows the target it records.
+        # its look here when no write did, after the sources are checked, so the report shows
+        # the target it records (none once the split is confirmed, ``exposure.ensure_sample``).
         from . import exposure
         store = StudyStore(study)
         exposure.ensure_sample(store, store.load_state())

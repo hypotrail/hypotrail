@@ -195,6 +195,7 @@ data_section:
   rows_note: Uniquement des lignes de développement, tirées au hasard à partir d'une graine fixée pour cette étude, de sorte que la fiche des données, ce rapport et le notebook montrent les mêmes lignes. Les valeurs de leur cible sont un regard sur la cible avant le découpage, inscrit au registre d'exposition.
   rows_seed: 'Graine du tirage :'
   rows_hidden: La cible de ces lignes s'affiche quand une écriture enregistre ce regard.
+  rows_withheld: La cible de ces lignes n'est pas montrée, le découpage a été confirmé avant que l'étude n'enregistre un regard sur elles.
   rows_missing: Les lignes d'exemple n'ont pas pu être lues.
   ungrouped: Autres colonnes
   missing: Valeurs manquantes dans les lignes de développement

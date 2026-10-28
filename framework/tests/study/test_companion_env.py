@@ -299,9 +299,13 @@ def test_the_labels_cover_both_languages():
     assert set(ce.DRAWER_LABELS['en']) == set(ce.DRAWERS)
     assert {f'todo:{k}' for k in ce.TODO_KINDS} <= set(ce.ANCHOR_LABELS['en'])
     for anchor in ('now', 'path', 'path:split', 'path:train_eda/eda.rate_by:job',
-                   'path:model_variant/fit.variant:2', 'tools:notions'):
+                   'path:model_variant/fit.variant:2', 'tools:notions', 'tools:how',
+                   # any column the engine can emit: accents, spaces, parentheses
+                   'path:structural_eda/eda.distribution:Durée (min)',
+                   'path:train_eda/eda.rate_by:Visitor Type'):
         assert ce.ANCHOR_RE.fullmatch(anchor), anchor
-    for bad in ('tab:eda', 'todo:other', 'tools:learn', 'path:', 'Now', 'path:Split'):
+    for bad in ('tab:eda', 'todo:other', 'tools:learn', 'path:', 'Now', 'path:Split',
+                'path:split/', 'path:split/a\nb'):
         assert not ce.ANCHOR_RE.fullmatch(bad), bad
 
 

@@ -1404,9 +1404,12 @@ def test_panel_line_keys_are_frozen_and_documented():
     assert ce.WHERE_KEYS == ce.SHOWN_KEYS == ('anchor', 'label', 'line')
     assert ce.TODO_KINDS == ('execution', 'deliverables', 'checks', 'sources', 'integrity')
     assert ce.DRAWERS == ('data', 'whatif', 'notions', 'deliverables')
+    # Review fix (2026-10-28): one grammar with the panel; a slot holds any character but a
+    # control character (a column with accents, spaces or parentheses), and ``tools:how``.
     assert ce.ANCHOR_RE.pattern == (
         r'now|todo:(?:execution|deliverables|checks|sources|integrity)|path'
-        r'|path:[a-z][a-z0-9_]*(?:/\S+)?|tools:(?:data|whatif|notions|deliverables)')
+        r'|path:[a-z][a-z0-9_]*(?:/[^\x00-\x1f\x7f]+)?'
+        r'|tools:(?:data|whatif|notions|deliverables|how)')
     assert not hasattr(ce, 'tabs') and not hasattr(ce, 'SECTIONS')
     assert '`{version, stage, title, where, shown}`' in ' '.join(DOC.split()) or \
         'Keys** (`companion_env.PANEL_KEYS`, version 2): `version`, `stage`, `title`, `where`, ' \
@@ -1440,7 +1443,7 @@ def test_panel_contract_p1_digest_keys(tmp_path, synthetic_case_dir):
     for name in ('SUMMARY_AUTOMATION_KEYS', 'SUMMARY_REVIEW_KEYS', 'SUMMARY_DEFENSIBILITY_KEYS',
                  'SUMMARY_LEDGER_KEYS', 'SUMMARY_SAMPLE_KEYS', 'HEADLINE_KEYS',
                  'SUMMARY_CRITERION_CONFIG_KEYS', 'CRITERION_BOUND_KEYS',
-                 'CRITERION_CONFIGURATION_KEYS'):
+                 'CRITERION_CONFIGURATION_KEYS', 'FINAL_CONFIGURATION_KEYS'):
         assert getattr(pd, name) == getattr(cc, name), name
     assert audience.SEVERITIES == ('blocking', 'caveat', 'not_final', 'context')
     for key in view.DIGEST_SUMMARY_KEYS[-8:] + view.LANGUAGE_TEXT_KEYS[10:]:
@@ -1449,7 +1452,7 @@ def test_panel_contract_p1_digest_keys(tmp_path, synthetic_case_dir):
     assert _run('init', '--case', synthetic_case_dir, '--study', study).exit_code == 0
     plain = _run('status', '--summary', '--study', study).payload
     assert tuple(plain) == cc.SUMMARY_KEYS
-    assert all('channel' not in r for r in plain['results'].values())
+    assert all('channel' not in r and 'step' not in r for r in plain['results'].values())
     full = _run('status', '--summary', '--digest', '--study', study).payload
     assert tuple(full) == cc.DIGEST_SUMMARY_KEYS
     assert full['panel_contract'] == cc.PANEL_CONTRACT

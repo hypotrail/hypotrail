@@ -63,9 +63,13 @@ SHOWN_KEYS = ('anchor', 'label', 'line')
 
 TODO_KINDS = ('execution', 'deliverables', 'checks', 'sources', 'integrity')
 DRAWERS = ('data', 'whatif', 'notions', 'deliverables')
+# One grammar for the engine and the panel (``lib/models/page.js`` ``ANCHOR_RE``,
+# ``lib/protocol.js`` ``ANCHOR``; CLI-CONTRACT §17.1.1): a slot is any run of characters but
+# a control character, so a column named with accents, spaces or parentheses is a slot;
+# ``tools:how`` is the panel's own fold ("How this panel works"), which the engine never names.
 ANCHOR_RE = re.compile(
     r'now|todo:(?:execution|deliverables|checks|sources|integrity)|path'
-    r'|path:[a-z][a-z0-9_]*(?:/\S+)?|tools:(?:data|whatif|notions|deliverables)')
+    r'|path:[a-z][a-z0-9_]*(?:/[^\x00-\x1f\x7f]+)?|tools:(?:data|whatif|notions|deliverables|how)')
 # The first stage that shows each place (CLI-CONTRACT §17.1.1). ``path:<step>`` is a v0
 # place, ``path:<step>/<slot>`` (a figure in the step's detail) a v2 one.
 ANCHOR_STAGE = {'now': 'v0', 'todo:execution': 'v0', 'todo:deliverables': 'v0',
@@ -312,6 +316,18 @@ def step_of(activity: str | None, slot: str | None, plan: Iterable[Mapping],
         return first('policy', 'model_choice', 'models')
     if activity == 'split':
         return first('split')
+    return None
+
+
+def target_read_of(activity: str | None, values: Mapping | None) -> bool | None:
+    """Whether a result read the target (§17.1.1): its ``target_read`` value, or for a
+    distribution whether its column is the target (``role``); None when the result does not
+    say."""
+    values = values if isinstance(values, Mapping) else {}
+    if isinstance(values.get('target_read'), bool):
+        return values['target_read']
+    if str(activity or '') == 'eda.distribution' and values.get('role'):
+        return values['role'] == 'target'
     return None
 
 
@@ -575,7 +591,7 @@ def annotate(action, study_dir, lang: str = 'en', env: Mapping | None = None,
     return action
 
 
-__all__ = ['ENV_VAR', 'STAGE_ENV', 'SETTINGS', 'SETTING_ENABLED', 'SETTING_STAGE', 'STAGES',
+__all__ = ['target_read_of', 'ENV_VAR', 'STAGE_ENV', 'SETTINGS', 'SETTING_ENABLED', 'SETTING_STAGE', 'STAGES',
            'PANEL_CONTRACT', 'PANEL_KEYS', 'WHERE_KEYS', 'SHOWN_KEYS', 'ANCHOR_RE',
            'TODO_KINDS', 'DRAWERS', 'TITLES', 'ANCHOR_LABELS', 'CONTENT_LABELS', 'DRAWER_LABELS',
            'STEP_LABELS', 'EDA_CARD_LABELS', 'FIGURE_LABELS', 'LINES', 'read_settings',

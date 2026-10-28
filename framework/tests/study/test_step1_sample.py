@@ -110,7 +110,8 @@ def test_the_same_eight_rows_everywhere_recorded_once(tmp_path):
     assert all(list(i['values'])[0] == target for i in rows['items'])
     assert rows['seed'] == seed
     assert rows['exposure'] == {'exposure_id': record['exposure_id'],
-                                'purpose': 'development_target_sample', 'recorded': True}
+                                'purpose': 'development_target_sample', 'recorded': True,
+                                'withheld': None}
     # check --text traces a sample cell as data.rows.<row key>
     special = card['special_rows']
     assert tuple(card) == cmd_data.PAYLOAD_KEYS and tuple(special) == cmd_data.SPECIAL_ROW_KEYS
@@ -166,7 +167,7 @@ def test_an_older_study_records_the_look_on_its_first_write(tmp_path):
     assert rows['target_shown'] is False and target not in rows['columns']
     assert all(target not in i['values'] for i in rows['items']) and rows['n_rows'] == 8
     assert rows['exposure'] == {'exposure_id': None, 'purpose': 'development_target_sample',
-                                'recorded': False}
+                                'recorded': False, 'withheld': None}
     for read_args in (('status', '--summary', '--digest'), ('check',), ('evidence',)):
         f.call(*read_args, '--study', f.study, expect=None)
     assert _sample_records(f.study) == []
@@ -176,7 +177,9 @@ def test_an_older_study_records_the_look_on_its_first_write(tmp_path):
                       '--request-id', f.rid(), '--expected-revision', revision,
                       '--study', f.study)
     [record] = _sample_records(f.study)
-    assert record['revision'] == revision                  # before the write's own work
+    # Recorded with the write that committed, under its lock (integrator decision 2026-10-28).
+    assert record['revision'] == revision + 1 == proposal['revision']
+    assert record['partition'] == 'development'
     assert set(rec.parse_row_keys(StudyStore(f.study).read_blob(record['row_keys']))) == \
         {i['row_key'] for i in rows['items']}
     assert f.call('data', '--study', f.study)['rows']['target_shown'] is True
@@ -190,3 +193,88 @@ def test_an_older_study_records_the_look_on_its_first_write(tmp_path):
     assert added is not None and added['sample_seed'] != record['sample_seed']
     assert exposure.ensure_sample(store, changed) is None
     assert len(_sample_records(f.study)) == 2
+
+
+def _strip_sample(study: Path) -> None:
+    """The exposure ledger as a study created before P1.9 holds it: no sample record."""
+    path = study / '.hypotrail' / exposure.EXPOSURE_FILE
+    lines = [line for line in path.read_text(encoding='utf-8').splitlines()
+             if json.loads(line)['purpose'] != exposure.SAMPLE_PURPOSE]
+    path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+
+
+def test_a_refused_write_records_no_look(tmp_path):
+    """Integrator decision 2026-10-28 (§17.3): an older study's look is recorded only with a
+    write that commits: a ``decide`` refused for a stale revision or for its arguments, a
+    ``run`` refused for a stale revision, and a replay record nothing; the next committed
+    write records it once, with the true note (before the split)."""
+    case_dir = fk.make_case(tmp_path / 'case', n_rows=200, task='binary')['case'].parent
+    f = fk.Flow(tmp_path / 'study', case_dir)
+    f.init()
+    _strip_sample(f.study)
+    revision = f.rev()
+    stale = f.call('decide', 'propose', 'prediction_time', '--value', 'x', '--restatement', 'y',
+                   '--rationale', 'r', '--request-id', f.rid(), '--expected-revision',
+                   revision + 5, '--study', f.study, expect=None)
+    assert stale['ok'] is False and stale['error']['code'] == 'stale_revision'
+    invalid = f.call('decide', 'propose', 'no_such_decision', '--value', 'x', '--restatement',
+                     'y', '--rationale', 'r', '--request-id', f.rid(), '--expected-revision',
+                     revision, '--study', f.study, expect=None)
+    assert invalid['ok'] is False
+    run = f.call('run', 'eda.quality', '--request-id', f.rid(), '--expected-revision',
+                 revision + 3, '--study', f.study, expect=None)
+    assert run['ok'] is False
+    assert _sample_records(f.study) == [] and f.rev() == revision
+    assert f.call('data', '--study', f.study)['rows']['target_shown'] is False
+    rid = f.rid()
+    f.call('decide', 'propose', 'prediction_time', '--value', 'before the call',
+           '--restatement', 'You predict before the call.', '--rationale', 'r',
+           '--request-id', rid, '--expected-revision', revision, '--study', f.study)
+    [record] = _sample_records(f.study)
+    assert record['revision'] == revision + 1
+    # a replay of the same request writes nothing more
+    f.call('decide', 'propose', 'prediction_time', '--value', 'before the call',
+           '--restatement', 'You predict before the call.', '--rationale', 'r',
+           '--request-id', rid, '--expected-revision', revision, '--study', f.study)
+    assert len(_sample_records(f.study)) == 1
+    rows = f.call('data', '--study', f.study)['rows']
+    assert rows['target_shown'] is True and rows['exposure']['withheld'] is None
+    [entry] = [x for x in f.call('evidence', '--study', f.study)['exposure']['ledger']
+               if x['purpose'] == exposure.SAMPLE_PURPOSE]
+    assert entry['note'] == exposure.SAMPLE_NOTE['en'] and 'before the split' in entry['note']
+
+
+def test_an_older_study_past_its_split_records_no_look(tmp_path):
+    """Integrator decision 2026-10-28 (§17.3): an older study whose split is already confirmed
+    never records the sample (the note "shown at step 1, before the split" would be false):
+    no write records it, the target stays hidden for good with the reason, in ``data --json``,
+    its text card, the digest, the ledger and the report."""
+    case_dir = fk.make_case(tmp_path / 'case', n_rows=200, task='binary')['case'].parent
+    f = fk.Flow(tmp_path / 'study', case_dir)
+    f.init()
+    f.pauses(split=False)
+    f.decide('split', SPLIT_HOLDOUT)
+    _strip_sample(f.study)                                   # as before P1.9
+    assert exposure.split_confirmed(f.state())
+    f.call('run', 'split', '--request-id', f.rid(), '--expected-revision', f.rev(),
+           '--study', f.study)
+    f.call('decide', 'propose', 'prediction_time', '--value', 'one day before the call',
+           '--restatement', 'You predict a day before.', '--rationale', 'r',
+           '--request-id', f.rid(), '--expected-revision', f.rev(), '--study', f.study)
+    assert f.call('render', '--study', f.study, expect=None)['ok']
+    assert _sample_records(f.study) == []
+    card = f.call('data', '--study', f.study)
+    rows, target = card['rows'], card['target']['column']
+    assert rows['target_shown'] is False and target not in rows['columns']
+    assert all(target not in i['values'] for i in rows['items']) and rows['n_rows'] == 8
+    assert rows['exposure'] == {'exposure_id': None, 'purpose': 'development_target_sample',
+                                'recorded': False, 'withheld': 'split_confirmed'}
+    assert 'the split was confirmed before this study recorded a look' in cmd_data.text(card)
+    digest = f.call('status', '--summary', '--digest', '--study', f.study)
+    assert digest['sample']['recorded'] is False
+    assert digest['ledger']['target_looks']['sample'] == 0
+    html = (f.study / 'reports/study.html').read_text(encoding='utf-8')
+    assert 'the split was confirmed before this study recorded a look' in html
+    assert 'once a write records that look' not in html
+    assert exposure.ensure_sample(StudyStore(f.study)) is None
+    assert _sample_records(f.study) == []
