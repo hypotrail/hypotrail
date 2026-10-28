@@ -78,7 +78,18 @@ B1_DECISION_IDS_BY_TASK = {BINARY: B1_DECISION_IDS, REGRESSION: B1_REGRESSION_DE
 B2_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', SUCCESS_CRITERION,
                    PREPROCESSING, MODEL_VARIANT, 'model_choice', 'policy', FINAL_TEST,
                    'conclusion')
-ALL_DECISION_IDS = tuple(dict.fromkeys(B2_DECISION_IDS + B1_REGRESSION_DECISION_IDS))
+# Lot 2026-10-28 (R60, option A; spec EN-9): a regression study created since then also
+# decides how the error is measured (``error_metric``: ``{"metric": "mae" | "rmse"}``), its own
+# step just before the success criterion, which is then fixed on that measure. A study created
+# before keeps its nine decisions and its thirteen steps (never migrated): :func:`decision_ids`
+# reads which set a state holds (:func:`has_error_metric`).
+ERROR_METRIC = 'error_metric'
+ERROR_METRICS = ('mae', 'rmse')
+DEFAULT_ERROR_METRIC = 'mae'
+M1_REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', ERROR_METRIC,
+                              SUCCESS_CRITERION, PREPROCESSING, MODEL_VARIANT, 'model_choice',
+                              FINAL_TEST, 'conclusion')
+ALL_DECISION_IDS = tuple(dict.fromkeys(B2_DECISION_IDS + M1_REGRESSION_DECISION_IDS))
 # The decision of the third pause, per task (the choice made on validation results).
 CHOICE_DECISION = {BINARY: 'policy', REGRESSION: 'model_choice'}
 DECISION_STATUSES = ('open', 'proposed', 'confirmed', 'reconfirm_required', 'superseded')
@@ -130,7 +141,7 @@ STANDING_DELEGATION_DECISIONS = ('prediction_time', 'feature_availability', 'spl
 # framing decisions that follow the split. The choice of the third pause, the conclusion
 # (and any decision added later) are never covered by a standing delegation (R1 of v0.1).
 EXPRESS_STANDING_DELEGATION_DECISIONS = STANDING_DELEGATION_DECISIONS + (
-    'success_criterion', 'preprocessing')
+    'success_criterion', 'preprocessing', 'error_metric')
 # ``agent_concern`` (R3, ADR 0005): a point the agent raised about the junior's words before
 # confirming, kept by the junior; ``null`` when none was raised. Written by every v0.2a
 # confirmation; a confirmation recorded before has none. ``mode`` (v0.2b, WP-B2): the
@@ -246,6 +257,21 @@ def _b1_depends(choice: str) -> dict:
 
 
 B1_DEPENDS_ON_BY_TASK = {BINARY: _b1_depends('policy'), REGRESSION: _b1_depends('model_choice')}
+
+
+def _m1_regression_depends() -> dict:
+    """Lot 2026-10-28 (EN-9): the measure rests on no decision; the success criterion rests on
+    it (changing the measure asks for the criterion again), and so do the opening of the final
+    test and the conclusion."""
+    out = _b1_depends('model_choice')
+    out['error_metric'] = ()
+    out[SUCCESS_CRITERION] = ('error_metric',)
+    out[FINAL_TEST] = ('error_metric',) + tuple(out[FINAL_TEST])
+    out['conclusion'] = ('error_metric',) + tuple(out['conclusion'])
+    return out
+
+
+M1_REGRESSION_DEPENDS_ON = _m1_regression_depends()
 
 
 def _b2_binary_depends() -> dict:
@@ -420,6 +446,21 @@ PREPROCESSING_STEP = {
                 'and skewed variables? Every parameter is learnt on training rows only.',
     'expected_output': 'A confirmed preprocessing, with the explorations that motivated it.',
     'completion': 'Decision preprocessing is confirmed.'}
+
+
+# Lot 2026-10-28 (R60, option A; EN-9): the step of the measure, just before the criterion.
+ERROR_METRIC_STEP = {
+    'id': 'error_metric', 'pause': 2, 'decision': 'error_metric', 'activities': (),
+    'requires': ('split',),
+    'title': 'Choose how the error is measured',
+    'question': 'The error of one prediction is the gap between the observed value and the '
+                'predicted one. The mean absolute error (MAE) averages these gaps; the root mean '
+                'squared error (RMSE) averages their squares, then takes the root, so one big '
+                'miss weighs much more. Which of the two measures the error of this study? It '
+                'is chosen now, before any model is fitted.',
+    'expected_output': 'A confirmed error measure (MAE or RMSE), chosen before any model '
+                       'result is seen.',
+    'completion': 'Decision error_metric is confirmed.'}
 
 
 def _models_after_decisions(step: dict) -> dict:
@@ -751,11 +792,25 @@ def has_wp_a4_decisions(state: Mapping | str | None) -> bool:
     return True
 
 
+def has_error_metric(state: Mapping | str | None) -> bool:
+    """Lot 2026-10-28 (EN-9): whether a regression study decides its error measure as a step
+    of its own. A state answers by the decisions it holds (a study created before the lot has
+    no ``error_metric`` and is never migrated); a task name or ``None`` describes a new study,
+    which has it for a regression."""
+    if task_of(state) != REGRESSION:
+        return False
+    if isinstance(state, Mapping) and isinstance(state.get('decisions'), Mapping):
+        return ERROR_METRIC in state['decisions']
+    return isinstance(state, str)
+
+
 def decision_ids(state: Mapping | str | None = None) -> tuple[str, ...]:
     """The decisions of a study (or of a task name, for a new study)."""
     if has_wp_b1_decisions(state):
         if has_explicit_binary_model_choice(state):
             return B2_DECISION_IDS
+        if has_error_metric(state):
+            return M1_REGRESSION_DECISION_IDS
         return B1_DECISION_IDS_BY_TASK[task_of(state)]
     table = FULL_DECISION_IDS_BY_TASK if has_wp_a4_decisions(state) else DECISION_IDS_BY_TASK
     return table[task_of(state)]
@@ -765,6 +820,8 @@ def depends_on(state: Mapping | str | None, decision_id: str) -> tuple[str, ...]
     if has_wp_b1_decisions(state):
         if has_explicit_binary_model_choice(state):
             return B2_BINARY_DEPENDS_ON[decision_id]
+        if has_error_metric(state):
+            return M1_REGRESSION_DEPENDS_ON[decision_id]
         return B1_DEPENDS_ON_BY_TASK[task_of(state)][decision_id]
     table = FULL_DEPENDS_ON_BY_TASK if has_wp_a4_decisions(state) else DEPENDS_ON_BY_TASK
     return table[task_of(state)][decision_id]
@@ -795,7 +852,9 @@ def _wp_f1_steps(state: Mapping | str | None, out: tuple) -> tuple:
             step = dict(step, activities=tuple(step['activities']) + (diag,))
         elif step['id'] == choice:
             step = dict(step, activities=tuple(step['activities']) + (diag,))
-        elif step['id'] == FINAL_TEST and review:
+        elif step['id'] == FINAL_TEST and (review or has_error_metric(state)):
+            # Lot 2026-10-28 (§8.2 of its spec): the final test's diagnostics join the plan of
+            # a study holding the new decision set; a study created before keeps its plan.
             step = dict(step, activities=tuple(step['activities']) + ('diag.final_test',))
         result.append(step)
     return tuple(result)
@@ -831,6 +890,18 @@ def _structural_order(state: Mapping, out: tuple) -> tuple:
     return tuple(result)
 
 
+def _with_error_metric_step(out: tuple) -> tuple:
+    """Lot 2026-10-28 (EN-9): the measure's step just before the success criterion, which then
+    requires it."""
+    result = []
+    for step in out:
+        if step['id'] == SUCCESS_CRITERION:
+            result.append(ERROR_METRIC_STEP)
+            step = dict(step, requires=tuple(step['requires']) + (ERROR_METRIC,))
+        result.append(step)
+    return tuple(result)
+
+
 def steps(state: Mapping | str | None = None) -> tuple[dict, ...]:
     """The plan steps of a study's task. A study created before WP-A4 has the step "Discover
     the data" and its own five decisions' steps (the models then need the split only). A
@@ -844,6 +915,8 @@ def steps(state: Mapping | str | None = None) -> tuple[dict, ...]:
             out = tuple(dict(s, **texts.get(s['id'], {})) for s in out)
         if structural_first(state):
             out = _structural_order(state, out)
+        if has_error_metric(state):
+            out = _with_error_metric_step(out)
         return _wp_f1_steps(state, out)
     full = FULL_STEPS_BY_TASK[task_of(state)]
     if has_wp_a4_decisions(state):
@@ -1798,6 +1871,10 @@ def b1_default_value(state: Mapping, decision_id: str):
         return default_variant(state)
     if decision_id == FINAL_TEST:
         return choice_config(state)
+    if decision_id == ERROR_METRIC and has_error_metric(state):
+        # Lot 2026-10-28 (EN-10): the MAE, every error weighing the same, read in the unit of
+        # the target.
+        return {'metric': DEFAULT_ERROR_METRIC}
     return None
 
 
