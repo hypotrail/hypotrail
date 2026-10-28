@@ -333,10 +333,12 @@
     "proposal_text": null,
     "recommended_option": "continue",
     "options": ["continue", "explain"],
+    "option_labels": {"continue": "Let's continue", "explain": "Explain first"},
     "question": "How much does a simple model improve on a constant baseline on validation?",
     "evidence_refs": [],
     "detail_topics": ["metric", "uncertainty"]
    }
-  }
+  },
+  "question_junior": "Does the positive rate differ across the groups of job by more than chance alone draws?"
  }
 }

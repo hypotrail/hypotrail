@@ -10,6 +10,7 @@
 //                    request's `seq`; the webview drops one that is not its latest.
 //   draft            `preview proposal <d> --value=<v>`: the engine's draft texts (read only),
 //                    shown so the junior sees what the agent would propose before asking.
+//   open_whatif      lot P (R51): the What if? editor tab (host.openWhatIf), read only.
 // Nothing here writes: W3 (a proposal made from the panel) was withdrawn by the v0.3
 // narrowing (ADR 0004 amendment, integrator decision I2); "Ask the agent to propose this"
 // copies a question for the chat instead. No `policy.evaluate`, no fit (INV-13, WI-2).
@@ -133,8 +134,17 @@ const loads = {
   },
 };
 
+/**
+ * Lot P (R51, ADR 0004 decision 14): open What if? in its own wide, read-only editor tab (a
+ * second webview of this extension, `surface: whatif`). Not a write: it opens a view.
+ */
+async function openWhatIf(message, ctx) {
+  if (ctx.host && typeof ctx.host.openWhatIf === 'function') return ctx.host.openWhatIf();
+  return ctx.post({ type: 'notice', politeness: 'polite', text: ctx.say('notAvailable') });
+}
+
 module.exports = {
-  types: { preview_policy: previewPolicy, draft },
+  types: { preview_policy: previewPolicy, draft, open_whatif: openWhatIf },
   loads,
   DEBOUNCE_MS, previewKey, settled,
 };

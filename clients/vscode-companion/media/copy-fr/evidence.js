@@ -63,7 +63,7 @@
     difference: (candidate, reference) => `${candidate} − ${reference}`,
     metrics: { mae: 'MAE', rmse: 'RMSE' },
     fits: { 'fit.linear': 'modèle linéaire', 'fit.logistic': 'modèle logistique', 'fit.variant': 'variante', 'fit.variant:2': 'deuxième variante', 'fit.variant:3': 'troisième variante' },
-    reference: { binary: 'référence', regression: "moyenne d'entraînement" },
+    reference: { binary: 'référence', regression: 'référence (prédire la moyenne)' },
     lineageTitle: 'Filiation',
     lineageIntro: "Ce dont dépend ce résultat, et ce qui deviendrait périmé s'il changeait.",
     lineageChoose: 'Choisissez un résultat pour voir sa filiation.',
@@ -119,7 +119,7 @@
 
     finalTitle: 'Test final',
     finalLead: {
-      sealed: "Chaque chiffre de cet onglet vient des lignes de développement. Elles ont servi à choisir le modèle et la règle : les chiffres sont donc optimistes. Le test final donne le seul chiffre indépendant ; il s'ouvre une fois, sur votre décision dans le chat, une fois le modèle et la règle confirmés.",
+      sealed: "Chaque chiffre ici vient des lignes de développement. Elles ont servi à choisir le modèle et la règle : les chiffres sont donc optimistes. Le test final donne le seul chiffre indépendant ; il s'ouvre une fois, sur votre décision dans le chat, une fois le modèle et la règle confirmés.",
       opened: "Le test final a été ouvert une fois. Son chiffre est la preuve indépendante de l'étude ; les chiffres de développement ci-dessous restent optimistes.",
       changed: "Le test final a été ouvert une fois, puis l'étude a changé. Son chiffre décrit la configuration mesurée alors, pas l'étude telle qu'elle est maintenant.",
       interrupted: "L'ouverture a commencé mais aucun résultat n'a été enregistré. Le test final est consommé : il n'est pas ouvert une seconde fois.",
@@ -287,6 +287,32 @@
           excluded: 'exclue : le cas exige un modèle interprétable' },
         dataContingent: "Une famille proposée maintenant est un essai dépendant des données : elle est choisie après avoir vu ces contrôles, et le rapport le dit.",
         why: "Un signal indique qu'une autre famille pourrait suivre les données de plus près, sans le prouver. Le modèle linéaire reste le défaut ; une famille non linéaire se compare comme une variante, dans le budget.",
+      },
+      // R11 (session du 2026-10-26) : une carte par variante comparée.
+      card: {
+        titles: {
+          regularisation: 'Que change cette pénalité dans le modèle ?',
+          drop_group: 'Que perd le modèle sans ce groupe ?',
+          tuned: 'Quelle pénalité chaque pli choisit-il, et avec quel résultat ?',
+          other: 'Que change cette variante ?',
+        },
+        changes: (kind, strength, group, name) => (kind === 'regularisation'
+          ? (strength === 'weak' ? 'Le candidat moins régularisé : une pénalité plus faible sur ses coefficients.'
+            : 'Le candidat plus régularisé : une pénalité plus forte sur ses coefficients.')
+          : kind === 'drop_group' ? `Le candidat sans le groupe de variables « ${group} ».`
+            : kind === 'tuned' ? 'Le candidat avec sa pénalité choisie dans chaque pli par une validation croisée interne (validation croisée imbriquée).'
+              : kind === 'family' ? `Une autre famille de modèles : ${name}.` : 'La variante change une seule chose dans le candidat.'),
+        cvTitle: (metric, folds) => `${metric} sur les ${folds} plis, à côté du candidat`,
+        differenceLead: "Face au candidat, l'écart apparié est de ",
+        withinNoise: 'ce qui reste dans le bruit entre les plis : les deux pourraient être aussi bons.',
+        beyondNoise: 'ce qui dépasse le bruit entre les plis.',
+        // Le réglage en mots (`tuning.parameter` de trials.GRIDS), avec « de » contracté.
+        tuningParams: { C: "de l'inverse de la force de la pénalité", alpha: 'de la force de la pénalité',
+          interactions: "du nombre de termes d'interaction", max_depth: 'de la profondeur de chaque arbre', other: 'du réglage' },
+        tuningTitle: words => `Valeur ${words} choisie dans chaque pli externe`,
+        tuningColumns: { fold: 'Pli', value: 'Valeur choisie' },
+        tuningAll: 'Choisie sur toutes les lignes de développement : ',
+        noDiagnostics: "Diagnostics pas encore calculés pour cette variante : ses coefficients apparaissent quand l'assistant les lance dans le chat.",
       },
       family: {
         eyebrow: (slot, name) => `${slot} · ${name}`,

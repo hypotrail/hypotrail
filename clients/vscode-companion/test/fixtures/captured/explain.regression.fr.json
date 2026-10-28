@@ -1,0 +1,1370 @@
+{
+ "about": {
+  "schema": "hypotrail.explain/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "explain",
+   "--json"
+  ],
+  "note": "A French Auto MPG study (L3): the engine texts in both languages."
+ },
+ "payload": {
+  "schema": "hypotrail.explain/1",
+  "ok": true,
+  "study": "/studies/auto mpg fr",
+  "revision": 34,
+  "task": "regression",
+  "terms": [
+   {
+    "id": "prediction_time",
+    "term": "moment de la prédiction",
+    "definition": "Le moment où la prédiction est faite et utilisée. Seule l'information connue à ce moment peut entrer dans le modèle.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "prediction_time"
+    ],
+    "language": "fr"
+   },
+   {
+    "id": "leakage",
+    "term": "fuite d'information (leakage)",
+    "definition": "Une variable qui porte une information postérieure au moment de la prédiction. Elle fait paraître un modèle meilleur sur les données passées qu'il ne peut l'être en usage. Par exemple, une consommation mesurée lors d'un essai sur route révélerait la consommation d'une voiture, mais elle n'est connue qu'après la mesure que le modèle doit anticiper.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "feature_availability",
+    "term": "disponibilité des variables",
+    "definition": "Le fait qu'une variable soit connue au moment de la prédiction. C'est une décision sur le cas d'usage, pas une propriété que les données peuvent prouver.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "feature_availability"
+    ],
+    "language": "fr"
+   },
+   {
+    "id": "validation_partition",
+    "term": "jeu de validation",
+    "definition": "Des lignes tenues à l'écart de l'ajustement des modèles et utilisées pour comparer les modèles et en choisir un. Une fois utilisées pour choisir, elles ne sont plus un résultat indépendant.",
+    "example": {
+     "segments": [
+      {
+       "text": "Ici, "
+      },
+      {
+       "text": "96",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+       "path": "partitions.validation.n_rows",
+       "value": 96,
+       "format": "int"
+      },
+      {
+       "text": " lignes sont tenues à l'écart pour la validation et "
+      },
+      {
+       "text": "222",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+       "path": "partitions.train.n_rows",
+       "value": 222,
+       "format": "int"
+      },
+      {
+       "text": " lignes entraînent les modèles."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [
+     "split"
+    ],
+    "language": "fr"
+   },
+   {
+    "id": "exposure",
+    "term": "exposition des données",
+    "definition": "L'enregistrement des lignes lues, par quelle activité et pourquoi. Changer le découpage ne rend pas non vues des lignes déjà vues.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "distribution",
+    "term": "distribution",
+    "definition": "La façon dont les valeurs d'une colonne se répartissent sur les lignes : la fréquence de chaque valeur ou, pour une mesure, son étendue, ses quartiles et ses cellules manquantes. Lue sur le jeu d'entraînement seulement, elle laisse le jeu de validation inexploré.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "special_value",
+    "term": "valeur spéciale",
+    "definition": "Un code qui représente autre chose qu'une mesure, comme « jamais » ou « inconnu ». Le traiter comme un nombre ordinaire déforme un modèle.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "baseline",
+    "term": "modèle de référence (baseline)",
+    "definition": "Le modèle de référence le plus simple, ici la moyenne de la cible sur le jeu d'entraînement, prédite pour chaque ligne. Garder le modèle de référence est une conclusion valable.",
+    "example": {
+     "segments": [
+      {
+       "text": "Ici, la référence (prédire la moyenne) prédit "
+      },
+      {
+       "text": "20.57",
+       "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+       "path": "train_mean",
+       "value": 20.565315315315317,
+       "format": "f2"
+      },
+      {
+       "text": " mpg pour chaque ligne, la moyenne des lignes d'entraînement."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [
+     "models"
+    ],
+    "language": "fr"
+   },
+   {
+    "id": "paired_bootstrap",
+    "term": "bootstrap apparié",
+    "definition": "Rééchantillonner les mêmes lignes de validation pour les deux modèles à la fois, pour que l'intervalle décrive leur différence plutôt que chacun séparément.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "paired_difference",
+    "term": "différence appariée",
+    "definition": "L'écart entre deux modèles mesuré sur les mêmes lignes, comme la MAE du modèle linéaire moins celle du modèle de référence. L'appariement retire le bruit dû aux lignes sur lesquelles chaque modèle a été mesuré.",
+    "example": {
+     "segments": [
+      {
+       "text": "Ici, la MAE du modèle linéaire moins celle du modèle de référence vaut "
+      },
+      {
+       "text": "-3.79",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.point",
+       "value": -3.792215923650031,
+       "format": "f2"
+      },
+      {
+       "text": " mpg, entre "
+      },
+      {
+       "text": "-4.38",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.low",
+       "value": -4.375861635363238,
+       "format": "f2"
+      },
+      {
+       "text": " et "
+      },
+      {
+       "text": "-3.16",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.high",
+       "value": -3.159283658688826,
+       "format": "f2"
+      },
+      {
+       "text": " sur des rééchantillonnages des lignes de validation."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "confidence_interval",
+    "term": "intervalle de confiance",
+    "definition": "Une plage qui montre de combien un chiffre pourrait bouger si d'autres lignes avaient été tirées. Dans cette étude, c'est un intervalle des percentiles du bootstrap apparié : il décrit la variabilité de ces lignes de validation, pas une plage garantie pour de futures lignes.",
+    "example": {
+     "segments": [
+      {
+       "text": "Ici, la MAE du modèle linéaire va de "
+      },
+      {
+       "text": "5.69",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "intervals.[fit.linear].mae.low",
+       "value": 5.690730215654784,
+       "format": "f2"
+      },
+      {
+       "text": " à "
+      },
+      {
+       "text": "7.31",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "intervals.[fit.linear].mae.high",
+       "value": 7.3058496174077225,
+       "format": "f2"
+      },
+      {
+       "text": " mpg sur des rééchantillonnages des lignes de validation."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "percentile_interval",
+    "term": "intervalle des percentiles",
+    "definition": "La plage entre deux percentiles des répétitions du bootstrap. Elle montre la variabilité d'échantillonnage sur ces lignes, pas l'erreur sur de futures lignes.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "selection_on_validation",
+    "term": "sélection sur le jeu de validation",
+    "definition": "Choisir un modèle en regardant les résultats de validation. L'erreur de validation du modèle retenu est optimiste pour cette raison.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "documented_fact",
+    "term": "fait documenté",
+    "definition": "Une affirmation appuyée par la documentation des données, avec sa source.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "scenario_assumption",
+    "term": "hypothèse du scénario",
+    "definition": "Une affirmation que le scénario tient pour acquise sans preuve. Elle peut être contestée et n'est jamais une décision.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "confirmed_decision",
+    "term": "décision confirmée",
+    "definition": "Un choix enregistré avec les mots de l'utilisateur en réponse à une reformulation. Le moteur enregistre les mots ; il ne peut pas vérifier qui les a tapés.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "conclusion"
+    ],
+    "language": "fr"
+   },
+   {
+    "id": "proposal",
+    "term": "proposition",
+    "definition": "Un choix reformulé qui attend la réponse de l'utilisateur. Ce n'est pas une décision tant qu'il n'est pas confirmé.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "stale_result",
+    "term": "résultat périmé",
+    "definition": "Un résultat calculé sous des décisions qui ont changé depuis. Il est gardé pour l'historique mais n'est pas cité.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "overfitting",
+    "term": "surapprentissage (overfitting)",
+    "definition": "Un modèle qui apprend le bruit de son jeu d'entraînement en plus de sa structure. Il paraît meilleur sur les lignes sur lesquelles il a été ajusté que sur de nouvelles lignes. Par exemple, un modèle qui mémorise la consommation des noms de voitures sur lesquels il a été ajusté prédit bien ces voitures et mal les années de modèle suivantes ; l'écart entre les erreurs d'entraînement et de validation le révèle.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "regularisation",
+    "term": "régularisation",
+    "definition": "Une pénalité sur les poids élevés du modèle pendant l'ajustement. Elle échange un peu d'ajustement sur le jeu d'entraînement contre des prédictions plus stables sur de nouvelles lignes. Par exemple, avec peu de voitures et des variables très liées comme le poids et la cylindrée, une pénalité empêche leurs poids de se compenser par de grandes valeurs opposées.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "one_hot_encoding",
+    "term": "encodage one-hot",
+    "definition": "Transformer une colonne de catégories en une colonne indicatrice par catégorie, activée pour les lignes qui ont cette catégorie. Un modèle linéaire en a besoin parce que les catégories n'ont pas d'ordre. Par exemple, l'origine d'une voiture est codée par un numéro de région ; elle devient un indicateur par région au lieu d'un nombre que le modèle lirait comme une mesure.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "imputation",
+    "term": "imputation",
+    "definition": "Remplacer une valeur manquante par un substitut, comme la médiane du jeu d'entraînement, avant l'ajustement. Le substitut est calculé sur le jeu d'entraînement seulement, et un indicateur peut garder la trace de la valeur manquante. Par exemple, les voitures dont la puissance manque reçoivent la puissance médiane des voitures d'entraînement, jamais un chiffre calculé avec les voitures de validation.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "standardisation",
+    "term": "standardisation",
+    "definition": "Remettre une colonne numérique à l'échelle avec une moyenne de zéro et un écart-type de un, tous deux calculés sur le jeu d'entraînement. Cela met les variables sur une même échelle, pour que leurs poids et une pénalité les traitent de la même façon. Par exemple, le poids en livres et l'accélération en secondes sont remis à l'échelle pour que le poids donné au poids d'une voiture ne soit pas minuscule seulement parce que les livres sont de grands nombres.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "cross_validation",
+    "term": "validation croisée à k plis",
+    "definition": "Découper l'échantillon de développement en k plis ; chaque pli est à son tour le pli de validation, mesuré par un modèle ajusté sur les autres plis, les plis d'entraînement. Chaque ligne de développement est mesurée une fois, donc l'estimation repose sur plus de lignes qu'un seul jeu de validation ; un choix fait avec elle reste optimiste. Par exemple, avec cinq plis de voitures, chaque modèle est ajusté cinq fois et son erreur mesurée à chaque fois sur des voitures qu'il n'a pas vues.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "out_of_fold",
+    "term": "prédictions hors pli",
+    "definition": "La prédiction pour une ligne de développement faite par le modèle ajusté sur les plis d'entraînement, les plis autres que le pli de validation de cette ligne, donc par un modèle qui n'a jamais vu cette ligne. Chaque ligne de développement en reçoit une, et les erreurs et le choix du modèle se lisent dessus ; ce sont des résultats de développement, parce que le choix est fait sur elles. Par exemple, une voiture du troisième pli est prédite par le modèle ajusté sur les voitures des autres plis.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "fold_spread",
+    "term": "dispersion entre plis",
+    "definition": "De combien un chiffre bouge d'un pli de validation à l'autre, donné par sa valeur de pli la plus basse et la plus haute. Ce n'est pas un intervalle de confiance : elle décrit les plis de cet échantillon de développement, alors qu'un intervalle de confiance décrit comment un chiffre pourrait bouger avec un autre échantillon. Un écart entre deux modèles plus petit que la dispersion n'est pas un écart que cette étude peut voir. Par exemple, si l'erreur moyenne varie beaucoup d'un pli à l'autre, un petit gain de la variante sur le candidat dit peu de chose.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "final_test",
+    "term": "échantillon de test final (holdout)",
+    "definition": "Des lignes mises à part et scellées avant tout regard sur les données, ouvertes une seule fois, une fois le modèle choisi, pour le mesurer sur des lignes qui n'ont joué aucun rôle dans un choix. C'est le seul résultat indépendant de l'étude. Par exemple, les voitures scellées au départ sont prédites une fois par le modèle choisi ; tout changement fait après cette ouverture est signalé comme fait après le test final.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "development_rows",
+    "term": "échantillon de développement",
+    "definition": "Toutes les lignes hors de l'échantillon de test final scellé : celles que l'étude peut explorer, répartir entre jeu d'entraînement et jeu de validation, et utiliser pour choisir. Ce qu'elles montrent est un résultat de développement, pas un résultat final. Par exemple, les voitures de l'échantillon de développement nourrissent l'exploration, les ajustements de modèles et leur comparaison, tandis que les voitures scellées restent non lues.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "discover_data"
+    ],
+    "language": "fr"
+   },
+   {
+    "id": "permutation_null_band",
+    "term": "bande nulle par permutation",
+    "definition": "L'étendue des chiffres d'un graphique après avoir mélangé plusieurs fois le résultat entre les lignes d'entraînement avec une graine fixe, ce qui casse tout lien réel entre la variable et le résultat. Un motif qui reste dans la bande est ce que le hasard seul produit ; un motif au-dessus de chaque mélange a peu de chances de venir du seul hasard. Par exemple, si les taux par métier diffèrent moins qu'après avoir mélangé qui a souscrit, les écarts ne prouvent rien.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "target_look",
+    "term": "regard sur la cible",
+    "definition": "Une analyse qui a lu la variable à prédire, comme sa distribution ou son résumé, les valeurs spéciales lues avec elle, ou sa moyenne par groupe. Chacune est comptée. Plus il y a de regards, plus une forme trouvée parmi eux peut être due au hasard. Par exemple, le contrôle de qualité des colonnes ne lit pas la cible et n'est pas un regard ; la distribution de la variable à prédire en est un.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "structural_eda"
+    ],
+    "language": "fr"
+   },
+   {
+    "id": "data_contingent_decision",
+    "term": "décision dépendante des données",
+    "definition": "Une décision choisie après avoir regardé le résultat dans les données. Elle est permise, mais enregistrée avec les analyses qui l'ont motivée, car un choix adapté au jeu d'entraînement rend les chiffres de validation un peu optimistes. Par exemple, plafonner une variable parce qu'un graphique du résultat semblait étrange à ses extrêmes est une préparation dépendante des données.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "preprocessing"
+    ],
+    "language": "fr"
+   },
+   {
+    "id": "success_criterion",
+    "term": "critère de succès",
+    "definition": "La plus petite réduction de l'erreur du modèle de référence qui rendrait le modèle digne d'être adopté, fixée avant tout ajustement de modèle, pour que le résultat ne puisse pas déplacer la barre. La conclusion se lit face à elle. Par exemple, décider avant les modèles que le modèle linéaire doit faire des erreurs au moins d'un dixième plus petites que prédire la moyenne du jeu d'entraînement pour chaque voiture, et garder la moyenne sinon.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "success_criterion"
+    ],
+    "language": "fr"
+   },
+   {
+    "id": "single_feature_signal",
+    "term": "signal d'une variable seule",
+    "definition": "À quel point une variable seule prédit le résultat, mesuré hors pli sur les lignes d'entraînement. Une variable qui prédit bien mieux que les autres pose une question sur le moment où sa valeur devient connue, parce qu'une valeur enregistrée au moment du résultat ou après le ferait fuir. Elle ne décide jamais quelles variables garder. Par exemple, la durée du dernier appel prédit très bien la réponse à cet appel, parce qu'elle n'est connue qu'une fois l'appel terminé.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "heteroscedasticity",
+    "term": "hétéroscédasticité",
+    "definition": "Des erreurs dont la taille change avec la prédiction ou d'un groupe à l'autre au lieu de rester à peu près la même. L'erreur moyenne reste un bon résumé, mais une même largeur d'intervalle pour chaque ligne serait fausse. Par exemple, si un modèle de la consommation se trompe davantage pour les voitures qu'il prédit les plus sobres, ses erreurs sont hétéroscédastiques.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "qq_plot",
+    "term": "graphique quantile-quantile (QQ plot)",
+    "definition": "Les quantiles des résidus, remis à l'échelle, tracés face aux mêmes quantiles d'une loi normale ; des points sur la diagonale signifient des résidus normaux. La normalité est une question sur les résidus après l'ajustement, jamais sur les variables brutes, et elle compte pour les intervalles de prédiction plutôt que pour l'erreur moyenne. Par exemple, quelques voitures aux très grandes erreurs écartent les extrémités du graphique de la diagonale.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "example_errors",
+    "term": "exemples d'erreurs",
+    "definition": "Les lignes aux plus grandes erreurs, montrées avec leurs valeurs pour qu'une personne puisse lire ce que le modèle a vu. Ce sont des exemples à comprendre, pas un échantillon à compter. Par exemple, les voitures que le modèle prédit le plus mal peuvent révéler un groupe de voitures qu'il n'a pas été ajusté pour décrire.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "training_set",
+    "term": "jeu d'entraînement",
+    "definition": "Les lignes sur lesquelles un modèle est ajusté. En validation croisée à k plis, le jeu d'entraînement de chaque modèle est formé des plis d'entraînement, tous les plis sauf celui sur lequel il est mesuré. Par exemple, avec cinq plis de clients, chaque modèle apprend de quatre plis de clients.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "fold",
+    "term": "pli",
+    "definition": "Une des k parties en lesquelles l'échantillon de développement est découpé pour la validation croisée à k plis. Chaque pli est à son tour le pli de validation, mesuré par un modèle ajusté sur les autres plis, les plis d'entraînement. Par exemple, avec cinq plis, les clients du troisième pli sont notés par un modèle qui a appris des clients des quatre autres plis.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "sample",
+    "term": "échantillon",
+    "definition": "Un ensemble de lignes tirées de la population sur laquelle porte l'étude ; un chiffre calculé dessus bougerait avec un autre échantillon de même taille. Par exemple, l'échantillon de développement est un échantillon des clients, et l'échantillon de test final (holdout) en est un autre.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "forward_chaining",
+    "term": "validation croisée progressive (forward chaining)",
+    "definition": "Une validation croisée qui suit l'ordre du moment de la prédiction. Les lignes de développement sont découpées en fenêtres successives ; chaque fenêtre suivante est prédite une fois par un modèle ajusté seulement sur des lignes plus anciennes dont la cible était déjà connue, et la première fenêtre, la période d'amorçage, sert seulement à l'entraînement et n'est jamais prédite. Un choix fait avec elle reste optimiste. Par exemple, les voitures de la troisième fenêtre sont prédites par un modèle ajusté sur les voitures des deux premières fenêtres, jamais sur des fenêtres plus récentes.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "random_split",
+    "term": "découpage aléatoire",
+    "definition": "Un découpage aléatoire des lignes entre entraînement et validation, avec une graine enregistrée. Il suppose que les lignes sont échangeables, ce qu'un ordre dans le temps ou des entités répétées peuvent contredire.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "ordinal_split",
+    "term": "découpage ordinal (temporel)",
+    "definition": "Un découpage sur une colonne ordonnée, comme une année de modèle. Les lignes à partir d'un seuil sont des lignes de validation et les lignes antérieures entraînent le modèle : la validation demande si un modèle ajusté sur le passé tient sur des périodes plus récentes.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "extrapolation",
+    "term": "extrapolation",
+    "definition": "Prédire pour des valeurs hors de la plage sur laquelle le modèle a été ajusté, comme des années plus récentes. Un modèle peut être exact dans sa plage d'entraînement et biaisé en dehors.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "group_overlap",
+    "term": "chevauchement des groupes",
+    "definition": "Des lignes qui décrivent la même entité, comme un même nom enregistré sur plusieurs années, qui tombent dans les deux partitions. Leurs lignes de validation ne sont pas indépendantes des lignes d'entraînement ; l'étude indique combien de groupes sont partagés.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "target_distribution",
+    "term": "distribution de la cible",
+    "definition": "La façon dont les valeurs de la cible se répartissent, résumée par la moyenne, l'écart type et les quartiles. Tout modèle est comparé à la prédiction la plus simple, la moyenne du jeu d'entraînement.",
+    "example": {
+     "segments": [
+      {
+       "text": "Sur les lignes d'entraînement de cette étude, la cible a une moyenne de "
+      },
+      {
+       "text": "20.57",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+       "path": "mean",
+       "value": 20.565315315315317,
+       "format": "f2"
+      },
+      {
+       "text": " mpg et un écart-type de "
+      },
+      {
+       "text": "6.20",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+       "path": "sd",
+       "value": 6.195978453412262,
+       "format": "f2"
+      },
+      {
+       "text": " mpg."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [
+     "train_eda"
+    ],
+    "language": "fr"
+   },
+   {
+    "id": "linear_regression",
+    "term": "régression linéaire",
+    "definition": "Un modèle qui prédit la cible comme une somme pondérée des variables, avec des poids ajustés sur le jeu d'entraînement par les moindres carrés. Ses poids sont des associations, pas des effets.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "prediction",
+    "term": "prédiction",
+    "definition": "La valeur qu'un modèle donne pour la cible d'une ligne, dans l'unité de la cible.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "residual",
+    "term": "résidu",
+    "definition": "La valeur observée moins la valeur prédite pour une ligne. Un résidu positif signifie que le modèle a prédit trop bas.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "bias",
+    "term": "biais",
+    "definition": "Le résidu moyen. Un biais loin de zéro signifie que le modèle est systématiquement trop bas ou trop haut, par exemple sur des périodes plus récentes que celles sur lesquelles il a été ajusté.",
+    "example": {
+     "segments": [
+      {
+       "text": "Ici, le résidu moyen du modèle linéaire sur les lignes de validation vaut "
+      },
+      {
+       "text": "6.39",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.linear].mean_residual",
+       "value": 6.394515464632113,
+       "format": "f2"
+      },
+      {
+       "text": " mpg."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "mae",
+    "term": "erreur absolue moyenne (MAE)",
+    "definition": "La taille moyenne des résidus, dans l'unité de la cible. Elle se lit directement comme l'erreur typique d'une prédiction.",
+    "example": {
+     "segments": [
+      {
+       "text": "Ici, la MAE de validation du modèle linéaire vaut "
+      },
+      {
+       "text": "6.48",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.linear].mae",
+       "value": 6.476590382656274,
+       "format": "f2"
+      },
+      {
+       "text": " mpg, contre "
+      },
+      {
+       "text": "10.27",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.baseline].mae",
+       "value": 10.268806306306304,
+       "format": "f2"
+      },
+      {
+       "text": " mpg pour la référence (prédire la moyenne)."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [
+     "model_choice"
+    ],
+    "language": "fr"
+   },
+   {
+    "id": "rmse",
+    "term": "racine de l'erreur quadratique moyenne (RMSE)",
+    "definition": "La racine carrée de la moyenne des résidus au carré, dans l'unité de la cible. Le carré pèse davantage les grandes erreurs : un écart entre RMSE et MAE signale quelques grandes erreurs.",
+    "example": {
+     "segments": [
+      {
+       "text": "Ici, la RMSE de validation du modèle linéaire vaut "
+      },
+      {
+       "text": "7.66",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.linear].rmse",
+       "value": 7.664419781686159,
+       "format": "f2"
+      },
+      {
+       "text": " mpg, contre "
+      },
+      {
+       "text": "11.92",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.baseline].rmse",
+       "value": 11.924502477405836,
+       "format": "f2"
+      },
+      {
+       "text": " mpg pour la référence (prédire la moyenne)."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [],
+    "language": "fr"
+   },
+   {
+    "id": "smearing",
+    "term": "retransformation (smearing)",
+    "definition": "Quand un modèle prédit le logarithme de la cible, ramener ses prédictions à l'unité d'origine sous-estime la moyenne, et une correction comme le smearing de Duan est nécessaire. Par exemple, un modèle du logarithme de la consommation en aurait besoin ; ce moteur ne transforme pas la cible, donc elle ne s'applique pas ici.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "fr"
+   }
+  ],
+  "steps": {
+   "discover_data": {
+    "concept": {
+     "segments": [
+      {
+       "text": "échantillon de développement"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "Le cas décrit une ligne ainsi : Un modèle de véhicule pour une année de modèle. La fiche des données montre les colonnes regroupées avec leur sens et leur disponibilité, et quelques lignes de développement."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Rien n'est calculé et rien n'est décidé. Les lignes montrées sont des lignes de développement, déjà lues pour leur structure à la création de l'étude ; l'échantillon de test final reste scellé."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Lire les colonnes avant toute décision est la façon de savoir ce que décrit chaque variable et quand sa valeur devient connue."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "La décision de disponibilité qui suit s'appuie sur cette lecture."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "prediction_time": {
+    "concept": {
+     "segments": [
+      {
+       "text": "moment de la prédiction"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "Dans ce cas, la décision est : Comparer des méthodes d'estimation, sans décision réelle. Le moment de la prédiction décide quelles variables sont permises."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Vous indiquez le moment ; l'agent le reformule et enregistre votre réponse. Aucune donnée n'est lue."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Chaque étape suivante est jugée par rapport à ce moment."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Le changer plus tard demande de confirmer à nouveau la décision de disponibilité, le choix du modèle et la conclusion."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "feature_availability": {
+    "concept": {
+     "segments": [
+      {
+       "text": "disponibilité des variables"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "Le cas décrit une ligne ainsi : Un modèle de véhicule pour une année de modèle. Pour chaque variable, vous décidez si elle est connue au moment de la prédiction."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Chaque variable candidate reçoit un statut. Les variables incertaines sont soit exclues, soit incluses et listées comme une limite. Une colonne de temps n'est pas une variable candidate ; elle ordonne les lignes."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Les variables marquées non disponibles, ou incertaines et exclues, n'entrent jamais dans un modèle."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Un changement qui modifie l'ensemble des variables utilisables réajuste le modèle linéaire et demande de confirmer à nouveau le choix du modèle."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "split": {
+    "concept": {
+     "segments": [
+      {
+       "text": "jeu de validation"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "Le découpage est fixé avant toute exploration de la cible. Quand le cas déclare une colonne de temps, la coupure est ordinale : les périodes plus récentes sont validées avec un modèle ajusté sur les plus anciennes, ce qui montre l'extrapolation au lieu de la cacher. Quand il déclare une colonne de groupe, le découpage indique les groupes que les deux partitions partagent."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Un découpage aléatoire avec une graine enregistrée, ou une coupure ordinale sur la colonne de temps entière (lue comme des entiers, jamais comme des dates). Les lignes lues sont enregistrées comme exposition."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Lignes d'entraînement : "
+      },
+      {
+       "text": "222",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+       "path": "partitions.train.n_rows",
+       "value": 222,
+       "format": "int"
+      },
+      {
+       "text": ". Lignes de validation : "
+      },
+      {
+       "text": "96",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+       "path": "partitions.validation.n_rows",
+       "value": 96,
+       "format": "int"
+      },
+      {
+       "text": ". Les groupes partagés et l'étendue de la colonne de temps dans chaque partition sont listés avec le résultat."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Changer le découpage réajuste les deux modèles et recalcule l'exploration ; les lignes déjà explorées restent exposées."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "error_metric": {
+    "concept": null,
+    "context": null,
+    "method": null,
+    "interpretation": null,
+    "consequence": null,
+    "text_status": "shown"
+   },
+   "success_criterion": {
+    "concept": {
+     "segments": [
+      {
+       "text": "critère de succès"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "Le critère est fixé à la pause du découpage, avant tout ajustement de modèle, pour que le résultat ne puisse pas l'influencer."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Vous indiquez la plus petite réduction relative de l'erreur absolue moyenne de validation de la référence (prédire la moyenne) qui rendrait le modèle utile."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "La conclusion est lue par rapport à ce critère. Une réduction inférieure, ou dont l'intervalle apparié contient zéro, ne justifie pas d'adopter le modèle."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Le changer plus tard demande de confirmer à nouveau la conclusion."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "structural_eda": {
+    "concept": {
+     "segments": [
+      {
+       "text": "regard sur la cible"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "Le contrôle de qualité lit les lignes de développement sans la cible ; la préparation décidée à partir de lui vient donc avant tout regard sur la cible."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Les cellules manquantes par colonne, les lignes répétées, les catégories de chaque colonne catégorielle avec les plus rares, et l'étendue de chaque colonne numérique comparée à celle que déclare le cas. Les lignes lues sont enregistrées comme une inspection de structure."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "La préparation proposée cite ce que ce contrôle a trouvé ; elle n'est pas dépendante des données tant qu'aucun regard sur la cible ne l'a précédée."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Une préparation proposée après un regard sur la cible reste marquée dépendante des données."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "preprocessing": {
+    "concept": {
+     "segments": [
+      {
+       "text": "décision dépendante des données"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "L'exploration des lignes d'entraînement peut motiver la façon dont le modèle prépare les variables ; les analyses qui l'ont motivée sont enregistrées avec elle."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Les indicateurs de valeur manquante, le nombre minimal de lignes d'une catégorie, les plafonds aux quantiles d'entraînement et les transformations logarithmiques sont appris sur les lignes d'entraînement seulement et appliqués tels quels aux lignes de validation. Le choix par défaut ne change rien."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Une préparation choisie après avoir regardé la cible est marquée dépendante des données ; les erreurs de validation peuvent alors être un peu optimistes."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "La changer réajuste le modèle linéaire et demande de confirmer à nouveau le choix du modèle et la conclusion ; l'exploration ne change pas."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "train_eda": {
+    "concept": {
+     "segments": [
+      {
+       "text": "distribution de la cible"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "La cible est : mpg : consommation en cycle urbain, en miles par gallon, selon la source. L'exploration lit seulement les lignes d'entraînement."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Le résumé de la cible et les valeurs spéciales sont calculés sur la partition d'entraînement, avec leurs effectifs."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Sur les lignes d'entraînement, la cible a une moyenne de "
+      },
+      {
+       "text": "20.57",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+       "path": "mean",
+       "value": 20.565315315315317,
+       "format": "f2"
+      },
+      {
+       "text": " et un écart-type de "
+      },
+      {
+       "text": "6.20",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+       "path": "sd",
+       "value": 6.195978453412262,
+       "format": "f2"
+      },
+      {
+       "text": ", dans l'unité de la cible. La référence (prédire la moyenne) prédit cette moyenne pour chaque ligne ; un modèle doit faire mieux pour être utile."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Un marqueur de valeur manquante sur une variable numérique devient un indicateur et une valeur imputée dans le modèle, jamais un nombre ordinaire."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "models": {
+    "concept": {
+     "segments": [
+      {
+       "text": "modèle de référence (baseline)"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "Une référence (prédire la moyenne) et un modèle linéaire sont ajustés sur les lignes d'entraînement et prédisent les lignes de validation."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Les prédictions sur les lignes de validation sont enregistrées, donc comparer et choisir un modèle ne demande jamais de réajustement."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Sur les lignes de validation, la référence (prédire la moyenne) a une erreur absolue moyenne de "
+      },
+      {
+       "text": "10.27",
+       "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+       "path": "validation.mae",
+       "value": 10.268806306306304,
+       "format": "f2"
+      },
+      {
+       "text": " et le modèle linéaire de "
+      },
+      {
+       "text": "6.48",
+       "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+       "path": "validation.mae",
+       "value": 6.476590382656274,
+       "format": "f2"
+      },
+      {
+       "text": ", dans l'unité de la cible."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "La comparaison des modèles lit ces prédictions enregistrées."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "model_variant": {
+    "concept": null,
+    "context": null,
+    "method": null,
+    "interpretation": null,
+    "consequence": null,
+    "text_status": "shown"
+   },
+   "model_choice": {
+    "concept": {
+     "segments": [
+      {
+       "text": "erreur absolue moyenne (MAE)"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "L'usage prévu est : Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques. Un modèle n'est adopté que s'il réduit l'erreur de la référence (prédire la moyenne) de plus que la variabilité de ces lignes de validation, et si ses résidus ne montrent pas de biais qui compte pour cet usage."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "La MAE et la RMSE sont calculées dans l'unité de la cible sur les prédictions de validation enregistrées, avec des intervalles bootstrap appariés de chacune et de l'écart avec le modèle de référence, et les résidus par période."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "La MAE du modèle linéaire moins celle du modèle de référence vaut "
+      },
+      {
+       "text": "-3.79",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.point",
+       "value": -3.792215923650031,
+       "format": "f2"
+      },
+      {
+       "text": " sur les lignes de validation, entre "
+      },
+      {
+       "text": "-4.38",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.low",
+       "value": -4.375861635363238,
+       "format": "f2"
+      },
+      {
+       "text": " et "
+      },
+      {
+       "text": "-3.16",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.high",
+       "value": -3.159283658688826,
+       "format": "f2"
+      },
+      {
+       "text": " sur des rééchantillonnages de ces lignes. Son résidu moyen (biais) vaut "
+      },
+      {
+       "text": "6.39",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.linear].mean_residual",
+       "value": 6.394515464632113,
+       "format": "f2"
+      },
+      {
+       "text": ". Ces lignes ont servi au choix, donc les chiffres sont optimistes et ne sont pas une prévision."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Changer le choix du modèle réutilise les prédictions enregistrées et l'évaluation ; rien n'est réajusté."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "final_test": {
+    "concept": null,
+    "context": null,
+    "method": null,
+    "interpretation": null,
+    "consequence": null,
+    "text_status": "shown"
+   },
+   "conclusion": {
+    "concept": {
+     "segments": [
+      {
+       "text": "décision confirmée"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "La conclusion dit ce qui peut être affirmé, pour quel usage et avec quelles limites."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Vous choisissez un verdict et écrivez le texte ; garder le modèle de référence ou déclarer l'étude non concluante sont des résultats valables."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "La conclusion repose sur des lignes de validation qui ont servi à la sélection."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Les limites listées sous « Ce qui n'est pas encore défendable » lui restent attachées."
+      }
+     ]
+    },
+    "text_status": "shown"
+   }
+  },
+  "predictions": [
+   {
+    "id": "regression.models.sign",
+    "step": "models",
+    "question": "Ajusté sans les lignes qu'il prédit, le modèle linéaire les prédira-t-il en moyenne trop bas ou trop haut ?",
+    "choices": [
+     {
+      "id": "too_low",
+      "label": "Trop bas"
+     },
+     {
+      "id": "too_high",
+      "label": "Trop haut"
+     },
+     {
+      "id": "not_sure",
+      "label": "Je ne sais pas"
+     }
+    ],
+    "reveal": {
+     "segments": [
+      {
+       "text": "Le résidu moyen du modèle linéaire sur les lignes qu'il a prédites vaut "
+      },
+      {
+       "text": "6.39",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.linear].mean_residual",
+       "value": 6.394515464632113,
+       "format": "f2"
+      },
+      {
+       "text": " mpg : en moyenne, il a prédit trop bas (observé moins prédit est positif)."
+      }
+     ]
+    },
+    "available": true
+   },
+   {
+    "id": "regression.model_choice.beats_mean",
+    "step": "model_choice",
+    "question": "L'erreur du modèle linéaire sera-t-elle inférieure à celle de la référence (prédire la moyenne) ?",
+    "choices": [
+     {
+      "id": "yes",
+      "label": "Oui"
+     },
+     {
+      "id": "no",
+      "label": "Non"
+     },
+     {
+      "id": "not_sure",
+      "label": "Je ne sais pas"
+     }
+    ],
+    "reveal": {
+     "segments": [
+      {
+       "text": "La MAE des lignes évaluées vaut "
+      },
+      {
+       "text": "6.48",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.linear].mae",
+       "value": 6.476590382656274,
+       "format": "f2"
+      },
+      {
+       "text": " mpg pour le modèle linéaire et "
+      },
+      {
+       "text": "10.27",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "models.[fit.baseline].mae",
+       "value": 10.268806306306304,
+       "format": "f2"
+      },
+      {
+       "text": " mpg pour la référence (prédire la moyenne). L'écart apparié vaut "
+      },
+      {
+       "text": "-3.79",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.point",
+       "value": -3.792215923650031,
+       "format": "f2"
+      },
+      {
+       "text": " mpg, entre "
+      },
+      {
+       "text": "-4.38",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.low",
+       "value": -4.375861635363238,
+       "format": "f2"
+      },
+      {
+       "text": " et "
+      },
+      {
+       "text": "-3.16",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+       "path": "deltas.[fit.linear].mae.high",
+       "value": -3.159283658688826,
+       "format": "f2"
+      },
+      {
+       "text": " sur des rééchantillonnages des lignes évaluées."
+      }
+     ]
+    },
+    "available": true
+   }
+  ]
+ }
+}

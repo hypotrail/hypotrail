@@ -84,7 +84,9 @@
        "text": " validation rows"
       }
      ]
-    }
+    },
+    "question_junior": null,
+    "texts": null
    },
    {
     "result_id": "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
@@ -147,6 +149,27 @@
        "text": " training rows"
       }
      ]
+    },
+    "question_junior": "How often is the outcome positive among the training rows?",
+    "texts": {
+     "en": {
+      "question": "How often is the outcome positive among the training rows?",
+      "note": null,
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "À quelle fréquence le résultat est-il positif parmi les lignes d'entraînement ?",
+      "note": null,
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
     }
    },
    {
@@ -413,7 +436,40 @@
      "note": "Counts on training rows. Special values that always occur together describe one fact twice.",
      "question": "How many training rows carry each special value, and how does the outcome look among them?"
     },
-    "headline": null
+    "headline": null,
+    "question_junior": "How many training rows carry each special value, and how does the outcome look among them?",
+    "texts": {
+     "en": {
+      "question": "How many training rows carry each special value, and how does the outcome look among them?",
+      "note": "Counts on training rows. Special values that always occur together describe one fact twice.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {
+       "job=unknown": "Listed as a category by the documentation; what it covers is not documented.",
+       "education=unknown": "Listed as a category by the documentation; what it covers is not documented.",
+       "contact=unknown": "Listed as a category by the documentation; what it covers is not documented.",
+       "pdays=-1": "The client was not previously contacted.",
+       "poutcome=unknown": "Listed as a category by the documentation; what it covers is not documented."
+      }
+     },
+     "fr": {
+      "question": "Combien des lignes d'entraînement portent chaque valeur spéciale, et à quoi ressemble le résultat parmi elles ?",
+      "note": "Effectifs sur les lignes d'entraînement. Des valeurs spéciales toujours présentes ensemble décrivent deux fois le même fait.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {
+       "job=unknown": null,
+       "education=unknown": null,
+       "contact=unknown": null,
+       "pdays=-1": null,
+       "poutcome=unknown": null
+      }
+     }
+    }
    },
    {
     "result_id": "770728df0eb075a82a317a78ca7e8d2a81eb0c1970543250ecbc4283503cdaa2",
@@ -607,7 +663,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 19,
+        "0.5": 53.0,
+        "0.99": 87
+       },
+       "skewness": 0.8
       },
       {
        "column": "balance",
@@ -617,7 +679,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": -3313,
+        "0.5": 33937.5,
+        "0.99": 71188
+       },
+       "skewness": 0.8
       },
       {
        "column": "day",
@@ -627,7 +695,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 1,
+        "0.5": 16.0,
+        "0.99": 31
+       },
+       "skewness": 0.8
       },
       {
        "column": "duration",
@@ -637,7 +711,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 4,
+        "0.5": 1514.5,
+        "0.99": 3025
+       },
+       "skewness": 0.8
       },
       {
        "column": "campaign",
@@ -647,7 +727,13 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 1,
+        "0.5": 25.5,
+        "0.99": 50
+       },
+       "skewness": 0.8
       },
       {
        "column": "pdays",
@@ -657,7 +743,13 @@
        "n_special": 2962,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 1,
+        "0.5": 436.0,
+        "0.99": 871
+       },
+       "skewness": 0.8
       },
       {
        "column": "previous",
@@ -667,13 +759,40 @@
        "n_special": 0,
        "declared": null,
        "n_below": null,
-       "n_above": null
+       "n_above": null,
+       "quantiles": {
+        "0.01": 0,
+        "0.5": 12.5,
+        "0.99": 25
+       },
+       "skewness": 0.8
       }
      ],
      "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
      "note": "Structural reading of the development rows: the target is not read, and nothing here is a rate or an association. A range is checked only against a range the case declares."
     },
-    "headline": null
+    "headline": null,
+    "question_junior": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
+    "texts": {
+     "en": {
+      "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
+      "note": "Structural reading of the development rows: the target is not read, and nothing here is a rate or an association. A range is checked only against a range the case declares.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Y a-t-il des cellules manquantes, des lignes répétées, des catégories rares ou des valeurs hors de leur plage possible dans les lignes de l'échantillon de développement ?",
+      "note": "Lecture structurelle des lignes de l'échantillon de développement : la cible n'est pas lue, et rien ici n'est un taux ni une association. Une plage n'est vérifiée que par rapport à une plage que le cas déclare.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
    },
    {
     "result_id": "39ab516d35eec3194bb6e38aade45f9dfd92bfdfb7767b8e1351b42b8a33f259",
@@ -832,7 +951,32 @@
      "question": "Does any single feature, on its own, predict the outcome so well that its availability at the prediction moment should be questioned?",
      "note": "Each feature alone, scored out of fold on the training rows. A high value only raises a question about when the value is known; it never keeps or drops a feature, and a legitimate feature may score high."
     },
-    "headline": null
+    "headline": null,
+    "question_junior": "Does any single feature, on its own, predict the outcome so well that its availability at the prediction moment should be questioned?",
+    "texts": {
+     "en": {
+      "question": "Does any single feature, on its own, predict the outcome so well that its availability at the prediction moment should be questioned?",
+      "note": "Each feature alone, scored out of fold on the training rows. A high value only raises a question about when the value is known; it never keeps or drops a feature, and a legitimate feature may score high.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {
+       "duration": "duration ranks the training rows with an out-of-fold AUC of 0.81 on its own, far above the other features (median 0.56). Is its value really known at the prediction moment, or is it recorded at or after the outcome? (availability decided: not_available)"
+      },
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Une variable, à elle seule, prédit-elle le résultat si bien que sa disponibilité au moment de la prédiction doit être mise en question ?",
+      "note": "Chaque variable seule, notée hors pli sur les lignes d'entraînement. Une valeur élevée pose seulement une question sur le moment où la valeur est connue ; elle ne garde ni n'écarte jamais une variable, et une variable légitime peut obtenir une valeur élevée.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {
+       "duration": "duration classe les lignes d'entraînement avec une AUC hors pli de 0,81 à elle seule, bien au-dessus des autres variables (médiane 0,56). Sa valeur est-elle vraiment connue au moment de la prédiction, ou est-elle enregistrée au moment de le résultat ou après ? (disponibilité décidée : non disponible)"
+      },
+      "null_band": null,
+      "meanings": {}
+     }
+    }
    },
    {
     "result_id": "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18",
@@ -1103,6 +1247,31 @@
        "text": " groups"
       }
      ]
+    },
+    "question_junior": "Does the positive rate differ across the groups of job by more than chance alone draws?",
+    "texts": {
+     "en": {
+      "question": "Does the positive rate differ across the groups of job by more than chance alone draws?",
+      "note": "Rates by group on training rows are associations, not effects of the variable.",
+      "warnings": [
+       "job = unknown (special value): only 26 training rows; its rate is too noisy to read on its own."
+      ],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": "The band is the range of the same figure after shuffling the target among the training rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks.",
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Le taux de résultat diffère-t-il entre les groupes de job plus que le hasard seul ne le produit ?",
+      "note": "Les taux par groupe sur les lignes d'entraînement sont des associations, pas des effets de la variable.",
+      "warnings": [
+       "job = unknown (special value) : seulement 26 lignes d'entraînement ; son taux est trop bruité pour être lu seul."
+      ],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": "La bande est l'étendue du même chiffre après avoir mélangé la cible entre les lignes d'entraînement 19 fois (graine fixe) : ce que le hasard seul produit. Un motif à l'intérieur ne se distingue pas du hasard ; un motif au-dessus de chaque mélange arrive par hasard environ une fois sur 20 regards.",
+      "meanings": {}
+     }
     }
    },
    {
@@ -1234,7 +1403,28 @@
      "note": "Counts of training rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
      "question": "How are the values of age distributed among the training rows?"
     },
-    "headline": null
+    "headline": null,
+    "question_junior": "How are the values of age distributed among the training rows?",
+    "texts": {
+     "en": {
+      "question": "How are the values of age distributed among the training rows?",
+      "note": "Counts of training rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Comment les valeurs de age se répartissent-elles parmi les lignes d'entraînement ?",
+      "note": "Effectifs des lignes d'entraînement seulement. Une distribution décrit cet échantillon ; ce n'est pas un taux du résultat et elle ne dit rien des causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
    },
    {
     "result_id": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
@@ -1310,7 +1500,9 @@
        "text": " validation rows"
       }
      ]
-    }
+    },
+    "question_junior": null,
+    "texts": null
    },
    {
     "result_id": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
@@ -1477,7 +1669,9 @@
        "text": " validation rows"
       }
      ]
-    }
+    },
+    "question_junior": null,
+    "texts": null
    },
    {
     "result_id": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
@@ -2049,7 +2243,9 @@
        "format": "pct1"
       }
      ]
-    }
+    },
+    "question_junior": null,
+    "texts": null
    },
    {
     "result_id": "b7e3c1d09a4f5e6b8c2d1f0e3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
@@ -2080,7 +2276,9 @@
     "execution_id": "e_dddddddddddddddddddddddd",
     "exposure_id": "x_1bb227dc541040efab93f8b8b64604d3",
     "values": null,
-    "headline": null
+    "headline": null,
+    "question_junior": null,
+    "texts": null
    }
   ],
   "truncated": false,
@@ -2567,7 +2765,8 @@
       "split"
      ],
      "first_revision": 1,
-     "last_revision": 8
+     "last_revision": 8,
+     "note": null
     },
     {
      "purpose": "train_eda",
@@ -2581,7 +2780,8 @@
       "eda.distribution"
      ],
      "first_revision": 10,
-     "last_revision": 27
+     "last_revision": 27,
+     "note": null
     },
     {
      "purpose": "train_fit",
@@ -2593,7 +2793,8 @@
       "fit.logistic"
      ],
      "first_revision": 16,
-     "last_revision": 18
+     "last_revision": 18,
+     "note": null
     },
     {
      "purpose": "validation_model_evaluation",
@@ -2605,7 +2806,8 @@
       "fit.logistic"
      ],
      "first_revision": 16,
-     "last_revision": 18
+     "last_revision": 18,
+     "note": null
     },
     {
      "purpose": "validation_policy_selection",
@@ -2616,7 +2818,8 @@
       "policy.evaluation"
      ],
      "first_revision": 20,
-     "last_revision": 24
+     "last_revision": 24,
+     "note": null
     }
    ],
    "prior_exposure": [

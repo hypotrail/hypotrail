@@ -1,26 +1,21 @@
-// Evidence view (COMPANION-ADVANCED §6.4, stage v2). WP-U3; reordered by WP-B5 (v0.2b).
+// Evidence parts (COMPANION-ADVANCED §A.4; formerly the Evidence tab, WP-U3, WP-B5). The one
+// page (ADR 0004 d13) places them through media/views/page.js:
 //
-// WP-B5: the tab leads with the final test (sealed, opened once in the junior's words,
-// changed after the opening, or absent) and the trial count, then the exposure ledger in
-// words, then the development evidence (the cross-validation scheme and its spread across
-// folds, the variant against the candidate) apart from the final evidence (measured once),
-// then the diagnostics when the engine has them, then the results registry (development
-// and final-test results listed apart), the detail, and the lineage. Opening the final
-// test is a chat act: no control here offers it.
+//   comparison     Now's figure at a choice (§6.5.2): the variants' paired difference, else
+//                  the models' intervals, limited to one metric (NOW-1 "the one figure")
+//   slotFigure     a result's figure in its step's detail (PATH-5): intervals, variants and
+//                  families (EV-15), diagnostics, the final evidence
+//   detail         "Where it comes from" under a figure: facts, report and notebook (EV-4),
+//                  lineage and impact (EV-6); several can be open, each read once per version
+//   ledgerTable    the exposure ledger of the path's ledger fold (PATH-1, EV-2, EV-8)
+//   devFinalTable  the end's development and final columns (§6.5.2 `done`, HON-1)
+//   finalTest      the final test's card, first in the `final_test` step's detail (EV-7)
 //
-// Left: the results registry with the filter Current / Stale / All. Right: the detail of
-// the chosen result (facts, report and notebook, stale reason, uncertainty of an
-// evaluation). Below: its lineage (chips, impact sentences, a table toggle) and the
-// exposure ledger. Data: the `evidence` view, loaded by this view itself because it carries
-// the chosen `resultId` (`evidence --result <rid>` holds the list too, so one read serves
-// both columns). Figures appear only for current, verified results (INV-7); stale ones read
-// "Not cited". Navigation targets: `data-nav="result:<rid>"` on the detail (deep links, "go
-// to a result", chips of other tabs).
+// Figures appear only for current, verified results (INV-7); a stale result is a line of its
+// step (HON-4). Opening the final test is a chat act: no control here offers it.
 (function (HT) {
   'use strict';
   const RID = /^[0-9a-f]{64}$/;
-  const FILTERS = ['current', 'stale', 'all'];
-  const MAX_ROWS = 200;
   const requested = {};
   let tableOpen = false;
   let copyNote = null;
@@ -39,14 +34,13 @@
     return ctx.components.intervalRows(container, options);
   }
 
-  function selected(ctx) {
-    const id = ctx.ui.get('selectedResult');
-    return typeof id === 'string' && RID.test(id) ? id : null;
-  }
-
-  function filterOf(ctx) {
-    const f = ctx.ui.get('evidenceFilter');
-    return FILTERS.includes(f) ? f : 'current';
+  // The one page (§4.3): the result whose "Where it comes from" is open (view memory only; the
+  // tabbed panel kept it in setState `selectedResult`, which §10 drops).
+  const pick = { rid: null };
+  // The metric a figure of Now is limited to (null: every metric, as in the path's details).
+  const focus = { metric: null };
+  function selected() {
+    return typeof pick.rid === 'string' && RID.test(pick.rid) ? pick.rid : null;
   }
 
   /** Ask for the evidence (with the chosen result) once per version and choice (CR.1). */
@@ -56,7 +50,11 @@
     const sel = selected(ctx);
     const d = ctx.data('evidence');
     if (ctx.fresh(d) && (d.resultId || null) === sel) return;
-    const key = `${ctx.version()}|${sel || ''}`;
+    const version = String(ctx.version());
+    const key = `${version}|${sel || ''}`;
+    // Once per version and choice: the asks of another version are forgotten, so a version
+    // seen again (a currency that comes back) is read again, never in a loop.
+    for (const k of Object.keys(requested)) if (!k.startsWith(`${version}|`)) delete requested[k];
     if (requested[key]) return;
     requested[key] = true;
     // WP-A5: the plain read may already be asked by another tab (the Overview's next move).
@@ -64,80 +62,15 @@
     ctx.load('evidence', sel ? { resultId: sel } : undefined);
   }
 
-  function choose(ctx, id) {
-    // A choice after a load error asks again (the earlier answer for it may have failed).
-    if (ctx.error('evidence') && ctx.snapshot) delete requested[`${ctx.version()}|${id || ''}`];
-    ctx.ui.set('selectedResult', id || undefined);
-    ctx.rerender();
-  }
-
   function fitLabel(task, fit) {
     const c = C();
     if (fit === 'fit.baseline') return c.reference[task === 'regression' ? 'regression' : 'binary'];
-    return c.fits[fit] || fit;
+    // Lot P (R45): a variant named by what it is (ridge, EBM), from the study's decision.
+    const named = HT.copy.junior.variantLabel ? HT.copy.junior.variantLabel(fit) : null;
+    return named || c.fits[fit] || fit;
   }
 
   // --- results registry --------------------------------------------------------------------
-
-  function visible(results, filter) {
-    if (filter === 'current') return results.filter(r => r.promoted && r.current);
-    if (filter === 'stale') return results.filter(r => !r.current);
-    return results;
-  }
-
-  function filterGroup(ctx, filter) {
-    const c = C();
-    return ctx.el('fieldset', { className: 'ht-ev-filter', 'data-evidence-filter': filter }, [
-      ctx.el('legend', { className: 'sr-only', text: c.filterLabel }),
-      ...FILTERS.map(f => ctx.el('label', { className: 'ht-ev-radio' }, [
-        ctx.el('input', { type: 'radio', name: 'ht-ev-filter', id: `ht-ev-filter-${f}`, value: f, checked: f === filter,
-          onchange: () => { ctx.ui.set('evidenceFilter', f); ctx.rerender(); } }),
-        f === 'stale' ? HT.terms.mark(c.filters[f], 'stale_result') : c.filters[f],
-      ])),
-    ]);
-  }
-
-  function resultRow(ctx, r, sel) {
-    const c = C();
-    const right = r.current && r.headline
-      ? ctx.components.segments(ctx.el('span', { className: 'ht-ev-headline' }), ruleWordsIn(r.headline))
-      : ctx.el('span', { className: 'ht-ev-headline muted', text: r.current ? '' : c.notCited });
-    return ctx.el('li', {}, [ctx.el('button', {
-      type: 'button', className: 'ht-ev-item', 'data-result-item': r.resultId, 'aria-pressed': r.resultId === sel ? 'true' : 'false',
-      'data-current': r.current ? 'true' : 'false', onclick: () => choose(ctx, r.resultId),
-    }, [
-      ctx.el('span', { className: 'ht-ev-slot' }, [
-        // v0.3 (WP-E3): the slot is an engine identifier, so it reads as code, not as prose.
-        ctx.el('code', { text: r.slot || r.activity }),
-        r.current ? null : ctx.el('span', { className: 'ht-ev-badge', 'data-stale': true,
-          text: r.integrity && r.integrity !== 'ok' ? c.integrityBadge : c.staleBadge }),
-      ]),
-      right,
-    ])]);
-  }
-
-  function registry(ctx, model, sel) {
-    const c = C();
-    const filter = filterOf(ctx);
-    const items = visible(model.results, filter);
-    const shown = items.slice(0, MAX_ROWS);
-    // WP-B5: the results measured on the final test are listed apart, under their label.
-    const final = shown.filter(r => r.partition === 'final_test');
-    const development = shown.filter(r => r.partition !== 'final_test');
-    const list = (rows, part) => ctx.el('ul', { className: 'ht-ev-list', 'data-results': filter, 'data-results-partition': part },
-      rows.map(r => resultRow(ctx, r, sel)));
-    return ctx.el('section', { className: 'card ht-ev-registry', 'aria-labelledby': 'ht-ev-results' }, [
-      ctx.el('h3', { id: 'ht-ev-results', text: c.resultsTitle }),
-      filterGroup(ctx, filter),
-      shown.length && final.length ? ctx.el('div', {}, [
-        ctx.el('h4', { className: 'ht-ev-list-head', text: c.developmentTitle }), development.length ? list(development, 'development') : null,
-        ctx.el('h4', { className: 'ht-ev-list-head', 'data-final-results': true, text: c.finalEvidenceTitle }), list(final, 'final_test'),
-      ]) : shown.length ? list(shown, 'development')
-        : ctx.el('p', { className: 'muted', text: c.empty[filter] }),
-      items.length > shown.length ? ctx.el('p', { className: 'muted', text: c.more(items.length - shown.length) }) : null,
-      model.truncated ? ctx.el('p', { className: 'muted', text: c.truncated }) : null,
-    ]);
-  }
 
   // --- result detail -----------------------------------------------------------------------
 
@@ -159,7 +92,7 @@
       const parts = [detail.partition, detail.nRows !== null ? c.rows(int(ctx, detail.nRows)) : null,
         task === 'binary' && detail.nPositive !== null ? c.positives(int(ctx, detail.nPositive)) : null].filter(Boolean);
       add(c.facts.evaluatedOn, parts.join(' · '));
-      if (detail.headline && detail.headline.length) add(c.facts.headline, ctx.components.segments(ctx.el('span'), ruleWordsIn(detail.headline)));
+      if (detail.headline && detail.headline.length) add(c.facts.headline, studyText(ctx.components.segments(ctx.el('span'), ruleWordsIn(detail.headline))));
     } else if (detail.partition) {
       add(c.facts.evaluatedOn, detail.partition);
     }
@@ -242,21 +175,43 @@
     if (u.kind === 'policy') {
       for (const rule of u.rules) {
         blocks.push(ctx.el('h4', { title: rule.rule, text: c.binary.rule(HT.copy.junior.ruleShort(rule.rule)) }));
-        for (const m of rule.metrics) {
+        for (const m of rule.metrics.filter(x => !focus.metric || x.metric === focus.metric)) {
           blocks.push(metricBlock(ctx, u, 'binary', m, x => pct(ctx, x), x => ctx.format.number(x, 'f3'), c.binary.metrics[m.metric], ''));
         }
       }
     } else {
       const unit = u.unit ? ` ${u.unit}` : '';
-      for (const m of u.metrics) {
+      for (const m of u.metrics.filter(x => !focus.metric || x.metric === focus.metric)) {
         blocks.push(metricBlock(ctx, u, 'regression', m, x => ctx.format.number(x, 'f2'), x => ctx.format.number(x, 'f2'), c.metrics[m.metric], unit));
       }
     }
-    return ctx.el('section', { className: 'ht-ev-uncertainty', 'data-uncertainty': u.kind, 'aria-labelledby': 'ht-ev-unc' }, [
-      ctx.el('h3', { id: 'ht-ev-unc' }, [HT.terms.mark(c.uncertaintyTitle, 'confidence_interval')]),
+    const hid = `ht-ev-unc-${u.kind}${focus.metric ? `-${focus.metric}` : ''}`;
+    return ctx.el('section', { className: 'ht-ev-uncertainty', 'data-uncertainty': u.kind, 'aria-labelledby': hid }, [
+      ctx.el('h3', { id: hid }, [HT.terms.mark(c.uncertaintyTitle, 'confidence_interval')]),
       ...blocks,
       replicates ? ctx.el('p', { className: 'muted', 'data-bootstrap': true, text: c.bootstrap(replicates, level) }) : null,
     ]);
+  }
+
+  // L3 (R4): a headline is written in the study language (`evidence`); in a panel of the
+  // other language it is marked with its language, as an engine text is.
+  function studyText(node) {
+    const study = HT.studyLanguage ? HT.studyLanguage() : 'en';
+    const panel = HT.language ? HT.language() : 'en';
+    if (study === panel) return node;
+    node.setAttribute('lang', study);
+    node.appendChild(HT.el('span', study === 'fr'
+      ? { className: 'ht-en-marker', 'data-fr-marker': true, text: '(fr)' }
+      : { className: 'ht-en-marker', 'data-en-marker': true, text: '(en)' }));
+    return node;
+  }
+
+  // L3 (R4): a limit as the junior reads it, `juniorText` (localized from the engine's `texts`),
+  // else the engine's English `text`, marked when it is not in the panel's language.
+  function limitText(ctx, i, attrs = {}) {
+    return i.juniorText
+      ? ctx.components.engineText(i.juniorText, { tag: 'p', attrs })
+      : ctx.components.engineText(i.text, { tag: 'p', attrs, lang: 'en' });
   }
 
   function smallData(ctx, detail) {
@@ -265,7 +220,8 @@
     const ids = /^(policy\.evaluation|evaluate\.regression|fit\.)/.test(slot)
       ? ['small_validation_partition', 'capacity_exceeds_validation'] : /^eda\./.test(slot) ? ['high_cardinality_grouping'] : [];
     const items = top.filter(i => ids.includes(i.id));
-    return items.map(i => ctx.el('div', { className: 'card ht-warn', role: 'note', 'data-small-data': i.id }, [ctx.el('p', { text: i.text })]));
+    // L3 (R4): the limit in the junior's words (the panel's language when the engine gave it).
+    return items.map(i => ctx.el('div', { className: 'card ht-warn', role: 'note', 'data-small-data': i.id }, [limitText(ctx, i)]));
   }
 
   // "Select the id": opens the full id and selects it, for the junior to copy with the
@@ -285,25 +241,27 @@
   }
 
   function detailSection(ctx, model, sel, task) {
+    // Ids carry the result, so that several open details stay unique (§4.3).
+    const sfx = String(sel || '').slice(0, 8);
     const c = C();
-    const head = [ctx.el('h3', { id: 'ht-ev-detail-title', className: 'sr-only', text: c.detailTitle })];
-    if (!sel) return ctx.el('section', { className: 'card ht-ev-detail', 'aria-labelledby': 'ht-ev-detail-title' }, [...head, ctx.el('p', { className: 'muted', text: c.choose })]);
+    const head = [ctx.el('h3', { id: `ht-ev-detail-title-${sfx}`, className: 'sr-only', text: c.detailTitle })];
+    if (!sel) return ctx.el('section', { className: 'card ht-ev-detail', 'aria-labelledby': `ht-ev-detail-title-${sfx}` }, [...head, ctx.el('p', { className: 'muted', text: c.choose })]);
     const detail = model && model.detail && model.detail.resultId === sel ? model.detail : null;
     if (!detail) {
-      return ctx.el('section', { className: 'card ht-ev-detail', 'aria-busy': 'true', 'aria-labelledby': 'ht-ev-detail-title' },
+      return ctx.el('section', { className: 'card ht-ev-detail', 'aria-busy': 'true', 'aria-labelledby': `ht-ev-detail-title-${sfx}` },
         [...head, ctx.el('p', { className: 'muted', text: c.readingDetail })]);
     }
     const code = ctx.el('code', { className: 'ht-mono', 'data-full-id': true, text: detail.resultId });
     const report = detail.reportAnchor
       ? ctx.el('button', { type: 'button', className: 'secondary', 'data-show-in-report': detail.resultId, text: c.showInReport,
         onclick: () => ctx.send({ type: 'open_artifact', artifact: 'report', resultId: detail.resultId }) })
-      : ctx.el('button', { type: 'button', className: 'secondary', disabled: true, 'aria-describedby': 'ht-ev-not-in-report',
+      : ctx.el('button', { type: 'button', className: 'secondary', disabled: true, 'aria-describedby': `ht-ev-not-in-report-${sfx}`,
         'data-show-in-report': detail.resultId, text: c.showInReport });
     const note = copyNote && copyNote.id === detail.resultId ? copyNote.text : null;
     return ctx.el('section', { className: 'card ht-ev-detail', 'data-nav': `result:${detail.resultId}`, 'data-detail': detail.resultId,
-      'aria-labelledby': 'ht-ev-detail-h' }, [
+      'aria-labelledby': `ht-ev-detail-h-${sfx}` }, [
       ctx.el('div', { className: 'ht-ev-head' }, [
-        ctx.el('h2', { id: 'ht-ev-detail-h', text: detail.slot || detail.activity }),
+        ctx.el('h4', { id: `ht-ev-detail-h-${sfx}`, text: detail.slot || detail.activity }),
         ctx.el('span', { className: 'ht-mono muted', 'data-currency': detail.current ? 'current' : 'stale', text: c.idLine(detail.rid8, detail.current) }),
         ctx.el('button', { type: 'button', className: 'ht-link', 'data-select-id': true, text: c.copyId, onclick: () => selectId(ctx, detail, code) }),
       ]),
@@ -315,16 +273,17 @@
       ctx.el('div', { className: 'ht-ev-actions' }, [
         report,
         ctx.el('button', { type: 'button', className: 'secondary', 'data-show-in-notebook': detail.resultId, disabled: !detail.notebookHint,
-          'aria-describedby': detail.notebookHint ? 'ht-ev-notebook-hint' : null, text: c.showInNotebook,
+          'aria-describedby': detail.notebookHint ? `ht-ev-notebook-hint-${sfx}` : null, text: c.showInNotebook,
           onclick: () => ctx.send({ type: 'open_artifact', artifact: 'notebook', resultId: detail.resultId }) }),
         // The shared agent-bridge helper of media/terms.js (§6.8; WP-I).
         HT.askButton(ctx, { kind: 'result', id: detail.resultId }, detail.slot || detail.activity,
           { label: c.askAgent, attrs: { 'data-ask-agent': 'result' } }),
       ]),
-      detail.reportAnchor ? null : ctx.el('p', { id: 'ht-ev-not-in-report', className: 'muted', text: c.notInReport }),
-      detail.notebookHint ? ctx.el('p', { id: 'ht-ev-notebook-hint', className: 'muted',
+      detail.reportAnchor ? null : ctx.el('p', { id: `ht-ev-not-in-report-${sfx}`, className: 'muted', text: c.notInReport }),
+      detail.notebookHint ? ctx.el('p', { id: `ht-ev-notebook-hint-${sfx}`, className: 'muted',
         text: c.notebookHint(detail.notebookHint.search, detail.notebookHint.path) }) : null,
-      detail.current ? uncertainty(ctx, detail.uncertainty, task) : null,
+      // The one page: the intervals are the figure this detail sits under (PATH-5); the detail
+      // does not repeat them.
     ]);
   }
 
@@ -338,6 +297,7 @@
   }
 
   function lineage(ctx, model, sel) {
+    const sfx = String(sel || '').slice(0, 8);
     const c = C();
     const detail = model && model.detail && model.detail.resultId === sel ? model.detail : null;
     const body = [];
@@ -360,10 +320,10 @@
       body.push(sentences.length ? ctx.el('ul', { className: 'ht-ev-impacts' }, sentences)
         : ctx.el('p', { className: 'muted', 'data-impact': 'none', text: c.noImpact }));
       const toggle = ctx.el('button', { type: 'button', className: 'ht-link', 'aria-expanded': tableOpen ? 'true' : 'false',
-        'aria-controls': 'ht-ev-lineage-table', text: tableOpen ? c.hideTable : c.showTable,
+        'aria-controls': `ht-ev-lineage-table-${sfx}`, text: tableOpen ? c.hideTable : c.showTable,
         onclick: () => { tableOpen = !tableOpen; ctx.rerender(); } });
       body.push(toggle);
-      const wrap = ctx.el('div', { id: 'ht-ev-lineage-table', hidden: tableOpen ? null : true });
+      const wrap = ctx.el('div', { id: `ht-ev-lineage-table-${sfx}`, hidden: tableOpen ? null : true });
       if (tableOpen) {
         ctx.components.valuesTable(wrap, { caption: c.nodesCaption,
           columns: [{ key: 'name', label: c.nodeColumns.name }, { key: 'kind', label: c.nodeColumns.kind }, { key: 'status', label: c.nodeColumns.status }],
@@ -374,8 +334,8 @@
       }
       body.push(wrap);
     }
-    return ctx.el('section', { className: 'card ht-ev-lineage', 'aria-labelledby': 'ht-ev-lineage-h' }, [
-      ctx.el('h3', { id: 'ht-ev-lineage-h', text: c.lineageTitle }),
+    return ctx.el('section', { className: 'card ht-ev-lineage', 'aria-labelledby': `ht-ev-lineage-h-${sfx}` }, [
+      ctx.el('h4', { id: `ht-ev-lineage-h-${sfx}`, text: c.lineageTitle }),
       ctx.el('p', { className: 'muted', text: c.lineageIntro }),
       ...body,
     ]);
@@ -410,7 +370,7 @@
       ctx.el('h3', { id: 'ht-ev-ledger-h' }, [HT.terms.mark(c.ledgerTitle, 'exposure')]),
       rows.length ? ctx.el('table', { className: 'ht-values ht-ledger' }, [ctx.el('caption', { className: 'sr-only', text: c.ledgerTitle }), head,
         ctx.el('tbody', {}, rows)]) : ctx.el('p', { className: 'muted', text: c.ledgerEmpty }),
-      ...limits.map(i => ctx.el('p', { className: 'hold', 'data-limit': i.id, text: i.text })),
+      ...limits.map(i => limitText(ctx, i, { className: 'hold', 'data-limit': i.id })),
       model.splitOverlap ? ctx.el('p', { className: 'hold', 'data-split-unseen': true, text: c.splitUnseen }) : null,
     ]);
   }
@@ -531,7 +491,10 @@
           columns: [{ key: 'model', label: cols.model }, { key: 'metric', label: cols.metric }, { key: 'mean', label: cols.mean },
             { key: 'range', label: cols.range }], rows });
         table.setAttribute('data-cv-spread', String(rows.length));
-        kids.push(table, ctx.el('p', { className: 'muted', text: c.spreadWhy }));
+        // R42, R45 (lot P): the spread is drawn fold by fold in the selection card; the text
+        // table stays one fold away.
+        kids.push(ctx.el('details', { className: 'ht-details', 'data-cv-spread-fold': true }, [ctx.el('summary', { text: c.spreadTitle }), table]),
+          ctx.el('p', { className: 'muted', text: c.spreadWhy }));
       }
     } else if (model.results.some(r => r.slot === 'split' && r.current)) {
       kids.push(ctx.el('p', { 'data-cv-scheme': 'split', text: c.schemeSplit }));
@@ -551,6 +514,8 @@
       for (const comp of chosen ? [chosen] : []) {
         for (const m of comp.metrics) {
           if (m.point === null) continue;
+          // Now's choice card shows the one metric of the criterion (ADR 0004 d13: one figure).
+          if (focus.metric && m.metric !== focus.metric) continue;
           const label = task === 'regression' ? c.metrics[m.metric] || m.metric : c.binary.metrics[m.metric] || m.metric;
           const fmt = task === 'regression' ? x => `${x > 0 ? '+' : ''}${ctx.format.number(x, 'f2')}` : binaryFmt;
           const ruleWords = comp.rule ? J().value('policy', comp.rule, task) || comp.rule : null;
@@ -675,11 +640,20 @@
     return C().measures[metric] || metric || '';
   }
 
-  /** The budget: the live one of the full view, else the one the evaluation stored. */
+  /**
+   * The budget: the live one of the full view when it was read at this snapshot's version,
+   * else the one the evaluation stored. R47 (lot P): the card used to show the full view of
+   * an earlier read (the variant proposal's "0 of 3", before any variant was confirmed) at
+   * the model choice, because it took any `trials` read without asking whether it was fresh
+   * and never asked for a new one. The engine's two sources agree (2 of 3 after two variants).
+   */
   function budgetOf(ctx, model) {
+    if (ctx.want) ctx.want('trials');
     const t = ctx.data('trials');
-    const live = t && t.model && t.model.budget;
-    return live || (model.selection && model.selection.budget) || null;
+    const live = t && ctx.fresh(t) && t.model && t.model.budget;
+    // The digest's live budget (`ledger.variants`, lot P) is read with every snapshot.
+    const digest = ctx.snapshot && ctx.snapshot.ledger && ctx.snapshot.ledger.variants;
+    return live || digest || (model.selection && model.selection.budget) || null;
   }
 
   function selectionCard(ctx, model, task) {
@@ -718,7 +692,18 @@
         tr.setAttribute('data-configuration', configs[i].slot);
         if (configs[i].slot === pick) tr.setAttribute('data-kept', 'true');
       }
-      body.push(table);
+      // R42, R45 (lot P): the per-fold values drawn as dots per configuration, the mean as a
+      // ring, the numbers written; the table of means stays one fold away.
+      const P = HT.copy.figures.perFold;
+      const dots = ctx.el('div', { 'data-selection-chart': 'per-fold' });
+      ctx.components.dotScale(dots, { title: P.title(metric),
+        rows: configs.map(cfg => ({ label: `${cap1(name(cfg))}${cfg.slot === pick ? ` · ${t.kept}` : ''}`, point: cfg.mean.value,
+          low: null, high: null, dots: cfg.perFold.map(v => v.value), dotTexts: cfg.perFold.map(v => (v.value === null ? '' : f3(v.value))),
+          highlight: cfg.slot === pick, tone: null,
+          pointText: cfg.mean.value === null ? '' : `${f3(cfg.mean.value)} ± ${f3(cfg.se.value)}`, intervalText: '' })),
+        concl: P.reading });
+      body.push(dots);
+      body.push(ctx.el('details', { className: 'ht-details', 'data-selection-means': true }, [ctx.el('summary', { text: P.numbers }), table]));
       const diffs = configs.filter(cfg => cfg.difference && cfg.difference.mean.value !== null);
       if (diffs.length) {
         const box = ctx.el('div', { 'data-selection-chart': 'difference' });
@@ -866,11 +851,9 @@
     return box;
   }
 
-  function familyFitCard(ctx, fit, task) {
+  /** A family's own diagnostics (EV-14): the body and the "Why?" of its card. */
+  function familyBody(ctx, fit) {
     const t = T().family;
-    const k = T().configs;
-    const name = k.family[fit.family] || k.variant;
-    const slot = cap1(fitLabel(task, fit.slot));
     const imp = x => ctx.format.number(x, 'f3');
     const body = [];
     if (fit.kind === 'ebm_terms') {
@@ -899,16 +882,110 @@
       fit.kind === 'ebm_terms' && fit.importance ? ctx.components.engineText(fit.importance, { lang: 'en', tag: 'p' }) : null,
       fit.kind === 'ebm_terms' && fit.scoreScale ? ctx.components.engineText(fit.scoreScale, { lang: 'en', tag: 'p' }) : null,
       fit.kind !== 'ebm_terms' && fit.definition ? ctx.components.engineText(fit.definition, { lang: 'en', tag: 'p' }) : null];
-    return ctx.components.card({
-      eyebrow: t.eyebrow(slot, name), title: fit.kind === 'ebm_terms' ? t.ebmTitle : t.hgbTitle, titleId: `ht-ev-fam-${fit.slot.replace(/[^a-z0-9]/g, '-')}`,
-      body, why, source: { activity: 'fit.variant', id: fit.resultId },
-      className: 'ht-ev-family-fit', attrs: { 'data-ev': 'family-fit', 'data-family-fit': fit.family || '', 'data-slot': fit.slot },
-    });
+    return { body, why };
   }
 
-  function trialCards(ctx, model, task) {
-    return [selectionCard(ctx, model, task), familiesCard(ctx, model, task),
-      ...(model.familyFits || []).map(fit => familyFitCard(ctx, fit, task))].filter(Boolean);
+  // R11 (owner session 2026-10-26): one card per compared variant, in slot order, after the
+  // selection card: what it changes, its question, its figures over the folds beside the
+  // candidate's (cited from the stored `model_selection`), and its own analysis: the value
+  // chosen in each fold (a tuned variant), the coefficients from the current development
+  // diagnostics, or the family's own diagnostics. Read only, like every Evidence card.
+
+  /** Its cross-validation figures beside the candidate's (cited to the evaluation). */
+  function variantComparison(ctx, v, name, task) {
+    const t = T();
+    const vc = t.card;
+    const cmp = v.comparison;
+    if (!cmp) return ctx.el('p', { className: 'muted', 'data-variant-comparison': 'none', text: t.noEvaluation });
+    const f3 = x => ctx.format.number(x, task === 'regression' ? 'f2' : 'f3');
+    const sgn = x => `${x > 0 ? '+' : ''}${f3(x)}`;
+    const cite = (text, c) => ctx.components.cited(text, { resultId: cmp.resultId, path: c.path, value: c.value });
+    const metric = metricName(cmp.metric);
+    const rows = [];
+    if (cmp.candidate && cmp.candidate.mean.value !== null) {
+      rows.push({ configuration: `${configName(task, { kind: 'candidate', slot: cmp.candidate.slot })} (${t.candidate})`,
+        mean: { text: `${f3(cmp.candidate.mean.value)} ± ${f3(cmp.candidate.se.value)}`,
+          cited: { resultId: cmp.resultId, path: cmp.candidate.mean.path, value: cmp.candidate.mean.value } }, difference: '—' });
+    }
+    const d = cmp.difference;
+    rows.push({ configuration: `${name}${cmp.kept ? ` · ${t.kept}` : ''}`,
+      mean: cmp.variant.mean.value === null ? '' : { text: `${f3(cmp.variant.mean.value)} ± ${f3(cmp.variant.se.value)}`,
+        cited: { resultId: cmp.resultId, path: cmp.variant.mean.path, value: cmp.variant.mean.value } },
+      difference: !d || d.mean.value === null ? '—' : { text: `${sgn(d.mean.value)} ± ${f3(d.se.value)}`,
+        cited: { resultId: cmp.resultId, path: d.mean.path, value: d.mean.value } } });
+    const table = ctx.components.valuesTable(null, { caption: vc.cvTitle(metric, int(ctx, cmp.folds)),
+      columns: [{ key: 'configuration', label: t.columns.configuration }, { key: 'mean', label: t.columns.mean },
+        { key: 'difference', label: t.columns.difference }], rows });
+    table.setAttribute('data-variant-comparison', v.slot);
+    const out = [table];
+    if (d && d.mean.value !== null) {
+      out.push(ctx.el('p', { 'data-variant-noise': d.withinNoise ? 'within' : 'beyond' }, [
+        vc.differenceLead, cite(sgn(d.mean.value), d.mean), ', ', d.withinNoise ? vc.withinNoise : vc.beyondNoise]));
+    }
+    return ctx.el('div', {}, out);
+  }
+
+  /** A tuned variant: the value chosen inside each outer fold, then on all development rows. */
+  function variantTuning(ctx, v) {
+    const vc = T().card;
+    const tu = v.tuning;
+    if (!tu || !tu.perFold.length) return null;
+    const f = x => ctx.format.number(x, Number.isInteger(x) ? 'int' : 'f3');
+    // The setting in words, never its identifier (C7): `max_depth` reads "the depth of each tree".
+    const words = vc.tuningParams[tu.parameter] || vc.tuningParams.other;
+    const table = ctx.components.valuesTable(null, { caption: vc.tuningTitle(words),
+      columns: [{ key: 'fold', label: vc.tuningColumns.fold }, { key: 'value', label: vc.tuningColumns.value }],
+      rows: tu.perFold.map(x => ({ fold: T().fold(int(ctx, x.fold)),
+        value: { text: f(x.value), cited: { resultId: v.resultId, path: x.path, value: x.value } } })) });
+    table.setAttribute('data-variant-tuning', String(tu.perFold.length));
+    const kids = [table];
+    if (tu.development) {
+      kids.push(ctx.el('p', { 'data-variant-tuning-development': true }, [vc.tuningAll,
+        ctx.components.cited(f(tu.development.value), { resultId: v.resultId, path: tu.development.path, value: tu.development.value }), '.']));
+    }
+    return ctx.el('div', {}, kids);
+  }
+
+  function variantCard(ctx, v, task) {
+    const t = T();
+    const vc = t.card;
+    const isFamily = Boolean(v.analysis);
+    const name = configName(task, { kind: v.kind, strength: v.strength, group: v.group, family: v.family, slot: v.slot });
+    const slotName = cap1(fitLabel(task, v.slot));
+    const trials = ctx.data('trials');
+    const question = (trials && trials.model && trials.model.questions && trials.model.questions[v.slot]) || v.question;
+    const body = [ctx.el('p', { 'data-variant-changes': v.kind || 'variant' }, [vc.changes(v.kind, v.strength, v.group, name)])];
+    if (question) {
+      body.push(ctx.el('p', { 'data-variant-own-question': v.slot }, [ctx.el('span', { className: 'muted', text: t.question }),
+        ctx.el('q', { 'data-quoted': true, text: question })]));
+    }
+    body.push(variantComparison(ctx, v, name, task));
+    const tuning = variantTuning(ctx, v);
+    if (tuning) body.push(tuning);
+    let why = [];
+    if (isFamily) {
+      const fam = familyBody(ctx, v.analysis);
+      body.push(...fam.body);
+      why = fam.why;
+    } else if (v.coefficients) {
+      body.push(diagCoefficients(ctx, { resultId: v.diagnosticsId }, { coefficients: v.coefficients }));
+    } else {
+      body.push(ctx.el('p', { className: 'muted', 'data-variant-diagnostics': v.diagnostics, text: vc.noDiagnostics }));
+    }
+    if (v.tuning) {
+      why = [...why, v.tuning.meaning ? ctx.components.engineText(v.tuning.meaning, { lang: 'en', tag: 'p' }) : null,
+        v.tuning.note ? ctx.components.engineText(v.tuning.note, { lang: 'en', tag: 'p' }) : null];
+    }
+    const slug = v.slot.replace(/[^a-z0-9]/g, '-');
+    return ctx.components.card({
+      eyebrow: t.family.eyebrow(slotName, name),
+      title: isFamily ? (v.analysis.kind === 'ebm_terms' ? t.family.ebmTitle : t.family.hgbTitle) : vc.titles[v.kind] || vc.titles.other,
+      titleId: isFamily ? `ht-ev-fam-${slug}` : `ht-ev-var-${slug}`,
+      body, why, source: { activity: 'fit.variant', id: v.resultId },
+      className: isFamily ? 'ht-ev-family-fit ht-ev-variant-card' : 'ht-ev-variant-card',
+      attrs: { 'data-ev': isFamily ? 'family-fit' : 'variant-fit', 'data-family-fit': isFamily ? v.family || '' : null,
+        'data-slot': v.slot, 'data-variant-card': v.slot, 'data-variant-kind': v.kind || '' },
+    });
   }
 
   // --- diagnostics (WP-B4; CLI-CONTRACT §13, CLI-CONTRACT-COMPANION §14) ------------------
@@ -1094,98 +1171,214 @@
     if (d.evidence === 'development' && opening && d.startedRevision !== null && d.startedRevision > opening.revision) {
       kids.push(ctx.el('p', { className: 'hold', 'data-after-opening': true, text: c.afterOpening }));
     }
-    // The chosen model first: the final test's, else the adopted choice (`@fit.variant` in a
-    // policy, the slot of a model choice), else the candidate (CLI-CONTRACT-COMPANION §14).
+    // The chosen model first: the final test's, else the adopted choice (the slot of a model
+    // choice; in a binary study a confirmed model choice, else `@fit.variant` in a policy),
+    // else the candidate (CLI-CONTRACT-COMPANION §14; R9UX-10).
     const decisions = (summary && summary.decisions) || {};
+    const selected = decisions.model_choice && decisions.model_choice.status === 'confirmed'
+      ? String(decisions.model_choice.value || '') : '';
     const choice = task === 'regression' ? String((decisions.model_choice || {}).value || '')
-      : String((decisions.policy || {}).value || '').split('@')[1] || '';
+      : (/^fit\./.test(selected) ? selected : String((decisions.policy || {}).value || '').split('@')[1] || '');
     const chosen = d.model || (/^fit\./.test(choice) ? choice : null);
     const order = [...d.models].sort((a, b) => (b.fit === chosen) - (a.fit === chosen));
     const [first, ...rest] = order;
-    if (first) kids.push(diagModel(ctx, d, first, task));
+    const forModel = m => withGuide({ model: fitLabel(task, m.fit) }, () => diagModel(ctx, d, m, task));
+    if (first) kids.push(forModel(first));
     if (rest.length) {
       kids.push(ctx.el('details', { className: 'ht-details', 'data-diag-also': true }, [
         ctx.el('summary', { text: c.also(rest.map(m => fitLabel(task, m.fit)).join(', ')) }),
-        ...rest.map(m => diagModel(ctx, d, m, task))]));
+        ...rest.map(forModel)]));
     }
     return ctx.el('div', { className: 'ht-ev-diag', 'data-diag': d.slot, 'data-diag-evidence': d.evidence, 'data-result-ref': d.resultId }, kids);
   }
 
-  function diagnosticsSection(ctx, model, summary, task) {
+  /**
+   * The diagnostics of one result slot (the path's figure of `diag.binary`, `diag.regression`
+   * or `diag.final_test`): its group only, development or final evidence, labelled as such.
+   */
+  function diagnosticsSection(ctx, model, summary, task, slot) {
     const c = C();
-    const items = model.diagnostics || [];
+    const items = (model.diagnostics || []).filter(d => !slot || d.slot === slot);
     if (!items.length) return null;
     const state = J().finalTestState(summary && summary.finalTest);
     const dev = items.filter(d => d.evidence === 'development');
     const fin = items.filter(d => d.evidence === 'final');
     const kids = [ctx.el('p', { className: 'muted', text: c.diagnosticsLead })];
-    kids.push(ctx.el('div', { className: 'ht-ev-diag-group', 'data-diag-evaluation': 'development' }, [
-      ctx.el('h4', { text: c.diagnosticsWhere.development }),
-      ...(dev.length ? dev.map(d => diagResult(ctx, d, summary, task)) : [ctx.el('p', { className: 'muted', text: c.diag.noneDevelopment })])]));
-    kids.push(ctx.el('div', { className: 'ht-ev-diag-group', 'data-diag-evaluation': 'final' }, [
-      ctx.el('h4', { text: c.diagnosticsWhere.final }),
-      ...(fin.length ? fin.map(d => diagResult(ctx, d, summary, task))
-        : [ctx.el('p', { className: 'muted', 'data-diag-final': state || 'none',
-          text: state === 'sealed' ? c.diag.finalSealed : state === 'absent' ? c.finalAbsent : c.diag.finalPending })])]));
-    return ctx.el('section', { className: 'card ht-ev-diagnostics', 'aria-labelledby': 'ht-ev-diag-h', 'data-ev': 'diagnostics' }, [
-      ctx.el('h3', { id: 'ht-ev-diag-h', text: c.diagnosticsTitle }), ...kids]);
+    if (dev.length || !slot) {
+      kids.push(ctx.el('div', { className: 'ht-ev-diag-group', 'data-diag-evaluation': 'development' }, [
+        ctx.el('h4', { text: c.diagnosticsWhere.development }),
+        ...(dev.length ? dev.map(d => withGuide(diagGuide(ctx, d), () => diagResult(ctx, d, summary, task)))
+          : [ctx.el('p', { className: 'muted', text: c.diag.noneDevelopment })])]));
+    }
+    // While sealed, the development diagnostics say that the final test has none yet (EV-12).
+    if (fin.length || !slot || (dev.length && state === 'sealed')) {
+      kids.push(ctx.el('div', { className: 'ht-ev-diag-group', 'data-diag-evaluation': 'final' }, [
+        ctx.el('h4', { text: c.diagnosticsWhere.final }),
+        ...(fin.length ? fin.map(d => withGuide(diagGuide(ctx, d), () => diagResult(ctx, d, summary, task)))
+          : [ctx.el('p', { className: 'muted', 'data-diag-final': state || 'none',
+            text: state === 'sealed' ? c.diag.finalSealed : state === 'absent' ? c.finalAbsent : c.diag.finalPending })])]));
+    }
+    const hid = `ht-ev-diag-h-${slot || 'all'}`;
+    return ctx.el('section', { className: 'card ht-ev-diagnostics', 'aria-labelledby': hid, 'data-ev': 'diagnostics',
+      'data-diag-slot': slot || null }, [ctx.el('h3', { id: hid, text: c.diagnosticsTitle }), ...kids]);
+  }
+
+  // --- lesson style (R30): the frame of the charts, the notions of the step --------------------
+
+  const withGuide = (guide, fn) => HT.components.withGuide(guide, fn);
+  const L = () => HT.copy.lesson;
+
+  /** The frame and the rows of a diagnostic's charts (development or final evidence). */
+  function diagGuide(ctx, d) {
+    const rows = C().diag.rows[d.evaluation];
+    return { frame: d.evidence === 'final' ? L().frames.final : L().frames.development,
+      rows: rows && d.n !== null ? rows(int(ctx, d.n)) : null };
   }
 
   // --- the tab -----------------------------------------------------------------------------
 
-  function render(summary, ctx) {
-    const c = C();
+  // --- the one page (ADR 0004 d13): the Evidence tab is gone ------------------------------------
+  //
+  // Its figures are placed in the path's step details (PATH-5), in Now's choice card (§6.5.2)
+  // and in the ledger fold (PATH-1). Each part reads `evidence` once per version (CR.1), and
+  // the result detail ("Where it comes from") reads `evidence --result <rid>`.
+
+  function entryOf(ctx) {
     ensureLoad(ctx);
     const d = ctx.data('evidence');
+    return d && d.model ? d : null;
+  }
+  function pending(ctx) {
     const error = ctx.error('evidence');
-    const sel = selected(ctx);
-    const root = ctx.el('div', { className: 'ht-evidence' }, [ctx.el('h2', { className: 'sr-only', text: c.title })]);
-    if (error) {
-      root.appendChild(ctx.el('div', { className: 'card alert', role: 'alert', 'data-evidence-error': true }, [
-        ctx.el('p', { className: 'title', text: c.loadError }),
-        ctx.el('p', { text: error.message }),
-        error.detail ? ctx.el('pre', { text: error.detail }) : null,
-        sel ? ctx.el('button', { type: 'button', className: 'secondary', text: c.showList, onclick: () => choose(ctx, null) }) : null,
-        ctx.el('button', { type: 'button', className: 'secondary', text: c.retry, onclick: () => {
-          for (const k of Object.keys(requested)) delete requested[k];
-          ctx.load('evidence', sel ? { resultId: sel } : undefined);
-        } }),
-      ]));
-    }
-    if (!d) {
-      if (!error) root.appendChild(ctx.el('p', { className: 'muted', 'aria-busy': 'true', 'data-loading': 'evidence', text: c.reading }));
-      return root;
-    }
+    return error ? ctx.el('p', { role: 'alert', 'data-evidence-error': true, text: `${C().loadError} ${error.message}` })
+      : ctx.el('p', { className: 'muted', 'aria-busy': 'true', 'data-loading': 'evidence', text: C().reading });
+  }
+  const taskOfModel = (ctx, model) => model.task || (ctx.snapshot && ctx.snapshot.task) || 'binary';
+  const dimmed = (ctx, d, node) => (node && !ctx.fresh(d) ? ctx.el('div', { className: 'ht-pending', 'aria-busy': 'true' }, [node]) : node);
+
+  /** The comparison Now shows at a choice (§6.5.2): the variants' paired difference, else the models' intervals. */
+  function comparison(ctx, step) {
+    const d = entryOf(ctx);
+    if (!d) return pending(ctx);
     const model = d.model;
-    const task = model.task || (summary && summary.task) || 'binary';
-    const stale = summary && !ctx.fresh(d);
-    if (stale) root.appendChild(ctx.el('p', { className: 'muted', role: 'status', 'data-updating': true, text: c.updating }));
-    // WP-B5: the final test and the ledger first, development and final evidence apart.
-    // v0.3 (WP-K): the variants compared, the family shortlist, each family's diagnostics.
-    const first = [finalTestCard(summary, model, ctx), ledger(ctx, model), developmentSection(ctx, model, task),
-      ...trialCards(ctx, model, task),
-      finalEvidenceSection(ctx, model, summary, task), diagnosticsSection(ctx, model, summary, task)].filter(Boolean);
-    for (const node of first) root.appendChild(node);
-    root.appendChild(ctx.el('div', { className: `ht-ev-grid${stale ? ' ht-pending' : ''}` }, [
-      registry(ctx, model, sel),
-      detailSection(ctx, model, sel, task),
-    ]));
-    root.appendChild(lineage(ctx, model, sel));
-    return root;
+    const task = taskOfModel(ctx, model);
+    const dev = { frame: L().frames.development };
+    focus.metric = task === 'regression' ? 'mae' : 'precision';
+    let nodes;
+    try {
+      nodes = withGuide(dev, () => [model.variant ? developmentSection(ctx, model, task) : uncertainty(ctx, model.uncertainty, task),
+        model.selection && model.selection.oneSe ? selectionCard(ctx, model, task) : null]).filter(Boolean);
+    } finally {
+      focus.metric = null;
+    }
+    return dimmed(ctx, d, ctx.el('div', { className: 'ht-comparison', 'data-comparison': step }, nodes));
+  }
+
+  /** The figure of one result in its step's detail (PATH-5). */
+  function slotFigure(ctx, step, slot) {
+    const d = entryOf(ctx);
+    if (!d) return pending(ctx);
+    const model = d.model;
+    const task = taskOfModel(ctx, model);
+    const summary = ctx.snapshot;
+    const dev = { frame: L().frames.development };
+    const final = { frame: L().frames.final };
+    const activity = String(slot).split(':')[0];
+    let node = null;
+    if (activity === 'evaluate.regression' || activity === 'policy.evaluation') node = withGuide(dev, () => uncertainty(ctx, model.uncertainty, task));
+    else if (activity === 'fit.variant') {
+      // EV-15: the first variant's figure holds the development scheme, the selection and the
+      // families; each variant's figure holds its own card.
+      const first = slot === 'fit.variant';
+      node = ctx.el('div', {}, withGuide(dev, () => [first ? developmentSection(ctx, model, task) : null,
+        first ? selectionCard(ctx, model, task) : null, first ? familiesCard(ctx, model, task) : null,
+        ...(model.variantCards || []).filter(v => v.slot === slot).map(v => variantCard(ctx, v, task))].filter(Boolean)));
+    }
+    else if (activity === 'final_test.evaluation') node = withGuide(final, () => finalEvidenceSection(ctx, model, summary, task));
+    else if (activity.startsWith('diag.')) node = diagnosticsSection(ctx, model, summary, task, slot);
+    else if (activity === 'split') node = model.crossValidation ? withGuide(dev, () => developmentSection(ctx, model, task)) : null;
+    else if (activity.startsWith('fit.')) node = ctx.el('p', { className: 'muted', 'data-fit-line': slot, text: HT.copy.page.fitLine });
+    return dimmed(ctx, d, node || ctx.el('p', { className: 'muted', text: HT.copy.page.noFigure }));
+  }
+
+  /** "Where it comes from" (PATH-5): the result's facts and lineage, read with `evidence --result`. */
+  // The details read so far at this version, by result id: several "Where it comes from" folds
+  // can be open at once, and the evidence read holds one detail at a time (CC §5).
+  const details = {};
+  function detailFor(ctx, rid) {
+    const d = ctx.data('evidence');
+    if (d && d.model && d.model.detail && d.model.detail.resultId === rid && ctx.fresh(d)) {
+      details[rid] = { version: ctx.version(), detail: d.model.detail };
+    }
+    const hit = details[rid];
+    return hit && hit.version === ctx.version() ? hit.detail : null;
+  }
+
+  function detail(ctx, rid) {
+    if (!RID.test(String(rid || ''))) return null;
+    const known = detailFor(ctx, rid);
+    if (!known && pick.rid !== rid) pick.rid = rid;
+    const d = entryOf(ctx);
+    if (!d) return pending(ctx);
+    const task = taskOfModel(ctx, d.model);
+    const model = known ? { ...d.model, detail: known } : d.model;
+    return ctx.el('div', { className: 'ht-where-from' }, [detailSection(ctx, model, rid, task), lineage(ctx, model, rid)]);
+  }
+
+  /** The ledger fold (PATH-1, v2): the exposure ledger table (EV-2, EV-8). */
+  function ledgerTable(ctx) {
+    const d = entryOf(ctx);
+    if (!d) return pending(ctx);
+    return dimmed(ctx, d, ledger(ctx, d.model));
+  }
+
+  /**
+   * The end's table (§6.5.2 `done`, v2): the chosen model and the reference, "Development
+   * (used to choose)" against "Final test (read once)", each value cited (HON-1).
+   */
+  function devFinalTable(ctx) {
+    const d = entryOf(ctx);
+    if (!d) return pending(ctx);
+    const P = HT.copy.page;
+    const model = d.model;
+    const task = taskOfModel(ctx, model);
+    const u = model.uncertainty;
+    const fe = model.finalEvaluation && model.finalEvaluation.current ? model.finalEvaluation : null;
+    const metricId = task === 'regression' ? 'mae' : 'precision';
+    const fmt = x => (task === 'regression' ? ctx.format.number(x, 'f2') : pct(ctx, x));
+    const devMetric = u ? (u.kind === 'policy' ? (((u.rules || [])[0] || {}).metrics || []) : (u.metrics || [])).find(m => m.metric === metricId) : null;
+    const finMetric = fe ? (fe.metrics || []).find(m => m.metric === metricId) : null;
+    const chosen = (fe && fe.model) || (ctx.snapshot.finalTest && ctx.snapshot.finalTest.opening && ctx.snapshot.finalTest.opening.model) || null;
+    const fits = [chosen, 'fit.baseline'].filter(Boolean);
+    const cell = (m, rid, fit) => {
+      const x = m && (m.models || []).find(y => y.fit === fit && y.point !== null);
+      if (!x) return '';
+      return { text: x.low !== null && x.high !== null ? `${fmt(x.point)} [${fmt(x.low)}, ${fmt(x.high)}]` : fmt(x.point),
+        cited: { resultId: rid, path: x.path, value: x.point } };
+    };
+    const rows = fits.map(fit => ({ model: fitLabel(task, fit), dev: cell(devMetric, u && u.resultId, fit), final: cell(finMetric, fe && fe.resultId, fit) }));
+    const wrap = ctx.el('div', { className: 'ht-scrollx', 'data-scroll-ok': true, tabindex: '0', role: 'region', 'aria-label': `${P.devColumn} · ${P.finalColumn}` });
+    const table = ctx.components.valuesTable(null, { caption: null,
+      columns: [{ key: 'model', label: '' }, { key: 'dev', label: P.devColumn }, { key: 'final', label: P.finalColumn }], rows });
+    table.setAttribute('data-dev-final', String(rows.length));
+    wrap.appendChild(table);
+    return ctx.el('div', { 'data-frame': 'final' }, [ctx.el('p', { className: 'ht-frame' }, [ctx.el('b', { text: P.frame.final })]), wrap]);
   }
 
   HT.register('evidence', {
-    tab: 'evidence',
     stage: 'v2',
-    // v0.3 (WP-K): `trials` (the full view: the live budget and the family shortlist).
-    views: ['trials'],
-    render,
-    onMessage(m, ctx) {
-      if (m.type === 'navigate' && m.tab === 'evidence' && m.kind === 'result' && RID.test(m.id)) {
-        ctx.ui.set('selectedResult', m.id);
-        ctx.rerender();
-      }
+    onMessage(m) {
+      if (m.type === 'navigate' && m.kind === 'result' && RID.test(String(m.id || ''))) pick.rid = m.id;
       return undefined;
     },
   });
+  HT.parts = HT.parts || {};
+  /** EV-7: the final test's card, first in the `final_test` step's detail (§18). */
+  function finalTest(ctx) {
+    const d = entryOf(ctx);
+    if (!d) return pending(ctx);
+    return finalTestCard(ctx.snapshot, d.model, ctx);
+  }
+
+  HT.parts.evidence = { comparison, slotFigure, detail, ledgerTable, devFinalTable, finalTest };
 })(globalThis.Hypotrail = globalThis.Hypotrail || {});

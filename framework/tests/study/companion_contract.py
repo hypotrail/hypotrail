@@ -46,7 +46,52 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
 # decision CA.3, ADR 0004 open question 7), then ``currency`` (review fix H1, CC §1.5).
 # Without ``--digest`` the summary is unchanged.
 DIGEST_SUMMARY_KEYS = SUMMARY_KEYS + ('moments', 'pauses', 'last_session', 'digest', 'task',
-                                      'currency')
+                                      'currency',
+                                      # L3 (owner session 2026-10-26, D4b): the junior texts
+                                      # of the summary in both languages.
+                                      'texts',
+                                      # Contract P1 (CLI-CONTRACT §17.2, the one-page panel):
+                                      # after ``texts``, in this order.
+                                      'panel_contract', 'automation', 'review_queue',
+                                      'defensibility', 'ledger', 'sample', 'headlines',
+                                      'criterion_configurations',
+                                      # Owner batch of 2026-10-28 (§17.6, additive).
+                                      'data_structure', 'quality_verdicts',
+                                      # Lot 2026-10-28 (§18, additive).
+                                      'case_brief', 'case_display')
+# L3: the tables of ``texts.<language>`` (``view.LANGUAGE_TEXT_KEYS``); contract P1 (§17.2.3)
+# appends the awaited question and its options, the explanation, the headlines, the
+# data-contingent marks and the sample's note.
+LANGUAGE_TEXT_KEYS = ('plan', 'moments', 'next_action', 'choice_options', 'limits',
+                      'artifacts', 'recap', 'digest', 'goal', 'proposals', 'question',
+                      'options', 'options_note', 'junior_digest', 'headlines',
+                      'data_contingent', 'sample_note',
+                      # Owner batch of 2026-10-28 (§17.6, additive).
+                      'plan_recap', 'step_limit', 'criterion_words',
+                      # Lot 2026-10-28 (§18, additive).
+                      'step_cards', 'case_brief', 'defensibility_note')
+# Contract P1 (CLI-CONTRACT §17.2): the keys of the digest additions, and the keys added
+# inside existing structures with ``--digest`` only.
+SUMMARY_AUTOMATION_KEYS = ('variant', 'active', 'started_revision', 'ended')
+SUMMARY_REVIEW_KEYS = ('items', 'done', 'total')
+SUMMARY_DEFENSIBILITY_KEYS = ('kind', 'count', 'items',
+                              # Lot 2026-10-28 (R65, §18.7, additive).
+                              'checklist')
+SUMMARY_LEDGER_KEYS = ('final_test', 'target_looks', 'configurations',
+                       # Owner batch of 2026-10-28 (R47, §17.6): the live trial budget.
+                       'variants')
+SUMMARY_SAMPLE_KEYS = ('seed', 'row_keys', 'recorded')
+HEADLINE_KEYS = ('decision_id', 'basis', 'results')
+SUMMARY_CRITERION_CONFIG_KEYS = ('metric', 'unit', 'bound', 'configurations', 'final_test',
+                                 # Lot 2026-10-28 (R67, §18.6, additive).
+                                 'business')
+CRITERION_BOUND_KEYS = ('value', 'reference', 'minimum', 'result_id', 'path')
+CRITERION_CONFIGURATION_KEYS = ('slot', 'value', 'result_id', 'path', 'point_meets_bound',
+                                'gain', 'low', 'high', 'status', 'judged_on')
+FINAL_CONFIGURATION_KEYS = ('slot', 'value', 'result_id', 'path', 'point_meets_bound', 'gain',
+                            'low', 'high', 'status', 'bound')
+DIGEST_RESULT_KEYS = ('result_id', 'current', 'stale_reason', 'integrity', 'step', 'channel')
+PANEL_CONTRACT = 2
 CURRENCY_HEX = 16
 CURRENCY_INPUT_KEYS = ('revision', 'sources', 'artifacts', 'sources_changed', 'alerts',
                        'next_action', 'executions', 'results')
@@ -56,12 +101,16 @@ MOMENTS = (('frame', 'Frame the change'), ('evidence', 'Prepare evidence'),
 # v0.2a (WP-A4): step 0 and the success criterion frame the change; the preprocessing is
 # prepared with the evidence. A moment lists only the steps of its study.
 # WP-B1: the variant is compared with the models, the final test opened before concluding.
+# Owner session 2026-10-26 (L5, D5): a study created by ``init`` checks the structure, then
+# decides the preparation, then explores the target (the plan order of its moment).
 MOMENT_STEPS = {
     'binary': (('discover_data', 'prediction_time', 'feature_availability', 'split',
-                'success_criterion'), ('train_eda', 'preprocessing'),
+                'success_criterion'), ('structural_eda', 'preprocessing', 'train_eda'),
                ('models', 'model_variant', 'policy'), ('final_test', 'conclusion')),
+    # Lot 2026-10-28 (EN-9): a regression study created since holds the error measure.
     'regression': (('discover_data', 'prediction_time', 'feature_availability', 'split',
-                    'success_criterion'), ('train_eda', 'preprocessing'),
+                    'error_metric', 'success_criterion'),
+                   ('structural_eda', 'preprocessing', 'train_eda'),
                    ('models', 'model_variant', 'model_choice'), ('final_test', 'conclusion')),
 }
 PAUSE_KEYS = ('pause', 'decisions', 'status', 'confirmed')
@@ -132,7 +181,13 @@ EVIDENCE_KEYS = ('schema', 'ok', 'study', 'revision', 'task', 'results', 'trunca
 EVIDENCE_RESULT_KEYS = ('result_id', 'activity', 'slot', 'promoted', 'current', 'stale_reason',
                         'integrity', 'partition', 'n_rows', 'params', 'upstream', 'downstream',
                         'created', 'started_revision', 'execution_id', 'exposure_id', 'values',
-                        'headline')
+                        'headline',
+                        # L3 (owner session 2026-10-26, R4, D4b): the question in the study
+                        # language and an EDA result's junior texts in both languages.
+                        'question_junior', 'texts')
+# L3: the junior texts of an EDA result in one language (``l10n.eda_texts``).
+EDA_TEXT_KEYS = ('question', 'note', 'warnings', 'binning', 'signal_questions', 'null_band',
+                 'meanings')
 SEGMENT_KEYS = ('text',)
 CITED_SEGMENT_KEYS = ('text', 'result_id', 'path', 'value', 'format')
 LINEAGE_KEYS = ('nodes', 'edges')
@@ -145,7 +200,7 @@ EXPOSURE_KEYS = ('summary', 'records', 'ledger', 'prior_exposure')
 EXPOSURE_RECORD_VIEW_KEYS = ('exposure_id', 'revision', 'time', 'activity', 'result_id',
                              'execution_id', 'purpose', 'partition', 'n_rows', 'columns')
 LEDGER_KEYS = ('purpose', 'partition', 'rows', 'records', 'activities', 'first_revision',
-               'last_revision')
+               'last_revision', 'note')
 IMPACT_KEYS = ('decision_id', 'mutation', 'row', 'change', 'stale_slots', 'kept_slots', 'refit',
                'reconfirm', 'notes')
 EDA_CATALOG_KEYS = ('activities',)
@@ -167,7 +222,10 @@ NOTEBOOK_HINT_KEYS = ('path', 'search')
 # --- C6 (CC §6) --------------------------------------------------------------------------
 EXPLAIN_SCHEMA = 'hypotrail.explain/1'
 EXPLAIN_KEYS = ('schema', 'ok', 'study', 'revision', 'task', 'terms', 'steps', 'predictions')
-EXPLAIN_TERM_KEYS = ('id', 'term', 'definition', 'example', 'example_status', 'steps')
+EXPLAIN_TERM_KEYS = ('id', 'term', 'definition', 'example', 'example_status', 'steps',
+                     # L3: the language of ``term`` and ``definition`` (the study's when the
+                     # glossary has it).
+                     'language')
 EXAMPLE_STATUSES = ('shown', 'needs_results', 'none')
 EXPLAIN_STEP_KEYS = ('concept', 'context', 'method', 'interpretation', 'consequence',
                      'text_status')

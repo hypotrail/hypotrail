@@ -19,6 +19,7 @@
     split: 'le découpage',
     policy: regression(task) ? 'la troisième décision' : 'la règle de décision',
     model_choice: 'le choix du modèle',
+    error_metric: "la mesure de l'erreur",
     success_criterion: 'le critère de succès',
     preprocessing: 'la préparation des données',
     model_variant: 'la variante à comparer',
@@ -33,6 +34,7 @@
     policy: regression(task) ? 'Cette décision transforme les résultats en action.'
       : "La règle de décision transforme les scores en action : sur quels cas agir, compte tenu de ce que l'équipe peut traiter.",
     model_choice: 'Le choix du modèle retient le modèle dont les erreurs sur les lignes de validation conviennent à votre usage.',
+    error_metric: "La mesure de l'erreur dit comment compter un raté : l'erreur absolue moyenne (MAE) pèse chaque raté pareil, la racine de l'erreur quadratique moyenne (RMSE) pèse beaucoup plus un gros raté.",
     success_criterion: "Le critère de succès fixe, avant de voir les résultats, de combien un modèle doit battre la référence pour valoir la peine d'être adopté.",
     preprocessing: "La préparation des données dit comment sont traités les valeurs manquantes, les catégories rares, les valeurs extrêmes et les colonnes asymétriques ; elle est apprise sur les lignes d'entraînement seulement.",
     model_variant: regression(task)
@@ -45,9 +47,23 @@
   const MODEL_NAMES = { 'fit.logistic': 'le modèle logistique', 'fit.linear': 'le modèle linéaire', 'fit.variant': 'la variante',
     // v0.3 (WP-F1, WP-K): the second and third variants of a list value.
     'fit.variant:2': 'la deuxième variante', 'fit.variant:3': 'la troisième variante' };
+  const VARIANT_SLOTS = ['fit.variant', 'fit.variant:2', 'fit.variant:3'];
+  function variantShort(slot) {
+    const i = VARIANT_SLOTS.indexOf(slot);
+    const list = (globalThis.Hypotrail && globalThis.Hypotrail.studyVariants) || [];
+    const v = i >= 0 ? list[i] : null;
+    if (!v || typeof v !== 'object') return null;
+    if (v.kind === 'tuned') return 'ridge';
+    if (v.kind === 'family') return { ebm: 'EBM', hgb: 'boosting' }[v.family] || null;
+    if (v.kind === 'regularisation') return v.strength === 'weak' ? 'moins pénalisée' : 'plus pénalisée';
+    if (v.kind === 'drop_group') return `sans ${str(v.group)}`;
+    return null;
+  }
+  const variantLabel = slot => (variantShort(slot) ? `variante ${variantShort(slot)}` : null);
   const modelName = (slot, task) => (slot === 'fit.baseline'
-    ? (regression(task) ? 'la référence moyenne' : 'la référence')
-    : MODEL_NAMES[slot] || `le modèle ${str(slot).replace(/^fit\./, '').replace(/_/g, ' ')}`);
+    ? (regression(task) ? 'la référence (prédire la moyenne)' : 'la référence')
+    : variantShort(slot) ? `la variante ${variantShort(slot)}`
+      : MODEL_NAMES[slot] || `le modèle ${str(slot).replace(/^fit\./, '').replace(/_/g, ' ')}`);
 
   function parse(raw) {
     if (raw && typeof raw === 'object') return raw;
@@ -127,13 +143,19 @@
     return `Ouvrir le test final une fois pour ${modelName(v.model, task)}${r ? ` (${r.toLowerCase()})` : ''}`;
   }
 
+  function errorMetric(raw) {
+    const v = parse(raw);
+    const m = v && typeof v === 'object' ? v.metric : raw;
+    return { mae: "L'erreur absolue moyenne (MAE)", rmse: "La racine de l'erreur quadratique moyenne (RMSE)" }[m] || null;
+  }
+
   function criterion(raw) {
     const v = parse(raw);
     if (!v || typeof v !== 'object') return null;
     // v0.3 (WP-C, R18): the criterion names its metric (precision by default, or recall).
     if (typeof v.min_points === 'number') return `N'adopter que si ${v.metric === 'recall_gain' ? 'le rappel' : 'la précision'} bat la référence d'au moins ${v.min_points} points`;
     if (typeof v.min_share === 'number') {
-      return `N'adopter que si l'erreur de validation est inférieure d'au moins ${Math.round(100 * v.min_share)} % à la référence moyenne`;
+      return `N'adopter que si l'erreur de validation est inférieure d'au moins ${Math.round(100 * v.min_share)} % à la référence (prédire la moyenne)`;
     }
     return null;
   }
@@ -144,11 +166,15 @@
     const parts = [];
     if (v.missing && typeof v.missing === 'object') {
       const flagged = Object.keys(v.missing).filter(k => v.missing[k] === 'indicator');
-      parts.push(flagged.length ? `valeurs manquantes signalées (${flagged.join(', ')})` : 'valeurs manquantes non signalées');
+      parts.push(flagged.length ? `une colonne indicatrice des valeurs manquantes (${flagged.join(', ')})` : 'pas de colonne indicatrice des valeurs manquantes');
     } else {
-      parts.push(v.missing === 'indicator' ? 'valeurs manquantes signalées' : 'valeurs manquantes non signalées');
+      parts.push(v.missing === 'indicator' ? 'une colonne indicatrice des valeurs manquantes' : 'pas de colonne indicatrice des valeurs manquantes');
     }
-    if (v.rare_category_min_rows) parts.push(`catégories de moins de ${v.rare_category_min_rows} lignes regroupées`);
+    if (v.rare_category_min_rows && typeof v.rare_category_min_rows === 'object') {
+      // L8 (R6) : un minimum par colonne.
+      Object.keys(v.rare_category_min_rows).sort().filter(c => v.rare_category_min_rows[c])
+        .forEach(c => parts.push(`catégories de ${c} de moins de ${v.rare_category_min_rows[c]} lignes regroupées`));
+    } else if (v.rare_category_min_rows) parts.push(`catégories de moins de ${v.rare_category_min_rows} lignes regroupées`);
     const caps = v.caps && typeof v.caps === 'object' ? Object.keys(v.caps) : [];
     parts.push(caps.length ? `valeurs extrêmes plafonnées (${caps.join(', ')})` : 'pas de plafonnement');
     const logs = Array.isArray(v.log_transform) ? v.log_transform : [];
@@ -195,6 +221,7 @@
         return parts.join(' · ');
       }
       case 'split': return split(raw);
+      case 'error_metric': return errorMetric(raw);
       case 'success_criterion': return criterion(raw);
       case 'preprocessing': return preparation(raw);
       case 'model_variant': return variant(raw);
@@ -219,18 +246,28 @@
       leadTraining: "L'assistant l'a proposé dans le chat. Répondez dans le chat, avec vos mots : dites ce qu'elle décide, ou ce que vous changez." },
     reconfirm: { title: name => `Confirmer de nouveau ${name}`, action: 'Ouvrir dans Décisions',
       lead: "Quelque chose sur quoi elle repose a changé : votre réponse précédente ne vaut plus tant que vous ne la confirmez pas de nouveau." },
+    // R24 (session du 2026-10-27) : la relecture d'une décision enregistrée par le mode automatique.
+    review: { title: name => `Relire ${name}`, action: 'Ouvrir dans Décisions',
+      lead: "Le mode automatique a enregistré cette décision sans vos mots. Relisez-la dans le chat : adoptez-la avec vos propres mots, ou dites ce que vous changez." },
     acknowledge_interruption: { title: () => "Une exécution s'est arrêtée avant la fin", action: "Aller à l'exécution",
-      lead: "Son issue est inconnue. Dites avec vos mots que vous le savez ; rien ne redémarre tout seul." },
+      lead: "Son issue est inconnue. Dites dans le chat, avec vos mots, que vous le savez ; rien ne redémarre tout seul, et ce panneau n'enregistre rien." },
     outcome_unknown: { title: () => "Une exécution s'est arrêtée avant la fin", action: "Aller à l'exécution",
       lead: "Son issue est inconnue. Elle n'est pas en cours et ne redémarre pas toute seule." },
     propose: { title: step => `Étape suivante : ${step}`, action: null,
       lead: "Rien ne vous attend ici. L'assistant propose cette étape dans le chat." },
+    // R16 (session du 2026-10-26, D20) : un choix que le chat demande avant toute proposition.
+    choice: { title: name => `Choisir ${name}, dans le chat`, action: 'Voir les options',
+      lead: "L'assistant vous demande de choisir dans le chat, parmi les options que le moteur accepte maintenant. Répondez là-bas : ce panneau n'enregistre aucun choix." },
     run: { title: step => `Étape suivante : ${step}`, action: null,
       lead: "Rien ne vous attend ici. L'assistant mène cette étape dans le chat." },
     blocked: { title: step => `Étape suivante : ${step}`, action: null,
       lead: "Cette étape attend une étape antérieure. L'assistant vous guide dans le chat." },
     done: { title: () => 'Toutes les étapes sont faites', action: null,
       lead: "Le rapport et le notebook portent l'étude. Relisez-les avant de les transmettre." },
+    // L7 (session du 2026-10-26, D15) : la suite de l'étude, en lecture seule. Le texte est
+    // celui du moteur (`next_action.after_study.junior_text`) ; le plan se demande dans le chat.
+    afterStudyTitle: "Après l'étude",
+    exportPlanInChat: "Le plan d'export Azure ML est disponible pour ce modèle : demandez-le à l'assistant dans le chat. Ce panneau n'exporte que le dossier de passation.",
     other: { title: () => 'Continuer dans le chat', action: null, lead: "L'assistant guide l'étape suivante dans le chat." },
     finalTest: {
       await: { title: () => 'Ouvrir le test final, dans le chat', action: null,
@@ -271,8 +308,9 @@
     high_cardinality_grouping: "Certaines valeurs rares ont été regroupées dans un graphique.",
     grouped_split_unsupported: "Des lignes liées peuvent tomber des deux côtés du découpage.",
     validation_is_not_independent: "Les lignes de validation ont servi à choisir : leurs chiffres ne sont pas une preuve indépendante.",
+    delayed_labels_excluded: "Une étiquette tardive est un résultat connu seulement un certain temps après la prédiction. Certaines lignes de développement n'ont eu leur résultat qu'après le début du test final : elles sont écartées du découpage, des regards sur le résultat et de chaque ajustement.",
     public_data_already_explored: "Les données ont été publiées et explorées auparavant ; leurs lignes ne sont pas inédites.",
-    no_time_or_entity_identifier: "Les données n'ont ni date ni identifiant d'entité : la dérive et les entités répétées ne peuvent pas être vérifiées.",
+    no_time_or_entity_identifier: "Il manque aux données un ordre dans le temps ou un identifiant d'entité : certaines vérifications ne sont pas possibles ; le rapport dit lesquelles.",
     no_causality: "L'étude montre des associations ; elle ne mesure pas l'effet d'une action.",
     workbench_not_tracked: "Votre établi n'est pas suivi : rien de ce qu'il contient ne compte comme preuve.",
     final_test_sealed: "Le test final est encore scellé : chaque chiffre jusqu'ici vient des lignes de développement qui ont servi à choisir.",
@@ -411,7 +449,7 @@
   HT.copyFr = HT.copyFr || {};
   HT.copyFr.junior = {
     decidedLine, ruleShort, featureName, modes, finalTest: finalTestCopy, changedName,
-    decisionName, why, value, modelName, nextMove,
+    decisionName, why, value, modelName, variantLabel, nextMove,
     severityLabel, limitText, limitFallback, groups, digestText,
     digestFallback: "L'étude a changé.",
     deliverablesUpToDate: 'Le rapport et le notebook sont à jour.',

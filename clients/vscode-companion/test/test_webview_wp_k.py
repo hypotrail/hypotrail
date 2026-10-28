@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from panel_cases import load_views, open_case
+from panel_cases import goto, load_views, open_case
 
 SHOTS = os.environ.get('HYPOTRAIL_SHOTS')
 RID = re.compile(r'\b[0-9a-f]{12,64}\b')
@@ -40,7 +40,7 @@ def views(model, payload):
 
 def evidence(open_panel, views, case='families', lang='en', width=900, theme='light-modern'):
     panel = open_case(open_panel, views, case=case, lang=lang, width=width, theme=theme)
-    panel.page.locator('[role="tab"][data-tab="evidence"]').click()
+    goto(panel)
     return panel, panel.page
 
 
@@ -77,7 +77,6 @@ def test_the_selection_card_cites_the_stored_comparison_fold_by_fold(open_panel,
     assert chart.locator('[data-zero]').count() == 3
     # Fold by fold: five folds, every value cited from the evaluation.
     folds = card.locator('[data-fold-by-fold]')
-    folds.locator('summary').click()
     assert folds.locator('[data-selection-folds]').get_attribute('data-selection-folds') == '5'
     assert folds.locator('data[data-result-id]').count() == 5 * 4
     # The question each variant answers (the junior's or the agent's words, quoted).
@@ -100,12 +99,13 @@ def test_the_selection_card_reads_in_french(open_panel, views):
     card = page.locator('[data-ev="selection"]')
     sel = views['evidence.families']['selection']
     assert card.locator('[data-budget-chip]').inner_text() == '3 variantes sur 3 utilisées'
-    assert card.locator('h3').inner_text() == 'Quelle configuration garder, et un autre essai vaut-il la peine ?'
+    # French typography: a narrow no-break space before "?" (§13.2).
+    assert card.locator('h3').inner_text() == 'Quelle configuration garder, et un autre essai vaut-il la peine\u202f?'
     advice = card.locator('[data-selection-advice]')
     assert 'Arrêtez-vous ici' in advice.inner_text()
     assert sel['advice']['texts']['fr'] in advice.inner_text()
     assert advice.locator('[data-en-marker]').count() == 0, 'the engine sent French: no (en) marker'
-    assert card.locator('.ht-finding').inner_text().startswith("La règle d'une erreur type retient : Gradient boosting.")
+    assert card.locator('.ht-finding').inner_text().startswith("La règle d'une erreur type retient\u202f: Gradient boosting.")
 
 
 def test_a_split_study_shows_the_budget_and_why_folds_are_not_compared(open_panel, views):
@@ -115,7 +115,6 @@ def test_a_split_study_shows_the_budget_and_why_folds_are_not_compared(open_pane
     assert card.locator('[data-trial-budget]').get_attribute('data-trial-budget') == '1/3'
     assert card.locator('[data-selection-table]').count() == 0
     assert card.locator('[data-selection-advice]').get_attribute('data-selection-advice') == 'not_available'
-    card.locator('details.ht-why summary').click()
     assert 'before the budget existed' in card.locator('details.ht-why').inner_text()
 
 
@@ -135,7 +134,6 @@ def test_the_shortlist_says_there_is_no_evidence_for_a_nonlinear_family_yet(open
     assert 'black box' in card.locator('[data-family="hgb"]').inner_text()
     texts = views['trials.families']['families']['texts']
     assert texts['en'] in card.locator('.ht-finding').inner_text()
-    card.locator('details.ht-why summary').click()
     assert 'balance' in card.locator('details.ht-why').inner_text(), 'the features the checks tested'
     assert card.locator('.ht-src').inner_text().startswith('Source · diag.binary · ')
 
@@ -190,48 +188,52 @@ def test_the_ebm_terms_and_shape_and_the_boosting_importance_are_cited(open_pane
 # --- the Decisions card of a waiting variant proposal ----------------------------------------
 
 def test_a_waiting_variant_proposal_shows_the_budget_and_the_shortlist(open_panel, views):
+    """WP-K on the one page: Now's proposal of the variants to compare carries the trial budget
+    and the family shortlist (v2), and the value in words."""
     panel = open_panel()
-    panel.init(stage='v3', task='binary')
+    panel.init(stage='v3', task='binary', panelContract=2)
     panel.snapshot(views['summary.families.proposal'])
-    panel.view_data('trials', views['trials.families.proposal'])
     page = panel.page
-    page.locator('[role="tab"][data-tab="decisions"]').click()
-    note = page.locator('[data-decision="model_variant"] [data-trials-note]')
+    goto(panel)
+    panel.view_data('trials', views['trials.families.proposal'])
+    card = page.locator('[data-block="now"] [data-proposal-card]')
+    note = card.locator('[data-trials-note]')
     assert note.count() == 1
     assert note.locator('[data-trial-budget]').inner_text() == 'Trial budget: 0 of 3 variants used, 3 left.'
     assert note.locator('[data-shortlist-text]').get_attribute('data-shortlist-text') == 'stay_linear'
     # The value in words, not the recorded list.
-    value = page.locator('[data-decision="model_variant"] [data-proposed-value]').inner_text()
+    value = card.locator('.ht-plainsay').inner_text()
     assert 'a more regularised variant, an Explainable Boosting Machine and gradient boosting' in value
 
 
 # --- the journey bar ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize('lang', ['en', 'fr'])
-def test_the_journey_labels_never_break_a_word_at_420_px(open_panel, views, lang):
-    panel = open_case(open_panel, views, case='cv', lang=lang, width=420)
-    page = panel.page
-    broken = page.evaluate("""() => {
-      const out = [];
-      for (const s of document.querySelectorAll('.ht-journey [data-step-label]')) {
-        const words = s.getAttribute('data-step-label').split(/\\s+/);
-        const range = document.createRange();
-        const text = [...s.childNodes].find(n => n.nodeType === 1 && !n.classList.contains('ov-mark')
-          && !n.classList.contains('sr-only')) || s;
-        range.selectNodeContents(text);
-        const lines = new Set([...range.getClientRects()].map(r => Math.round(r.top)));
-        if (lines.size > words.length) out.push(s.getAttribute('data-step-label'));
-      }
-      return out;
-    }""")
-    assert broken == []
-    labels = page.locator('.ht-journey [data-step-label]').evaluate_all('ss => ss.map(s => s.dataset.stepLabel)')
-    assert 'Conclusion' in labels
-    assert ('Split' if lang == 'en' else 'Découpage') in labels
-    # The plan's full title stays in the hover and for screen readers.
-    conclusion = page.locator('.ht-journey [data-step="conclusion"]')
-    assert 'Conclude proportionately' in conclusion.get_attribute('title')
-    assert conclusion.locator('.sr-only').last.inner_text() != ''
+def test_the_path_labels_never_break_a_word_at_320_and_420_px(open_panel, views, lang):
+    """The path's step names (PATH-2), every phase open, at 420 and 320 px (NAR-1)."""
+    for width in (420, 320):
+        panel = open_case(open_panel, views, case='cv', lang=lang, width=width)
+        page = panel.page
+        goto(panel)
+        broken = page.evaluate("""() => {
+          const out = [];
+          for (const s of document.querySelectorAll('[data-block="path"] li[data-step] .ht-t')) {
+            const words = s.textContent.trim().split(/\\s+/);
+            const range = document.createRange();
+            range.selectNodeContents(s);
+            const lines = new Set([...range.getClientRects()].map(r => Math.round(r.top)));
+            if (lines.size > words.length) out.push(s.textContent);
+          }
+          return out;
+        }""")
+        assert broken == [], width
+        labels = page.locator('[data-block="path"] [data-step] .ht-t, [data-block="path"] span[data-step]').all_text_contents()
+        assert 'Conclusion' in labels
+        assert ('Split' if lang == 'en' else 'Découpage') in labels
+        # The plan's full title stays in the hover, in the panel's language since L3 (D4b).
+        conclusion = page.locator('[data-block="path"] [data-step="conclusion"]')
+        title = conclusion.get_attribute('title') or conclusion.locator('.ht-t').get_attribute('title')
+        assert ('Conclude proportionately' if lang == 'en' else 'Conclure avec mesure') in title
 
 
 # --- refusals in the panel language -----------------------------------------------------------
@@ -239,7 +241,7 @@ def test_the_journey_labels_never_break_a_word_at_420_px(open_panel, views, lang
 def test_a_refusal_explains_itself_in_french(open_panel, views):
     panel = open_case(open_panel, views, case='binary', lang='fr')
     page = panel.page
-    page.locator('[role="tab"][data-tab="eda"]').click()
+    goto(panel)
     refusal = {'code': 'stale_revision', 'reason': None, 'engineMessage': 'expected revision 3, current 4',
                'human': 'The study changed after the panel showed it. Nothing was recorded.',
                'details': ['Revision read by the panel: 3'],
@@ -248,7 +250,7 @@ def test_a_refusal_explains_itself_in_french(open_panel, views):
     panel.send({'type': 'outcome', 'op': 'W4', 'kind': 'refused', 'target': 'eda.rate_by:job', 'refusal': refusal})
     box = page.locator('[data-outcome="refused"]').first
     assert box.locator('[data-human]').inner_text() == refusal['humanFr']
-    assert 'Révision lue par le panneau : 3' in box.inner_text()
+    assert 'Révision lue par le panneau : 3' in box.inner_text().replace('\u202f', ' ')
     assert box.locator('[data-engine-message]').inner_text() == refusal['engineMessage']
 
 

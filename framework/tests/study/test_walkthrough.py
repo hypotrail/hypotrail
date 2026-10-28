@@ -125,6 +125,24 @@ class Chat:
         return self('run', activity, *options, '--request-id', self.rid(f'run-{activity}'),
                     '--expected-revision', self.rev(), expect=expect, extra_env=extra_env)
 
+def _structural_preparation(chat) -> dict:
+    """Owner session 2026-10-26 (L5, D5, D6): the structural check of a new study, the
+    screened distributions ``next_action`` names, then the drafted preparation, proposed and
+    confirmed before any look at the target (not data-contingent)."""
+    assert chat.run('eda.quality')['status'] == 'promoted'
+    action = chat.status()['view']['next_action']
+    while action['kind'] == 'run' and action['activity'] == 'eda.distribution':
+        chat.run('eda.distribution', '--column', action['options']['column'])
+        action = chat.status()['view']['next_action']
+    assert (action['kind'], action['decision']) == ('propose', 'preprocessing'), action
+    value = action['default_value']
+    p = chat.propose('preprocessing', value, 'You adopt the preparation drafted from the '
+                                             'quality check of the columns.')
+    chat.confirm(p, 'I confirm this preparation.')
+    recorded = chat.status()['view']['decisions']['preprocessing']['value']
+    assert recorded['data_contingent'] is False and recorded['target_looks_before'] == 0
+    return value
+
 
 class Tags(HTMLParser):
     def __init__(self):
@@ -159,7 +177,8 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     assert chat.view['current_step'] == 'discover_data'
     assert chat.view['next_action']['kind'] == 'show_data_card'
     card = chat('data')
-    assert card['schema'] == 'hypotrail.data/1' and card['rows']['n_rows'] == 5
+    # contract P1.9: the seeded step-1 sample, eight development rows
+    assert card['schema'] == 'hypotrail.data/1' and card['rows']['n_rows'] == 8
     assert Chat(study, work, 'chat1b').view['revision'] == chat.view['revision']   # read-only
     p = chat.propose('prediction_time', junior['prediction_time'], junior['restatement'])
     refused = chat.confirm(p, 'ok', expect=2)
@@ -189,14 +208,12 @@ def test_walkthrough(name, cases, tmp_path, capsys):
                      'least 5 points at the rule you adopt.')
     chat.confirm(p, 'I confirm: at least 5 points over the baseline.')
 
-    # 4-5. authorised work between pauses: training EDA, the preprocessing, then both fits
+    # 4-5. authorised work between pauses: the structural check and the preparation drafted
+    # from it (owner session 2026-10-26, L5), then the training EDA, then both fits
+    _structural_preparation(chat)
     target = chat.run('eda.target_rate')['values']
     specials = chat.run('eda.special_values')['values']
     rate_by = chat.run('eda.rate_by', '--column', junior['rate_by'])
-    default = chat.status()['view']['next_action']['default_value']
-    p = chat.propose('preprocessing', default, 'You keep the default preparation of the '
-                                               'variables: nothing added, nothing grouped.')
-    chat.confirm(p, 'I confirm the default preparation.')
     assert rate_by['result']['slot'] == f'eda.rate_by:{junior["rate_by"]}'
     assert target['n_rows'] == parts['train']['n_rows']
     baseline = chat.run('fit.baseline')
@@ -276,7 +293,15 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     chat.run('diag.binary')
 
     # 8b. WP-B1: the final test, opened once in the junior's words (a reason is optional
-    # since v0.3, WP-B; a condition is still refused)
+    # since v0.3, WP-B; a condition is still refused). Third session of 2026-10-26: the
+    # chosen model is captured first, with the options next_action names, so the Azure ML
+    # export at done carries the evaluated model; no final-test row is read.
+    nxt = chat.status()['view']['next_action']
+    assert (nxt['kind'], nxt['activity']) == ('run', 'predictor.capture'), nxt
+    capture = chat.run('predictor.capture', *[x for k, v in (nxt.get('options') or {}).items()
+                                              for x in (f'--{k}', str(v))])
+    assert capture['status'] == 'promoted'
+    assert fk.read.open(study).state['partition']['status'] == 'sealed'
     value = chat.status()['view']['next_action']['default_value']
     assert value == {'model': 'fit.logistic', 'rule': CAPACITY}
     p = chat.propose('final_test', value, 'You open the sealed final test once, for the model '
@@ -325,7 +350,9 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     tags.feed(page)
     controls = [t for t, a in tags.tags if t in ('input', 'form', 'select', 'textarea', 'option')]
     buttons = [a for t, a in tags.tags if t == 'button']
-    assert controls == [] and len(buttons) == 1 and 'data-theme-toggle' in buttons[0]
+    # v4 (R27, R28): the theme button and the language button, nothing else
+    assert controls == [] and len(buttons) == 2
+    assert 'data-lang-toggle' in buttons[0] and 'data-theme-toggle' in buttons[1]
     data = [a for t, a in tags.tags if t == 'data']
     assert len(data) > 50
     assert all(a.get('data-result-id') and a.get('data-path') for a in data)

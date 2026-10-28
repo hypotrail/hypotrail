@@ -18,6 +18,7 @@ from mlkit.study import cmd_check, manifest as mf, notebook_view as nv, read
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import flowkit as fk  # noqa: E402
+from lesson_page import chapter_html, primary  # noqa: E402
 
 AUTO = fk.REPO / 'use-cases' / 'auto-mpg'
 BINARY_VOCABULARY = re.compile(r'threshold|positive class|precision|recall|capacity', re.I)
@@ -76,7 +77,10 @@ def test_report_shows_bins_and_groups_with_cited_numbers(bank):
         assert f'id="r-{rid}"' in html
     pdays = _block(html, 'eda.distribution:pdays')
     assert 'special_values.0.n_rows' in {p for _, p in _cited(pdays)}
-    assert 'step-train_eda' in html[:html.index('data-slot="eda.distribution:age"')]
+    # v4: the distribution is evidence of the exploration chapter, the one of its step
+    exploration = chapter_html(primary(html), 'ch4')
+    assert 'id="step-train_eda"' in exploration
+    assert 'data-slot="eda.distribution:age"' in exploration
 
 
 def test_check_traces_the_distribution_numbers(bank, tmp_path):

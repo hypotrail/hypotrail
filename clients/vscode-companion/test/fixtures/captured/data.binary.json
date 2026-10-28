@@ -18,7 +18,11 @@
   "observation_unit": {
    "value": "A customer contacted during a telephone campaign",
    "status": "documented_fact",
-   "source": "data/bank-names.txt:26-28"
+   "source": "data/bank-names.txt:26-28",
+   "texts": {
+    "en": "A customer contacted during a telephone campaign",
+    "fr": "Un client contacté pendant une campagne téléphonique"
+   }
   },
   "development": {
    "rows": 3617,
@@ -32,8 +36,11 @@
     "definition": "records identical on every column, the target included",
     "line": "No two development rows are identical.",
     "audience": "junior",
-    "junior_text": "No two development rows are identical."
-   }
+    "junior_text": "No two development rows are identical.",
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": []
   },
   "target": {
    "column": "y",
@@ -73,7 +80,11 @@
       "availability": {
        "value": "unknown",
        "status": "unknown",
-       "source": "Availability at prediction time is not documented"
+       "source": "Availability at prediction time is not documented",
+       "texts": {
+        "en": "Availability at prediction time is not documented",
+        "fr": "La disponibilité au moment de la prédiction n'est pas documentée"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -98,7 +109,11 @@
       "availability": {
        "value": "unknown",
        "status": "unknown",
-       "source": "Availability at prediction time is not documented"
+       "source": "Availability at prediction time is not documented",
+       "texts": {
+        "en": "Availability at prediction time is not documented",
+        "fr": "La disponibilité au moment de la prédiction n'est pas documentée"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -109,7 +124,11 @@
         "value": "unknown",
         "meaning": "Listed as a category by the documentation; what it covers is not documented.",
         "status": "unknown",
-        "n_rows": 32
+        "n_rows": 32,
+        "texts": {
+         "en": "Listed as a category by the documentation; what it covers is not documented.",
+         "fr": "Une catégorie listée par la documentation ; ce qu'elle recouvre n'est pas documenté."
+        }
        }
       ],
       "n_missing": 0,
@@ -130,7 +149,11 @@
       "availability": {
        "value": "unknown",
        "status": "unknown",
-       "source": "Availability at prediction time is not documented"
+       "source": "Availability at prediction time is not documented",
+       "texts": {
+        "en": "Availability at prediction time is not documented",
+        "fr": "La disponibilité au moment de la prédiction n'est pas documentée"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -155,7 +178,11 @@
       "availability": {
        "value": "unknown",
        "status": "unknown",
-       "source": "Availability at prediction time is not documented"
+       "source": "Availability at prediction time is not documented",
+       "texts": {
+        "en": "Availability at prediction time is not documented",
+        "fr": "La disponibilité au moment de la prédiction n'est pas documentée"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -166,7 +193,11 @@
         "value": "unknown",
         "meaning": "Listed as a category by the documentation; what it covers is not documented.",
         "status": "unknown",
-        "n_rows": 155
+        "n_rows": 155,
+        "texts": {
+         "en": "Listed as a category by the documentation; what it covers is not documented.",
+         "fr": "Une catégorie listée par la documentation ; ce qu'elle recouvre n'est pas documenté."
+        }
        }
       ],
       "n_missing": 0,
@@ -187,7 +218,11 @@
       "availability": {
        "value": "unknown",
        "status": "unknown",
-       "source": "Availability at prediction time is not documented"
+       "source": "Availability at prediction time is not documented",
+       "texts": {
+        "en": "Availability at prediction time is not documented",
+        "fr": "La disponibilité au moment de la prédiction n'est pas documentée"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -211,7 +246,11 @@
       "availability": {
        "value": "available_at_prediction",
        "status": "scenario_assumption",
-       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time"
+       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+       "texts": {
+        "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+        "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -236,7 +275,11 @@
       "availability": {
        "value": "unknown",
        "status": "unknown",
-       "source": "Availability at prediction time is not documented"
+       "source": "Availability at prediction time is not documented",
+       "texts": {
+        "en": "Availability at prediction time is not documented",
+        "fr": "La disponibilité au moment de la prédiction n'est pas documentée"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -260,7 +303,11 @@
       "availability": {
        "value": "unknown",
        "status": "unknown",
-       "source": "Availability at prediction time is not documented"
+       "source": "Availability at prediction time is not documented",
+       "texts": {
+        "en": "Availability at prediction time is not documented",
+        "fr": "La disponibilité au moment de la prédiction n'est pas documentée"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -274,7 +321,11 @@
        "yes"
       ]
      }
-    ]
+    ],
+    "texts": {
+     "en": "Client",
+     "fr": "Client"
+    }
    },
    {
     "group": "Last contact of this campaign",
@@ -289,7 +340,11 @@
       "availability": {
        "value": "unknown",
        "status": "unknown",
-       "source": "Availability at prediction time is not documented"
+       "source": "Availability at prediction time is not documented",
+       "texts": {
+        "en": "Availability at prediction time is not documented",
+        "fr": "La disponibilité au moment de la prédiction n'est pas documentée"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -300,7 +355,11 @@
         "value": "unknown",
         "meaning": "Listed as a category by the documentation; what it covers is not documented.",
         "status": "unknown",
-        "n_rows": 1042
+        "n_rows": 1042,
+        "texts": {
+         "en": "Listed as a category by the documentation; what it covers is not documented.",
+         "fr": "Une catégorie listée par la documentation ; ce qu'elle recouvre n'est pas documenté."
+        }
        }
       ],
       "n_missing": 0,
@@ -320,7 +379,11 @@
       "availability": {
        "value": "unknown",
        "status": "unknown",
-       "source": "Availability at prediction time is not documented"
+       "source": "Availability at prediction time is not documented",
+       "texts": {
+        "en": "Availability at prediction time is not documented",
+        "fr": "La disponibilité au moment de la prédiction n'est pas documentée"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -345,7 +408,11 @@
       "availability": {
        "value": "unknown",
        "status": "unknown",
-       "source": "Availability at prediction time is not documented"
+       "source": "Availability at prediction time is not documented",
+       "texts": {
+        "en": "Availability at prediction time is not documented",
+        "fr": "La disponibilité au moment de la prédiction n'est pas documentée"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -370,7 +437,11 @@
       "availability": {
        "value": "not_available",
        "status": "documented_fact",
-       "source": "data/bank-names.txt:56,60: duration of the last contact of the current campaign, which is known only once that contact has ended"
+       "source": "data/bank-names.txt:56,60: duration of the last contact of the current campaign, which is known only once that contact has ended",
+       "texts": {
+        "en": "data/bank-names.txt:56,60: duration of the last contact of the current campaign, which is known only once that contact has ended",
+        "fr": "data/bank-names.txt:56,60 : durée du dernier contact de la campagne en cours, qui n'est connue qu'une fois ce contact terminé"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -385,7 +456,11 @@
        185
       ]
      }
-    ]
+    ],
+    "texts": {
+     "en": "Last contact of this campaign",
+     "fr": "Dernier contact de cette campagne"
+    }
    },
    {
     "group": "This and previous campaigns",
@@ -400,7 +475,11 @@
       "availability": {
        "value": "unknown",
        "status": "unknown",
-       "source": "Availability at prediction time is not documented"
+       "source": "Availability at prediction time is not documented",
+       "texts": {
+        "en": "Availability at prediction time is not documented",
+        "fr": "La disponibilité au moment de la prédiction n'est pas documentée"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -425,7 +504,11 @@
       "availability": {
        "value": "available_at_prediction",
        "status": "scenario_assumption",
-       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time"
+       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+       "texts": {
+        "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+        "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -436,7 +519,11 @@
         "value": -1,
         "meaning": "The client was not previously contacted.",
         "status": "documented_fact",
-        "n_rows": 2962
+        "n_rows": 2962,
+        "texts": {
+         "en": "The client was not previously contacted.",
+         "fr": "Le client n'avait pas été contacté auparavant."
+        }
        }
       ],
       "n_missing": 0,
@@ -457,7 +544,11 @@
       "availability": {
        "value": "available_at_prediction",
        "status": "scenario_assumption",
-       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time"
+       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+       "texts": {
+        "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+        "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -482,7 +573,11 @@
       "availability": {
        "value": "available_at_prediction",
        "status": "scenario_assumption",
-       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time"
+       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+       "texts": {
+        "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+        "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+       }
       },
       "decided": {
        "status": "confirmed",
@@ -493,7 +588,11 @@
         "value": "unknown",
         "meaning": "Listed as a category by the documentation; what it covers is not documented.",
         "status": "unknown",
-        "n_rows": 2962
+        "n_rows": 2962,
+        "texts": {
+         "en": "Listed as a category by the documentation; what it covers is not documented.",
+         "fr": "Une catégorie listée par la documentation ; ce qu'elle recouvre n'est pas documenté."
+        }
        }
       ],
       "n_missing": 0,
@@ -504,7 +603,11 @@
        "success"
       ]
      }
-    ]
+    ],
+    "texts": {
+     "en": "This and previous campaigns",
+     "fr": "Cette campagne et les précédentes"
+    }
    },
    {
     "group": "Outcome",
@@ -519,7 +622,11 @@
       "availability": {
        "value": "not_available",
        "status": "scenario_assumption",
-       "source": "Teaching scenario assumption; not established by the dataset documentation"
+       "source": "Teaching scenario assumption; not established by the dataset documentation",
+       "texts": {
+        "en": "Teaching scenario assumption; not established by the dataset documentation",
+        "fr": "Hypothèse du scénario pédagogique ; non établi par la documentation des données"
+       }
       },
       "decided": null,
       "special_values": [],
@@ -530,7 +637,11 @@
        "yes"
       ]
      }
-    ]
+    ],
+    "texts": {
+     "en": "Outcome",
+     "fr": "Résultat"
+    }
    }
   ],
   "rows": {
@@ -553,13 +664,224 @@
     "previous",
     "poutcome"
    ],
-   "n_rows": 5,
-   "order": "first rows by row key",
+   "n_rows": 8,
+   "order": "seeded sample",
+   "items": [
+    {
+     "row_key": "L871",
+     "values": {
+      "y": "no",
+      "age": 56,
+      "job": "technician",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 150,
+      "housing": "yes",
+      "loan": "yes",
+      "contact": "cellular",
+      "day": 11,
+      "month": "may",
+      "duration": 102,
+      "campaign": 6,
+      "pdays": 349,
+      "previous": 1,
+      "poutcome": "failure"
+     }
+    },
+    {
+     "row_key": "L1406",
+     "values": {
+      "y": "no",
+      "age": 50,
+      "job": "management",
+      "marital": "married",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 0,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 9,
+      "month": "jul",
+      "duration": 243,
+      "campaign": 5,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     }
+    },
+    {
+     "row_key": "L2298",
+     "values": {
+      "y": "yes",
+      "age": 32,
+      "job": "blue-collar",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 1905,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 16,
+      "month": "jul",
+      "duration": 709,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     }
+    },
+    {
+     "row_key": "L2672",
+     "values": {
+      "y": "no",
+      "age": 46,
+      "job": "admin.",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 0,
+      "housing": "yes",
+      "loan": "yes",
+      "contact": "cellular",
+      "day": 20,
+      "month": "apr",
+      "duration": 239,
+      "campaign": 2,
+      "pdays": 259,
+      "previous": 2,
+      "poutcome": "failure"
+     }
+    },
+    {
+     "row_key": "L2784",
+     "values": {
+      "y": "no",
+      "age": 41,
+      "job": "technician",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 64,
+      "housing": "yes",
+      "loan": "yes",
+      "contact": "unknown",
+      "day": 8,
+      "month": "may",
+      "duration": 210,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     }
+    },
+    {
+     "row_key": "L3910",
+     "values": {
+      "y": "no",
+      "age": 36,
+      "job": "technician",
+      "marital": "married",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 167,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 28,
+      "month": "jan",
+      "duration": 57,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     }
+    },
+    {
+     "row_key": "L4049",
+     "values": {
+      "y": "no",
+      "age": 75,
+      "job": "retired",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 26452,
+      "housing": "no",
+      "loan": "no",
+      "contact": "telephone",
+      "day": 15,
+      "month": "jul",
+      "duration": 219,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     }
+    },
+    {
+     "row_key": "L4361",
+     "values": {
+      "y": "no",
+      "age": 46,
+      "job": "housemaid",
+      "marital": "single",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 3232,
+      "housing": "no",
+      "loan": "no",
+      "contact": "telephone",
+      "day": 15,
+      "month": "jun",
+      "duration": 94,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     }
+    }
+   ],
+   "seed": "be32233201bea6ea",
+   "target_shown": true,
+   "exposure": {
+    "exposure_id": "x_fc9c80ab429a44d4be237f424556675c",
+    "purpose": "development_target_sample",
+    "recorded": true,
+    "withheld": null
+   }
+  },
+  "note": {
+   "text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored after the split, on the rows it leaves for exploration. The test is reserved by the protocol; the local source file remains accessible. Confirmations are agent-reported, not independently authenticated. Cross-study history is not enforced.",
+   "audience": "junior",
+   "junior_text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored after the split, on the rows it leaves for exploration. The test is reserved by the protocol; the local source file remains accessible. Confirmations are agent-reported, not independently authenticated. Cross-study history is not enforced."
+  },
+  "special_rows": {
+   "columns": [
+    "age",
+    "job",
+    "marital",
+    "education",
+    "default",
+    "balance",
+    "housing",
+    "loan",
+    "contact",
+    "day",
+    "month",
+    "duration",
+    "campaign",
+    "pdays",
+    "previous",
+    "poutcome"
+   ],
+   "n_rows": 3001,
    "items": [
     {
      "row_key": "L2",
      "values": {
-      "y": "no",
       "age": 30,
       "job": "unemployed",
       "marital": "married",
@@ -576,56 +898,21 @@
       "pdays": -1,
       "previous": 0,
       "poutcome": "unknown"
-     }
-    },
-    {
-     "row_key": "L3",
-     "values": {
-      "y": "no",
-      "age": 33,
-      "job": "services",
-      "marital": "married",
-      "education": "secondary",
-      "default": "no",
-      "balance": 4789,
-      "housing": "yes",
-      "loan": "yes",
-      "contact": "cellular",
-      "day": 11,
-      "month": "may",
-      "duration": 220,
-      "campaign": 1,
-      "pdays": 339,
-      "previous": 4,
-      "poutcome": "failure"
-     }
-    },
-    {
-     "row_key": "L4",
-     "values": {
-      "y": "no",
-      "age": 35,
-      "job": "management",
-      "marital": "single",
-      "education": "tertiary",
-      "default": "no",
-      "balance": 1350,
-      "housing": "yes",
-      "loan": "no",
-      "contact": "cellular",
-      "day": 16,
-      "month": "apr",
-      "duration": 185,
-      "campaign": 1,
-      "pdays": 330,
-      "previous": 1,
-      "poutcome": "failure"
-     }
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
     },
     {
      "row_key": "L5",
      "values": {
-      "y": "no",
       "age": 30,
       "job": "management",
       "marital": "married",
@@ -642,36 +929,1548 @@
       "pdays": -1,
       "previous": 0,
       "poutcome": "unknown"
-     }
+     },
+     "specials": [
+      {
+       "column": "contact",
+       "value": "unknown"
+      },
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
     },
     {
-     "row_key": "L7",
+     "row_key": "L9",
      "values": {
-      "y": "no",
-      "age": 35,
+      "age": 39,
+      "job": "technician",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 147,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 6,
+      "month": "may",
+      "duration": 151,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L10",
+     "values": {
+      "age": 41,
+      "job": "entrepreneur",
+      "marital": "married",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 221,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "unknown",
+      "day": 14,
+      "month": "may",
+      "duration": 57,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "contact",
+       "value": "unknown"
+      },
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L12",
+     "values": {
+      "age": 39,
+      "job": "services",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 9374,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "unknown",
+      "day": 20,
+      "month": "may",
+      "duration": 273,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "contact",
+       "value": "unknown"
+      },
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L15",
+     "values": {
+      "age": 20,
+      "job": "student",
+      "marital": "single",
+      "education": "secondary",
+      "default": "no",
+      "balance": 502,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 30,
+      "month": "apr",
+      "duration": 261,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L18",
+     "values": {
+      "age": 56,
+      "job": "technician",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 4073,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 27,
+      "month": "aug",
+      "duration": 239,
+      "campaign": 5,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L20",
+     "values": {
+      "age": 25,
+      "job": "blue-collar",
+      "marital": "single",
+      "education": "primary",
+      "default": "no",
+      "balance": -221,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "unknown",
+      "day": 23,
+      "month": "may",
+      "duration": 250,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "contact",
+       "value": "unknown"
+      },
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L22",
+     "values": {
+      "age": 38,
+      "job": "management",
+      "marital": "divorced",
+      "education": "unknown",
+      "default": "no",
+      "balance": 0,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 18,
+      "month": "nov",
+      "duration": 96,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "education",
+       "value": "unknown"
+      },
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L23",
+     "values": {
+      "age": 42,
+      "job": "management",
+      "marital": "divorced",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 16,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 19,
+      "month": "nov",
+      "duration": 140,
+      "campaign": 3,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L25",
+     "values": {
+      "age": 44,
+      "job": "entrepreneur",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 93,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 7,
+      "month": "jul",
+      "duration": 125,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L26",
+     "values": {
+      "age": 26,
+      "job": "housemaid",
+      "marital": "married",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 543,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 30,
+      "month": "jan",
+      "duration": 169,
+      "campaign": 3,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L27",
+     "values": {
+      "age": 41,
+      "job": "management",
+      "marital": "married",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 5883,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 20,
+      "month": "nov",
+      "duration": 182,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L28",
+     "values": {
+      "age": 55,
+      "job": "blue-collar",
+      "marital": "married",
+      "education": "primary",
+      "default": "no",
+      "balance": 627,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "unknown",
+      "day": 5,
+      "month": "may",
+      "duration": 247,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "contact",
+       "value": "unknown"
+      },
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L29",
+     "values": {
+      "age": 67,
+      "job": "retired",
+      "marital": "married",
+      "education": "unknown",
+      "default": "no",
+      "balance": 696,
+      "housing": "no",
+      "loan": "no",
+      "contact": "telephone",
+      "day": 17,
+      "month": "aug",
+      "duration": 119,
+      "campaign": 1,
+      "pdays": 105,
+      "previous": 2,
+      "poutcome": "failure"
+     },
+     "specials": [
+      {
+       "column": "education",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L30",
+     "values": {
+      "age": 56,
+      "job": "self-employed",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 784,
+      "housing": "no",
+      "loan": "yes",
+      "contact": "cellular",
+      "day": 30,
+      "month": "jul",
+      "duration": 149,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L32",
+     "values": {
+      "age": 68,
+      "job": "retired",
+      "marital": "divorced",
+      "education": "secondary",
+      "default": "no",
+      "balance": 4189,
+      "housing": "no",
+      "loan": "no",
+      "contact": "telephone",
+      "day": 14,
+      "month": "jul",
+      "duration": 897,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L33",
+     "values": {
+      "age": 31,
+      "job": "technician",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 171,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 27,
+      "month": "aug",
+      "duration": 81,
+      "campaign": 3,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L35",
+     "values": {
+      "age": 32,
       "job": "management",
       "marital": "single",
       "education": "tertiary",
       "default": "no",
-      "balance": 747,
+      "balance": 2536,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 26,
+      "month": "aug",
+      "duration": 958,
+      "campaign": 6,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L37",
+     "values": {
+      "age": 42,
+      "job": "admin.",
+      "marital": "divorced",
+      "education": "secondary",
+      "default": "no",
+      "balance": 1811,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "unknown",
+      "day": 14,
+      "month": "may",
+      "duration": 150,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "contact",
+       "value": "unknown"
+      },
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L38",
+     "values": {
+      "age": 78,
+      "job": "retired",
+      "marital": "divorced",
+      "education": "primary",
+      "default": "no",
+      "balance": 229,
+      "housing": "no",
+      "loan": "no",
+      "contact": "telephone",
+      "day": 22,
+      "month": "oct",
+      "duration": 97,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L41",
+     "values": {
+      "age": 23,
+      "job": "services",
+      "marital": "single",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 363,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "unknown",
+      "day": 30,
+      "month": "may",
+      "duration": 16,
+      "campaign": 18,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "contact",
+       "value": "unknown"
+      },
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L42",
+     "values": {
+      "age": 38,
+      "job": "management",
+      "marital": "single",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 11971,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "unknown",
+      "day": 17,
+      "month": "nov",
+      "duration": 609,
+      "campaign": 2,
+      "pdays": 101,
+      "previous": 3,
+      "poutcome": "failure"
+     },
+     "specials": [
+      {
+       "column": "contact",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L43",
+     "values": {
+      "age": 36,
+      "job": "management",
+      "marital": "single",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 553,
       "housing": "no",
       "loan": "no",
       "contact": "cellular",
-      "day": 23,
-      "month": "feb",
-      "duration": 141,
+      "day": 11,
+      "month": "aug",
+      "duration": 106,
       "campaign": 2,
-      "pdays": 176,
-      "previous": 3,
-      "poutcome": "failure"
-     }
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L44",
+     "values": {
+      "age": 52,
+      "job": "blue-collar",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 1117,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 13,
+      "month": "may",
+      "duration": 365,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L45",
+     "values": {
+      "age": 32,
+      "job": "technician",
+      "marital": "married",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 396,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 13,
+      "month": "may",
+      "duration": 205,
+      "campaign": 3,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L46",
+     "values": {
+      "age": 32,
+      "job": "technician",
+      "marital": "single",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 2204,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 21,
+      "month": "nov",
+      "duration": 11,
+      "campaign": 4,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L47",
+     "values": {
+      "age": 34,
+      "job": "management",
+      "marital": "single",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 872,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "unknown",
+      "day": 7,
+      "month": "may",
+      "duration": 105,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "contact",
+       "value": "unknown"
+      },
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L49",
+     "values": {
+      "age": 26,
+      "job": "blue-collar",
+      "marital": "married",
+      "education": "primary",
+      "default": "no",
+      "balance": 0,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "unknown",
+      "day": 21,
+      "month": "may",
+      "duration": 425,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "contact",
+       "value": "unknown"
+      },
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L50",
+     "values": {
+      "age": 32,
+      "job": "entrepreneur",
+      "marital": "single",
+      "education": "primary",
+      "default": "yes",
+      "balance": -849,
+      "housing": "yes",
+      "loan": "yes",
+      "contact": "cellular",
+      "day": 4,
+      "month": "feb",
+      "duration": 204,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L51",
+     "values": {
+      "age": 61,
+      "job": "admin.",
+      "marital": "married",
+      "education": "unknown",
+      "default": "no",
+      "balance": 4629,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 27,
+      "month": "jan",
+      "duration": 181,
+      "campaign": 1,
+      "pdays": 92,
+      "previous": 1,
+      "poutcome": "success"
+     },
+     "specials": [
+      {
+       "column": "education",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L54",
+     "values": {
+      "age": 38,
+      "job": "technician",
+      "marital": "single",
+      "education": "secondary",
+      "default": "no",
+      "balance": 50,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 29,
+      "month": "aug",
+      "duration": 98,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L56",
+     "values": {
+      "age": 53,
+      "job": "blue-collar",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 2231,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 14,
+      "month": "jul",
+      "duration": 272,
+      "campaign": 3,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L59",
+     "values": {
+      "age": 33,
+      "job": "self-employed",
+      "marital": "single",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 2155,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 17,
+      "month": "nov",
+      "duration": 295,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L60",
+     "values": {
+      "age": 36,
+      "job": "retired",
+      "marital": "single",
+      "education": "secondary",
+      "default": "no",
+      "balance": 101,
+      "housing": "yes",
+      "loan": "yes",
+      "contact": "unknown",
+      "day": 26,
+      "month": "may",
+      "duration": 314,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "contact",
+       "value": "unknown"
+      },
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L62",
+     "values": {
+      "age": 41,
+      "job": "blue-collar",
+      "marital": "married",
+      "education": "primary",
+      "default": "no",
+      "balance": -516,
+      "housing": "no",
+      "loan": "yes",
+      "contact": "telephone",
+      "day": 8,
+      "month": "jul",
+      "duration": 554,
+      "campaign": 3,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L63",
+     "values": {
+      "age": 63,
+      "job": "retired",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 415,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 7,
+      "month": "oct",
+      "duration": 323,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L64",
+     "values": {
+      "age": 48,
+      "job": "management",
+      "marital": "married",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 5887,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 13,
+      "month": "aug",
+      "duration": 227,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L65",
+     "values": {
+      "age": 48,
+      "job": "services",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 1355,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 4,
+      "month": "jul",
+      "duration": 134,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L66",
+     "values": {
+      "age": 56,
+      "job": "admin.",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 16873,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 7,
+      "month": "oct",
+      "duration": 223,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L68",
+     "values": {
+      "age": 31,
+      "job": "services",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 338,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 28,
+      "month": "jan",
+      "duration": 155,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L69",
+     "values": {
+      "age": 29,
+      "job": "technician",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 444,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 21,
+      "month": "jul",
+      "duration": 130,
+      "campaign": 4,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L70",
+     "values": {
+      "age": 41,
+      "job": "management",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 0,
+      "housing": "no",
+      "loan": "yes",
+      "contact": "cellular",
+      "day": 7,
+      "month": "jul",
+      "duration": 630,
+      "campaign": 3,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L71",
+     "values": {
+      "age": 32,
+      "job": "technician",
+      "marital": "single",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 360,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 19,
+      "month": "nov",
+      "duration": 164,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L75",
+     "values": {
+      "age": 41,
+      "job": "services",
+      "marital": "married",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 412,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "unknown",
+      "day": 3,
+      "month": "jun",
+      "duration": 154,
+      "campaign": 5,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "contact",
+       "value": "unknown"
+      },
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L76",
+     "values": {
+      "age": 56,
+      "job": "retired",
+      "marital": "married",
+      "education": "secondary",
+      "default": "no",
+      "balance": 344,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "unknown",
+      "day": 15,
+      "month": "may",
+      "duration": 221,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "contact",
+       "value": "unknown"
+      },
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L77",
+     "values": {
+      "age": 54,
+      "job": "management",
+      "marital": "divorced",
+      "education": "tertiary",
+      "default": "no",
+      "balance": 3222,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 14,
+      "month": "aug",
+      "duration": 67,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L79",
+     "values": {
+      "age": 40,
+      "job": "technician",
+      "marital": "single",
+      "education": "secondary",
+      "default": "no",
+      "balance": 591,
+      "housing": "no",
+      "loan": "yes",
+      "contact": "cellular",
+      "day": 14,
+      "month": "aug",
+      "duration": 87,
+      "campaign": 6,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L82",
+     "values": {
+      "age": 27,
+      "job": "admin.",
+      "marital": "divorced",
+      "education": "secondary",
+      "default": "no",
+      "balance": 451,
+      "housing": "yes",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 16,
+      "month": "jul",
+      "duration": 652,
+      "campaign": 1,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
+    },
+    {
+     "row_key": "L83",
+     "values": {
+      "age": 60,
+      "job": "retired",
+      "marital": "married",
+      "education": "primary",
+      "default": "no",
+      "balance": 5,
+      "housing": "no",
+      "loan": "no",
+      "contact": "cellular",
+      "day": 26,
+      "month": "aug",
+      "duration": 63,
+      "campaign": 2,
+      "pdays": -1,
+      "previous": 0,
+      "poutcome": "unknown"
+     },
+     "specials": [
+      {
+       "column": "pdays",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "value": "unknown"
+      }
+     ]
     }
-   ]
-  },
-  "note": {
-   "text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored after the split, on the rows it leaves for exploration. The test is reserved by the protocol; the local source file remains accessible. Confirmations are agent-reported, not independently authenticated. Cross-study history is not enforced.",
-   "audience": "junior",
-   "junior_text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored after the split, on the rows it leaves for exploration. The test is reserved by the protocol; the local source file remains accessible. Confirmations are agent-reported, not independently authenticated. Cross-study history is not enforced."
+   ],
+   "truncated": true
   }
  }
 }

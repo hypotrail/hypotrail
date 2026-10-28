@@ -11,6 +11,8 @@
     uncertain_excluded: 'uncertain, left out', not_available: 'not available',
   };
   const data = task => ({
+    // R1b (owner session 2026-10-26): the heading of the data card's section.
+    cardTitle: 'Data card',
     eyebrow: 'The data · structural reading',
     structural: task === 'regression' ? 'no target figure' : 'no outcome read',
     oneRowIs: unit => `One row: ${unit}`,
@@ -184,7 +186,7 @@
     empty: 'No exploration yet. EDA runs after the split is confirmed.',
     galleryLabel: 'Registered EDA results',
     stale: 'Stale · not cited',
-    chipLabel: rid8 => `Open result ${rid8} in Evidence`,
+    chipLabel: rid8 => `Where result ${rid8} comes from`,
     specialTitle: 'Special values',
     specialTable: 'Special values, training rows',
     together: (a, b) => [`${a} and ${b} are the same `, ' rows.'],
@@ -235,9 +237,19 @@
         '): more than chance alone usually draws, although about one look in twenty does so by chance.'],
       bandInside: ['The spread between groups, ', ', stays within what the ', ' shuffles of the outcome draw (up to ',
         '): it cannot be told apart from chance.'],
+      // The question of the chart before it runs: the engine's own question of that activity
+      // (mlkit/study/eda.py `question`), so the request card and the card the run adds to the
+      // gallery say the same thing (test/eda.test.js checks it against the captured results).
       requestQuestion: (activity, column) => (activity === 'eda.distribution'
-        ? `How are the values of ${column} spread on the training rows? Are there extreme values?`
-        : `Does the outcome rate differ across the values of ${column} on the training rows, by more than chance draws?`),
+        ? `How are the values of ${column} distributed among the training rows?`
+        : `Does the positive rate differ across the groups of ${column} by more than chance alone draws?`),
+      // Under cross-validation the engine words its questions for the development rows.
+      cv: {
+        ...common.cv,
+        requestQuestion: (activity, column) => (activity === 'eda.distribution'
+          ? `How are the values of ${column} distributed among the development rows?`
+          : `Does the positive rate differ across the groups of ${column} by more than chance alone draws?`),
+      },
       targetTitle: target => `Target · ${target}`,
       targetChart: target => `Outcome ${target}, training rows`,
       targetLine: ['', ' ', ' · ', ' of ', ' rows'],
@@ -267,8 +279,14 @@
       bandInside: ['The spread between the group means, ', ', stays within what the ', ' shuffles of the target draw (up to ',
         '): it cannot be told apart from chance.'],
       requestQuestion: (activity, column) => (activity === 'eda.distribution'
-        ? `How are the values of ${column} spread on the training rows? Are there extreme values?`
-        : `Does the target mean differ across the values of ${column} on the training rows, by more than chance draws?`),
+        ? `How are the values of ${column} distributed among the training rows?`
+        : `Does the mean target differ across the groups of ${column} by more than chance alone draws?`),
+      cv: {
+        ...common.cv,
+        requestQuestion: (activity, column) => (activity === 'eda.distribution'
+          ? `How are the values of ${column} distributed among the development rows?`
+          : `Does the mean target differ across the groups of ${column} by more than chance alone draws?`),
+      },
       targetTitle: target => `Target · ${target}`,
       summaryChart: target => `Distribution of the target ${target}, training rows`,
       summaryTerm: 'Target distribution',

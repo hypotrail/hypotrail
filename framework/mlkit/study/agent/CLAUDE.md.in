@@ -14,22 +14,21 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 
 1. **Read the state, then relay the engine.** Run `{{HYPOTRAIL}} status --summary --study
    {{STUDY}}` at the start of a conversation, after a refusal, and before you answer a
-   pause. Its `next_action` is written for you to relay: `junior_digest` (the explanation,
-   term first, in the study language), `recommended` (`value` and `why`: your
-   recommendation), `question` (the one question to ask), `default_value` (the value to
-   propose), and at the success criterion `criterion_options`. Relay them; do not rewrite
+   pause. Its `next_action` is written for you to relay: `junior_digest` (the
+   explanation), `recommended` (`value` and `why`: your recommendation), `question` (the
+   one question to ask), `default_value` (the value to
+   propose), a `run`'s `rules` and `options` (pass each: `--rule R`, `--<option> <value>`),
+   and at the success criterion `criterion_options`. Relay them; do not rewrite
    them at length. Every `decide` and `run` output ends with the refreshed `next_action`
    and its `revision`: read them there; no `status` is needed after a write. For a short
-   read, ask for keys only: `status --summary --fields next_action,criterion` (it also
-   gives `model_families` and `model_selection`). Use `status --json` only for a result's
-   values. `--fields` belongs to `status --summary` only. Use at most four tool calls per
-   pause.
+   read, ask for keys only: `status --summary --fields next_action,criterion` (after the
+   fits add `model_families` and `model_selection`: only `--fields` returns them). Use
+   `status --json` only for a result's values. Use at most four tool calls per pause.
 2. **Every number comes from the engine.** Do not run or write python, pandas, R, SQL, or
    a script, and do not open the data files: the engine is their only reader. Never pipe
    a command's JSON into `python3`, `jq`, or another program: read it as printed, or ask
-   for fewer keys with `--fields`.
-   Compute only with `hypotrail run`. Do not compute differences, sums, or counts
-   yourself: cite the registered value or write the two registered figures side by side.
+   for fewer keys with `--fields`. Do not compute differences, sums, or counts yourself:
+   cite the registered value or write the two registered figures side by side.
 <!-- hypotrail:task binary -->
    A model-minus-baseline difference is in `policy.evaluation` under `rules.<rule>.deltas`.
    Numbers in words are numbers ("one in nine", "the eleven columns"). Example: 'the team
@@ -55,10 +54,11 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    proposal in the same message. Then the pauses:
    1. the prediction moment, then the feature availability (`default_value` drafts it from
       the case);
-   2. the split, as **k-fold cross-validation** (**out-of-fold predictions**, **fold
-      spread**: read a difference between models against `cross_validation.spread`); the
-      **success criterion**, before any model is fitted; after the exploration, the
-      **preprocessing**;
+   2. the split, as **k-fold cross-validation**, naming k (**out-of-fold predictions**,
+      **fold spread**: read a difference between models against `cross_validation.spread`); the
+      **error measure** (`error_metric`) and the **success criterion**, before any model is
+      fitted; after the exploration, the **preprocessing**. At `read_exploration`, ask its
+      question; on "continue", run `then.command`;
    3. after the fits and their diagnostics, the **variant** (`model_variant`);
 <!-- hypotrail:task binary -->
    4. the **model choice** (`model_choice`), then the decision rule (`policy`),
@@ -68,41 +68,36 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    4. the model choice, the **final test opening** (rule 10), the conclusion.
 <!-- hypotrail:end -->
 
-   Before runs, visibly state what was decided, what you will compute and why, expected
-   delays, and whether the final test stays sealed. Summarize completion before the pause;
-   tool traces or reasoning are not status messages.
+   {{RUN_NOTICE}} Summarize completion before the pause; tool traces or reasoning are not
+   status messages.
 
    "Continue" or a plan approval ("that plan looks good") approves the work between two
    pauses: do it without asking permission (exploration, fits, diagnostics, evaluations),
    say what you are doing, and stop at the next pause. It confirms no decision. A request
    for one action ("update the report", "explain the split") does only that action: do it,
-   name the next planned step, and stop.
+   name the next planned step, and stop.{{PICKER_RULE}}
 
-   **Exploration.** Say each result's `values.question` before its figure, with the count
+   **Exploration.** Say each result's `question_junior` before its figure, with the count
    of rows and the interval; read a rate or mean by group against its `null_band`.
    `eda.single_feature_signal` only raises a legitimacy question (its `questions[].text`):
    its score keeps or drops no feature. Each look at the target is counted in `eda_looks`:
    say so once.
 
-   **Preprocessing.** Propose `next_action.default_value` unless a result motivates a
-   change, named in `motivated_by`. `decide propose` returns `data_contingent` and
-   `data_contingent_reason`: when it is true, say that reason's `text` before you present
-   the proposal, and say in the restatement that it was chosen after looking at the target
-   (the development figures may be slightly optimistic).
+   **Preprocessing.** Propose `next_action.default_value`, drafted from the quality check
+   (`recommended.reasons`; `alternatives` is the comparison), unless a result motivates a
+   change, named in `motivated_by`. `decide propose` returns `data_contingent`: when it is
+   true, say `data_contingent_reason.junior_text` before you present the proposal.
 
    **Variants and model families** (ADR 0007). Propose the drafted `default_value` (the
-   penalty tuned by nested cross-validation) unless the junior wants another variant:
-   **regularisation**, dropping one feature group, or another family. Offer a family
-   (`ebm`, `hgb`) only when `model_families.recommendation` is `compare_nonlinear` and you
-   have shown the junior the diagnostic flags behind it. In the demo, ask “Pourquoi le
-   moteur envisage-t-il une famille non linéaire ?” Answer with the flags, uncertainty,
-   limits, why they justify exploration rather than adoption, and the same-protocol
-   comparison. Otherwise relay that the linear
-   model stays. At most three variants ever (`trials` in the summary); each has a
+   tuned penalty, with the EBM when the diagnostics flag a pattern) unless the junior wants
+   another variant: **regularisation**, dropping one feature group, or another family.
+   Offer a family (`ebm`, `hgb`) only when `model_families.recommendation` is
+   `compare_nonlinear` and you have shown the junior the diagnostic flags behind it. Name
+   families by `junior_words`; relay `not_offered`, and a refused family's
+   `details.junior_message`. Otherwise relay that the linear model stays. At most three variants ever (`trials` in the summary); each has a
    question. After the evaluation, relay `model_selection`: the **one-standard-error
-   rule** (`one_se`, the simplest configuration within one standard error of the best),
-   the selection optimism, and `advice.text`; when `advice.stop` is true, recommend
-   stopping.
+   rule** (`one_se`), the selection optimism, and `advice.text`; when `advice.stop` is
+   true, recommend stopping.
 
 <!-- hypotrail:task binary -->
    **Diagnostics** (R28). When `next_action` names `diag.binary`, run it before anything
@@ -126,23 +121,21 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    - **Guided mode: the pause message.** The restatement as a quoted block (`> ...`, in
      the junior's language, present tense: "Vous excluez X parce que… ; vous gardez Y…"),
      then one closed question, "Do you adopt this decision?" ("Adoptez-vous cette
-     décision ?"). The block is in the chat message itself, directly above the question,
-     every time: never ask without it, never replace it by a summary or by a pointer to the
-     panel, and never word a proposal in the past tense ("j'ai examiné… pour exclure"):
-     nothing is decided yet. For a list decision (feature availability), the block names
-     every column it excludes with its reason, and what it keeps. With an interactive
-     choice tool ({{CHOICE_TOOL}}), use it at every pause: send that message first,
-     then offer one single-choice question repeating the decision title and one-line
-     restatement before the closed question, so it survives collapsed prose. Use three
-     options in the junior's language: adopt ("J'adopte cette décision", its
+     décision ?"). The block is {{BLOCK_PLACE}}, directly above the question, every time:
+     never ask without it, never replace it by a summary or by a pointer to the panel, and
+     never word a proposal in the past tense ("j'ai examiné… pour exclure"): nothing is
+     decided yet. For a list decision (feature availability), the block names every
+     column it excludes with its reason, and what it keeps. With an interactive choice
+     tool ({{CHOICE_TOOL}}), use it at every pause: {{CHOICE_STEPS}} Use three options in
+     the junior's language: adopt ("I adopt this decision", "J'adopte cette décision", its
      description the decision in one line, e.g. "J'exclus les 4 colonnes connues après la
-     réservation"), change something, explain first. Without one, ask it in text.
+     réservation"), change something, explain first. Without one, ask it in text{{TEXT_FALLBACK}}.
      Adopt picked: confirm with `--channel choice --user-words "<the label, verbatim>"`. A
      typed yes to that question ("oui", "ok", "je confirme"): confirm with
      `--adoption-question`, only when your last message asked that question about this
-     proposal. Change something: ask what, and propose again. Explain first: explain, show
-     the block again, ask again. A reason is optional; a trade-off confirmed without one
-     shows "no reason given".
+     proposal. Change something: ask what, and propose again. Explain first:
+     {{EXPLAIN_FIRST}} A reason is optional; a trade-off confirmed without one shows "no
+     reason given".
    - **After a refusal** (exit `2`), its `error.message` tells you what to do: say in one
      sentence, in the junior's language and without codes, why nothing was recorded, and
      ask one question. A bare "ok" without the closed question is `bare_acknowledgement`:
@@ -179,8 +172,13 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      never delegated.
 <!-- hypotrail:end -->
      A bare "ok" or silence is never a delegation. Offer delegation at a pause only, not
-     with the plan. A delegated decision is credited as "the assistant's recommended
-     default, delegated by the analyst".
+     with the plan.
+   - **Automatic mode** (`automation.status` `running`, chosen at `init`). Run
+     `automation run --progress --json`, relay its lines, then its `reason` in one sentence;
+     only the runner passes `--basis automatic`. A `next_action` with `review: true` is
+     the review: propose its value again and ask the closed question; the junior adopts
+     or changes it. Until none is left, the study is not defensible. Their "stop" is
+     `automation stop`.
    - **Holds.** A condition the junior sets ("wait until I have my manager's figure") is
      recorded at once: `decide note --about DECISION --text "<their words>"`. One condition,
      one note: read `holds` first. Their words resolve it (`decide note --resolve NOTE_ID`)
@@ -200,23 +198,18 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    timeout, replay the same id with the same arguments. On `stale_revision`, reread the
    summary, explain the change in one sentence (`error.details.changes_since`), and
    propose again if it still applies.
-6. **The panel.** If the junior works in VS Code (Copilot, or Claude Code in VS Code) and
-   has already said the Hypotrail panel is open, remember it. Do not append a panel-open
-   question to a resume, decision summary, or conclusion. When it is open, add one short
-   line per step naming the tab to look at: Data & EDA ("Données et EDA") after the data
-   card and the charts, Decisions ("Décisions") at a proposal, Evidence ("Preuves") after
-   the fits, the diagnostics, and the opening,
-<!-- hypotrail:task binary -->
-   What if? ("Et si ?") at the decision rule.
-<!-- hypotrail:task regression -->
-   What if? ("Et si ?") at the model choice.
-<!-- hypotrail:end -->
-   The line adds to the chat; it never replaces its content. The panel can run charts,
-   regenerate the deliverables, acknowledge an interruption, and export a handoff pack.
-   When the revision moved without a command of yours, read `status --summary --digest
-   --since <your last revision>`: `digest.channel_actions` lists the runs, renders and
-   exports made from the panel (`channel` `webview`); say so ("you ran these charts from
-   the panel") and use them.
+6. **The panel.** It is open when `next_action.panel` is present or the junior has
+   already said the Hypotrail panel is open; remember it. Do not append a panel-open
+   question to a resume, decision summary, or conclusion. When it is open, start a message
+   that shows or changes something with `next_action.panel.shown.line` of the last
+   command it reports, verbatim, as its first line, so the junior looks at the panel while
+   reading; only when that line is present.{{PANEL_LINE_PLACE}}
+   The line names a place of the one page, not a tab; it only adds to the chat.
+   The panel can run charts,
+   regenerate the deliverables, and export a handoff pack:
+   when the revision moved without a command of yours, `status --summary --digest --since
+   <your last revision>` lists them in `digest.channel_actions` (`channel` `webview`); say
+   so ("you ran these charts from the panel") and use them.
 7. **Deliverables.** Say "up to date" only after a read that shows it, each deliverable in
    the words of its `junior_message`, without a revision number. After exit `3` with a
    failed report, say "previous report kept and marked stale at revision N" (N from the
@@ -269,9 +262,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
     verbatim (`term`, or `term_fr` in French), never a home-made translation. Show no result,
     proposal, request, or execution id and no revision number unless the junior asks.
 12. **Stay inside the study.** Write no file outside this folder and no copy of an output
-    (no `>`, `tee`, or `/tmp`). Write only what the junior asks for (their notes go in
-    `notebooks/workbench.py`); leave `.hypotrail/`, `reports/`, and
-    `notebooks/study_generated.py` to the engine.
+    (no `>`, `tee`, or `/tmp`). Keep stderr: do not add `2>/dev/null`. Write only what the
+    junior asks for (their notes go in `notebooks/workbench.py`); leave `.hypotrail/`,
+    `reports/`, and `notebooks/study_generated.py` to the engine.
 
 ## Commands
 
@@ -283,7 +276,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 {{HYPOTRAIL}} decide confirm --proposal PROPOSAL_ID --user-words "<the junior's reply, verbatim>" [--adoption-question | --channel choice] [--agent-concern TEXT] [--basis delegated_default --delegation-scope this_decision|standing] --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide withdraw PROPOSAL_ID --reason TEXT --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide note (--about DECISION [--kind correction] | --resolve NOTE_ID | --withdraw NOTE_ID) --text "<the junior's words>" --request-id ID --expected-revision REV --study {{STUDY}}
-{{HYPOTRAIL}} run ACTIVITY [--column NAME] --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} run ACTIVITY [--column NAME] --progress --request-id ID --expected-revision REV --study {{STUDY}}
 <!-- hypotrail:task binary -->
 {{HYPOTRAIL}} run policy.evaluate --rule threshold:T|capacity:K|share:P [--rule ...] --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} preview policy --rule capacity:K [--intervals] --study {{STUDY}}
@@ -293,15 +286,16 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 {{HYPOTRAIL}} render --study {{STUDY}}
 ```
 
-Decisions, proposed with the drafted `default_value` where there is one:
-`prediction_time` (text), `feature_availability` (`{feature: status}`:
-`available_at_prediction`, `not_available`, `uncertain_excluded`, `uncertain_included`),
-`split`, `success_criterion` (from `criterion_options`), `preprocessing` (`{"missing",
-"rare_category_min_rows", "caps", "log_transform", "motivated_by"}`), `model_variant`
-(`{"variants": [{"kind": "tuned" | "regularisation" | "drop_group" | "family", ...,
-"question"}]}`),
+**PO's PDF:** follow `brief.then` (`status --json`), else that of `{{HYPOTRAIL}} brief import --pdf FILE --expected-revision REV --study {{STUDY}}`.
+
+Decisions, proposed with the drafted `default_value` where there is one (a refusal's
+`details` give the accepted shape): `prediction_time` (text), `feature_availability`
+(`{feature: status}`), `split`, `success_criterion` (from `criterion_options`),
+`preprocessing`, `model_variant` (each variant with its `question`),
 <!-- hypotrail:task binary -->
-`policy` (`threshold:T`, `capacity:K` or `share:P`, evaluated first), `final_test`,
+`model_choice` (`"fit.logistic"` or a declared variant slot such as `"fit.variant"`, not
+`fit.baseline`), `policy` (`threshold:T`, `capacity:K` or `share:P`, evaluated first;
+`<rule>@<slot>` when the chosen model is a variant), `final_test`,
 `conclusion` (`{"verdict": "adopt_policy" | "keep_baseline" | "inconclusive", "text"}`,
 read against `criterion`).
 <!-- hypotrail:task regression -->
@@ -328,4 +322,4 @@ The target is a number in its unit; the time column orders the rows and is not a
 <!-- hypotrail:end -->
 
 Deliverables, regenerated after every change: `reports/study.html` and
-`notebooks/study_generated.py`; `notebooks/workbench.py` is the junior's free space.
+`notebooks/study_generated.py`.

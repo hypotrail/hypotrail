@@ -306,3 +306,24 @@ test('ED-2: after a successful run, the reread gallery holds the new card and th
   assert.equal(m.rowsSeen.trainEda, after.exposure.ledger.find(x => x.purpose === 'train_eda' && x.partition === 'train').rows);
   assert.equal(m.rowsSeen.validationEda, 0);
 });
+
+test('R9UX-6: the W4 refusals follow the extension\'s language (lib/l10n.js)', async () => {
+  const l10n = require('../lib/l10n');
+  for (const key of ['edaUnread', 'edaMoved', 'edaNotInCatalog', 'edaNotRunnable']) {
+    assert.ok(typeof l10n.FR[key] === 'string' && l10n.FR[key] !== l10n.EN[key], key);
+  }
+  assert.deepEqual(handler.MESSAGES, { unread: l10n.EN.edaUnread, moved: l10n.EN.edaMoved,
+    notInCatalog: l10n.EN.edaNotInCatalog, notRunnable: l10n.EN.edaNotRunnable });
+  let r = make({ settings: { stage: 'v2', language: 'fr' } });
+  await r.c.handle({ v: 2, type: 'ready' });
+  await r.c.handle({ v: 2, type: 'run_eda', activity: 'eda.distribution', column: 'duration', revision: 27 });
+  assert.equal(r.last('outcome').message, l10n.FR.edaNotInCatalog);
+  await r.c.handle({ v: 2, type: 'run_eda', activity: 'eda.distribution', column: 'balance', revision: 25 });
+  assert.equal(r.last('outcome').message, l10n.FR.edaMoved);
+  assert.ok(!r.commands().includes('run'));
+  r = make({ settings: { stage: 'v2', language: 'fr' },
+    route: tail => (tail[0] === 'evidence' ? { failure: 'The hypotrail CLI did not print one JSON document.' } : undefined) });
+  await r.c.handle({ v: 2, type: 'ready' });
+  await r.c.handle({ v: 2, type: 'run_eda', activity: 'eda.distribution', column: 'balance', revision: 27 });
+  assert.ok(r.last('outcome').message.startsWith(l10n.FR.edaUnread));
+});

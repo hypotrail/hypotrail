@@ -65,13 +65,18 @@
     "status": "done"
    },
    {
-    "id": "train_eda",
-    "title": "Explore the training partition",
+    "id": "structural_eda",
+    "title": "Check the structure of the data",
     "status": "done"
    },
    {
     "id": "preprocessing",
     "title": "Decide how the model prepares the variables",
+    "status": "done"
+   },
+   {
+    "id": "train_eda",
+    "title": "Explore the target on the training rows",
     "status": "done"
    },
    {
@@ -116,6 +121,11 @@
    "recommended": null,
    "question": "Do you adopt this decision?",
    "junior_digest": "Proposal on the decision policy: \"Call the 100 clients with the highest scores.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Rule (12 of 14).",
+   "evidence": [
+    "policy.evaluation",
+    "diag.binary"
+   ],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "decision",
@@ -123,8 +133,8 @@
     "revision": 50,
     "position": {
      "step_id": "final_test",
-     "completed": 11,
-     "total": 13
+     "completed": 12,
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -149,6 +159,11 @@
      "change",
      "explain"
     ],
+    "option_labels": {
+     "adopt": "I adopt this decision",
+     "change": "Change something",
+     "explain": "Explain first"
+    },
     "question": "Call the 100 clients with the highest scores.\n\nDo you adopt this decision?",
     "evidence_refs": [],
     "detail_topics": [
@@ -334,91 +349,91 @@
   },
   "results": {
    "diag.binary": {
-    "result_id": "141c7a9e61e8bebc92cdc5a39d8ce6587c0eb025433d21e0456834045d877f75",
+    "result_id": "afaa453cc8f7d53ad432be8dffee226bfdd66c8fd342bece0473c320a12625db",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.correlation": {
-    "result_id": "3b952dc39b09d382c86f1c119cc092ba62d814426a36266f15746edcd66e8d0c",
+    "result_id": "0dd6cba3e5a066eb8a4eee4fbddf77b7e67cc8554137559570b02270260865e2",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:age": {
-    "result_id": "d111d579bde4cc8148ea65993039108ed56994816e79b1e15904c3baf6089513",
+    "result_id": "e355985f3e935f00111229333a94078dafa8c1696a1d0214d8680c81824b32e2",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:job": {
-    "result_id": "7525eca97b6d36ac8d2cc17bb54ffa0ad444130c40dba8c0663244556a3efd1c",
+    "result_id": "38d11b8c56663281600d7990f032fb758103dce7808e196a2ab5d1f6e5d01070",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:previous": {
-    "result_id": "ffc2025643bb18e85248b86e631075d7d77b81e1e88ad07ea78daefc6d01a91a",
+    "result_id": "65258127a2d99e43bef73ec8f6c21faff933a9cd52110bdb5c7b5fa8fe484d27",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "6db0024401ac021fbf4ffe45c08d406fa9e0e69e4c2e46a0d19aa8a8aa399278",
+    "result_id": "bd0f5021d267175fb88d9d3d0b17c384c889601aa46e5faade5832b41d98b200",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.rate_by:job": {
-    "result_id": "ed070172cfb8fc97e3d437d5221cefe80ef5ea4713c114058ea2c8d5eef7cf02",
+    "result_id": "df1bd4e68b536adea82668704d986c02a293a6ef486f187e93a0e2c172c501f7",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "2aa4f23e368cca23256435e63c8fade057132579886b847ae17ad4b5f319af20",
+    "result_id": "54312bf6cfae81cf93c8a28ea71e6321eb0cff3612992b7ad87733dd880d68b0",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "73229100358bd1d33a6d14321c9016c5ed8dd5fbb03495ed2e0b596b54ed2ba3",
+    "result_id": "1fa97eb7e0b16b7eca521d7ef7fa0e03e5c41c1fe69e5c82e6cba0e9a4f65509",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_rate": {
-    "result_id": "3733bf690d37396585dd1d18b3347f1a1b95ce9fb16ab1a72645f1e75182683a",
+    "result_id": "80c0c7169535603c9a5e42355090ba21d341cfdc702654ea2b613c04a8fb7f01",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "fdce45ce2a1af25c20d76b8e3ff05858c4ade001d36eb73f27fb282d330bd073",
+    "result_id": "9abd65918f72482d5dccd75d48e58bc0253c45bdc4e6c6de0519a60b5e0f22fd",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.logistic": {
-    "result_id": "9862ea70cd991c27bc2d11c7748ee06c0514189636fbee20bd159298cecc7ad4",
+    "result_id": "3c6fd1dc403d60d9e2733e78500db47196ded2d65d48e4e73d854fc08bd96249",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "72ea4d078e01dc503ae3a4710f0c2adf0f594cd47f473b340831f928c482ecf5",
+    "result_id": "688c2df4c82592b31ada7e6b4ceeb8459c10e721ef7182c04f525aabbd3d83c4",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "policy.evaluation": {
-    "result_id": "97dd9c63fe5f2af78cd69db362849cf2a7803d241a944b124bab96c7890a2dd0",
+    "result_id": "7badf1dfdfc32377b33e9376f05c914cad989474d248eec173bac6b1581b493b",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "ae127b385abdb9c62ae1f016df8ade6783976f6f216c6f8be66e081e83c023d9",
+    "result_id": "911dd1efe7cca40b504db86c60b7d27be6a1930e02c0fbd9734dbe3437f94127",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -543,16 +558,16 @@
   "eda_looks": {
    "target_looks": 5,
    "results": [
-    "3733bf690d37396585dd1d18b3347f1a1b95ce9fb16ab1a72645f1e75182683a",
-    "73229100358bd1d33a6d14321c9016c5ed8dd5fbb03495ed2e0b596b54ed2ba3",
-    "2aa4f23e368cca23256435e63c8fade057132579886b847ae17ad4b5f319af20",
-    "ed070172cfb8fc97e3d437d5221cefe80ef5ea4713c114058ea2c8d5eef7cf02",
-    "141c7a9e61e8bebc92cdc5a39d8ce6587c0eb025433d21e0456834045d877f75"
+    "80c0c7169535603c9a5e42355090ba21d341cfdc702654ea2b613c04a8fb7f01",
+    "1fa97eb7e0b16b7eca521d7ef7fa0e03e5c41c1fe69e5c82e6cba0e9a4f65509",
+    "54312bf6cfae81cf93c8a28ea71e6321eb0cff3612992b7ad87733dd880d68b0",
+    "df1bd4e68b536adea82668704d986c02a293a6ef486f187e93a0e2c172c501f7",
+    "afaa453cc8f7d53ad432be8dffee226bfdd66c8fd342bece0473c320a12625db"
    ]
   },
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
-   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); model choice: the logistic model; policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result 97dd9c63).",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); model choice: the logistic model; policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result 7badf1df).",
    "Now: Open the final test once; the report and notebook are up to date.",
    "Next: whether you adopt the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."

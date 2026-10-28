@@ -88,6 +88,22 @@ def is_cv(view: Mapping) -> bool:
     return bool(item) and 'folds' in (item.get('blobs') or {})
 
 
+def is_explicit(view: Mapping) -> bool:
+    """Review round 3: whether the current split is a review-v1 explicit row-membership plan
+    (each fold fitted on its own training rows, warm-up rows never scored), not folds that
+    are each predicted by a model of the other folds."""
+    item = _current(view, 'split')
+    return bool(item) and 'evaluation_plan' in (item.get('blobs') or {})
+
+
+def delayed_labels(view: Mapping) -> Mapping | None:
+    """Review round 3 (E3-1): the delayed-label rows the current split left out
+    (``values.training_exclusions``: ``{n_rows, reasons, note}``), or None."""
+    item = _current(view, 'split')
+    found = (item or {}).get('values', {}).get('training_exclusions') if item else None
+    return found if isinstance(found, Mapping) and found.get('n_rows') else None
+
+
 def _ident(column: str, suffix: str, taken: set[str]) -> str:
     """A Python name for a cell variable about ``column`` (``<column>_<suffix>``), unique in
     the notebook (Marimo refuses a name defined by two cells)."""
@@ -112,11 +128,31 @@ def _special_mask(frame: str, column: str, value: Any, na_values: tuple) -> str:
     return f'{frame}[{q(column)}] == {q(value)}'
 
 
+DELAYED_LABEL_ROWS = '''
+# A delayed label is an outcome that becomes known only some time after the prediction is
+# made. A development row whose outcome arrives at or after the start of the final test had
+# no known label at the decision time: its "partition" is "delayed_label", and no look at the
+# target, no split and no fit reads it (the structural checks, without the target, still do).
+# This study's example:
+print(nv.delayed_labels_text(study))
+delayed_label_rows = development[development["partition"] == "delayed_label"]'''
+
+
 def rows_cell(view: Mapping) -> tuple[str, str]:
-    """The development rows, loaded once; every exploration cell reads them."""
-    return 'explore_rows', '''# Development rows: the rows you may explore and fit on. The final test stays sealed and
+    """The development rows, loaded once; every exploration cell reads them.
+
+    Review round 3 (E3-1): when the split left delayed-label rows out, the cell says so (the
+    term first, then this study's example) and names them; the cells that read the target or
+    fit read the split's rows (``train``, ``validation``) only."""
+    if delayed_labels(view) is None:
+        return 'explore_rows', '''# Development rows: the rows you may explore and fit on. The final test stays sealed and
 # is never loaded here. "partition" says what the split does with each row.
 development = nv.development_frame(study, RESULT_IDS["split"])
+development.head()'''
+    return 'explore_rows', '''# Development rows: every row outside the sealed final test, which is never loaded here.
+# "partition" says what the split does with each row: its "train" and "validation" rows are
+# the ones you may explore the target on and fit on.
+development = nv.development_frame(study, RESULT_IDS["split"])''' + DELAYED_LABEL_ROWS + '''
 development.head()'''
 
 
@@ -176,27 +212,58 @@ def split_cell(view: Mapping, task: str) -> tuple[str, str] | None:
     # The registry entry must hold what the cell reads: the row keys of both partitions.
     if item is None or not {'train', 'validation'} <= set(item.get('blobs') or {}):
         return None
+    delayed = delayed_labels(view) is not None
+    # Review round 3 (E3-1): the delayed-label rows are development rows the split holds none
+    # of; they are counted against the split's own record of them.
+    excluded = ('\nassert len(delayed_label_rows) == split["training_exclusions"]["n_rows"]'
+                if delayed else '')
+    if is_explicit(view):
+        # Review round 3: the registered review-v1 plan, read as the engine reads it.
+        code = f'''# The registered evaluation plan: each fold is fitted on its own training rows
+# (the rows before its window, a gap apart) and scores its validation window only; the
+# earliest rows train but are never scored. "folds" says which window scores each row.
+split = nv.values(study, RESULT_IDS["split"])
+folds = nv.folds(study, RESULT_IDS["split"])
+evaluation_plan = nv.evaluation_plan(study, RESULT_IDS["split"])
+# The rows the split holds: every development row{" but the delayed-label ones" if delayed else ""}.
+train = development[development["partition"] == "train"]
+validation = train
+fold_counts = folds.value_counts().sort_index()
+
+assert len(train) == split["n_rows"]{excluded}
+assert len(folds) == split["n_scored"]
+for _fold, _item in zip(evaluation_plan["folds"], split["fold_rows"]):
+    assert len(_fold["validation_keys"]) == _item["n_rows"] == fold_counts[_item["fold"]]
+    assert len(_fold["train_keys"]) == _item["n_train"]
+fold_counts.to_frame("rows")'''
+        return 'recompute_split', code
     if is_cv(view):
+        rows = ('train = development[development["partition"] == "train"]\n'
+                'validation = train' if delayed else
+                'train = development\nvalidation = development')
+        held = ('# The rows the split holds: every development row but the delayed-label ones.\n'
+                if delayed else '')
         code = f'''# Cross-validation: every development row is explored, and each fold is predicted by a
 # model fitted on the other folds. "folds" says which fold each row belongs to.
 split = nv.values(study, RESULT_IDS["split"])
 folds = nv.folds(study, RESULT_IDS["split"])
-train = development
-validation = development
+{held}{rows}
 fold_counts = folds.value_counts().sort_index()
 
-assert len(development) == split["n_rows"]
+assert len(train) == split["n_rows"]{excluded}
 for _item in split["fold_rows"]:
     assert fold_counts[_item["fold"]] == _item["n_rows"]
 fold_counts.to_frame("rows")'''
         return 'recompute_split', code
+    total = ('assert len(train) + len(validation) == split["n_rows"]' if delayed
+             else 'assert len(development) == split["n_rows"]')
     code = f'''split = nv.values(study, RESULT_IDS["split"])
 # "partition" says whether each row trains the models or validates them.
 train = development[development["partition"] == "train"]
 validation = development[development["partition"] == "validation"]
 partition_counts = development["partition"].value_counts()
 
-assert len(development) == split["n_rows"]
+{total}{excluded}
 assert partition_counts["train"] == split["partitions"]["train"]["n_rows"]
 assert partition_counts["validation"] == split["partitions"]["validation"]["n_rows"]
 partition_counts.to_frame("rows")'''
@@ -489,8 +556,10 @@ def preparation_steps(values: Mapping) -> str | None:
         lines += [f'# Missing-value indicator for {column}: 1 where the cell is empty.',
                   f'X_train[{q(name)}] = train[{q(column)}].isna().astype(int).to_numpy()',
                   f'X_validation[{q(name)}] = validation[{q(column)}].isna().astype(int).to_numpy()']
-    k = value.get('rare_category_min_rows')
+    rare = value.get('rare_category_min_rows')
     for column in fitted.get('rare_categories') or {}:
+        # L8 (R6): one minimum for every column, or the column's own.
+        k = rare.get(column, 0) if isinstance(rare, Mapping) else rare
         lines += [f'# Categories of {column} with fewer than {k} training rows are grouped as '
                   f'"(rare)" (a category unseen in training too).',
                   f'_counts = X_train[{q(column)}].dropna().astype(str).value_counts()',
@@ -551,7 +620,12 @@ def _per_fold_asserts(item: Mapping, column: str, key: str) -> str:
 def cv_fit_cell(view: Mapping, task: str, target: str, positive: Any,
                 slot: str, item: Mapping) -> tuple[str, str] | None:
     """WP-B1: the candidate's out-of-fold metric, recomputed fold by fold: each fold is
-    predicted by a model fitted (with its preparation) on the other folds."""
+    predicted by a model fitted (with its preparation) on the other folds. Review round 3:
+    under a review-v1 explicit plan, each fold is fitted on its registered training rows and
+    scores its validation window (:func:`explicit_fit_cell`). The rows are the split's
+    (``train``): a delayed-label row is never fitted on or scored."""
+    if is_explicit(view):
+        return explicit_fit_cell(view, task, target, positive, slot, item)
     head = f'''candidate = nv.values(study, RESULT_IDS[{q(slot)}])
 # Cross-validation: each fold is predicted by a model fitted on the other folds, the
 # preparation of the variables learnt on those rows too. Every development row gets one
@@ -560,13 +634,13 @@ print(nv.preprocessing_words(study, RESULT_IDS[{q(slot)}]))
 {CV_PIPELINE}
 '''
     if task == 'regression':
-        code = head + f'''y_validation = pd.to_numeric(development[{q(target)}])
-prediction = np.zeros(len(development))
+        code = head + f'''y_validation = pd.to_numeric(train[{q(target)}])
+prediction = np.zeros(len(train))
 fold_rows = []
 for _fold in sorted(folds.unique()):
     _held = (folds == _fold).to_numpy()
-    _X_fit, _X_held = nv.model_inputs(study, RESULT_IDS[{q(slot)}], development[~_held],
-                                      development[_held])
+    _X_fit, _X_held = nv.model_inputs(study, RESULT_IDS[{q(slot)}], train[~_held],
+                                      train[_held])
     _model = Pipeline([("prepare", _prepare_columns(_X_fit)), ("model", LinearRegression())])
     _model.fit(_X_fit, y_validation[~_held])
     prediction[_held] = _model.predict(_X_held)
@@ -584,13 +658,13 @@ assert abs(validation_mae - candidate["validation"]["mae"]) < FIT_TOLERANCE
     if not isinstance(seed, int):
         return None
     solver = _solver_arg(item)
-    code = head + f'''y_validation = {_positive_expr("development", target, positive)}.astype(int)
-score = np.zeros(len(development))
+    code = head + f'''y_validation = {_positive_expr("train", target, positive)}.astype(int)
+score = np.zeros(len(train))
 fold_rows = []
 for _fold in sorted(folds.unique()):
     _held = (folds == _fold).to_numpy()
-    _X_fit, _X_held = nv.model_inputs(study, RESULT_IDS[{q(slot)}], development[~_held],
-                                      development[_held])
+    _X_fit, _X_held = nv.model_inputs(study, RESULT_IDS[{q(slot)}], train[~_held],
+                                      train[_held])
     _model = Pipeline([
         ("prepare", _prepare_columns(_X_fit)),
         ("model", LogisticRegression(max_iter=1000, random_state={seed}{solver})),
@@ -604,6 +678,78 @@ for _fold in sorted(folds.unique()):
 fold_table = pd.DataFrame(fold_rows).set_index("fold")
 validation_auc = roc_auc_score(y_validation, score)
 print(f"Out-of-fold AUC: {{validation_auc:.4f}}")
+
+assert abs(validation_auc - candidate["validation"]["roc_auc"]) < FIT_TOLERANCE
+{_per_fold_asserts(item, 'auc', 'roc_auc')}fold_table'''
+    return 'recompute_model', code
+
+
+def explicit_fit_cell(view: Mapping, task: str, target: str, positive: Any,
+                      slot: str, item: Mapping) -> tuple[str, str] | None:
+    """Review round 3: the candidate's metric under a review-v1 explicit plan, as
+    :func:`mlkit.study.fit.compute_explicit_cv` computes it: each fold of the registered plan
+    is fitted (with its preparation) on its ``train_keys`` and scores its
+    ``validation_keys``; the metric pools every scored row. ``y_validation`` and the
+    predictions are in the order of ``folds`` (the scored rows in file order), which the
+    policy cell reads."""
+    head = f'''candidate = nv.values(study, RESULT_IDS[{q(slot)}])
+# The registered plan: each fold is fitted on its own training rows, the preparation of the
+# variables learnt on those rows too, and scores its validation window. Warm-up rows train
+# but get no prediction.
+print(nv.preprocessing_words(study, RESULT_IDS[{q(slot)}]))
+{CV_PIPELINE}
+'''
+    if task == 'regression':
+        code = head + f'''y_rows = pd.to_numeric(train[{q(target)}])
+prediction = pd.Series(np.nan, index=folds.index)
+fold_rows = []
+for _fold in evaluation_plan["folds"]:
+    _fit, _held = _fold["train_keys"], _fold["validation_keys"]
+    _X_fit, _X_held = nv.model_inputs(study, RESULT_IDS[{q(slot)}], train.loc[_fit],
+                                      train.loc[_held])
+    _model = Pipeline([("prepare", _prepare_columns(_X_fit)), ("model", LinearRegression())])
+    _model.fit(_X_fit, y_rows.loc[_fit])
+    prediction.loc[_held] = _model.predict(_X_held)
+    fold_rows.append({{"fold": _fold["id"], "rows": len(_held),
+                      "mae": mean_absolute_error(y_rows.loc[_held], prediction.loc[_held])}})
+# One row per fold: its rows and the error of its predictions.
+fold_table = pd.DataFrame(fold_rows).set_index("fold")
+# Every scored row, in the order of "folds".
+y_validation = y_rows.loc[folds.index]
+prediction = prediction.loc[folds.index].to_numpy()
+validation_mae = mean_absolute_error(y_validation, prediction)
+print(f"Mean absolute error over the scored windows: {{validation_mae:.4f}}")
+
+assert abs(validation_mae - candidate["validation"]["mae"]) < FIT_TOLERANCE
+{_per_fold_asserts(item, 'mae', 'mae')}fold_table'''
+        return 'recompute_model', code
+    seed = (item.get('params') or {}).get('seed')
+    if not isinstance(seed, int):
+        return None
+    solver = _solver_arg(item)
+    code = head + f'''y_rows = {_positive_expr("train", target, positive)}.astype(int)
+score = pd.Series(np.nan, index=folds.index)
+fold_rows = []
+for _fold in evaluation_plan["folds"]:
+    _fit, _held = _fold["train_keys"], _fold["validation_keys"]
+    _X_fit, _X_held = nv.model_inputs(study, RESULT_IDS[{q(slot)}], train.loc[_fit],
+                                      train.loc[_held])
+    _model = Pipeline([
+        ("prepare", _prepare_columns(_X_fit)),
+        ("model", LogisticRegression(max_iter=1000, random_state={seed}{solver})),
+    ])
+    _model.fit(_X_fit, y_rows.loc[_fit])
+    score.loc[_held] = _model.predict_proba(_X_held)[:, 1]
+    _y = y_rows.loc[_held]
+    fold_rows.append({{"fold": _fold["id"], "rows": len(_held),
+                      "auc": roc_auc_score(_y, score.loc[_held]) if _y.nunique() == 2 else None}})
+# One row per fold: its rows and the AUC of its predictions.
+fold_table = pd.DataFrame(fold_rows).set_index("fold")
+# Every scored row, in the order of "folds".
+y_validation = y_rows.loc[folds.index]
+score = score.loc[folds.index].to_numpy()
+validation_auc = roc_auc_score(y_validation, score)
+print(f"AUC over the scored windows: {{validation_auc:.4f}}")
 
 assert abs(validation_auc - candidate["validation"]["roc_auc"]) < FIT_TOLERANCE
 {_per_fold_asserts(item, 'auc', 'roc_auc')}fold_table'''
@@ -752,10 +898,25 @@ assert abs(precision - at_rule["precision"]) < TOLERANCE'''
 def baseline_error_cell(view: Mapping, target: str) -> tuple[str, str] | None:
     if _current(view, 'evaluate.regression') is None or _current(view, 'fit.linear') is None:
         return None
+    if is_explicit(view):
+        # Review round 3: the review-v1 baseline predicts each window with the median of its
+        # fold's training rows (the median minimises the absolute error).
+        code = '''evaluation = nv.values(study, RESULT_IDS["evaluate.regression"])
+# The baseline predicts, for each window, the median target of that fold's training rows.
+baseline_prediction = pd.Series(np.nan, index=folds.index)
+for _fold in evaluation_plan["folds"]:
+    baseline_prediction.loc[_fold["validation_keys"]] = y_rows.loc[_fold["train_keys"]].median()
+baseline_prediction = baseline_prediction.loc[folds.index].to_numpy()
+baseline_mae = np.abs(y_validation.to_numpy() - baseline_prediction).mean()
+print(f"Baseline MAE {baseline_mae:.4f}, linear model MAE {validation_mae:.4f}")
+
+assert abs(baseline_mae - evaluation["models"]["fit.baseline"]["mae"]) < TOLERANCE
+assert abs(validation_mae - evaluation["models"]["fit.linear"]["mae"]) < FIT_TOLERANCE'''
+        return 'recompute_comparison', code
     if is_cv(view):
         code = '''evaluation = nv.values(study, RESULT_IDS["evaluate.regression"])
 # The baseline predicts, for each fold, the mean of the other folds.
-baseline_prediction = np.zeros(len(development))
+baseline_prediction = np.zeros(len(train))
 for _fold in sorted(folds.unique()):
     _held = (folds == _fold).to_numpy()
     baseline_prediction[_held] = y_validation[~_held].mean()

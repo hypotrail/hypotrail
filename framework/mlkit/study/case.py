@@ -95,7 +95,13 @@ DATASET_REQUIRED = ('path', 'format', 'sep', 'encoding', 'decimal', 'header', 's
 DATASET_OPTIONAL = ('quotechar', 'na_values')
 VARIABLE_REQUIRED = ('name', 'type', 'role', 'description', 'status', 'source', 'availability',
                      'special_values')
-VARIABLE_OPTIONAL = ('unit', 'format', 'group', 'labels', 'range')
+VARIABLE_OPTIONAL = ('unit', 'format', 'group', 'labels', 'range',
+                     # Owner session 2026-10-26 (L5, R12, owner decision D8): a numeric or
+                     # integer feature that holds a calendar year declares ``calendar: year``;
+                     # under a temporal evaluation the engine advises on it (a year term can
+                     # only extrapolate). Never inferred from a column name.
+                     'calendar')
+CALENDAR_UNITS = ('year',)
 # v0.2a (WP-A4): ``group`` names the group a variable is shown in by the data card
 # (``hypotrail data``); ``labels`` gives the description in another language
 # (``{fr: "..."}``); ``range`` declares the possible values of a numeric variable,
@@ -379,6 +385,11 @@ def _validate_variables(variables: Any, p: _Problems) -> list[dict]:
                     p.add(f'{path}.range', 'min and max are numbers or null, not both null')
                 elif None not in bounds and bounds[0] > bounds[1]:
                     p.add(f'{path}.range', 'min must not exceed max')
+        if 'calendar' in v:
+            if v['calendar'] not in CALENDAR_UNITS:
+                p.add(f'{path}.calendar', f'must be one of {", ".join(CALENDAR_UNITS)}')
+            elif v['type'] not in ('numeric', 'integer') or v['role'] != 'feature':
+                p.add(f'{path}.calendar', 'is declared for a numeric or integer feature')
         if not isinstance(v['special_values'], list):
             p.add(f'{path}.special_values', 'must be a list')
         else:

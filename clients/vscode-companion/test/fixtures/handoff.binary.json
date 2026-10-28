@@ -156,7 +156,8 @@
       "split"
      ],
      "first_revision": 1,
-     "last_revision": 8
+     "last_revision": 8,
+     "note": null
     },
     {
      "purpose": "train_eda",
@@ -170,7 +171,8 @@
       "eda.distribution"
      ],
      "first_revision": 10,
-     "last_revision": 27
+     "last_revision": 27,
+     "note": null
     },
     {
      "purpose": "train_fit",
@@ -182,7 +184,8 @@
       "fit.logistic"
      ],
      "first_revision": 16,
-     "last_revision": 18
+     "last_revision": 18,
+     "note": null
     },
     {
      "purpose": "validation_model_evaluation",
@@ -194,7 +197,8 @@
       "fit.logistic"
      ],
      "first_revision": 16,
-     "last_revision": 18
+     "last_revision": 18,
+     "note": null
     },
     {
      "purpose": "validation_policy_selection",
@@ -205,7 +209,8 @@
       "policy.evaluation"
      ],
      "first_revision": 20,
-     "last_revision": 24
+     "last_revision": 24,
+     "note": null
     }
    ]
   },

@@ -16,7 +16,9 @@
 //
 // Keys (§9): task, binary: n, evaluatedRules, initialRule; regression: models, errors,
 // deltas, residuals, residualsBy, splitLimits; plus revision, resultId, bootstrap, and
-// (binary) targetLabel, (regression) unit, validation, splitOrdinal, residualDefinition.
+// (binary) targetLabel, (regression) unit, validation, splitOrdinal, residualDefinition,
+// and `families` ({fit slot: family} of each compared variant fit whose current result
+// names its model family, e.g. `ebm`; R9UX-5), so a variant is named in words.
 
 const { ModelError, str, strOrNull, list, obj, int, num, expectSchema, plain } = require('./common');
 const { citable, side, gainOf, pathOf } = require('./evidence');
@@ -85,7 +87,7 @@ function regression(results, base) {
     n: int(obj(obj(sv.partitions).validation).n_rows), resultId: str(split.result_id) } : null;
   const empty = { ...base, resultId: null, models: [], errors: {}, deltas: null, residuals: {}, residualsBy: null,
     splitLimits, validation, splitOrdinal: Boolean(validation && validation.method === 'ordinal_cutoff'),
-    unit: null, bootstrap: null, n: validation ? validation.n : null, residualDefinition: null };
+    unit: null, bootstrap: null, n: validation ? validation.n : null, residualDefinition: null, families: {} };
   if (!evaluation) return empty;
   const v = obj(evaluation.values);
   const params = obj(evaluation.params);
@@ -138,7 +140,22 @@ function regression(results, base) {
     residuals,
     residualsBy,
     residualDefinition: strOrNull(v.residual_definition),
+    families: familiesOf(results, ordered),
   };
+}
+
+// The model family of each variant fit, from its current result (`params.family`, else
+// `values.family`); a fit without one (the linear model, the baseline, a linear variant
+// of an older study) is left out.
+function familiesOf(results, fits) {
+  const out = {};
+  for (const fit of fits) {
+    if (!fit.startsWith('fit.variant')) continue;
+    const r = promoted(results, fit);
+    const family = r ? strOrNull(obj(r.params).family) || strOrNull(obj(r.values).family) : null;
+    if (family) out[fit] = family;
+  }
+  return out;
 }
 
 function toWhatIfModel(payload) {

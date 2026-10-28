@@ -31,10 +31,12 @@ from pathlib import Path
 
 import pytest
 
-from mlkit.study import cmd_check, code_cells, manifest as mf, read, render_notebook as rn
+from mlkit.study import (cmd_check, code_cells, manifest as mf, read, render_notebook as rn,
+                         view as view_mod)
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import flowkit as fk  # noqa: E402
+import flowkit as fk
+from lesson_page import editions, primary  # noqa: E402
 
 AUTO = fk.REPO / 'use-cases' / 'auto-mpg'
 WRITER_MODULES = {'store', 'lock', 'registry', 'exposure', 'dependencies', 'commands', 'cli',
@@ -60,7 +62,9 @@ def _bank(study: Path) -> Path:
     f.variant()           # WP-B1: the variant the policy compares
     f.run('policy.evaluate', '--rule', 'capacity:100')
     f.decide('policy', 'capacity:100', 'Yes, call the top 100 because the desk has 100 slots')
-    f.decide('conclusion', {'verdict': 'adopt_policy',
+    # Review round 9 (R9E-4): the final test stays sealed in this study, so the conclusion
+    # cannot adopt (adopting rests on the opened final test).
+    f.decide('conclusion', {'verdict': 'inconclusive',
                             'text': 'The ranking beats the baseline on validation rows chosen '
                                     'to compare them; a pilot should confirm it.'},
              'I conclude as stated because the interval excludes zero')
@@ -132,7 +136,9 @@ def test_recomputation_cells_run_headless_and_match_the_registry(studies, name):
                          'recompute_model', 'recompute_policy'],
                 'auto': ['recompute_split', 'recompute_target', 'recompute_by_group',
                          'recompute_model', 'recompute_comparison']}[name]
-    assert re.findall(r'^def (recompute_\w+)\(', source, re.M) == ['recompute_imports'] + expected
+    # Contract P1.9: the step-1 sample's cell comes first, at the data step.
+    assert re.findall(r'^def (recompute_\w+)\(', source, re.M) == \
+        ['recompute_imports', 'recompute_sample'] + expected
     explore = {'bank': ['explore_rows', 'explore_info', 'explore_missing', 'explore_describe',
                         'explore_special_values', 'explore_by_group_chart',
                         'explore_job_distribution', 'explore_pdays_distribution',
@@ -312,6 +318,7 @@ class _Page(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.stack, self.order, self.prose, self.svg_numbers = [], [], [], []
         self.figures = 0
+        self.charts = []
         self.annex_open = None
 
     def handle_starttag(self, tag, attrs):
@@ -322,6 +329,7 @@ class _Page(HTMLParser):
             self.order.append(a['id'])
         if tag == 'figure':
             self.figures += 1
+            self.charts.append(a.get('data-chart') or '')
         if tag == 'details' and a.get('id') == 'annex':
             self.annex_open = 'open' in a
 
@@ -344,30 +352,60 @@ class _Page(HTMLParser):
 @pytest.mark.parametrize('name', ['bank', 'auto'])
 def test_report_layout_and_traceability(studies, name):
     study = studies[name]
-    page = (study / mf.ARTIFACTS['report']).read_text(encoding='utf-8')
+    whole = (study / mf.ARTIFACTS['report']).read_text(encoding='utf-8')
+    page = primary(whole)                   # v4 (R27): the study language's edition
     p = _Page()
     p.feed(page)
-    assert p.order[:4] == ['verdict', 'objective', 'data', 'charts']
-    assert 3 <= p.figures <= 7      # v0.3 (WP-J): a distribution and the correlation matrix too
+    # L6 (R8), v4: how to read, the verdict, then the chapters in the order of the study,
+    # then the summary and the annex; the data card is in chapter one.
+    assert p.order[:4] == ['prereq', 'verdict', 'lesson', 'ch1']
+    chapters = [x for x in p.order if re.fullmatch(r'ch\d|appendix', x)]
+    assert chapters == [f'ch{i}' for i in range(1, 10)] + ['appendix']
+    assert page.index('id="objective"') < page.index('id="data"') < page.index('id="ch2"')
+    # v0.3 (WP-J): a distribution and the correlation matrix too. L6 and v4 add charts drawn
+    # from recorded values outside that count (the diagnostics, the fold-by-fold comparison,
+    # the shape a linear model does not follow, the parts of the file, the folds, the look
+    # counter, figure V, the paired differences, the coefficients).
+    explored = [c for c in p.charts if c.split(':')[0] in (
+        'target_balance', 'target_distribution', 'by_group', 'distribution', 'correlation',
+        'single_feature_signal', 'selection', 'residuals', 'residuals_by')]
+    assert 3 <= len(explored) <= 7, p.charts
+    for added in ('parts', 'looks', 'errors_bar'):
+        assert added in p.charts, (added, p.charts)
+    # the folds as blocks under cross-validation only (a holdout has none)
+    split = view_mod.build(study)['results']['split']['values']
+    assert ('fold_blocks' in p.charts) == bool(split.get('fold_rows')), p.charts
     assert p.annex_open is False
     # every number drawn in a chart is a cited label or an axis tick
     for text, ancestors in p.svg_numbers:
         if re.search(r'\d', text):
             cited = any('data-result-id' in a for a in ancestors)
             literal = {a.get('data-literal') for a in ancestors}
-            assert cited or literal & {'axis', 'category', 'decision_value'}, (text, ancestors)
+            # v4: a fold's number is an ordinal; a count of the study state (the sealed rows,
+            # the looks) a structure literal
+            assert cited or literal & {'axis', 'category', 'decision_value', 'ordinal',
+                                       'structure'}, (text, ancestors)
     # no raw result id (64 hex, or its 12-character prefix) in the prose outside the annex
     prose = ' '.join(p.prose)
     assert not re.search(r'\b[0-9a-f]{12,64}\b', prose)
     assert 'Channel chat' not in prose
-    # the five development rows, never a final-test row
+    # contract P1.9: the eight rows of the step-1 sample, never a final-test row
     rows = re.search(r'<table class="rows">.*?</table>', page, re.S).group(0)
-    assert rows.count('<tr>') == 1 + 5
+    assert rows.count('<tr>') == 1 and rows.count('<tr data-row-key="') == 8
     # the verdict card and the data section
-    verdict = re.search(r'<section class="card verdict" id="verdict">.*?</section>', page,
+    verdict = re.search(r'<section class="blk" id="verdict">.*?</section>', page,
                         re.S).group(0)
-    assert 'data-result-id' in verdict and 'Met' in verdict
+    assert 'data-result-id' in verdict
+    if name == 'auto':
+        # R52 (2026-10-28): a regression's criterion is the last row of the one evidence
+        # table, its status in words in each column.
+        row = verdict.split('data-row="criterion"')[1].split('</tr>')[0]
+        assert re.search(r'\bmet (in development|on the final test)\b', row)
+    else:
+        assert 'Met' in verdict
     assert 'stay sealed' in page and 'data-feature-basis' in page
+    # both languages are in the file, the other edition's ids suffixed (R27)
+    assert set(editions(whole)) == {'en', 'fr'} and 'id="ch1--fr"' in whole
     report = cmd_check.run_check(study)
     assert report['clean'], report['findings']
 
@@ -377,8 +415,9 @@ def test_check_accepts_an_axis_tick_only_inside_an_svg(studies, tmp_path):
     page_path = study / mf.ARTIFACTS['report']
     page = page_path.read_text(encoding='utf-8')
     assert cmd_check.run_check(study)['clean']
-    page_path.write_text(page.replace('<main>', '<main><p><span data-literal="axis">77</span>'
-                                                '</p>', 1), encoding='utf-8')
+    main = '<main id="main">'                   # v4: the study language's edition
+    page_path.write_text(page.replace(main, main + '<p><span data-literal="axis">77</span>'
+                                                   '</p>', 1), encoding='utf-8')
     findings = cmd_check.run_check(study)['findings']
     assert any(f['code'] == 'number_outside_result' and '77' in f['message'] for f in findings)
 
@@ -410,8 +449,10 @@ def _cv(study: Path, case_dir: Path, task: str) -> Path:
     f.decide('split', f.view()['next_action']['default_value'])
     f.model_decisions()
     f.run('split')
-    for a in (('eda.target_summary', 'eda.special_values') if task == 'regression'
-              else ('eda.target_rate', 'eda.special_values')):
+    # Owner session 2026-10-26 (L5): a new study's plan checks the structure first.
+    for a in (('eda.quality', 'eda.target_summary', 'eda.special_values')
+              if task == 'regression'
+              else ('eda.quality', 'eda.target_rate', 'eda.special_values')):
         f.run(a)
     f.run('fit.baseline')
     f.run('fit.linear' if task == 'regression' else 'fit.logistic')
@@ -424,7 +465,14 @@ def _cv(study: Path, case_dir: Path, task: str) -> Path:
         f.decide('policy', 'capacity:100', 'Yes, call the top 100 because the desk has 100 slots')
     # v0.3 (WP-F1, R28): the plan runs the diagnostics before the opening is drafted.
     f.run('diag.regression' if task == 'regression' else 'diag.binary')
-    value = f.view()['next_action']['default_value']
+    nxt = f.view()['next_action']
+    if nxt['kind'] == 'run' and nxt['activity'] == 'predictor.capture':
+        # Third session of 2026-10-26: the journey captures the chosen model, with the
+        # options it names, before the opening is proposed (``view._capture_first``).
+        f.run('predictor.capture', *[x for k, v in (nxt.get('options') or {}).items()
+                                     for x in (f'--{k}', str(v))])
+        nxt = f.view()['next_action']
+    value = nxt['default_value']
     p = f.call('decide', 'propose', 'final_test', '--value-json', json.dumps(value),
                '--restatement', 'You open the sealed final test once for the chosen configuration.',
                '--rationale', 'The choice is fixed.', '--request-id', f.rid(),
@@ -471,19 +519,31 @@ def test_cross_validated_recomputation_cells_refit_fold_by_fold(cv_studies, name
 @pytest.mark.parametrize('name', ['bank', 'auto'])
 def test_the_verdict_card_separates_development_and_final_evidence(cv_studies, name):
     study = cv_studies[name]
-    page = (study / mf.ARTIFACTS['report']).read_text(encoding='utf-8')
-    verdict = re.search(r'<section class="card verdict" id="verdict">.*?</section>', page,
+    page = primary((study / mf.ARTIFACTS['report']).read_text(encoding='utf-8'))
+    verdict = re.search(r'<section class="blk" id="verdict">.*?</section>', page,
                         re.S).group(0)
-    assert 'Development evidence' in verdict and 'out-of-fold' in verdict
-    assert 'Final test' in verdict and 'Opened once, on' in verdict
-    assert 'Success criterion on the final test' in verdict
     final = read.open(study).current('final_test.evaluation')['result_id']
-    assert f'data-result-id="{final}"' in verdict
-    assert 'Configurations compared' in verdict
-    # WP-B6a: once opened, the final-test evidence comes first, the development second.
-    assert verdict.index('Opened once, on') < verdict.index('Development evidence')
-    assert verdict.index('Success criterion on the final test') \
-        < verdict.index('Development evidence')
+    if name == 'auto':
+        # R52 (2026-10-28): a regression's development and final evidence are one table, a
+        # row per configuration, a column per frame; the criterion is judged in the final
+        # column, and the separation is the columns, not two cards.
+        assert 'class="vbox' not in verdict
+        table = verdict.split('<table class="evtab"')[1].split('</table>')[0]
+        assert 'Development (out of fold, used to choose)' in table
+        assert 'Final test (read once)' in table
+        assert f'data-result-id="{final}"' in table
+        assert 'error on the final test reduced by' in table
+        assert 'data-unmeasured="unmeasured"' in table
+    else:
+        assert 'Development evidence' in verdict and 'out-of-fold' in verdict
+        assert 'Final test' in verdict and 'Opened once, on' in verdict
+        assert 'Success criterion on the final test' in verdict
+        assert f'data-result-id="{final}"' in verdict
+        assert 'Configurations compared' in verdict
+        # WP-B6a: once opened, the final-test evidence comes first, the development second.
+        assert verdict.index('Opened once, on') < verdict.index('Development evidence')
+        assert verdict.index('Success criterion on the final test') \
+            < verdict.index('Development evidence')
     assert 'id="variant-comparison"' in page
     report = cmd_check.run_check(study)
     assert report['clean'], report['findings']

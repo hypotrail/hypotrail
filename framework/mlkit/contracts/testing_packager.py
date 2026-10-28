@@ -13,6 +13,8 @@ import shutil
 from pathlib import Path
 from typing import Mapping
 
+import numpy as np
+
 FORMAT = 'synthetic_test'
 
 
@@ -50,6 +52,11 @@ class SyntheticPackager:
             pipeline = pickle.load(fh)
         features = frame_from_document(json.loads((root / parity_spec['features_path'])
                                                   .read_bytes()))
+        # The raw pipeline is called without the runtime's input check: hand it a missing
+        # text value as that check does (NaN, never None).
+        for column in features.columns:
+            if features[column].dtype == object:
+                features[column] = features[column].where(features[column].notna(), np.nan)
         expected = json.loads((root / parity_spec['expected_outputs_path']).read_bytes())
         if self.fail:
             values = [v + 1.0 for v in expected['values']]

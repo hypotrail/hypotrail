@@ -1,0 +1,17 @@
+[
+  {
+    "logical_key": "repo:src/pipeline.py",
+    "path": "src/pipeline.py",
+    "role": "code"
+  },
+  {
+    "logical_key": "repo:src/transforms.py",
+    "path": "src/transforms.py",
+    "role": "transform_recipe"
+  },
+  {
+    "logical_key": "repo:SECURITY.md",
+    "path": "SECURITY.md",
+    "role": "security_rule"
+  }
+]

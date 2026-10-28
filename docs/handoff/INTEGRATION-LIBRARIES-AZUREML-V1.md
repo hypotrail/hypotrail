@@ -135,6 +135,13 @@ the panel tests other than `test_webview_eda.py`. Fixes:
 - Export support matrix: regression `linear` (Auto MPG). Binary families capture and
   package (library tests) but the Azure template refuses them (`capability_not_supported`).
 - Calibration partitions are not created by the engine (MAPIE adapters library-level).
+- Source compatibility (review 2026-10-24, E1, fixed): the integration changed
+  `mlkit/study/activities.py` and `fit.py`, so studies made at `506180a` had no current
+  result at HEAD, and one whose final test was opened could not recover. Exact
+  `code_compat` edges now cover the activities whose path is unchanged without a capture,
+  each added only after a byte comparison of the two engines on four temporary studies
+  ([LIBRARIES-V1.md](LIBRARIES-V1.md#source-compatibility-of-existing-studies)). Any later
+  edit of either file needs the comparison again and new edges.
 - Pixel baselines of the panel fail identically at the base in this container (fonts).
 - `test_contract_companion_e2.py::test_c7_export_handoff` failed at the base `581c7b3`; it
   passes on the integration branch.

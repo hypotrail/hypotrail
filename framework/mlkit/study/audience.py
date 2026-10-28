@@ -35,7 +35,9 @@ DECISION_WORDS = {'prediction_time': 'the prediction moment',
                   'preprocessing': 'the preparation of the variables',
                   # v0.2b (WP-B1)
                   'model_variant': 'the variant to compare',
-                  'final_test': 'the opening of the final test'}
+                  'final_test': 'the opening of the final test',
+                  # Lot 2026-10-28 (EN-9)
+                  'error_metric': 'the error measure'}
 # Plan steps in words (the steps without a decision of their own).
 STEP_WORDS = {'train_eda': 'the exploration of the data', 'models': 'the model fits',
               'discover_data': 'the discovery of the data'}
@@ -49,7 +51,8 @@ DECISION_WORDS_FR = {'prediction_time': 'le moment de la prédiction',
                      'success_criterion': 'le critère de succès',
                      'preprocessing': 'la préparation des variables',
                      'model_variant': 'la variante à comparer',
-                     'final_test': "l'ouverture de l'échantillon de test final"}
+                     'final_test': "l'ouverture de l'échantillon de test final",
+                     'error_metric': "la mesure de l'erreur"}
 STEP_WORDS_FR = {'train_eda': "l'exploration des données", 'models': "l'ajustement des modèles",
                  'discover_data': 'la découverte des données'}
 EN, FR = 'en', 'fr'
@@ -79,7 +82,11 @@ ACTIVITY_WORDS = {'split': 'the split', 'eda.target_rate': 'the outcome rate',
                   'evaluate.regression': 'the model comparison',
                   # v0.2b (WP-B1)
                   'fit.variant': 'the variant model',
-                  'final_test.evaluation': 'the final test evaluation'}
+                  'final_test.evaluation': 'the final test evaluation',
+                  # Review round 3 (E3-3): named when they must be run again.
+                  'diag.binary': 'the development diagnostics',
+                  'diag.regression': 'the development diagnostics',
+                  'predictor.capture': 'the captured model'}
 
 
 ACTIVITY_WORDS_FR = {'split': 'le découpage', 'eda.target_rate': 'le taux de résultat positif',
@@ -96,7 +103,10 @@ ACTIVITY_WORDS_FR = {'split': 'le découpage', 'eda.target_rate': 'le taux de r�
                      'policy.evaluation': "l'évaluation de la règle",
                      'evaluate.regression': 'la comparaison des modèles',
                      'fit.variant': 'le modèle variante',
-                     'final_test.evaluation': "l'évaluation sur l'échantillon de test final"}
+                     'final_test.evaluation': "l'évaluation sur l'échantillon de test final",
+                     'diag.binary': 'les diagnostics de développement',
+                     'diag.regression': 'les diagnostics de développement',
+                     'predictor.capture': 'le modèle capturé'}
 
 
 def activity_words(activity, lang: str = EN) -> str:
@@ -121,7 +131,7 @@ MODEL_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean basel
                'fit.variant:2': 'the second variant', 'fit.variant:3': 'the third variant'}
 VERDICT_WORDS = {'adopt_policy': 'adopt the policy', 'adopt_model': 'adopt the chosen model',
                  'keep_baseline': 'keep the baseline', 'inconclusive': 'inconclusive'}
-MODEL_WORDS_FR = {'fit.linear': 'le modèle linéaire', 'fit.baseline': 'la moyenne de référence',
+MODEL_WORDS_FR = {'fit.linear': 'le modèle linéaire', 'fit.baseline': 'la référence (prédire la moyenne)',
                   'fit.logistic': 'le modèle logistique', 'fit.variant': 'la variante',
                   # v0.3 (WP-F1)
                   'fit.variant:2': 'la deuxième variante',
@@ -281,6 +291,27 @@ def _junior_next(action: Mapping, lang: str = EN) -> tuple[str, str]:
         return AGENT, (f'{named} was interrupted and its outcome is unknown. It does not '
                        'restart by itself; you will be asked before it is recorded as '
                        'interrupted.')
+    if action.get('review') and kind in ('reconfirm', 'await_user_words'):
+        # L9 (R20): the review of a decision the automatic mode recorded.
+        words = decision_words(action.get('decision'), lang)
+        if fr:
+            return AGENT, (f'La décision sur {words} a été prise par le mode automatique, sans '
+                           'vos mots. Relisez-la : adoptez-la avec vos propres mots, ou dites '
+                           'ce que vous changez.')
+        return AGENT, (f'The decision on {words} was made by the automatic mode, without your '
+                       'words. Review it: adopt it in your own words, or say what you change.')
+    if kind == 'reconfirm' and action.get('decision') == 'final_test':
+        # Review round 4 (E4-1): a final test confirmed but not opened, whose basis changed.
+        if fr:
+            return AGENT, ("Le test final est toujours scellé : aucune de ses lignes n'a été "
+                           "lue. Vous aviez confirmé son ouverture, mais ce sur quoi elle "
+                           "reposait a changé avant qu'il soit ouvert ; il ne s'ouvre donc "
+                           "qu'après une nouvelle confirmation, avec vos propres mots, sur la "
+                           "configuration que l'étude choisit maintenant.")
+        return AGENT, ('The final test is still sealed: none of its rows was read. You '
+                       'confirmed its opening, but what it rests on changed before it was '
+                       'opened, so it opens only once you confirm it again, in your own words, '
+                       'on the configuration the study now chooses.')
     if kind == 'reconfirm':
         if fr:
             return AGENT, (f'Votre réponse sur {decision_words(action.get("decision"), lang)} '
@@ -297,6 +328,19 @@ def _junior_next(action: Mapping, lang: str = EN) -> tuple[str, str]:
         return AGENT, (f'A proposal on {decision_words(action.get("decision"))} is waiting for '
                        'your answer. Read its restatement and say whether you adopt it, or '
                        'what you would change.')
+    if kind == 'resolve_hold':
+        # Review round 6 (area E): a decision the junior put on hold, in their own words.
+        said = str(action.get('user_words') or '').strip()
+        if fr:
+            return AGENT, (f'Vous avez mis {decision_words(action.get("decision"), lang)} en '
+                           f'attente, avec vos mots : « {said} ». Cette condition est-elle '
+                           'remplie maintenant ? Votre réponse, avec vos propres mots, lève '
+                           "l'attente ou la maintient ; tant qu'elle est en attente, rien de ce "
+                           "qu'elle couvre n'est confirmé.")
+        return AGENT, (f'You put {decision_words(action.get("decision"))} on hold, in your '
+                       f'words: "{said}". Is that condition met now? Your answer, in your own '
+                       'words, lifts the hold or keeps it; while it is on hold, nothing it '
+                       'covers is confirmed.')
     if kind == 'blocked':
         needed = join((decision_words(r, lang) for r in action.get('requires') or []), lang)
         if fr:
@@ -308,11 +352,20 @@ def _junior_next(action: Mapping, lang: str = EN) -> tuple[str, str]:
         # WP-A4 (R2): step 0, informational.
         if fr:
             return AGENT, ("D'abord, regardez les données avec l'assistant : ce que décrit une "
-                           'ligne, les colonnes et ce que chacune signifie, et cinq lignes '
-                           "d'exemple. Rien n'est décidé à cette étape.")
+                           'ligne, les colonnes et ce que chacune signifie, et huit lignes '
+                           "tirées au hasard. Rien n'est décidé à cette étape.")
         return AGENT, ('First, look at the data with the assistant: what one row describes, '
-                       'the columns and what each one means, and five example rows. Nothing '
+                       'the columns and what each one means, and eight rows drawn at random. '
+                       'Nothing '
                        'is decided at this step.')
+    if kind == 'read_exploration':
+        # Lot 2026-10-28 (EN-12, R61): the pause after the exploration.
+        if fr:
+            return JUNIOR, ("Les graphiques de l'exploration sont affichés et aucun modèle "
+                            "n'est encore ajusté. Lisez-les, puis dites si l'on passe aux "
+                            'modèles.')
+        return JUNIOR, ("The exploration's charts are shown and no model is fitted yet. Read "
+                        'them, then say whether we move on to the models.')
     if kind in ('propose', 'run'):
         # The step's question, written for the junior (state.STEPS); WP-C: in French, its
         # translation (``junior.step_text``).
@@ -369,6 +422,15 @@ def _junior_limit(item: Mapping, lang: str = EN) -> str | None:
         named = join(decision_words(d) for d in item.get('decisions') or [])
         return (f'You delegated these to the assistant\'s recommended default, so they are not '
                 f'your own judgment: {named}.')
+    if kind == 'automatic_decisions_to_review':
+        named = join(decision_words(d) for d in item.get('decisions') or [])
+        return ('Automatic study: not defensible until reviewed. The automatic mode decided '
+                f'these without your words; adopt or change each one in your own words: '
+                f'{named}.')
+    if kind == 'final_test_opened_automatically':
+        return ('The final test was opened automatically, by the demonstration mode, not by '
+                'your decision. Its one evaluation stands and the opening cannot be redone; '
+                'anything changed since is marked as made after the final test.')
     if kind == 'stale_results':
         return 'Some results are out of date and are computed again before they are cited.'
     if kind == 'adopted_rule_not_evaluated':
@@ -381,7 +443,40 @@ def _junior_limit(item: Mapping, lang: str = EN) -> str | None:
 
 # The limits whose English ``text`` is written for the agent (their junior variant differs).
 AGENT_LIMITS = ('unconfirmed_decisions', 'open_holds', 'conclusion_outdated',
-                'delegated_decisions', 'stale_results', 'adopted_rule_not_evaluated')
+                'delegated_decisions', 'stale_results', 'adopted_rule_not_evaluated',
+                # L9 (R20): written about the junior; their variants speak to them.
+                'automatic_decisions_to_review', 'final_test_opened_automatically')
+
+
+# Contract P1.11 (CLI-CONTRACT §17.2.2): the severity of each ``not_yet_defensible`` id, which
+# the study panel's header pill reads (``status --summary --digest`` ``defensibility``), moved
+# from the panel's own table (``media/copy/junior.js`` ``SEVERITY``). ``blocking``: the study
+# cannot be defended while it holds; ``caveat``: a limit of the evidence; ``not_final``: a
+# step not done yet; ``context``: always true of such a study. An id not listed is a
+# ``caveat``. Two ids depend on the item (``panel_digest``): ``unconfirmed_decisions`` is
+# blocking when one of its decisions was reopened, ``stale_results`` when a decision cites
+# them. (Kept here, not in ``governance``, whose source is part of every fit's code
+# fingerprint: editing it would make every existing study's results stale.)
+BLOCKING, CAVEAT, NOT_FINAL, CONTEXT = 'blocking', 'caveat', 'not_final', 'context'
+SEVERITIES = (BLOCKING, CAVEAT, NOT_FINAL, CONTEXT)
+LIMIT_SEVERITY = {
+    'sources_changed': BLOCKING, 'result_integrity': BLOCKING,
+    'interrupted_executions': BLOCKING, 'stale_results': BLOCKING, 'code_changed': BLOCKING,
+    'automatic_decisions_to_review': BLOCKING, 'open_holds': BLOCKING,
+    'conclusion_outdated': BLOCKING, 'changed_after_final_test': BLOCKING,
+    'final_test_opening_interrupted': BLOCKING, 'inconclusive_without_choice': BLOCKING,
+    'adopted_rule_not_evaluated': BLOCKING, 'verdict_contradicts_criterion': BLOCKING,
+    'uncertain_features_included': CAVEAT, 'delegated_decisions': CAVEAT,
+    'small_validation_partition': CAVEAT, 'capacity_exceeds_validation': CAVEAT,
+    'high_cardinality_grouping': CAVEAT, 'grouped_split_unsupported': CAVEAT,
+    'delayed_labels_excluded': CAVEAT, 'capacity_assumed_for_exercise': CAVEAT,
+    'verdict_keeps_baseline_against_criterion': CAVEAT,
+    'data_contingent_preprocessing': CAVEAT, 'final_test_opened_automatically': CAVEAT,
+    'unconfirmed_decisions': NOT_FINAL, 'final_test_sealed': NOT_FINAL,
+    'validation_is_not_independent': NOT_FINAL,
+    'public_data_already_explored': CONTEXT, 'no_time_or_entity_identifier': CONTEXT,
+    'no_causality': CONTEXT, 'workbench_not_tracked': CONTEXT,
+}
 
 
 def limit(item: Mapping, lang: str = EN) -> dict:

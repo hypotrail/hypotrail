@@ -7,7 +7,7 @@
 //   loads.trials            v0.3 (WP-K): `status --json` projected by toTrialsModel (the
 //                           trial budget, the variants' questions, the family shortlist).
 //   commands.go_to_result   "Hypotrail: go to a result...": resolve a pasted id prefix
-//                           through `evidence`, then post `navigate` to the Evidence tab.
+//                           through `evidence`, then post `navigate` to its figure in the path.
 //
 // Cache keys are `evidence` and `evidence:<rid>` (COMPANION-ADVANCED §5): the controller
 // caches the payload per key, so the EDA and What if? loaders, which read the same
@@ -18,6 +18,7 @@
 const { toEvidenceModel } = require('../models/evidence');
 const { toTrialsModel } = require('../models/trials');
 const { resultIdInput } = require('../uri');
+const { anchorOfResult } = require('../models/page');
 
 const LIST_KEY = 'evidence';
 // v0.3 (WP-K): the full view (`status --json`), shared by `trials` (here) and the What if?
@@ -68,7 +69,9 @@ async function goToResult(args, ctx) {
     tell(ctx, ids.length > 1 ? ctx.say('severalResults', prefix) : ctx.say('noResult', prefix, out.model.truncated));
     return null;
   }
-  ctx.post({ type: 'navigate', tab: 'evidence', kind: 'result', id });
+  // ADR 0004 d13 (§4.3, NAV-2): the figure of the result in its step's detail; a stale result
+  // opens its step line, which lists it without figures.
+  ctx.post({ type: 'navigate', anchor: anchorOfResult(ctx.snapshot(), id), kind: 'result', id });
   return id;
 }
 

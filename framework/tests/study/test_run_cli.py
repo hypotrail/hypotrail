@@ -93,7 +93,8 @@ def test_the_activity_flow_through_processes(tmp_path, work, cases, name):
     cli.decide('model_variant', {'kind': 'regularisation', 'strength': 'strong'},
                'Yes, compare it with the more strongly regularised variant')
     payloads = {}
-    for args in (('split',), ('eda.target_rate',), ('eda.special_values',),
+    # Owner session 2026-10-26 (L5): the structural check is a step of a new study's plan.
+    for args in (('split',), ('eda.quality',), ('eda.target_rate',), ('eda.special_values',),
                  ('fit.baseline',), ('fit.logistic',), ('fit.variant',),
                  ('policy.evaluate', '--rule', 'threshold:0.5', '--rule', 'capacity:100')):
         payload = cli.run(*args)
@@ -117,6 +118,16 @@ def test_the_activity_flow_through_processes(tmp_path, work, cases, name):
         view['next_action']['activity'] == 'diag.binary'
     assert cli.run('diag.binary')['status'] == 'promoted'
     after = cli('status')['view']['next_action']
+    if name == 'bank':
+        # Review round 6 (R6E-2): the scenario's share (the policy proposal's default) is not
+        # among the evaluated rules, so its confirmation would be refused: it is evaluated
+        # first, with the rules already evaluated.
+        assert (after['kind'], after['activity']) == ('run', 'policy.evaluation'), after
+        assert after['rules'][0] == 'share:0.1' and 'capacity:100' in after['rules']
+        assert 'did not measure the rule' in after['junior_message']
+        assert cli.run('policy.evaluate', *[a for r in after['rules']
+                                            for a in ('--rule', r)])['status'] == 'promoted'
+        after = cli('status')['view']['next_action']
     assert after['kind'] == 'propose' and after['decision'] == 'policy'
     by_purpose = view['exposure']['by_purpose']
     # ADR 0006: init inspects the development rows; the final test is sealed, not inspected.

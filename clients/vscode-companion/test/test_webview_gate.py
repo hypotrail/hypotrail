@@ -1,16 +1,18 @@
-"""v0.3 WP-E3 (scope S, simulated browser): the panel's visual gate.
+"""v0.3 WP-E3 (scope S, simulated browser): the panel's visual gate, on the one page (ADR 0004
+d13; PANEL-ONE-PAGE-PLAN P-6, P-7).
 
 The real document under the real CSP, offline, on the **captured** payloads of the real
-engine (``panel_cases.py``). Two layers:
+engine and the five contract-P1 states of the mockup (``panel_cases.py``). Two layers:
 
-1. **Structural assertions**, on every tab of the split and the cross-validated Bank studies,
-   the cross-validated Bank study with three variants (v0.3, WP-K), and Auto MPG in French,
-   at 1280, 900 and 420 px, under Light Modern, Dark Modern and High Contrast (``themes.py``),
-   in English and in French:
+1. **Structural assertions**, on the page of the split and the cross-validated Bank studies,
+   the cross-validated Bank study with three variants (v0.3, WP-K), the five P1 states, and
+   Auto MPG in French, at 320, 420, 600 and 900 px (§13.5), under Light Modern, Dark Modern
+   and High Contrast (``themes.py``), in English and in French, as first rendered and with
+   every fold and drawer open:
 
    * nothing scrolls sideways: no element's right edge passes the viewport, and none passes
      the right edge of its card (a ``section``, ``article`` or ``.card``), except inside the
-     dictionary and the five example rows (``data-scroll-ok``);
+     dictionary and the sample (``data-scroll-ok``);
    * the type scale: every visible text is set at one of the six sizes of the design system
      (caption, meta, body, title, page, stat; ``tokens.css``), chart text at 10 to 13 px, and
      monospace holds identifiers only (three words at most);
@@ -28,9 +30,9 @@ engine (``panel_cases.py``). Two layers:
    AA, 4.5:1; 7:1 for the main text in High Contrast), of the chip inks on their tints, and of
    the button texts on their buttons.
 
-2. **Pixel baselines** (``test/baselines/*.png``): each tab of the split Bank study at 420 and
-   900 px, Light Modern, Dark Modern and High Contrast, English and French; the first viewport
-   (800 px high) and, on the EDA, Evidence and What if? tabs, their main chart. Rendering is
+2. **Pixel baselines** (``test/baselines/*.png``): the page of each of the five P1 states at
+   420 and 900 px, Light Modern, Dark Modern and High Contrast, English and French; the first
+   viewport (800 px high), and the choice state's comparison figure. Rendering is
    pinned: the DejaVu Sans and DejaVu Sans Mono fonts (installed, never fetched), reduced
    motion and no animation, a fixed clock, locale and time zone, a device scale of 1. The
    comparison runs inside Chromium (two canvases): a pixel differs when a channel moves by more
@@ -40,9 +42,11 @@ engine (``panel_cases.py``). Two layers:
 
    ``--update-baselines`` (or ``HYPOTRAIL_UPDATE_BASELINES=1``) rewrites the baselines that
    differ or are missing and writes their diff images too; the owner reviews every baseline
-   change from those diff images before it is committed (CONTRIBUTING). The baselines were
-   drawn on Linux; without the DejaVu fonts (``fc-match``) the pixel tests skip with a
-   warning, and the structural ones still run.
+   change from those diff images before it is committed (CONTRIBUTING). The 108 baselines of
+   the tabbed panel were deleted with the tabs (P-7); until the owner has reviewed and
+   committed the one-page set, the pixel tests skip ("one-page baselines awaiting owner
+   review") unless a local set exists. The baselines are drawn on Linux; without the DejaVu
+   fonts (``fc-match``) the pixel tests skip with a warning, and the structural ones still run.
 
 With ``HYPOTRAIL_SHOTS=<dir>`` the structural tests also write full-page screenshots for a
 person to look at (WP-E2). Requirement ids: A11Y-3, A11Y-4, R21, R26. This is not a VS Code
@@ -62,7 +66,7 @@ from pathlib import Path
 import pytest
 
 import themes
-from panel_cases import OVERFLOW, PROSE, STYLE_ATTRS, TABS, UNDERLINED, VISIBLE, load_views, open_case
+from panel_cases import OVERFLOW, PROSE, STATES, STYLE_ATTRS, UNDERLINED, VISIBLE, load_views, open_all, open_case
 
 HERE = Path(__file__).resolve().parent
 BASELINES = HERE / 'baselines'
@@ -70,19 +74,19 @@ DIFFS = Path(os.environ.get('HYPOTRAIL_BASELINE_DIFF') or HERE.parent / '.local'
 SHOTS = os.environ.get('HYPOTRAIL_SHOTS')
 
 THEMES = ['light-modern', 'dark-modern', 'hc']
-WIDTHS = [1280, 900, 420]
+WIDTHS = [320, 420, 600, 900]
 LANGS = ['en', 'fr']
 
 # The pixel subset (owner budget: the baselines stay well under 15 MB).
 PIXEL_WIDTHS = [900, 420]
 PIXEL_HEIGHT = 800
 CHART_MAX_HEIGHT = 640
-# The main chart of a tab: the first of these selectors that matches a visible element.
+# The main figure of a state: the first of these selectors that matches a visible element.
 MAIN_CHART = {
-    'eda': ['[data-eda-card="eda.rate_by:job"]', '[data-eda-card^="eda.distribution"]'],
-    'evidence': ['[data-diag-chart]', '.ht-ev-uncertainty', '.ht-ev-development'],
-    'whatif': ['.ht-wi-gain', '.ht-wi-comparison'],
+    'choice': ['[data-block="now"] .ht-figure'],
 }
+# A one-page baseline: `<state>-<theme>-<width>-<lang>.png` (or `<state>-chart-...`).
+ONE_PAGE = re.compile(r'^(%s)-' % '|'.join(STATES))
 CHANNEL_DELTA = 24
 MAX_SHARE = 0.001
 FONT = 'DejaVu Sans'
@@ -154,8 +158,9 @@ UNDERLINED_TEXT = """() => {
   return [...new Set(out)].slice(0, 10);
 }"""
 
-# Prose without the junior's quoted words (they are quoted as recorded, tokens included).
-PROSE_UNQUOTED = PROSE.replace(".ht-src, code, pre,", ".ht-src, code, pre, [data-quoted], blockquote, q,")
+# Prose without the junior's quoted words (they are quoted as recorded, tokens included),
+# and without the engine's own record under "Details" (layer 2, verbatim by design, §15.1).
+PROSE_UNQUOTED = PROSE.replace(".ht-src, code, pre,", ".ht-src, code, pre, [data-quoted], blockquote, q, [data-engine-text],")
 
 # The resolved colours of the theme's tokens, as sRGB triples.
 TOKENS = """(names) => {
@@ -235,8 +240,7 @@ def shot(page, name):
         page.screenshot(path=str(Path(SHOTS) / f'{name}.png'), full_page=True)
 
 
-def show(page, tab):
-    page.locator(f'[role="tab"][data-tab="{tab}"]').click()
+def settle(page):
     # The curves redraw at their container's width (a ResizeObserver): two frames settle them.
     page.evaluate('() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))')
 
@@ -246,33 +250,40 @@ def views(model, payload):
     return load_views(model, payload)
 
 
+def gate(panel, where, case, columns):
+    """The structural gate on the page as first rendered, then with every fold and drawer open."""
+    settle(panel.page)
+    structural(panel, f'{where}/closed', columns)
+    open_all(panel, panel.case_views, panel.case_reads)
+    settle(panel.page)
+    assert panel.page.locator('#app details:not([open])').evaluate_all(
+        'ds => ds.filter(d => !d.closest("[data-popover]")).length') == 0, where
+    structural(panel, f'{where}/open', columns)
+
+
 # --- 1. structural assertions --------------------------------------------------------------
 
 @pytest.mark.parametrize('lang', LANGS)
 @pytest.mark.parametrize('width', WIDTHS)
 @pytest.mark.parametrize('theme', THEMES)
-def test_every_tab_passes_the_structural_gate(open_panel, views, payload, theme, width, lang):
-    """A11Y-3, A11Y-4, R26: every tab at 1280, 900 and 420 px, three themes, both languages."""
-    # v0.3 (WP-K): `families`, the study with three variants, for the selection and family cards.
-    for case in ['binary', 'cv', 'families']:
+def test_the_page_passes_the_structural_gate(open_panel, views, payload, theme, width, lang):
+    """A11Y-3, A11Y-4, R26, NAR-1, NAR-2 (§13.5): the page at 320, 420, 600 and 900 px, three themes,
+    both languages, on the captured Bank studies and the five P1 states (Auto MPG)."""
+    for case in ['binary', 'cv', 'families', *STATES]:
         panel = open_case(open_panel, views, case=case, theme=theme, width=width, lang=lang)
-        page = panel.page
-        for tab in TABS:
-            show(page, tab)
-            structural(panel, f'{case}/{tab}/{theme}/{width}/{lang}', column_names(payload, 'binary'))
-            assert page.locator(f'#panel-{tab} [data-tab-lead="{tab}"]').count() == 1, (tab, 'one lead sentence per tab (I1)')
-            if width != 1280 and (case == 'binary' or tab in ('overview', 'evidence', 'decisions')):
-                shot(page, f'{tab}-{case}-{theme}-{width}-{lang}')
+        columns = column_names(payload, 'regression' if case in STATES else 'binary')
+        gate(panel, f'{case}/{theme}/{width}/{lang}', case, columns)
+        if width in (320, 420) and case in STATES:
+            shot(panel.page, f'{case}-{theme}-{width}-{lang}')
+        panel.context.close()
 
 
 @pytest.mark.parametrize('width', WIDTHS)
-def test_regression_tabs_pass_the_structural_gate_in_french(open_panel, views, payload, width):
+def test_the_regression_page_passes_the_structural_gate_in_french(open_panel, views, payload, width):
     panel = open_case(open_panel, views, case='regression', theme='light-modern', width=width, lang='fr')
-    for tab in TABS:
-        show(panel.page, tab)
-        structural(panel, f'regression/{tab}/{width}', column_names(payload, 'regression'))
-        if width != 1280:
-            shot(panel.page, f'{tab}-regression-light-modern-{width}-fr')
+    gate(panel, f'regression/{width}', 'regression', column_names(payload, 'regression'))
+    if width != 900:
+        shot(panel.page, f'regression-light-modern-{width}-fr')
 
 
 @pytest.mark.parametrize('theme', THEMES)
@@ -398,39 +409,48 @@ def check_pixels(comparer, name: str, png: bytes, update: bool, changed: list) -
     return problem
 
 
+def _one_page_set() -> bool:
+    """Whether a set of one-page baselines exists here (committed after the owner's review, or local)."""
+    return BASELINES.is_dir() and any(ONE_PAGE.match(f.name) for f in BASELINES.glob('*.png'))
+
+
 @pytest.mark.parametrize('lang', LANGS)
 @pytest.mark.parametrize('width', PIXEL_WIDTHS)
 @pytest.mark.parametrize('theme', THEMES)
-def test_every_tab_matches_its_pixel_baseline(open_panel, views, comparer, request, theme, width, lang):
+def test_every_state_matches_its_pixel_baseline(open_panel, views, comparer, request, theme, width, lang):
     why = _fonts_ok()
     if why:
         warnings.warn(f'the panel pixel baselines did not run: {why}.', pytest.PytestWarning, stacklevel=1)
         pytest.skip(why)
     update = request.config.getoption('--update-baselines', default=False) or _update()
+    if not update and not _one_page_set():
+        # P-7: the tabbed baselines were deleted; the one-page set waits for the owner.
+        pytest.skip('one-page baselines awaiting owner review')
     options = {'locale': 'en-US', 'timezone_id': 'UTC', 'reduced_motion': 'reduce', 'device_scale_factor': 1}
-    # open_case opens the panel through `open_panel`; the context options go with it.
-    panel = open_case(lambda color_scheme: open_panel(color_scheme=color_scheme, **options), views,
-                      theme=theme, width=width, lang=lang, height=PIXEL_HEIGHT, before=pin)
-    page = panel.page
-    page.evaluate('document.fonts.ready')
     problems, changed = [], []
-    for tab in TABS:
-        show(page, tab)
+    for state in STATES:
+        # open_case opens the panel through `open_panel`; the context options go with it.
+        panel = open_case(lambda color_scheme: open_panel(color_scheme=color_scheme, **options), views, case=state,
+                          theme=theme, width=width, lang=lang, height=PIXEL_HEIGHT, before=pin)
+        page = panel.page
+        page.evaluate('document.fonts.ready')
+        settle(page)
         page.evaluate('window.scrollTo(0, 0)')
         png = page.screenshot(animations='disabled', caret='hide', scale='css')
-        problem = check_pixels(comparer, f'{tab}-{theme}-{width}-{lang}', png, update, changed)
+        problem = check_pixels(comparer, f'{state}-{theme}-{width}-{lang}', png, update, changed)
         if problem:
             problems.append(problem)
-        chart = next((page.locator(s).first for s in MAIN_CHART.get(tab, []) if page.locator(s).count()), None)
+        chart = next((page.locator(sel).first for sel in MAIN_CHART.get(state, []) if page.locator(sel).count()), None)
         if chart is not None:
             chart.scroll_into_view_if_needed()
             box = chart.bounding_box()
             png = page.screenshot(animations='disabled', caret='hide', scale='css', full_page=True,
                                   clip={'x': box['x'] + page.evaluate('scrollX'), 'y': box['y'] + page.evaluate('scrollY'),
                                         'width': box['width'], 'height': min(box['height'], CHART_MAX_HEIGHT)})
-            problem = check_pixels(comparer, f'{tab}-chart-{theme}-{width}-{lang}', png, update, changed)
+            problem = check_pixels(comparer, f'{state}-chart-{theme}-{width}-{lang}', png, update, changed)
             if problem:
                 problems.append(problem)
+        panel.context.close()
     if changed:
         warnings.warn('panel pixel baselines rewritten (owner review of the diff images in '
                       f'{DIFFS} before commit): ' + '; '.join(changed), pytest.PytestWarning, stacklevel=1)

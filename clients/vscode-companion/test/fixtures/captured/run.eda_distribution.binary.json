@@ -22,7 +22,7 @@
   "activity": "eda.distribution",
   "execution_id": "e_17bb42fe2af6771b4815132d",
   "status": "promoted",
-  "result_id": "d111d579bde4cc8148ea65993039108ed56994816e79b1e15904c3baf6089513",
+  "result_id": "e355985f3e935f00111229333a94078dafa8c1696a1d0214d8680c81824b32e2",
   "values": {
    "partition": "train",
    "column": "age",
@@ -136,13 +136,13 @@
    "activity": "eda.distribution",
    "slot": "eda.distribution:age",
    "status": "promoted",
-   "result_id": "d111d579bde4cc8148ea65993039108ed56994816e79b1e15904c3baf6089513",
-   "input_key": "b17ec2cef71d6fe49ff39e6ea109c54b44dcb1659517b77efd82d3309bb3e293",
+   "result_id": "e355985f3e935f00111229333a94078dafa8c1696a1d0214d8680c81824b32e2",
+   "input_key": "5878a426c2b7ac54d971b8b945517172f0b9a80b64fe583fd8b783958127dcb9",
    "reason": null,
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_a66fa78a9fe2420a8842c8743c9bc551"
+    "x_1518c1ac697348879dc72e9d8a8d1b8f"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -185,15 +185,20 @@
   },
   "next_action": {
    "kind": "run",
-   "step": "models",
-   "activity": "fit.baseline",
-   "message": "How much does a simple model improve on a constant baseline on validation?",
-   "audience": "junior",
-   "junior_message": "How much does a simple model improve on a constant baseline on validation?",
+   "step": "train_eda",
+   "activity": "eda.rate_by",
+   "message": "Run eda.rate_by --column age: the exploration step runs the case catalogue's charts before the models. It reads the target: a look, counted.",
+   "audience": "agent",
+   "junior_message": "The exploration continues with an outcome rate by group (age). It reads the target of the development rows: one more look, counted.",
+   "options": {
+    "column": "age"
+   },
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: the baseline model, run without asking you. How much does a simple model improve on a constant baseline on validation?",
+   "junior_digest": "Next: an outcome rate by group (age), run without asking you. The exploration continues with an outcome rate by group (age). It reads the target of the development rows: one more look, counted.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Exploration (8 of 14).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",
@@ -201,8 +206,8 @@
     "revision": 25,
     "position": {
      "step_id": "models",
-     "completed": 7,
-     "total": 13
+     "completed": 8,
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -226,13 +231,18 @@
      "continue",
      "explain"
     ],
-    "question": "How much does a simple model improve on a constant baseline on validation?",
+    "option_labels": {
+     "continue": "Let's continue",
+     "explain": "Explain first"
+    },
+    "question": "The exploration continues with an outcome rate by group (age). It reads the target of the development rows: one more look, counted.",
     "evidence_refs": [],
     "detail_topics": [
      "metric",
      "uncertainty"
     ]
    }
-  }
+  },
+  "question_junior": "How are the values of age distributed among the training rows?"
  }
 }

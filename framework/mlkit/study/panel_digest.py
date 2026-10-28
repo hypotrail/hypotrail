@@ -1,0 +1,792 @@
+"""The digest additions of the one-page study panel (contract P1, CLI-CONTRACT §17.2).
+
+``status --summary --digest`` appends, after ``texts`` (:data:`view.DIGEST_SUMMARY_KEYS`):
+``panel_contract``, ``automation``, ``review_queue``, ``defensibility``, ``ledger``,
+``sample``, ``headlines`` and ``criterion_configurations``; inside existing structures it adds
+``results.<slot>.channel``, ``open_proposals[].data_contingent`` and the ``texts.{en,fr}``
+keys of §17.2.3. Every key is read from the view the summary was made from and from the
+study's own records (revisions, exposure ledger); no clock is read, nothing is written, and
+nothing here is computed by the panel. The plain summary (without ``--digest``) is unchanged.
+
+Pure apart from reading the study through :class:`mlkit.study.read.Study`; it imports neither
+pandas nor scikit-learn.
+"""
+from __future__ import annotations
+
+import re
+from typing import Any, Iterable, Mapping
+
+from . import audience, cite, companion_env, criterion as criterion_mod, junior, partition
+from . import records as rec
+from . import state as st
+
+SUMMARY_AUTOMATION_KEYS = ('variant', 'active', 'started_revision', 'ended')
+AUTOMATION_ENDED_KEYS = ('revision', 'reason')
+SUMMARY_REVIEW_KEYS = ('items', 'done', 'total')
+SUMMARY_DEFENSIBILITY_KEYS = ('kind', 'count', 'items',
+                              # Lot 2026-10-28 (R65, CLI-CONTRACT §18): what the study must
+                              # gather by the end, each with whether it is done.
+                              'checklist')
+CHECKLIST_KEYS = ('id', 'done')
+CHECKLIST_IDS = ('framing_in_your_words', 'model_chosen_by_you', 'final_test_opened_once',
+                 'conclusion_written', 'no_stale_figure')
+DEFENSIBILITY_NOTE_KEYS = ('meaning', 'checklist', 'not_alarm', 'limits_lead')
+DEFENSIBILITY_NOTE = {
+    'en': {'meaning': 'Defensible means the study can support its conclusion before a '
+                      'reviewer: every decision taken in your words, the model chosen by you, '
+                      'the final test opened once, the conclusion written, and no stale '
+                      'figure.',
+           'checklist': {'framing_in_your_words': 'The framing decisions, taken in your words',
+                         'model_chosen_by_you': 'The model, chosen by you',
+                         'final_test_opened_once': 'The final test, opened once',
+                         'conclusion_written': 'The conclusion, written',
+                         'no_stale_figure': 'No stale figure'},
+           'not_alarm': 'This is not an alarm: it is the list of what the study must gather by '
+                        'the end. It turns to a warning only when something is wrong (a '
+                        'decision to confirm again, a stale figure, an automatic decision to '
+                        'review).',
+           'limits_lead': 'The study is defensible, with these limits:'},
+    'fr': {'meaning': "Défendable veut dire que l'étude peut soutenir sa conclusion devant un "
+                      'relecteur : chaque décision prise avec vos mots, le modèle choisi par '
+                      'vous, le test final ouvert une seule fois, la conclusion écrite, et '
+                      'aucun chiffre périmé.',
+           'checklist': {'framing_in_your_words': 'Les décisions de cadrage, prises avec vos mots',
+                         'model_chosen_by_you': 'Le modèle, choisi par vous',
+                         'final_test_opened_once': 'Le test final, ouvert une fois',
+                         'conclusion_written': 'La conclusion, écrite',
+                         'no_stale_figure': 'Aucun chiffre périmé'},
+           'not_alarm': "Ce n'est pas une alerte : c'est la liste de ce que l'étude devra réunir "
+                        "d'ici la fin. Elle passe en alerte seulement si quelque chose pose "
+                        'problème (décision à reconfirmer, chiffre périmé, décision automatique '
+                        'à relire).',
+           'limits_lead': "L'étude est défendable, avec ces limites :"},
+}
+FRAMING_DECISIONS = ('prediction_time', 'feature_availability', 'split', st.ERROR_METRIC,
+                     st.SUCCESS_CRITERION, st.PREPROCESSING)
+DEFENSIBILITY_ITEM_KEYS = ('id', 'severity')
+DEFENSIBILITY_KINDS = ('warn', 'limits', 'pending')
+SUMMARY_LEDGER_KEYS = ('final_test', 'target_looks', 'configurations', 'variants')
+LEDGER_FINAL_TEST_KEYS = ('openings', 'max')
+LEDGER_LOOK_KEYS = ('eda', 'sample', 'total')
+LEDGER_CONFIGURATION_KEYS = ('tried', 'reference')
+SUMMARY_SAMPLE_KEYS = ('seed', 'row_keys', 'recorded')
+HEADLINE_KEYS = ('decision_id', 'basis', 'results')
+SUMMARY_CRITERION_CONFIG_KEYS = ('metric', 'unit', 'bound', 'configurations',
+                                 # The configuration judged on the opened final test, with
+                                 # its own bound from the final test's baseline (§17.2.4).
+                                 'final_test',
+                                 # Lot 2026-10-28 (R67, CLI-CONTRACT §18): the business bar,
+                                 # the criterion's second level; null without one.
+                                 'business')
+BUSINESS_KEYS = ('max_error', 'measure', 'configurations', 'final_test', 'judged_on', 'met')
+BUSINESS_CONFIGURATION_KEYS = ('slot', 'value', 'met')
+CRITERION_BOUND_KEYS = ('value', 'reference', 'minimum', 'result_id', 'path')
+CRITERION_CONFIGURATION_KEYS = ('slot', 'value', 'result_id', 'path', 'point_meets_bound',
+                                'gain', 'low', 'high', 'status', 'judged_on')
+FINAL_CONFIGURATION_KEYS = ('slot', 'value', 'result_id', 'path', 'point_meets_bound', 'gain',
+                            'low', 'high', 'status', 'bound')
+CHANNEL_DEFAULT = 'chat'
+BASELINE = 'fit.baseline'
+TOLERANCE = 1e-12
+_RESERVE = 'run.reserve'
+
+
+# --- automation and the review queue (§17.2.1) ----------------------------------------------
+
+def automation(state: Mapping) -> dict | None:
+    """``automation``: null for a study created without ``init --automation``."""
+    record = st.automation_of(state)
+    if record is None:
+        return None
+    ended = record.get('ended')
+    return {'variant': record.get('mode'),
+            'active': record.get('status') == st.AUTOMATION_RUNNING,
+            'started_revision': record.get('started_revision'),
+            'ended': ({'revision': ended.get('revision'), 'reason': ended.get('reason')}
+                      if isinstance(ended, Mapping) else None)}
+
+
+def automatic_decisions(records: Iterable[Mapping]) -> list[str]:
+    """The distinct decisions a confirmation with basis ``automatic`` was recorded for, in the
+    order of the revisions (the opening of a demonstration included)."""
+    out: list[str] = []
+    for record in records:
+        if record.get('action') != 'decide.confirm':
+            continue
+        params, result = record.get('params') or {}, record.get('result') or {}
+        if (result.get('basis') or params.get('basis')) != st.AUTOMATIC:
+            continue
+        decision = result.get('decision_id') or params.get('decision_id')
+        if decision and decision not in out:
+            out.append(decision)
+    return out
+
+
+def review_queue(state: Mapping, built: Mapping, records: list[Mapping]) -> dict | None:
+    """``review_queue``: null without automation; else the decisions still confirmed
+    automatically (``view.review_queue``), how many the automatic mode confirmed in all, and
+    how many the junior has reviewed."""
+    if st.automation_of(state) is None:
+        return None
+    items = [dict(item) for item in built.get('review_queue') or []]
+    total = len(automatic_decisions(records))
+    return {'items': items, 'done': max(total - len(items), 0), 'total': total}
+
+
+# --- defensibility (§17.2.2) -----------------------------------------------------------------
+
+def _severity(item: Mapping, decisions: Mapping) -> str:
+    severity = audience.LIMIT_SEVERITY.get(item.get('id'), audience.CAVEAT)
+    if item.get('id') == 'unconfirmed_decisions':
+        reopened = any((decisions.get(d) or {}).get('status') == 'reconfirm_required'
+                       for d in item.get('decisions') or [])
+        return audience.BLOCKING if reopened else severity
+    if item.get('id') == 'stale_results':
+        return audience.BLOCKING if item.get('cited_by') else audience.CAVEAT
+    return severity
+
+
+def defensibility(built: Mapping, summary_out: Mapping) -> dict:
+    """``defensibility``: every ``not_yet_defensible`` id of the summary (``top`` then
+    ``more``) with its severity (``audience.LIMIT_SEVERITY``), the pill's kind and count."""
+    by_id = {}
+    for item in built.get('not_yet_defensible') or []:
+        by_id.setdefault(item['id'], item)
+    limits = summary_out.get('not_yet_defensible') or {}
+    ids = [x['id'] for x in limits.get('top') or []] + list(limits.get('more') or [])
+    decisions = built.get('decisions') or {}
+    items = [{'id': i, 'severity': _severity(by_id.get(i, {'id': i}), decisions)} for i in ids]
+    severities = [x['severity'] for x in items]
+    done = (built.get('next_action') or {}).get('kind') == 'done'
+    if audience.BLOCKING in severities:
+        kind = 'warn'
+    elif done:
+        kind = 'limits'
+    else:
+        kind = 'pending'
+    count = (severities.count(audience.CAVEAT) if kind == 'limits'
+             else sum(s != audience.CONTEXT for s in severities))
+    return {'kind': kind, 'count': count, 'items': items, 'checklist': checklist(built)}
+
+
+def _own_words(decision: Mapping | None) -> bool:
+    if not isinstance(decision, Mapping) or decision.get('status') != 'confirmed':
+        return False
+    return st.basis_class(decision.get('basis')) == 'own_words'
+
+
+def checklist(built: Mapping) -> list[dict]:
+    """R65: what a defensible study gathers, each ``{id, done}``, from the view: the framing
+    decisions and the model choice confirmed in the junior's words, the final test opened
+    once, the conclusion confirmed in their words, and no stale result."""
+    decisions = built.get('decisions') or {}
+    framing = [decisions[d] for d in FRAMING_DECISIONS if d in decisions]
+    choice = decisions.get(st.CHOICE_DECISION.get(built.get('task'), 'model_choice'))
+    final = built.get('final_test') or {}
+    opening = final.get('opening') if isinstance(final.get('opening'), Mapping) else None
+    # A stale result counts when a junior surface cites it (``stale_results.junior``).
+    stale = any(x.get('id') == 'stale_results' and x.get('junior')
+                for x in built.get('not_yet_defensible') or [])
+    done = {'framing_in_your_words': bool(framing) and all(_own_words(d) for d in framing),
+            'model_chosen_by_you': _own_words(choice),
+            'final_test_opened_once': final.get('status') == 'opened' and opening is not None,
+            'conclusion_written': _own_words(decisions.get('conclusion')),
+            'no_stale_figure': not stale}
+    return [{'id': i, 'done': done[i]} for i in CHECKLIST_IDS]
+
+
+def defensibility_note(built: Mapping, summary_out: Mapping, lang: str) -> dict:
+    """``texts.<lang>.defensibility_note`` (R65): what "defensible" means, the checklist's
+    texts by id, why the pill is not an alarm, and the lead of the limits at the end."""
+    words = DEFENSIBILITY_NOTE['fr' if lang == 'fr' else 'en']
+    return {'meaning': words['meaning'], 'checklist': dict(words['checklist']),
+            'not_alarm': words['not_alarm'], 'limits_lead': words['limits_lead']}
+
+
+# --- the ledger line and the sample (§17.2.2, §17.3) ------------------------------------------
+
+def sample(study, state: Mapping, entries: list[Mapping]) -> dict | None:
+    """``sample``: ``{seed, row_keys, recorded}`` of the step-1 sample, or null when none can
+    be drawn. The values are read with ``data --json``."""
+    drawn = partition.study_sample(state, study.blob, entries)
+    if drawn is None:
+        return None
+    return {'seed': drawn['seed'], 'row_keys': list(drawn['row_keys']),
+            'recorded': bool(partition.sample_records(entries, drawn['seed']))}
+
+
+def ledger(built: Mapping, entries: list[Mapping]) -> dict:
+    """``ledger``: the counts of the path's ledger line: the final test's openings, the looks
+    at the target (the exploration's and the step-1 sample's), the configurations tried."""
+    final = built.get('final_test') or {}
+    status = final.get('status')
+    looks = (built.get('eda_looks') or {}).get('target_looks') or 0
+    samples = len(partition.sample_records(entries))
+    return {'final_test': (None if status in (None, 'absent')
+                           else {'openings': 1 if status == 'opened' else 0, 'max': 1}),
+            'target_looks': {'eda': looks, 'sample': samples, 'total': looks + samples},
+            'configurations': {'tried': (built.get('trials') or {}).get('count') or 0,
+                               'reference': BASELINE in (built.get('results') or {})},
+            'variants': None}
+
+
+def variant_budget(state: Mapping) -> dict | None:
+    """``ledger.variants`` (R47, §17.6): the live trial budget of the study's state,
+    ``{used, max, remaining}`` (``trials.budget``: the distinct variants of every confirmed
+    ``model_variant`` value), or None in a study without the variant decision. The panel's
+    budget line reads it, never a budget a result stored at another revision."""
+    from . import state as st, trials
+    if not st.has_wp_b1_decisions(state):
+        return None
+    found = trials.budget(state)
+    return {k: found[k] for k in ('used', 'max', 'remaining')}
+
+
+# --- a result's channel (§17.2.5) ------------------------------------------------------------
+
+def run_channels(records: Iterable[Mapping]) -> dict[str, str]:
+    """``{execution_id: channel}`` recorded on each run's reservation (WP-J, R35); a run
+    started from the chat records no channel."""
+    out = {}
+    for record in records:
+        if record.get('action') != _RESERVE:
+            continue
+        params = record.get('params') or {}
+        eid = params.get('execution_id') or (record.get('result') or {}).get('execution_id')
+        if eid:
+            out[eid] = params.get('channel') or CHANNEL_DEFAULT
+    return out
+
+
+def with_channels(results: Mapping, built: Mapping, channels: Mapping) -> dict:
+    """The summary's ``results`` with ``step`` (the plan step that files the result,
+    ``companion_env.step_of``, target-aware: §17.1.1) and ``channel`` as each slot's last
+    two keys. The panel files a result under ``step`` and computes no step itself."""
+    out = {}
+    plan = built.get('plan') or []
+    for slot, item in results.items():
+        found = (built.get('results') or {}).get(slot) or {}
+        activity = found.get('activity') or str(slot).split(':')[0]
+        step = companion_env.step_of(activity, slot, plan,
+                                     companion_env.target_read_of(activity, found.get('values')))
+        out[slot] = {**item, 'step': step,
+                     'channel': channels.get(found.get('execution_id'), CHANNEL_DEFAULT)}
+    return out
+
+
+# --- data-contingent proposals (§17.2.6) -----------------------------------------------------
+
+def proposal_contingency(records: Iterable[Mapping]) -> dict[str, tuple]:
+    """``{proposal_id: (data_contingent, data_contingent_reason)}`` as each ``decide
+    propose`` returned them (its receipt); a proposal recorded before a decision was assessed
+    reads ``(None, None)``."""
+    out = {}
+    for record in records:
+        if record.get('action') != 'decide.propose':
+            continue
+        result = record.get('result') or {}
+        pid = result.get('proposal_id')
+        if pid:
+            out[pid] = (result.get('data_contingent'), result.get('data_contingent_reason'))
+    return out
+
+
+def decision_marks(study, built: Mapping) -> dict[str, bool]:
+    """``{decision_id: True}`` for a rule or a model choice whose current proposal (the one
+    the decision holds, confirmed or proposed) was changed after an evaluation of the earlier
+    value was seen (contract P1.13): the report and the notebook show the mark next to the
+    decision, as they show a data-contingent preparation."""
+    found = proposal_contingency(study.revisions(0))
+    out = {}
+    for decision_id in ('policy', 'model_choice'):
+        pid = ((built.get('decisions') or {}).get(decision_id) or {}).get('proposal_id')
+        flag, reason = found.get(pid, (None, None))
+        if flag is True and isinstance(reason, Mapping) \
+                and reason.get('kind') == junior.CHANGED_AFTER_VALIDATION:
+            out[decision_id] = True
+    return out
+
+
+def contingency_text(decision_id: str | None, reason: Mapping | None, lang: str) -> str | None:
+    """The junior's sentence of a data-contingent proposal in ``lang`` (the receipt holds it
+    in the study language only): rebuilt from the recorded reason."""
+    if not isinstance(reason, Mapping):
+        return None
+    from . import drafts
+    if reason.get('kind') == junior.CHANGED_AFTER_VALIDATION:
+        return junior.changed_after_validation_text(decision_id, lang)
+    if decision_id == st.PREPROCESSING:
+        return drafts.contingency_text(reason.get('target_looks_before') or 0,
+                                       reason.get('looks_by_activity') or {},
+                                       len(reason.get('motivating_results_reading_target') or []),
+                                       lang)
+    if decision_id == st.MODEL_VARIANT and reason.get('families') is not None:
+        return drafts.variant_contingency_text(list(reason.get('families') or []), lang)
+    return reason.get('junior_text')
+
+
+# --- headlines (§17.2.2, §17.2.3) -----------------------------------------------------------
+
+def _citable(built: Mapping, slot: str) -> Mapping | None:
+    item = (built.get('results') or {}).get(slot)
+    if item and item.get('current') and item.get('integrity') == 'ok' \
+            and isinstance(item.get('values'), Mapping):
+        return item
+    return None
+
+
+def _num(value: Any, kind: str, lang: str) -> str | None:
+    return cite.format_value(value, kind, lang) if cite.is_number(value) else None
+
+
+def _model_figures(built: Mapping, lang: str, slot: str, model: str | None, metric: str,
+                   kind: str, path) -> tuple[str | None, list[str]]:
+    """``(words, [result_id])``: ``model``'s ``metric`` against the baseline's in the result
+    of ``slot`` (``path(values, model)`` reads one model's metric)."""
+    item = _citable(built, slot)
+    if item is None or not model:
+        return None, []
+    values = item['values']
+    mine, base = path(values, model), path(values, BASELINE)
+    words = junior.HEADLINES[lang]
+    mine, base = _num(mine, kind, lang), _num(base, kind, lang)
+    if mine is None or base is None or model == BASELINE:
+        return None, []
+    unit = values.get('unit')
+    unit = f' {unit}' if unit and kind != 'fraction' else ''
+    return words['against'].format(metric=words[metric], value=f'{mine}{unit}',
+                                   baseline=f'{base}{unit}'), [item['result_id']]
+
+
+def _rule_metric(rule: str | None):
+    def read(values, model):
+        rules = values.get('rules') or {}
+        raw = next((r for r in rules if rule and rec.canonical_rule(r) == rule), None)
+        if raw is None:
+            return None
+        return (((rules[raw].get('models') or {}).get(model) or {}).get('precision'))
+    return read
+
+
+def _mae(values, model):
+    return ((values.get('models') or {}).get(model) or {}).get('mae')
+
+
+def _final_precision(values, model):
+    return ((values.get('models') or {}).get(model) or {}).get('precision')
+
+
+def _figures(step_id: str, built: Mapping, lang: str) -> tuple[str | None, list[str]]:
+    """The figures a step's headline quotes, from current results only."""
+    words = junior.HEADLINES[lang]
+    decisions = built.get('decisions') or {}
+    task = built.get('task')
+    if step_id == 'structural_eda':
+        item = _citable(built, 'eda.quality')
+        if item is None:
+            return None, []
+        values = item['values']
+        rows = _num(values.get('n_rows'), 'integer', lang)
+        dup = _num((values.get('duplicates') or {}).get('n_rows'), 'integer', lang)
+        if rows is None or dup is None:
+            return None, []
+        return words['quality'].format(rows=rows, duplicates=dup), [item['result_id']]
+    if step_id == 'train_eda':
+        item = _citable(built, 'eda.target_rate' if task != 'regression'
+                        else 'eda.target_summary')
+        if item is None:
+            return None, []
+        values = item['values']
+        if task == 'regression':
+            mean = _num(values.get('mean'), 'auto', lang)
+            unit = f' {values["unit"]}' if values.get('unit') else ''
+            return ((words['target_mean'].format(value=f'{mean}{unit}'), [item['result_id']])
+                    if mean else (None, []))
+        rate = _num(values.get('rate'), 'fraction', lang)
+        return (words['target_rate'].format(value=rate), [item['result_id']]) if rate \
+            else (None, [])
+    if step_id == 'model_choice' and task == 'regression':
+        return _model_figures(built, lang, 'evaluate.regression',
+                              (decisions.get('model_choice') or {}).get('value'), 'error',
+                              'auto', _mae)
+    if step_id == 'policy':
+        value = (decisions.get('policy') or {}).get('value')
+        rule, _, model = str(value or '').partition('@')
+        model = model or (decisions.get('model_choice') or {}).get('value') or 'fit.logistic'
+        return _model_figures(built, lang, 'policy.evaluation', model, 'precision',
+                              'fraction', _rule_metric(rec.canonical_rule(rule)))
+    if step_id == 'final_test':
+        item = _citable(built, 'final_test.evaluation')
+        if item is None:
+            return None, []
+        model = item['values'].get('model')
+        if task == 'regression':
+            return _model_figures(built, lang, 'final_test.evaluation', model, 'error', 'auto',
+                                  _mae)
+        return _model_figures(built, lang, 'final_test.evaluation', model, 'precision',
+                              'fraction', _final_precision)
+    return None, []
+
+
+def _decision_words(built: Mapping, decision_id: str) -> str | None:
+    from . import automation_words
+    value = ((built.get('decisions') or {}).get(decision_id) or {}).get('value')
+    if value is None:
+        return None
+    lang = built.get('language') or 'en'
+    if decision_id == 'conclusion' and isinstance(value, Mapping):
+        return audience.verdict_words(value.get('verdict'), lang)
+    words = automation_words.value_words(built, decision_id, value)
+    if isinstance(value, str) and words == value:
+        # Free text (the prediction moment): the junior's words, quoted as said.
+        return f'« {value} »' if lang == 'fr' else f'“{value}”'
+    return words
+
+
+def headlines(built: Mapping, summary_out: Mapping, lang: str | None = None
+              ) -> tuple[dict, dict]:
+    """``(headlines, texts)``: for each done plan step, in plan order, ``{decision_id, basis,
+    results}`` and its one line in ``lang`` (the study language when not given). A line holds
+    the decision's value in words and the figures of current results only (``cite`` formats
+    them); a step whose figures are not current keeps its value only, and a step with
+    neither has no entry."""
+    lang = lang or built.get('language') or 'en'
+    words = junior.HEADLINES[lang]
+    decisions = summary_out.get('decisions') or {}
+    out, lines = {}, {}
+    for step in built.get('plan') or []:
+        if step.get('status') != 'done':
+            continue
+        decision_id = step.get('decision')
+        value = _decision_words(built, decision_id) if decision_id else None
+        figures, results = _figures(step['id'], built, lang)
+        if value is None and figures is None:
+            continue
+        parts = [p for p in (value, figures) if p]
+        text = words['join'].join(parts)
+        # Without the step's name (the panel prints it beside the line), first letter up.
+        text = text[:1].upper() + text[1:] if text[:1].islower() else text
+        lines[step['id']] = words['line'].format(text=text)
+        out[step['id']] = {'decision_id': decision_id,
+                           'basis': (decisions.get(decision_id) or {}).get('basis')
+                           if decision_id else None,
+                           'results': results}
+    return out, lines
+
+
+# --- the criterion per configuration (§17.2.4) -------------------------------------------------
+
+def _regression_configurations(built: Mapping, value: Mapping) -> dict | None:
+    item = _citable(built, 'evaluate.regression')
+    if item is None or not isinstance(value.get('min_share'), (int, float)):
+        return None
+    values = item['values']
+    models = list((item.get('params') or {}).get('models') or (values.get('models') or {}))
+    # R46: the error the confirmed criterion names (MAE by default, or RMSE).
+    error = criterion_mod.ERROR_METRIC.get(value.get('metric'), 'mae')
+    reference = _error(values, BASELINE, error)
+    if not cite.is_number(reference):
+        return None
+    minimum = value['min_share']
+    bound = (1 - minimum) * reference
+    candidate = (item.get('params') or {}).get('candidate')
+    order = _ordered(models, candidate)
+    configurations = []
+    for slot in order:
+        mae = _error(values, slot, error)
+        if not cite.is_number(mae):
+            continue
+        delta = ((values.get('deltas') or {}).get(slot) or {}).get(error)
+        gain = low = high = None
+        if slot != BASELINE and isinstance(delta, Mapping) and cite.is_number(delta.get('point')):
+            gain = -delta['point'] / reference
+            if cite.is_number(delta.get('low')) and cite.is_number(delta.get('high')):
+                low, high = -delta['high'] / reference, -delta['low'] / reference
+        configurations.append(_configuration(
+            slot, mae, item['result_id'], cite.format_path(['models', slot, error]),
+            mae <= bound + TOLERANCE, gain, low, high, minimum))
+    return {'metric': value.get('metric') or 'mae_reduction', 'unit': values.get('unit'),
+            'bound': {'value': bound, 'reference': reference, 'minimum': minimum,
+                      'result_id': item['result_id'],
+                      'path': cite.format_path(['models', BASELINE, error])},
+            'configurations': configurations}
+
+
+def _error(values, model, error: str = 'mae'):
+    return ((values.get('models') or {}).get(model) or {}).get(error)
+
+
+def _ordered(models: list[str], candidate: str | None) -> list[str]:
+    """The candidate first, then each variant and family in slot order, then the baseline."""
+    rest = sorted((m for m in models if m not in (candidate, BASELINE)),
+                  key=lambda s: (s.partition(':')[0], int(s.partition(':')[2] or 1)))
+    head = [candidate] if candidate in models else []
+    return head + rest + ([BASELINE] if BASELINE in models else [])
+
+
+def _binary_configurations(built: Mapping, value: Mapping, crit: Mapping) -> dict | None:
+    item = _citable(built, 'policy.evaluation')
+    if item is None or not isinstance(value.get('min_points'), (int, float)):
+        return None
+    rule = crit.get('rule')
+    if not rule:
+        return None
+    values = item['values']
+    rules = values.get('rules') or {}
+    raw = next((r for r in rules if rec.canonical_rule(r) == rule), None)
+    if raw is None:
+        return None
+    metric = criterion_mod.DELTA_METRIC.get(value.get('metric'), 'precision')
+    at_rule = rules[raw]
+    reference = ((at_rule.get('models') or {}).get(BASELINE) or {}).get(metric)
+    if not cite.is_number(reference):
+        return None
+    minimum = value['min_points']
+    bound = reference + minimum / 100
+    params = item.get('params') or {}
+    models = list(params.get('models') or (at_rule.get('models') or {}))
+    candidate = next((m for m in models if m in ('fit.logistic', 'fit.linear')), None)
+    configurations = []
+    for slot in _ordered(models, candidate):
+        point = ((at_rule.get('models') or {}).get(slot) or {}).get(metric)
+        if not cite.is_number(point):
+            continue
+        delta = ((at_rule.get('deltas') or {}).get(slot) or {}).get(metric)
+        gain = low = high = None
+        if slot != BASELINE and isinstance(delta, Mapping) and cite.is_number(delta.get('point')):
+            gain = 100 * delta['point']
+            if cite.is_number(delta.get('low')) and cite.is_number(delta.get('high')):
+                low, high = 100 * delta['low'], 100 * delta['high']
+        configurations.append(_configuration(
+            slot, point, item['result_id'],
+            cite.format_path(['rules', raw, 'models', slot, metric]),
+            point >= bound - TOLERANCE, gain, low, high, minimum))
+    return {'metric': value.get('metric'), 'unit': 'share',
+            'bound': {'value': bound, 'reference': reference, 'minimum': minimum,
+                      'result_id': item['result_id'],
+                      'path': cite.format_path(['rules', raw, 'models', BASELINE, metric])},
+            'configurations': configurations}
+
+
+def _configuration(slot, value, result_id, path, meets, gain, low, high, minimum) -> dict:
+    status = (criterion_mod._status(gain, low, high, minimum)[0] if gain is not None
+              else 'not_assessed')
+    return {'slot': slot, 'value': value, 'result_id': result_id, 'path': path,
+            'point_meets_bound': bool(meets), 'gain': gain, 'low': low, 'high': high,
+            'status': status, 'judged_on': 'development'}
+
+
+def criterion_configurations(built: Mapping) -> dict | None:
+    """``criterion_configurations``: null when the success criterion is not confirmed or no
+    current evaluation compares configurations; else the absolute bound a configuration must
+    reach (from registered values) and each configuration's status against it. The
+    configuration the opened final test measured is judged on the final test."""
+    crit = built.get('criterion') or {}
+    value = crit.get('value')
+    if crit.get('decision_status') not in ('confirmed', 'reconfirm_required') \
+            or not isinstance(value, Mapping):
+        return None
+    if built.get('task') == 'regression':
+        out = _regression_configurations(built, value)
+    else:
+        out = _binary_configurations(built, value, crit)
+    if out is None:
+        return None
+    final = crit.get('final_test')
+    out['final_test'] = None
+    if crit.get('judged_on') == 'final_test' and isinstance(final, Mapping):
+        for item in out['configurations']:
+            if item['slot'] == crit.get('model'):
+                item.update(judged_on='final_test', status=final.get('status') or item['status'])
+        out['final_test'] = _final_configuration(built, value, crit, final)
+    out['business'] = _business(crit, out)
+    return {k: out[k] for k in SUMMARY_CRITERION_CONFIG_KEYS}
+
+
+def _business(crit: Mapping, out: Mapping) -> dict | None:
+    """R67: the business bar of the criterion (``view.criterion.business``, from registered
+    values), with each development configuration's error against it; null without a bar."""
+    business = crit.get('business')
+    if not isinstance(business, Mapping):
+        return None
+    bar = business['max_error']
+    configurations = [{'slot': c['slot'], 'value': c['value'],
+                       'met': c['value'] <= bar + TOLERANCE}
+                      for c in out.get('configurations') or [] if cite.is_number(c.get('value'))]
+    final = business.get('final_test')
+    return {'max_error': bar, 'measure': business.get('measure'),
+            'configurations': configurations,
+            'final_test': dict(final) if isinstance(final, Mapping) else None,
+            'judged_on': business.get('judged_on'), 'met': business.get('met')}
+
+
+def _final_configuration(built: Mapping, value: Mapping, crit: Mapping,
+                         final: Mapping) -> dict | None:
+    """``criterion_configurations.final_test``: the configuration the opened final test
+    measured, every figure from the current ``final_test.evaluation`` (never a development
+    one): its metric, the bound computed from the final test's own baseline, its gain and
+    interval (``values.criterion``) and the status the criterion is judged by. None when the
+    evaluation does not register them."""
+    item = _citable(built, 'final_test.evaluation')
+    if item is None:
+        return None
+    values = item['values']
+    slot = values.get('model') or crit.get('model')
+    models = values.get('models') or {}
+    regression = built.get('task') == 'regression'
+    metric = (criterion_mod.ERROR_METRIC.get(value.get('metric'), 'mae') if regression
+              else criterion_mod.DELTA_METRIC.get(value.get('metric'), 'precision'))
+    reference = (models.get(BASELINE) or {}).get(metric)
+    mine = (models.get(slot) or {}).get(metric)
+    minimum = value.get('min_share' if regression else 'min_points')
+    if not (cite.is_number(reference) and cite.is_number(mine)
+            and isinstance(minimum, (int, float))):
+        return None
+    if regression:
+        bound = (1 - minimum) * reference
+        meets = mine <= bound + TOLERANCE
+    else:
+        bound = reference + minimum / 100
+        meets = mine >= bound - TOLERANCE
+    registered = values.get('criterion') if isinstance(values.get('criterion'), Mapping) else {}
+    if regression and metric == 'rmse':
+        # R46: the evaluation registers the MAE criterion; the RMSE one is computed from
+        # its RMSE figures (``criterion.assess``).
+        registered = final
+    figure = {k: registered.get(k) if cite.is_number(registered.get(k)) else None
+              for k in ('gain', 'low', 'high')}
+    return {'slot': slot, 'value': mine, 'result_id': item['result_id'],
+            'path': cite.format_path(['models', slot, metric]),
+            'point_meets_bound': bool(meets), **figure,
+            'status': final.get('status') or 'not_assessed',
+            'bound': {'value': bound, 'reference': reference, 'minimum': minimum,
+                      'result_id': item['result_id'],
+                      'path': cite.format_path(['models', BASELINE, metric])}}
+
+
+# --- the texts of §17.2.3 ------------------------------------------------------------------
+
+# French typography of the texts the panel shows verbatim (CLI-CONTRACT §17.2.3): a narrow
+# no-break space (U+202F) before ; : ? ! and », and after «, as the panel sets its own copy
+# (media/core.js ``frenchSpaces``), which leaves the engine's texts byte for byte.
+NNBSP = '\u202f'
+_FR_BEFORE = re.compile('(?<=\\S)[ \u00a0\u202f]+([;:?!\u00bb])')
+_FR_AFTER = re.compile('\u00ab[ \u00a0\u202f]*')
+
+
+def french_typography(value):
+    """``value`` with the French spaces set: every string of a str, list or dict (keys kept).
+    A sign glued to the previous word ("http:", "12:30", "Note:") is left as written; only a
+    space (plain, no-break or narrow) before the sign becomes one narrow no-break space."""
+    if isinstance(value, str):
+        out = _FR_BEFORE.sub(NNBSP + r'\1', value)
+        return _FR_AFTER.sub('\u00ab' + NNBSP, out)
+    if isinstance(value, list):
+        return [french_typography(v) for v in value]
+    if isinstance(value, dict):
+        return {k: french_typography(v) for k, v in value.items()}
+    return value
+
+
+def _sample_note(lang: str) -> str:
+    from . import exposure              # the read side imports no writer at module level
+    return exposure.sample_note(lang)
+
+
+def question(action: Mapping) -> str | None:
+    """The one question the chat asks now, or null for a run, a blocked step, an unknown
+    outcome or the end."""
+    if action.get('kind') in ('run', 'blocked', 'done', 'outcome_unknown'):
+        return None
+    pause = action.get('pause') or {}
+    return action.get('question') or pause.get('question')
+
+
+def options(action: Mapping) -> dict:
+    """``{option_id: label}`` in the order the chat offers them, or ``{}`` without a
+    question."""
+    if question(action) is None:
+        return {}
+    pause = action.get('pause') or {}
+    labels = pause.get('option_labels') or {}
+    return {o: labels.get(o) for o in pause.get('options') or []}
+
+
+def texts(built: Mapping, lang: str, *, contingency: Mapping, has_sample: bool,
+          headline_lines: Mapping) -> dict:
+    """The keys §17.2.3 adds to ``texts.<lang>``, from the view read in that language."""
+    action = built.get('next_action') or {}
+    open_ids = {p['proposal_id']: p['decision_id'] for p in built.get('open_proposals') or []}
+    return {
+        'question': question(action),
+        'options': options(action),
+        'options_note': junior.options_note(built, action, lang),
+        'junior_digest': action.get('junior_digest'),
+        'headlines': dict(headline_lines),
+        'data_contingent': {pid: contingency_text(open_ids[pid], reason, lang)
+                            for pid, (flag, reason) in contingency.items()
+                            if pid in open_ids and flag is True},
+        'sample_note': _sample_note(lang) if has_sample else None,
+        # Owner batch of 2026-10-28 (§17.6).
+        'plan_recap': action.get('plan_recap'),
+        'step_limit': junior.step_limit(built, lang),
+        'criterion_words': criterion_words(built, lang),
+    }
+
+
+def criterion_words(built: Mapping, lang: str) -> str | None:
+    """R48: the confirmed criterion in words, on the frame it is judged on: "error (MAE) on
+    the final test …" once the opened final test judges it, else the out-of-fold or
+    validation error; null without a held criterion."""
+    from . import texts as tx
+    crit = built.get('criterion') or {}
+    if crit.get('decision_status') not in ('confirmed', 'reconfirm_required'):
+        return None
+    cv = tx.scheme_of(built) == tx.CROSS_VALIDATION
+    return criterion_mod.value_words(crit.get('value'), lang, cv, crit.get('judged_on'))
+
+
+def additions(study, built: Mapping, summary_out: Mapping) -> dict:
+    """The digest keys of §17.2, in :data:`view.DIGEST_SUMMARY_KEYS` order after ``texts``."""
+    state = study.state
+    records = study.revisions(0)
+    entries = study.exposure_records()
+    found, _ = headlines(built, summary_out)
+    from . import cmd_data, drafts
+    lang = built.get('language') or 'en'
+    verdicts = drafts.quality_verdicts(study, state, lang)
+    return {'panel_contract': companion_env.PANEL_CONTRACT,
+            'automation': automation(state),
+            'review_queue': review_queue(state, built, records),
+            'defensibility': defensibility(built, summary_out),
+            'ledger': {**ledger(built, entries), 'variants': variant_budget(state)},
+            'sample': sample(study, state, entries),
+            'headlines': found,
+            'criterion_configurations': criterion_configurations(built),
+            # Owner batch of 2026-10-28 (CLI-CONTRACT §17.6): the duplicates and groups known
+            # before the split (R38), and every column's quality verdict (R40, R41).
+            'data_structure': cmd_data.structure_of(study),
+            'quality_verdicts': verdicts,
+            # Lot 2026-10-28 (CLI-CONTRACT §18): the use-case brief (R66) and the case's
+            # display names (EN-18); null without the case file.
+            **case_files(state)}
+
+
+def case_files(state: Mapping) -> dict:
+    """``case_brief`` and ``case_display`` of the digest (null without their file)."""
+    from . import case_brief as cb, case_display as cd
+    _, display = cd.of_state(state)
+    return {'case_brief': cb.digest(cb.of_state(state)), 'case_display': cd.digest(display)}
+
+
+def proposal_evidence(built: Mapping, proposal: Mapping) -> list[str]:
+    """R40: the slots of the current results that show the data facts an open proposal
+    cites (``junior.evidence_slots`` for its decision); the drafted preparation's reasons
+    name the distributions concerned."""
+    action = {'decision': proposal.get('decision_id'), 'default_value': proposal.get('value')}
+    return junior.evidence_slots(action, built, proposal.get('decision_id'))
+
+
+__all__ = ['additions', 'automation', 'review_queue', 'defensibility', 'ledger', 'sample',
+           'headlines', 'criterion_configurations', 'run_channels', 'with_channels',
+           'proposal_contingency', 'contingency_text', 'texts', 'french_typography']

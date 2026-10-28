@@ -36,6 +36,8 @@ const refusals = require('./refusals');
 const { studyKey } = require('./localstore');
 const launch = require('./launch');
 const l10n = require('./l10n');
+const page = require('./models/page');
+const flag = require('./flag');
 
 const HANDLERS_DIR = path.join(__dirname, 'handlers');
 const MAX_READS = 2;
@@ -113,7 +115,7 @@ function semaphore(limit) {
   };
 }
 
-function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SETTINGS, host = {},
+function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SETTINGS, host = {}, surface = 'panel',
   openArtifact = host.openArtifact || (async () => {}),
   exists = target => fs.existsSync(target), uuid = () => crypto.randomUUID(), log = () => {},
   handlers = loadHandlers() }) {
@@ -162,6 +164,9 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     // `study` (CR.2): the study key, so the webview keeps draft words for this study only.
     send({ type: 'init', stage: active.stage, reviewer: active.reviewer === true, learningLayer: active.learningLayer !== false,
       chatInsert: active.chatInsert === true, task: snapshot ? snapshot.task : null, study: studyKey(agent.studyDir),
+      panelContract: flag.PANEL_CONTRACT,
+      // Lot P (R51, ADR 0004 decision 14): the read-only What if? tab draws only What if?.
+      surface: surface === 'whatif' ? 'whatif' : 'panel',
       marimo: launch.display(agent),
       language: ['auto', 'en', 'fr'].includes(active.language) ? active.language : 'auto' });
   }
@@ -228,7 +233,8 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
   }
 
   async function loadSummary({ since = null } = {}) {
-    const digest = stageAtLeast('v1');
+    // ADR 0004 d13 (§5): the one page needs the digest's P1 keys from stage v0.
+    const digest = true;
     let res = await readProcess(cli.statusArgv(agent, { digest, since }));
     // An engine without C1 (CLI-CONTRACT-COMPANION §13 stub): fall back to the v0 read.
     if (digest && res.payload && res.payload.ok === false && res.payload.error &&
@@ -301,12 +307,14 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
   }
 
   /**
-   * ctx.write: one whitelisted write (W4-W7). `argv(requestId)` builds it with lib/cli.js;
+   * ctx.write: one whitelisted write (W4, W5, W7, W8). `argv(requestId)` builds it with lib/cli.js;
    * `record(payload)` returns the `recorded` object of a success. Exclusive: reads wait;
    * a second write while one runs is `invalid`. Always refreshes after the outcome.
    */
   async function write(op, { target = null, argv, record = null, refresh: again_ = true } = {}) {
     if (!protocol.WRITE_OPS.includes(op)) throw new Error(`unknown write ${op}`);
+    // Lot P (R51): the What if? tab writes nothing, whatever the stage.
+    if (surface === 'whatif') { invalid(op, say('whatifReadOnly'), target); return null; }
     if (active.reviewer && !REVIEWER_ALLOWED.includes(op)) { invalid(op, say('reviewerRefusal'), target); return null; }
     if (busy) { invalid(op, say('busyRefusal'), target); return null; }
     let built;
@@ -348,7 +356,14 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     if (!loader || (loader.stage && !stageAtLeast(loader.stage)) || (typeof loader.when === 'function' && !loader.when({ ...active }))) {
       return send({ type: 'load_error', view: message.view, message: say('notAvailable'), detail: '' });
     }
-    const out = await read(loader.key(message), loader.argv(cli, agent, message), loader.model);
+    let argv;
+    try {
+      // Lot P (R49): a loader may read the snapshot's revision (the Azure ML plan).
+      argv = loader.argv(cli, agent, message, snapshot);
+    } catch (e) {
+      return send({ type: 'load_error', view: message.view, message: String((e && e.message) || e), detail: '' });
+    }
+    const out = await read(loader.key(message), argv, loader.model);
     if (!out.ok) return send({ type: 'load_error', view: message.view, message: out.message, detail: out.detail || '' });
     const reply = { type: 'view_data', view: message.view, revision: out.revision, currency: out.currency, model: out.model };
     if (message.resultId !== undefined) reply.resultId = message.resultId;
@@ -378,6 +393,21 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     say,
   };
 
+  /** The anchor of a navigation target (§4.3), from the last summary; the path's head when unknown. */
+  function anchorOf(target) {
+    if (target && typeof target.anchor === 'string') return target.anchor;
+    const kind = target && target.kind;
+    const id = target && target.id;
+    if (kind === 'result') return page.anchorOfResult(snapshot, id);
+    const plan = snapshot ? snapshot.plan.map(s => s.id) : [];
+    if (kind === 'decision' && plan.includes(id)) return `path:${id}`;
+    if (kind === 'proposal') {
+      const p = snapshot ? snapshot.proposals.find(x => x.proposalId === id) : null;
+      return p ? 'now' : 'path';
+    }
+    return 'path';
+  }
+
   async function handle(raw) {
     const message = protocol.validateIncoming(raw);
     if (!message) {
@@ -389,6 +419,10 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
       return;
     }
     const spec = protocol.TO_EXTENSION[message.type];
+    if (spec.write && surface === 'whatif') {
+      invalid(spec.write, say('whatifReadOnly'), null);
+      return;
+    }
     if (spec.write && active.reviewer && !REVIEWER_ALLOWED.includes(spec.write)) {
       invalid(spec.write, say('reviewerRefusal'), message.proposalId || message.executionId || null);
       return;
@@ -426,9 +460,13 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     settings: () => ({ ...active }),
     /** The language of the extension's words (lib/l10n.js). */
     language,
-    /** Post a navigation request (a deep link, "go to a result"); false when invalid. */
+    /**
+     * Post a navigation request (a deep link, "go to a result"; §4.3): the target's anchor,
+     * resolved from the last summary (a result to `path:<step>/<slot>`, a decision to its
+     * step line, an open proposal to Now); false when invalid.
+     */
     navigate(target) {
-      return send({ type: 'navigate', tab: target.tab, kind: target.kind, id: target.id });
+      return send({ type: 'navigate', anchor: anchorOf(target), kind: target.kind, id: target.id });
     },
     /** Run an extension command a handler registered; undefined when none did. */
     async command(name, args) {

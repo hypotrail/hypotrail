@@ -30,5 +30,5 @@ reports:
 # The candidate's MLflow package is written during its capture, before any check
 # (workshop profile: required). "none" keeps the native bundle only.
 packaging:
-  format: "@@text:packaging_format@@"
+  format: @@yaml:packaging_format@@
   required: @@yaml:packaging_required@@

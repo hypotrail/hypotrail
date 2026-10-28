@@ -1,6 +1,7 @@
 'use strict';
 // Stage v1 on the real CLI (scope S, WP-I; COMPANION-ADVANCED §3.2 v1, §6.1, §6.2, §7 W5,
-// W6, §11; no W1/W2 since the v0.3 narrowing). The controller and real `hypotrail` processes on temporary Bank Marketing
+// §11; no W1/W2 since the v0.3 narrowing, no W6 since R31: an interruption is acknowledged in
+// the chat). The controller and real `hypotrail` processes on temporary Bank Marketing
 // (binary) and Auto MPG (regression) studies created from the committed cases, outside the
 // repository, in paths with spaces and quotes. The chat agent is played by direct CLI
 // calls. Not a VS Code session. Needs framework/.venv.
@@ -95,7 +96,7 @@ test('no W2 (v0.3): a withdrawal in the chat reaches the panel', { skip }, async
   assert.ok(!p.snapshot().proposals.some(x => x.proposalId === pid), 'refreshed: no longer open');
 });
 
-test('W5: Regenerate writes the report and the notebook; W6: an interrupted run is acknowledged in typed words only', { skip }, async () => {
+test('W5: Regenerate writes the report and the notebook; R31: an interrupted run is shown read only and acknowledged in the chat', { skip }, async () => {
   bank.decide('feature_availability', require('./realstudy').availability('binary'));
   bank.decide('split', { method: 'stratified_random', validation_fraction: 0.3, seed: 20261017 });
   bank.run('split');
@@ -116,14 +117,15 @@ test('W5: Regenerate writes the report and the notebook; W6: an interrupted run 
   const pending = [...ex.interrupted, ...ex.suspected];
   assert.equal(pending.length, 1, JSON.stringify(ex));
   const eid = pending[0].executionId;
-  await p.send({ type: 'acknowledge', executionId: eid, words: 'ok', revision: p.snapshot().revision });
-  const bare = p.last('outcome');
-  assert.deepEqual([bare.op, bare.kind, bare.refusal.code, bare.refusal.reason], ['W6', 'refused', 'ambiguous_confirmation', 'bare_acknowledgement']);
-  const words = 'I know this run was cut off and its outcome is unknown';
-  await p.send({ type: 'acknowledge', executionId: eid, words, revision: p.snapshot().revision });
-  const ack = p.last('outcome');
-  assert.equal(ack.kind, 'ok', JSON.stringify(ack));
-  assert.equal(ack.recorded.userWords, words);
+  // The panel takes no acknowledgement (R31): the message is dropped and runs nothing.
+  const before = p.commands().length;
+  await p.send({ type: 'acknowledge', executionId: eid, words: 'I know it stopped', revision: p.snapshot().revision });
+  assert.equal(p.commands().length, before, 'no CLI process');
+  // The chat acknowledges it in the junior's words (the agent, played by a direct CLI call);
+  // the panel reads it back.
+  bank.hyp(['run', '--acknowledge-interruption', eid, '--user-words=I know this run was cut off and its outcome is unknown',
+    '--request-id', 'chat-ack-1', '--expected-revision', bank.rev(), '--json']);
+  await p.send({ type: 'refresh' });
   const after = p.snapshot().executions;
   assert.ok(![...after.interrupted, ...after.suspected].some(e => e.executionId === eid), 'no longer waiting');
 });
@@ -134,8 +136,7 @@ test('reviewer mode refuses every write of the study before any process starts (
   const before = p.commands().length;
   const rev = p.snapshot().revision;
   for (const m of [{ type: 'render' },
-    { type: 'run_eda', activity: 'eda.distribution', column: 'age', revision: rev },
-    { type: 'acknowledge', executionId: 'e_1', words: 'I know it stopped', revision: rev }]) {
+    { type: 'run_eda', activity: 'eda.distribution', column: 'age', revision: rev }]) {
     await p.send(m);
     assert.deepEqual([p.last('outcome').kind, p.last('outcome').message], ['invalid', 'Read-only reviewer mode.'], m.type);
   }

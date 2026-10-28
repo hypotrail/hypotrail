@@ -485,13 +485,20 @@ def _partial_part(decision_id: str, value: Mapping, texts, names: Mapping, t: st
         step = next((k for k, concept in PREPROCESSING_PARTS.items()
                      if concepts.any_said(concepts.concept_terms(concept), [part])), None)
         if step is None:
+            rare = value.get('rare_category_min_rows')
             columns = {cmd._fold(str(c)) for c in list(value.get('caps') or {})
-                       + list(value.get('log_transform') or [])}
+                       + list(value.get('log_transform') or [])
+                       # L8 (R6): a column with its own rare-category minimum.
+                       + [c for c, n in (rare.items() if isinstance(rare, Mapping) else ())
+                          if n]}
             return found if part in columns else None
         active = value.get(step)
         if step == 'missing':
             active = active == 'indicator' or (isinstance(active, Mapping)
                                                and 'indicator' in active.values())
+        if step == 'rare_category_min_rows':
+            from . import governance
+            active = governance.rare_grouping(value)        # L8 (R6): or per column
         return found if active and not _negated_in(texts, part) else None
     if decision_id == 'model_variant' and any(
             v.get('kind') == 'drop_group' for v in _variants(value)):

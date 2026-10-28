@@ -11,7 +11,9 @@
   the third decision is ``model_choice``: confirming it needs a current
   ``evaluate.regression`` result that compared the chosen model; the conclusion
   ``adopt_model`` needs the candidate model chosen, and ``keep_baseline`` and
-  ``inconclusive`` need no model choice.
+  ``inconclusive`` need no model choice. In a study with a final test (WP-B1) an adopting
+  verdict also needs the final test opened with a current final evaluation (review round 9,
+  R9E-4, :func:`adoption_missing`).
 
 ``missing_for_decision`` and ``missing_for_activity`` return the unmet requirements
 (empty when met); the ``require_*`` functions raise
@@ -20,7 +22,9 @@ activities call :func:`require_activity` before reserving an execution, and agai
 when promoting a result.
 
 Pure: only state is read, plus, when ``store`` is given, the registry entry of the
-current policy evaluation (to check that it evaluated the proposed rule).
+current policy evaluation (to check that it evaluated the proposed rule) and (review round
+3, E3-3) the currency of the results the final-test opening rests on, by the rule of
+``status`` (:mod:`mlkit.study.opening`).
 """
 from __future__ import annotations
 
@@ -40,6 +44,8 @@ CONCLUSION_VERDICTS = ('adopt_policy', 'keep_baseline', 'inconclusive')
 REGRESSION_CONCLUSION_VERDICTS = ('adopt_model', 'keep_baseline', 'inconclusive')
 CONCLUSION_VERDICTS_BY_TASK = {st.BINARY: CONCLUSION_VERDICTS,
                                st.REGRESSION: REGRESSION_CONCLUSION_VERDICTS}
+# Review round 9 (R9E-4): the verdicts that adopt something rest on the final test.
+ADOPT_VERDICTS = ('adopt_policy', 'adopt_model')
 # Model slots of a regression study: the reference (training mean) and the candidate.
 REGRESSION_BASELINE, REGRESSION_CANDIDATE = 'fit.baseline', 'fit.linear'
 BINARY_BASELINE, BINARY_CANDIDATE = 'fit.baseline', 'fit.logistic'
@@ -103,6 +109,13 @@ def decision_requires(state: Mapping, decision_id: str) -> tuple[str, ...]:
             if st.has_explicit_binary_model_choice(state):
                 extra = extra + ('model_choice',)
         base = tuple(dict.fromkeys(base + extra))
+    if st.has_error_metric(state):
+        # Lot 2026-10-28 (EN-9): the measure is fixed after the split, and the criterion on
+        # that measure after it.
+        if decision_id == st.ERROR_METRIC:
+            base = ('prediction_time', 'feature_availability', 'split')
+        elif decision_id == st.SUCCESS_CRITERION:
+            base = tuple(dict.fromkeys(base + (st.ERROR_METRIC,)))
     return base
 
 
@@ -149,19 +162,39 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
                                       'before the challenger discussion.'})
     if decision_id == st.FINAL_TEST and state['current'].get(CAPTURE):
         # Library integration v1: a study that captured its predictor opens the final test
-        # only on a current capture of the configuration it opens.
-        if not st.is_current(state, CAPTURE):
-            missing.append({'requirement': 'result_current', 'slot': CAPTURE,
-                            'detail': 'Capture the chosen model again before opening the final '
-                                      'test: the capture is no longer current.'})
-        elif store is not None and value is not None:
+        # only on a current capture of the configuration it opens. Review round 2 (E2-1, A
+        # F1): current by the rule ``status`` and ``evidence`` use (stale map, code changed
+        # under the attestations, upstream), and loadable as the final evaluation loads it
+        # (bundle verification, environment, parity rows), checked here, before the
+        # confirmation commits and so before anything is marked opened.
+        from mlkit.contracts import capture
+        if store is not None:
+            problem = capture.currency_problem(store, state)
+        elif not st.is_current(state, CAPTURE):
+            problem = {'requirement': 'result_current', 'slot': CAPTURE,
+                       'detail': 'Capture the chosen model again before opening the final '
+                                 'test: the capture is no longer current.'}
+        else:
+            problem = None
+        if problem is not None:
+            missing.append(problem)
+        elif store is not None:
             from . import registry
             entry = registry.get(store, state['current'][CAPTURE])
-            if entry['inputs'].get('configuration') != value:
+            if value is not None and entry['inputs'].get('configuration') != value:
+                # Review round 6 (area E, R6E-1): with the junior's message, as every other
+                # refusal of the opening.
+                captured = entry['inputs'].get('configuration')
                 missing.append({'requirement': 'result_current', 'slot': CAPTURE,
-                                'captured': entry['inputs'].get('configuration'),
+                                'captured': captured,
                                 'detail': 'The captured predictor is another configuration; '
-                                          'capture the one the final test would open.'})
+                                          'capture the one the final test would open.',
+                                'junior_message': other_configuration_message(
+                                    state, captured, value)})
+            else:
+                loading = capture.loading_problem(store, state, capture.predictor_of(entry))
+                if loading is not None:
+                    missing.append(loading)
     if decision_id == 'policy':
         if not st.is_current(state, POLICY_EVALUATION):
             missing.append({'requirement': 'result_current', 'slot': POLICY_EVALUATION,
@@ -222,6 +255,8 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
             missing.append({**_need_decision(state, 'policy'),
                             'detail': 'Adopt a policy first, or conclude keep_baseline or '
                                       'inconclusive.'})
+        if verdict in ADOPT_VERDICTS:
+            missing += adoption_missing(state)
         if assurance.profile(state) == 'review-v1' and verdict != 'inconclusive' \
                 and st.is_current(state, FINAL_TEST_EVALUATION) \
                 and not st.is_current(state, FINAL_DIAGNOSTICS):
@@ -230,6 +265,93 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
                             'detail': 'Compute the final diagnostic summary from the stored '
                                       'final predictions before drawing an empirical conclusion.'})
     return missing
+
+
+def adoption_missing(state: Mapping) -> list[dict]:
+    """Review round 9 (R9E-4): what an adopting conclusion (``adopt_policy``, ``adopt_model``)
+    still needs in a study with a final test (WP-B1): the final test confirmed, then opened,
+    with a current final evaluation (under review-v1 also current final diagnostics, the rule
+    of :func:`missing_for_decision`). Empty when met, and in a study without a final test (a
+    study created before WP-B1, which has none to open).
+
+    ``keep_baseline`` and ``inconclusive`` need none of it: a study that keeps the baseline
+    opens nothing (the final-test step is optional, CLI-CONTRACT §12), and "keep_baseline is
+    allowed when the work stops without enough evidence" (J2.3).
+
+    The first unmet item only, with a junior message in the study language: the final test to
+    confirm (``decision_confirmed``, so ``next_action`` proposes it), the confirmed final test
+    to open (``final_test_opened``), or, once opened, the final evaluation that is missing or
+    not current (``final_evidence_required``), which is never computed again: only
+    ``keep_baseline`` or ``inconclusive`` remain."""
+    if not st.has_wp_b1_decisions(state) or state.get('partition') is None:
+        return []
+    fr = st.language_of(state) == 'fr'
+    if not st.final_test_opened(state):
+        if state['decisions'][st.FINAL_TEST]['status'] != 'confirmed':
+            return [{**_need_decision(state, st.FINAL_TEST),
+                     'detail': 'An adopting conclusion rests on the final test: confirm and '
+                               'open the final test first, or conclude keep_baseline or '
+                               'inconclusive.',
+                     'junior_message': ADOPTION_MESSAGES['confirm']['fr' if fr else 'en']}]
+        return [{'requirement': 'final_test_opened', 'decision': st.FINAL_TEST,
+                 'detail': 'An adopting conclusion rests on the final test: it is confirmed '
+                           'but not opened yet; open it first, or conclude keep_baseline or '
+                           'inconclusive.',
+                 'junior_message': ADOPTION_MESSAGES['open']['fr' if fr else 'en']}]
+    if not st.is_current(state, FINAL_TEST_EVALUATION):
+        return [{'requirement': 'final_evidence_required', 'slot': FINAL_TEST_EVALUATION,
+                 'detail': 'An adopting conclusion rests on a current final evaluation of the '
+                           'chosen configuration; it is missing or not current and the final '
+                           'test is opened only once, so conclude keep_baseline or '
+                           'inconclusive.',
+                 'junior_message': ADOPTION_MESSAGES['evidence']['fr' if fr else 'en']}]
+    return []
+
+
+ADOPTION_MESSAGES = {
+    'confirm': {
+        'en': 'Adopting rests on the final test: it measures the chosen configuration once, on '
+              'rows nobody has looked at. Open the final test first, then conclude; you can '
+              'also keep the baseline or conclude inconclusive now.',
+        'fr': "Adopter repose sur le test final : il mesure une seule fois la configuration "
+              "choisie, sur des lignes que personne n'a regardées. Ouvrez d'abord le test "
+              "final, puis concluez ; vous pouvez aussi garder le modèle de référence ou "
+              "conclure que l'étude n'est pas concluante dès maintenant."},
+    'open': {
+        'en': 'You confirmed the final test, but it is not opened yet, and adopting rests on '
+              'its evaluation. It opens first, then you conclude; you can also keep the '
+              'baseline or conclude inconclusive now.',
+        'fr': "Vous avez confirmé le test final, mais il n'est pas encore ouvert, et adopter "
+              "repose sur son évaluation. Il s'ouvre d'abord, puis vous concluez ; vous pouvez "
+              "aussi garder le modèle de référence ou conclure que l'étude n'est pas concluante "
+              "dès maintenant."},
+    'evidence': {
+        'en': "Adopting rests on the final test's evaluation of the chosen configuration, which "
+              'is missing or no longer current, and the final test is opened only once. What '
+              'remains: keep the baseline or conclude inconclusive, saying why.',
+        'fr': "Adopter repose sur l'évaluation, par le test final, de la configuration choisie, "
+              "qui manque ou n'est plus à jour, et le test final ne s'ouvre qu'une fois. Ce qui "
+              "reste possible : garder le modèle de référence ou conclure que l'étude n'est pas "
+              "concluante, en disant pourquoi."},
+}
+
+
+def other_configuration_message(state: Mapping, captured: Any, value: Any) -> str:
+    """Review round 6 (area E, R6E-1): the junior message of a final test that would open a
+    configuration other than the captured one, in the study language."""
+    from . import opening
+    lang = st.language_of(state)
+    if lang == 'fr':
+        return ('Votre modèle capturé est une autre configuration '
+                f'({opening.configuration_words(captured, lang)}) que celle que le test final '
+                f'ouvrirait ({opening.configuration_words(value, lang)}) : le test final ne '
+                "peut pas l'évaluer. Capturez d'abord à nouveau le modèle choisi, puis ouvrez "
+                f"le test final. {opening.NOT_READ['fr']}")
+    return ('Your captured model is another configuration '
+            f'({opening.configuration_words(captured, lang)}) than the one the final test would '
+            f'open ({opening.configuration_words(value, lang)}), so the final test cannot score '
+            'it. Capture the chosen model again first, then open the final test. '
+            f"{opening.NOT_READ['en']}")
 
 
 def final_test_missing(state: Mapping, value: Any = None, *, store=None) -> list[dict]:
@@ -260,8 +382,10 @@ def final_test_missing(state: Mapping, value: Any = None, *, store=None) -> list
         missing.append({'requirement': 'nothing_stale', 'slots': stale,
                         'detail': 'Some results are stale: run them again before opening the '
                                   'final test.'})
-    again = [d for d in st.decision_ids(state)
-             if state['decisions'][d]['status'] == 'reconfirm_required']
+    # Review round 4 (E4-1): the final test's own confirmation, asked again, is what this
+    # rule is checked for.
+    again = [d for d in st.decision_ids(state) if d != st.FINAL_TEST
+             and state['decisions'][d]['status'] == 'reconfirm_required']
     if again:
         missing.append({'requirement': 'nothing_to_reconfirm', 'decisions': again,
                         'detail': 'Confirm these decisions again before opening the final test.'})
@@ -272,6 +396,10 @@ def final_test_missing(state: Mapping, value: Any = None, *, store=None) -> list
         if not st.is_current(state, slot):
             missing.append({'requirement': 'result_current', 'slot': slot,
                             'detail': 'The final test is opened on current results only.'})
+    if store is not None:
+        # Review round 3 (E3-3): current by the rule ``status`` and ``evidence`` use, not by
+        # the stale map alone (the capture is checked by ``missing_for_decision``).
+        missing += selection_not_current(store, state)
     from . import assurance
     if assurance.profile(state) == 'review-v1':
         diag_slot = st.DIAG_SLOT[task]
@@ -296,6 +424,44 @@ def final_test_missing(state: Mapping, value: Any = None, *, store=None) -> list
                                 'detail': 'The current diagnostic describes a different '
                                           'model or action rule.'})
     return missing
+
+
+def opening_missing(state: Mapping, store=None) -> list[dict]:
+    """Review round 4 (E4-1): what the reservation of ``final_test.evaluation`` (every path
+    that opens the final test: the opening right after the confirmation, and ``run
+    final_test.evaluation`` on a confirmed final test whose opening did not run) still needs
+    before anything is marked opened. It is the confirmation's own rule
+    (:func:`final_test_missing` on the confirmed value: the stale map, the full currency of
+    every result the opening rests on, the value equal to the configuration the study
+    chooses now, nothing awaiting reconfirmation), plus the decisions it requires confirmed
+    and the final test's own confirmation still holding (a change of what it rests on after
+    the confirmation makes it ``reconfirm_required``, :mod:`mlkit.study.dependencies`). The
+    capture's currency and loading are the plan's (E2-1, A F1). Every item carries the same
+    junior message (:func:`mlkit.study.opening.reservation_message`); empty when the final
+    test may open."""
+    decision = state['decisions'].get(st.FINAL_TEST) or {}
+    missing: list[dict] = []
+    if decision.get('status') != 'confirmed':
+        missing.append({**_need_decision(state, st.FINAL_TEST),
+                        'reason': decision.get('reason'),
+                        'detail': 'The final test opens only on its confirmation in the '
+                                  "junior's words; confirm it again."})
+    missing += [_need_decision(state, d) for d in decision_requires(state, st.FINAL_TEST)
+                if not _confirmed(state, d)]
+    missing += final_test_missing(state, decision.get('value'), store=store)
+    if missing:
+        from . import opening
+        junior = opening.reservation_message(state, missing)
+        missing = [{**m, 'junior_message': junior} for m in missing]
+    return missing
+
+
+def selection_not_current(store, state: Mapping, *, capture: bool = False) -> list[dict]:
+    """Review round 3 (E3-3): :func:`mlkit.study.opening.not_current` on ``state`` (the
+    writer's state, through :meth:`mlkit.study.read.Study.at_state`)."""
+    from . import opening, read
+    return opening.not_current(read.Study.at_state(store.study_dir, state), state,
+                               capture=capture)
 
 
 ACTIVITY_DECISIONS = ('prediction_time', 'feature_availability', 'split')
@@ -374,10 +540,21 @@ def missing_for_activity(state: Mapping, activity: str) -> list[dict]:
 
 
 
+def refuse_missing(missing: list[dict], subject: str) -> None:
+    """Raise ``precondition_missing`` for ``missing`` (with its junior message), if any."""
+    _refuse(missing, subject)
+
+
 def _refuse(missing: list[dict], subject: str) -> None:
     if missing:
+        details: dict = {'missing': missing}
+        # Review round 2 (E2-1): an unmet requirement written for the junior (the capture
+        # of the final test) is relayed as the refusal's junior message.
+        junior = [m['junior_message'] for m in missing if m.get('junior_message')]
+        if junior:
+            details['junior_message'] = ' '.join(dict.fromkeys(junior))
         raise CommandRefused('precondition_missing', f'{subject} is not possible yet.',
-                             details={'missing': missing})
+                             details=details)
 
 
 def require_decision(state: Mapping, decision_id: str, value: Any = None, *, store=None) -> None:

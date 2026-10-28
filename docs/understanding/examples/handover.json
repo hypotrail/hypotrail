@@ -1,0 +1,24 @@
+{
+  "purpose": "Rank the members to remind first when the desk can call only some of them.",
+  "decisions_with_reasons": [
+    "Inputs known before the reminder only, because the desk acts before the outcome."
+  ],
+  "result_interpretation": "A development comparison only; the final test is sealed.",
+  "limits": [
+    "Retrospective data of one network."
+  ],
+  "source_refs": [
+    "src/transforms.py",
+    "src/pipeline.py"
+  ],
+  "environment_and_reproduction": "uv sync, then run the pipeline on a copy of the data.",
+  "change_locations": [
+    "src/transforms.py for the imputation"
+  ],
+  "safety_rules": [
+    "SECURITY.md applies to every new dependency."
+  ],
+  "next_actions": [
+    "Open the final test once the rule is fixed."
+  ]
+}

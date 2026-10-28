@@ -46,8 +46,11 @@
     exportFile: (file, bytes) => `${file} · ${bytes} octets`,
     exportOut: out => `Dossier : ${out}`,
     exportIncomplete: words => `Le dossier est incomplet : ${words}.`,
-    exportStaleReport: "Le rapport n'était pas à jour : il n'est pas dans le dossier. Régénérez-le dans Vue d'ensemble et exportez de nouveau si vous en avez besoin.",
+    exportStaleReport: "Le rapport n'était pas à jour : il n'est pas dans le dossier. Régénérez-le dans Livrables et exportez de nouveau si vous en avez besoin.",
     openFolder: 'Ouvrir le dossier',
+    // L7 (session du 2026-10-26, D15) : la suite de l'étude, en lecture seule.
+    afterStudyTitle: "Après l'étude",
+    exportPlanInChat: "Le plan d'export Azure ML est disponible pour ce modèle : demandez-le à l'assistant dans le chat. Ce panneau n'exporte que le dossier de passation.",
     reviewerLine: "Un relecteur peut ouvrir cette étude en lecture seule avec « Hypotrail: open the study panel (reviewer, read-only) ».",
     reportTitle: 'Rapport de session (pour une session observée)',
     reportReading: 'Lecture du rapport de session...',

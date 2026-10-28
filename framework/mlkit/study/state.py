@@ -78,7 +78,18 @@ B1_DECISION_IDS_BY_TASK = {BINARY: B1_DECISION_IDS, REGRESSION: B1_REGRESSION_DE
 B2_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', SUCCESS_CRITERION,
                    PREPROCESSING, MODEL_VARIANT, 'model_choice', 'policy', FINAL_TEST,
                    'conclusion')
-ALL_DECISION_IDS = tuple(dict.fromkeys(B2_DECISION_IDS + B1_REGRESSION_DECISION_IDS))
+# Lot 2026-10-28 (R60, option A; spec EN-9): a regression study created since then also
+# decides how the error is measured (``error_metric``: ``{"metric": "mae" | "rmse"}``), its own
+# step just before the success criterion, which is then fixed on that measure. A study created
+# before keeps its nine decisions and its thirteen steps (never migrated): :func:`decision_ids`
+# reads which set a state holds (:func:`has_error_metric`).
+ERROR_METRIC = 'error_metric'
+ERROR_METRICS = ('mae', 'rmse')
+DEFAULT_ERROR_METRIC = 'mae'
+M1_REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', ERROR_METRIC,
+                              SUCCESS_CRITERION, PREPROCESSING, MODEL_VARIANT, 'model_choice',
+                              FINAL_TEST, 'conclusion')
+ALL_DECISION_IDS = tuple(dict.fromkeys(B2_DECISION_IDS + M1_REGRESSION_DECISION_IDS))
 # The decision of the third pause, per task (the choice made on validation results).
 CHOICE_DECISION = {BINARY: 'policy', REGRESSION: 'model_choice'}
 DECISION_STATUSES = ('open', 'proposed', 'confirmed', 'reconfirm_required', 'superseded')
@@ -106,9 +117,15 @@ EXPLICIT, DELEGATED_DEFAULT = 'explicit', 'delegated_default'
 # ``decide confirm --basis`` for "the junior's own words": the engine records which of
 # ``endorsed`` and ``restated`` they are.
 ENDORSED, RESTATED = 'endorsed', 'restated'
-CONFIRMATION_BASES = (EXPLICIT, ENDORSED, RESTATED, DELEGATED_DEFAULT)
-# What ``decide confirm --basis`` accepts (the junior's own words, or a delegation).
-REQUEST_BASES = (EXPLICIT, DELEGATED_DEFAULT)
+# Owner session 2026-10-26 (L9, R20; ADR 0005 amendment of 2026-10-26): ``automatic``, a
+# decision the automatic mode chosen at launch recorded with the engine's value
+# (``actor: assistant``, ``user_words: null``). It is never the junior's own words and never
+# a delegation: it stays in the review queue until the junior adopts or changes it.
+AUTOMATIC = 'automatic'
+CONFIRMATION_BASES = (EXPLICIT, ENDORSED, RESTATED, DELEGATED_DEFAULT, AUTOMATIC)
+# What ``decide confirm --basis`` accepts (the junior's own words, a delegation, or, in an
+# automatic study only, the automatic mode).
+REQUEST_BASES = (EXPLICIT, DELEGATED_DEFAULT, AUTOMATIC)
 # Bases of a decision taken in the junior's own words (not delegated).
 OWN_WORDS_BASES = (EXPLICIT, ENDORSED, RESTATED)
 DEFAULT_BASIS = EXPLICIT
@@ -124,7 +141,7 @@ STANDING_DELEGATION_DECISIONS = ('prediction_time', 'feature_availability', 'spl
 # framing decisions that follow the split. The choice of the third pause, the conclusion
 # (and any decision added later) are never covered by a standing delegation (R1 of v0.1).
 EXPRESS_STANDING_DELEGATION_DECISIONS = STANDING_DELEGATION_DECISIONS + (
-    'success_criterion', 'preprocessing')
+    'success_criterion', 'preprocessing', 'error_metric')
 # ``agent_concern`` (R3, ADR 0005): a point the agent raised about the junior's words before
 # confirming, kept by the junior; ``null`` when none was raised. Written by every v0.2a
 # confirmation; a confirmation recorded before has none. ``mode`` (v0.2b, WP-B2): the
@@ -134,7 +151,13 @@ CONFIRMATION_OPTIONAL_KEYS = ('basis', 'delegation_scope', 'agent_concern', 'mod
                               # v0.3 (WP-B, R27): whether the junior's words give a reason,
                               # for the trade-offs only; and whether they answer the closed
                               # adoption question (written only when true).
-                              'reason_given', 'adoption_question')
+                              'reason_given', 'adoption_question',
+                              # L9 (R20): a confirmation in the junior's words that adopts,
+                              # with the same value, an automatic one (its review):
+                              # ``{basis: automatic, proposal_id, revision}`` of the
+                              # automatic confirmation it replaced.
+                              'adopted_from')
+ADOPTED_FROM_KEYS = ('basis', 'proposal_id', 'revision')
 
 # Confirmation modes (ADR 0005). ``guided`` is the default (v0.2a); ``training`` and
 # ``express`` are implemented in v0.2b (WP-B2). ``MODE_STRICTNESS`` orders them: lowering the
@@ -148,6 +171,29 @@ DEFAULT_MODE = GUIDED
 MODES_AVAILABLE_IN: dict[str, str] = {}
 MODE_STRICTNESS = {EXPRESS: 0, GUIDED: 1, TRAINING: 2}
 MODE_CHANGE_KEYS = ('mode', 'previous', 'user_words', 'revision', 'time', 'request_id')
+# L9 (R20): the end of an automatic mode is recorded in ``mode_history`` with this optional
+# key, ``{previous, reason}``: ``previous`` the automation that ended, ``reason``
+# ``reached_end`` (the run reached what it covers; no words needed) or ``stopped`` (the
+# junior's words stopped it midway). The confirmation mode itself does not change.
+MODE_CHANGE_OPTIONAL_KEYS = ('automation',)
+AUTOMATION_END_KEYS = ('previous', 'reason')
+# L9 (R20, D17): the automatic mode, chosen at ``init`` only (``init --automation``).
+# ``until_final_test`` (the default variant) records every decision before the final test;
+# ``full_demo`` also opens the final test and concludes (a demonstration, never defensible
+# until reviewed). ``state.automation`` is ``{mode, status, started_revision, ended}``;
+# ``status`` goes one way, ``running`` to ``ended``. A study without the key has no
+# automation (every study created before L9, and every study created without the flag).
+UNTIL_FINAL_TEST, FULL_DEMO = 'until_final_test', 'full_demo'
+AUTOMATION_MODES = (UNTIL_FINAL_TEST, FULL_DEMO)
+AUTOMATION_RUNNING, AUTOMATION_ENDED = 'running', 'ended'
+AUTOMATION_STATUSES = (AUTOMATION_RUNNING, AUTOMATION_ENDED)
+AUTOMATION_KEYS = ('mode', 'status', 'started_revision', 'ended')
+AUTOMATION_ENDED_KEYS = ('revision', 'reason', 'user_words', 'time', 'request_id')
+AUTOMATION_END_REASONS = ('reached_end', 'stopped')
+# The decisions ``full_demo`` covers beyond ``until_final_test``.
+DEMO_ONLY_DECISIONS = ('final_test', 'conclusion')
+# The actor of an automatic confirmation.
+AUTOMATIC_ACTOR = 'assistant'
 # The study language (``init --lang``): proposals may carry a restatement per language
 # (``labels``) and surfaces show the one of the study language.
 LANGUAGES = ('en', 'fr')
@@ -211,6 +257,21 @@ def _b1_depends(choice: str) -> dict:
 
 
 B1_DEPENDS_ON_BY_TASK = {BINARY: _b1_depends('policy'), REGRESSION: _b1_depends('model_choice')}
+
+
+def _m1_regression_depends() -> dict:
+    """Lot 2026-10-28 (EN-9): the measure rests on no decision; the success criterion rests on
+    it (changing the measure asks for the criterion again), and so do the opening of the final
+    test and the conclusion."""
+    out = _b1_depends('model_choice')
+    out['error_metric'] = ()
+    out[SUCCESS_CRITERION] = ('error_metric',)
+    out[FINAL_TEST] = ('error_metric',) + tuple(out[FINAL_TEST])
+    out['conclusion'] = ('error_metric',) + tuple(out['conclusion'])
+    return out
+
+
+M1_REGRESSION_DEPENDS_ON = _m1_regression_depends()
 
 
 def _b2_binary_depends() -> dict:
@@ -387,8 +448,80 @@ PREPROCESSING_STEP = {
     'completion': 'Decision preprocessing is confirmed.'}
 
 
+# Lot 2026-10-28 (R60, option A; EN-9): the step of the measure, just before the criterion.
+ERROR_METRIC_STEP = {
+    'id': 'error_metric', 'pause': 2, 'decision': 'error_metric', 'activities': (),
+    'requires': ('split',),
+    'title': 'Choose how the error is measured',
+    'question': 'The error of one prediction is the gap between the observed value and the '
+                'predicted one. The mean absolute error (MAE) averages these gaps; the root mean '
+                'squared error (RMSE) averages their squares, then takes the root, so one big '
+                'miss weighs much more. Which of the two measures the error of this study? It '
+                'is chosen now, before any model is fitted.',
+    'expected_output': 'A confirmed error measure (MAE or RMSE), chosen before any model '
+                       'result is seen.',
+    'completion': 'Decision error_metric is confirmed.'}
+
+
 def _models_after_decisions(step: dict) -> dict:
     return dict(step, requires=('split', SUCCESS_CRITERION, PREPROCESSING))
+
+
+# Owner session 2026-10-26 (lot L5, R5, R7, owner decision D5). A study created by ``init``
+# since then writes ``exploration_order: "structural_first"``: its plan checks the structure of
+# the development rows without the target (``eda.quality``, step ``structural_eda``) and
+# decides the preparation from it **before** any look at the target; the target exploration
+# (``train_eda``) follows the preparation. The view drafts the preparation from the
+# target-free results and the variants from the diagnostics (:mod:`mlkit.study.drafts`) only
+# in such a study. A study without the key keeps its plan, its drafts and its open proposals
+# (never migrated). The WP-A9 M1 rule is unchanged: a preparation proposed after a look at the
+# target is still stamped data-contingent.
+EXPLORATION_ORDER_KEY = 'exploration_order'
+STRUCTURAL_FIRST = 'structural_first'
+EXPLORATION_ORDERS = (STRUCTURAL_FIRST,)
+STRUCTURAL_EDA = 'structural_eda'
+STRUCTURAL_EDA_STEP = {
+    'id': STRUCTURAL_EDA, 'pause': None, 'decision': None, 'activities': ('eda.quality',),
+    'requires': ('split',),
+    'title': 'Check the structure of the data',
+    'question': 'Which columns have missing cells, rare categories, or values outside their '
+                'possible range? This check reads the development rows without the target, so '
+                'the preparation decided from it comes before any look at the target.',
+    'expected_output': 'A current quality overview of the development rows, read without the '
+                       'target.',
+    'completion': 'The quality overview is current.'}
+# The target exploration once the preparation is decided (structural-first plan), by task and
+# by evaluation scheme (``True``: cross-validation).
+STRUCTURAL_TRAIN_EDA_TEXTS = {
+    (BINARY, True): {
+        'title': 'Explore the target on the development rows',
+        'question': 'What do the development rows show about the outcome and the special '
+                    'values? Each of these analyses is a look at the target: it reads the '
+                    'variable to predict, and every look is counted. The preparation is already '
+                    'decided, before these looks.'},
+    (BINARY, False): {
+        'title': 'Explore the target on the training rows',
+        'question': 'What do the training rows show about the outcome and the special values? '
+                    'Each of these analyses is a look at the target: it reads the variable to '
+                    'predict, and every look is counted. The preparation is already decided, '
+                    'before these looks.'},
+    (REGRESSION, True): {
+        'title': 'Explore the target on the development rows',
+        'question': 'What do the development rows show about the distribution of the target '
+                    'and the special values? Each of these analyses is a look at the target: it '
+                    'reads the variable to predict, and every look is counted. The preparation '
+                    'is already decided, before these looks.'},
+    (REGRESSION, False): {
+        'title': 'Explore the target on the training rows',
+        'question': 'What do the training rows show about the distribution of the target and '
+                    'the special values? Each of these analyses is a look at the target: it '
+                    'reads the variable to predict, and every look is counted. The preparation '
+                    'is already decided, before these looks.'},
+}
+STRUCTURAL_PREPROCESSING_QUESTION = (
+    'How should the model treat missing values, rare categories, extreme values and skewed '
+    'variables? The draft reads the quality check, which does not read the target; every '
+    'parameter is learnt only on the rows each model is fitted on.')
 
 
 FULL_STEPS = (DISCOVER_STEP, STEPS[0], STEPS[1], STEPS[2], SUCCESS_STEP, STEPS[3],
@@ -571,8 +704,25 @@ TOP_KEYS = ('schema', 'revision', 'created', 'updated', 'case', 'dataset', 'fact
 # ``mode`` and ``language`` (ADR 0005, v0.2a) are written by every new study; a state
 # without them is a guided study in English. ``mode_history`` appears with the first
 # ``mode set``.
+# ``understanding`` (ADR 0008): the opt-in understanding and handover review; a state
+# without it is ``off`` (``mlkit.study.understanding.model``).
+# ``case_l10n`` (owner session 2026-10-26, L3, D4 A): the case's translation sidecar
+# recorded at ``init`` (``{path, sha256}``, :mod:`mlkit.study.l10n`); a study whose case has
+# none, or created before it existed, has no ``case_l10n`` and shows the case's English.
 TOP_OPTIONAL_KEYS = ('task', 'notes', 'partition', 'mode', 'language', 'mode_history',
-                     'exploration')
+                     'exploration', 'understanding', 'case_l10n',
+                     # Owner session 2026-10-26 (L5, D5): the plan generation that checks the
+                     # structure before the target (``structural_first``), written by
+                     # ``init``; absent in a study created before.
+                     'exploration_order',
+                     # Owner session 2026-10-26 (L9, R20): the automatic mode chosen at
+                     # ``init --automation`` (AUTOMATION_KEYS); absent otherwise.
+                     'automation',
+                     # R68 (minimal version, 2026-10-28): the product owner's PDF imported by
+                     # ``brief import`` and the brief confirmed by ``brief set``
+                     # (``{source, confirmed}``, ``case_brief.SOURCE_RECORD_KEYS`` and
+                     # ``CONFIRMED_KEYS``); absent until the first import.
+                     'brief')
 DECISION_KEYS = ('status', 'value', 'proposal_id', 'confirmation', 'depends_on', 'revision',
                  'reason')
 PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale', 'revision',
@@ -647,11 +797,38 @@ def has_wp_a4_decisions(state: Mapping | str | None) -> bool:
     return True
 
 
+def has_error_metric(state: Mapping | str | None) -> bool:
+    """Lot 2026-10-28 (EN-9): whether a regression study decides its error measure as a step
+    of its own. A state answers by the decisions it holds (a study created before the lot has
+    no ``error_metric`` and is never migrated); a task name or ``None`` describes a new study,
+    which has it for a regression."""
+    if task_of(state) != REGRESSION:
+        return False
+    if isinstance(state, Mapping) and isinstance(state.get('decisions'), Mapping):
+        return ERROR_METRIC in state['decisions']
+    return isinstance(state, str)
+
+
+def confirmed_error_metric(state: Mapping | None) -> str | None:
+    """Lot 2026-10-28 (EN-9): the error measure (``mae`` or ``rmse``) a study holds
+    (confirmed, or awaiting reconfirmation), else None (a study without the decision too)."""
+    if not isinstance(state, Mapping):
+        return None
+    decision = (state.get('decisions') or {}).get(ERROR_METRIC) or {}
+    value = decision.get('value')
+    if decision.get('status') in ('confirmed', 'reconfirm_required') \
+            and isinstance(value, Mapping) and value.get('metric') in ERROR_METRICS:
+        return value['metric']
+    return None
+
+
 def decision_ids(state: Mapping | str | None = None) -> tuple[str, ...]:
     """The decisions of a study (or of a task name, for a new study)."""
     if has_wp_b1_decisions(state):
         if has_explicit_binary_model_choice(state):
             return B2_DECISION_IDS
+        if has_error_metric(state):
+            return M1_REGRESSION_DECISION_IDS
         return B1_DECISION_IDS_BY_TASK[task_of(state)]
     table = FULL_DECISION_IDS_BY_TASK if has_wp_a4_decisions(state) else DECISION_IDS_BY_TASK
     return table[task_of(state)]
@@ -661,6 +838,8 @@ def depends_on(state: Mapping | str | None, decision_id: str) -> tuple[str, ...]
     if has_wp_b1_decisions(state):
         if has_explicit_binary_model_choice(state):
             return B2_BINARY_DEPENDS_ON[decision_id]
+        if has_error_metric(state):
+            return M1_REGRESSION_DEPENDS_ON[decision_id]
         return B1_DEPENDS_ON_BY_TASK[task_of(state)][decision_id]
     table = FULL_DEPENDS_ON_BY_TASK if has_wp_a4_decisions(state) else DEPENDS_ON_BY_TASK
     return table[task_of(state)][decision_id]
@@ -691,21 +870,71 @@ def _wp_f1_steps(state: Mapping | str | None, out: tuple) -> tuple:
             step = dict(step, activities=tuple(step['activities']) + (diag,))
         elif step['id'] == choice:
             step = dict(step, activities=tuple(step['activities']) + (diag,))
-        elif step['id'] == FINAL_TEST and review:
+        elif step['id'] == FINAL_TEST and (review or has_error_metric(state)):
+            # Lot 2026-10-28 (§8.2 of its spec): the final test's diagnostics join the plan of
+            # a study holding the new decision set; a study created before keeps its plan.
             step = dict(step, activities=tuple(step['activities']) + ('diag.final_test',))
+        result.append(step)
+    return tuple(result)
+
+
+def structural_first(state: Mapping | str | None) -> bool:
+    """Owner session 2026-10-26 (L5, D5): whether a study follows the structural-first plan
+    (``exploration_order: "structural_first"``, written by ``init``). A study without the key
+    (created before) keeps its plan; a task name or ``None`` is not a study."""
+    return isinstance(state, Mapping) \
+        and state.get(EXPLORATION_ORDER_KEY) == STRUCTURAL_FIRST \
+        and has_wp_b1_decisions(state)
+
+
+def _structural_order(state: Mapping, out: tuple) -> tuple:
+    """L5 (D5): the structural check, then the preparation (which requires it), then the
+    target exploration; every other step keeps its place and its requirements."""
+    cv = uses_cross_validation(state)
+    texts = STRUCTURAL_TRAIN_EDA_TEXTS[(task_of(state), cv)]
+    by_id = {s['id']: s for s in out}
+    result = []
+    for step in out:
+        if step['id'] == 'train_eda':
+            continue
+        if step['id'] == PREPROCESSING:
+            result.append(STRUCTURAL_EDA_STEP)
+            result.append(dict(step, requires=tuple(step['requires']) + (STRUCTURAL_EDA,),
+                               question=STRUCTURAL_PREPROCESSING_QUESTION))
+            if 'train_eda' in by_id:
+                result.append(dict(by_id['train_eda'], **texts))
+            continue
+        result.append(step)
+    return tuple(result)
+
+
+def _with_error_metric_step(out: tuple) -> tuple:
+    """Lot 2026-10-28 (EN-9): the measure's step just before the success criterion, which then
+    requires it."""
+    result = []
+    for step in out:
+        if step['id'] == SUCCESS_CRITERION:
+            result.append(ERROR_METRIC_STEP)
+            step = dict(step, requires=tuple(step['requires']) + (ERROR_METRIC,))
         result.append(step)
     return tuple(result)
 
 
 def steps(state: Mapping | str | None = None) -> tuple[dict, ...]:
     """The plan steps of a study's task. A study created before WP-A4 has the step "Discover
-    the data" and its own five decisions' steps (the models then need the split only)."""
+    the data" and its own five decisions' steps (the models then need the split only). A
+    structural-first study (L5) checks the structure, then decides the preparation, then
+    explores the target (:func:`structural_first`)."""
     if has_wp_b1_decisions(state):
         out = (B2_BINARY_STEPS if has_explicit_binary_model_choice(state)
                else B1_STEPS_BY_TASK[task_of(state)])
         if uses_cross_validation(state):
             texts = CV_STEP_TEXTS_BY_TASK[task_of(state)]
             out = tuple(dict(s, **texts.get(s['id'], {})) for s in out)
+        if structural_first(state):
+            out = _structural_order(state, out)
+        if has_error_metric(state):
+            out = _with_error_metric_step(out)
         return _wp_f1_steps(state, out)
     full = FULL_STEPS_BY_TASK[task_of(state)]
     if has_wp_a4_decisions(state):
@@ -725,6 +954,10 @@ def step_ids(state: Mapping | str | None = None) -> tuple[str, ...]:
 
 def activity_slots(state: Mapping | str | None = None) -> tuple[str, ...]:
     if has_wp_b1_decisions(state):
+        if structural_first(state):
+            base = (B2_BINARY_STEPS if has_explicit_binary_model_choice(state)
+                    else B1_STEPS_BY_TASK[task_of(state)])
+            return tuple(a for s in _structural_order(state, base) for a in s['activities'])
         if has_explicit_binary_model_choice(state):
             return tuple(a for s in B2_BINARY_STEPS for a in s['activities'])
         return B1_ACTIVITY_SLOTS_BY_TASK[task_of(state)]
@@ -836,11 +1069,12 @@ def _sha256_file(path) -> str:
     return digest.hexdigest()
 
 
-def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, revision: int,
-                 time: str | None = None, basis: str = DEFAULT_BASIS,
+def confirmation(*, user_words: str | None, proposal: dict, channel: str, actor: str,
+                 revision: int, time: str | None = None, basis: str = DEFAULT_BASIS,
                  delegation_scope: str | None = None, agent_concern: str | None = None,
                  mode: str | None = None, warnings: list | None = None,
-                 reason_given: bool | None = None, adoption_question: bool = False) -> dict:
+                 reason_given: bool | None = None, adoption_question: bool = False,
+                 adopted_from: Mapping | None = None) -> dict:
     """The confirmation record of ``proposal`` (plan §3.2, §9 bis).
 
     ``user_words`` is the user's verbatim reply to the proposal's restatement.
@@ -869,6 +1103,8 @@ def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, r
         record['reason_given'] = bool(reason_given)
     if adoption_question:
         record['adoption_question'] = True
+    if adopted_from is not None:
+        record['adopted_from'] = {k: adopted_from.get(k) for k in ADOPTED_FROM_KEYS}
     problems = _confirmation_problems(record, 'confirmation')
     if problems:
         raise StudyError('invalid_confirmation', 'The confirmation is incomplete.',
@@ -903,10 +1139,13 @@ def confirmation_basis(c: Any) -> str:
 
 def basis_class(basis: str | None) -> str | None:
     """``own_words`` for a decision taken in the junior's words (``explicit``, ``endorsed``,
-    ``restated``), ``delegated`` for a delegation; None stays None. The conclusion's credit
+    ``restated``), ``delegated`` for a delegation, ``automatic`` for the automatic mode (L9);
+    None stays None. The conclusion's credit
     line depends on this class only (:func:`dependencies.outdates_conclusion`)."""
     if basis is None:
         return None
+    if basis == AUTOMATIC:       # L9 (R20): neither the junior's words nor a delegation
+        return 'automatic'
     return 'delegated' if basis == DELEGATED_DEFAULT else 'own_words'
 
 
@@ -935,9 +1174,23 @@ def _confirmation_problems(c: Any, path: str) -> list[dict]:
         elif confirmation_basis(c) != DELEGATED_DEFAULT:
             problems.append({'path': f'{path}.delegation_scope',
                              'problem': 'must be null unless the basis is delegated_default'})
+    automatic = confirmation_basis(c) == AUTOMATIC
     for key in ('user_words', 'proposal_id', 'restatement', 'actor', 'time'):
+        if key == 'user_words' and automatic:
+            # L9 (R20): an automatic decision has no words of the junior.
+            if c[key] is not None:
+                problems.append({'path': f'{path}.{key}',
+                                 'problem': 'must be null for an automatic confirmation'})
+            continue
         if not _text(c[key]):
             problems.append({'path': f'{path}.{key}', 'problem': 'must be a non-empty string'})
+    if 'adopted_from' in present and (
+            not isinstance(c['adopted_from'], dict)
+            or set(c['adopted_from']) != set(ADOPTED_FROM_KEYS)
+            or c['adopted_from'].get('basis') != AUTOMATIC or automatic):
+        problems.append({'path': f'{path}.adopted_from',
+                         'problem': 'must be {basis: automatic, proposal_id, revision} on a '
+                                    'confirmation in the junior\'s words'})
     if c['authenticated'] is not False:
         problems.append({'path': f'{path}.authenticated',
                          'problem': 'must be false: user words are not authenticated'})
@@ -1073,18 +1326,38 @@ def validate_state(state: Any) -> list[dict]:
         problems.append({'path': 'mode', 'problem': f'must be one of {", ".join(MODES)}'})
     if 'language' in present and state['language'] not in LANGUAGES:
         problems.append({'path': 'language', 'problem': f'must be one of {", ".join(LANGUAGES)}'})
+    if 'case_l10n' in present:
+        from . import l10n
+        problems.extend(l10n.state_problems(state))
+    if 'automation' in present:
+        problems.extend(automation_problems(state['automation']))
+    if 'exploration_order' in present and state['exploration_order'] not in EXPLORATION_ORDERS:
+        problems.append({'path': 'exploration_order',
+                         'problem': f'must be one of {", ".join(EXPLORATION_ORDERS)}'})
     if 'mode_history' in present:
         history = state['mode_history']
         if not isinstance(history, list):
             problems.append({'path': 'mode_history', 'problem': 'must be a list'})
         else:
             for i, change in enumerate(history):
-                if _keys(change, f'mode_history.{i}', MODE_CHANGE_KEYS, problems) \
+                extra = tuple(k for k in MODE_CHANGE_OPTIONAL_KEYS
+                              if isinstance(change, dict) and k in change)
+                end = change.get('automation') if extra else None
+                if extra and not (isinstance(end, dict) and set(end) == set(AUTOMATION_END_KEYS)
+                                  and end.get('previous') in AUTOMATION_MODES
+                                  and end.get('reason') in AUTOMATION_END_REASONS):
+                    problems.append({'path': f'mode_history.{i}.automation',
+                                     'problem': 'must be {previous, reason} of an automation '
+                                                'that ended'})
+                # L9: the automatic mode ending when its run reached what it covers needs no
+                # words (it makes the study stricter); stopping it midway needs them.
+                reached = isinstance(end, dict) and end.get('reason') == 'reached_end'
+                if _keys(change, f'mode_history.{i}', MODE_CHANGE_KEYS + extra, problems) \
                         and (change['mode'] not in MODES or change['previous'] not in MODES
                              or not (_text(change['user_words'])
                                      or (change['user_words'] is None
-                                         and raises_strictness(change['previous'],
-                                                               change['mode'])))):
+                                         and (reached or raises_strictness(
+                                             change['previous'], change['mode']))))):
                     problems.append({'path': f'mode_history.{i}',
                                      'problem': "needs a known mode and the user's words "
                                                 "(optional only when the change raises the "
@@ -1160,6 +1433,9 @@ def validate_state(state: Any) -> list[dict]:
                 and state['settings']['reliability_profile'] not in assurance.PROFILES:
             problems.append({'path': 'settings.reliability_profile',
                              'problem': 'must be legacy or review-v1'})
+    if 'understanding' in present:
+        from .understanding import model as understanding
+        problems.extend(understanding.check(state['understanding']))
     return problems
 
 
@@ -1244,6 +1520,25 @@ def open_holds(state: Mapping, decision_id: str | None = None) -> list[dict]:
             and (decision_id is None or n['decision_id'] == decision_id)]
 
 
+def hold_action(state: Mapping, decision_id: str) -> dict | None:
+    """Review round 6 (area E): the ``next_action`` of a decision the junior put on hold in
+    their own words (an open hold note), whose confirmation is refused
+    (``decision_on_hold``): ask the junior whether the condition they set is met; their own
+    words resolve the hold (``decide note --resolve``) or keep it. None without an open
+    hold. :mod:`mlkit.study.feasibility` names it instead of a confirmation it would refuse."""
+    holds = open_holds(state, decision_id)
+    if not holds:
+        return None
+    note = holds[0]
+    return {'kind': 'resolve_hold', 'decision': decision_id, 'note_id': note['note_id'],
+            'note_ids': [n['note_id'] for n in holds], 'user_words': note['user_words'],
+            'message': (f'The junior put the {decision_id} on hold in their own words '
+                        f'(note {note["note_id"]}): "{note["user_words"]}". It cannot be '
+                        'confirmed while the hold is open. Ask them whether the condition is '
+                        f'met; record their reply with decide note --resolve {note["note_id"]} '
+                        '(their own words), or leave it on hold. Do not answer for them.')}
+
+
 def _confirmed(state: dict, decision_id: str) -> bool:
     return state['decisions'][decision_id]['status'] == 'confirmed'
 
@@ -1303,10 +1598,15 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
        read-only lease probe by ``status``, F1) has an unknown outcome: tell the junior,
        never call it in progress, and ask before acknowledging;
     1. an interrupted execution must be acknowledged (never restarted automatically);
-    2. a decision needs reconfirmation;
+    2. a decision needs reconfirmation (once proposed again, the words awaited on that
+       proposal, review round 6);
     3. an open proposal waits for the user's verbatim answer to its restatement;
     4. the current step needs a proposal or a result;
     5. otherwise the plan is finished.
+
+    L9 (R20): in an automatic study, between 2 and 3, a decision the automatic mode recorded
+    is reviewed (:func:`review_action`) once the mode ended or wherever it does not cover the
+    action 3 to 5 would give.
 
     Step 0 (WP-A4) comes first in the plan: while the study holds no proposal, the next
     action is ``show_data_card`` (informational, nothing to confirm).
@@ -1327,9 +1627,22 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
     for decision_id in decision_ids(state):
         decision = state['decisions'][decision_id]
         if decision['status'] == 'reconfirm_required':
-            return {'kind': 'reconfirm', 'decision': decision_id,
-                    'message': f'Decision {decision_id} must be confirmed again: '
-                               f'{decision["reason"]}'}
+            # Review round 6 (area E): once proposed again, the junior's words are awaited
+            # on that proposal (a ``reconfirm`` named again would only propose once more).
+            return decision_action(state, decision_id)
+    # L9 (R20): the review of an automatic study. While the automatic mode runs, the plan is
+    # followed as it covers it; once it ended, or where it stops (the final test in
+    # ``until_final_test``, ``done`` in ``full_demo``), each decision it recorded is
+    # reviewed in the plan's order before anything else, in the junior's own words.
+    queue = [d for d in review_queue(state) if state['decisions'][d]['status'] == 'confirmed']
+    planned = _planned_action(state)
+    if queue and not action_covered(state, planned):
+        return review_action(state, queue[0])
+    return planned
+
+
+def _planned_action(state: dict) -> dict:
+    """Steps 3 to 5 of :func:`next_action`: an open proposal, the current step, ``done``."""
     pending = sorted(open_proposals(state), key=lambda p: (p['revision'], p['proposal_id']))
     from . import assurance
     if assurance.profile(state) == 'review-v1':
@@ -1345,16 +1658,7 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
                          else ('fit.baseline', 'fit.linear')))
              or not is_current(state, DIAG_SLOT[task_of(state)])))]
     if pending:
-        p = pending[0]
-        # v0.3 (WP-J): mode-aware; own words are asked only in the training mode (R27).
-        message = ('Show the restatement and record the user\'s own words in reply: what '
-                   'they keep and why. A bare "ok" is not a decision.'
-                   if mode_of(state) == TRAINING else
-                   'Show the restatement, then ask the closed question "Do you adopt this '
-                   'decision?" and record the reply verbatim. A bare "ok" before that '
-                   'question is not a decision.')
-        return {'kind': 'await_user_words', 'proposal_id': p['proposal_id'],
-                'decision': p['decision_id'], 'message': message}
+        return _await_action(state, pending[0])
     for step in derive_plan(state):
         if step['status'] == 'done':
             continue
@@ -1367,7 +1671,7 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
             return {'kind': 'show_data_card', 'step': DISCOVER_DATA,
                     'message': 'Before proposing anything, show the junior the data card '
                                '(hypotrail data): the row unit, the grouped columns with their '
-                               'meaning and availability, and the five example rows. It is '
+                               'meaning and availability, and the eight sample rows. It is '
                                'informational: nothing to confirm. Then propose the prediction '
                                'moment.'}
         if step['status'] == 'blocked':
@@ -1375,20 +1679,106 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
                     'message': f'Step {step["id"]} needs: {", ".join(step["requires"])}.'}
         decide = step['decision'] and not _confirmed(state, step['decision'])
         if decide and (step['decide_first'] or not step['missing_results']):
-            action = {'kind': 'propose', 'step': step['id'], 'decision': step['decision'],
-                      'message': step['question']}
-            if step['decision'] == PREPROCESSING:
-                # WP-A4: the engine's default, the preparation the models used before the
-                # decision existed (results stay comparable).
-                from .governance import DEFAULT_PREPROCESSING
-                action['default_value'] = copy.deepcopy(DEFAULT_PREPROCESSING)
-            default = b1_default_value(state, step['decision'])
-            if default is not None:
-                action['default_value'] = default
-            return action
+            return _propose_action(state, step)
         return {'kind': 'run', 'step': step['id'], 'activity': step['missing_results'][0],
                 'message': step['question']}
     return {'kind': 'done', 'message': 'Every step is done. Review what is not yet defensible.'}
+
+
+def read_exploration_action(then: Mapping) -> dict:
+    """Lot 2026-10-28 (EN-12, R61): the pause after the exploration of a study holding the new
+    decision set (:func:`has_error_metric`): every exploration chart is current and no model is
+    fitted yet; the junior reads the charts, then ``then`` (the ``run`` of the first fit) is
+    carried out. Stateless: it disappears once ``fit.baseline`` is registered."""
+    return {'kind': 'read_exploration', 'step': 'train_eda',
+            'then': {'kind': 'run', 'activity': then.get('activity'),
+                     'command': f'hypotrail run {then.get("activity")}'},
+            'message': 'The exploration charts are current and no model is fitted yet. Ask the '
+                       'junior whether to move on to the models (a picker: continue, or explain '
+                       'first); on "continue", run then.command.'}
+
+
+def _reconfirm_action(state: dict, decision_id: str) -> dict:
+    """The action of a decision to confirm again (``reconfirm``, or the ``run`` first of a
+    result its confirmation needs, E4-3)."""
+    decision = state['decisions'][decision_id]
+    action = {'kind': 'reconfirm', 'decision': decision_id,
+              'message': f'Decision {decision_id} must be confirmed again: '
+                         f'{decision["reason"]}'}
+    # Review round 4 (E4-3): the value to propose again, so the action is runnable as
+    # given (E4-1: a final test on the configuration the study chooses now).
+    default = reconfirm_value(state, decision_id)
+    if default is not None:
+        action['default_value'] = default
+    # E4-3: a result the confirmation needs that is not current is run first (the
+    # confirmation would be refused): the plan's step question, as any run.
+    slot = _reconfirm_needs_run(state, decision_id, default)
+    if slot is not None:
+        step = next((s for s in derive_plan(state) if s['decision'] == decision_id),
+                    None) or {}
+        return {'kind': 'run', 'step': step.get('id'), 'activity': slot,
+                'reconfirm': decision_id,
+                'message': step.get('question') or action['message']}
+    return action
+
+
+def _await_action(state: dict, proposal: Mapping) -> dict:
+    """The action of an open proposal: the junior's words awaited on it."""
+    # v0.3 (WP-J): mode-aware; own words are asked only in the training mode (R27).
+    message = ('Show the restatement and record the user\'s own words in reply: what '
+               'they keep and why. A bare "ok" is not a decision.'
+               if mode_of(state) == TRAINING else
+               'Show the restatement, then ask the closed question "Do you adopt this '
+               'decision?" and record the reply verbatim. A bare "ok" before that '
+               'question is not a decision.')
+    return {'kind': 'await_user_words', 'proposal_id': proposal['proposal_id'],
+            'decision': proposal['decision_id'], 'message': message}
+
+
+def _propose_action(state: dict, step: Mapping) -> dict:
+    """The proposal of a plan step's decision, with the engine's drafted value."""
+    action = {'kind': 'propose', 'step': step['id'], 'decision': step['decision'],
+              'message': step['question']}
+    if step['decision'] == PREPROCESSING:
+        # WP-A4: the engine's default, the preparation the models used before the
+        # decision existed (results stay comparable).
+        from .governance import DEFAULT_PREPROCESSING
+        action['default_value'] = copy.deepcopy(DEFAULT_PREPROCESSING)
+    default = b1_default_value(state, step['decision'])
+    if default is not None:
+        action['default_value'] = default
+    return action
+
+
+def _criterion_off_measure(state: Mapping, decision_id: str) -> bool:
+    """Lot 2026-10-28 (§8.12 of its spec): a criterion fixed on another measure than the
+    confirmed error measure cannot be confirmed again as it stands; it is proposed afresh."""
+    if decision_id != SUCCESS_CRITERION:
+        return False
+    measure = confirmed_error_metric(state)
+    value = (state['decisions'].get(SUCCESS_CRITERION) or {}).get('value')
+    if measure is None or not isinstance(value, Mapping):
+        return False
+    return {'mae_reduction': 'mae', 'rmse_reduction': 'rmse'}.get(value.get('metric')) != measure
+
+
+def decision_action(state: dict, decision_id: str) -> dict | None:
+    """Review round 6 (area E): the action ``next_action`` gives for one decision, wherever
+    it stands in the plan: ``await_user_words`` on its latest open proposal, else
+    ``reconfirm`` (or its ``run`` first) when it must be confirmed again, else its
+    ``propose``. None for a decision the study does not have or that is confirmed."""
+    decision = state['decisions'].get(decision_id)
+    if decision is None or decision['status'] == 'confirmed':
+        return None
+    pending = sorted((p for p in open_proposals(state) if p['decision_id'] == decision_id),
+                     key=lambda p: (p['revision'], p['proposal_id']))
+    if pending:
+        return _await_action(state, pending[-1])
+    if decision['status'] == 'reconfirm_required' \
+            and not _criterion_off_measure(state, decision_id):
+        return _reconfirm_action(state, decision_id)
+    step = next((s for s in derive_plan(state) if s['decision'] == decision_id), None)
+    return _propose_action(state, step) if step is not None else None
 
 
 # v0.2b (WP-B1): the evaluation schemes of the ``split`` decision (cross-validation on the
@@ -1469,6 +1859,47 @@ def choice_config(state: Mapping) -> dict | None:
     return {'model': value, 'rule': None} if isinstance(value, str) else None
 
 
+def _reconfirm_needs_run(state: Mapping, decision_id: str, value) -> str | None:
+    """E4-3: the first result a decision to confirm again needs and that is not current
+    (stale or missing), so the confirmation would be refused
+    (:func:`mlkit.study.preconditions.missing_for_decision` checks the same slots; this one
+    reads state only, on the read side): the policy evaluation for the policy, the fits (or
+    the regression comparison) for the model choice, every result the opening rests on
+    (:func:`mlkit.study.opening.selection_slots`) for the final test. None otherwise."""
+    from . import opening
+    task = task_of(state)
+    if decision_id == 'policy':
+        slots = ['policy.evaluation']
+    elif decision_id == 'model_choice':
+        slots = (['fit.logistic'] + ([value] if isinstance(value, str)
+                                     and trials.is_variant_slot(value) else [])
+                 if task == BINARY else ['evaluate.regression'])
+    elif decision_id == FINAL_TEST:
+        slots = opening.selection_slots(state)
+    else:
+        return None
+    return next((slot for slot in slots if not is_current(state, slot)), None)
+
+
+def reconfirm_value(state: Mapping, decision_id: str):
+    """Review round 4 (E4-3): the value a decision to confirm again is proposed with: its
+    recorded value, except the final test (the configuration the study chooses now,
+    :func:`choice_config`, E4-1) and a binary policy under an explicit model choice (its
+    rule, applied to the model chosen now). None when there is no such value."""
+    from . import records as rec
+    decision = state['decisions'].get(decision_id) or {}
+    if decision_id == FINAL_TEST:
+        return choice_config(state)
+    value = decision.get('value')
+    if decision_id == 'policy' and has_explicit_binary_model_choice(state):
+        rule = rec.policy_rule(value)
+        model = (state['decisions'].get('model_choice') or {}).get('value')
+        if rule is None or not isinstance(model, str):
+            return copy.deepcopy(value)
+        return rule if model == rec.POLICY_CANDIDATE else f'{rule}{rec.POLICY_MODEL_SEP}{model}'
+    return copy.deepcopy(value)
+
+
 def b1_default_value(state: Mapping, decision_id: str):
     """The engine's drafted value of a WP-B1 study's decision for ``next_action``: the
     cross-validation scheme of the split, the default variant, the configuration a final
@@ -1484,6 +1915,10 @@ def b1_default_value(state: Mapping, decision_id: str):
         return default_variant(state)
     if decision_id == FINAL_TEST:
         return choice_config(state)
+    if decision_id == ERROR_METRIC and has_error_metric(state):
+        # Lot 2026-10-28 (EN-10): the MAE, every error weighing the same, read in the unit of
+        # the target.
+        return {'metric': DEFAULT_ERROR_METRIC}
     return None
 
 
@@ -1502,6 +1937,140 @@ def delegated_decisions(state: dict) -> list[str]:
                 and confirmation_basis(dec['confirmation']) == DELEGATED_DEFAULT:
             out.append(d)
     return out
+
+
+# --- automatic mode (owner session 2026-10-26, L9, R20; ADR 0005 and 0006 amendments) ------
+
+def automation_record(mode: str, revision: int) -> dict:
+    """The ``state.automation`` record ``init --automation MODE`` writes."""
+    return {'mode': mode, 'status': AUTOMATION_RUNNING, 'started_revision': revision,
+            'ended': None}
+
+
+def automation_problems(record: Any) -> list[dict]:
+    """Schema problems of ``state.automation`` (empty when valid)."""
+    path = 'automation'
+    if not isinstance(record, dict) or set(record) != set(AUTOMATION_KEYS):
+        return [{'path': path, 'problem': 'must be {' + ', '.join(AUTOMATION_KEYS) + '}'}]
+    problems = []
+    if record['mode'] not in AUTOMATION_MODES:
+        problems.append({'path': f'{path}.mode',
+                         'problem': f'must be one of {", ".join(AUTOMATION_MODES)}'})
+    if record['status'] not in AUTOMATION_STATUSES:
+        problems.append({'path': f'{path}.status',
+                         'problem': f'must be one of {", ".join(AUTOMATION_STATUSES)}'})
+    ended = record['ended']
+    if record['status'] == AUTOMATION_RUNNING and ended is not None:
+        problems.append({'path': f'{path}.ended', 'problem': 'a running automation has none'})
+    if record['status'] == AUTOMATION_ENDED and (
+            not isinstance(ended, dict) or set(ended) != set(AUTOMATION_ENDED_KEYS)
+            or ended.get('reason') not in AUTOMATION_END_REASONS
+            or (ended.get('reason') == 'stopped' and not _text(ended.get('user_words')))):
+        problems.append({'path': f'{path}.ended',
+                         'problem': 'an ended automation records {' + ', '.join(
+                             AUTOMATION_ENDED_KEYS) + '}; stopping it needs the words'})
+    return problems
+
+
+def automation_of(state: Mapping | None) -> dict | None:
+    """The automatic mode chosen at ``init``, or None (a study without one)."""
+    record = (state or {}).get('automation') if isinstance(state, Mapping) else None
+    return record if isinstance(record, Mapping) else None
+
+
+def automation_in_force(state: Mapping | None) -> str | None:
+    """The automatic mode while it runs (``until_final_test`` or ``full_demo``), else None:
+    no automation, or one that ended (one way)."""
+    record = automation_of(state)
+    if record is None or record.get('status') != AUTOMATION_RUNNING:
+        return None
+    return record.get('mode')
+
+
+def automation_covers(state: Mapping, decision_id: str | None) -> bool:
+    """Whether the automatic mode in force records ``decision_id``: ``until_final_test``
+    every decision before the final test, ``full_demo`` also the final test and the
+    conclusion (ADR 0005 and 0006 amendments, 2026-10-26)."""
+    mode = automation_in_force(state)
+    if mode is None or decision_id not in decision_ids(state):
+        return False
+    return mode == FULL_DEMO or decision_id not in DEMO_ONLY_DECISIONS
+
+
+def action_covered(state: Mapping, action: Mapping | None) -> bool:
+    """Whether the automatic mode in force carries out ``action`` (a ``next_action``) by
+    itself: a run (the final evaluation only in ``full_demo``), the data card, and the
+    proposal, confirmation or reconfirmation of a decision it covers. Never a hold, an
+    interruption, a blocked step, a review, or ``done``."""
+    if not action or automation_in_force(state) is None or action.get('review'):
+        return False
+    kind = action.get('kind')
+    if kind == 'run':
+        return action.get('activity') not in ('final_test.evaluation',) \
+            or automation_in_force(state) == FULL_DEMO
+    if kind in ('show_data_card', 'read_exploration'):
+        # Lot 2026-10-28 (EN-12): the automatic mode runs the pause's ``then`` itself.
+        return True
+    if kind in ('propose', 'reconfirm', 'await_user_words'):
+        return automation_covers(state, action.get('decision'))
+    return False
+
+
+def review_queue(state: Mapping) -> list[str]:
+    """Decisions whose current confirmation is ``automatic`` (confirmed, or waiting to be
+    confirmed again), in the plan's order: each one waits for the junior's review, adopted or
+    changed in their own words. Empty in a study without automation."""
+    out = []
+    for d in decision_ids(state):
+        dec = state['decisions'][d]
+        if dec['status'] in ('confirmed', 'reconfirm_required') \
+                and isinstance(dec.get('confirmation'), Mapping) \
+                and confirmation_basis(dec['confirmation']) == AUTOMATIC:
+            out.append(d)
+    return out
+
+
+def opened_automatically(state: Mapping) -> bool:
+    """Whether the final test was opened by the automatic mode (``full_demo``): the opening
+    record carries ``basis: automatic``. Permanent: the opening cannot be redone."""
+    opening = ((state.get('partition') or {}).get('opening') or {}) \
+        if isinstance(state, Mapping) else {}
+    return opening.get('basis') == AUTOMATIC
+
+
+def reviews_automatic_opening(state: Mapping, value: Any) -> bool:
+    """L9 (ADR 0006 amendment): the junior's review of a final test the demo mode opened.
+    The final test was opened automatically, its decision still holds the automatic
+    confirmation, and ``value`` is the configuration it opened: confirming it in the junior's
+    own words adopts the opening; nothing is opened or measured again."""
+    if not final_test_opened(state) or not opened_automatically(state):
+        return False
+    decision = (state.get('decisions') or {}).get(FINAL_TEST) or {}
+    conf = decision.get('confirmation')
+    if decision.get('status') != 'confirmed' or not isinstance(conf, Mapping) \
+            or confirmation_basis(conf) != AUTOMATIC:
+        return False
+    from . import records as rec
+    return rec.canonical(value) == rec.canonical(decision.get('value'))
+
+
+def review_action(state: dict, decision_id: str) -> dict:
+    """The review of one automatic decision (L9): the junior's words awaited on its open
+    proposal, else the decision proposed again with the value automation recorded, for the
+    junior to adopt or change in their own words. ``review: true`` marks it."""
+    pending = sorted((p for p in open_proposals(state) if p['decision_id'] == decision_id),
+                     key=lambda p: (p['revision'], p['proposal_id']))
+    if pending:
+        action = _await_action(state, pending[-1])
+    else:
+        action = {'kind': 'reconfirm', 'decision': decision_id,
+                  'default_value': copy.deepcopy(state['decisions'][decision_id]['value']),
+                  'message': f'Decision {decision_id} was recorded by the automatic mode, '
+                             'not in the junior\'s words. Propose it again as it stands, then '
+                             'ask the junior whether they adopt it in their own words or '
+                             'what they change.'}
+    action['review'] = True
+    return action
 
 
 def cited_stale_results(state: Mapping) -> list[dict]:
@@ -1535,6 +2104,106 @@ def cited_stale_results(state: Mapping) -> list[dict]:
     return unique
 
 
+def _clock_value(value) -> str:
+    """A value of the study's clock written exactly (review round 4, E4-4): an integer in
+    full ("20170301", "1700000000", never "2.01703e+07"), a float that is a whole number as
+    that integer, any other float in its shortest exact decimal form, without an exponent
+    (``repr``: "20170301.5"), so the limit text names the true boundary and
+    :mod:`mlkit.study.numtrace` reads it back as the recorded value."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return str(value)
+    if isinstance(value, int):
+        return str(value)
+    if value.is_integer():
+        return str(int(value))
+    import decimal
+    return format(decimal.Decimal(repr(value)), 'f')
+
+
+def delayed_labels_limit(state: Mapping) -> dict | None:
+    """The ``delayed_labels_excluded`` limit (review 2026-10-24 round 2): how many development
+    rows are left out of training, selection and validation because their outcome is known
+    only at or after the final boundary; None when there are none. The text introduces the
+    term, then gives an example in the study's own clock."""
+    from . import partition
+    n = partition.delayed_label_rows(state)
+    if not n:
+        return None
+    part = partition.of(state) or {}
+    order = part.get('order') or {}
+    clock, start = order.get('by'), order.get('final_start')
+    where = (f'{clock} {_clock_value(start)}' if clock and start is not None
+             else 'the start of the final test')
+    rows = 'row' if n == 1 else 'rows'
+    return {'id': 'delayed_labels_excluded', 'n_rows': n,
+            'development_rows': (part.get('development') or {}).get('n_rows'),
+            'clock': clock, 'final_start': start,
+            'text': (f'A delayed label is an outcome that becomes known only some time after '
+                     f'the prediction is made. Here {n} development {rows} had an outcome '
+                     f'known only at or after the start of the final test ({where}), the '
+                     f'moment the decision is simulated, so their labels were not known yet: '
+                     f'they are left out of the split, the exploration of the target, every '
+                     f'fit and its validation scores, the final refit and the captured '
+                     f'predictor. For example, a row predicted just before {where} whose '
+                     f'outcome arrives after it would teach the model an answer nobody had '
+                     f'at that moment.')}
+
+
+def declared_order(state: Mapping) -> dict | None:
+    """L7 (R17): the row order the study's final test follows, ``{by}`` (``line`` or a
+    column), when the case declares an order and the sealed final test is temporal (the last
+    rows in that order); None otherwise (no order, or a study created before the final
+    test)."""
+    part = state.get('partition') or {}
+    if part.get('method') != 'temporal':
+        return None
+    return {'by': (part.get('order') or {}).get('by')}
+
+
+def missing_structure(state: Mapping) -> list[str]:
+    """L7 (R17): what the ``no_time_or_entity_identifier`` limit names as missing, in this
+    order: ``time_column`` when the case declares neither a time column nor an order (a
+    declared order makes the final test temporal), ``group_column`` when it declares no
+    entity identifier."""
+    structure = state['structure']
+    out = []
+    if structure['time_column']['value'] is None and declared_order(state) is None:
+        out.append('time_column')
+    if structure['group_column']['value'] is None:
+        out.append('group_column')
+    return out
+
+
+def order_words(by) -> str:
+    """How the declared order is named in a limit: the file's lines, or a column."""
+    return "the order of the file's lines" if by in (None, 'line') else f'the column {by}'
+
+
+def structure_limit(state: Mapping, missing: list[str]) -> dict:
+    """L7 (R17): the ``no_time_or_entity_identifier`` limit, naming only what is missing;
+    with a declared order, a second sentence says what the temporal final test can show (a
+    shift between periods, not its cause). ``ordered_by`` is the order's ``by`` then, else
+    absent."""
+    if missing == ['time_column', 'group_column']:
+        text = ('The data have no time column or entity identifier, so the study cannot check '
+                'drift over time or repeated entities across partitions.')
+    elif missing == ['time_column']:
+        text = ('The data have no time column and no declared order, so the study cannot '
+                'check drift over time.')
+    else:
+        text = ('The data have no entity identifier, so the study cannot check whether the '
+                'same entity appears in several partitions.')
+    item = {'id': 'no_time_or_entity_identifier', 'missing': list(missing), 'text': text}
+    order = declared_order(state)
+    if order is not None:
+        item['ordered_by'] = order['by']
+        item['text'] += (f' The rows follow a declared order ({order_words(order["by"])}) and '
+                         'the final test holds the last rows in it, so the final test can show '
+                         'a shift between the development period and the final period, not its '
+                         'cause.')
+    return item
+
+
 def not_yet_defensible(state: dict) -> list[dict]:
     """What the study cannot claim yet, from state only (plan §6)."""
     items = []
@@ -1563,13 +2232,16 @@ def not_yet_defensible(state: dict) -> list[dict]:
                       'text': 'Validation rows are used to compare models and to choose the '
                               'policy and its threshold or capacity, so validation results '
                               'are not independent evidence of future performance.'})
+    delayed = delayed_labels_limit(state)
+    if delayed is not None:
+        items.append(delayed)
     if state['prior_exposure']:
         items.append({'id': 'public_data_already_explored',
                       'text': 'The data were explored or published before this study; its rows '
                               'are not unseen.',
                       'sources': [p['source'] for p in state['prior_exposure']]})
     structure = state['structure']
-    missing = [k for k in ('time_column', 'group_column') if structure[k]['value'] is None]
+    missing = missing_structure(state)
     group = structure['group_column']['value']
     if group is not None and is_cv_split(split_value):
         # B6c (M3): the same limit in the words of the folds.
@@ -1589,10 +2261,7 @@ def not_yet_defensible(state: dict) -> list[dict]:
                               f'Validation rows of a shared group are not independent of the '
                               f'training rows.'})
     if missing:
-        items.append({'id': 'no_time_or_entity_identifier', 'missing': missing,
-                      'text': 'The data have no time column or entity identifier, so the study '
-                              'cannot check drift over time or repeated entities across '
-                              'partitions.'})
+        items.append(structure_limit(state, missing))
     availability = state['decisions']['feature_availability']['value'] or {}
     uncertain = sorted(f for f, v in availability.items() if v == 'uncertain_included')
     if uncertain:
@@ -1630,6 +2299,22 @@ def not_yet_defensible(state: dict) -> list[dict]:
         items.append({'id': 'delegated_decisions', 'decisions': delegated,
                       'text': 'Decided by delegation to the assistant\'s default, not by the '
                               'junior\'s own judgment: ' + ', '.join(delegated) + '.'})
+    automatic = review_queue(state)
+    if automatic:
+        # L9 (R20): an automatic study is not defensible until each automatic decision is
+        # reviewed (adopted or changed) in the junior's own words.
+        items.append({'id': 'automatic_decisions_to_review', 'decisions': automatic,
+                      'text': 'Automatic study: not defensible until reviewed. Recorded by the '
+                              'automatic mode chosen at launch, not in the junior\'s words: '
+                              + ', '.join(automatic) + '. The junior adopts or changes each '
+                              'one in their own words.'})
+    if opened_automatically(state):
+        # L9 (ADR 0006 amendment): permanent; the opening cannot be redone.
+        items.append({'id': 'final_test_opened_automatically',
+                      'text': 'The final test was opened automatically by the demonstration '
+                              'mode, not by the junior\'s decision. Its one evaluation stands '
+                              'and the opening cannot be redone; any change made since is '
+                              'marked as made after the final test.'})
     current_stale = sorted(rid for rid in state['stale']
                            if rid != state.get('current', {}).get('policy.inspection'))
     if current_stale:

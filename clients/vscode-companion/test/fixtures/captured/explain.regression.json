@@ -14,7 +14,7 @@
   "schema": "hypotrail.explain/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 38,
+  "revision": 40,
   "task": "regression",
   "terms": [
    {
@@ -25,7 +25,8 @@
     "example_status": "none",
     "steps": [
      "prediction_time"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "leakage",
@@ -33,7 +34,8 @@
     "definition": "A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use. For example, a fuel consumption measured on a road test would reveal a car's fuel efficiency, but it is known only after the measurement the model is meant to anticipate.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "feature_availability",
@@ -43,7 +45,8 @@
     "example_status": "none",
     "steps": [
      "feature_availability"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "validation_partition",
@@ -56,7 +59,7 @@
       },
       {
        "text": "96",
-       "result_id": "ae74b16b6f43c17895b642ec3576564a4c6ebcf5d6ec69bfdd68895d6f7a4a7f",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
        "path": "partitions.validation.n_rows",
        "value": 96,
        "format": "int"
@@ -66,7 +69,7 @@
       },
       {
        "text": "222",
-       "result_id": "ae74b16b6f43c17895b642ec3576564a4c6ebcf5d6ec69bfdd68895d6f7a4a7f",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
        "path": "partitions.train.n_rows",
        "value": 222,
        "format": "int"
@@ -79,7 +82,8 @@
     "example_status": "shown",
     "steps": [
      "split"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "exposure",
@@ -87,7 +91,8 @@
     "definition": "The record of which rows were read, by which activity, and why. Changing the split does not make rows already seen unseen.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "distribution",
@@ -95,7 +100,8 @@
     "definition": "How the values of one column spread over the rows, read as how often each value occurs or, for a measurement, its range, quartiles, and missing cells. Read on training rows only, it leaves the validation rows unexplored.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "special_value",
@@ -103,7 +109,8 @@
     "definition": "A code that stands for something other than a measurement, such as \"never\" or \"unknown\". Treating it as an ordinary number distorts a model.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "baseline",
@@ -116,7 +123,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "b6b270c7110f2b295ac5122ae9144119b8671180e19d1a04b05dbef1d25353fb",
+       "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
        "path": "train_mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -129,7 +136,8 @@
     "example_status": "shown",
     "steps": [
      "models"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "paired_bootstrap",
@@ -137,7 +145,8 @@
     "definition": "Resampling the same validation rows for both models at once, so the interval describes their difference rather than each one separately.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "paired_difference",
@@ -150,7 +159,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -160,7 +169,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -170,7 +179,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"
@@ -181,7 +190,8 @@
      ]
     },
     "example_status": "shown",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "confidence_interval",
@@ -194,7 +204,7 @@
       },
       {
        "text": "5.69",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "intervals.[fit.linear].mae.low",
        "value": 5.690730215654784,
        "format": "f2"
@@ -204,7 +214,7 @@
       },
       {
        "text": "7.31",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "intervals.[fit.linear].mae.high",
        "value": 7.3058496174077225,
        "format": "f2"
@@ -215,7 +225,8 @@
      ]
     },
     "example_status": "shown",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "percentile_interval",
@@ -223,7 +234,8 @@
     "definition": "The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the error on future rows.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "selection_on_validation",
@@ -231,7 +243,8 @@
     "definition": "Choosing a model by looking at validation results. The chosen model's validation error is optimistic for that reason.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "documented_fact",
@@ -239,7 +252,8 @@
     "definition": "A statement backed by the dataset documentation, with its source.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "scenario_assumption",
@@ -247,7 +261,8 @@
     "definition": "A statement the scenario takes as given without evidence. It can be challenged and is never a decision.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "confirmed_decision",
@@ -257,7 +272,8 @@
     "example_status": "none",
     "steps": [
      "conclusion"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "proposal",
@@ -265,7 +281,8 @@
     "definition": "A restated choice waiting for the user's answer. It is not a decision until it is confirmed.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "stale_result",
@@ -273,7 +290,8 @@
     "definition": "A result computed under decisions that have since changed. It is kept for the record but is not cited.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "overfitting",
@@ -281,7 +299,8 @@
     "definition": "A model that fits the noise of its training set as well as its pattern. It looks better on the rows it was fitted on than on new rows. For example, a model that memorises the fuel efficiency of the car names it was fitted on predicts those cars well and later model years badly; the gap between training and validation errors reveals it.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "regularisation",
@@ -289,7 +308,8 @@
     "definition": "A penalty on large model weights during fitting. It trades a little fit on the training set for steadier predictions on new rows. For example, with few cars and closely related features such as weight and displacement, a penalty keeps their weights from offsetting each other with large opposite values.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "one_hot_encoding",
@@ -297,7 +317,8 @@
     "definition": "Turning a category column into one indicator column per category, set for the rows that have that category. A linear model needs it because categories have no order. For example, the origin of a car is coded as a region number; it becomes one indicator per region instead of a number the model would read as a measurement.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "imputation",
@@ -305,7 +326,8 @@
     "definition": "Filling a missing value with a substitute, such as the median of the training set, before fitting. The substitute is computed on the training set only, and an indicator can record that the value was missing. For example, the cars whose engine power is missing get the median engine power of the training cars, never a figure computed with validation cars.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "standardisation",
@@ -313,7 +335,8 @@
     "definition": "Rescaling a numeric column to a mean of zero and a standard deviation of one, with both computed on the training set. It puts features on one scale, so their weights and a penalty treat them alike. For example, weight in pounds and acceleration in seconds are rescaled so that the weight given to a car's weight is not tiny only because pounds are large numbers.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "cross_validation",
@@ -321,7 +344,8 @@
     "definition": "Dividing the development set into k folds; each fold is in turn the validation fold, measured by a model fitted on the other folds, the training folds. Every development row is measured once, so the estimate rests on more rows than one validation set; a choice made with it is still optimistic. For example, with five folds of the cars, each model is fitted five times and its error measured each time on cars it did not see.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "out_of_fold",
@@ -329,7 +353,8 @@
     "definition": "The prediction for a development row made by the model fitted on the training folds, the folds other than the row's own validation fold, so by a model that never saw that row. Every development row gets one, and the errors and the model choice are read on them; they are development evidence, because the choice is made on them. For example, a car in the third fold is predicted by the model fitted on the other folds' cars.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "fold_spread",
@@ -337,7 +362,8 @@
     "definition": "How much a figure moves from one validation fold to another, given as its lowest and highest fold value. It is not a confidence interval, since it describes the folds of this development set, while a confidence interval describes how a figure could move with another sample. A difference between two models smaller than the spread is not a difference this study can see. For example, if the mean error ranges widely across folds, a small gain of the variant over the candidate says little.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "final_test",
@@ -345,7 +371,8 @@
     "definition": "Rows set apart and sealed before any look at the data, opened once, after the model is chosen, to measure it on rows that played no part in any choice. It is the study's only independent evidence. For example, the cars sealed at the start are predicted once by the chosen model; any change made after that opening is reported as made after the final test.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "development_rows",
@@ -355,7 +382,8 @@
     "example_status": "none",
     "steps": [
      "discover_data"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "permutation_null_band",
@@ -363,7 +391,19 @@
     "definition": "The range of a chart's figures after shuffling the outcome among the training rows several times with a fixed seed, which breaks any real link between the variable and the outcome. A pattern that stays inside the band is what chance alone draws; one above every shuffle is unlikely to be chance alone. For example, if the rates by job group differ less than they do after shuffling who subscribed, the differences are not evidence of anything.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "target_look",
+    "term": "Look at the target",
+    "definition": "An analysis that read the variable to predict, such as its distribution or its summary, the special values read with it, or its mean by group. Each one is counted. The more looks, the more a pattern found among them can be chance. For example, the quality check of the columns reads no target and is not a look; the distribution of the variable to predict is one.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "structural_eda"
+    ],
+    "language": "en"
    },
    {
     "id": "data_contingent_decision",
@@ -373,7 +413,8 @@
     "example_status": "none",
     "steps": [
      "preprocessing"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "success_criterion",
@@ -383,7 +424,8 @@
     "example_status": "none",
     "steps": [
      "success_criterion"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "single_feature_signal",
@@ -391,7 +433,8 @@
     "definition": "How well one variable alone predicts the outcome, measured out of fold on the training rows. A variable that predicts far better than the others raises a question about when its value becomes known, because a value recorded at or after the outcome would leak it. It never decides which variables to keep. For example, the length of the last call predicts the answer of that call very well, because it is only known once the call has ended.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "heteroscedasticity",
@@ -399,7 +442,8 @@
     "definition": "Errors whose size changes with the prediction or across groups instead of staying about the same. The mean error stays a fair summary, but one interval width for every row would be wrong. For example, if a model of fuel efficiency errs more for the cars it predicts most efficient, its errors are heteroscedastic.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "qq_plot",
@@ -407,7 +451,8 @@
     "definition": "The quantiles of the residuals, rescaled, plotted against the same quantiles of a normal distribution; points on the diagonal mean normal residuals. Normality is a question about the residuals after the fit, never about the raw variables, and it matters for prediction intervals rather than for the mean error. For example, a few cars with very large errors bend the ends of the plot away from the diagonal.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "example_errors",
@@ -415,7 +460,8 @@
     "definition": "The rows with the largest errors, shown with their values so a person can read what the model saw. They are examples to understand, not a sample to count. For example, the cars the model predicts worst can reveal a group of cars it was not fitted to describe.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "training_set",
@@ -423,7 +469,8 @@
     "definition": "The rows a model is fitted on. Under k-fold cross-validation each model's training set is the training folds, every fold but the one it is measured on. For example, with five folds of the clients, each model learns from four folds of clients.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "fold",
@@ -431,7 +478,8 @@
     "definition": "One of the k parts the development set is divided into for k-fold cross-validation. Each fold is in turn the validation fold, measured by a model fitted on the other folds, the training folds. For example, with five folds the clients of the third fold are scored by a model that learnt from the clients of the four other folds.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "sample",
@@ -439,7 +487,17 @@
     "definition": "A set of rows drawn from the population the study is about; a figure computed on it would move with another sample of the same size. For example, the development set is one sample of the clients, and the holdout another one.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
+   },
+   {
+    "id": "forward_chaining",
+    "term": "Forward-chaining cross-validation",
+    "definition": "Cross-validation that follows the order of prediction time. The development rows are cut into consecutive windows; each later window is predicted once by a model fitted only on earlier rows whose target was already known, and the first window, the warm-up, only trains and is never predicted. A choice made with it is still optimistic. For example, the cars of the third window are predicted by a model fitted on the cars of the first two windows, never on later ones.",
+    "example": null,
+    "example_status": "none",
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "random_split",
@@ -447,7 +505,8 @@
     "definition": "A random division of the rows between training and validation, with a recorded seed. It assumes the rows are exchangeable, which a time order or repeated entities can contradict.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "ordinal_split",
@@ -455,7 +514,8 @@
     "definition": "A split on an ordered column such as a model year. Rows at or after a cutoff are validation rows and earlier rows train the model, so the validation asks whether a model fitted on the past holds on later periods.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "extrapolation",
@@ -463,7 +523,8 @@
     "definition": "Predicting for values outside the range the model was fitted on, such as later years. A model can be accurate inside its training range and biased outside it.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "group_overlap",
@@ -471,7 +532,8 @@
     "definition": "Rows that describe the same entity, such as one name recorded in several years, falling in both partitions. Their validation rows are not independent of the training rows; the study reports how many groups are shared.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "target_distribution",
@@ -484,7 +546,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "33e9e3394afc107d0917147c52ec09372bbc9b2ca8a0676c7a61d1dee09c0060",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
        "path": "mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -494,7 +556,7 @@
       },
       {
        "text": "6.20",
-       "result_id": "33e9e3394afc107d0917147c52ec09372bbc9b2ca8a0676c7a61d1dee09c0060",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
        "path": "sd",
        "value": 6.195978453412262,
        "format": "f2"
@@ -507,7 +569,8 @@
     "example_status": "shown",
     "steps": [
      "train_eda"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "linear_regression",
@@ -515,7 +578,8 @@
     "definition": "A model that predicts the target as a weighted sum of the features, with weights fitted on training rows by least squares. Its weights are associations, not effects.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "prediction",
@@ -523,7 +587,8 @@
     "definition": "The value a model gives for the target of a row, in the unit of the target.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "residual",
@@ -531,7 +596,8 @@
     "definition": "Observed minus predicted value for one row. A positive residual means the model predicted too low.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "bias",
@@ -544,7 +610,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -555,7 +621,8 @@
      ]
     },
     "example_status": "shown",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "mae",
@@ -568,7 +635,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "models.[fit.linear].mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -578,7 +645,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "models.[fit.baseline].mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -591,7 +658,8 @@
     "example_status": "shown",
     "steps": [
      "model_choice"
-    ]
+    ],
+    "language": "en"
    },
    {
     "id": "rmse",
@@ -604,7 +672,7 @@
       },
       {
        "text": "7.66",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "models.[fit.linear].rmse",
        "value": 7.664419781686159,
        "format": "f2"
@@ -614,7 +682,7 @@
       },
       {
        "text": "11.92",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "models.[fit.baseline].rmse",
        "value": 11.924502477405836,
        "format": "f2"
@@ -625,7 +693,8 @@
      ]
     },
     "example_status": "shown",
-    "steps": []
+    "steps": [],
+    "language": "en"
    },
    {
     "id": "smearing",
@@ -633,7 +702,8 @@
     "definition": "When a model predicts the logarithm of the target, turning its predictions back to the original unit underestimates the mean, and a correction such as Duan's smearing is needed. For example, a model of the log of fuel efficiency would need it; this engine does not transform the target, so it does not apply here.",
     "example": null,
     "example_status": "none",
-    "steps": []
+    "steps": [],
+    "language": "en"
    }
   ],
   "steps": {
@@ -780,7 +850,7 @@
       },
       {
        "text": "222",
-       "result_id": "ae74b16b6f43c17895b642ec3576564a4c6ebcf5d6ec69bfdd68895d6f7a4a7f",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
        "path": "partitions.train.n_rows",
        "value": 222,
        "format": "int"
@@ -790,7 +860,7 @@
       },
       {
        "text": "96",
-       "result_id": "ae74b16b6f43c17895b642ec3576564a4c6ebcf5d6ec69bfdd68895d6f7a4a7f",
+       "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
        "path": "partitions.validation.n_rows",
        "value": 96,
        "format": "int"
@@ -807,6 +877,14 @@
       }
      ]
     },
+    "text_status": "shown"
+   },
+   "error_metric": {
+    "concept": null,
+    "context": null,
+    "method": null,
+    "interpretation": null,
+    "consequence": null,
     "text_status": "shown"
    },
    "success_criterion": {
@@ -847,59 +925,39 @@
     },
     "text_status": "shown"
    },
-   "train_eda": {
+   "structural_eda": {
     "concept": {
      "segments": [
       {
-       "text": "Target distribution"
+       "text": "Look at the target"
       }
      ]
     },
     "context": {
      "segments": [
       {
-       "text": "The target is: mpg: city-cycle fuel efficiency in miles per gallon according to the source. Exploration reads training rows only."
+       "text": "The quality check reads the development rows without the target, so the preparation decided from it comes before any look at the target."
       }
      ]
     },
     "method": {
      "segments": [
       {
-       "text": "The target summary and the special values are computed on the training partition, with their counts."
+       "text": "Missing cells by column, repeated rows, the categories of each categorical column with their rare ones, and the range of each numeric column against the range the case declares. The rows read are recorded as a structural inspection."
       }
      ]
     },
     "interpretation": {
      "segments": [
       {
-       "text": "On the training rows the target has a mean of "
-      },
-      {
-       "text": "20.57",
-       "result_id": "33e9e3394afc107d0917147c52ec09372bbc9b2ca8a0676c7a61d1dee09c0060",
-       "path": "mean",
-       "value": 20.565315315315317,
-       "format": "f2"
-      },
-      {
-       "text": " and a standard deviation of "
-      },
-      {
-       "text": "6.20",
-       "result_id": "33e9e3394afc107d0917147c52ec09372bbc9b2ca8a0676c7a61d1dee09c0060",
-       "path": "sd",
-       "value": 6.195978453412262,
-       "format": "f2"
-      },
-      {
-       "text": ", in the unit of the target. The mean baseline predicts that mean for every row; a model has to do better to be useful."
+       "text": "The drafted preparation cites what this check found; it is not data-contingent while no look at the target came before it."
       }
      ]
     },
     "consequence": {
      "segments": [
       {
-       "text": "A missing-value marker on a numeric variable becomes an indicator and an imputed value in the model, never an ordinary number."
+       "text": "A preparation proposed after a look at the target is still stamped data-contingent."
       }
      ]
     },
@@ -943,6 +1001,64 @@
     },
     "text_status": "shown"
    },
+   "train_eda": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Target distribution"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The target is: mpg: city-cycle fuel efficiency in miles per gallon according to the source. Exploration reads training rows only."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "The target summary and the special values are computed on the training partition, with their counts."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "On the training rows the target has a mean of "
+      },
+      {
+       "text": "20.57",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+       "path": "mean",
+       "value": 20.565315315315317,
+       "format": "f2"
+      },
+      {
+       "text": " and a standard deviation of "
+      },
+      {
+       "text": "6.20",
+       "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+       "path": "sd",
+       "value": 6.195978453412262,
+       "format": "f2"
+      },
+      {
+       "text": ", in the unit of the target. The mean baseline predicts that mean for every row; a model has to do better to be useful."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "A missing-value marker on a numeric variable becomes an indicator and an imputed value in the model, never an ordinary number."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
    "models": {
     "concept": {
      "segments": [
@@ -972,7 +1088,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "b6b270c7110f2b295ac5122ae9144119b8671180e19d1a04b05dbef1d25353fb",
+       "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
        "path": "validation.mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -982,7 +1098,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "6c5edebf385d0f90967eedb40e07575b13b9b18471f8928dcc83ce9dfb476e93",
+       "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
        "path": "validation.mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -1038,7 +1154,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -1048,7 +1164,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -1058,7 +1174,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"
@@ -1068,7 +1184,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -1160,7 +1276,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -1197,7 +1313,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "models.[fit.linear].mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -1207,7 +1323,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "models.[fit.baseline].mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -1217,7 +1333,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -1227,7 +1343,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -1237,7 +1353,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+       "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"

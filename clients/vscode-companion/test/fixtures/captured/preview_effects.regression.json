@@ -7,7 +7,7 @@
   "argv": [
    "preview",
    "effects",
-   "p_7",
+   "p_8",
    "--json"
   ],
   "note": ""
@@ -16,8 +16,8 @@
   "schema": "hypotrail.preview_effects/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 38,
-  "proposal_id": "p_7",
+  "revision": 40,
+  "proposal_id": "p_8",
   "decision_id": "model_choice",
   "value": "fit.linear",
   "previous": null,
@@ -28,12 +28,12 @@
   "stale_slots": [],
   "kept_slots": [
    "split",
+   "eda.quality",
    "eda.target_summary",
    "eda.special_values",
    "eda.correlation",
    "eda.distribution:weight",
    "eda.mean_by:model_year",
-   "eda.quality",
    "eda.single_feature_signal",
    "fit.baseline",
    "fit.linear",

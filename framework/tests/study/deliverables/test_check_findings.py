@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from mlkit.reliability import CommandRefused
-from mlkit.study import cmd_check, commands as cmd, manifest as mf, read, view
+from mlkit.study import cmd_check, commands as cmd, manifest as mf, preconditions, read, view
 from mlkit.study.store import StudyStore
 
 import phase3_study as fx
@@ -55,7 +55,8 @@ def test_rendered_study_is_clean(study):
 
 def test_number_outside_a_cited_value_is_reported(study):
     page = _report(study).read_text()
-    _report(study).write_text(page.replace('<main>', '<main><p>We reached 42 renewals and '
+    main = '<main id="main">'                   # v4: the study language's edition
+    _report(study).write_text(page.replace(main, main + '<p>We reached 42 renewals and '
                                            '<span data-literal="revision">7</span>.</p>', 1))
     result = cmd_check.run_check(study)
     found = [f for f in result['findings'] if f['code'] == 'number_outside_result']
@@ -91,8 +92,8 @@ def test_a_cited_result_that_is_not_current_is_reported(study, synthetic_case_di
     orphan = b.put('eda.target_rate', {'rate': 0.5, 'n_positive': 1, 'n_rows': 2}, promote=False)
     page = _report(study).read_text()
     _report(study).write_text(page.replace(
-        '<main>', f'<main><p><data value="0.5" data-result-id="{orphan}" data-path="rate">'
-        '50.0%</data></p>', 1))
+        '<main id="main">', f'<main id="main"><p><data value="0.5" data-result-id="{orphan}" '
+        'data-path="rate">50.0%</data></p>', 1))
     assert 'stale_result_cited' in codes(cmd_check.run_check(study))
 
 
@@ -121,7 +122,9 @@ def test_draft_numbers_are_traced_to_the_registry(study):
     assert {'35.0%', '15%', '55%', '210', '20', '20261017'} <= set(traced)
 
 
-@pytest.mark.parametrize('number', ['0.47', '42', '12.3%', '3.14159'])
+# Contract P1.9: the data card's sample is drawn from the study's seed, so a small integer (42,
+# an age) may be one of its cells, which check traces; these numbers are no cell of the study.
+@pytest.mark.parametrize('number', ['0.47', '98765', '12.3%', '3.14159'])
 def test_fabricated_numbers_are_untraceable(study, number):
     result = text_check(study, f'The model reached {number} on validation rows.')
     assert codes(result) == ['untraceable_number']
@@ -202,7 +205,7 @@ def test_a_digit_only_registry_prefix_is_not_a_claim(study, monkeypatch):
 @pytest.mark.parametrize('text, number', [
     ('The model selected 12345678 clients.', '12345678'),          # not a registry prefix
     ('The model selected 526597 clients.', '526597'),             # diverges from the id
-    ('See result 42 for the count.', '42'),                       # fewer than 6 digits
+    ('See result 98765 for the count.', '98765'),                 # fewer than 6 digits
     ('The result 1357.5 is untraced.', '1357.5'),                  # not digits only
     ('(result 52659681%)', '52659681%'),                           # a percentage
 ])
@@ -360,8 +363,10 @@ def test_conclusion_text_is_checked(tmp_path, synthetic_case_dir, monkeypatch):
         b.decide('conclusion', {'verdict': 'adopt_policy', 'text': text},
                  'You adopt the policy.', 'I adopt the capacity rule as written.')
     assert refused.value.code == 'literal_number_in_text'
-    # ... and check still reports one recorded by a study written before that fix.
+    # ... and check still reports one recorded by a study written before that fix (and before
+    # review round 9, R9E-4, which made an adopting conclusion wait for the final test).
     monkeypatch.setattr(cmd, 'check_conclusion', lambda *a, **k: None)
+    monkeypatch.setattr(preconditions, 'adoption_missing', lambda state: [])
     b.decide('conclusion', {'verdict': 'adopt_policy', 'text': text},
              'You adopt the policy.',
              'I adopt the capacity rule as written, because it ranks better.')

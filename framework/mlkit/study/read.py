@@ -133,6 +133,26 @@ class Study:
         self._currency: dict[str, dict] = {}
         self._sources: list[dict] | None = None
 
+    @classmethod
+    def at_state(cls, study_dir, state: dict) -> 'Study':
+        """A snapshot over ``state`` as given (a copy), instead of the one on disk.
+
+        A writer that holds the lock uses it to apply the same currency rule as ``status``
+        and ``evidence`` (:meth:`currency`: stale map, code changed under the code
+        attestations, upstream) to the state it is about to mutate, before it decides
+        (review round 2, E2-1..E2-3). Nothing is written; the registry and blobs are read and
+        verified from disk as for any snapshot.
+        """
+        self = cls.__new__(cls)
+        self.study_dir = Path(study_dir).resolve()
+        self.home = self.study_dir / HOME
+        self._state = copy.deepcopy(dict(state))
+        self._entries = {}
+        self._module_shas = {}
+        self._currency = {}
+        self._sources = None
+        return self
+
     # state
 
     @property
@@ -267,6 +287,11 @@ class Study:
                 changed = self.code_changed(entry)
                 if changed:
                     reason['code_changed'] = changed
+                # Review 2026-10-24 round 2: computed with rows whose label is delayed.
+                from .partition import ignores_exclusions
+                delayed = ignores_exclusions(state, entry)
+                if delayed:
+                    reason['delayed_labels_included'] = True
                 parents = [p for p in rec.upstream(entry, history=False)
                            if not self.currency(p)['current']]
                 if parents:
@@ -276,6 +301,9 @@ class Study:
                     if changed:
                         text.append(f'the code of {entry["activity"]} changed since it was '
                                     'computed (§3.7 row 11)')
+                    if delayed:
+                        text.append('it was computed with development rows whose outcome is '
+                                    'known only after the final boundary')
                     if parents:
                         text.append('it was computed from a result that is no longer current')
                     reason = {'reason': '; '.join(text), 'since': None, **reason}
@@ -359,13 +387,37 @@ class Study:
 
 
 def _module_path(name: str) -> Path | None:
-    """The source file of module ``name`` (located, not imported), or None."""
+    """The source file of module ``name`` (located, not imported), or None.
+
+    Round 5 (review E, R5E-2): a name with a slash, ``package/relative/path``, is a data file
+    inside the folder of a regular package (the runtime's JSON schemas, which its wheel holds
+    and the capture's fingerprint covers)."""
+    if '/' in name:
+        return _package_file(name)
     try:
         spec = importlib.util.find_spec(name)
     except (ImportError, ValueError):
         return None
     path = Path(spec.origin) if spec is not None and spec.origin else None
     return path if path is not None and path.is_file() else None
+
+
+def _package_file(name: str) -> Path | None:
+    """The file ``relative/path`` of ``package/relative/path`` inside the one folder of the
+    regular package ``package`` (located, not imported), or None."""
+    package, _, relative = name.partition('/')
+    parts = relative.split('/')
+    if not package or not relative or any(p in ('', '.', '..') for p in parts):
+        return None
+    try:
+        spec = importlib.util.find_spec(package)
+    except (ImportError, ValueError):
+        return None
+    locations = list(spec.submodule_search_locations or []) if spec is not None else []
+    if len(locations) != 1:
+        return None
+    path = Path(locations[0]).joinpath(*parts)
+    return path if path.is_file() else None
 
 
 def open(study_dir) -> Study:   # noqa: A001 - the documented name of the read API

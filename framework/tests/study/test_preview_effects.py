@@ -14,7 +14,7 @@ import pytest
 
 import companion_contract as cc
 import flowkit as fk
-from mlkit.study import commands as cmd, read
+from mlkit.study import commands as cmd, read, state as st
 
 AUTO = fk.REPO / 'use-cases' / 'auto-mpg'
 CONCLUSION_TEXT = ('The comparison was made on validation rows that were used to choose, so it '
@@ -187,6 +187,9 @@ def test_auto_mpg_walkthrough_previews_equal_every_confirmation(tmp_path):
                      'fit.linear', 'evaluate.regression'):
         flow.run(activity)
     flow.decide('model_choice', 'fit.linear')
+    # Review round 9 (R9E-4): adopting rests on the final test, so it is opened first.
+    flow.decide('final_test', st.choice_config(flow.state()),
+                'Yes, I open the final test now, because the model is fixed')
     flow.decide('conclusion', {'verdict': 'adopt_model', 'text': CONCLUSION_TEXT},
                 'I adopt the linear model, as you stated the conclusion, because it errs less.')
     pid = flow.propose('model_choice', 'fit.baseline')
@@ -198,5 +201,6 @@ def test_auto_mpg_walkthrough_previews_equal_every_confirmation(tmp_path):
     assert cc.r3_imported(flow.study, 'preview', 'effects', pid) == []
     flow.confirm(pid, 'Yes, I want the model_choice switched back, exactly as you stated it, '
                       'because it errs less')
-    # WP-A4: the success criterion and the preprocessing; WP-B1: the variant.
-    assert len(flow.previews) == 9
+    # WP-A4: the success criterion and the preprocessing; WP-B1: the variant and (R9E-4,
+    # before the adopting conclusion) the final test.
+    assert len(flow.previews) == 10

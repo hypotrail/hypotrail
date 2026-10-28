@@ -295,7 +295,8 @@ test('§6.7: every term id marked in the panel copy exists in the glossary of at
   require('../media/terms.js');
   const map = globalThis.Hypotrail.terms.MAP;
   delete globalThis.Hypotrail;
-  const glossary = new Set([...payload('explain.binary').terms, ...payload('explain.regression').terms].map(t => t.id));
+  const glossary = new Set(['explain.binary', 'explain.regression', 'captured/explain.binary', 'captured/explain.regression']
+    .flatMap(n => payload(n).terms).map(t => t.id));
   assert.ok(Object.keys(map).length >= 5);
   for (const [id, places] of Object.entries(map)) {
     assert.ok(glossary.has(id), `${id} is not a glossary id`);
@@ -394,4 +395,62 @@ test('the warnings of an export have words for every code of CLI-CONTRACT-COMPAN
     assert.ok(learn.WARNINGS[code], code);
   }
   assert.equal(learn.warningsText([]), '');
+});
+
+// --- L7 (owner session 2026-10-26, D15): what comes after the study, read only ---------------
+
+const { toSummaryModel, afterStudyOf } = require('../lib/models/summary');
+
+test('HO-3 (L7): the summary keeps the junior text of after_study and whether the plan is available, never its commands', () => {
+  const raw = JSON.parse(JSON.stringify(payload('captured/summary.binary.cv')));
+  const after = { handoff: { command: 'hypotrail export handoff --study /s --expected-revision 9' },
+    azureml: { supported: true, reason_id: null, reason: null, plan_command: 'hypotrail export azureml --study /s --expected-revision 9 --plan',
+      model: { task: 'binary', family: 'logistic', output_kind: 'binary_score' }, template: 'team-azureml-v1' },
+    cloud_status: 'not_qualified', junior_text: 'What comes next: the handoff pack.' };
+  raw.next_action = { kind: 'done', message: 'Done.', audience: 'junior', junior_message: 'Done.', after_study: after };
+  const m = toSummaryModel(raw);
+  // Lot P (R49): the engine's reason when not supported, and the family the support matrix names.
+  assert.deepEqual(m.nextAction.afterStudy, { juniorText: 'What comes next: the handoff pack.', exportPlanAvailable: true, cloudStatus: 'not_qualified',
+    azureReason: null, azureFamily: 'logistic' });
+  assert.ok(!JSON.stringify(m.nextAction.afterStudy).includes('hypotrail'));
+  // Not supported, absent, blank, or on another kind: no plan line, or no block at all.
+  assert.equal(afterStudyOf({ ...after, azureml: { supported: false } }).exportPlanAvailable, false);
+  assert.equal(afterStudyOf({ ...after, junior_text: '  ' }), null);
+  assert.equal(afterStudyOf(null), null);
+  raw.next_action.kind = 'propose';
+  assert.equal(toSummaryModel(raw).nextAction.afterStudy, null);
+  // The captured payload of a real study at done (capture.py, wave W1).
+  const done = payload('captured/summary.binary.cv.done');
+  const real = toSummaryModel(done).nextAction.afterStudy;
+  assert.equal(real.juniorText, done.next_action.after_study.junior_text);
+  assert.equal(real.exportPlanAvailable, done.next_action.after_study.azureml.supported);
+});
+
+// The one page (ADR 0004 d13): after the study is Now's `done` card ("And after", NOW-11); the
+// hand-off drawer no longer repeats it. Its lines are text only (the browser checks the block:
+// test_webview_page.py, test_webview_wave1_real_cli.py).
+test('HO-3 (L7): the after-study lines of the page are text only (no control, no write)', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'media', 'views', 'page.js'), 'utf8');
+  const lines = source.split('\n').filter(l => l.includes("'data-after-study"));
+  assert.equal(lines.length, 2, 'the junior text and the export plan line');
+  for (const line of lines) {
+    for (const forbidden of ['data-write', 'onclick', 'ctx.send', 'HT.send', "type: 'button'", 'textarea', 'askButton', 'copyButton']) {
+      assert.ok(!line.includes(forbidden), forbidden);
+    }
+  }
+  assert.ok(!fs.readFileSync(path.join(__dirname, '..', 'media', 'views', 'learn.js'), 'utf8').includes('data-after-study'));
+});
+
+// --- R24 (owner session 2026-10-27): the review of an automatic decision, read only ----------
+
+test('R24: the summary marks the review of an automatic decision (a reconfirm or an await_user_words with review), nothing else', () => {
+  const raw = JSON.parse(JSON.stringify(payload('captured/summary.binary.cv')));
+  raw.next_action = { kind: 'reconfirm', decision: 'prediction_time', review: true, message: 'Review.', audience: 'agent' };
+  assert.equal(toSummaryModel(raw).nextAction.review, true);
+  raw.next_action.kind = 'await_user_words';
+  assert.equal(toSummaryModel(raw).nextAction.review, true);
+  raw.next_action.kind = 'run';
+  assert.equal(toSummaryModel(raw).nextAction.review, false, 'only an adoption question is a review');
+  raw.next_action = { kind: 'reconfirm', decision: 'prediction_time', review: 'yes' };
+  assert.equal(toSummaryModel(raw).nextAction.review, false, 'only the boolean true counts');
 });

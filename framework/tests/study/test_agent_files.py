@@ -355,7 +355,7 @@ def test_instructions_carry_the_v0_2a_rules():
         # the pauses and EDA governance
         for phrase in ('**success criterion**', 'before any model is fitted',
                        '**preprocessing**', '`next_action.default_value`', '`motivated_by`',
-                       '`data_contingent`', '`values.question`', '`null_band`',
+                       '`data_contingent`', '`question_junior`', '`null_band`',
                        '`eda.single_feature_signal` only raises a legitimacy question',
                        'its score keeps or drops no feature', '`eda_looks`'):
             assert phrase in rule3, (task, phrase)
@@ -463,6 +463,10 @@ def test_the_agent_relays_the_engine_payloads(task):
     assert {'model_families', 'model_selection'} <= set(view.VIEW_KEYS)
     # v0.3 (WP-J): a write returns the next action, so no status after it; a short read
     # asks for keys, and the JSON is never piped into a program (S14: 6 of 104 runs did).
+    # Third session: a run's rules and options are passed as given (the capture before the
+    # opening carries ``--profile workshop``, ``view._capture_first``).
+    assert "a `run`'s `rules` and `options` (pass each: `--rule R`, `--<option> <value>`)" \
+        in rule1
     for phrase in ('at most four tool calls per pause', 'ends with the refreshed `next_action`',
                    'no `status` is needed after a write',
                    '`status --summary --fields next_action,criterion`'):
@@ -475,21 +479,52 @@ def test_the_agent_relays_the_engine_payloads(task):
 @pytest.mark.parametrize('task', af.TASKS)
 def test_the_panel_rule(task):
     """WP-D, R13, R20, R35: remember an already-open panel without interrupting resumes;
-    one line per step names the tab; panel actions are said as such."""
+    panel actions are said as such. Owner session 2026-10-26 (R1): the panel is open when
+    the engine says so (``next_action.panel``) or the junior said it. L2 (R1b, D3): a message
+    that shows or changes something ends with the engine's line for what the command it
+    reports produced (``next_action.panel.shown.line``), none when ``shown`` is null; the
+    template's own tab-by-step mapping is gone (the behaviour moved to the engine, tested
+    in ``test_companion_env.py`` and ``test_journey_walkthrough.py``). Third session (R21):
+    the line comes first, the message's first line and, with Copilot, the picker question's
+    first line, never its last. R35 (owner decision 2026-10-28; the assertion "no line when
+    `shown` is null" is rewritten): the engine leaves the line out while Now shows the step
+    (``line`` null) and gives it at a session's first message, so the agent starts with the
+    line only when it is present."""
     text = Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task))
     rule6 = _rule(text, 6)
-    for phrase in ('If the junior works in VS Code',
-                   'has already said the Hypotrail panel is open', 'Do not append a panel-open',
-                   'one short line per step naming the tab', 'Data & EDA ("Données et EDA")',
-                   'after the data card and the charts', 'Decisions ("Décisions") at a proposal',
-                   'Evidence ("Preuves") after the fits, the diagnostics, and the opening',
-                   'What if? ("Et si ?")', 'it never replaces its content',
+    for phrase in ('It is open when `next_action.panel` is present or the junior has already '
+                   'said the Hypotrail panel is open; remember it', 'Do not append a panel-open',
+                   'start a message that shows or changes something with '
+                   '`next_action.panel.shown.line` of the last command it reports, verbatim, '
+                   'as its first line',
+                   'only when that line is present',
+                   # Contract P1 (ADR 0004 decision 13): places of the one page, never a tab.
+                   'The line names a place of the one page, not a tab; it only adds to the '
+                   'chat',
                    '`status --summary --digest', '`channel` `webview`',
                    '"you ran these charts from the panel"'):
         assert phrase in rule6, phrase
-    assert ('at the decision rule' in rule6) == (task == 'binary')
-    from mlkit.study import view
+    assert 'Data & EDA' not in rule6 and 'where.line' not in rule6     # the mapping is gone
+    assert 'If the junior works in VS Code' not in rule6           # the trigger before R1
+    assert 'the {' not in rule6 and ' tab.' not in rule6 and 'tabs' not in rule6
+    from mlkit.study import companion_env as ce, view
     assert 'channel' in view.DIGEST_ITEM_KEYS
+    assert ce.PANEL_KEYS == ('version', 'stage', 'title', 'where', 'shown')
+    assert ce.SHOWN_KEYS == ce.WHERE_KEYS == ('anchor', 'label', 'line')
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    source = (af.SOURCE / 'CLAUDE.md.in').read_text()
+    claude, copilot = (Flat(_rule(af.render(source, flavour=f, values=values,
+                                            source='CLAUDE.md.in', task=task), 6))
+                       for f in (af.CLAUDE, af.COPILOT))
+    place = 'At a pause it is the first line of the picker question, before the facts'
+    assert place in copilot and place not in claude
+    assert 'otherwise the first line of your final message' in copilot
+    for flat in (rule6, claude, copilot):                          # R21: never the last line
+        assert 'end a message that shows' not in flat and 'last line' not in flat
+    skill = (af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text()
+    order = skill.split('## One pause, one message', 1)[1].split('\n## ', 1)[0]
+    assert '\n1. **The panel line**, first, when the engine gives one (CLAUDE.md rule 6).' in order
+    assert order.index('**The panel line**') < order.index('**Where we are**')
 
 
 @pytest.mark.parametrize('task', af.TASKS)
@@ -518,8 +553,18 @@ def test_diagnostics_variants_and_r32(task):
     assert {'one_se', 'advice'} <= set(trials.SELECTION_KEYS)
     pre = Flat(rule3.split('**Preprocessing.**', 1)[1].split('**Variants', 1)[0])
     for phrase in ('`decide propose` returns `data_contingent`',
-                   "say that reason's `text` before you present the proposal"):
+                   # L5 (R5, R7): the engine drafts the preparation and explains the stamp
+                   # (test_l5_recommendations.py pins the behaviour that moved there).
+                   'say `data_contingent_reason.junior_text` before you present the proposal',
+                   'drafted from the quality check', '`recommended.reasons`',
+                   '`alternatives` is the comparison'):
         assert phrase in pre, phrase
+    variants = Flat(rule3.split('**Variants and model families**', 1)[1])
+    # L5 (R13, R14, R15): the drafted EBM, the families' junior words, the refusal that teaches.
+    for phrase in ('with the EBM when the diagnostics flag a pattern',
+                   'Name families by `junior_words`', 'relay `not_offered`',
+                   "a refused family's `details.junior_message`"):
+        assert phrase in variants, phrase
 
 
 @pytest.mark.parametrize('task', af.TASKS)
@@ -547,3 +592,652 @@ def test_standard_vocabulary_and_no_ids(task):
                           'validation croisée à k plis')):
         entry = texts.glossary(term, task)
         assert (entry['term'], entry['term_fr']) == (en, fr), term
+
+
+# --- R9UX-1: GitHub Copilot shows only the last message of a turn and the picker ----------
+
+def test_generated_copilot_instructions_put_what_the_junior_reads_last(study):
+    """Copilot folds the text written before a tool call into collapsed reasoning. The
+    instructions ``init`` writes for it never order "message first, then picker"; they put the
+    facts, the quoted block and the closed question in the picker question, and what the
+    junior must keep in the final message. Since the owner session of 2026-10-26 (R2),
+    "explain first" calls the picker again instead of ending the turn in text; since its
+    second batch (R9, D13) short progress lines before and between tool calls are allowed
+    with Copilot, what the junior must keep being repeated in the final message or the
+    picker. The Claude Code copy keeps its own procedure, unchanged."""
+    target, _ = study
+    copilot = Flat((target / '.github/copilot-instructions.md').read_text())
+    claude = Flat((target / 'CLAUDE.md').read_text())
+    claude_only = ('send that message first', 'Before runs, visibly state',
+                   'in the chat message itself', 'explain, show the block again, ask again',
+                   'so it survives collapsed prose')
+    for phrase in claude_only:
+        assert phrase not in copilot, phrase
+        assert phrase in claude, phrase
+    for phrase in ('Copilot folds text written before a tool call',
+                   'the final message (at a pause, the picker question) repeats what the '
+                   'junior must keep', 'The block is inside the picker question',
+                   'call it as the last step of the turn, with one single-select question that '
+                   'holds the key facts of the pause, the quoted block, and the closed question',
+                   '`next_action.pause.question`',
+                   'write nothing the junior must read before it',
+                   'Mark the adopt option recommended only when you proposed '
+                   '`recommended.value`',
+                   'Explain first: call the picker again, its question holding the explanation, '
+                   'the block, and the closed question'):
+        assert phrase in copilot, phrase
+        assert phrase not in claude, phrase
+    for task in af.TASKS:          # every task, both flavours: no placeholder left
+        text = (af.SOURCE / 'CLAUDE.md.in').read_text()
+        for flavour in (af.CLAUDE, af.COPILOT):
+            out = af.render(text, flavour=flavour, values={'HYPOTRAIL': 'h', 'STUDY': 's',
+                                                           'GLOSSARY': 'g'},
+                            source='CLAUDE.md.in', task=task)
+            assert '{{' not in out and 'directly above the question' in out
+            assert ('send that message first' in out) == (flavour == af.CLAUDE)
+            assert ('call it as the last step of the turn' in out) == (flavour == af.COPILOT)
+
+
+def test_the_copilot_agent_asks_in_the_study_language():
+    """R9UX-2: the picker's question and options are in the study language, the closed
+    question taken from ``next_action.pause``; adopt is marked recommended only when the
+    proposal is the engine's recommendation. Owner session 2026-10-26 (L1, R3): the option
+    labels come from the engine (``pause.option_labels``), so the agent no longer translates
+    them; their words, and the closed question, are pinned on the engine
+    (:func:`test_the_engine_labels_the_adoption_picker`)."""
+    agent = Flat((af.SOURCE / 'copilot-agent.md.in').read_text())
+    for phrase in ('one question in the study language', '`next_action.pause.question`',
+                   'Options: `next_action.pause.options`, labelled with `pause.option_labels`',
+                   '"Explain first" ("Expliquer d\'abord": call the picker again)',
+                   'recommended only if you proposed `recommended.value`'):
+        assert phrase in agent, phrase
+    assert '(recommended;' not in agent
+
+
+def test_the_engine_labels_the_adoption_picker():
+    """The words the agent file named before L1, now the engine's: the closed question of a
+    decision pause and the labels of its options, in English and in French; the adopt label
+    is the words ``--channel choice`` records (CLI-CONTRACT §5.4), and the shared rule 4 still
+    names it."""
+    from mlkit.study import guidance
+    view = {'next_action': {'kind': 'await_user_words', 'proposal_id': 'p_1'},
+            'open_proposals': [{'proposal_id': 'p_1', 'restatement': 'You keep X.'}],
+            'revision': 3}
+    for lang, closed, labels in (
+            ('en', 'Do you adopt this decision?',
+             {'adopt': 'I adopt this decision', 'change': 'Change something',
+              'explain': 'Explain first'}),
+            ('fr', 'Adoptez-vous cette décision ?',
+             {'adopt': "J'adopte cette décision", 'change': 'Changer quelque chose',
+              'explain': "Expliquer d'abord"})):
+        pause = guidance.pause({**view, 'language': lang})
+        assert pause['kind'] == 'decision'
+        assert pause['question'].replace('\u00a0', ' ').endswith(closed)
+        assert pause['option_labels'] == labels
+    instructions = _binary('CLAUDE.md.in')
+    for label in ('"I adopt this decision"', '"J\'adopte cette décision"'):
+        assert label in instructions, label
+
+
+def test_the_short_read_asks_for_the_keys_rule_3_reads(study):
+    """R9UX-8: ``model_families`` and ``model_selection`` come only from ``--fields``; the
+    rule asks for them there instead of claiming the default fields give them."""
+    target, _ = study
+    rule1 = _rule(Flat((af.SOURCE / 'CLAUDE.md.in').read_text()), 1)
+    assert 'it also gives' not in rule1
+    assert ('after the fits add `model_families` and `model_selection`: only `--fields` '
+            'returns them') in rule1
+    short = cmd.status(target, summary=True, fields=['next_action', 'criterion']).payload
+    assert not {'model_families', 'model_selection'} & set(short)
+    assert not {'model_families', 'model_selection'} & set(cmd.status(target, summary=True)
+                                                           .payload)
+    asked = cmd.status(target, summary=True,
+                       fields=['model_families', 'model_selection']).payload
+    assert {'model_families', 'model_selection'} <= set(asked)
+
+
+def test_the_binary_decision_list_names_the_model_choice():
+    """R9UX-4: a binary study's ``model_choice`` is the logistic model or a declared variant
+    slot (the baseline is refused), and the rule then names that model."""
+    from mlkit.study import records as rec
+    binary = _binary('CLAUDE.md.in').split('Decisions, proposed with', 1)[1]
+    regression = Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), 'regression'))
+    for phrase in ('`model_choice` (`"fit.logistic"` or a declared variant slot',
+                   'not `fit.baseline`', '`<rule>@<slot>` when the chosen model is a variant'):
+        assert phrase in Flat(binary), phrase
+        assert phrase not in regression, phrase
+    assert rec.POLICY_CANDIDATE == 'fit.logistic' and rec.policy_model('capacity:5') == \
+        rec.POLICY_CANDIDATE and rec.policy_model('capacity:5@fit.variant') == 'fit.variant'
+
+
+# --- Owner session 2026-10-26, R2: Copilot never showed the picker -------------------------
+
+_TEXT_ENDING = re.compile(r'\b(?:in text|all in text|end (?:the|your) turn with)\b', re.I)
+_OLD_TEXT_ENDINGS = ('all in text', 'end the turn with the explanation',
+                     'Explain: end your turn', 'when you ask in text', 'Without one, ask it in text.',
+                     'Without the picker, ask in text. ')
+
+
+def _sentences(text: str) -> list[str]:
+    return re.split(r'(?<=[.!?])\s+(?=[A-Z"(])', ' '.join(text.split()))
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_copilot_ends_every_pause_with_the_picker(tmp_path, task):
+    """R2: with Copilot, every pause turn ends with the ``#tool:vscode/askQuestions`` call,
+    whose question holds the whole pause message; "explain first" calls it again; the only
+    text form left is the fallback when the call fails or the tool is missing. Checked on the
+    files ``init`` writes for Copilot (the agent, the instructions, the skill)."""
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    out = {}
+    for rel in af.templates():
+        for target, flavour in af.targets(rel):
+            if flavour == af.COPILOT:
+                out[target] = Flat(af.render((af.SOURCE / rel).read_text(), flavour=flavour,
+                                             values=values, source=rel, task=task))
+    agent = out['.github/agents/hypotrail.agent.md']
+    instructions = out['.github/copilot-instructions.md']
+    skill = out['.github/skills/hypotrail-study/SKILL.md']
+    for name, text in out.items():
+        for old in _OLD_TEXT_ENDINGS:
+            assert old not in text, (name, old)
+        # every remaining "in text" is the failure fallback, in the same sentence
+        for sentence in _sentences(text):
+            if _TEXT_ENDING.search(sentence):
+                assert re.search(r'call fails', sentence), (name, sentence)
+    for phrase in ('every guided pause turn ends with a #tool:vscode/askQuestions call, never '
+                   'in plain text', 'holding the whole pause message',
+                   '"Explain first" ("Expliquer d\'abord": call the picker again)',
+                   'Without the picker, ask in text: only if the call fails or the tool is '
+                   'missing'):
+        assert phrase in agent, phrase
+    assert any('Without the picker, ask' in line for line in agent.splitlines())  # one line
+    for phrase in ('use it at every pause', 'Every pause turn ends with this call, never in '
+                   'plain text', 'the whole pause message of the skill, at most 150 words',
+                   'write nothing the junior must read before it',
+                   'Explain first: call the picker again',
+                   'Without one, ask it in text only when the picker call fails or the tool is '
+                   'missing', 'in the final message only when the picker call fails'):
+        assert phrase in instructions, phrase
+    one_pause = Flat(skill.split('## One pause, one message', 1)[1].split('\n## ', 1)[0])
+    assert ('With GitHub Copilot this message is the question of the '
+            '`#tool:vscode/askQuestions` call that ends the pause turn') in one_pause
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_the_r2_fix_leaves_the_claude_code_copy_unchanged(task):
+    """R2 is Copilot only: the slots it adds are empty for Claude Code, so the Claude Code
+    copy keeps its pause procedure word for word (text before the choice tool, "explain
+    first" answered in the chat, the text fallback without a tool). R37 (owner answers of
+    2026-10-28; ``PICKER_RULE`` taken out of the empty slots, checked in
+    :func:`test_claude_code_ends_every_closed_question_with_its_picker`): the Claude Code copy
+    closes every closed question with ``AskUserQuestion`` too, so the word "picker" now
+    appears in it, in that rule only."""
+    for key in ('TEXT_FALLBACK', 'PAUSE_CARRIER', 'PANEL_LINE_PLACE'):
+        assert af.FLAVOUR_TEXTS[af.CLAUDE][key] == '', key
+        assert af.FLAVOUR_TEXTS[af.COPILOT][key].strip(), key
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    claude = af.render((af.SOURCE / 'CLAUDE.md.in').read_text(), flavour=af.CLAUDE,
+                       values=values, source='CLAUDE.md.in', task=task)
+    skill = af.render((af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text(),
+                      flavour=af.CLAUDE, values=values, source='SKILL.md', task=task)
+    flat = Flat(claude)
+    for phrase in ('With an interactive choice tool (Claude Code: `AskUserQuestion`), use it at '
+                   'every pause: send that message first, then offer one single-choice question',
+                   'explain first. Without one, ask it in text. Adopt picked:',
+                   'Explain first: explain, show the block again, ask again. A reason is optional',
+                   'The block is in the chat message itself, directly above the question',
+                   'with `next_action.panel.shown.line` of the last command it reports',
+                   'Before runs, visibly state what was decided'):
+        assert phrase in flat, phrase
+    picker_free = claude.replace(af.FLAVOUR_TEXTS[af.CLAUDE]['PICKER_RULE'], '')
+    assert 'picker' not in picker_free and 'Copilot this message' not in skill
+    assert ('count them before sending. No\nheading, no recap of earlier steps' in skill)
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_claude_code_ends_every_closed_question_with_its_picker(task):
+    """R36, R37 (owner answers of 2026-10-28): the Claude Code copy closes every closed
+    question with ``AskUserQuestion``, transitions included ("On continue" / "Expliquer
+    d'abord"), with the engine's options and labels verbatim, as Copilot's L1 rule; an open
+    question needs no picker; a free choice is picked, then proposed. Rule 3, where the
+    transitions are, carries it."""
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    claude = Flat(af.render((af.SOURCE / 'CLAUDE.md.in').read_text(), flavour=af.CLAUDE,
+                            values=values, source='CLAUDE.md.in', task=task))
+    rule3 = _rule(claude, 3)
+    for phrase in ('**Closed questions** (Claude Code). A turn ending with a closed question '
+                   'ends with `AskUserQuestion`, transitions included ("On continue" / '
+                   '"Expliquer d\'abord")',
+                   'options `next_action.pause.options` labelled by `pause.option_labels`, '
+                   'verbatim', 'recommended only when `pause.recommended_option` names one',
+                   'never a typed "On continue ?"', 'An open question needs no picker',
+                   'a pick is no confirmation (never `--channel choice`)'):
+        assert phrase in rule3, phrase
+    from mlkit.study import guidance
+    assert guidance.OPTION_LABELS['continue'][1] == 'On continue'
+    assert guidance.OPTION_LABELS['explain'][1] == "Expliquer d'abord"
+
+
+# --- Owner session 2026-10-26, second batch: L1 (R3, R2b, R2c) and L4 (R9, R10) -----------
+
+def _copilot_files(task: str) -> dict:
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    return {target: Flat(af.render((af.SOURCE / rel).read_text(), flavour=flavour,
+                                   values=values, source=rel, task=task))
+            for rel in af.templates() for target, flavour in af.targets(rel)
+            if flavour == af.COPILOT}
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_copilot_ends_every_closed_question_with_the_picker(task):
+    """R3 (D1): with Copilot, every turn that ends with a closed question ends with the
+    picker, transitions included ("go on"), its options and labels the engine's
+    (``pause.options``, ``pause.option_labels``), one marked recommended only when
+    ``pause.recommended_option`` names it, and its question holds what the junior must keep;
+    an open question stays without a picker. Rule 3, where the transitions are, carries it."""
+    out = _copilot_files(task)
+    instructions = out['.github/copilot-instructions.md']
+    rule3 = _rule(instructions, 3)
+    for phrase in ('A turn ending with a closed question (go on, explain first, adopt, an '
+                   'engine option) ends with the picker',
+                   'options `next_action.pause.options` labelled by `pause.option_labels`',
+                   'recommended only when `pause.recommended_option` names one',
+                   'its question holding what the junior must keep',
+                   'An open question needs no picker'):
+        assert phrase in rule3, phrase
+    agent = out['.github/agents/hypotrail.agent.md']
+    for phrase in ('so does every turn that ends with another closed question',
+                   'labelled with `pause.option_labels`'):
+        assert phrase in agent, phrase
+    assert 'picker at every closed question' in agent.split('\n---\n', 1)[0]
+    from mlkit.study import guidance
+    assert set(guidance.OPTION_LABELS) == {'adopt', 'change', 'explain', 'continue'}
+    assert 'choice' in guidance.KINDS
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_a_dismissed_picker_is_asked_again(task):
+    """R2b: a picker closed without an answer, or a reply typed instead, is not a failed
+    call; a typed reply is read as the answer; the pause is asked again with the picker,
+    saying that nothing is recorded yet; only a failed call or a missing tool falls back to
+    text. No word blames the junior ("ignorée", "ignored")."""
+    out = _copilot_files(task)
+    instructions = out['.github/copilot-instructions.md']
+    for phrase in ('A picker closed unanswered, or a reply typed instead, is not a failed call',
+                   'read a typed reply as the answer',
+                   'to ask again, say nothing is recorded yet ("Rien n\'est encore '
+                   'enregistré : voici de nouveau la décision.") and call the picker again',
+                   'Without one, ask it in text only when the picker call fails or the tool is '
+                   'missing'):
+        assert phrase in instructions, phrase
+    assert ('Without the picker, ask in text: only if the call fails or the tool is missing'
+            in out['.github/agents/hypotrail.agent.md'])
+    for name, text in out.items():
+        assert not re.search(r'ignor', text, re.I), name
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_a_free_choice_uses_the_picker(task):
+    """R2c (D2): at a free choice (``pause.kind`` ``choice``: the model choice, the
+    conclusion), one option per ``next_action.choice_options``, none recommended; the pick is
+    the junior's choice, not a confirmation (never ``--channel choice``): the value is
+    proposed, then adopted at its own pause."""
+    rule3 = _rule(_copilot_files(task)['.github/copilot-instructions.md'], 3)
+    for phrase in ('When `pause.kind` is `choice`, offer `next_action.choice_options`, none '
+                   'recommended', 'a pick is no confirmation (never `--channel choice`)',
+                   'propose it (a conclusion with its text in `next_action.language`), then ask '
+                   'the adoption question'):
+        assert phrase in rule3, phrase
+    from mlkit.study import junior
+    assert junior.CHOICE_DECISIONS == ('model_choice', 'conclusion')
+    assert junior.CHOICE_OPTION_KEYS == ('id', 'value', 'label')
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_copilot_narrates_the_major_steps(task):
+    """R9 (D13): with Copilot, one short line before each major step and one with its result
+    after it, the steps ticked in the ``todo`` tool (in the agent's tools); what the junior
+    must keep is repeated in the final message or the picker."""
+    out = _copilot_files(task)
+    rule3 = _rule(out['.github/copilot-instructions.md'], 3)
+    for phrase in ('Before each major step write one short line ("Je vais maintenant ajuster '
+                   'le modèle de référence."), after it one line with its result from the '
+                   'output, and tick the step in the `todo` tool',
+                   'Copilot folds text written before a tool call once the turn ends',
+                   'repeats what the junior must keep: what was decided, the results, expected '
+                   'delays, whether the final test stays sealed'):
+        assert phrase in rule3, phrase
+    assert 'never before a tool call' not in out['.github/copilot-instructions.md']
+    assert "'todo'" in out['.github/agents/hypotrail.agent.md'].split('\n---\n', 1)[0]
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_runs_show_progress_and_keep_stderr(task):
+    """R10 (L4): both agents run activities with ``--progress`` (the commands block) and never
+    discard stderr, where the progress lines go; the flag exists on ``hypotrail run``."""
+    from mlkit.study import cmd_run
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    for flavour in (af.CLAUDE, af.COPILOT):
+        text = Flat(af.render((af.SOURCE / 'CLAUDE.md.in').read_text(), flavour=flavour,
+                              values=values, source='CLAUDE.md.in', task=task))
+        assert 'h run ACTIVITY [--column NAME] --progress --request-id ID' in text
+        assert 'Keep stderr: do not add `2>/dev/null`.' in _rule(text, 12)
+    import argparse
+    parser = argparse.ArgumentParser()
+    cmd_run.configure(parser)
+    assert '--progress' in parser._option_string_actions
+
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_the_conclusion_says_what_comes_after_the_study(task):
+    """L7 (D15): at ``done`` the agent relays the engine's ``next_action.after_study`` text,
+    offers the handoff pack, offers the Azure ML export plan only when the engine says the
+    chosen model is supported, and never claims a cloud run. Both agents, both tasks."""
+    from mlkit.study import after_study
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    rel = 'dot-claude/skills/hypotrail-study/SKILL.md'
+    for flavour in (af.CLAUDE, af.COPILOT):
+        skill = Flat(af.render((af.SOURCE / rel).read_text(), flavour=flavour, values=values,
+                               source=rel, task=task))
+        conclusion = skill.split('## The conclusion', 1)[1].split('\n## ', 1)[0]
+        for phrase in ('At `done`, relay `next_action.after_study.junior_text`',
+                       'only when `after_study.azureml.supported`, the export plan',
+                       'Never say an Azure job or endpoint ran'):
+            assert phrase in conclusion, (flavour, phrase)
+    assert {'junior_text', 'azureml'} <= set(after_study.AFTER_STUDY_KEYS)
+    assert {'supported', 'plan_command'} <= set(after_study.AZUREML_KEYS)
+    assert after_study.CLOUD_STATUS == 'not_qualified'
+
+# The Claude Code copy (CLAUDE.md, the skill, the resume command) as rendered before this
+# batch (``a12c23a``), placeholders h/s/g, by task, and the shared lines each lot changes on
+# purpose (new, old). NR-8: any other change to the Claude Code copy fails here; a lot that
+# changes a shared line adds it to this list in the same commit.
+CLAUDE_CODE_DIGESTS = {
+    'binary': '18719e74569e7be56cb9b6b985ae5598fc45c5960dd668a747a9ff3fed9483e5',
+    'regression': 'b4a890b652378d935ad16664ff2232cd1431014062730159a8489d4567d018a2'}
+CLAUDE_CODE_INTENDED_CHANGES = {
+    # Lot 2026-10-28 (EN-9, EN-12): the error measure before the criterion, and the pause
+    # after the exploration (``read_exploration``).
+    'Lot 2026-10-28: the error measure and the pause after the exploration (rule 3)': (
+        '      **error measure** (`error_metric`) and the **success criterion**, before any '
+        'model is\n      fitted; after the exploration, the **preprocessing**. At '
+        '`read_exploration`, ask its\n      question; on "continue", run `then.command`;\n',
+        '      **success criterion**, before any model is fitted; after the exploration, the\n'
+        '      **preprocessing**;\n'),
+    # Owner batch of 2026-10-28. Listed first: R35 and the skill's panel-line item restore
+    # the text that the R21 entries below then read.
+    # R35: the engine gives the line only when it adds something (not while Now shows the
+    # step, except at a session's first message).
+    'R35: the panel line only when present (rule 6)': (
+        '   reading; only when that line is present.\n',
+        '   reading; no line when `shown` is null.\n'),
+    'R35: the panel line only when present (skill pause order)': (
+        '1. **The panel line**, first, when the engine gives one (CLAUDE.md rule 6).\n',
+        '1. **The panel line**, first, when the panel is open (CLAUDE.md rule 6).\n'),
+    # R36, R37: Claude Code closes every closed question with ``AskUserQuestion`` (rule 3).
+    'R37: Claude Code closes every closed question with its picker (rule 3)': (
+        af.FLAVOUR_TEXTS[af.CLAUDE]['PICKER_RULE'], ''),
+    # R36: the plan recap is the engine's (``next_action.plan_recap``), never a fixed list
+    # whose order differs from the study's plan.
+    'R36: the plan recap from the engine (skill)': (
+        "Say which moment you are in, and show the plan in the first conversation and when it\n"
+        "changes: `next_action.plan_recap`, verbatim, the study's own steps in their order. "
+        "Never\nlist or order the steps from memory: the order depends on the study.\n",
+        {task: 'Say which moment you are in, and show the plan (`plan` in the summary, step '
+               'titles, not\nids) in the first conversation and when it changes:\n\n'
+               '1. **Frame the change**: the data card, prediction moment, feature '
+               'availability, split,\n   success criterion.\n2. **Prepare evidence**: '
+               'exploration of the development set, then the preprocessing.\n'
+               f'3. **Work and compare**: {models}, diagnostics, variants, evaluation.\n'
+               f'4. **Conclude and hand over**: {last}, final test opening, conclusion.\n'
+         for task, models, last in (('binary', 'baseline, logistic model', 'decision rule'),
+                                    ('regression', 'mean baseline, linear model',
+                                     'model choice'))}),
+    # R36: k is named with the cross-validation (rule 3).
+    'R36: name k with the cross-validation (rule 3)': (
+        '   2. the split, as **k-fold cross-validation**, naming k (**out-of-fold predictions**,\n'
+        '      **fold spread**: read',
+        '   2. the split, as **k-fold cross-validation** (**out-of-fold predictions**, **fold\n'
+        '      spread**: read'),
+    # Contract P1 (ADR 0004 decision 13, CLI-CONTRACT §17.1): the panel is one page, so the
+    # line names a place of it, never a tab (six more words: the D18 caps still hold).
+    'P1: rule 6 names a place of the one page': (
+        '   The line names a place of the one page, not a tab; it only adds to the chat.\n'
+        '   The panel can run charts,\n',
+        '   The line adds to the chat; it never replaces its content. The panel can run charts,\n'),
+    'L4 (R10): keep stderr': (
+        ' Keep stderr: do not add `2>/dev/null`. Write only what the\n    junior asks for (their '
+        'notes go in `notebooks/workbench.py`); leave `.hypotrail/`,\n    `reports/`, and '
+        '`notebooks/study_generated.py` to the engine.',
+        ' Write only what the junior asks for (their notes go in\n    '
+        '`notebooks/workbench.py`); leave `.hypotrail/`, `reports/`, and\n    '
+        '`notebooks/study_generated.py` to the engine.'),
+    'L4 (R10): run with --progress': (' run ACTIVITY [--column NAME] --progress --request-id',
+                                      ' run ACTIVITY [--column NAME] --request-id'),
+    # Third session (Azure ML export at done): a capture before the opening carries
+    # ``options`` (``--profile workshop``); the agent passes a run's rules and options.
+    'Third session: pass a run\'s rules and options': (
+        "   propose), a `run`'s `rules` and `options` (pass each: `--rule R`, `--<option> "
+        "<value>`),\n   and at the success criterion `criterion_options`. Relay them; do not "
+        "rewrite\n",
+        '   propose), and at the success criterion `criterion_options`. Relay them; do not '
+        'rewrite\n'),
+    # Third session (R21): the panel line comes first, in rule 6 and in the skill's pause
+    # order; applied before the L2 entry, which then restores the text before the batch.
+    'R21: the panel line first (rule 6)': (
+        'conclusion. When it is open, start a message\n   that shows or changes something with '
+        '`next_action.panel.shown.line` of the last\n   command it reports, verbatim, as its first '
+        'line, so the junior looks at the panel while\n   reading; no line when `shown` is null.\n',
+        'conclusion. When it is open, end a message\n   that shows or changes something with '
+        '`next_action.panel.shown.line` of the last\n   command it reports, verbatim; no line '
+        'when `shown` is null.\n'),
+    'R21: the panel line first (skill pause order)': (
+        '1. **The panel line**, first, when the panel is open (CLAUDE.md rule 6).\n'
+        '2. **Where we are**: the step title and what was just confirmed, in one line; what you\n'
+        '   propose next is never written as done.\n'
+        '3. **The explanation**',
+        '1. **Where we are**: the step title and what was just confirmed, in one line; what you\n'
+        '   propose next is never written as done.\n'
+        '2. **The explanation**'),
+    'R21: the panel line first (skill renumbering)': (
+        '\n4. **The recommendation**', '\n3. **The recommendation**'),
+    'R21: the panel line first (skill, last item)': (
+        '\n5. **The decision**: the quoted restatement, in the present tense, then the closed\n'
+        '   question (CLAUDE.md rule 4). Never skip the block, even to stay under 150 words: cut\n'
+        '   the explanation instead.\n',
+        '\n4. **The decision**: the quoted restatement, in the present tense, then the closed\n'
+        '   question (CLAUDE.md rule 4). Never skip the block, even to stay under 150 words: cut\n'
+        '   the explanation instead.\n'
+        '5. **The panel line**, when the panel is open (CLAUDE.md rule 6).\n'),
+    # L2 (R1b, D3): rule 6 relays the engine's line instead of its own tab-by-step mapping;
+    # the old text differed by task, so ``old`` is given per task.
+    'L2 (R1b): rule 6 relays panel.shown.line': (
+        'conclusion. When it is open, end a message\n   that shows or changes something with '
+        '`next_action.panel.shown.line` of the last\n   command it reports, verbatim; no line '
+        'when `shown` is null.\n',
+        {task: 'conclusion. When it is open, end each\n   message that shows or changes '
+               'something with one short line per step naming the tab\n   to look at '
+               '(`next_action.panel.where.line`, or the `panel.tabs` label of the step the\n'
+               '   message covers): Data & EDA ("Données et EDA") after the data card and the '
+               'charts,\n   Decisions ("Décisions") at a proposal, Evidence ("Preuves") after '
+               'the fits, the\n   diagnostics, and the opening,\n   What if? ("Et si ?") at '
+               f'the {place}.\n'
+         for task, place in (('binary', 'decision rule'), ('regression', 'model choice'))}),
+    # L7 (D15): the skill's conclusion says what comes after the study.
+    'L7 (D15): at done, relay after_study': (
+        '\nAt `done`, relay `next_action.after_study.junior_text`, then offer the handoff pack '
+        'and, only when `after_study.azureml.supported`, the export plan (its `plan_command`, '
+        'prefix as in Commands). Never say an Azure job or endpoint ran.\n', ''),
+    # L3 (R4): the exploration question in the study language (proposals/L3-agent-text.md).
+    'L3 (R4): say question_junior': (
+        "   **Exploration.** Say each result's `question_junior` before its figure, with the count\n",
+        "   **Exploration.** Say each result's `values.question` before its figure, with the count\n"),
+    # L5 (R5, R7, R13, R14, R15; proposals/L5-agent-text.md): the engine drafts the
+    # preparation and the variants and explains the stamp; the template relays them.
+    'L5 (R5, R7): relay the drafted preparation and the stamp': (
+        '   **Preprocessing.** Propose `next_action.default_value`, drafted from the quality check\n'
+        '   (`recommended.reasons`; `alternatives` is the comparison), unless a result motivates a\n'
+        '   change, named in `motivated_by`. `decide propose` returns `data_contingent`: when it is\n'
+        '   true, say `data_contingent_reason.junior_text` before you present the proposal.\n',
+        '   **Preprocessing.** Propose `next_action.default_value` unless a result motivates a\n'
+        '   change, named in `motivated_by`. `decide propose` returns `data_contingent` and\n'
+        "   `data_contingent_reason`: when it is true, say that reason's `text` before you present\n"
+        '   the proposal, and say in the restatement that it was chosen after looking at the target\n'
+        '   (the development figures may be slightly optimistic).\n'),
+    'L5 (R13, R14, R15): relay the drafted variants and families': (
+        '   **Variants and model families** (ADR 0007). Propose the drafted `default_value` (the\n'
+        '   tuned penalty, with the EBM when the diagnostics flag a pattern) unless the junior wants\n'
+        '   another variant: **regularisation**, dropping one feature group, or another family.\n'
+        '   Offer a family (`ebm`, `hgb`) only when `model_families.recommendation` is\n'
+        '   `compare_nonlinear` and you have shown the junior the diagnostic flags behind it. Name\n'
+        "   families by `junior_words`; relay `not_offered`, and a refused family's\n"
+        '   `details.junior_message`. Otherwise relay that the linear model stays. At most',
+        '   **Variants and model families** (ADR 0007). Propose the drafted `default_value` (the\n'
+        '   penalty tuned by nested cross-validation) unless the junior wants another variant:\n'
+        '   **regularisation**, dropping one feature group, or another family. Offer a family\n'
+        '   (`ebm`, `hgb`) only when `model_families.recommendation` is `compare_nonlinear` and you\n'
+        '   have shown the junior the diagnostic flags behind it. In the demo, ask “Pourquoi le\n'
+        '   moteur envisage-t-il une famille non linéaire ?” Answer with the flags, uncertainty,\n'
+        '   limits, why they justify exploration rather than adoption, and the same-protocol\n'
+        '   comparison. Otherwise relay that the linear\n'
+        '   model stays. At most'),
+    'L5: a shorter decision list': (
+        "Decisions, proposed with the drafted `default_value` where there is one (a refusal's\n"
+        '`details` give the accepted shape): `prediction_time` (text), `feature_availability`\n'
+        '(`{feature: status}`), `split`, `success_criterion` (from `criterion_options`),\n'
+        '`preprocessing`, `model_variant` (each variant with its `question`),\n',
+        'Decisions, proposed with the drafted `default_value` where there is one:\n'
+        '`prediction_time` (text), `feature_availability` (`{feature: status}`:\n'
+        '`available_at_prediction`, `not_available`, `uncertain_excluded`, `uncertain_included`),\n'
+        '`split`, `success_criterion` (from `criterion_options`), `preprocessing` (`{"missing",\n'
+        '"rare_category_min_rows", "caps", "log_transform", "motivated_by"}`), `model_variant`\n'
+        '(`{"variants": [{"kind": "tuned" | "regularisation" | "drop_group" | "family", ...,\n'
+        '"question"}]}`),\n'),
+    # L9 (R20, proposals/L9-agent-text.md): the automatic mode, one shared bullet of rule 4;
+    # the words come from cuts of text the engine now states itself (L0 integration of W3,
+    # each served sentence checked in test_the_l9_cuts_are_served_by_the_engine).
+    'L9 (R20): the automatic mode (rule 4), without the credit sentence': (
+        '     with the plan.\n'
+        '   - **Automatic mode** (`automation.status` `running`, chosen at `init`). Run\n'
+        '     `automation run --progress --json`, relay its lines, then its `reason` in one '
+        'sentence;\n'
+        '     only the runner passes `--basis automatic`. A `next_action` with `review: true` is\n'
+        '     the review: propose its value again and ask the closed question; the junior adopts\n'
+        '     or changes it. Until none is left, the study is not defensible. Their "stop" is\n'
+        '     `automation stop`.\n',
+        '     with the plan. A delegated decision is credited as "the assistant\'s recommended\n'
+        '     default, delegated by the analyst".\n'),
+    'L9 (L0 cut): junior_digest described once (rule 1)': (
+        '   pause. Its `next_action` is written for you to relay: `junior_digest` (the\n'
+        '   explanation), `recommended` (`value` and `why`: your recommendation), `question` '
+        '(the\n'
+        '   one question to ask), `default_value` (the value to\n',
+        '   pause. Its `next_action` is written for you to relay: `junior_digest` (the '
+        'explanation,\n'
+        '   term first, in the study language), `recommended` (`value` and `why`: your\n'
+        '   recommendation), `question` (the one question to ask), `default_value` (the value '
+        'to\n'),
+    'L9 (L0 cut): --fields refused by the engine without --summary (rule 1)': (
+        "   `status --json` only for a result's values. Use at most four tool calls per pause.\n",
+        "   `status --json` only for a result's values. `--fields` belongs to `status --summary`\n"
+        '   only. Use at most four tool calls per pause.\n'),
+    'L9 (L0 cut): rule 2 states the computing rule once': (
+        '   for fewer keys with `--fields`. Do not compute differences, sums, or counts '
+        'yourself:\n'
+        '   cite the registered value or write the two registered figures side by side.\n',
+        '   for fewer keys with `--fields`.\n'
+        '   Compute only with `hypotrail run`. Do not compute differences, sums, or counts\n'
+        '   yourself: cite the registered value or write the two registered figures side by '
+        'side.\n'),
+    'L9 (L0 cut): the one-standard-error rule defined by advice.text': (
+        '   rule** (`one_se`), the selection optimism, and `advice.text`; when `advice.stop` is\n'
+        '   true, recommend stopping.\n',
+        '   rule** (`one_se`, the simplest configuration within one standard error of the '
+        'best),\n'
+        '   the selection optimism, and `advice.text`; when `advice.stop` is true, recommend\n'
+        '   stopping.\n'),
+    'R31: the panel no longer acknowledges an interruption': (
+        '   regenerate the deliverables, and export a handoff pack:',
+        '   regenerate the deliverables, acknowledge an interruption, and export a handoff pack:'),
+    # R68 (minimal version, 2026-10-28): the product owner's PDF; the engine's ``then``
+    # (``cmd_brief.THEN_TEXT``) carries the draft, the citations and the closed question;
+    # once imported (``init --brief-pdf``), ``view.brief.then`` carries it.
+    "R68: a PO's PDF (commands)": (
+        "**PO's PDF:** follow `brief.then` (`status --json`), else that of `h brief "
+        "import --pdf FILE --expected-revision REV --study s`.\n\n", ''),
+}
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_the_claude_code_copy_changes_only_the_listed_shared_lines(task):
+    """D1b, NR-8: L1 and the R9 narration are Copilot only; the Claude Code copy is byte for
+    byte the one before the batch, except the shared lines listed in
+    :data:`CLAUDE_CODE_INTENDED_CHANGES` (each present exactly once)."""
+    import hashlib
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    digest = hashlib.sha256()
+    found = dict.fromkeys(CLAUDE_CODE_INTENDED_CHANGES, 0)
+    for rel in ('CLAUDE.md.in', 'dot-claude/skills/hypotrail-study/SKILL.md',
+                'dot-claude/commands/hypotrail-resume.md'):
+        text = af.render((af.SOURCE / rel).read_text(), flavour=af.CLAUDE, values=values,
+                         source=rel, task=task)
+        for name, (new, old) in CLAUDE_CODE_INTENDED_CHANGES.items():
+            old = old[task] if isinstance(old, dict) else old
+            found[name] += text.count(new)
+            text = text.replace(new, old)
+        digest.update(text.encode('utf-8'))
+    assert found == dict.fromkeys(CLAUDE_CODE_INTENDED_CHANGES, 1), found
+    assert digest.hexdigest() == CLAUDE_CODE_DIGESTS[task]
+
+
+RENDERED_COPILOT_CAP = 4400          # D18: owner decision of 2026-10-26
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_the_rendered_copilot_copy_stays_bounded(task):
+    """D18 (§2.4 of the 2026-10-26 plan): a ``{{SLOT}}`` counts as one word in the raw budget,
+    so the Copilot copy as ``init`` writes it (placeholders h/s/g expanded, header comments
+    included) is capped too, where the junior's agent reads it."""
+    words = sum(len(text.split()) for text in _copilot_files(task).values())
+    assert words <= RENDERED_COPILOT_CAP, words
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_the_automatic_mode_rule(task):
+    """L9 (R20, proposals/L9-agent-text.md): rule 4 of both tasks runs the automatic mode
+    through the engine's runner, never records ``--basis automatic`` itself, walks the review,
+    and records the junior's "stop"; the names are the engine's."""
+    from mlkit.study import automation, cli
+    rule4 = _rule(Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task)), 4)
+    for phrase in ('**Automatic mode** (`automation.status` `running`, chosen at `init`)',
+                   # R23 (2026-10-27): on a terminal the runner prints its readable summary
+                   # by default; the agent reads the JSON document.
+                   '`automation run --progress --json`',
+                   'only the runner passes `--basis automatic`',
+                   '`review: true`', 'ask the closed question; the junior adopts or changes it',
+                   'the study is not defensible', '`automation stop`'):
+        assert phrase in rule4, phrase
+    assert {'reason', 'review_queue', 'next_action'} <= set(automation.PAYLOAD_KEYS)
+    assert st.AUTOMATIC == 'automatic' and 'automation' in inspect.getsource(cli)
+
+
+def test_the_l9_cuts_are_served_by_the_engine():
+    """The words L0 freed for the L9 bullet (§2.4: a removed sentence is replaced by the
+    engine stating it): ``--fields`` without ``--summary`` is refused with that reason; the
+    selection advice defines the one-standard-error pick; a conclusion that credits a
+    delegated default to the analyst is refused with the credit wording; the pause message
+    gives the term first in the study language (the skill); the computing rule is stated
+    once in rule 2."""
+    from mlkit.study import cli, trials
+    assert "'--fields requires --summary'" in inspect.getsource(cli)
+    assert 'within one standard error of the best' in ' '.join(inspect.getsource(trials).split())
+    source = inspect.getsource(cmd)
+    assert "'misattributed_delegation'" in source and \
+        "recommended default, ' 'delegated by the analyst; say so." in ' '.join(source.split())
+    skill = _binary('dot-claude/skills/hypotrail-study/SKILL.md')
+    assert '**The explanation**: `next_action.junior_digest`' in skill
+    assert 'Introduce a statistical term in bold under its glossary name' in skill
+    rule2 = _rule(_binary('CLAUDE.md.in'), 2)
+    assert 'Do not run or write python' in rule2 and 'Do not compute differences' in rule2

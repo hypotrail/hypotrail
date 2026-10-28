@@ -15,38 +15,27 @@ only the junior can take. The rules of `CLAUDE.md` always apply.
 
 ## The plan in four moments
 
-Say which moment you are in, and show the plan (`plan` in the summary, step titles, not
-ids) in the first conversation and when it changes:
-
-1. **Frame the change**: the data card, prediction moment, feature availability, split,
-   success criterion.
-<!-- hypotrail:task binary -->
-2. **Prepare evidence**: exploration of the development set, then the preprocessing.
-3. **Work and compare**: baseline, logistic model, diagnostics, variants, evaluation.
-4. **Conclude and hand over**: decision rule, final test opening, conclusion.
-<!-- hypotrail:task regression -->
-2. **Prepare evidence**: exploration of the development set, then the preprocessing.
-3. **Work and compare**: mean baseline, linear model, diagnostics, variants, evaluation.
-4. **Conclude and hand over**: model choice, final test opening, conclusion.
-<!-- hypotrail:end -->
+Say which moment you are in, and show the plan in the first conversation and when it
+changes: `next_action.plan_recap`, verbatim, the study's own steps in their order. Never
+list or order the steps from memory: the order depends on the study.
 
 ## One pause, one message
 
-A pause message has at most 150 words; aim for 120 and count them before sending. No
+A pause message has at most 150 words; aim for 120 and count them before sending.{{PAUSE_CARRIER}} No
 heading, no recap of earlier steps, no list of options the engine did not give. In this
 order:
 
-1. **Where we are**: the step title and what was just confirmed, in one line; what you
+1. **The panel line**, first, when the engine gives one (CLAUDE.md rule 6).
+2. **Where we are**: the step title and what was just confirmed, in one line; what you
    propose next is never written as done.
-2. **The explanation**: `next_action.junior_digest`, cut to two or three sentences, never
+3. **The explanation**: `next_action.junior_digest`, cut to two or three sentences, never
    extended with figures it does not hold.
-3. **The recommendation**: `recommended.value` with its `why`, in one sentence (the
-   success criterion has one too). When `recommended` is null (the model choice, the
-   conclusion), present the options and let the junior choose.
-4. **The decision**: the quoted restatement, in the present tense, then the closed
+4. **The recommendation**: `recommended.value` with its `why`, in one sentence. When
+   `recommended` is null (the model choice, the conclusion), present the options and let
+   the junior choose.
+5. **The decision**: the quoted restatement, in the present tense, then the closed
    question (CLAUDE.md rule 4). Never skip the block, even to stay under 150 words: cut
    the explanation instead.
-5. **The panel line**, when the panel is open (CLAUDE.md rule 6).
 
 Ask only questions whose answer changes the study: `next_action.question`, a legitimacy
 doubt, a condition. Work the plan covers is done, not asked about. If a reply decides
@@ -120,3 +109,5 @@ against the success criterion (`criterion`), and the next action
 Write it in `next_action.language` and check it before proposing it:
 
     {{HYPOTRAIL}} check --text - --study {{STUDY}}
+
+At `done`, relay `next_action.after_study.junior_text`, then offer the handoff pack and, only when `after_study.azureml.supported`, the export plan (its `plan_command`, prefix as in Commands). Never say an Azure job or endpoint ran.

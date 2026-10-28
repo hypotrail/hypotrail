@@ -72,6 +72,10 @@ Unknown keys are refused at every level. Existing cases without it remain valid.
   `by` is a non-target numeric/integer column, or unambiguous `line`. Future
   prediction requires two documented clocks; file order alone is insufficient.
   Declaring clock semantics does not establish that the data actually meet them.
+  Under `review-v1`, a development row whose outcome clock is at or after the final
+  start has a delayed label: it is kept as a development row but never trained,
+  explored with the target, validated or refitted on (`partition.training_exclusions`,
+  `CLI-CONTRACT.md` § Review-v1 evaluation plan). A null outcome clock excludes nothing.
 - `dependencies`: `{kind, group_column, group_goal, status, source}`. Kind is
   `independent`, `grouped`, `temporal`, `grouped_temporal` or `unknown`. Grouped modes
   require a non-target column and `group_goal: unseen_groups`; other modes require
@@ -158,6 +162,7 @@ task: binary
 | `group` | Optional (v0.2a, WP-A4): the group the data card (`hypotrail data`) shows the variable in, for example `Client` or `Last contact of this campaign` |
 | `labels` | Optional (v0.2a, WP-A4): the description in another language, `{fr: "..."}` (languages `en`, `fr`); the data card shows `labels.fr` next to the description |
 | `range` | Optional (v0.2a, WP-A4), numeric or integer variables only: `{min, max, status, source}`, the possible values (either bound may be `null`, not both); `eda.quality` counts the ordinary values outside it |
+| `calendar` | Optional (owner session 2026-10-26, L5, R12, owner decision D8), a numeric or integer feature only: `year` (the only value, `case.CALENDAR_UNITS`) when the column holds a calendar year. Under an evaluation that follows time, the engine advises on a kept calendar-year feature (a year term can only extrapolate; keep the month and the week; CLI-CONTRACT §3.1). The engine never infers it from a column name. Adding it to a committed case changes the case's bytes, so it ships with a case revision the owner accepts (every study on the previous bytes reports `sources_changed`): Hotel's `arrival_date_year` waits for the next Hotel revision |
 | `description` | What the value means. For a variable that describes an event close to the outcome, say so: for example "last contact of the current campaign" |
 | `status`, `source` | Epistemic status of the description |
 | `availability` | `{value, status, source}`, see below |
@@ -266,6 +271,69 @@ structure:
 ```
 
 `group_column` and `time_column` name a variable or are `null`. The variables with role `group_id` (respectively `time`) must be exactly that column.
+
+## Translations (`case.l10n.yaml`, owner session 2026-10-26, L3)
+
+A case's statements are written in English, the source language. The French form of the ones a
+junior reads lives in a **sidecar** next to `case.yaml`, `case.l10n.yaml`
+(`hypotrail.case_l10n/1`, decision D4 option A of
+[OWNER-SESSION-2026-10-26-PLAN](../plans/OWNER-SESSION-2026-10-26-PLAN.md) §3 L3), so translating
+a case changes no byte of `case.yaml` and every study created on it stays current (a byte change
+would make each of them `sources_changed`, CLI-CONTRACT §4).
+
+```yaml
+schema: hypotrail.case_l10n/1
+case: {id: hotel-booking-resort-v1, sha256: <sha256 of the exact case.yaml it translates>}
+glossary_examples: false                  # optional: true only for a case the engine glossary's examples describe
+facts:                                    # optional: by fact id
+  prediction_time: {fr: "Quand la réservation est saisie ..."}
+structure:                                # optional
+  row_unit: {fr: "Une réservation d'hôtel"}
+special_values:                           # optional: one per {column, value} of the case
+  - {column: meal, value: SC, meaning: {fr: "Pas de formule de repas. ..."}}
+variables:                                # optional: by variable name
+  lead_time:
+    group: {fr: "Séjour demandé"}
+    availability: {source: {fr: "Scénario : ..."}}
+```
+
+| Key | Content |
+|---|---|
+| `schema` | `hypotrail.case_l10n/1` |
+| `case` | `{id, sha256}`: the case's `id` and the sha256 of the `case.yaml` file it translates; a sidecar written for other bytes of the case file is not used |
+| `glossary_examples` | Optional boolean (wave W2 integration of the 2026-10-26 batch): `true` when the engine glossary's "For example" sentences describe this case (`bank-marketing`, `bank-marketing-full`, `auto-mpg`). The engine names no dataset; a study whose case does not declare it, or that has no current sidecar, reads the glossary's definitions without those sentences, its own figures giving the example (`view.case_texts.glossary_examples`, `texts.examples_apply`) |
+| `facts.<id>` | The fact's `value` in each target language, `{fr: text}` |
+| `structure.row_unit` | The row unit's `value`, `{fr: text}` |
+| `special_values[]` | `{column, value, meaning: {fr: text}}`, one per special value of the case (at most once) |
+| `variables.<name>.group` | The variable's `group`, `{fr: text}`; every variable of one group gives it the same translation |
+| `variables.<name>.availability.source` | The source of the variable's availability statement, `{fr: text}` |
+
+Rules (`mlkit.study.l10n`):
+
+- every key names something the case states (an unknown fact, variable, group or special value is
+  a problem); the only target language is `fr` (`en` is the case itself); texts are non-empty;
+- quotations of a source (an article, a data dictionary) stay in their language, between « »;
+  identifiers, column names, codes, references and numbers stay as the case writes them;
+- `init` validates the sidecar before reading any data byte and refuses an invalid one with
+  `invalid_case` (`problems`, as for the case); a valid one is **recorded** in the study state
+  as `case_l10n: {path, sha256}`. A case without a sidecar records nothing, and so does a case
+  whose sidecar was written for other bytes of the case file (`case.sha256` differs: the case
+  was edited and its translation not regenerated), so the study shows the case's English;
+- a study reads its sidecar only while the file's bytes match the recorded sha256. A sidecar
+  changed or removed after `init` is not used: the study shows the case's English, as a study
+  created before L3 (or on a case without a sidecar) does. A sidecar is not a source of any
+  result: changing it never makes a study `sources_changed` and refuses nothing;
+- what the engine shows in the study language from it: the data card's `texts` (CLI-CONTRACT
+  §11.1), `view.case_texts` (CLI-CONTRACT §4), the summary's `goal` and the prediction moment's
+  `recommended.value` in a French study, the report's case statements, and the EDA cards'
+  special-value meanings in the study panel.
+
+A generated case's generator writes its sidecar too and checks it with `--check`
+(`hotel-booking`, `bank-marketing-full`, `online-shoppers`: `build_case.py`); the sidecar of a
+case generated by `mlkit.study.migrate` (`bank-marketing`, `auto-mpg`) is written by hand and
+names the sha256 of the case file it translates, so a regenerated case file needs its sidecar
+updated (`framework/tests/study/test_l3_language.py` checks every committed sidecar and that each
+gives a French form of every statement a junior reads).
 
 ## Capabilities
 

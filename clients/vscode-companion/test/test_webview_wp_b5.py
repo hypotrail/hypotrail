@@ -23,6 +23,7 @@ from pathlib import Path
 import pytest
 
 from conftest import inline_styles_ok
+from panel_cases import OPEN_ONE, goto, with_results
 
 import themes
 
@@ -86,11 +87,22 @@ def open_tab(open_panel, summary, tab, theme='light', width=900, stage='v2', **i
     panel = open_panel(color_scheme=themes.scheme(theme))
     panel.page.set_viewport_size({'width': width, 'height': 900})
     themes.apply(panel.page, theme)
-    panel.init(stage=stage, task=summary['task'], **init)
+    panel.init(stage=stage, task=summary['task'], panelContract=2, **init)
     panel.snapshot(summary)
     if tab != 'overview':
-        panel.page.locator(f'[role="tab"][data-tab="{tab}"]').click()
+        goto(panel)
     return panel
+
+
+def feed(panel, **models):
+    """Deliver the views, every fold then open (the path's figures and their sources, the
+    ledger, the drawers): the former Evidence and What if? tabs, laid out on the one page."""
+    for _ in range(10):
+        for view, data in models.items():
+            panel.view_data(view, data)
+        if panel.page.evaluate(OPEN_ONE) == 0:
+            break
+        panel.page.wait_for_timeout(30)
 
 
 def clean(panel):
@@ -114,14 +126,12 @@ def charts_unscaled(page):
 def test_ev7_evidence_opens_on_the_opened_final_test_then_the_ledger(open_panel, views):
     """EV-7: opened once (revision, the junior's words, what was measured), changed after (in words), the trial count."""
     panel = open_tab(open_panel, views['summary.opened'], 'evidence')
-    panel.view_data('evidence', views['evidence.opened'])
+    feed(panel, evidence=views['evidence.opened'])
     page = panel.page
-    order = page.locator('.ht-evidence [data-ev]').evaluate_all('ns => ns.map(n => n.dataset.ev)')
-    assert order[:2] == ['final-test', 'development'] or order[0] == 'final-test', order
-    first = page.locator('.ht-evidence > section, .ht-evidence > div').evaluate_all(
-        'ns => ns.filter(n => n.getBoundingClientRect().height > 0).map(n => n.dataset.ev || n.className)')
-    assert first[0] == 'final-test', first
-    assert page.locator('.ht-evidence > section').nth(1).get_attribute('data-ledger') == ''
+    # EV-7 → PG-5 and the `final_test` step's detail: the card comes first in that detail.
+    first = page.locator('li[data-step="final_test"] .pg-detail > *').first
+    assert first.get_attribute('data-ev') == 'final-test'
+    assert page.locator('[data-block="header"] [data-pill="seal"]').get_attribute('data-seal') == 'changed'
     card = page.locator('[data-final-test-card]')
     assert card.get_attribute('data-final-test-card') == 'changed'
     raw = views['raw.summary.opened']['final_test']
@@ -144,9 +154,10 @@ def test_ev7_evidence_opens_on_the_opened_final_test_then_the_ledger(open_panel,
 
 def test_ev7_sealed_final_test_points_to_the_chat_and_lists_what_must_be_confirmed(open_panel, views):
     panel = open_tab(open_panel, views['summary.opening'], 'evidence')
-    panel.view_data('evidence', views['evidence.sealed'])
+    feed(panel, evidence=views['evidence.sealed'])
     page = panel.page
-    card = page.locator('[data-final-test-card="sealed"]')
+    # NOW-7: at the opening, the card is in Now.
+    card = page.locator('[data-block="now"] [data-final-test-card="sealed"]')
     raw = views['raw.summary.opening']['final_test']
     assert f"{raw['rows']:,} rows nobody has read" in card.inner_text()
     assert card.locator('[data-partition-line="development"]').inner_text().startswith(f"{raw['development_rows']:,}")
@@ -155,7 +166,7 @@ def test_ev7_sealed_final_test_points_to_the_chat_and_lists_what_must_be_confirm
     done = card.locator('[data-before]').evaluate_all('ns => ns.map(n => [n.dataset.before, n.dataset.done])')
     assert done == [['policy', 'true'], ['model_variant', 'true'], ['success_criterion', 'true']]
     assert card.locator('button, [data-write]').count() == 0
-    assert page.locator('[data-ev="final"] [data-final-evidence="none"]').count() == 1
+    assert page.locator('[data-ev="final"]').count() == 0, 'no final evidence before the opening'
     clean(panel)
     shot(page, 'evidence-sealed-light-900')
 
@@ -165,15 +176,17 @@ def test_ev7_absent_final_test_says_no_figure_is_independent(open_panel, views):
     summary['finalTest'] = {'status': 'absent', 'rows': None, 'method': None, 'fraction': None, 'developmentRows': None,
                             'schemaCheck': None, 'opening': None, 'postFinalTest': False, 'changedAfter': []}
     panel = open_tab(open_panel, summary, 'evidence')
-    panel.view_data('evidence', views['evidence.split'])
-    card = panel.page.locator('[data-final-test-card="absent"]')
-    assert 'No final test' in card.inner_text() and 'independent evidence' in card.inner_text()
+    feed(panel, evidence=views['evidence.split'])
+    # EV-7 → PG-5: the seal pill says it, and its hover why no figure is independent.
+    pill = panel.page.locator('[data-block="header"] [data-pill="seal"]')
+    assert pill.get_attribute('data-seal') == 'absent' and pill.text_content() == 'No final test'
+    assert 'every figure comes from rows the study has used' in pill.get_attribute('title')
     clean(panel)
 
 
 def test_ev8_the_ledger_explains_each_purpose_and_marks_the_final_test_rows(open_panel, views):
     panel = open_tab(open_panel, views['summary.opened'], 'evidence')
-    panel.view_data('evidence', views['evidence.opened'])
+    feed(panel, evidence=views['evidence.opened'])
     page = panel.page
     raw = views['raw.evidence.opened']['exposure']['ledger']
     rows = page.locator('[data-ledger-row]')
@@ -192,9 +205,9 @@ def test_ev8_the_ledger_explains_each_purpose_and_marks_the_final_test_rows(open
 def test_ev9_ev10_ev11_development_and_final_evidence_are_apart_and_cited(open_panel, views):
     """EV-9 two labelled sections; EV-10 the scheme in words, mean ± sd, lowest – highest; EV-11 the variant."""
     panel = open_tab(open_panel, views['summary.opened'], 'evidence')
-    panel.view_data('evidence', views['evidence.opened'])
+    feed(panel, evidence=views['evidence.opened'])
     page = panel.page
-    dev = page.locator('[data-ev="development"]')
+    dev = page.locator('[data-anchor="path:model_variant/fit.variant"] [data-ev="development"]')
     final = page.locator('[data-ev="final"]')
     assert dev.locator('h3').inner_text() == 'Development evidence · used to choose'
     assert final.locator('h3').inner_text() == 'Final evidence · measured once'
@@ -220,12 +233,11 @@ def test_ev9_ev10_ev11_development_and_final_evidence_are_apart_and_cited(open_p
     assert crit.get_attribute('data-final-criterion') == fe['values']['criterion']['status']
     assert crit.locator('data[data-path="criterion.gain"]').get_attribute('data-result-id') == fe['result_id']
     assert final.locator('[data-final-metric="precision"] .ht-intervals').count() == 2
-    # The registry lists the final-test results apart.
-    assert page.locator('[data-final-results]').count() == 1
-    items = page.locator('[data-results-partition="final_test"] [data-result-item]').evaluate_all('ns => ns.map(n => n.dataset.resultItem)')
-    on_final = [r['result_id'] for r in views['raw.evidence.opened']['results']
+    # The final-test results are listed apart: the `final_test` step holds them (PATH-5).
+    items = page.locator('li[data-step="final_test"] [data-result-slot]').evaluate_all('ns => ns.map(n => n.dataset.resultSlot)')
+    on_final = [r['slot'] for r in views['raw.evidence.opened']['results']
                 if r['promoted'] and r['current'] and r['partition'] == 'final_test']
-    assert fe['result_id'] in items and sorted(items) == sorted(on_final)
+    assert fe['slot'] in items and sorted(items) == sorted(on_final)
     clean(panel)
     shot(page, 'evidence-development-final-light-900')
 
@@ -235,10 +247,12 @@ def test_ev9_ev10_ev11_development_and_final_evidence_are_apart_and_cited(open_p
 def test_ev12_diagnostics_render_when_present_each_number_cited(open_panel, views):
     """EV-12 on the captured diagnostics: development (out of fold, computed after the opening) and final apart."""
     panel = open_tab(open_panel, views['summary.opened'], 'evidence')
-    panel.view_data('evidence', views['evidence.diagnostics'])
+    feed(panel, evidence=views['evidence.diagnostics'])
     page = panel.page
-    section = page.locator('[data-ev="diagnostics"]')
-    assert section.count() == 1
+    # One figure per diagnostics result, under its step: development (models), final (final test).
+    section = page.locator('#main')
+    assert page.locator('[data-ev="diagnostics"]').evaluate_all('ns => ns.map(n => n.dataset.diagSlot)') == \
+        ['diag.binary', 'diag.final_test']
     assert section.locator('[data-diag-evaluation]').evaluate_all('ns => ns.map(n => n.dataset.diagEvaluation)') == \
         ['development', 'final']
     raw = {r['slot']: r for r in views['raw.evidence.diagnostics']['results'] if r['promoted'] and r['current']}
@@ -269,13 +283,14 @@ def test_ev12_diagnostics_render_when_present_each_number_cited(open_panel, view
     assert final.get_attribute('data-diag-evidence') == 'final'
     assert final.locator('[data-diag-rows="final_test"]').inner_text().startswith(
         f"On {raw['diag.final_test']['values']['n']:,} final-test rows")
-    assert section.locator('button:not(.ht-link), [data-write]').count() == 0, 'the panel never runs a diagnostic'
+    assert page.locator('[data-ev="diagnostics"] :is(button:not(.ht-link):not(.ht-term), [data-write])').count() == 0, \
+        'the panel never runs a diagnostic'
     charts_unscaled(page)
     clean(panel)
     shot(page, 'evidence-diagnostics-light-900')
     # Sealed: development diagnostics, and the final test has none yet (a chat act).
     panel.snapshot(views['summary.opening'])
-    panel.view_data('evidence', views['evidence.sealed'])
+    feed(panel, evidence=views['evidence.sealed'])
     assert page.locator('[data-diag-final="sealed"]').count() == 1
     assert page.locator('[data-diag="diag.binary"] [data-after-opening]').count() == 0
     # Without diag.* results the section is absent. v0.3 (WP-F1, R28): the Bank capture now
@@ -287,10 +302,31 @@ def test_ev12_diagnostics_render_when_present_each_number_cited(open_panel, view
     assert page.locator('[data-ev="diagnostics"]').count() == 0
 
 
+@pytest.mark.parametrize('choice, policy, first', [
+    (('confirmed', 'fit.variant'), 'share:0.2', 'fit.variant'),
+    (('confirmed', 'fit.logistic'), 'share:0.2', 'fit.logistic'),
+    (('proposed', 'fit.variant'), 'share:0.2', 'fit.logistic'),
+    (('proposed', 'fit.variant'), 'share:0.2@fit.variant', 'fit.variant'),
+])
+def test_binary_diagnostics_show_the_chosen_model_first(open_panel, views, choice, policy, first):
+    """R9UX-10: in a binary study the confirmed model choice says which model's diagnostics
+    come first; without one, the policy's ``@model`` suffix does, else the candidate."""
+    summary = copy.deepcopy(views['summary.opened'])
+    summary['decisions']['model_choice'].update(status=choice[0], value=choice[1])
+    summary['decisions']['policy']['value'] = policy
+    panel = open_tab(open_panel, summary, 'evidence')
+    feed(panel, evidence=views['evidence.diagnostics'])
+    dev = panel.page.locator('[data-diag="diag.binary"]')
+    order = dev.locator('[data-diag-model]').evaluate_all('ns => ns.map(n => n.dataset.diagModel)')
+    assert order[0] == first and sorted(order) == ['fit.logistic', 'fit.variant'], order
+    assert dev.locator('[data-diag-also] [data-diag-model]').get_attribute('data-diag-model') != first
+
+
 @pytest.mark.parametrize('theme', THEMES)
 def test_ev12_regression_diagnostics_residuals_without_rule_words(open_panel, views, theme):
-    panel = open_tab(open_panel, views['summary.regression'], 'evidence', theme=theme)
-    panel.view_data('evidence', views['evidence.regression.diag'])
+    summary = with_results(views['summary.regression'], views['evidence.regression.diag']['results'])
+    panel = open_tab(open_panel, summary, 'evidence', theme=theme)
+    feed(panel, evidence=views['evidence.regression.diag'])
     page = panel.page
     dev = page.locator('[data-diag="diag.regression"]')
     assert dev.count() == 1
@@ -300,7 +336,7 @@ def test_ev12_regression_diagnostics_residuals_without_rule_words(open_panel, vi
     assert dev.locator('[data-diag-chart="qq"] [data-diagonal]').count() >= 1
     assert dev.locator('[data-by-feature]').count() >= 1
     assert dev.locator('[data-no-transform]').count() >= 1
-    text = page.locator('#panel-evidence').inner_text()
+    text = page.locator('#main').inner_text()
     assert not FORBIDDEN.search(text), FORBIDDEN.search(text)
     charts_unscaled(page)
     clean(panel)
@@ -309,11 +345,11 @@ def test_ev12_regression_diagnostics_residuals_without_rule_words(open_panel, vi
 
 def test_ev12_regression_evidence_holds_no_rule_words(open_panel, views):
     panel = open_tab(open_panel, views['summary.regression'], 'evidence')
-    panel.view_data('evidence', views['evidence.regression'])
+    feed(panel, evidence=views['evidence.regression'])
     page = panel.page
-    text = page.locator('#panel-evidence').inner_text()
+    text = page.locator('#main').inner_text()
     assert not FORBIDDEN.search(text), FORBIDDEN.search(text)
-    assert page.locator('[data-ev="final-test"]').count() == 1
+    assert page.locator('[data-block="header"] [data-pill="seal"]').count() == 1
     clean(panel)
 
 
@@ -324,8 +360,7 @@ def test_wi6_the_gain_curve_shows_registered_points_and_the_scenario_share(open_
     page = panel.page
     loads = [m['view'] for m in panel.posted() if m['type'] == 'load']
     assert 'scenario' in loads and 'whatif' in loads
-    panel.view_data('scenario', views['scenario'])
-    panel.view_data('whatif', views['whatif.opened'])
+    feed(panel, scenario=views['scenario'], whatif=views['whatif.opened'])
     gain = page.locator('[data-gain]')
     raw = next(r for r in views['raw.evidence.opened']['results'] if r['slot'] == 'policy.evaluation' and r['promoted'])
     points = raw['values']['gain_points']['points']
@@ -348,7 +383,7 @@ def test_wi6_the_gain_curve_shows_registered_points_and_the_scenario_share(open_
 def test_wi7_try_a_share_previews_it_and_proposing_stays_w3_for_evaluated_rules(open_panel, views):
     panel = open_tab(open_panel, views['summary.opened'], 'whatif')
     page = panel.page
-    panel.view_data('whatif', views['whatif.opened'])
+    feed(panel, whatif=views['whatif.opened'])
     page.locator('[data-rule-kind="share"]').click()
     assert page.locator('[data-slider="share"]').count() == 1
     assert page.locator('[data-rule-label]').inner_text().startswith('Act on the top')
@@ -367,41 +402,40 @@ def test_wi7_try_a_share_previews_it_and_proposing_stays_w3_for_evaluated_rules(
 
 @pytest.mark.parametrize('stage', ['v0', 'v2'])
 def test_ov10_the_opening_of_the_final_test_is_a_chat_act(open_panel, views, stage):
+    """OV-10, DC-10 → NOW-7: Now names the opening, says it opens once, in the chat, and offers
+    no control but "Copy the question"."""
     panel = open_tab(open_panel, views['summary.opening'], 'overview', stage=stage)
     page = panel.page
-    hero = page.locator('[data-ov="hero"]')
-    assert hero.locator('[data-hero-title]').inner_text() == 'Open the final test, in the chat'
-    assert hero.locator('[data-hero-chat="final_test"]').count() == 1
-    assert hero.locator('button, [data-write]').count() == 0
-    assert 'once' in hero.locator('[data-hero-why]').inner_text()
-    clean(panel)
-    shot(page, f'overview-opening-{stage}-light-900')
-    # Stage v0 shows the decision cards without a tab bar.
-    if page.locator('[role="tab"][data-tab="decisions"]').count():
-        page.locator('[role="tab"][data-tab="decisions"]').click()
-    card = page.locator('[data-proposal-card][data-decision="final_test"]')
+    now = page.locator('[data-block="now"]')
+    assert now.get_attribute('data-now-step') == 'final_test'
+    # No control opens it; the one button copies a ready question for the chat, which writes nothing.
+    assert now.locator('[data-write]').count() == 0
+    assert now.locator('button:not([data-copy-question]):not(.ht-term)').count() == 0
+    assert now.locator('[data-copy-question]').count() == 1
+    card = now.locator('[data-proposal-card]')
     assert card.count() == 1
     assert card.locator('textarea, [data-action="confirm"]').count() == 0, 'DC-10: no field, no confirm'
-    assert card.locator('[data-final-test-chat]').inner_text().startswith('Answer this one in the chat')
-    assert 'Open the final test once for the logistic model' in card.locator('[data-proposed-value]').inner_text()
+    assert card.locator('[data-answer-in-chat]').inner_text() == \
+        'The final test opens once, in the chat, when you decide it. Nothing in this panel opens it.'
+    assert 'Open the final test once for the logistic model' in card.locator('.ht-plainsay').inner_text()
     clean(panel)
     shot(page, f'decisions-opening-{stage}-light-900')
 
 
-def test_ov11_where_we_are_shows_the_final_test_and_the_mode(open_panel, views):
+def test_ov11_pg5_now7_the_final_test_and_the_mode(open_panel, views):
+    """OV-11 → PG-5 (the seal pill: opened, then changed after) and NOW-7 (the answer rules of
+    the mode, a fold of Now): the final test's opening words and criterion are in its step's
+    card (EV-7, above); here the pill and the mode."""
     panel = open_tab(open_panel, views['summary.opened'], 'overview', stage='v1')
+    pill = panel.page.locator('[data-block="header"] [data-pill="seal"]')
+    assert pill.get_attribute('data-seal') == 'changed'
+    assert 'the decision rule' in pill.get_attribute('title')
+    clean(panel)
+    panel = open_tab(open_panel, views['summary.opening'], 'overview', stage='v1')
     page = panel.page
-    row = page.locator('[data-final-test-row]')
-    assert row.get_attribute('data-final-test-row') == 'changed'
-    raw = views['raw.summary.opened']
-    assert row.locator('[data-opening-words]').inner_text() == f"“{raw['final_test']['opening']['user_words']}”"
-    crit = row.locator('[data-final-criterion]')
-    assert crit.get_attribute('data-final-criterion') == raw['criterion']['final_test']['status']
-    assert crit.locator('data[data-path="criterion.gain"]').get_attribute('data-result-id') == raw['criterion']['final_test']['result_id']
-    assert 'the decision rule' in row.locator('[data-changed-after]').inner_text()
-    mode = page.locator('[data-mode-explainer="guided"]')
+    goto(panel)
+    mode = page.locator('[data-block="now"] [data-mode="guided"]')
     assert 'This study uses the guided mode.' in mode.inner_text()
-    assert 'opening of the final test' in mode.inner_text().lower() or 'Opening the final test' in mode.inner_text()
     assert mode.locator('button, select, input, textarea, [data-write]').count() == 0
     assert 'changes only in the chat' in mode.locator('[data-mode-change]').inner_text()
     clean(panel)
@@ -410,16 +444,12 @@ def test_ov11_where_we_are_shows_the_final_test_and_the_mode(open_panel, views):
 
 @pytest.mark.parametrize('mode', ['training', 'express'])
 def test_ov11_the_mode_explainer_says_what_counts_in_each_mode(open_panel, views, mode):
-    summary = copy.deepcopy(views['summary.opened'])
+    summary = copy.deepcopy(views['summary.opening'])
     summary['mode'] = mode
     panel = open_tab(open_panel, summary, 'overview', stage='v1')
-    text = panel.page.locator(f'[data-mode-explainer="{mode}"]').inner_text()
+    goto(panel)
+    text = panel.page.locator(f'[data-block="now"] [data-mode="{mode}"]').inner_text()
     assert f'This study uses the {mode} mode.' in text
-    if mode == 'training':
-        assert 'key points' in text and 'because' in text
-    else:
-        assert "recommended default" in text and 'always yours' in text
-    panel.page.locator('[role="tab"][data-tab="decisions"]').click()
     assert panel.page.locator(f'[data-mode="{mode}"] .dc-mode-rules li').count() >= 3
     clean(panel)
 
@@ -434,8 +464,7 @@ def test_a11y3_wp_b5_views_in_every_theme_and_at_420px(open_panel, views, theme,
     page = panel.page
     no_sideways(page)
     shot(page, f'overview-{theme}-{width}')
-    page.locator('[role="tab"][data-tab="evidence"]').click()
-    panel.view_data('evidence', views['evidence.diagnostics'])
+    feed(panel, evidence=views['evidence.diagnostics'])
     no_sideways(page)
     charts_unscaled(page)
     # The confusion counts keep their column as a label (v0.3: a 2 x 2 grid, each cell named).
@@ -443,9 +472,7 @@ def test_a11y3_wp_b5_views_in_every_theme_and_at_420px(open_panel, views, theme,
     assert tp.get_attribute('data-label') == 'acted on'
     assert page.locator('[data-confusion="final"] [data-cell="fn"]').first.get_attribute('data-label') == 'not acted on'
     shot(page, f'evidence-{theme}-{width}')
-    page.locator('[role="tab"][data-tab="whatif"]').click()
-    panel.view_data('scenario', views['scenario'])
-    panel.view_data('whatif', views['whatif.opened'])
+    feed(panel, scenario=views['scenario'], whatif=views['whatif.opened'])
     no_sideways(page)
     charts_unscaled(page)
     shot(page, f'whatif-{theme}-{width}')

@@ -132,3 +132,25 @@ def test_the_outcome_raises_the_legitimacy_question(hotel):
     flagged = {q['feature'] for q in signal['questions']}
     assert 'reservation_status' in flagged
     assert signal['signals'][0]['availability'] == 'not_available'
+
+
+def test_the_limits_follow_the_declared_order(hotel, tmp_path):
+    """L7 (R17, J-LIMIT): Hotel declares no time column but an order (its final test is
+    temporal) and no entity identifier: the limit names only the missing entity identifier,
+    in English and, in a French study, in French; never "ni colonne de temps"."""
+    flow, _ = hotel
+    english = next(x for x in flow.view()['not_yet_defensible']
+                   if x['id'] == 'no_time_or_entity_identifier')
+    assert english['missing'] == ['group_column'] and english['ordered_by'] == 'line'
+    assert 'time column' not in english['text'] and 'drift' not in english['text']
+    assert 'not its cause' in english['text']
+    french = Flow(tmp_path / 'fr', HOTEL, prefix='hf')
+    french.call('init', '--case', HOTEL, '--study', french.study, '--lang', 'fr')
+    item = next(x for x in french.view()['not_yet_defensible']
+                if x['id'] == 'no_time_or_entity_identifier')
+    assert item['missing'] == ['group_column']
+    assert item['junior_text'].startswith("Les données n'ont pas d'identifiant d'entité")
+    assert 'colonne de temps' not in item['junior_text']
+    summary = french.call('status', '--summary', '--study', french.study)
+    texts = [x.get('junior_text') or x['text'] for x in summary['not_yet_defensible']['top']]
+    assert not [t for t in texts if 'ni colonne de temps' in t]

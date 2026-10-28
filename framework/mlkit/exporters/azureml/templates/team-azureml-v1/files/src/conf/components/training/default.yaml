@@ -1,4 +1,4 @@
-# Scientific (the study's selected recipe, decision @@text:selection_decision@@): a replay
+# Scientific (the study's selected recipe, decision @@yaml:selection_decision@@): a replay
 # fits exactly this. Any change is refused with scientific_config_changed.
 status: selected
 task: @@yaml:task@@

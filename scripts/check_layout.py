@@ -146,7 +146,8 @@ def companion_terminal_errors(sources):
 # v0.3 narrowing (ADR 0004 amendment; owner decision R23, integrator decision I2): the
 # panel records no decision. No client source may invoke `decide confirm`, `decide
 # withdraw`, or `decide propose`, neither as an argv array ('decide', 'confirm') nor as a
-# command string ("decide confirm"); W4-W7 are its only writes.
+# command string ("decide confirm"); W4, W5, W7 and W8 are its only writes (W6: below, R31;
+# W8: below, ADR 0004 decision 14).
 DECIDE_WRITE = re.compile(r"""['"`]decide['"`]\s*,\s*['"`](?:confirm|withdraw|propose)['"`]"""
                           r'|\bdecide\s+(?:confirm|withdraw|propose)\b')
 
@@ -155,6 +156,73 @@ def companion_decide_errors(sources):
     """Errors of the narrowing rule over ``{relative path: text}`` of the client sources."""
     return [f'Companion client source invokes a withdrawn decide write (W1-W3): {rel}'
             for rel, text in sorted(sources.items()) if DECIDE_WRITE.search(text)]
+
+
+# Owner decision R31 (2026-10-27, ADR 0004 amendment): W6 is withdrawn; the panel takes no
+# words of the junior and never acknowledges an interrupted execution. No client source may
+# build `run --acknowledge-interruption` (as an argv array or a command string) or keep an
+# acknowledgement builder; W4, W5 and W7 are its only writes.
+ACKNOWLEDGE_WRITE = re.compile(r'--acknowledge-interruption\b|\backnowledge(?:Interruption)?Argv\b')
+
+
+def companion_acknowledge_errors(sources):
+    """Errors of the R31 rule over ``{relative path: text}`` of the client sources."""
+    return [f'Companion client source builds a withdrawn acknowledgement write (W6): {rel}'
+            for rel, text in sorted(sources.items()) if ACKNOWLEDGE_WRITE.search(text)]
+
+
+# ADR 0004 decision 14 (owner request R49, 2026-10-28): the whitelist of writes is exactly W4,
+# W5, W7 and W8, the builders of `lib/cli.js` `WRITES`. W8 is the Azure ML export
+# (`export azureml --out`), outside the study state; `export azureml --plan` is a read. Only
+# lib/cli.js builds an `export azureml` argv; the W8 builder never carries `--plan`; and no
+# client source starts an Azure job or calls the Azure CLI (`az ml job`, an `'az'` argv).
+COMPANION_WRITES = ('W4', 'W5', 'W7', 'W8')
+COMPANION_CLI_FILE = 'lib/cli.js'
+WRITES_BLOCK = re.compile(r'const WRITES = Object\.freeze\(\{(?P<body>[^}]*)\}\)')
+AZUREML_ARGV = re.compile(r"""['"`]export['"`]\s*,\s*['"`]azureml['"`]""")
+AZURE_JOB = re.compile(r"""\baz\s+ml\b|['"`]az['"`]\s*,\s*['"`]ml['"`]|\bsubmit_job\b|\bjobs\.create_or_update\b""")
+
+
+def companion_write_errors(sources):
+    """Errors of the write whitelist over ``{relative path: text}`` of the client sources."""
+    errors = []
+    cli = sources.get(COMPANION_CLI_FILE, '')
+    block = WRITES_BLOCK.search(cli)
+    keys = tuple(re.findall(r'\b(W[0-9]+)\s*:', block.group('body'))) if block else ()
+    if keys != COMPANION_WRITES:
+        errors.append(f'Companion client {COMPANION_CLI_FILE} WRITES is not exactly {", ".join(COMPANION_WRITES)}: '
+                      f'{", ".join(keys) or "none found"}')
+    for rel, text in sorted(sources.items()):
+        if rel != COMPANION_CLI_FILE and AZUREML_ARGV.search(text):
+            errors.append(f'Companion client source builds an export azureml argv outside {COMPANION_CLI_FILE}: {rel}')
+        if AZURE_JOB.search(text):
+            errors.append(f'Companion client source starts an Azure job or calls the Azure CLI: {rel}')
+    w8 = re.search(r'function exportAzuremlArgv\([^)]*\)\s*\{(?P<body>.*?)\n\}', cli, re.S)
+    if not w8:
+        errors.append(f'Companion client {COMPANION_CLI_FILE} has no W8 builder exportAzuremlArgv')
+    elif '--plan' in w8.group('body') or '--out=' not in w8.group('body'):
+        errors.append(f'Companion client {COMPANION_CLI_FILE} W8 must write with --out and never carry --plan')
+    return errors
+
+
+# The same narrowing in the words the extension shows before it runs (R9UX-3): its name,
+# description, and command titles never claim that the panel confirms, withdraws, or
+# proposes a decision. "Proposals" and "confirmed" (a state it shows) are allowed.
+PANEL_DECISION_CLAIM = re.compile(r'\b(?:confirms?|withdraws?|proposes?)\b', re.IGNORECASE)
+
+
+def companion_package_claim_errors(package):
+    """Errors of the narrowing rule over the panel's ``package.json`` (a dict)."""
+    contributes = package.get('contributes', {})
+    texts = {'displayName': package.get('displayName', ''),
+             'description': package.get('description', '')}
+    for command in contributes.get('commands', []):
+        texts[f'command {command.get("command")}'] = command.get('title', '')
+    for key, prop in contributes.get('configuration', {}).get('properties', {}).items():
+        texts[f'setting {key}'] = prop.get('description', '')
+    return [f'Companion client package.json {where} claims a withdrawn decision write: '
+            f'{PANEL_DECISION_CLAIM.search(text).group(0)!r}'
+            for where, text in texts.items() if PANEL_DECISION_CLAIM.search(text or '')]
 
 
 def check_companion_client(errors):
@@ -175,6 +243,7 @@ def check_companion_client(errors):
         errors.append('Companion client does not require a trusted workspace')
     if package.get('dependencies'):
         errors.append('Companion client has runtime dependencies')
+    errors.extend(companion_package_claim_errors(package))
     sources = sorted(p for p in folder.rglob('*.js')
                      if 'test' not in p.relative_to(folder).parts and 'node_modules' not in p.parts)
     # The webview's protocol copy is generated from lib/protocol.js and must not drift.
@@ -189,6 +258,8 @@ def check_companion_client(errors):
     texts = {p.relative_to(folder).as_posix(): p.read_text(encoding='utf-8') for p in sources}
     errors.extend(companion_terminal_errors(texts))
     errors.extend(companion_decide_errors(texts))
+    errors.extend(companion_acknowledge_errors(texts))
+    errors.extend(companion_write_errors(texts))
     return len(sources)
 
 def main():

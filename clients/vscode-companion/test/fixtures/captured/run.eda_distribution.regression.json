@@ -16,13 +16,13 @@
   "ok": true,
   "study": "/studies/auto mpg",
   "action": "run",
-  "request_id": "a17",
+  "request_id": "a19",
   "replayed": false,
-  "revision": 25,
+  "revision": 27,
   "activity": "eda.distribution",
-  "execution_id": "e_622dd0c704d6af123eea761a",
+  "execution_id": "e_aa1477c41bc44c975f9888ce",
   "status": "promoted",
-  "result_id": "b68e2a872bb35e1f4f79f86a4fbc75d82833c936131cf93de5510b32a21caf02",
+  "result_id": "bedade14ed77dd17cb9d696a4706af59a70071a5da92bfea69c2230a50d194fc",
   "values": {
    "partition": "train",
    "column": "weight",
@@ -132,17 +132,17 @@
    "question": "How are the values of weight distributed among the training rows?"
   },
   "result": {
-   "execution_id": "e_622dd0c704d6af123eea761a",
+   "execution_id": "e_aa1477c41bc44c975f9888ce",
    "activity": "eda.distribution",
    "slot": "eda.distribution:weight",
    "status": "promoted",
-   "result_id": "b68e2a872bb35e1f4f79f86a4fbc75d82833c936131cf93de5510b32a21caf02",
-   "input_key": "0ff6c96c50321bca2c4e43689cc917080dd21a8e0b5b266c2a4efa544ad46bbc",
+   "result_id": "bedade14ed77dd17cb9d696a4706af59a70071a5da92bfea69c2230a50d194fc",
+   "input_key": "0a0cca74457102e44cab685d80eb9e5cd32114781a2e5500dea33f7af10d3cd3",
    "reason": null,
-   "started_revision": 24,
+   "started_revision": 26,
    "invalidation": null,
    "exposure_ids": [
-    "x_a94773eb79c441c5a09909be3a4b6d25"
+    "x_58eec21065424072a7ed8fe8d0b65e2b"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -151,24 +151,24 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 25,
-    "last_ok_revision": 25,
+    "revision": 27,
+    "last_ok_revision": 27,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 25,
-    "last_ok_revision": 25,
+    "revision": 27,
+    "last_ok_revision": 27,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },
    "editable": {
     "status": "ok",
     "path": "notebooks/study_editable.py",
-    "revision": 25,
-    "last_ok_revision": 25,
+    "revision": 27,
+    "last_ok_revision": 27,
     "error": null,
     "tracked": false,
     "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence."
@@ -185,24 +185,29 @@
   },
   "next_action": {
    "kind": "run",
-   "step": "models",
-   "activity": "fit.baseline",
-   "message": "Which predictions do the training mean and a linear model give for the validation rows?",
-   "audience": "junior",
-   "junior_message": "Which predictions do the training mean and a linear model give for the validation rows?",
+   "step": "train_eda",
+   "activity": "eda.mean_by",
+   "message": "Run eda.mean_by --column cylinders: the exploration step runs the case catalogue's charts before the models. It reads the target: a look, counted.",
+   "audience": "agent",
+   "junior_message": "The exploration continues with a target mean by group (cylinders). It reads the target of the development rows: one more look, counted.",
+   "options": {
+    "column": "cylinders"
+   },
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: the baseline model, run without asking you. Which predictions do the training mean and a linear model give for the validation rows?",
+   "junior_digest": "Next: a target mean by group (cylinders), run without asking you. The exploration continues with a target mean by group (cylinders). It reads the target of the development rows: one more look, counted.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Error measure, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Model choice); Conclude and hand over (Final test, Conclusion). Current step: Exploration (9 of 14).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",
     "language": "en",
-    "revision": 25,
+    "revision": 27,
     "position": {
      "step_id": "models",
-     "completed": 7,
-     "total": 12
+     "completed": 9,
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -226,13 +231,18 @@
      "continue",
      "explain"
     ],
-    "question": "Which predictions do the training mean and a linear model give for the validation rows?",
+    "option_labels": {
+     "continue": "Let's continue",
+     "explain": "Explain first"
+    },
+    "question": "The exploration continues with a target mean by group (cylinders). It reads the target of the development rows: one more look, counted.",
     "evidence_refs": [],
     "detail_topics": [
      "metric",
      "uncertainty"
     ]
    }
-  }
+  },
+  "question_junior": "How are the values of weight distributed among the training rows?"
  }
 }

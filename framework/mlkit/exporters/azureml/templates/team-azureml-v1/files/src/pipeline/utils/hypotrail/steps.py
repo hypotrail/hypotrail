@@ -9,9 +9,11 @@
    on every authorised development row, through ``hypotrail_runtime``, and captures it with
    its MLflow package (the packager hook) before any check. Nothing is registered.
 4. :func:`evaluate`: technical checks of that candidate (bundle verification, reload,
-   native/MLflow parity) and its observed deviation from the evaluated model on the parity
-   rows. It reads no final-test row and computes no generalisation metric: the candidate
-   does not inherit the study's verdict.
+   native/MLflow parity, and for a binary score that every score is a probability) and its
+   observed deviation from the evaluated model on the parity rows. It reads no final-test row
+   and computes no metric (the parity rows carry no label; ROC AUC, Brier score or log loss on
+   the training rows would not be generalisation): the candidate does not inherit the
+   study's verdict. A binary study's decision rule is reported as metadata, never applied.
 """
 
 from __future__ import annotations
@@ -26,6 +28,8 @@ from .config import write_frozen
 from .errors import ProjectError
 
 if TYPE_CHECKING:
+    from types import ModuleType
+
     import pandas as pd
 
 CANDIDATE_ROLE = "rebuilt_candidate"
@@ -43,14 +47,8 @@ def _write_json(path: Path, document: dict) -> Path:
     return path
 
 
-def _key_order(key: str) -> tuple:
-    digits = key[1:] if key[:1].isalpha() else key
-    return (0, int(digits), key) if digits.isdigit() else (1, 0, key)
-
-
-def development_keys(plan: dict) -> list[str]:
-    """Every development row key of the plan, in key order."""
-    return sorted({k for part in plan["partitions"] for k in part["row_keys"]}, key=_key_order)
+_key_order = contracts.key_order
+development_keys = contracts.development_keys
 
 
 # --- 1. data preparation ---------------------------------------------------------------
@@ -109,10 +107,43 @@ def prepare(frozen: dict) -> dict:
         "learnt_statistics": [],
         "dropped_rows": 0,
     }
+    encoding = target_encoding(found.recipe, typed)
+    if encoding is not None:
+        report["target_encoding"] = encoding
     _write_json(out_dir / "validation-report.json", report)
     write_frozen(frozen, out_dir)
     logging.info("Prepared %d development rows", len(keys))
     return report
+
+
+def target_encoding(recipe: dict, rows: pd.DataFrame) -> dict | None:
+    """Return how a binary study's target is encoded, or None for a regression.
+
+    The positive label is the one the study recorded (``target.positive_label``); a row is 1
+    when its target is that label and 0 otherwise, by the runtime's own encoding. Rows of a
+    single class are refused here, before any fit.
+    """
+    if recipe["task"] != "binary":
+        return None
+    target = recipe["target"]
+    encode = runtime_bridge.positive_indicator()
+    positives = int(encode(rows[target["name"]], target["positive_label"]).sum())
+    negatives = len(rows) - positives
+    if positives == 0 or negatives == 0:
+        raise ProjectError(
+            "data_identity_mismatch",
+            "The development rows hold one class of the target only.",
+            path=target["name"],
+            remediation="Materialise the study's development rows from its original dataset file.",
+            details={"positive_label": target["positive_label"], "n_positive": positives, "n_negative": negatives},
+        )
+    return {
+        "target": target["name"],
+        "positive_label": target["positive_label"],
+        "rule": "1 when the target is the positive label the study recorded, else 0 (hypotrail_runtime)",
+        "n_positive": positives,
+        "n_negative": negatives,
+    }
 
 
 # --- 2. data splitting -----------------------------------------------------------------
@@ -190,7 +221,20 @@ def evaluated_bundle(found: contracts.Contracts) -> Path | None:
     return folder if (folder / "predictor_bundle.json").is_file() else None
 
 
-def parity_features(found: contracts.Contracts, rows: pd.DataFrame) -> tuple[pd.DataFrame, str]:
+def verified_evaluated(found: contracts.Contracts, rt: ModuleType) -> Path | None:
+    """Return the evaluated bundle folder once verified as the snapshot's predictor, or None.
+
+    ``hypotrail_runtime.verify_bundle`` recomputes the predictor id from the bundle's content
+    (its parity rows included), which must be the id the snapshot names (review round 9,
+    R9AB-1): a folder copied from another bundle, with its checksums rewritten, is refused.
+    """
+    folder = evaluated_bundle(found)
+    if folder is not None:
+        contracts.check_evaluated(found.data_dir, found.snapshot, rt.verify_bundle(folder).predictor_id)
+    return folder
+
+
+def parity_features(found: contracts.Contracts, rows: pd.DataFrame, rt: ModuleType) -> tuple[pd.DataFrame, str]:
     """Return the parity rows (features only, no target) and their origin.
 
     They are the evaluated bundle's (authorised development rows or synthetic cases), else
@@ -198,13 +242,22 @@ def parity_features(found: contracts.Contracts, rows: pd.DataFrame) -> tuple[pd.
     """
     from . import mlflow_packaging as mp
 
-    bundle_dir = evaluated_bundle(found)
+    bundle_dir = verified_evaluated(found, rt)
     if bundle_dir is not None:
         bundle = contracts.load_json(bundle_dir / "predictor_bundle.json")
         spec = mp.ParitySpec.from_bundle(bundle)
         return mp.read_table(mp.inside(bundle_dir, spec.features_path, "parity.features_path")), "evaluated_bundle"
     features = list(found.recipe["features"])
     return rows[features].head(PARITY_FALLBACK_ROWS).reset_index(drop=True), "development_rows"
+
+
+def _output_fields(found: contracts.Contracts) -> dict:
+    """Return the output kind and, for a binary study, its decision rule (never applied)."""
+    out = {"output_kind": found.recipe["output_contract"]["kind"]}
+    rule = contracts.decision_rule(found.snapshot)
+    if rule is not None:
+        out["decision_rule"] = rule
+    return out
 
 
 def train(frozen: dict) -> dict:
@@ -267,7 +320,7 @@ def train(frozen: dict) -> dict:
         "semantic_dependencies": [],
         "environment_lock_sha256": lock_sha,
     }
-    features, parity_origin = parity_features(found, rows)
+    features, parity_origin = parity_features(found, rows, rt)
     models = Path(config["models"]["path"])
     destination = models / BUNDLE_FOLDER
     rt.capture_predictor(fitted, context, features, destination, packager=packager)
@@ -292,6 +345,7 @@ def train(frozen: dict) -> dict:
         "parity_origin": parity_origin,
         "mlflow_package": bool(manifest_doc.get("optional_packages")),
         "registered": False,
+        **_output_fields(found),
     }
     _write_json(models / "hypotrail-run.json", record)
     write_frozen(frozen, models)
@@ -299,6 +353,31 @@ def train(frozen: dict) -> dict:
 
 
 # --- 4. evaluation ---------------------------------------------------------------------
+
+
+def _load_bundle(rt: ModuleType, bundle_dir: Path) -> object:
+    """Load the predictor of a bundle, trusted by its absolute folder (a relative root is refused)."""
+    return rt.load_predictor(bundle_dir, trusted_roots=[bundle_dir.resolve()])
+
+
+def output_checks(recipe: dict, outputs: pd.DataFrame) -> list[dict]:
+    """Return the checks of the model output: for a binary score, every score is a probability.
+
+    A score is a probability when it is finite and between 0 and 1; a regression prediction
+    has no such check.
+    """
+    if recipe["output_contract"]["kind"] != "binary_score":
+        return []
+    values = outputs.to_numpy(dtype=float).ravel()
+    outside = int(sum(1 for v in values if not 0.0 <= v <= 1.0))
+    return [
+        {
+            "id": "candidate_scores_are_probabilities",
+            "status": "passed" if outside == 0 else "failed",
+            "rows": len(values),
+            "outside_unit_interval": outside,
+        },
+    ]
 
 
 def evaluate(frozen: dict) -> dict:
@@ -326,10 +405,13 @@ def evaluate(frozen: dict) -> dict:
     )
     spec = mp.ParitySpec.from_bundle(bundle)
     features = mp.read_table(mp.inside(bundle_dir, spec.features_path, "parity.features_path"))
-    native = mp.batch_frame(rt.load_predictor(bundle_dir, trusted_roots=[bundle_dir]).predict(features.copy()))
+    native = mp.batch_frame(_load_bundle(rt, bundle_dir).predict(features.copy()))
     expected = mp.read_table(mp.inside(bundle_dir, spec.expected_outputs_path, "parity.expected_outputs_path"))
     reload = mp.compare(native, expected, spec.rtol, spec.atol)
-    checks.append({"id": "candidate_reload_parity", "status": "passed" if reload["equal"] else "failed", **reload})
+    checks += [
+        {"id": "candidate_reload_parity", "status": "passed" if reload["equal"] else "failed", **reload},
+        *output_checks(found.recipe, native),
+    ]
     packages = [p for p in bundle.get("optional_packages") or [] if p.get("format") == mp.FORMAT]
     if packages:
         result = mp.ArtifactPackager(rt).verify(bundle_dir, bundle_dir / packages[0]["relative_path"])
@@ -338,13 +420,13 @@ def evaluate(frozen: dict) -> dict:
         status = "failed" if config["packaging"]["required"] else "not_run"
         checks.append({"id": "mlflow_package_parity", "status": status, "reason": "no_package"})
     deviation = None
-    evaluated_dir = evaluated_bundle(found)
+    evaluated_dir = verified_evaluated(found, rt)
     if evaluated_dir is not None:
         evaluated = contracts.load_json(evaluated_dir / "predictor_bundle.json")
         espec = mp.ParitySpec.from_bundle(evaluated)
         efeatures = mp.read_table(mp.inside(evaluated_dir, espec.features_path, "parity.features_path"))
         eexpected = mp.read_table(mp.inside(evaluated_dir, espec.expected_outputs_path, "parity.expected_outputs_path"))
-        candidate = mp.batch_frame(rt.load_predictor(bundle_dir, trusted_roots=[bundle_dir]).predict(efeatures.copy()))
+        candidate = mp.batch_frame(_load_bundle(rt, bundle_dir).predict(efeatures.copy()))
         observed = mp.compare(candidate, eexpected, espec.rtol, espec.atol)
         deviation = {
             "rows": len(efeatures),
@@ -352,6 +434,19 @@ def evaluate(frozen: dict) -> dict:
             "within_evaluated_tolerance": observed["equal"],
             "meaning": "Observed difference on a few parity rows; it does not transfer the evaluated model's verdict.",
         }
+        # The same recipe fitted on the same rows reproduces the evaluated model within its
+        # declared tolerance; a rebuild outside it is not a faithful replay and never passes.
+        checks.append(
+            {
+                "id": "candidate_within_evaluated_tolerance",
+                "status": "passed" if observed["equal"] else "failed",
+                "max_abs_diff": observed["max_abs_diff"],
+            },
+        )
+    else:
+        checks.append(
+            {"id": "candidate_within_evaluated_tolerance", "status": "not_run", "reason": "no_evaluated_model"},
+        )
     status = "passed" if all(c["status"] in ("passed", "not_run") for c in checks) else "failed"
     report = {
         "schema_version": REPORT_SCHEMA,
@@ -362,6 +457,7 @@ def evaluate(frozen: dict) -> dict:
         "scientific_verdict": "not_inherited",
         "generalisation_metrics": None,
         "generalisation_metrics_reason": "No final-test row is read here; training-row metrics are not generalisation.",
+        **_output_fields(found),
         "checks": checks,
         "deviation_from_evaluated_model": deviation,
         "registered": False,

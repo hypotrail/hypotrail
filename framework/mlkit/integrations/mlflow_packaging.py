@@ -13,12 +13,78 @@ scientific evidence.
   it back with ``mlflow.pyfunc.load_model``, compares its predictions with the native ones,
   writes ``hypotrail-package.json`` (the package descriptor) and publishes the folder by a
   rename. Any failure leaves no package behind.
-* :meth:`ArtifactPackager.verify` repeats the two comparisons on an existing package.
+* :meth:`ArtifactPackager.verify` repeats the two comparisons on an existing package, after
+  checking that the package serves the native bundle it was made from: its wrapper is this
+  packager's, ``MLmodel`` loads it on ``artifacts/native_bundle`` with the signature of the
+  bundle, and the bundle there verifies and is byte-identical to the native one (same
+  predictor id, manifest, recipe, data contract, payload and bound files). ``package`` makes
+  the same check before publishing. The package is outside the predictor id; parity on the
+  bundle's rows alone would accept another model that agrees on them (review A1, round 2).
+
+Round 3 (review A, 2026-10-25). Nothing from the package runs before its integrity is
+established, and nothing is read from or written into it as bytecode:
+
+* a ``__pycache__`` folder or a ``*.pyc``/``*.pyo`` file anywhere in a package is refused,
+  never skipped (a planted cache replaces the wrapper the digests bind, and MLflow imports
+  it); a package is loaded for parity only from a fresh temporary copy, with bytecode
+  reading and writing disabled (``sys.pycache_prefix`` on an empty temporary folder,
+  ``sys.dont_write_bytecode``);
+* ``artifact_id`` is the content id of the descriptor (``hypotrail_runtime.canonical.
+  artifact_id`` of the contract document without ``artifact_id``), recomputed by ``verify``
+  and by the runtime; the descriptor inside the package (``hypotrail-package.json``, named
+  by the extension ``hypotrail.descriptor_copy``) is the contract document itself, so the
+  runtime compares it with the one beside the package;
+* the environment files (``requirements.txt``, ``conda.yaml``, ``python_env.yaml``) are
+  written by this packager from the bundle's pinned environment (its semantic dependencies,
+  the runtime and the MLflow version recorded in the descriptor), not by the MLflow
+  installation, and ``verify`` regenerates them and compares the bytes;
+* ``verify`` turns every failure into a :class:`PackagingError` (a runtime refusal keeps its
+  contract code; anything else is ``artifact_integrity_failed``) or a failed result.
+
+Round 4 (review A, 2026-10-25). A package holds exactly the files this packager writes, and
+its ``MLmodel`` is exactly the document it writes:
+
+* ``MLmodel`` is written by this packager (:func:`mlmodel_bytes`, from the bundle's signature
+  and the package's pinned environment: no clock, no random id, no local path, no key
+  MLflow's loader would follow elsewhere such as ``data``, ``code`` or ``model_config``), in
+  place of the one ``mlflow.pyfunc.save_model`` writes; ``verify`` regenerates it and
+  compares the bytes, so an added, removed or changed key (top level or in the
+  ``python_function`` block) is refused before anything from the package runs;
+* the package's files are an allowlist (:data:`PACKAGE_FILES`): ``MLmodel``, the wrapper, the
+  three environment files, the descriptor copy, and ``artifacts/native_bundle/**`` (the
+  embedded bundle, checked against the native one); any other file or folder is refused, by
+  :meth:`ArtifactPackager.package` and :meth:`ArtifactPackager.verify` here, and by the
+  runtime's ``verify_bundle`` for a package of this format inside a bundle.
+
+Round 5 (review A, 2026-10-25). A package serves only with the runtime its bundle binds, and
+holds no evidence:
+
+* R5-A1: the environment files install the bundle's own runtime wheel, embedded in the
+  package at ``artifacts/native_bundle/runtime/<wheel>``, by a relative path
+  (``./artifacts/native_bundle/runtime/hypotrail_runtime-<version>-py3-none-any.whl``), never
+  ``hypotrail-runtime==<version>`` from an index: the version number does not identify the
+  code. MLflow's environment restoration (``env_manager`` ``virtualenv`` or ``uv``) installs
+  ``requirements.txt`` from a mirror of the package folder with that folder as working
+  directory, so the path resolves to the embedded wheel; conda installs the ``pip`` section of
+  ``conda.yaml`` from the folder of that file, the package root, when it is writable (MLflow's own
+  ``add_libraries_to_model`` references wheels inside a model the same way). The wrapper's
+  ``load_context`` refuses to serve unless the installed ``hypotrail_runtime`` holds exactly
+  the files of that wheel, byte for byte (checked before anything of the runtime is
+  imported), and then reproduces the bundle's parity rows (``check_parity``);
+* R5-A2: the embedded bundle holds no ``evidence/`` folder (nor ``packages/``): the packager
+  never copies them, refuses them in a package (:func:`layout_issues`), and requires the
+  embedded bundle to hold exactly its listed files and its bundle document.
+
+Round 9 (review AB, R9AB-3). MLflow 3.17 copies the working directory's uv project files
+(``pyproject.toml``, ``uv.lock``, ``.python-version``) into a package it saves, which the
+allowlist refuses: :meth:`ArtifactPackager.package` names an empty folder as the uv project
+(``uv_project_path``), so a package holds the same bytes whatever the working directory.
 
 The wrapper inside the package (``hypotrail_pyfunc.py``, MLflow "models from code") imports
-only ``hypotrail_runtime``, ``mlflow`` and ``pandas``: it keeps the whole preprocessing of the
-native predictor and the meaning of its output (``regression_point`` or the score of the
-named positive class), so serving needs neither this repository nor a study.
+only the standard library, ``hypotrail_runtime``, ``mlflow`` and ``pandas``: it keeps the
+whole preprocessing of the native predictor and the meaning of its output
+(``regression_point`` or the score of the named positive class), so serving needs neither
+this repository nor a study.
 
 Tolerances are the ones the bundle declares (``parity.tolerance``), never relaxed here.
 Tracking is not done here: packaging logs nothing to any MLflow server.
@@ -35,15 +101,21 @@ import importlib
 import json
 import math
 import os
+import re
 import shutil
 import sys
 import tempfile
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any, Mapping
 
 FORMAT = 'mlflow_pyfunc'
-PACKAGER_VERSION = '1'
+# 2 (round 3): the descriptor inside the package is the contract document, its artifact id
+# is the descriptor's content id, and the environment files are the packager's own.
+# 3 (round 4): ``MLmodel`` is the packager's own document and the files are an allowlist.
+# 4 (round 5): the environment installs the embedded runtime wheel, the wrapper checks the
+# installed runtime and the parity rows at load, and the embedded bundle holds no evidence.
+PACKAGER_VERSION = '4'
 DESCRIPTOR_SCHEMA = 'hypotrail.package_descriptor/1'
 PARITY_SCHEMA = 'hypotrail.parity_result/1'
 DESCRIPTOR_FILE = 'hypotrail-package.json'
@@ -60,29 +132,144 @@ MLFLOW_TYPES = {'int64': 'long', 'int32': 'integer', 'float64': 'double', 'float
                 'bool': 'boolean', 'boolean': 'boolean', 'string': 'string', 'str': 'string',
                 'object': 'string', 'category': 'string', 'datetime64[ns]': 'datetime'}
 OUTPUT_KINDS = ('regression_point', 'binary_score')
+DESCRIPTOR_COPY = 'hypotrail.descriptor_copy'
+ENVIRONMENT_FILES = ('requirements.txt', 'conda.yaml', 'python_env.yaml')
+MLMODEL_ENV = {'conda': 'conda.yaml', 'virtualenv': 'python_env.yaml'}
+MLMODEL_FILE = 'MLmodel'
+CODE_LOADER = 'mlflow.pyfunc.loaders.code_model'
+EMBEDDED_BUNDLE = f'artifacts/{NATIVE_ARTIFACT}'
+# The files of a package (round 4, R4-A1): these names at the package root, and the embedded
+# native bundle under ``EMBEDDED_BUNDLE``; nothing else. The runtime keeps the same list for
+# the ``mlflow_pyfunc`` format (``hypotrail_runtime.predictor.MLFLOW_PYFUNC_FILES``).
+PACKAGE_FILES = (MLMODEL_FILE, WRAPPER_FILE, *ENVIRONMENT_FILES, DESCRIPTOR_FILE)
+PACKAGE_FOLDERS = ('artifacts', EMBEDDED_BUNDLE)
+BYTECODE_DIR = '__pycache__'
+BYTECODE_SUFFIXES = ('.pyc', '.pyo')
+# Folders of a native bundle that never enter a package (round 5, R5-A2).
+EVIDENCE_DIR = 'evidence'
+PACKAGES_DIR = 'packages'
+NOT_EMBEDDED = (EVIDENCE_DIR, PACKAGES_DIR)
+RUNTIME_DISTRIBUTION = 'hypotrail-runtime'
+# What may enter a generated environment file: a distribution name, a version, a Python
+# version (no URL, no space, no YAML syntax).
+_NAME = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$')
+_VERSION = re.compile(r'^[0-9][A-Za-z0-9.+!_-]{0,63}$')
+_PYTHON = re.compile(r'^[0-9]+\.[0-9]+\.[0-9]+[A-Za-z0-9+]{0,16}$')
+# The runtime wheel of a bundle, as hypotrail_runtime.wheel names it (round 5, R5-A1).
+_RUNTIME_WHEEL = re.compile(r'^runtime/hypotrail_runtime-([0-9][A-Za-z0-9.+!_]{0,63})'
+                            r'-py3-none-any\.whl$')
 
 WRAPPER_SOURCE = '''"""MLflow pyfunc wrapper of a Hypotrail native predictor (generated by the packager).
 
 It loads the native bundle stored in the package artifacts with ``hypotrail_runtime`` and
 returns its typed predictions in input order. It neither fits nor reads any other file.
+
+It serves only with the runtime the bundle binds: before anything of ``hypotrail_runtime`` is
+imported, the installed package must hold exactly the files of the bundle's own wheel, byte
+for byte (the version number does not identify the code); after loading, the predictor must
+reproduce the bundle's parity rows. Otherwise loading the package fails with a message.
 """
+import hashlib
+import importlib.util
+import io
+import json
+import zipfile
 from pathlib import Path
 
 import mlflow.pyfunc
 import pandas as pd
 from mlflow.models import set_model
 
+RUNTIME = "hypotrail_runtime"
+
+
+class RuntimeNotBound(RuntimeError):
+    """The installed hypotrail_runtime is not the runtime of the bundle."""
+
+    code = "environment_unqualified"
+
+
+class ParityNotReproduced(RuntimeError):
+    """The loaded predictor does not reproduce the bundle's parity rows."""
+
+    code = "artifact_integrity_failed"
+
+
+def _sha256(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def bound_runtime(bundle):
+    """The wheel the predictor binds (its path, and the digests of its package members)."""
+    document = json.loads((bundle / "predictor_bundle.json").read_bytes())
+    manifest = json.loads((bundle / document["predictor_manifest_path"]).read_bytes())
+    runtime = manifest.get("runtime") or {}
+    rel = runtime.get("wheel_relative_path")
+    wheel = (bundle / rel).resolve() if isinstance(rel, str) else None
+    if wheel is None or bundle not in wheel.parents or not wheel.is_file():
+        raise RuntimeNotBound("The native bundle of this package holds no runtime wheel.")
+    data = wheel.read_bytes()
+    if _sha256(data) != runtime.get("wheel_sha256"):
+        raise RuntimeNotBound(f"The runtime wheel {rel} of this package is not the one its "
+                              "predictor binds.")
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        files = {name: _sha256(archive.read(name)) for name in archive.namelist()
+                 if name.startswith(RUNTIME + "/") and not name.endswith("/")}
+    return rel, files
+
+
+def installed_runtime():
+    """The folder of the installed hypotrail_runtime (found, not imported) and the digests of
+    its files, Python bytecode left out."""
+    spec = importlib.util.find_spec(RUNTIME)
+    locations = list(spec.submodule_search_locations or []) if spec is not None else []
+    if len(locations) != 1:
+        return None, {}
+    root = Path(locations[0]).resolve()
+    files = {}
+    for path in sorted(root.rglob("*")):
+        rel = path.relative_to(root)
+        if "__pycache__" in rel.parts or path.suffix.lower() in (".pyc", ".pyo"):
+            continue
+        if path.is_file():
+            files[f"{RUNTIME}/{rel.as_posix()}"] = _sha256(path.read_bytes())
+    return root, files
+
+
+def check_runtime(bundle):
+    """Refuse unless the installed hypotrail_runtime is, file for file, the bound wheel."""
+    rel, bound = bound_runtime(bundle)
+    location, installed = installed_runtime()
+    if installed == bound:
+        return
+    differing = sorted(name[len(RUNTIME) + 1:] for name in
+                       (set(bound) ^ set(installed))
+                       | {n for n in set(bound) & set(installed) if bound[n] != installed[n]})
+    raise RuntimeNotBound(
+        f"The installed hypotrail_runtime ({location or 'not installed'}) is not the runtime "
+        f"this package binds: {len(differing)} file(s) differ from its wheel {rel} "
+        f"({', '.join(differing[:5])}). A runtime of the same version with other code may "
+        "predict otherwise, so this package does not serve. Restore the package environment "
+        f"(its requirements.txt installs artifacts/native_bundle/{rel}) or install that wheel "
+        "with pip, then load the package again.")
+
 
 class HypotrailPredictor(mlflow.pyfunc.PythonModel):
     """Native predictor behind the pyfunc interface."""
 
     def load_context(self, context):
+        bundle = Path(context.artifacts["native_bundle"]).resolve()
+        check_runtime(bundle)
         import hypotrail_runtime
 
-        bundle = Path(context.artifacts["native_bundle"])
         hypotrail_runtime.verify_bundle(bundle)
         # The bundle travels inside this package: it is the trusted source by construction.
         self._predictor = hypotrail_runtime.load_predictor(bundle, trusted_roots=[bundle])
+        parity = hypotrail_runtime.check_parity(self._predictor)
+        if parity.status != "ok":
+            raise ParityNotReproduced(
+                "The predictor of this package does not reproduce the parity rows of its "
+                f"bundle ({parity.reason}), so this package does not serve.")
 
     def predict(self, context, model_input, params=None):
         batch = self._predictor.predict(model_input)
@@ -97,6 +284,24 @@ class HypotrailPredictor(mlflow.pyfunc.PythonModel):
 
 set_model(HypotrailPredictor())
 '''
+
+
+def _without_uv_project(mlflow, empty_folder: Path) -> dict:
+    """The ``save_model`` argument that keeps the working directory's uv project out of the
+    package (round 9, R9AB-3). MLflow 3.x copies ``pyproject.toml``, ``uv.lock`` and
+    ``.python-version`` from the current directory into the package when it finds a uv
+    project there (``MLFLOW_UV_AUTO_DETECT``, on by default), and the package's allowlist then
+    refuses them: packaging failed whenever it ran from a uv project (``framework/``, an
+    exported project after ``uv lock``). ``uv_project_path`` naming an empty folder replaces
+    that detection, so nothing is copied and the package holds the same bytes from any
+    working directory; the environment variables and the process's working directory are left
+    as they are. An MLflow without the parameter has no uv detection to turn off."""
+    import inspect
+    try:
+        parameters = inspect.signature(mlflow.pyfunc.save_model).parameters
+    except (TypeError, ValueError):
+        return {}
+    return {'uv_project_path': str(empty_folder)} if 'uv_project_path' in parameters else {}
 
 
 class PackagingError(RuntimeError):
@@ -276,13 +481,46 @@ def inside(root: Path, relative: str, where: str) -> Path:
     return target
 
 
+def bytecode_in(root: Path) -> tuple[list[str], list[str]]:
+    """``(folders, files)``: the ``__pycache__`` folders and stray ``*.pyc``/``*.pyo`` files
+    under ``root``, relative, sorted."""
+    folders, files = set(), set()
+    for path in Path(root).rglob('*'):
+        parts = path.relative_to(root).parts
+        if BYTECODE_DIR in parts:
+            folders.add('/'.join(parts[:parts.index(BYTECODE_DIR) + 1]))
+        elif path.suffix.lower() in BYTECODE_SUFFIXES:
+            files.add('/'.join(parts))
+    return sorted(folders), sorted(files)
+
+
+def refuse_bytecode(root: Path, what: str = 'package') -> None:
+    """``artifact_integrity_failed`` when ``root`` holds Python bytecode (round 3): MLflow
+    imports a cached wrapper instead of the source the digests bind, and loading a package
+    in place writes such a cache. The message names what to delete."""
+    folders, files = bytecode_in(root)
+    if not folders and not files:
+        return
+    named = folders + files
+    shown = ', '.join(named[:5]) + (f' and {len(named) - 5} more' if len(named) > 5 else '')
+    raise PackagingError(
+        'artifact_integrity_failed',
+        f'A Python bytecode cache was written into the {what} ({shown}), typically by loading '
+        f'the package in place (mlflow.pyfunc.load_model on its folder). Bytecode is code no '
+        f'digest binds (Python runs a cached module instead of its source), so the {what} is '
+        f'refused.', path=named[0],
+        remediation=f'Delete {shown} (Python bytecode only), then load the package from a copy '
+                    f'of its folder, never in place.',
+        details={'bytecode_folders': folders, 'bytecode_files': files})
+
+
 def _inventory(root: Path) -> list[dict]:
     """``[{relative_path, size_bytes, sha256}]`` of every file under ``root``, sorted; a
-    symlink is refused; ``__pycache__`` folders (bytecode) are not part of a package."""
+    symlink is refused; Python bytecode (``__pycache__``, ``*.pyc``, ``*.pyo``) is refused,
+    never skipped (round 3)."""
+    refuse_bytecode(root)
     out = []
     for path in sorted(root.rglob('*')):
-        if '__pycache__' in path.relative_to(root).parts:
-            continue
         if path.is_symlink():
             raise PackagingError('artifact_integrity_failed',
                                  'A package may not contain a symbolic link.',
@@ -363,7 +601,8 @@ def batch_frame(batch):
 
 def compare(left, right, rtol: float, atol: float) -> dict:
     """``{equal, max_abs_diff, reason}``: same columns and rows; floats within
-    ``|l - r| <= atol + rtol * |r|`` with NaN at the same places; other values equal."""
+    ``|l - r| <= atol + rtol * |r|`` with NaN, and infinities of the same sign, at the same
+    places; other values equal."""
     np = _import('numpy', 'numpy')
     if list(left.columns) != list(right.columns):
         return {'equal': False, 'max_abs_diff': None, 'reason': 'columns_differ'}
@@ -377,9 +616,10 @@ def compare(left, right, rtol: float, atol: float) -> dict:
             nan_a, nan_b = np.isnan(a), np.isnan(b)
             if not np.array_equal(nan_a, nan_b):
                 return {'equal': False, 'max_abs_diff': None, 'reason': 'nan_positions_differ'}
-            if np.isinf(a).any() or np.isinf(b).any():
-                if not np.array_equal(a[np.isinf(a)], b[np.isinf(b)]):
-                    return {'equal': False, 'max_abs_diff': None, 'reason': 'infinities_differ'}
+            # Infinities must sit at the same rows with the same sign (swapped rows differ).
+            inf_a, inf_b = np.isinf(a), np.isinf(b)
+            if not np.array_equal(inf_a, inf_b) or not np.array_equal(a[inf_a], b[inf_b]):
+                return {'equal': False, 'max_abs_diff': None, 'reason': 'infinities_differ'}
             mask = ~(nan_a | np.isinf(a))
             if mask.any():
                 diff = np.abs(a[mask] - b[mask])
@@ -469,23 +709,83 @@ class ArtifactPackager:
         return {'inputs': inputs, 'outputs': outputs, 'output_kind': output['kind'],
                 'unit': output.get('unit'), 'positive_label': output.get('positive_label')}
 
-    def _requirements(self, manifest: Mapping) -> list[str]:
-        runtime = manifest.get('runtime') or {}
+    def _requirements(self, manifest: Mapping, mlflow_version: str | None = None) -> list[str]:
+        """The pinned requirements of the package: the bundle's semantic dependencies,
+        ``mlflow-skinny`` at ``mlflow_version`` (the installed MLflow when it is None), and the
+        bundle's own runtime wheel by its path inside the package (:func:`runtime_requirement`,
+        round 5). Every pin is a distribution name and a version, never a URL or an option;
+        the runtime is never named from an index."""
         environment = manifest.get('environment') or {}
-        lines = [f'{d["distribution"]}=={d["version"]}'
-                 for d in environment.get('semantic_dependencies') or []
-                 if isinstance(d, Mapping) and d.get('distribution') and d.get('version')]
-        if runtime.get('distribution') and runtime.get('version'):
-            lines.append(f'{runtime["distribution"]}=={runtime["version"]}')
-        mlflow = _import('mlflow', 'the azureml extra (mlflow-skinny)')
-        lines.append(f'mlflow-skinny=={mlflow.__version__}')
-        return sorted(set(lines))
+        pins = [(d.get('distribution'), d.get('version'))
+                for d in environment.get('semantic_dependencies') or []
+                if isinstance(d, Mapping) and d.get('distribution') != RUNTIME_DISTRIBUTION]
+        if mlflow_version is None:
+            mlflow_version = _import('mlflow', 'the azureml extra (mlflow-skinny)').__version__
+        pins.append(('mlflow-skinny', mlflow_version))
+        lines = set()
+        for name, version in pins:
+            if not (isinstance(name, str) and _NAME.match(name) and isinstance(version, str)
+                    and _VERSION.match(version)):
+                raise PackagingError('contract_invalid', 'A pinned dependency of the package is '
+                                     'not a distribution name and a version.',
+                                     path='environment.semantic_dependencies',
+                                     details={'distribution': str(name)[:100],
+                                              'version': str(version)[:64]})
+            lines.add(f'{name}=={version}')
+        lines.add(runtime_requirement(manifest))
+        return sorted(lines)
+
+    def environment(self, manifest: Mapping, mlflow_version: str | None = None) -> dict:
+        """The package's environment (``python``, ``pip_requirements``, ``mlflow``): the
+        bundle's pinned environment and the MLflow version of the package."""
+        python = (manifest.get('environment') or {}).get('python')
+        if not isinstance(python, str) or not _PYTHON.match(python):
+            raise PackagingError('contract_invalid', 'The bundle does not name its Python '
+                                 'version as major.minor.micro.', path='environment.python',
+                                 details={'python': str(python)[:40]})
+        if mlflow_version is None:
+            mlflow_version = _import('mlflow', 'the azureml extra (mlflow-skinny)').__version__
+        return {'python': python, 'pip_requirements': self._requirements(manifest, mlflow_version),
+                'mlflow': mlflow_version}
 
     def _native_parity(self, bundle_dir: Path, spec: ParitySpec):
         features, expected = self._parity_frames(bundle_dir, spec)
-        predictor = self.runtime.load_predictor(bundle_dir, trusted_roots=[bundle_dir])
+        root = Path(bundle_dir).resolve()
+        predictor = self.runtime.load_predictor(root, trusted_roots=[root])
         native = batch_frame(predictor.predict(features.copy()))
         return features, expected, native
+
+    # The contract document of a descriptor and its content id (round 3, R3-A2).
+    def _contract(self, document: Mapping):
+        runtime = self.runtime
+        try:
+            return runtime.parse(runtime.PackageDescriptor, document)
+        except Exception as error:      # noqa: BLE001 - the runtime's refusal is the cause
+            raise PackagingError('artifact_integrity_failed', 'The package descriptor is not a '
+                                 'hypotrail.package_descriptor/1 document.',
+                                 path=DESCRIPTOR_FILE,
+                                 remediation='Capture the predictor again; never edit a '
+                                             'package.',
+                                 details={'error': f'{type(error).__name__}: {error}'[:300]}
+                                 ) from error
+
+    def content_id(self, document: Mapping) -> str:
+        """The package's ``artifact_id``: the runtime's content id of its descriptor (the
+        contract document without ``artifact_id``), the rule the runtime checks too."""
+        return self.runtime.canonical.artifact_id(self._contract(document),
+                                                  exclude=('artifact_id',))
+
+    def _describe(self, predictor_id, files, signature, environment, parity
+                  ) -> PackageDescriptor:
+        draft = PackageDescriptor(FORMAT, '0' * 64, predictor_id, files, signature,
+                                  environment, parity,
+                                  extensions={DESCRIPTOR_COPY: DESCRIPTOR_FILE})
+        return replace(draft, artifact_id=self.content_id(draft.to_contract()))
+
+    def descriptor_bytes(self, descriptor: PackageDescriptor) -> bytes:
+        """The canonical bytes of the contract document, as ``capture_predictor`` writes the
+        descriptor beside the package: the copy inside the package is the same document."""
+        return self.runtime.canonical.dumps(self._contract(descriptor.to_contract())) + b'\n'
 
     def package(self, native_bundle_dir, output_dir, parity_spec: ParitySpec | None = None
                 ) -> PackageDescriptor:
@@ -496,6 +796,8 @@ class ArtifactPackager:
         bundle, manifest, contract = self._documents(bundle_dir)
         spec = _spec(parity_spec, bundle)
         signature = self.signature(manifest, contract)
+        mlflow = _import('mlflow', 'the azureml extra (mlflow-skinny)')
+        environment = self.environment(manifest, mlflow.__version__)
         features, expected, native = self._native_parity(bundle_dir, spec)
         first = compare(native, expected, spec.rtol, spec.atol)
         if not first['equal']:
@@ -506,7 +808,6 @@ class ArtifactPackager:
         if out.exists() and (not out.is_dir() or any(out.iterdir())):
             raise PackagingError('destination_not_empty', 'The package folder is not empty.',
                                  path=str(out))
-        mlflow = _import('mlflow', 'the azureml extra (mlflow-skinny)')
         out.parent.mkdir(parents=True, exist_ok=True)
         staging = Path(tempfile.mkdtemp(prefix=f'.{out.name}.', dir=out.parent))
         try:
@@ -516,35 +817,37 @@ class ArtifactPackager:
             bundle_copy = staging / NATIVE_ARTIFACT
             shutil.copytree(bundle_dir, bundle_copy,
                             ignore=_skip(bundle_dir, bundle, out, staging))
+            self._native_document(bundle_copy)
+            no_uv_project = staging / 'no-uv-project'
+            no_uv_project.mkdir()
             mlflow.pyfunc.save_model(
                 str(package_dir), python_model=str(wrapper),
                 artifacts={NATIVE_ARTIFACT: str(bundle_copy)},
                 signature=_mlflow_signature(signature),
-                pip_requirements=self._requirements(manifest))
-            _neutralise_code_path(package_dir)
-            second = self._pyfunc_parity(package_dir, features, native, spec)
+                pip_requirements=environment['pip_requirements'],
+                **_without_uv_project(mlflow, no_uv_project))
+            _write_mlmodel(package_dir, signature, environment)
+            write_environment_files(package_dir, environment)
+            refuse_layout(package_dir, with_descriptor=False)
+            self._check_embedded(bundle_dir, bundle, package_dir, signature, environment)
+            files = _inventory(package_dir)
+            second = self._pyfunc_parity(package_dir, files, features, native, spec)
             if not second['equal']:
                 raise PackagingError('artifact_integrity_failed',
                                      'The pyfunc package does not reproduce the native '
                                      'predictions; nothing was packaged.',
                                      details={'comparison': 'pyfunc_vs_native', **second})
-            files = _inventory(package_dir)
-            environment = {'python': (manifest.get('environment') or {}).get('python'),
-                           'pip_requirements': self._requirements(manifest),
-                           'mlflow': mlflow.__version__}
+            if _inventory(package_dir) != files:
+                raise PackagingError('artifact_integrity_failed', 'The package changed while '
+                                     'it was checked; nothing was packaged.')
             parity = ParityResult('passed', int(len(features)), list(native.columns),
                                   spec.rtol, spec.atol,
                                   [{'left': 'native', 'right': 'expected', **first},
                                    {'left': 'pyfunc', 'right': 'native', **second}]).to_dict()
-            content = {'format': FORMAT, 'predictor_id': manifest.get('predictor_id'),
-                       'files': files, 'signature': signature, 'environment': environment,
-                       'packager_version': PACKAGER_VERSION}
-            artifact_id = hashlib.sha256(canonical_bytes(content)).hexdigest()
-            descriptor = PackageDescriptor(FORMAT, artifact_id, manifest.get('predictor_id'),
-                                           files, signature, environment, parity)
-            (package_dir / DESCRIPTOR_FILE).write_bytes(
-                json.dumps(descriptor.to_dict(), indent=2, sort_keys=True,
-                           ensure_ascii=False).encode('utf-8') + b'\n')
+            descriptor = self._describe(manifest.get('predictor_id'), files, signature,
+                                        environment, parity)
+            (package_dir / DESCRIPTOR_FILE).write_bytes(self.descriptor_bytes(descriptor))
+            refuse_layout(package_dir)
             if out.exists():
                 out.rmdir()
             os.rename(package_dir, out)
@@ -552,32 +855,214 @@ class ArtifactPackager:
         finally:
             shutil.rmtree(staging, ignore_errors=True)
 
-    def _pyfunc_parity(self, package_dir: Path, features, native, spec: ParitySpec) -> dict:
+    def _native_document(self, bundle_copy: Path) -> None:
+        """The bundle document of the copy embedded in a package names the native predictor
+        only (round 5, R5-A2): when the bundle being packaged already holds an evidence
+        binding or packages (left out of the copy by :func:`_skip`), the copy's document is
+        rewritten without them, through the runtime's contract model; otherwise its bytes are
+        kept."""
+        path = bundle_copy / BUNDLE_DOCUMENT
+        document = _read_json(path, BUNDLE_DOCUMENT)
+        if document.get('evidence_binding_path') is None and \
+                not document.get('optional_packages'):
+            return
+        native = _native_files(document)
+        rewritten = {**document, 'evidence_binding_path': None, 'optional_packages': [],
+                     'files': [f for f in document.get('files') or []
+                               if isinstance(f, Mapping) and f.get('relative_path') in native]}
+        model = self.runtime.parse(self.runtime.PredictorBundle, rewritten)
+        path.write_bytes(self.runtime.canonical.dumps(model) + b'\n')
+
+    def _pyfunc_parity(self, package_dir: Path, listed: list, features, native,
+                       spec: ParitySpec) -> dict:
+        """Load the package with MLflow and compare its predictions with the native ones.
+
+        Round 3 (R3-A1/A4): the package is loaded from a fresh temporary copy, checked
+        against ``listed`` first, with bytecode neither read nor written
+        (``sys.pycache_prefix`` on an empty temporary folder, ``sys.dont_write_bytecode``):
+        nothing is read from, or written into, the package folder or the bundle."""
         mlflow = _import('mlflow', 'the azureml extra (mlflow-skinny)')
-        # Loading imports the wrapper from the package folder: no bytecode may be written
-        # there (it would hold a local path and change the package's files).
-        previous = sys.dont_write_bytecode
-        sys.dont_write_bytecode = True
-        try:
-            model = mlflow.pyfunc.load_model(str(package_dir))
-            result = model.predict(features.copy())
-        finally:
-            sys.dont_write_bytecode = previous
-            sys.modules.pop(Path(WRAPPER_FILE).stem, None)
+        # Imported before bytecode is disabled, so MLflow itself does not recompile.
+        importlib.import_module('mlflow.pyfunc')
+        importlib.import_module('mlflow.pyfunc.loaders.code_model')
+        expected = [f for f in listed if f['relative_path'] != DESCRIPTOR_FILE]
+        with tempfile.TemporaryDirectory(prefix='hypotrail-pyfunc-') as scratch:
+            copy = Path(scratch) / 'package'
+            shutil.copytree(package_dir, copy, symlinks=True)
+            found = [f for f in _inventory(copy) if f['relative_path'] != DESCRIPTOR_FILE]
+            if found != expected:
+                raise PackagingError('artifact_integrity_failed', 'The package changed while '
+                                     'it was verified.', path=str(Path(package_dir).name),
+                                     remediation='Verify the package again; never edit it.')
+            cache = Path(scratch) / 'no-bytecode'
+            cache.mkdir()
+            previous = (sys.dont_write_bytecode, sys.pycache_prefix)
+            modules = set(sys.modules)
+            sys.dont_write_bytecode, sys.pycache_prefix = True, str(cache)
+            try:
+                model = mlflow.pyfunc.load_model(str(copy))
+                result = model.predict(features.copy())
+            finally:
+                sys.dont_write_bytecode, sys.pycache_prefix = previous
+                for name in set(sys.modules) - modules:
+                    if name.startswith('code_model_') or name == Path(WRAPPER_FILE).stem:
+                        sys.modules.pop(name, None)
         pd = _import('pandas', 'pandas')
         if not isinstance(result, pd.DataFrame):
             result = pd.DataFrame({native.columns[0]: list(result)})
         return compare(result.reset_index(drop=True), native, spec.rtol, spec.atol)
 
+    def _check_embedded(self, bundle_dir: Path, bundle: Mapping, package: Path,
+                        signature: Mapping, environment: Mapping) -> None:
+        """The package serves the native bundle it was made from (review A1, round 2): the
+        wrapper is this packager's; ``MLmodel`` is, byte for byte, the document this packager
+        writes for the bundle's signature and the package's pinned ``environment``
+        (:func:`mlmodel_bytes`, round 4, R4-A1: every top-level key and the whole
+        ``python_function`` block, so a ``data`` key or any key not generated is refused);
+        and the bundle under ``artifacts/native_bundle`` verifies on its own and is
+        byte-identical to the native one (same predictor id, manifest, recipe, data contract
+        and payload; exactly the files the predictor id binds, with the same digests). The
+        package is outside the predictor id, so parity on the bundle's rows alone would
+        accept another model that agrees on them. ``artifact_integrity_failed`` otherwise."""
+        def refuse(message, **details):
+            raise PackagingError('artifact_integrity_failed', message, path=str(package.name),
+                                 remediation='Capture the predictor again; never edit a '
+                                             'package.', details=details)
+        wrapper = inside(package, WRAPPER_FILE, 'package wrapper')
+        if not wrapper.is_file() or wrapper.read_bytes() != WRAPPER_SOURCE.encode('utf-8'):
+            refuse('The package wrapper is not the one this packager writes.',
+                   file=WRAPPER_FILE)
+        expected = mlmodel_bytes(signature, environment)
+        path = inside(package, MLMODEL_FILE, MLMODEL_FILE)
+        found = path.read_bytes() if path.is_file() else None
+        if found != expected:
+            import yaml
+            try:
+                parsed = yaml.safe_load(found.decode('utf-8')) if found is not None else None
+            except (UnicodeDecodeError, yaml.YAMLError):
+                parsed = None
+            differences = _mlmodel_differences(parsed, mlmodel_document(signature,
+                                                                        environment))
+            shown = [k for name in ('unexpected', 'missing', 'changed')
+                     for k in differences[name]]
+            refuse('The package MLmodel is not the document this packager writes for the '
+                   'native bundle' + (f' ({", ".join(shown[:5])} differ)' if shown else '')
+                   + ': MLflow would load what it names instead of the checked wrapper and '
+                   'embedded bundle.', file=MLMODEL_FILE, **differences)
+        embedded = inside(package, f'artifacts/{NATIVE_ARTIFACT}', 'native bundle')
+        try:
+            self.runtime.verify_bundle(embedded)
+        except Exception as error:      # noqa: BLE001 - the runtime's refusal is the cause
+            refuse('The native bundle embedded in the package does not verify.',
+                   error=f'{type(error).__name__}: {error}'[:300])
+        inner, inner_manifest, _ = self._documents(embedded)
+        _, manifest, _ = self._documents(bundle_dir)
+        for key in ('predictor_id', 'recipe_sha256', 'data_contract_sha256', 'payload_files'):
+            if inner_manifest.get(key) != manifest.get(key):
+                refuse('The native bundle embedded in the package is another predictor '
+                       f'({key} differs).', field=key)
+        if inner.get('optional_packages'):
+            refuse('The native bundle embedded in the package holds packages of its own.')
+        if _files(inner) != _native_files(bundle):
+            refuse('The native bundle embedded in the package does not hold exactly the '
+                   'files of the native bundle.')
+        # Round 5 (R5-A2): no evidence, and no file but the listed ones and the document.
+        if inner.get('evidence_binding_path') is not None:
+            refuse('The native bundle embedded in the package names an evidence binding: '
+                   'evidence belongs to the bundle on disk, never to a package.')
+        held = sorted(p.relative_to(embedded).as_posix() for p in embedded.rglob('*')
+                      if p.is_file())
+        if held != sorted([*_files(inner), BUNDLE_DOCUMENT]):
+            refuse('The native bundle embedded in the package holds files it does not list.',
+                   files=sorted(set(held) - set(_files(inner)) - {BUNDLE_DOCUMENT})[:20])
+
+    def _check_descriptor(self, package: Path, descriptor: Mapping, manifest: Mapping,
+                          signature: Mapping) -> dict:
+        """The descriptor inside the package (round 3, R3-A2): a contract document of this
+        packager's version, its ``artifact_id`` the content id of its files, signature,
+        environment and parity, its signature the bundle's, and its environment the bundle's
+        pinned environment, whose files the package holds byte for byte. Returns that
+        environment."""
+        def refuse(message, path=DESCRIPTOR_FILE, **details):
+            raise PackagingError('artifact_integrity_failed', message, path=path,
+                                 remediation='Capture the predictor again; never edit a '
+                                             'package.', details=details)
+        model = self._contract(descriptor)
+        extensions = descriptor.get('extensions') or {}
+        if extensions.get('hypotrail.packager_version') != PACKAGER_VERSION:
+            raise PackagingError('schema_version_unsupported', 'The package was written by '
+                                 'another version of the MLflow packager.',
+                                 path=DESCRIPTOR_FILE,
+                                 remediation='Capture the predictor again with this version '
+                                             '(the package is derived from the bundle).',
+                                 details={'found': str(extensions.get(
+                                     'hypotrail.packager_version'))[:20],
+                                     'expected': PACKAGER_VERSION})
+        if descriptor.get('format') != FORMAT or extensions.get(DESCRIPTOR_COPY) != \
+                DESCRIPTOR_FILE or extensions.get('hypotrail.native_bundle') != \
+                f'artifacts/{NATIVE_ARTIFACT}':
+            refuse('The package descriptor does not describe this packager\'s package.')
+        content = self.runtime.canonical.artifact_id(model, exclude=('artifact_id',))
+        if content != descriptor.get('artifact_id'):
+            refuse('The package artifact id is not the content id of its descriptor.',
+                   recorded=str(descriptor.get('artifact_id'))[:64], found=content)
+        if descriptor.get('signature') != dict(signature):
+            refuse('The package descriptor signature is not the signature of the native '
+                   'bundle.')
+        recorded = descriptor.get('environment') if isinstance(
+            descriptor.get('environment'), Mapping) else {}
+        version = recorded.get('mlflow')
+        if not isinstance(version, str) or not _VERSION.match(version):
+            refuse('The package descriptor does not name its MLflow version.')
+        expected = self.environment(manifest, version)
+        if dict(recorded) != expected:
+            refuse('The package environment is not the pinned environment of the native '
+                   'bundle.', expected=expected)
+        for name, data in environment_files(expected).items():
+            path = inside(package, name, name)
+            if not path.is_file() or path.read_bytes() != data:
+                refuse(f'{name} is not the environment file this packager writes for the '
+                       'pinned environment of the native bundle.', path=name)
+        return expected
+
     def verify(self, native_bundle_dir, package_dir, parity_spec: ParitySpec | None = None
                ) -> ParityResult:
-        """Check an existing package against its native bundle: file hashes of the
-        descriptor, native parity, then pyfunc parity. ``failed`` with a reason, never an
-        exception for a mismatch; an unreadable package is ``artifact_integrity_failed``."""
-        bundle_dir, package = Path(native_bundle_dir), Path(package_dir)
+        """Check an existing package against its native bundle: no bytecode, exactly the
+        allowlisted files (:func:`refuse_layout`, round 4), file hashes of the descriptor, the
+        descriptor itself (:meth:`_check_descriptor`), the wrapper, ``MLmodel`` regenerated
+        and compared byte for byte, and the embedded native bundle (:meth:`_check_embedded`),
+        native parity, then pyfunc parity on a fresh temporary copy. Nothing from the package
+        runs before these checks pass.
+        ``failed`` with a reason, never an exception, for a parity mismatch or a changed
+        file list; every other failure is a :class:`PackagingError`: the runtime's refusals
+        keep their contract code, anything else (an unreadable package, one that would
+        serve another bundle, an MLflow error) is ``artifact_integrity_failed``."""
+        try:
+            return self._verify(Path(native_bundle_dir), Path(package_dir), parity_spec)
+        except PackagingError:
+            raise
+        except Exception as error:      # noqa: BLE001 - converted, never swallowed
+            code, to_dict = getattr(error, 'code', None), getattr(error, 'to_dict', None)
+            if isinstance(code, str) and callable(to_dict):      # the runtime's ContractError
+                found = dict(to_dict())
+                raise PackagingError(code, str(found.get('message') or error),
+                                     path=found.get('path'),
+                                     remediation=found.get('remediation'),
+                                     details={**dict(found.get('details') or {}),
+                                              'contract_code': code}) from error
+            raise PackagingError('artifact_integrity_failed', 'The package could not be '
+                                 f'verified: {type(error).__name__}: {error}'[:600],
+                                 path=Path(package_dir).name,
+                                 remediation='Capture the predictor again; never edit a '
+                                             'package.',
+                                 details={'error_type': type(error).__name__}) from error
+
+    def _verify(self, bundle_dir: Path, package: Path, parity_spec) -> ParityResult:
         self.runtime.verify_bundle(bundle_dir)
-        bundle, manifest, _ = self._documents(bundle_dir)
+        bundle, manifest, contract = self._documents(bundle_dir)
         spec = _spec(parity_spec, bundle)
+        refuse_bytecode(package)
+        refuse_layout(package)
         descriptor = _read_json(package / DESCRIPTOR_FILE, DESCRIPTOR_FILE)
         listed = descriptor.get('files')
         if descriptor.get('predictor_id') != manifest.get('predictor_id'):
@@ -587,15 +1072,190 @@ class ArtifactPackager:
         if actual != listed:
             return ParityResult('failed', None, [], spec.rtol, spec.atol, [],
                                 'package_files_changed')
+        signature = self.signature(manifest, contract)
+        environment = self._check_descriptor(package, descriptor, manifest, signature)
+        self._check_embedded(bundle_dir, bundle, package, signature, environment)
         features, expected, native = self._native_parity(bundle_dir, spec)
         first = compare(native, expected, spec.rtol, spec.atol)
-        second = self._pyfunc_parity(package, features, native, spec)
+        second = self._pyfunc_parity(package, actual, features, native, spec)
         status = 'passed' if first['equal'] and second['equal'] else 'failed'
         reason = None if status == 'passed' else (first['reason'] or second['reason'])
         return ParityResult(status, int(len(features)), list(native.columns), spec.rtol,
                             spec.atol, [{'left': 'native', 'right': 'expected', **first},
                                         {'left': 'pyfunc', 'right': 'native', **second}],
                             reason)
+
+
+def environment_files(environment: Mapping) -> dict[str, bytes]:
+    """The environment files of a package for its pinned ``environment`` (round 3, R3-A2):
+    ``requirements.txt`` (one pin per line), ``conda.yaml`` and ``python_env.yaml`` in the
+    layout MLflow reads. Written by the packager, not by the installed MLflow, so their
+    bytes depend on the bundle only (MLflow would add the local pip and setuptools
+    versions), and regenerated by :meth:`ArtifactPackager.verify`. The runtime is the
+    bundle's own wheel by its path inside the package (round 5, R5-A1): MLflow installs
+    ``requirements.txt`` with the package folder as working directory, and conda installs the
+    ``pip`` section of ``conda.yaml`` from the folder of that file."""
+    pins = list(environment['pip_requirements'])
+    python = environment['python']
+    requirements = ''.join(f'{pin}\n' for pin in pins)
+    conda = ('channels:\n- conda-forge\ndependencies:\n'
+             f'- python={python}\n- pip\n- pip:\n'
+             + ''.join(f'  - {pin}\n' for pin in pins) + 'name: mlflow-env\n')
+    python_env = (f'python: {python}\nbuild_dependencies:\n- pip\n- setuptools\n- wheel\n'
+                  'dependencies:\n- -r requirements.txt\n')
+    return {'requirements.txt': requirements.encode('utf-8'),
+            'conda.yaml': conda.encode('utf-8'),
+            'python_env.yaml': python_env.encode('utf-8')}
+
+
+def runtime_requirement(manifest: Mapping) -> str:
+    """The requirement line of the bundle's runtime (round 5, R5-A1): the path of its own
+    wheel inside the package, ``./artifacts/native_bundle/runtime/hypotrail_runtime-<version>-
+    py3-none-any.whl``, relative to the package folder. The manifest must name the runtime
+    ``hypotrail-runtime`` with a wheel of that exact name and version and its digest; the
+    wheel's bytes are checked against that digest by ``verify_bundle``, and the installed
+    runtime against the wheel by the wrapper and by ``load_predictor``."""
+    runtime = manifest.get('runtime') or {}
+    rel, version = runtime.get('wheel_relative_path'), runtime.get('version')
+    match = _RUNTIME_WHEEL.match(rel) if isinstance(rel, str) else None
+    if runtime.get('distribution') != RUNTIME_DISTRIBUTION or match is None or \
+            match.group(1) != version or not isinstance(version, str) or \
+            not _VERSION.match(version) or not isinstance(runtime.get('wheel_sha256'), str):
+        raise PackagingError('contract_invalid', 'The bundle does not bind its runtime as a '
+                             'hypotrail-runtime wheel of its own (runtime/hypotrail_runtime-'
+                             '<version>-py3-none-any.whl, with its digest); the package would '
+                             'have to name the runtime from an index, by a version that does '
+                             'not identify its code.', path='runtime.wheel_relative_path',
+                             remediation='Capture the predictor again with hypotrail_runtime.',
+                             details={'wheel_relative_path': str(rel)[:120],
+                                      'version': str(version)[:64]})
+    return f'./{EMBEDDED_BUNDLE}/{rel}'
+
+
+def write_environment_files(package_dir: Path, environment: Mapping) -> None:
+    for name, data in environment_files(environment).items():
+        (Path(package_dir) / name).write_bytes(data)
+
+
+def _signature_json(columns) -> str:
+    """One side of an MLmodel signature, as MLflow serialises a ``Schema`` of ``ColSpec``:
+    a JSON list of ``{type, name, required}`` (ASCII, MLflow's separators)."""
+    return json.dumps([{'type': c['type'], 'name': c['name'], 'required': bool(c['required'])}
+                       for c in columns])
+
+
+def mlmodel_document(signature: Mapping, environment: Mapping) -> dict:
+    """The ``MLmodel`` document of a package (round 4, R4-A1): the ``python_function``
+    flavor that loads this packager's wrapper (MLflow "models from code") on the embedded
+    native bundle with the packager's environment files, the bundle's signature, the
+    package's Python and MLflow versions. Nothing else: no ``data``, ``code``,
+    ``model_config`` or other key MLflow's loader would follow, no clock, random id or local
+    path, so the document depends on the bundle and the pinned environment only."""
+    return {'flavors': {'python_function': {
+                'artifacts': {NATIVE_ARTIFACT: {'path': EMBEDDED_BUNDLE, 'uri': NATIVE_ARTIFACT}},
+                'code': None, 'env': dict(MLMODEL_ENV), 'loader_module': CODE_LOADER,
+                'model_code_path': WRAPPER_FILE, 'python_version': environment['python'],
+                'streamable': False}},
+            'mlflow_version': environment['mlflow'],
+            'signature': {'inputs': _signature_json(signature['inputs']),
+                          'outputs': _signature_json(signature['outputs']), 'params': None}}
+
+
+def mlmodel_bytes(signature: Mapping, environment: Mapping) -> bytes:
+    """The bytes of ``MLmodel`` (round 4, R4-A1): :func:`mlmodel_document` as indented JSON
+    with sorted keys, ASCII only, which is YAML that MLflow reads (``yaml.safe_load``).
+    Written by :meth:`ArtifactPackager.package` and regenerated by ``verify``, which
+    compares the bytes."""
+    return (json.dumps(mlmodel_document(signature, environment), indent=2, sort_keys=True,
+                       ensure_ascii=True, allow_nan=False) + '\n').encode('ascii')
+
+
+def _mlmodel_differences(found, expected: Mapping, prefix: str = '') -> dict:
+    """``{unexpected, missing, changed}``: dotted keys of ``found`` (a parsed ``MLmodel``)
+    against the document the packager writes, for the refusal's details."""
+    out = {'unexpected': [], 'missing': [], 'changed': []}
+    if not isinstance(found, Mapping):
+        out['changed'].append(prefix or '<document>')
+        return out
+    for key in sorted(set(found) | set(expected), key=str):
+        where = f'{prefix}{key}'
+        if key not in expected:
+            out['unexpected'].append(where)
+        elif key not in found:
+            out['missing'].append(where)
+        elif isinstance(expected[key], Mapping) and isinstance(found[key], Mapping):
+            for name, items in _mlmodel_differences(found[key], expected[key],
+                                                    where + '.').items():
+                out[name] += items
+        elif found[key] != expected[key]:
+            out['changed'].append(where)
+    return out
+
+
+def layout_issues(root: Path, *, with_descriptor: bool = True) -> dict:
+    """``{unexpected, missing}``: the paths under a package folder that the allowlist of round
+    4 (R4-A1) does not admit (any file or folder but :data:`PACKAGE_FILES`, the folders of
+    :data:`PACKAGE_FOLDERS` and what lies under ``artifacts/native_bundle/``), and the
+    allowlisted files that are absent (the descriptor copy only when ``with_descriptor``;
+    the embedded bundle by its ``predictor_bundle.json``). Under the embedded bundle, an
+    ``evidence/`` or ``packages/`` folder and anything in it are unexpected (round 5)."""
+    root = Path(root)
+    unexpected = []
+    for path in sorted(root.rglob('*')):
+        rel = path.relative_to(root).as_posix()
+        if rel.startswith(EMBEDDED_BUNDLE + '/'):
+            # Round 5 (R5-A2): the embedded bundle carries no evidence and no package.
+            top = rel[len(EMBEDDED_BUNDLE) + 1:].split('/')[0]
+            if top in NOT_EMBEDDED:
+                unexpected.append(rel + ('/' if path.is_dir() and not path.is_symlink()
+                                         else ''))
+            continue
+        if path.is_dir() and not path.is_symlink():
+            if rel not in PACKAGE_FOLDERS:
+                unexpected.append(rel + '/')
+        elif rel not in PACKAGE_FILES:
+            unexpected.append(rel)
+    required = [*PACKAGE_FILES, f'{EMBEDDED_BUNDLE}/{BUNDLE_DOCUMENT}']
+    missing = [rel for rel in required if (with_descriptor or rel != DESCRIPTOR_FILE)
+               and not (root / rel).is_file()]
+    return {'unexpected': unexpected, 'missing': missing}
+
+
+def refuse_layout(root: Path, *, with_descriptor: bool = True) -> None:
+    """``artifact_integrity_failed`` unless the package folder holds exactly the files of
+    the allowlist (:func:`layout_issues`). MLflow's loader follows keys of ``MLmodel`` to
+    other files of the package, so a file no check reads is never admitted."""
+    issues = layout_issues(root, with_descriptor=with_descriptor)
+    if not issues['unexpected'] and not issues['missing']:
+        return
+    named = issues['unexpected'] + issues['missing']
+    shown = ', '.join(named[:5]) + (f' and {len(named) - 5} more' if len(named) > 5 else '')
+    raise PackagingError(
+        'artifact_integrity_failed',
+        f'The package does not hold exactly the files this packager writes ({shown}): only '
+        f'{", ".join(PACKAGE_FILES)} and the embedded native bundle under {EMBEDDED_BUNDLE}/ '
+        f'(without {EVIDENCE_DIR}/ or {PACKAGES_DIR}/) are allowed, since MLflow could load '
+        'any other file of the package.',
+        path=named[0],
+        remediation='Capture the predictor again; never add, remove or edit a file of a '
+                    'package.',
+        details={'unexpected': issues['unexpected'], 'missing': issues['missing'],
+                 'allowed': [*PACKAGE_FILES, EMBEDDED_BUNDLE + '/']})
+
+
+def _signature_document(value) -> dict:
+    """An MLmodel ``signature`` with its JSON strings decoded, for comparison."""
+    if not isinstance(value, Mapping):
+        return {'unreadable': str(value)[:200]}
+    out = {}
+    for key, item in value.items():
+        if isinstance(item, str):
+            try:
+                item = json.loads(item)
+            except ValueError:
+                item = {'unreadable': item[:200]}
+        out[str(key)] = item
+    return out
 
 
 def _spec(parity_spec, bundle: Mapping) -> ParitySpec:
@@ -608,12 +1268,30 @@ def _spec(parity_spec, bundle: Mapping) -> ParitySpec:
     return ParitySpec.from_bundle(bundle)
 
 
+def _files(bundle: Mapping) -> dict:
+    """``{relative_path: sha256}`` of the files a bundle document lists."""
+    return {f.get('relative_path'): f.get('sha256') for f in bundle.get('files') or []
+            if isinstance(f, Mapping)}
+
+
+def _native_files(bundle: Mapping) -> dict:
+    """The listed files of a bundle that belong to the native predictor: every file but
+    those of its optional packages (``packages/<format>/...`` and their descriptors)."""
+    owned = [p['relative_path'] for p in bundle.get('optional_packages') or []
+             if isinstance(p, Mapping) and isinstance(p.get('relative_path'), str)]
+    return {rel: sha for rel, sha in _files(bundle).items()
+            if not any(rel == f'{o}.descriptor.json' or rel.startswith(o + '/')
+                       for o in owned)}
+
+
 def _skip(bundle_dir: Path, bundle: Mapping, out: Path, staging: Path):
     """``copytree`` filter of the native bundle copied into a package: the package being
-    written (``out``, when it lies inside the bundle), the packager's staging folder, and
-    the bundle's existing optional packages are left out, so a package never contains
-    itself or another package."""
+    written (``out``, when it lies inside the bundle), the packager's staging folder, the
+    bundle's existing optional packages, and (round 5, R5-A2) its whole ``evidence/`` and
+    ``packages/`` folders are left out, so a package never contains itself, another package
+    or evidence."""
     excluded = {Path(os.path.realpath(p)) for p in (out, staging)}
+    excluded |= {Path(os.path.realpath(Path(bundle_dir) / name)) for name in NOT_EMBEDDED}
     for package in bundle.get('optional_packages') or []:
         if isinstance(package, Mapping) and isinstance(package.get('relative_path'), str):
             excluded.add(Path(os.path.realpath(bundle_dir / package['relative_path'])))
@@ -634,21 +1312,38 @@ def _mlflow_signature(signature: Mapping):
                         for c in signature['outputs']]))
 
 
-def _neutralise_code_path(package_dir: Path) -> None:
-    """MLflow records the absolute paths of the wrapper source (``model_code_path``) and of
-    each artifact's origin (``artifacts.<name>.uri``) in ``MLmodel``; keep only names, so
-    the package carries no local path of the machine that wrote it. Loading uses the
-    copies inside the package (MLflow joins the base name of ``model_code_path`` to the
-    package folder, and ``artifacts.<name>.path``)."""
+def _write_mlmodel(package_dir: Path, signature: Mapping, environment: Mapping) -> None:
+    """Replace the ``MLmodel`` MLflow wrote with the packager's own (:func:`mlmodel_bytes`,
+    round 4). MLflow's records the clock, a random model id, the local Python version and
+    the absolute paths of the wrapper source and of each artifact's origin. Its loading keys
+    are checked first, so an MLflow version that would load the package otherwise is
+    refused rather than silently overwritten; loading the package for parity then proves
+    the packager's document loads."""
     import yaml
-    path = package_dir / 'MLmodel'
-    document = yaml.safe_load(path.read_text(encoding='utf-8'))
-    pyfunc = document['flavors']['python_function']
-    if 'model_code_path' in pyfunc:
-        pyfunc['model_code_path'] = WRAPPER_FILE
-    for name, artifact in (pyfunc.get('artifacts') or {}).items():
-        artifact['uri'] = name
-    path.write_text(yaml.safe_dump(document, sort_keys=True), encoding='utf-8')
+    path = Path(package_dir) / MLMODEL_FILE
+    try:
+        written = yaml.safe_load(path.read_text(encoding='utf-8'))
+        pyfunc = written['flavors']['python_function']
+        located = (sorted(written['flavors']), pyfunc.get('loader_module'),
+                   Path(str(pyfunc.get('model_code_path'))).name, sorted(pyfunc.get('artifacts')
+                                                                     or {}),
+                   (pyfunc.get('artifacts') or {}).get(NATIVE_ARTIFACT, {}).get('path'),
+                   pyfunc.get('data'), pyfunc.get('code'))
+        found_signature = _signature_document(written.get('signature'))
+    except (OSError, yaml.YAMLError, KeyError, TypeError, AttributeError) as error:
+        raise PackagingError('capability_not_supported', 'The MLmodel written by this MLflow '
+                             'version is not readable.', path=MLMODEL_FILE,
+                             remediation='Use the MLflow version the azureml extra pins.',
+                             details={'error': str(error)[:200]}) from error
+    if located != (['python_function'], CODE_LOADER, WRAPPER_FILE, [NATIVE_ARTIFACT],
+                   EMBEDDED_BUNDLE, None, None) or found_signature != _signature_document(
+                       mlmodel_document(signature, environment)['signature']):
+        raise PackagingError('capability_not_supported', 'This MLflow version writes a model '
+                             'that the packager does not know how to describe.',
+                             path=MLMODEL_FILE,
+                             remediation='Use the MLflow version the azureml extra pins.',
+                             details={'found': [str(v) for v in located]})
+    path.write_bytes(mlmodel_bytes(signature, environment))
 
 
 # --- the hook of capture_predictor (contract v1 §6) ------------------------------------

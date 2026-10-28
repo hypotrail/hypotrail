@@ -14,17 +14,29 @@ confirm at merge in ``docs/handoff/AZUREML-EXPORT-V1.md``): ``study_id``, ``revi
 ``decisions`` (confirmed ones), ``results`` (references with ``current``), ``validity``,
 ``development_plan``, ``predictor`` (``bundle_dir`` or null), ``limitations``, and the
 optional ``case``, ``metrics``, ``conclusion``, ``development_data``. A Pydantic object is
-read through ``model_dump(mode='json')``.
+read through ``model_dump(mode='json')``. The predictor's ``status`` and ``evidence_status``
+and ``final_test.status`` decide what is exported: only a ``captured`` predictor (a current
+capture of the confirmed selection) is transported, with the evidence status the study
+records; a ``stale`` one is refused while the final test is sealed and left out (recipe
+only) after the opening, except a capture whose choice only awaits re-confirmation in the
+chat (``scientific_contracts.selection.capture``), which is refused with a remediation that
+says so. A recipe selected at an earlier confirmation is accepted only under the engine's
+rule: the captured configuration equals the confirmed one and the capture is current. The
+bundle found at the recorded path must be the recorded predictor (same predictor id, and
+recipe and data contract digests); another bundle is ``artifact_integrity_failed``. A
+``hypotrail_runtime`` ``ContractError`` of the reader is answered as an export refusal
+(:func:`from_contract_error`).
 """
 from __future__ import annotations
 
 import importlib
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from . import canonical as cj
-from .errors import ExportError
+from .errors import CODES, CONTRACT_ALIASES, ExportError
 
 SCHEMA = 'hypotrail.deployment_snapshot/1'
 PLAN_SCHEMA = 'hypotrail.development_plan/1'
@@ -79,7 +91,15 @@ def read_source(study, expected_revision: int, reader: Callable | None = None):
                               remediation='Use an engine version that ships '
                                           'read_export_source; nothing was read or written.'
                               ) from error
-    source = reader(Path(study), expected_revision)
+    try:
+        source = reader(Path(study), expected_revision)
+    except ExportError:
+        raise
+    except Exception as error:
+        refusal = from_contract_error(error)
+        if refusal is None:
+            raise
+        raise refusal from error
     revision = field(source, 'revision')
     if type(revision) is not int:
         raise ExportError('contract_invalid', 'The export source revision is not an integer.',
@@ -92,6 +112,32 @@ def read_source(study, expected_revision: int, reader: Callable | None = None):
                           details={'expected_revision': expected_revision,
                                    'current_revision': revision})
     return source
+
+
+def from_contract_error(error: BaseException) -> ExportError | None:
+    """The export refusal of a ``hypotrail_runtime`` ``ContractError`` raised while the
+    study is read (for example ``stale_revision``), or None for any other exception. The
+    contract code, path and remediation are kept; a contract code the export does not
+    answer with is reported as ``contract_invalid`` (``details.contract_code`` keeps it)."""
+    try:
+        from hypotrail_runtime.errors import ContractError
+    except ImportError:
+        return None
+    if not isinstance(error, ContractError):
+        return None
+    export_code = CONTRACT_ALIASES.get(error.code, error.code)
+    if export_code not in CODES:
+        export_code = 'contract_invalid'
+    details = {k: v for k, v in error.details.items()
+               if k not in ('path', 'remediation', 'contract_code')}
+    if error.issues:
+        details['issues'] = error.issues
+    out = ExportError(export_code, error.message, path=error.path or None,
+                      remediation=error.remediation
+                      or 'Read the study status again, then export; nothing was written.',
+                      details=details)
+    out.details['contract_code'] = error.code
+    return out
 
 
 def runtime(required_for: str):
@@ -158,6 +204,71 @@ def _check_recipe(recipe: dict, contract: dict) -> None:
                           path='model_recipe.target.positive_label', remediation='Fix the recipe.')
 
 
+def _reconfirmed_capture(source, descriptor, predictor_status, contracts: Mapping,
+                         selection: Mapping, revision: int, by_id: Mapping) -> bool:
+    """Whether a recipe selected at an earlier confirmation is still the confirmed selection:
+    the same rule as ``read_export_source`` (the engine's): the captured configuration
+    equals the configuration confirmed now and the capture result is current. Only a
+    captured bundle qualifies; another configuration confirmed after the capture never
+    does."""
+    state = contracts.get('selection')
+    if not isinstance(state, Mapping) or predictor_status != 'captured' \
+            or contracts.get('source') != 'captured_bundle' or state.get('capture') != 'selected':
+        return False
+    plan = field(source, 'development_plan', None)
+    confirmed = plan.get('configuration') if isinstance(plan, Mapping) else None
+    capture_rid = field(descriptor, 'capture_result_id', None)
+    earlier = selection.get('revision')
+    return (confirmed is not None
+            and state.get('capture_configuration') == confirmed
+            and state.get('confirmed_configuration') == confirmed
+            and state.get('decision_id') == selection.get('decision_id')
+            and state.get('decision_revision') == revision
+            and state.get('capture_result_id') == capture_rid and capture_rid is not None
+            and (by_id.get(capture_rid) or {}).get('current') is True
+            and isinstance(earlier, int) and not isinstance(earlier, bool)
+            and earlier <= revision)
+
+
+def _same_predictor(descriptor, predictor: Mapping) -> None:
+    """The bundle found at the recorded path is the predictor the capture recorded (and,
+    through it, the one the final test evaluated): same predictor id, and the same recipe
+    and data contract digests when the study records them. A self-consistent bundle put in
+    its place is refused, never exported under the study's evidence."""
+    expected = field(descriptor, 'predictor_id', None)
+    manifest = predictor.get('manifest') or {}
+    found = predictor.get('predictor_id')
+    mismatched = []
+    if not isinstance(expected, str) or not expected:
+        raise ExportError('contract_invalid', 'The export source names no predictor id for its '
+                          'captured predictor.', path='predictor.predictor_id',
+                          remediation='Fix the engine: read_export_source names the captured '
+                                      'predictor id.')
+    if found != expected:
+        mismatched.append('predictor_id')
+    for key in ('recipe_sha256', 'data_contract_sha256'):
+        recorded = field(descriptor, key, None)
+        if recorded is not None and manifest.get(key) != recorded:
+            mismatched.append(key)
+    binding = predictor.get('binding') or {}
+    final_rid = field(descriptor, 'final_result_id', None)
+    if predictor.get('evidence_status') == 'evaluated' and (
+            binding.get('predictor_id') != expected
+            or (final_rid is not None and binding.get('final_result_id') != final_rid)):
+        mismatched.append('evidence_binding')
+    if mismatched:
+        raise ExportError('artifact_integrity_failed', 'The bundle at the recorded path is not '
+                          'the predictor the study captured and evaluated; nothing was '
+                          'written.', path='predictor.bundle_dir',
+                          remediation='Restore the captured bundle from a copy you trust (or '
+                                      'capture again before opening the final test); never '
+                                      'replace or edit a bundle.',
+                          details={'reason': 'bundle_not_recorded_predictor',
+                                   'mismatched': mismatched,
+                                   'recorded_predictor_id': expected,
+                                   'found_predictor_id': found})
+
+
 @dataclass(frozen=True)
 class Snapshot:
     """What the generator renders from: plain JSON documents, no live object."""
@@ -174,6 +285,91 @@ class Snapshot:
     development_data: dict | None
     checks: list
     warnings: list
+
+
+def _final_status(source) -> str | None:
+    """The final test status of the source (``sealed``, ``opened``, ``absent``...)."""
+    final = field(source, 'final_test', None)
+    if not isinstance(final, Mapping):
+        plan = field(source, 'development_plan', None)
+        final = plan.get('final_test') if isinstance(plan, Mapping) else None
+    status = final.get('status') if isinstance(final, Mapping) else None
+    return status if isinstance(status, str) else None
+
+
+def _evidence_status(study: Any, binding: str) -> str:
+    """``evaluated`` only when the study's record and the bundle's binding both say so."""
+    if study == 'evaluated' and binding == 'evaluated':
+        return 'evaluated'
+    if 'stale' in (study, binding):
+        return 'stale'
+    return 'unassessed'
+
+
+def _refuse_without_recipe(source, predictor_status: str | None,
+                           final_status: str | None, template_capabilities: list) -> None:
+    """Refuse an export whose source describes no recipe, with a remediation the junior can
+    follow (or the reason none exists)."""
+    limitations = [str(x) for x in (field(source, 'limitations', None) or [])]
+    contracts = field(source, 'scientific_contracts', None)
+    family = contracts.get('unsupported_family') if isinstance(contracts, Mapping) else None
+    if isinstance(family, str):
+        # R19: the chosen family (EBM, histogram boosting) is outside the support matrix;
+        # the model is kept, never replaced by a qualified family, and no capture helps.
+        raise ExportError('capability_not_supported',
+                          f'The selected model is of the {family} family, which neither the '
+                          'predictor runtime v1 nor this template qualifies; the selected '
+                          'model is kept and not replaced, and nothing was written.',
+                          path='model_recipe.family',
+                          remediation='Keep the study as it is: its chosen model has no '
+                                      'exportable recipe. Only a study whose selected model is '
+                                      'in the template support matrix (details.supported) can '
+                                      'be exported; a new choice would be a new study.',
+                          details={'reason': 'family_not_supported', 'family': family,
+                                   'supported': template_capabilities,
+                                   'limitations': limitations})
+    if predictor_status == 'not_applicable':
+        remediation = ('This study was created before the final test and the model capture '
+                       'existed: it has no selected model to export. Start a new study with '
+                       'this engine to export a selected model to Azure ML.')
+    elif final_status == 'absent':
+        remediation = ('This study has no final test (it was created before the final test '
+                       'existed): confirm the model choice in the chat (a model, not the '
+                       'constant baseline), then export its recipe; no evaluated model can '
+                       'be exported for it.')
+    elif final_status == 'opened':
+        remediation = ('The final test is opened, so the model can no longer be captured: '
+                       'this selection has no exportable recipe (see details.limitations).')
+    else:
+        remediation = ('Confirm the model choice in the chat (a model, not the constant '
+                       'baseline); for a tuned model, run hypotrail run predictor.capture '
+                       'before opening the final test; then export.')
+    raise ExportError('capability_not_supported', 'The study describes no recipe of a selected '
+                      'model; nothing was written.', path='scientific_contracts.model_recipe',
+                      remediation=remediation,
+                      details={'reason': 'no_recipe', 'limitations': limitations})
+
+
+# Round 5 (review E, R5E-8): once the final test is opened the predictor can no longer be
+# captured again (a new fit would be a rebuilt candidate, not the evaluated model), so a
+# refusal of the captured bundle never tells the user to capture it again.
+AFTER_OPENING_REMEDIATION = (
+    'The final test is opened, so the predictor can no longer be captured again (a new fit '
+    'would be a rebuilt candidate, not the evaluated model). Restore the captured bundle from a '
+    'copy you trust and export again; never replace or edit a bundle. The recipe of the '
+    'selection stays in the study, and a new, independently evaluated model needs a new study.')
+
+
+def after_opening(error: ExportError, final_status: str | None) -> ExportError:
+    """``error`` with :data:`AFTER_OPENING_REMEDIATION` when the final test is opened and
+    its remediation names a new capture; unchanged otherwise."""
+    remediation = error.details.get('remediation') or ''
+    if final_status != 'opened' or not re.search(r'captur', remediation, re.IGNORECASE):
+        return error
+    details = {k: v for k, v in error.details.items() if k not in ('path', 'remediation')}
+    details.update(recapture_possible=False, original_remediation=remediation)
+    return ExportError(error.code, error.message, path=error.details.get('path'),
+                       remediation=AFTER_OPENING_REMEDIATION, details=details)
 
 
 def _plan(source_plan: Any, contract: dict) -> dict:
@@ -239,8 +435,112 @@ def _plan(source_plan: Any, contract: dict) -> dict:
                        'labels_included': False, 'row_keys_included': False},
         'keys_sha256_rule': 'sha256 of the canonical JSON of the sorted row keys',
     }
+    # How many records the engine read in the source file (development, final test and any
+    # excluded row): materialize refuses a file that splits into another number of records.
+    n_records = plan.get('n_source_records')
+    if n_records is not None:
+        if not isinstance(n_records, int) or isinstance(n_records, bool) or \
+                n_records < len(development):
+            raise ExportError('contract_invalid', 'The development plan counts fewer source '
+                              'records than development rows.',
+                              path='development_plan.n_source_records',
+                              remediation='Fix the engine.')
+        out['n_source_records'] = n_records
+    excluded = plan.get('excluded_rows')
+    if excluded is not None:
+        out['excluded_rows'] = _excluded_rows(excluded)
     out['keys_sha256'] = cj.canonical_sha256({p['id']: p['row_keys'] for p in partitions})
     return out
+
+
+def _excluded_rows(excluded: Any) -> list:
+    """``development_plan.excluded_rows``: the development rows the engine leaves out of
+    every fit (delayed labels), counted and explained, never listed by key."""
+    where = 'development_plan.excluded_rows'
+    if not isinstance(excluded, list) or not all(
+            isinstance(e, Mapping) and isinstance(e.get('reason'), str)
+            and isinstance(e.get('text'), str) and isinstance(e.get('n_rows'), int)
+            and not isinstance(e['n_rows'], bool) and e['n_rows'] > 0 for e in excluded):
+        raise ExportError('contract_invalid', 'The excluded development rows are not a list of '
+                          '{reason, n_rows, text}.', path=where, remediation='Fix the engine.')
+    return [{'reason': e['reason'], 'n_rows': e['n_rows'], 'text': e['text']} for e in excluded]
+
+
+def membership_digests(keys) -> set[str]:
+    """The SHA-256 digests under which the engine names a set of row keys in a capture's
+    ``training_scope.membership_sha256``: of the sorted keys one per line (the study's
+    row-key blob), or joined by newlines (the rows of a fit that left delayed-label rows
+    out). Either digest identifies the same set of keys."""
+    ordered = sorted(set(keys))
+    return {cj.sha256_hex(''.join(k + '\n' for k in ordered).encode('utf-8')),
+            cj.sha256_hex('\n'.join(ordered).encode('utf-8'))}
+
+
+def _check_training_rows(plan: dict, predictor: Mapping) -> dict:
+    """The exported plan names exactly the rows the captured predictor was fitted on: its
+    development rows' digest is the capture's ``training_scope.membership_sha256``; another
+    set is ``contract_invalid`` (a rebuild would fit other rows than the evaluated model)."""
+    scope = (predictor.get('manifest') or {}).get('training_scope') or {}
+    recorded = scope.get('membership_sha256')
+    keys = {k for p in plan['partitions'] for k in p['row_keys']}
+    if not isinstance(recorded, str) or recorded not in membership_digests(keys):
+        raise ExportError('contract_invalid', 'The exported development plan does not name '
+                          'the rows the captured predictor was fitted on; a rebuild would fit '
+                          'other rows. Nothing was written.',
+                          path='development_plan.partitions',
+                          remediation='Fix the engine: read_export_source lists every row of '
+                                      'the final refit (development rows less delayed-label '
+                                      'rows); never edit the plan.',
+                          details={'reason': 'plan_rows_not_training_rows',
+                                   'n_development_rows': len(keys),
+                                   'training_membership_sha256': recorded})
+    return {'id': 'plan_rows_are_training_rows', 'status': 'passed'}
+
+
+RULE = re.compile(r'(threshold|capacity|share):([0-9]+(?:\.[0-9]+)?)\Z')
+RULE_MEANING = {
+    'threshold': ('A threshold rule acts on every row whose score is at least {amount} '
+                  '(inclusive). The model output stays the score: the comparison is the '
+                  "consumer's step and is not applied by the model, predict or an endpoint."),
+    'capacity': ('A capacity rule acts on the {amount} rows with the highest scores among the '
+                 'rows scored together (the study shares ties at the cut pro rata). It needs '
+                 'the whole batch ranked, so a row-by-row endpoint cannot apply it; the model '
+                 'output is the score only.'),
+    'share': ('A share rule acts on the share {amount} of the rows scored together that have '
+              'the highest scores (floor(share x n + 0.5) rows, at least one). It needs the '
+              'whole batch ranked, so a row-by-row endpoint cannot apply it; the model output '
+              'is the score only.'),
+}
+
+
+def _decision_rule(source, recipe: dict, confirmed: Mapping) -> dict | None:
+    """R19: the decision rule the binary study adopted, carried as metadata only. The model
+    output is the positive-class score (``binary_score``); the rule is never applied inside
+    the model, ``predict`` or the MLflow package. None for a regression study."""
+    if recipe['task'] != 'binary':
+        return None
+    plan = field(source, 'development_plan', None)
+    config = plan.get('configuration') if isinstance(plan, Mapping) else None
+    rule = config.get('rule') if isinstance(config, Mapping) else None
+    match = RULE.fullmatch(rule) if isinstance(rule, str) else None
+    if match is None:
+        raise ExportError('contract_invalid', 'The binary study names no adopted decision rule '
+                          'for its selected model; nothing was written.',
+                          path='development_plan.configuration.rule',
+                          remediation='Confirm the decision rule (the policy) in the chat, then '
+                                      'export.',
+                          details={'reason': 'decision_rule_missing', 'rule': rule})
+    kind, amount = match.groups()
+    policy = confirmed.get('policy') or {}
+    return {'decision_id': 'policy' if policy else None,
+            'policy_value': policy.get('value'),
+            'rule': rule, 'kind': kind, 'amount': amount,
+            'model': config.get('model'),
+            'score_column': (recipe['output_contract'].get('columns') or [None])[0],
+            'positive_label': recipe['target'].get('positive_label'),
+            'applied_in_model_output': False,
+            'needs_batch_ranking': kind in ('capacity', 'share'),
+            'meaning': RULE_MEANING[kind].format(amount=amount)}
 
 
 def _key_order(key: str):
@@ -259,7 +559,41 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
     ``verify_predictor(bundle_dir, recipe, data_contract)`` returns the predictor record
     (see :mod:`mlkit.exporters.azureml.artifact`); it is called only when the source
     names a captured predictor."""
+    descriptor = field(source, 'predictor', None)
+    predictor_status = field(descriptor, 'status', 'captured') if descriptor else None
+    final_status = _final_status(source)
     contracts = field(source, 'scientific_contracts')
+    selection_state = (contracts.get('selection') if isinstance(contracts, Mapping) else None)
+    selection_state = selection_state if isinstance(selection_state, Mapping) else {}
+    if predictor_status == 'stale' and selection_state.get('capture') == 'awaiting_reconfirmation':
+        # The model choice is on hold after its confirmation: the capture (and the final
+        # evaluation that scored it) is kept, the choice only has to be confirmed again.
+        raise ExportError('contract_invalid', 'The model choice awaits re-confirmation in the '
+                          'chat, so no selection is confirmed now; nothing was written.',
+                          path='predictor.status',
+                          remediation='Confirm the same model choice again in the chat (the '
+                                      'captured predictor and its final evaluation are kept); '
+                                      'that makes the export possible again. Then export.',
+                          details={'reason': 'selection_awaits_reconfirmation',
+                                   'decision_id': selection_state.get('decision_id'),
+                                   'capture_result_id': field(descriptor, 'capture_result_id',
+                                                              None),
+                                   'limitations': [str(x) for x in
+                                                   (field(source, 'limitations', None) or [])]})
+    if predictor_status == 'stale' and final_status == 'sealed':
+        # Before the opening a capture of the confirmed selection is still possible: the
+        # export neither ships the superseded model nor drops it silently.
+        raise ExportError('model_not_captured', 'The captured predictor is not the current '
+                          'confirmed selection (another configuration confirmed after it, or '
+                          'a change since the capture that made it not current); the export '
+                          'does not substitute it and nothing was written.', path='predictor.status',
+                          remediation='Run hypotrail run predictor.capture again, so the '
+                                      'capture is the confirmed selection, then export.',
+                          details={'reason': 'capture_not_current_selection',
+                                   'capture_result_id': field(descriptor, 'capture_result_id',
+                                                              None)})
+    if not isinstance(contracts, Mapping) or contracts.get('model_recipe') is None:
+        _refuse_without_recipe(source, predictor_status, final_status, template_capabilities)
     recipe = _require(field(contracts, 'model_recipe'), RECIPE_KEYS, RECIPE_SCHEMA,
                       'model_recipe')
     contract = _require(field(contracts, 'data_contract'), DATA_CONTRACT_KEYS,
@@ -298,9 +632,25 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
                           path='model_recipe.selection_reference.decision_id',
                           remediation='Confirm the model choice in the chat, then export.',
                           details={'reason': 'selection_not_confirmed'})
-    checks.append({'id': 'selection_confirmed', 'status': 'passed'})
+    decision = confirmed[selection.get('decision_id')]
+    revision = decision.get('revision')
     results = [_plain(r) for r in field(source, 'results')]
     by_id = {r.get('result_id'): r for r in results if isinstance(r, Mapping)}
+    if not isinstance(revision, int) or isinstance(revision, bool) or (
+            revision != selection.get('revision')
+            and not _reconfirmed_capture(source, descriptor, predictor_status, contracts,
+                                         selection, revision, by_id)):
+        raise ExportError('contract_invalid', 'The recipe was selected by another confirmation '
+                          'than the one in force; the export does not substitute a model and '
+                          'nothing was written.',
+                          path='model_recipe.selection_reference.revision',
+                          remediation='Capture the confirmed model choice again (hypotrail run '
+                                      'predictor.capture) before the final test is opened, '
+                                      'then export.',
+                          details={'reason': 'selection_not_current_decision',
+                                   'selection_revision': selection.get('revision'),
+                                   'decision_revision': decision.get('revision')})
+    checks.append({'id': 'selection_confirmed', 'status': 'passed'})
     for rid in selection.get('evidence_ids') or []:
         item = by_id.get(rid)
         if item is None or item.get('current') is not True:
@@ -318,22 +668,39 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
     recipe_sha = cj.canonical_sha256(recipe)
     contract_sha = cj.canonical_sha256(contract)
     predictor = None
-    descriptor = field(source, 'predictor', None)
     # A's ExportSource always describes the predictor; only a bundle makes it captured
     # (a stale capture no longer describes the chosen configuration: it is not exported).
-    if descriptor and field(descriptor, 'bundle_dir', None) and \
-            field(descriptor, 'status', 'captured') == 'captured':
+    if descriptor and field(descriptor, 'bundle_dir', None) and predictor_status == 'captured':
         bundle_dir = field(descriptor, 'bundle_dir')
         if verify_predictor is None:
             raise ExportError('optional_dependency_missing', 'No predictor verifier.',
                               path='predictor', remediation='Internal: pass verify_predictor.')
-        predictor = verify_predictor(Path(bundle_dir), recipe, contract)
+        from .artifact import recorded_packages
+        # Round 4 (R4-A2): the bundle must hold the packages the capture recorded.
+        try:
+            predictor = verify_predictor(Path(bundle_dir), recipe, contract,
+                                         recorded_packages=recorded_packages(source))
+            _same_predictor(descriptor, predictor)
+        except ExportError as error:
+            raise after_opening(error, final_status) from error
+        checks.append(_check_training_rows(plan, predictor))
         checks += predictor['checks']
         warnings += predictor['warnings']
+        # The study's own record decides the evidence status; the binding beside the bundle
+        # is an editable file and can only lower it.
+        evidence = _evidence_status(field(descriptor, 'evidence_status', None),
+                                    predictor['evidence_status'])
+        if evidence != predictor['evidence_status']:
+            warnings.append('evidence_binding_disagrees_with_study')
+        predictor = {**predictor, 'evidence_status': evidence}
     else:
         checks.append({'id': 'predictor_captured', 'status': 'missing',
-                       'detail': 'No captured predictor: the recipe is exported, the evaluated '
-                                 'model is not (artifact_status missing).'})
+                       'detail': 'The captured predictor is not current (kept as history; '
+                                 'source status stale): the recipe is exported, the evaluated '
+                                 'model is not (artifact_status missing).'
+                       if predictor_status == 'stale' else
+                       'No captured predictor: the recipe is exported, the evaluated '
+                       'model is not (artifact_status missing).'})
         warnings.append('artifact_missing')
     case = field(source, 'case', None) or {}
     conclusion = field(source, 'conclusion', None)
@@ -359,7 +726,9 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
                             'keys_sha256': plan['keys_sha256'],
                             'roles': [p['role'] for p in plan['partitions']],
                             'n_development_rows': plan['n_development_rows'],
-                            'final_test': plan['final_test']},
+                            'final_test': plan['final_test'],
+                            **({'excluded_rows': plan['excluded_rows']}
+                               if 'excluded_rows' in plan else {})},
         'evidence_state': validity,
         'conclusion': conclusion,
         'limitations': limitations,
@@ -371,6 +740,10 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
             'evidence_status': predictor['evidence_status'],
             'artifact_status': predictor['artifact_status']},
     }
+    rule = _decision_rule(source, recipe, confirmed)
+    if rule is not None:
+        # Binary only: a regression snapshot keeps its exact bytes and id.
+        document['decision_rule'] = rule
     try:
         document = cj.normalise(document, 'snapshot')
     except cj.CanonicalError as error:

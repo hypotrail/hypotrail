@@ -55,6 +55,25 @@ EDITABLE = mf.ARTIFACTS['editable']
 WORKBENCH = mf.ARTIFACTS['workbench']
 CANDIDATE = 'notebooks/workbench.candidate.py'
 STUDY_TEMPLATE_VERSION = 2
+# Contract P1.9 (CLI-CONTRACT §17.3): the data step's cell. It recomputes the draw from the
+# seed in plain code (rank every development row key by a hash of the seed and the key, keep
+# the first eight) and asserts it gives the rows the data card and the report show.
+_SAMPLE_CODE = '''sample = nv.sample_frame(study)
+_seed = nv.sample_seed(study)
+_ranked = sorted(nv.sample_candidates(study), key=lambda _k: nv.sample_rank(_seed, _k))
+_drawn = sorted(_ranked[:8], key=lambda _k: int(_k[1:]))
+assert _drawn == list(sample.index), "the sample differs from the data card's rows"
+sample'''
+SAMPLE_CELL = ('# Eight development rows drawn at random, target included: a look at the target\n'
+               '# before the split, counted in the exposure ledger. The draw is reproducible:\n'
+               '# rank every development row key by the SHA-256 of the seed and the key\n'
+               '# (nv.sample_rank), keep the first eight, show them in row order.\n'
+               + _SAMPLE_CODE)
+SAMPLE_CELL_FR = ('# Huit lignes de développement tirées au hasard, cible comprise : un regard sur\n'
+                  "# la cible avant le découpage, compté au registre d'exposition. Le tirage se\n"
+                  '# refait : on classe chaque clé de ligne par le SHA-256 de la graine et de la\n'
+                  "# clé (nv.sample_rank), on garde les huit premières, dans l'ordre des lignes.\n"
+                  + _SAMPLE_CODE)
 MAX_REPLACE_ATTEMPTS = 5
 
 _TEMPLATE_VERSION = re.compile(rb'template_version = (\d+)')
@@ -100,8 +119,9 @@ RECOMPUTE_NOTE = ('Each code cell below is the pandas (or scikit-learn) you woul
                   'are not replaced by an equal-fold mean. Copy any cell to your workbench to '
                   'experiment.')
 # WP-F2: the notebook narrative is in the study language where the engine provides French
-# (WP-C: step titles and questions, glossary term names). Definitions, methods, and code
-# comments have no French source yet and stay English.
+# (WP-C: step titles and questions, glossary term names). L3 (owner session 2026-10-26, R4):
+# the definitions, the step explanations (``steps_fr.yaml``) and the notebook's own labels
+# too; code comments stay English (the code is the junior's to copy).
 RECOMPUTE_NOTE_FR = ("Chaque cellule de code ci-dessous est le pandas (ou scikit-learn) que vous "
                      "taperiez sur l'échantillon de développement, suivi d'un `assert` qui "
                      "vérifie que son résultat est celui du registre. Avec review-v1, "
@@ -122,13 +142,14 @@ def _step_markdown(index: int, step: Mapping, content: Mapping, pending: bool,
     term = texts.glossary(content.get('concept')) if content.get('concept') else None
     if term:
         name = term['term_fr'] if fr and term.get('term_fr') else term['term']
-        lines += ['', f'**{name[:1].upper() + name[1:]}.** {term["definition"]}']
+        definition = texts.definition(term)[0]
+        lines += ['', f'**{name[:1].upper() + name[1:]}.** {definition}']
     if content.get('method'):
-        lines += ['', f'**Method.** {content["method"]}']
+        lines += ['', f'**{"Méthode" if fr else "Method"}.** {content["method"]}']
     if recompute:
         lines += ['', RECOMPUTE_NOTE_FR if fr else RECOMPUTE_NOTE]
     if pending:
-        lines += ['', f'_{texts.load("steps")["pending"]}_']
+        lines += ['', f'_{texts.step_status_words()["pending"]}_']
     return '\n'.join(lines)
 
 
@@ -157,7 +178,8 @@ CACHE_FILE = 'render-cache/study_generated.json'
 
 
 def _study_cells(view: Mapping, revision: Any) -> tuple[str, list[tuple[str, str]]]:
-    with texts.study_context(view):
+    # L3: the engine's texts in the study language (an English study is unchanged).
+    with texts.study_context(view), texts.report_language_context(view.get('language')):
         return _study_cells_for_task(view, revision)
 
 
@@ -185,17 +207,30 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
     target, positive, facts = _target(view)
     recompute = code_cells.cells_by_step(view, task, target, positive, facts,
                                          [step['id'] for step in view['plan']])
+    fr = view.get('language') == 'fr'
+    if target is not None:
+        # Contract P1.9 (CLI-CONTRACT §17.3): the step-1 sample, recomputed from its seed,
+        # behind the recomputation button like every cell that reads rows.
+        first = 'discover_data' if any(s['id'] == 'discover_data' for s in view['plan']) \
+            else view['plan'][0]['id']
+        recompute.setdefault(first, []).insert(
+            0, ('recompute_sample', SAMPLE_CELL_FR if fr else SAMPLE_CELL))
     if recompute:
+        button = ('Lancer les recalculs enregistrés' if fr
+                  else 'Run registered recomputations')
+        paused = ('Les recalculs sont en pause tant que vous n\'appuyez pas sur le bouton.'
+                  if fr else 'Recomputation is paused until you press the run button.')
         cells.append(('run_recompute',
-                      'run_recompute = mo.ui.run_button(label="Run registered recomputations")\n'
+                      f'run_recompute = mo.ui.run_button(label={json.dumps(button, ensure_ascii=False)})\n'
                       'run_recompute'))
         guard = ('mo.stop(not (run_recompute.value or '
                  'os.environ.get("HYPOTRAIL_NOTEBOOK_RECOMPUTE") == "1"), '
-                 'mo.md("Recomputation is paused until you press the run button."))\n')
-        cells.append(('recompute_imports', guard + code_cells.imports(task)))
+                 f'mo.md({json.dumps(paused, ensure_ascii=False)}))\n')
+        if any(name != 'recompute_sample' for code in recompute.values() for name, _ in code):
+            cells.append(('recompute_imports', guard + code_cells.imports(task)))
     for index, step in enumerate(view['plan'], start=1):
         content = texts.step(step['id'])
-        slots = render_html.slots_of_step(step['id'], view['results'], task)
+        slots = render_html.slots_of_step(step['id'], view['results'], task, view['plan'])
         has_result = any(s in rids for s in slots)
         # WP-A4: step 0 is informational; it is never "not executed".
         pending = not has_result and not step['decision'] and step['id'] != 'discover_data'
@@ -211,10 +246,15 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
                  f'mo.Html(nv.step_html(cited, RESULT_IDS, {slots!r}, '
                  f'{content.get("context", "")!r}, {content.get("interpretation", "")!r}'
                  f'{task_arg}))']
+        if step['id'] == 'split' and code_cells.delayed_labels(view) is not None:
+            # Review round 3 (E3-1): the rows the split leaves out for a delayed label, the
+            # term first, then this study's example (the engine's limit, study language).
+            items.append('mo.Html(nv.delayed_labels_html(study))')
         if step['decision']:
             items.append(f'mo.Html(nv.decision_html(study, {step["decision"]!r}))')
         if content.get('consequence'):
-            items.append(f'mo.md({("**Consequence.** " + content["consequence"])!r})')
+            lead = '**Conséquence.** ' if fr else '**Consequence.** '
+            items.append(f'mo.md({(lead + content["consequence"])!r})')
         body = 'mo.vstack(\n    [\n' + ''.join(f'        {i},\n' for i in items) + '    ]\n)'
         cells.append((f'step_{step["id"]}', body))
     return header, cells

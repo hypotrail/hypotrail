@@ -10,13 +10,17 @@ The view is deterministic for a given study content: it contains no clock readin
 so two renders of one revision see the same view.
 
 Read-only (it uses :mod:`mlkit.study.read` only) and free of pandas, numpy, and
-scikit-learn at import and at build time.
+scikit-learn at import and at build time, with one exception (round 5, review E, R5E-2):
+outside a read-only process, when the study holds a current predictor capture and the next
+action would open the final test, the capture is loaded as the confirmation loads it
+(:mod:`mlkit.study.capture_check`), which imports the runtime; nothing is written.
 """
 from __future__ import annotations
 
 import copy
 import re
 from pathlib import Path
+from typing import Mapping
 
 from . import audience
 from . import currency
@@ -59,7 +63,17 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # engine's shortlist of model families; ``null`` in a study without variants.
              'model_selection', 'model_families', 'assurance',
              # reliability roadmap J2: one derived evaluator, never persisted.
-             'requirements', 'completion', 'claim_eligibility', 'presentation')
+             'requirements', 'completion', 'claim_eligibility', 'presentation',
+             # Owner session 2026-10-26 (L9, R20): the automatic mode chosen at launch
+             # (``state.automation``, or ``null``) and the decisions it recorded that wait
+             # for the junior's review (``[]`` in a study without automation).
+             'automation', 'review_queue',
+             # L3 (owner session 2026-10-26, R4; D4 A, D4b): the case's statements in both
+             # languages from its translation sidecar (``l10n.case_texts``), or ``null``.
+             'case_texts',
+             # R68 (minimal version, 2026-10-28): the product owner's PDF imported and the
+             # study's own brief confirmed (``case_brief.view_of``), each ``null`` until then.
+             'brief')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -79,7 +93,14 @@ CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'prop
                           # v0.3 (WP-B, R27): for a trade-off in the junior's words, whether
                           # they gave a reason (``null`` otherwise); whether the words answer
                           # the closed adoption question (``false`` when not recorded).
-                          'reason_given', 'adoption_question')
+                          'reason_given', 'adoption_question',
+                          # L3 (owner session 2026-10-26, R4): the confirmed proposal's
+                          # restatement in the study language (``state.label_of``; the
+                          # English ``restatement`` when the agent gave none in it).
+                          'label',
+                          # L9 (R20): the automatic confirmation the junior's review adopted
+                          # with the same value (``null`` otherwise).
+                          'adopted_from')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created',
                       # ADR 0005: the restatement per language (``null`` when none was
@@ -125,8 +146,13 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 'language')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
+# L9 (R20): one item of ``view.review_queue``.
+REVIEW_QUEUE_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'revision')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
-SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds',
+SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions',
+                    # L9 (R20): the banners of an automatic study come first.
+                    'automatic_decisions_to_review', 'final_test_opened_automatically',
+                    'open_holds',
                     # v0.2b (WP-B1): the final test no longer measures what the study holds.
                     'changed_after_final_test', 'final_test_opening_interrupted',
                     # v0.2a (WP-A4): an adopting verdict against the success criterion.
@@ -142,6 +168,8 @@ SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds',
                     'inconclusive_without_choice',
                     'delegated_decisions', 'unconfirmed_decisions',
                     'uncertain_features_included', 'high_cardinality_grouping',
+                    # Review 2026-10-24 round 2: rows left out for a delayed label.
+                    'delayed_labels_excluded',
                     'validation_is_not_independent', 'final_test_sealed')
 SUMMARY_TOP = 5
 
@@ -235,6 +263,16 @@ def _case_uncertain_limit(state: dict, defensible: list) -> None:
         item['text'] = f'{item["text"]} {text}'
 
 
+def _confirmed_label(state: Mapping, conf: Mapping) -> str | None:
+    """The restatement a confirmation answered, in the study language (L3): the proposal's
+    label in that language when the agent gave one, else the recorded restatement."""
+    proposal = (state.get('proposals') or {}).get(conf.get('proposal_id'))
+    if not isinstance(proposal, Mapping):
+        return conf.get('restatement')
+    labels = proposal.get('labels') or {}
+    return labels.get(st.language_of(state)) or conf.get('restatement')
+
+
 def _decisions(state: dict) -> dict:
     out = {}
     fa = state['decisions'].get('feature_availability') or {}
@@ -248,7 +286,8 @@ def _decisions(state: dict) -> dict:
                   'confirmation': ({**{k: conf.get(k) for k in CONFIRMATION_VIEW_KEYS},
                                     'basis': st.confirmation_basis(conf),
                                     'warnings': list(conf.get('warnings') or []),
-                                    'adoption_question': bool(conf.get('adoption_question'))}
+                                    'adoption_question': bool(conf.get('adoption_question')),
+                                    'label': _confirmed_label(state, conf)}
                                    if isinstance(conf, dict) else None),
                   'open_proposals': sorted(p['proposal_id'] for p in st.open_proposals(state)
                                            if p['decision_id'] == d),
@@ -517,15 +556,24 @@ def summary(view: dict) -> dict:
     ``recap``, five lines a new chat may quote (:func:`recap`). The full view stays in ``hypotrail status --json``.
     """
     lang = view.get('language') or audience.EN
+    # L3 (R4, T4; D4 A): the case's statements in the study language when its translation
+    # sidecar gives them (``view.case_texts``).
+    translated = ((view.get('case_texts') or {}).get('facts') or {}) if lang != audience.EN \
+        else {}
+
+    def fact(fact_id):
+        item = _fact(view, fact_id)
+        french = (translated.get(fact_id) or {}).get(lang) if item else None
+        return {**item, 'value': french} if french else item
     pt = view['decisions']['prediction_time']
     if pt['value'] is not None:
         prediction_time = {'value': pt['value'], 'source': 'decision', 'status': pt['status']}
     else:
-        fact = _fact(view, 'prediction_time')
-        prediction_time = ({'value': fact['value'], 'source': 'case', 'status': fact['status']}
-                           if fact else None)
-    goal = {'intended_use': _fact(view, 'intended_use'), 'decision': _fact(view, 'decision'),
-            'observation_unit': _fact(view, 'observation_unit'),
+        item = fact('prediction_time')
+        prediction_time = ({'value': item['value'], 'source': 'case', 'status': item['status']}
+                           if item else None)
+    goal = {'intended_use': fact('intended_use'), 'decision': fact('decision'),
+            'observation_unit': fact('observation_unit'),
             'prediction_time': prediction_time}
     decisions = {}
     for d, dec in view['decisions'].items():
@@ -654,7 +702,9 @@ DECISION_LABELS = {'prediction_time': 'prediction moment',
                    # v0.2a (WP-A4)
                    'success_criterion': 'success criterion', 'preprocessing': 'preprocessing',
                    # v0.2b (WP-B1)
-                   'model_variant': 'variant', 'final_test': 'final test'}
+                   'model_variant': 'variant', 'final_test': 'final test',
+                   # Lot 2026-10-28 (EN-9)
+                   'error_metric': 'error measure'}
 # A regression study's model choice (M3), in words: the recap never says "policy".
 MODEL_CHOICE_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean baseline',
                       'fit.variant': 'the variant', 'fit.variant:2': 'the second variant',
@@ -843,9 +893,13 @@ def preprocessing_words(value: dict) -> str:
         named = sorted(c for c, v in missing.items() if v == 'indicator')
         if named:
             parts.append('missing-value indicators for ' + ', '.join(named))
-    if value.get('rare_category_min_rows'):
-        parts.append(f'categories with fewer than {value["rare_category_min_rows"]} training '
-                     f'rows grouped')
+    rare = value.get('rare_category_min_rows')
+    if isinstance(rare, dict):
+        # L8 (R6): a minimum per column.
+        parts += [f'categories of {column} with fewer than {k} training rows grouped'
+                  for column, k in sorted(rare.items()) if k]
+    elif rare:
+        parts.append(f'categories with fewer than {rare} training rows grouped')
     if value.get('caps'):
         parts.append('caps on ' + ', '.join(sorted(value['caps'])))
     if value.get('log_transform'):
@@ -881,7 +935,7 @@ def _recap_next(summary_out: dict, view: dict, junior: bool = False) -> str:
     if kind == 'show_data_card':
         # WP-A9 (M4): step 0 is the first step of the plan, not its end.
         return ('show the junior the data card (hypotrail data): what one row describes, the '
-                'columns and their meaning, and five example rows; nothing to confirm. Then '
+                'columns and their meaning, and the eight sample rows; nothing to confirm. Then '
                 'propose the prediction moment.')
     if kind != 'done' and nxt.get('message'):
         return str(nxt['message']).strip()
@@ -1336,8 +1390,8 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'plan': plan,
         'current_step': next((s['id'] for s in plan if s['current']), None),
         # v0.2a (WP-A1): every message for a surface says who it is written for.
-        'next_action': audience.next_action(_with_default_rule(st.next_action(state, suspected),
-                                                               defaults), language),
+        'next_action': _next_action(study, state, audience.next_action(
+            _with_default_rule(st.next_action(state, suspected), defaults), language)),
         'open_proposals': [_proposal_view(p, st.language_of(state))
                            for p in sorted(st.open_proposals(state),
                                            key=lambda p: (p['revision'], p['proposal_id']))],
@@ -1365,6 +1419,10 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         **_wp_f1(state, results),
     }
     case = _case_or_none(state) if not sources else None
+    # L3 (R4; D4 A, D4b): the case's statements in both languages, read by ``junior.enrich``
+    # (the prediction moment in the study language) and the surfaces; moved last below.
+    from . import l10n
+    out['case_texts'] = l10n.case_texts(state, case.document) if case is not None else None
     out['assurance'] = assurance.describe(state, case)
     if assurance.profile(state) == 'review-v1':
         from . import validity
@@ -1378,7 +1436,14 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         out['claim_eligibility'] = None
     # v0.3 (WP-C): what the agent relays at this pause (``junior_digest``, ``recommended``,
     # ``question``, ``criterion_options``), in the study language.
-    junior.enrich(out, state, case)
+    # Owner session 2026-10-26 (L1, R2c): at a free choice, ``choice_options`` lists the
+    # values a confirmation would accept now (``feasibility.accepts``).
+    from . import feasibility
+    junior.enrich(out, state, case, accepts=feasibility.accepts(study, state))
+    if out['next_action'].get('kind') == 'done':
+        # L7 (D15): what comes after the study, the export offered only when supported.
+        from . import after_study
+        out['next_action']['after_study'] = after_study.build(out, state, case)
     notice = assurance.scope_notice(case, language)
     if assurance.profile(state) == 'review-v1':
         contract = case.document.get('analysis_contract') if case is not None else None
@@ -1394,10 +1459,501 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     if notice:
         out['next_action']['junior_digest'] += ' ' + notice
         # The existing summary and plan both carry next_action; no second scope model.
+    # L9 (R20): the value the automatic mode records, while it runs and covers the action.
+    from . import automation
+    automation.annotate(out, state)
     from . import guidance
     out['next_action']['pause'] = guidance.pause(out)
     from . import presentation
     out['presentation'] = presentation.build(out)
+    record = st.automation_of(state)
+    out['automation'] = dict(record) if record is not None else None
+    out['review_queue'] = review_queue(state)
+    out['case_texts'] = out.pop('case_texts')          # VIEW_KEYS order
+    from . import case_brief
+    out['brief'] = case_brief.view_of(state)           # R68: the last key
+    if case_brief.pending_pdf(state):
+        # Imported (``init --brief-pdf`` or ``brief import``), not adopted yet: the agent
+        # drafts from it without importing it again.
+        from .cmd_brief import then
+        out['brief']['then'] = then(study.study_dir, state['revision'], language)
+    return out
+
+
+def review_queue(state: Mapping) -> list[dict]:
+    """L9 (R20): ``view.review_queue``, every decision whose current confirmation is
+    ``automatic``, in the plan's order (:func:`state.review_queue`)."""
+    out = []
+    for d in st.review_queue(state):
+        dec = state['decisions'][d]
+        out.append({'decision_id': d, 'status': dec['status'], 'value': dec['value'],
+                    'proposal_id': dec['proposal_id'], 'revision': dec['revision']})
+    return out
+
+
+def _next_action(study: read.Study, state: Mapping, action: dict | None) -> dict | None:
+    """The view's ``next_action``: the state's, completed (:func:`_opening_not_current`,
+    :func:`_runnable`), then checked as the engine would execute it (review round 6, area E,
+    R6E-1, R6E-2: :func:`mlkit.study.feasibility.checked`): an action the engine would refuse
+    is replaced by its first remedy, completed the same way. Never an action the engine
+    refuses as given, when it has a remedy."""
+    from . import feasibility
+
+    def finish(item: dict | None) -> dict | None:
+        return _runnable(study, state, _opening_not_current(study, state, item))
+    return feasibility.checked(study, state, finish(action), finish)
+
+
+def _opening_not_current(study: read.Study, state: Mapping, action: dict | None) -> dict | None:
+    """Review round 3 (E3-3): ``next_action`` never recommends opening the final test (a
+    ``propose`` of ``final_test``, the junior's words awaited on its proposal, or the ``run``
+    of its evaluation before the opening) while a
+    result the opening rests on is not current by the rule of ``status``
+    (:func:`mlkit.study.opening.not_current`); it is then a ``run`` of the
+    first such result, upstream first, with ``not_current`` listing every one and a junior
+    message in the study language. The state-derived plan is unchanged."""
+    if not action or st.final_test_opened(state) or not (
+            (action.get('kind') in ('propose', 'await_user_words', 'reconfirm')
+             and action.get('decision') == st.FINAL_TEST)
+            or (action.get('kind') == 'run'
+                and action.get('activity') == 'final_test.evaluation')):
+        return action
+    from . import opening
+    if study.source_changes():
+        return action
+    missing = opening.not_current(study, state, capture=True)
+    if not missing:
+        # Round 5 (review E, R5E-2): a capture current by its fingerprint that the final
+        # evaluation could not load (another runtime installed, an altered bundle, another
+        # environment) is captured again first; proposing the opening would be refused.
+        problem = _capture_unloadable(study, state)
+        if problem is None:
+            return _capture_first(state, action)
+        out = {'kind': 'run', 'step': action.get('step'), 'activity': CAPTURE_SLOT,
+               'not_current': [CAPTURE_SLOT],
+               'message': ('Run predictor.capture again before opening the final test: the '
+                           'captured predictor cannot be loaded as the final evaluation loads it '
+                           f'({problem.get("message")}). Running it again recomputes the '
+                           'capture of the same choice with what is installed now. The final '
+                           'test stays sealed.'),
+               'audience': audience.AGENT, 'junior_message': problem['junior_message']}
+        return _with_capture_options(study, state, out)
+    slots = [m['slot'] for m in missing]
+    junior = ' '.join(dict.fromkeys(m['junior_message'] for m in missing
+                                    if m.get('junior_message')))
+    out = {'kind': 'run', 'step': action.get('step'), 'activity': slots[0],
+           'not_current': slots,
+           'message': (f'Run {", ".join(slots)} again before opening the final test: by the '
+                       'rule of status they are not current (code changed, delayed-label rows, '
+                       'or an upstream result not current). The final test stays sealed.'),
+           'audience': audience.AGENT, 'junior_message': junior}
+    return _with_capture_options(study, state, out) if slots[0] == CAPTURE_SLOT else out
+
+
+CAPTURE_SLOT = 'predictor.capture'
+CAPTURE_FIRST_MESSAGE = (
+    'Run predictor.capture before proposing to open the final test: the export template '
+    'supports the chosen model, and only a model captured before the opening is exported as '
+    'the evaluated model (afterwards the Azure ML export carries the recipe only). The final '
+    'test stays sealed.')
+CAPTURE_FIRST_JUNIOR = (
+    'Before the final test is opened, the engine captures the chosen model: it fits it once '
+    'on every development row, reloads it and checks that it gives the same predictions, so '
+    'that the Azure ML export carries the evaluated model. No final-test row is read.',
+    "Avant l'ouverture du test final, le moteur capture le modèle choisi : il l'ajuste une "
+    'fois sur toutes les lignes de développement, le recharge et vérifie qu\'il donne les '
+    "mêmes prédictions, pour que l'export Azure ML emporte le modèle évalué. Aucune ligne du "
+    'test final n\'est lue.')
+
+
+def _capture_first(state: Mapping, action: dict) -> dict:
+    """Third session of 2026-10-26 (the Azure ML export at ``done``): the proposal to open
+    the final test comes after a capture of the chosen model when the export template
+    supports it (:func:`mlkit.study.after_study.chosen_model`, its support matrix), so that
+    the export at ``done`` carries the evaluated model, not the recipe only: a capture is
+    possible only before the opening. The action is ``run predictor.capture`` with
+    ``options`` ``{"profile": "workshop"}`` (the MLflow package the template announces) when
+    its packager can be imported, else none (a native bundle). Only a study without a
+    capture, at the ``propose`` of the final test, outside a read-only process; the final
+    test is still opened once, in the junior's words."""
+    from . import guard
+    if action.get('kind') != 'propose' or state['current'].get(CAPTURE_SLOT) \
+            or guard.read_only():
+        return action
+    from . import after_study
+    model, _ = after_study.chosen_model(state, _case_or_none(state))
+    if model is None or not any(
+            c['task'] == model['task'] and c['family'] == model['family']
+            and c['output_kind'] == model['output_kind'] for c in after_study.capabilities()):
+        return action
+    from . import capture_check
+    options = capture_check.capture_first_options(state)
+    if options is None:
+        return action
+    lang = st.language_of(state)
+    out = {'kind': 'run', 'step': action.get('step'), 'activity': CAPTURE_SLOT,
+           'message': CAPTURE_FIRST_MESSAGE, 'audience': audience.AGENT,
+           'junior_message': CAPTURE_FIRST_JUNIOR[1 if lang == 'fr' else 0]}
+    return {**out, 'options': options} if options else out
+
+
+def capture_options(params: Mapping | None) -> dict:
+    """Round 5 (review E, R5E-3): the ``run`` options that reproduce a capture's params
+    (``profile`` when not the default, ``packager`` when the profile does not imply it), so a
+    re-capture keeps its MLflow package. ``{}`` for a base capture without packager."""
+    params = params or {}
+    out = {}
+    profile, packager = params.get('profile'), params.get('packager')
+    if isinstance(profile, str) and profile != 'base':
+        out['profile'] = profile
+    if isinstance(packager, str) and packager and not (
+            profile == 'workshop' and packager == 'mlflow_pyfunc'):
+        out['packager'] = packager
+    return out
+
+
+def _with_capture_options(study: read.Study, state: Mapping, action: dict) -> dict:
+    """R5E-3: a ``run`` of the capture carries ``options`` (each one a ``--<option>
+    <value>``) of the capture it replaces, when that capture had any."""
+    rid = state['current'].get(CAPTURE_SLOT)
+    if rid is None:
+        return action
+    try:
+        options = capture_options(study.result(rid).get('params'))
+    except StudyError:
+        return action
+    return {**action, 'options': options} if options else action
+
+
+def _capture_unloadable(study: read.Study, state: Mapping) -> dict | None:
+    """R5E-2: the ``capture_loadable`` item of the current capture when the final
+    evaluation could not load it (:func:`mlkit.study.capture_check.unloadable`, the check of
+    the confirmation and of the reservation; never in a read-only process), else None."""
+    from . import capture_check
+    return capture_check.unloadable(study, state)
+
+
+POLICY_RUNS = ('policy.evaluation', 'policy.evaluate')
+
+
+def _runnable(study: read.Study, state: Mapping, action: dict | None) -> dict | None:
+    """Review round 4 (E4-2, E4-3): ``next_action`` never names an action the engine would
+    refuse as given.
+
+    * After the opening, the final evaluation is never run again, and the final-test
+      diagnostics cannot be computed from a final evaluation that is missing or not current
+      (``run diag.final_test`` refuses it, E3-4): the action then says so and names what
+      remains (:func:`_final_test_not_recomputable`).
+    * Before the opening, a confirmed final test whose opening the reservation would refuse
+      because the study now chooses another configuration (``chosen_configuration`` of
+      :func:`mlkit.study.preconditions.opening_missing`, read here from state: a study that
+      changed its choice before this rule existed) is proposed again on that configuration.
+    * A ``run`` of the policy evaluation carries the rules to pass (``rules``, each one a
+      ``--rule``) whenever the study knows them: the adopted or proposed rule, the
+      scenario's default, the rules of the evaluation it runs again."""
+    if not action:
+        return action
+    kind, activity = action.get('kind'), action.get('activity')
+    if kind == 'run' and st.final_test_opened(state) \
+            and activity in ('final_test.evaluation', 'diag.final_test'):
+        replaced = _final_test_not_recomputable(study, state, action)
+        if replaced is not None:
+            return replaced
+    if kind in ('propose', 'reconfirm', 'await_user_words', 'done') \
+            and st.final_test_opened(state):
+        # Round 5 (review E, R5E-8): after the opening, a decision proposed while the final
+        # evaluation is not current says so too (E4-2 for the runs).
+        action = _with_final_test_notice(study, state, action)
+    if kind in ('run', 'propose') and st.structural_first(state):
+        # Owner batch of 2026-10-28 (R40, R45): on the way to the models, the exploration
+        # step runs the case catalogue's charts itself, each target chart a counted look.
+        from . import drafts
+        run = drafts.exploration_run(study, state, action, st.language_of(state))
+        if run is not None:
+            return run
+        if kind == 'run' and activity == 'fit.baseline' and st.has_error_metric(state) \
+                and drafts.exploration_complete(study, state):
+            # Lot 2026-10-28 (EN-12, R61): a pause, so the charts are read before any model.
+            return st.read_exploration_action(action)
+    if kind == 'propose' and st.structural_first(state) \
+            and action.get('decision') in (st.PREPROCESSING, st.MODEL_VARIANT):
+        # Owner session 2026-10-26 (L5, R5, R13; D6, D9): the drafts read the evidence. The
+        # preparation is drafted from the target-free results (the screened distributions are
+        # run first); the variants add the EBM when the diagnostics flag a pattern.
+        from . import drafts
+        language = st.language_of(state)
+        if action.get('decision') == st.PREPROCESSING:
+            run = drafts.distribution_run(study, state, action, language)
+            if run is not None:
+                return run
+            action = drafts.with_preprocessing_draft(study, state, action, language)
+        else:
+            action = drafts.with_variant_draft(study, state, action, language)
+    if kind == 'propose' and action.get('decision') == 'policy':
+        # R5E-4: the policy proposal carries the rule to propose (``default_value``).
+        default = _policy_default(study, state, action)
+        if default is not None:
+            action = {**action, 'default_value': default}
+    if kind == 'run' and activity == 'final_test.evaluation' \
+            and not st.final_test_opened(state):
+        from . import opening
+        decision = state['decisions'].get(st.FINAL_TEST) or {}
+        chosen = st.choice_config(state)
+        if decision.get('status') == 'confirmed' and chosen is not None \
+                and decision.get('value') != chosen:
+            # The reservation's ``chosen_configuration`` (read side, state only).
+            missing = [{'requirement': 'chosen_configuration', 'value': decision.get('value'),
+                        'chosen': chosen}]
+            return {'kind': 'propose', 'step': action.get('step'), 'decision': st.FINAL_TEST,
+                    'default_value': chosen,
+                    'message': ('The final test was confirmed but not opened, and the study '
+                                'now chooses another configuration: propose the final test '
+                                'again on the chosen configuration and record the junior\'s own '
+                                'words; running final_test.evaluation would be refused. The '
+                                'final test stays sealed.'),
+                    'audience': audience.AGENT,
+                    'junior_message': opening.reservation_message(state, missing)}
+    if kind == 'run' and activity in POLICY_RUNS and not action.get('rules'):
+        rules = _known_rules(study, state, action)
+        if rules:
+            action = {**action, 'rules': rules}
+    return action
+
+
+# Round 5 (review E, R5E-4): the rules the engine recommends evaluating when the study names
+# none (no proposal, no scenario share, no evaluation yet, no rule fixed by a review-v1
+# criterion): the top shares the policy evaluation reports its gain at
+# (``mlkit.study.policy.GAIN_SHARES``), and among them the one it proposes, the share the
+# development diagnostics apply by default (``mlkit.study.diagnostics.DEFAULT_RULE``). Both
+# equalities are tested; this module may not import those numerical modules.
+RECOMMENDED_RULES = ('share:0.05', 'share:0.1', 'share:0.2')
+RECOMMENDED_RULE = 'share:0.1'
+
+
+def criterion_rule(state: Mapping) -> str | None:
+    """R5E-4: under review-v1, the rule the confirmed success criterion fixes
+    (``selection.rule``): the policy must adopt it (``selection_rule_mismatch``). None
+    otherwise."""
+    if assurance.profile(state) != 'review-v1':
+        return None
+    decision = state['decisions'].get(st.SUCCESS_CRITERION) or {}
+    if decision.get('status') not in ('confirmed', 'reconfirm_required'):
+        return None
+    value = decision.get('value')
+    rule = ((value.get('selection') or {}).get('rule') if isinstance(value, Mapping)
+            else None)
+    return rec.canonical_rule(rule) if isinstance(rule, str) else None
+
+
+def _evaluation_params(study: read.Study, state: Mapping) -> dict | None:
+    """The params of the current policy evaluation (``rules``, ``models``), or None when
+    the slot holds none, it is not current by the state, or its entry cannot be read."""
+    rid = state['current'].get('policy.evaluation')
+    if rid is None or not st.is_current(state, 'policy.evaluation'):
+        return None
+    try:
+        params = study.result(rid).get('params') or {}
+    except StudyError:
+        return None
+    rules = params.get('rules') if isinstance(params.get('rules'), list) else (
+        [params['rule']] if params.get('rule') is not None else [])
+    return {'rules': [rec.canonical_rule(r) or str(r) for r in rules],
+            'models': [str(m) for m in params.get('models') or [rec.POLICY_CANDIDATE]]}
+
+
+def _with_chosen_model(state: Mapping, rule: str) -> str:
+    """``rule`` applied to the model the study chose (``rule@fit.variant``) when a binary
+    study's explicit model choice is a variant; the rule alone otherwise."""
+    if st.has_explicit_binary_model_choice(state):
+        model = (state['decisions'].get('model_choice') or {}).get('value')
+        if isinstance(model, str) and model != rec.POLICY_CANDIDATE \
+                and model in rec.POLICY_MODELS:
+            return f'{rule}{rec.POLICY_MODEL_SEP}{model}'
+    return rule
+
+
+def _policy_default(study: read.Study, state: Mapping, action: Mapping) -> str | None:
+    """R5E-4: the policy value a ``propose policy`` action carries: under review-v1 the
+    rule the success criterion fixes; else the scenario's share (the action's default);
+    else, among the rules of the current evaluation, :data:`RECOMMENDED_RULE` or the first.
+    Applied to the chosen model (:func:`_with_chosen_model`)."""
+    rule = criterion_rule(state) or rec.canonical_rule(action.get('default_value'))
+    if rule is None:
+        evaluated = (_evaluation_params(study, state) or {}).get('rules') or []
+        rule = RECOMMENDED_RULE if RECOMMENDED_RULE in evaluated else (
+            evaluated[0] if evaluated else None)
+    return _with_chosen_model(state, rule) if rule else None
+
+
+def _unevaluated_policy_proposal(study: read.Study, state: Mapping, action: Mapping
+                                 ) -> dict | None:
+    """R5E-7: the ``run`` that makes the open policy proposal confirmable, or None when the
+    confirmation would accept it: the policy evaluation on its rule (and the rules already
+    evaluated) when no current evaluation covers that rule or model, or the fit of its model
+    first when that fit is not current. Round 6 (R6E-2): the remedy
+    :mod:`mlkit.study.feasibility` names for that refusal, after the confirmation's earlier
+    refusals (a hold, a stale proposal) and checked like any run."""
+    proposal = state['proposals'].get(action.get('proposal_id')) or {}
+    value = proposal.get('value')
+    rule, model = rec.policy_rule(value), rec.policy_model(value)
+    if rule is None:
+        return None
+    evaluated = _evaluation_params(study, state)
+    if evaluated is not None and rule in evaluated['rules'] and model in evaluated['models']:
+        return None
+    lang = st.language_of(state)
+    fr = lang == audience.FR
+    words = audience.rule_words(rule, lang)
+    if model != rec.POLICY_CANDIDATE and not st.is_current(state, model):
+        activity = model
+        junior = (f"Votre proposition de règle (« {words} ») s'applique à "
+                  f'{audience.model_words(model, lang)}, dont l\'ajustement n\'est pas à jour : '
+                  "il est relancé d'abord, puis la règle est évaluée, avant de vous demander "
+                  'si vous l\'adoptez.' if fr else
+                  f'Your proposed rule ("{words}") applies to '
+                  f'{audience.model_words(model, lang)}, whose fit is not current: it is run '
+                  'first, then the rule is evaluated, before you are asked whether you adopt '
+                  'it.')
+        out = {'kind': 'run', 'step': 'policy', 'activity': activity,
+               'proposal_id': action.get('proposal_id')}
+    else:
+        rules = list(dict.fromkeys([rule] + _known_rules(study, state, action)))
+        junior = (f"Votre proposition de règle (« {words} ») n'a pas encore été évaluée sur "
+                  "les résultats à jour : l'évaluation de la règle est lancée d'abord, puis "
+                  'vous dites si vous l\'adoptez.' if fr else
+                  f'Your proposed rule ("{words}") has not been evaluated on the current '
+                  'results yet: the policy evaluation runs first, then you say whether you '
+                  'adopt it.')
+        out = {'kind': 'run', 'step': 'policy', 'activity': 'policy.evaluation',
+               'rules': rules, 'proposal_id': action.get('proposal_id')}
+    out.update(message=(f'Do not ask for words on proposal {action.get("proposal_id")} yet: '
+                        f'the confirmation would refuse it, since no current policy evaluation '
+                        f'covers {value}. Run {out["activity"]} first; the proposal stays open.'),
+               audience=audience.AGENT, junior_message=junior)
+    return out
+
+
+def _known_rules(study: read.Study, state: Mapping, action: Mapping) -> list[str]:
+    """E4-3: the rules a policy evaluation runs on as the study knows them, in this order:
+    the rule a review-v1 success criterion fixes (round 5, R5E-4), the policy decision's rule
+    (confirmed, to confirm again, or proposed), the rules of the open policy proposals, the
+    action's default (the scenario's share), and the rules of the current evaluation (run
+    again on what it evaluated); when the study names none, :data:`RECOMMENDED_RULES`."""
+    found: list[str] = [criterion_rule(state)]
+    decision = state['decisions'].get('policy') or {}
+    if decision.get('status') in ('confirmed', 'reconfirm_required', 'proposed'):
+        found.append(rec.policy_rule(decision.get('value')))
+    for p in sorted(st.open_proposals(state), key=lambda p: (p['revision'], p['proposal_id'])):
+        if p.get('decision_id') == 'policy':
+            found.append(rec.policy_rule(p.get('value')))
+    found.append(rec.canonical_rule(action.get('default_value')))
+    rid = state['current'].get('policy.evaluation')
+    if rid:
+        try:
+            params = study.result(rid).get('params') or {}
+        except StudyError:
+            params = {}
+        rules = params.get('rules') if isinstance(params.get('rules'), list) else (
+            [params['rule']] if params.get('rule') is not None else [])
+        found += [rec.canonical_rule(r) for r in rules]
+    return [r for r in dict.fromkeys(found) if r] or list(RECOMMENDED_RULES)
+
+
+def _final_test_not_recomputable(study: read.Study, state: Mapping, action: Mapping
+                                 ) -> dict | None:
+    """E4-2: after the opening, the ``run`` the plan names (the final evaluation, or the
+    final-test diagnostics on a final evaluation that is missing or not current) would be
+    refused: None when it would not (the diagnostics on a current final evaluation).
+    Otherwise the next action says that the final test cannot be recomputed and why, and
+    names what remains: the conclusion (with the verdicts its rule still allows), or nothing
+    when it is confirmed. Never a loop."""
+    from . import opening
+    final = state['current'].get('final_test.evaluation')
+    currency = study.currency(final) if final else None
+    if action.get('activity') == 'diag.final_test' and currency and currency['current']:
+        return None
+    reason = (currency or {}).get('reason') or {}
+    lang = st.language_of(state)
+    fr = lang == audience.FR
+    if final is None:
+        why = ("l'ouverture a été interrompue avant que son évaluation soit enregistrée" if fr
+               else 'the opening was interrupted before its evaluation was recorded')
+    elif reason.get('delayed_labels_included'):
+        why = ("elle a été calculée avec des lignes de développement dont l'étiquette "
+               "n'était pas encore connue au moment de la décision (des étiquettes tardives)"
+               if fr else
+               'it was computed with development rows whose label was not known yet at the '
+               'decision time (delayed labels)')
+    elif reason.get('code_changed'):
+        why = ("le code du moteur qui l'a calculée a changé depuis" if fr else
+               "the engine's code that computed it changed since")
+    elif currency is not None and currency['current']:
+        why = ("elle est enregistrée, et le test final ne s'ouvre qu'une fois" if fr else
+               'it is recorded, and the final test is opened only once')
+    else:
+        why = ("elle a été calculée à partir de résultats qui ne sont plus à jour" if fr else
+               'it was computed from results that are no longer current')
+    conclusion = state['decisions'].get('conclusion') or {}
+    verdicts = opening.conclusion_verdicts(state)
+    step = next((s for s in st.derive_plan(state) if s['id'] == st.FINAL_TEST), None) or {}
+    blocked = [a for a in ('final_test.evaluation', 'diag.final_test')
+               if a == action.get('activity') or a in (step.get('missing_results') or [])]
+    named = audience.join([audience.verdict_words(v, lang) for v in verdicts], lang)
+    if fr:
+        head = ("Le test final a été ouvert une fois, et son évaluation ne peut pas être "
+                f"recalculée : {why}. Ses diagnostics ne peuvent donc pas être calculés non "
+                "plus. Ses chiffres restent dans l'étude comme historique.")
+        rest = (f' Ce qui reste possible : conclure l\'étude à partir des preuves de '
+                f'développement ({named}), en disant pourquoi ; un nouveau test final, '
+                f'indépendant, demande une nouvelle étude.' if conclusion.get('status')
+                != 'confirmed' and verdicts else
+                " Votre conclusion est enregistrée ; un nouveau test final, indépendant, "
+                "demande une nouvelle étude.")
+    else:
+        head = (f'The final test was opened once, and its evaluation cannot be computed again: '
+                f'{why}. Its diagnostics cannot be computed either. Its figures stay in the '
+                f'study as history.')
+        rest = (f' What remains possible: conclude the study from the development evidence '
+                f'({named}), saying why; a new, independent final test needs a new study.'
+                if conclusion.get('status') != 'confirmed' and verdicts else
+                ' Your conclusion is recorded; a new, independent final test needs a new '
+                'study.')
+    out = {'not_recomputable': blocked,
+           'audience': audience.AGENT, 'junior_message': head + rest}
+    agent = (f'Do not run {", ".join(blocked)}: the final test was already opened and its '
+             'evaluation cannot be recomputed; the engine refuses it.')
+    if conclusion.get('status') != 'confirmed' and verdicts:
+        return {'kind': 'propose', 'step': 'conclusion', 'decision': 'conclusion',
+                'verdicts': verdicts, **out,
+                'message': agent + ' Propose the conclusion (verdicts the engine accepts: '
+                           + ', '.join(verdicts) + '), its text citing development evidence '
+                           'and saying that the final test cannot be recomputed.'}
+    return {'kind': 'done', **out,
+            'message': agent + ' Nothing else remains in the plan; a new final test needs a '
+                               'new study.'}
+
+
+def _with_final_test_notice(study: read.Study, state: Mapping, action: dict) -> dict:
+    """Round 5 (review E, R5E-8): after the opening, a ``propose``, ``reconfirm``,
+    ``await_user_words`` or ``done`` while the final evaluation is missing or not current
+    carries the E4-2 notice (:func:`_final_test_not_recomputable`): ``not_recomputable``
+    and, first in ``junior_message``, why the final test cannot be computed again and what
+    remains; a proposal of the conclusion also carries the verdicts its rule still allows."""
+    final = state['current'].get('final_test.evaluation')
+    if final is not None and study.currency(final)['current']:
+        return action
+    notice = _final_test_not_recomputable(study, state, {'activity': 'final_test.evaluation'})
+    if notice is None:
+        return action
+    out = {**action, 'not_recomputable': notice['not_recomputable'],
+           'junior_message': ' '.join(t for t in (notice['junior_message'],
+                                                   action.get('junior_message')) if t)}
+    if action.get('decision') == 'conclusion' and notice.get('verdicts') \
+            and 'verdicts' not in action:
+        out['verdicts'] = notice['verdicts']
+    out['message'] = (f'{action.get("message") or ""} The final test was already opened and '
+                      'its evaluation is not current and cannot be recomputed: say so, and cite '
+                      'development evidence.').strip()
     return out
 
 
@@ -1422,9 +1978,15 @@ def _wp_f1(state: dict, results: dict) -> dict:
         document = None
     diag = results.get(st.DIAG_SLOT[task]) or {}
     values = diag.get('values') if diag.get('integrity') == 'ok' else None
-    return {'model_selection': tr.selection(results, state, task),
-            'model_families': tr.shortlist(document, values, task, st.language_of(state),
-                                           diag.get('result_id'))}
+    # Owner session 2026-10-26 (L5, R14, D10): each family in the junior's words, and why no
+    # random forest (additive keys ``families[].junior_words``, ``not_offered``).
+    from . import criterion as criterion_mod, drafts
+    # R46: the one-standard-error selection on the error the criterion names (MAE unless the
+    # junior chose RMSE).
+    return {'model_selection': criterion_mod.selection(results, state, task),
+            'model_families': drafts.with_junior_words(
+                tr.shortlist(document, values, task, st.language_of(state),
+                             diag.get('result_id')), st.language_of(state))}
 
 
 # WP-B1: the activities whose runs are model configurations (the baseline is not a trial),
@@ -1536,7 +2098,38 @@ def _proposal_view(p: dict, language: str) -> dict:
 # --- the digest of the advanced companion (CLI-CONTRACT-COMPANION §1, C1) -------------
 
 # ``status --summary --digest`` appends these keys after ``recap``, in this order.
-DIGEST_SUMMARY_KEYS = ('moments', 'pauses', 'last_session', 'digest', 'task', 'currency')
+DIGEST_SUMMARY_KEYS = ('moments', 'pauses', 'last_session', 'digest', 'task', 'currency',
+                       # L3 (owner session 2026-10-26, R4; D4b): the junior texts this summary
+                       # shows, in both languages (:func:`language_texts`).
+                       'texts',
+                       # Contract P1 (CLI-CONTRACT §17.2, the one-page study panel): after
+                       # ``texts``, in this order (:mod:`mlkit.study.panel_digest`).
+                       'panel_contract', 'automation', 'review_queue', 'defensibility',
+                       'ledger', 'sample', 'headlines', 'criterion_configurations',
+                       # Owner batch of 2026-10-28 (CLI-CONTRACT §17.6): the structure known
+                       # before the split (R38) and every column's quality verdict (R41).
+                       'data_structure', 'quality_verdicts',
+                       # Lot 2026-10-28 (CLI-CONTRACT §18): the use-case brief's flag and
+                       # business numbers (R66) and the case's display names (EN-18).
+                       'case_brief', 'case_display')
+# ``texts.<language>``: where each junior text of the summary is, by its id (L3, D4b).
+LANGUAGE_TEXT_KEYS = ('plan', 'moments', 'next_action', 'choice_options', 'limits',
+                      'artifacts', 'recap', 'digest', 'goal', 'proposals',
+                      # Contract P1 (CLI-CONTRACT §17.2.3): the awaited question, its options
+                      # and why, the explanation, the headlines, the data-contingent marks,
+                      # the step-1 sample's note.
+                      'question', 'options', 'options_note', 'junior_digest', 'headlines',
+                      'data_contingent', 'sample_note',
+                      # Owner batch of 2026-10-28 (§17.6): the plan in its order (R36), the
+                      # limit of the current step (R43, R48), the criterion in words on the
+                      # frame it is judged on (R48).
+                      'plan_recap', 'step_limit', 'criterion_words',
+                      # Lot 2026-10-28 (CLI-CONTRACT §18): the step cards (EN-19), the
+                      # use-case brief's texts (R66) and the defensibility note (R65).
+                      'step_cards', 'case_brief', 'defensibility_note')
+# The engine's own texts of ``texts.fr``, set in French typography (a narrow no-break space
+# before ; : ? ! », after «); the others are the junior's or the agent's words, as written.
+FRENCH_TYPOGRAPHY_KEYS = tuple(k for k in LANGUAGE_TEXT_KEYS if k not in ('goal', 'proposals'))
 # Review fix H1: ``currency`` is the first CURRENCY_HEX hex characters of a sha256 over the
 # canonical JSON of :func:`currency_inputs` (CLI-CONTRACT-COMPANION §1.5).
 CURRENCY_HEX = 16
@@ -1586,14 +2179,19 @@ _COUNT_OF_KIND = {'proposed': 'proposed', 'confirmed': 'confirmed', 'withdrawn':
 def moments(task: str, state: dict | None = None) -> list[dict]:
     """The four moments of the plan (``content/steps.yaml``, ``moments``). With ``state``,
     only the steps of that study are listed (a study created before WP-A4 has no success
-    criterion or preprocessing step)."""
+    criterion or preprocessing step), with the titles in its language (L3)."""
     from . import texts
 
     data = texts.load('steps')
     overlay = data.get('regression_moments', {}) if task == st.REGRESSION else {}
-    ids = set(st.step_ids(state if state is not None else task))
-    return [{'id': m['id'], 'title': m['title'],
-             'steps': [s for s in overlay.get(m['id'], m['steps']) if s in ids]}
+    order = st.step_ids(state if state is not None else task)
+    ids = set(order)
+    french = st.language_of(state) == audience.FR if state is not None else False
+    # Owner session 2026-10-26 (L5): the steps of a moment in the study's plan order (a
+    # structural-first study checks the structure, then the preparation, then the target).
+    return [{'id': m['id'], 'title': m.get('title_fr', m['title']) if french else m['title'],
+             'steps': sorted((s for s in overlay.get(m['id'], m['steps']) if s in ids),
+                             key=order.index)}
             for m in data['moments']]
 
 
@@ -1645,31 +2243,43 @@ def last_session(records: list[dict]) -> dict:
 
 
 class _Texts:
-    """The digest sentences of ``content/digest.yaml`` for one task."""
+    """The digest sentences of ``content/digest.yaml`` for one task. ``lang`` French (L3,
+    owner session 2026-10-26): the junior sentences of a French study, from the file's ``fr``
+    mapping, with the decisions and activities in the junior's French words."""
 
-    def __init__(self, task: str):
+    def __init__(self, task: str, lang: str = audience.EN):
         from . import texts
 
         data = texts.load('digest')
         if task == st.REGRESSION:
             data = texts._merge({k: v for k, v in data.items() if k != st.REGRESSION},
                                 data.get(st.REGRESSION, {}))
+        self.lang = lang
+        if lang == audience.FR:
+            french = data.get('fr') or {}
+            data = {**data, 'templates': french['templates'],
+                    'junior_templates': french['templates'], 'causes': french['causes'],
+                    'junior_causes': {}, 'effects': french['effects'],
+                    'slot_with_column': french['slot_with_column'],
+                    'webview': french['webview'], 'activities': {}}
         self.data = data
 
     def decision(self, decision_id) -> str:
+        if self.lang == audience.FR:
+            return audience.decision_words(decision_id, self.lang)
         return self.data['decisions'].get(decision_id, ' '.join(str(decision_id).split('_')))
 
     def slot(self, slot, junior: bool = False) -> str:
         base, sep, column = str(slot).partition(':')
         label = self.data['activities'].get(base) or (
-            audience.activity_words(base) if junior   # WP-A7: no activity id for the junior
+            audience.activity_words(base, self.lang) if junior   # WP-A7: no activity id
             else self.data['activity_fallback'].format(activity=base))
         return self.data['slot_with_column'].format(label=label, column=column) if sep else label
 
-    @staticmethod
-    def join(labels) -> str:
+    def join(self, labels) -> str:
         labels = list(labels)
-        return labels[0] if len(labels) == 1 else ', '.join(labels[:-1]) + ' and ' + labels[-1]
+        last = ' et ' if self.lang == audience.FR else ' and '
+        return labels[0] if len(labels) == 1 else ', '.join(labels[:-1]) + last + labels[-1]
 
     def template(self, name: str, junior: bool = False, **fields) -> str:
         own = self.data.get('junior_templates', {}).get(name) if junior else None
@@ -1753,13 +2363,14 @@ def _text(t: _Texts, item: dict, *, again: bool, state: dict, full: dict | None,
         # Only a rule identifier or a model slot is quoted: other values are free text.
         identifier = item['decision_id'] in st.CHOICE_DECISION.values() and isinstance(value, str)
         if identifier and junior:
-            value = (audience.model_words(value) if item['decision_id'] == 'model_choice'
-                     else audience.rule_words(value))
+            value = (audience.model_words(value, t.lang) if item['decision_id'] == 'model_choice'
+                     else audience.rule_words(value, t.lang))
         main = template('proposed_value', value=value) if identifier else template('proposed')
         if item['superseded']:
             main += ' ' + t.data['templates']['superseding']
     elif kind == 'confirmed':
         name = ('confirmed_delegated' if item['basis'] == st.DELEGATED_DEFAULT
+                else 'confirmed_automatic' if item['basis'] == st.AUTOMATIC
                 else 'confirmed_again' if again else 'confirmed')
         main = template(name, channel=item['channel'])
     elif kind == 'withdrawn':
@@ -1778,8 +2389,8 @@ def _text(t: _Texts, item: dict, *, again: bool, state: dict, full: dict | None,
         act = {'activity': activity, 'Activity': _cap(activity)}
         if kind in ('result_added', 'result_replaced'):
             if item['rules']:
-                rules = ('; '.join(audience.rule_words(r) for r in item['rules']) if junior
-                         else ', '.join(item['rules']))
+                rules = ('; '.join(audience.rule_words(r, t.lang) for r in item['rules'])
+                         if junior else ', '.join(item['rules']))
                 main = t.template(f'{kind}_rules', junior, rules=rules, **act)
             elif item['column'] and ':' not in str(item['slot']):
                 main = t.template(f'{kind}_column', junior, column=item['column'], **act)
@@ -1791,7 +2402,7 @@ def _text(t: _Texts, item: dict, *, again: bool, state: dict, full: dict | None,
             main = t.template(kind, junior, **act)
         if item.get('channel') == 'webview':
             # v0.3 (WP-J, R35): a run started from the study panel says so.
-            main += (' You ran it from the study panel.' if junior
+            main += (' ' + t.data.get('webview', 'You ran it from the study panel.') if junior
                      else ' It was started from the study panel (channel webview).')
     elif action == 'init':
         main = template('created')
@@ -1810,6 +2421,9 @@ def digest(study: read.Study, state: dict, *, since: int) -> dict:
     """
     records = study.revisions(0)
     t = _Texts(st.task_of(state))
+    # L3 (R4): the junior sentences of a French study are French (``text`` stays English).
+    lang = st.language_of(state)
+    tj = _Texts(st.task_of(state), lang) if lang == audience.FR else t
     full_by_revision: dict[int, dict] = {}
     for inv in state['invalidations']:
         full_by_revision.setdefault(inv['revision'], inv)
@@ -1898,6 +2512,10 @@ def digest(study: read.Study, state: dict, *, since: int) -> dict:
         # WP-A7: ``junior_text`` only when the sentence differs (the summary stays compact).
         item['audience'] = audience.JUNIOR if junior == item['text'] else audience.AGENT
         item['junior_text'] = None if junior == item['text'] else junior
+        if tj is not t:
+            # L3: in a French study the junior's sentence is always given, in French.
+            item['junior_text'] = _text(tj, item, again=again, state=state, full=own,
+                                        record=record, kept=kept, junior=True)
         if kind in _COUNT_OF_KIND:
             counts[_COUNT_OF_KIND[kind]] += 1
         inv = item['invalidation']
@@ -1942,7 +2560,7 @@ def _channel_events(study: read.Study, since: int) -> list[dict]:
 
 
 def with_digest(study: read.Study, built: dict, summary_out: dict, *,
-                since: int | None = None) -> dict:
+                since: int | None = None, leases: dict | None = None) -> dict:
     """``summary_out`` with the keys of ``--digest`` (CLI-CONTRACT-COMPANION §1, C1).
 
     It appends :data:`DIGEST_SUMMARY_KEYS` after ``recap`` and adds ``origin`` (C9, null
@@ -1955,17 +2573,119 @@ def with_digest(study: read.Study, built: dict, summary_out: dict, *,
                          f'--since must be between 0 and the current revision '
                          f'({study.revision}).',
                          details={'since': since, 'revision': study.revision})
+    from . import panel_digest
     state = study.state
-    session = last_session(study.revisions(0))
+    records = study.revisions(0)
+    session = last_session(records)
     out = dict(summary_out)
+    # Contract P1 (CLI-CONTRACT §17.2.5, §17.2.6): each result's channel, last; each open
+    # proposal's data-contingent mark, after ``origin`` (null when not assessed).
+    out['results'] = panel_digest.with_channels(summary_out['results'], built,
+                                                panel_digest.run_channels(records))
+    contingency = panel_digest.proposal_contingency(records)
     out['open_proposals'] = [{**p, 'origin': (state['proposals'].get(p['proposal_id']) or {})
-                              .get('origin')} for p in summary_out['open_proposals']]
+                              .get('origin'),
+                              'data_contingent': contingency.get(p['proposal_id'],
+                                                                 (None, None))[0],
+                              # Owner batch of 2026-10-28 (R40, §17.6): the results that
+                              # show the data facts the proposal cites.
+                              'evidence': panel_digest.proposal_evidence(built, p)}
+                             for p in summary_out['open_proposals']]
+    start = session['boundary_revision'] if since is None else since
     out.update({'moments': moments(built['task'], state), 'pauses': pauses(state),
                 'last_session': session,
-                'digest': digest(study, state, since=session['boundary_revision']
-                                 if since is None else since),
+                'digest': digest(study, state, since=start),
                 'task': built['task'], 'currency': currency_digest(study, built)})
+    extra = panel_digest.additions(study, built, out)
+    out['texts'] = language_texts(study, built, out, since=start, leases=leases,
+                                  contingency=contingency,
+                                  has_sample=extra['sample'] is not None)
+    out.update(extra)
     return out
+
+
+def _texts_of(built: dict, summary_out: dict, lang: str, *, contingency: Mapping | None = None,
+              has_sample: bool = False) -> dict:
+    """The junior texts of one summary (and the view it was made from), by id."""
+    from . import panel_digest
+    nxt = built.get('next_action') or {}
+    _, lines = panel_digest.headlines(built, summary_out, lang)
+    return {
+        'plan': {s['id']: s['title'] for s in built['plan']},
+        'moments': {m['id']: m['title'] for m in summary_out.get('moments') or []},
+        'next_action': nxt.get('junior_message'),
+        'choice_options': {o['id']: o['label'] for o in nxt.get('choice_options') or []},
+        'limits': {x['id']: x.get('junior_text') or x.get('text')
+                   for x in built['not_yet_defensible']},
+        'artifacts': {name: i.get('junior_message')
+                      for name, i in built['artifacts']['items'].items()},
+        'recap': list(summary_out.get('recap_junior') or []),
+        'digest': {str(i['revision']): i.get('junior_text') or i.get('text')
+                   for i in (summary_out.get('digest') or {}).get('items') or []},
+        'goal': {k: (v or {}).get('value') for k, v in (summary_out.get('goal') or {}).items()},
+        'proposals': {p['proposal_id']: (p.get('labels') or {}).get(lang)
+                      for p in built['open_proposals']},
+        # Contract P1 (CLI-CONTRACT §17.2.3).
+        **panel_digest.texts(built, lang, contingency=contingency or {},
+                             has_sample=has_sample, headline_lines=lines),
+    }
+
+
+def language_texts(study: read.Study, built: dict, summary_out: dict, *, since: int,
+                   leases: dict | None = None, contingency: Mapping | None = None,
+                   has_sample: bool = False) -> dict:
+    """``texts`` of ``status --summary --digest`` (L3, owner session 2026-10-26; D4b):
+    ``{"en": T, "fr": T}``, where ``T`` gives each junior text of the summary in that language
+    by its id (:data:`LANGUAGE_TEXT_KEYS`): the step titles (``plan``), the ``moments``, the
+    next action's ``junior_message`` and ``choice_options`` labels, the ``limits``'
+    ``junior_text``, the deliverables' ``junior_message`` (``artifacts``), ``recap_junior``
+    (``recap``), the digest items' junior sentences by revision (``digest``), the ``goal``,
+    and each open proposal's restatement in that language (``proposals``, null when the agent
+    gave none in it). The study language's table is read from this summary; the other one
+    from the same study read in the other language (no write, no clock), so the study panel
+    can follow its own language switch. The French table's engine texts
+    (:data:`FRENCH_TYPOGRAPHY_KEYS`) are set in French typography
+    (:func:`panel_digest.french_typography`), so they equal the summary's own texts up to
+    those spaces."""
+    state = study.state
+    lang = built.get('language') or audience.EN
+    other = audience.FR if lang == audience.EN else audience.EN
+    twin_state = {**state, 'language': other}
+    twin = read.Study.at_state(study.study_dir, twin_state)
+    twin_built = build(twin, leases=leases)
+    twin_summary = summary(twin_built)
+    twin_summary['moments'] = moments(twin_built['task'], twin_state)
+    twin_summary['digest'] = digest(twin, twin_state, since=since)
+    extra = {'contingency': contingency, 'has_sample': has_sample}
+    tables = {lang: _texts_of(built, summary_out, lang, **extra),
+              other: _texts_of(twin_built, twin_summary, other, **extra)}
+    # Lot 2026-10-28 (CLI-CONTRACT §18): the step cards, the brief and the defensibility
+    # note, each from the view read in its language.
+    from . import case_brief, panel_digest as pdg, step_cards
+    records = study.revisions(0)
+    for code, s, b, summ in ((lang, study, built, summary_out),
+                             (other, twin, twin_built, twin_summary)):
+        tables[code]['step_cards'] = step_cards.build(s, b, code, records=records)
+        tables[code]['case_brief'] = case_brief.texts_of_state(state, code)
+        tables[code]['defensibility_note'] = pdg.defensibility_note(b, summ, code)
+    # The panel shows these texts verbatim: the French table carries its own typography
+    # (CLI-CONTRACT §17.2.3); the junior's and the agent's words (``goal``, ``proposals``)
+    # stay as they were written.
+    from . import panel_digest
+    words = _decision_words_of(tables[audience.FR].get('step_cards'))
+    tables[audience.FR] = {k: panel_digest.french_typography(v)
+                           if k in FRENCH_TYPOGRAPHY_KEYS else v
+                           for k, v in tables[audience.FR].items()}
+    for card, said in zip((tables[audience.FR].get('step_cards') or {}).get('steps') or [],
+                          words):
+        if card.get('decision') is not None:
+            # The junior's words stay as they were written.
+            card['decision']['words'] = said
+    return {k: tables[k] for k in (audience.EN, audience.FR)}
+
+
+def _decision_words_of(cards: Mapping | None) -> list:
+    return [((s.get('decision') or {}).get('words')) for s in (cards or {}).get('steps') or []]
 
 
 def currency_inputs(study: read.Study, built: dict) -> dict:

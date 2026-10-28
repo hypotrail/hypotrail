@@ -37,9 +37,16 @@ SEVERITY = {'number_outside_result': 'error', 'unknown_result_id': 'error',
 SEVERITY['validity_requirement_missing'] = 'error'
 FINDING_CODES = tuple(SEVERITY)
 
-EXEMPT_BEFORE = re.compile(r'(?:revision|revisions|rev\.?|step|steps|pause|pauses|proposal|p_|'
-                           r'request|req-|expected-revision|section|§|row|'
+# Review round 9 (R9E-3): the word starts at a word boundary, so "grow 3", "narrow 12",
+# "tomorrow 5", "borrow 2" and "intersection 4" are figures, while "row 12", "step 3",
+# "section 4" and "exit 2" stay exempt; "p_" and "§" must not follow a word character.
+# Third session of 2026-10-26 (R22): the French "révision" is a revision too, as a French
+# handoff.md writes it ("Étude à la révision 49").
+EXEMPT_BEFORE = re.compile(r'(?:\b(?:revision|revisions|r\u00e9vision|r\u00e9visions|rev\.?|step|'
+                           r'steps|pause|pauses|proposal|'
+                           r'request|req-|expected-revision|section|row|'
                            r'exit|exit code|exit status|exited with|exited with code)'
+                           r'|(?<!\w)(?:p_|§))'
                            r'\s*[#:=]?\s*$', re.IGNORECASE)
 # "revision 26 instead of 24", "revision 24 to 26", "revisions 24 and 26": every number of
 # the comparison that follows "revision" is a revision too (D4). "and" and "or" continue
@@ -56,7 +63,9 @@ RULE_IDENTIFIER = re.compile(r'\b(?:threshold|capacity|share)\s*:\s*(-?\d+(?:\.\
 # figure (R3): at least this many digits, after one of these words or as the start of a
 # registry ``result_id``.
 RESULT_ID_DIGITS = re.compile(r'\d{6,}')
-RESULT_ID_LEAD = re.compile(r'\b(?:results?(?:[ _-]?ids?)?|rids?|ids?|executions?(?:[ _-]?ids?)?)'
+# R22: a French text names a result "résultat" ("(résultat 52659681)").
+RESULT_ID_LEAD = re.compile(r'\b(?:results?(?:[ _-]?ids?)?|r\u00e9sultats?|rids?|ids?|'
+                            r'executions?(?:[ _-]?ids?)?)'
                             r'\s*[#:=]?\s*[`(\[]?\s*$', re.IGNORECASE)
 # "29.5 percentage points": a difference of two rates, read as a percentage of a registered
 # difference (``deltas``), never of a rate (D4).
@@ -66,7 +75,11 @@ PERCENTAGE_POINTS = re.compile(r'\s*(?:percentage[- ]points?|pp\b|p\.p\.|points?
 # difference times 100, or a value already registered in points (``Pool.trace``).
 BARE_POINTS = re.compile(r'\s*(?:points?|pts?)(?![\w])', re.IGNORECASE)
 LIST_MARKER = re.compile(r'^\s*\d+[.)]\s', re.MULTILINE)
-ISO_DATE = re.compile(r'\b\d{4}-\d{2}-\d{2}(?:[T ][\d:.]+(?:Z|[+-]\d{2}:?\d{2})?)?\b')
+# A date, with an optional time of day (review round 4: the time is ``hh:mm`` with optional
+# seconds, fraction and zone, so a number right after a date, "On 2026-10-25 241 clients", is
+# still a number to trace).
+ISO_DATE = re.compile(r'\b\d{4}-\d{2}-\d{2}'
+                      r'(?:[T ]\d{2}:\d{2}(?::\d{2}(?:[.,]\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?\b')
 HEADING_ORDINAL = re.compile(r'^(\s*#{1,6}\s+)\d+\.', re.MULTILINE)
 # D8: nouns that name the study's own structure, by the view count they refer to.
 STRUCTURE_NOUNS = {
@@ -81,6 +94,10 @@ _STRUCTURE_NOUN = '|'.join(re.escape(n) for nouns in STRUCTURE_NOUNS.values()
                            for n in sorted(nouns, key=len, reverse=True))
 STRUCTURE_AFTER = re.compile(rf"\s+(?:[^\W\d_][\w'’-]*\s+)?(?P<noun>{_STRUCTURE_NOUN})(?![\w])",
                              re.IGNORECASE)
+# Review round 3 (E3-2): "2 development rows", "2 lignes de développement" (the count of
+# the delayed-label limit, :meth:`Pool.partition_match`).
+DEVELOPMENT_ROWS_AFTER = re.compile(r'\s+(?:development\s+rows?|lignes?\s+de\s+d[ée]veloppement)'
+                                    r'(?![\w])', re.IGNORECASE)
 USABLE_STATUSES = ('available_at_prediction', 'uncertain_included')
 EXCLUDED_STATUSES = ('not_available', 'uncertain_excluded')
 
@@ -107,20 +124,20 @@ def location(path: str | None, anchor: str | None = None, line: int | None = Non
 
 # --- number pools -----------------------------------------------------------------------
 
-def _walk_numbers(value: Any) -> Iterable[float]:
+def _walk_numbers(value: Any, language: str | None = None) -> Iterable[float]:
     if cite.is_number(value):
         yield float(value)
     elif isinstance(value, str):
-        for tok in cite.parse_numbers(value):
+        for tok in cite.parse_numbers(value, language):
             yield tok.value / 100 if tok.percent else tok.value
         for word in wordnum.parse(value):         # F3: "one in ten" written by the junior
             yield word.value / 100 if word.kind in ('percent', 'points') else word.value
     elif isinstance(value, Mapping):
         for v in value.values():
-            yield from _walk_numbers(v)
+            yield from _walk_numbers(v, language)
     elif isinstance(value, list):
         for v in value:
-            yield from _walk_numbers(v)
+            yield from _walk_numbers(v, language)
 
 
 # WP-A9 (H2): paths of a result that a free text never cites. They are a result's internals
@@ -546,6 +563,10 @@ def _fraction_forms(v: float) -> tuple:
     return (v,)
 
 
+# The literals written in the study language (review round 4, E4-6).
+STUDY_LANGUAGE_LITERALS = ('user_words', 'user_text', 'criterion_option')
+
+
 class Pool:
     """Numbers a text may cite: current results, then literals, then stale results.
 
@@ -565,6 +586,9 @@ class Pool:
                  data_card: Mapping | None = None, *, proposed: Any = None,
                  scope: Iterable[str] | None = None):
         self.current, self.stale, self.literal = [], [], []
+        # Review round 4 (E4-6): the study language reads the numbers of its texts (a French
+        # text writes "1,286" for 1.286, never for 1,286).
+        self.language = 'fr' if view.get('language') == 'fr' else 'en'
         # Withdrawn and superseded proposals (F3): never literals; only named in the
         # finding when an untraceable number repeats one of their figures.
         self.retired = []
@@ -750,13 +774,37 @@ class Pool:
         for items in view['facts']['by_status'].values():
             for f in items:
                 self._literal('case', f['id'], f['value'])
+        # Review round 3 (E3-2): the state values the engine's own delayed-label limit cites
+        # (``state.delayed_labels_limit``: the partition's final boundary on its clock and the
+        # number of development rows left out). Each is traced only in the context the limit
+        # writes it ("prediction_tick 241", "2 development rows"), never as a bare literal, so
+        # an untraceable number elsewhere stays untraceable.
+        self.partition_facts: list[dict] = []
+        for item in view.get('not_yet_defensible') or []:
+            if not isinstance(item, Mapping) or item.get('id') != 'delayed_labels_excluded':
+                continue
+            clock, start = item.get('clock'), item.get('final_start')
+            if isinstance(clock, str) and clock and cite.is_number(start):
+                self.partition_facts.append({
+                    'id': 'partition.order.final_start', 'value': float(start),
+                    # Review round 4: one space between the clock and the value, as the
+                    # limit writes it (a masked date in between is not the limit's context).
+                    'before': re.compile(rf'(?<![\w.]){re.escape(clock)}\s?$'), 'after': None})
+            if isinstance(item.get('n_rows'), int) and not isinstance(item['n_rows'], bool):
+                self.partition_facts.append({
+                    'id': 'partition.training_exclusions.n_rows', 'value': float(item['n_rows']),
+                    'before': None, 'after': DEVELOPMENT_ROWS_AFTER})
 
     def _literal(self, kind: str, source: str, value: Any, *, forms: bool = False) -> None:
         """Record the numbers of ``value``. ``forms`` (a decision or proposal value): a
         fraction may also be written as its complement, or as a whole number of percent
         ("70/30" for a validation fraction of 0.3), never another number of the value as a
         percentage ("capacity:100" does not allow "100%")."""
-        for v in _walk_numbers(_rule_spaced(value)):
+        # Review round 4 (E4-6): the junior's words and texts, and the engine's texts in the
+        # study language, are read in that language; recorded values and the case's own
+        # statements as written.
+        language = self.language if kind in STUDY_LANGUAGE_LITERALS else None
+        for v in _walk_numbers(_rule_spaced(value), language):
             for form in (_fraction_forms(v) if forms else (v,)):
                 self.literal.append({'source': kind, 'id': source, 'value': form})
 
@@ -803,6 +851,22 @@ class Pool:
         kind = next(k for k, nouns in STRUCTURE_NOUNS.items() if noun in nouns)
         return next((item for item in self.structure
                      if item['kind'] == kind and item['value'] == int(value)), None)
+
+    def partition_match(self, text: str, tok: cite.Token) -> dict | None:
+        """Review round 3 (E3-2): the partition fact (:attr:`partition_facts`) a number
+        repeats in the context the engine's delayed-label limit writes it; None otherwise."""
+        if tok.percent:
+            return None
+        for fact in getattr(self, 'partition_facts', ()):
+            if abs(fact['value'] - tok.value) > 1e-9:
+                continue
+            if fact['before'] is not None \
+                    and not fact['before'].search(text[max(0, tok.start - 80):tok.start]):
+                continue
+            if fact['after'] is not None and not fact['after'].match(text, tok.end):
+                continue
+            return fact
+        return None
 
     def threshold_match(self, tok: cite.Token) -> dict | None:
         """v0.3 (WP-J): the stated engine threshold a number after a threshold word repeats."""
@@ -941,6 +1005,209 @@ GLUED_NUMBER = re.compile(r'(?<=[^\W\d_]{2})(\d+(?:[.,]\d+)?)(?![\w])(\s?%)?')
 HEX_IDENTIFIER = re.compile(r'\b(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)[0-9a-f]{8,}\b', re.I)
 
 
+# Review round 4: a number with a magnitude suffix or an exponent ("241k", "1.5M", "2bn",
+# "241e3") is the number it scales to, at the precision it shows ("241k" is 241,000 to the
+# nearest thousand: ``decimals`` is negative), so it is traced like any other number, and
+# reported when it matches nothing; it was neither before.
+#
+# Round 5 (review E, R5E-5): a scale word or symbol after a number changes its value too,
+# glued, after a space or after a hyphen, in English and French, singular and plural ("241
+# k", "241-thousand", "1.5 millions", "1,5 milliard", "241 mille", "1.5 bn"); "1.5x10^6"
+# and "1.5×10⁶" are the exponent forms; "1.5‰" is a per mille (0.15 %); "1.5x" is a
+# multiple (1.5). A single-letter symbol after a space is not read before a hyphen and a
+# letter ("5 k-fold").
+#
+# Round 6 (review E, R6E-4): "trillion(s)" is 10^12; in French (the long scale) "billion" is
+# 10^12, "billiard" 10^15 and "trillion" 10^18 (:data:`FRENCH_SCALE_WORDS`, read when the
+# text is French). A percentage or a per mille written in words after digits ("12 percent",
+# "12 per cent", "12 pour cent", "1.5 per mille", "12 pour mille") is read as one
+# (:data:`PERCENT_WORDS`, :data:`PER_MILLE_WORDS`), as "twelve percent" is
+# (:mod:`mlkit.study.wordnum`): never as the bare number, which a count could match.
+_SCALE_SEPARATOR = '[ \u00a0\u202f\u2009-]'
+SCALE_WORDS = {'thousand': 3, 'thousands': 3, 'mille': 3, 'millier': 3, 'milliers': 3,
+               'million': 6, 'millions': 6, 'mio': 6, 'billion': 9, 'billions': 9,
+               'milliard': 9, 'milliards': 9, 'bn': 9, 'md': 9, 'mds': 9, 'mrd': 9,
+               'trillion': 12, 'trillions': 12}
+FRENCH_SCALE_WORDS = {**SCALE_WORDS, 'billion': 12, 'billions': 12, 'billiard': 15,
+                      'billiards': 15, 'trillion': 18, 'trillions': 18}
+MAGNITUDE = {'k': 3, 'K': 3, 'M': 6, 'x': 0, '\u00d7': 0}
+_WORD_ALTERNATION = '|'.join(sorted(FRENCH_SCALE_WORDS, key=len, reverse=True))
+_BODY = r'([1-9]\d{0,2}(?:,\d{3})+(?:\.\d+)?|\d+(?:[.,]\d+)?|\.\d+)'
+_SIGN = rf'([{cite.SIGNS}](?=\.?\d))?'
+SUPERSCRIPT = str.maketrans('\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079'
+                            '\u207b\u207a', '0123456789-+')
+_SUPERSCRIPTS = '\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079'
+SCALED_NUMBER = re.compile(
+    r'(?<![\w.,])' + _SIGN + _BODY +
+    r'(?:[eE]([-+]?\d{1,3})'
+    r'|\s?[x\u00d7*\u00b7]\s?10(?:\^\(?([-+\u2212]?\d{1,3})\)?'
+    rf'|([\u207b\u207a]?[{_SUPERSCRIPTS}]{{1,3}}))'
+    rf'|{_SCALE_SEPARATOR}?(?i:({_WORD_ALTERNATION}))'
+    r'|(k|K|M|x|\u00d7)'
+    rf'|{_SCALE_SEPARATOR}(k|K|M)(?!-[^\W\d_]))'
+    r'(?![\w])(\s?%)?')
+PER_MILLE = re.compile(r'(?<![\w.,])' + _SIGN + _BODY + r'\s?\u2030')
+_WORD_GAP = '[ \u00a0\u202f\u2009-]+'
+PERCENT_WORDS = re.compile(r'(?<![\w.,])' + _SIGN + _BODY + _WORD_GAP
+                           + r'(?i:(?:per|pour)' + _WORD_GAP + r'cent|percent|pourcent)(?![\w])')
+PER_MILLE_WORDS = re.compile(r'(?<![\w.,])' + _SIGN + _BODY + _WORD_GAP
+                             + r'(?i:(?:per|pour)' + _WORD_GAP + r'(?:mille|mil)|permille)'
+                             r'(?![\w])')
+
+
+def _scaled_body(body: str, language: str | None) -> str:
+    """The digits of a scaled number as a decimal string: in English a comma followed by
+    groups of three digits groups thousands ("12,000 thousand"), otherwise a comma is the
+    decimal separator (always in French)."""
+    if language != 'fr' and re.fullmatch(r'[1-9]\d{0,2}(?:,\d{3})+(?:\.\d+)?', body):
+        return body.replace(',', '')
+    return body.replace(',', '.')
+
+
+# Review round 9 (R9E-6): an exponent beyond ±300 ("1e999", "1e-999", "1×10^999") is no
+# number the engine can compare (its value overflows or underflows a float): it is reported as
+# an odd form (:func:`odd_numbers`), never read as infinity or as 0.
+MAX_EXPONENT = cite.MAX_DECIMALS
+
+
+def _exponent(m: re.Match, language: str | None) -> int | None:
+    """The power of ten of a :data:`SCALED_NUMBER` match; None for a French-only scale word
+    ("billiard") in a text that is not French."""
+    if m.group(3) is not None:
+        return int(m.group(3))
+    if m.group(4) is not None:
+        return int(m.group(4).replace('\u2212', '-'))
+    if m.group(5) is not None:
+        return int(m.group(5).translate(SUPERSCRIPT))
+    if m.group(6) is not None:
+        return (FRENCH_SCALE_WORDS if language == 'fr' else SCALE_WORDS).get(m.group(6).lower())
+    return MAGNITUDE[m.group(7) or m.group(8)]
+
+
+def _signed_token(text: str, m: re.Match, value: float, decimals: int,
+                  percent: bool) -> cite.Token:
+    """The token of a match whose group 1 is an optional sign and group 2 the digits: the
+    sign makes it negative when it applies (an en dash after a number is a range, R9E-7), and
+    is left out of the token otherwise."""
+    negative = cite.sign_applies(text, m.start(), m.group(1))
+    start = m.start() if negative or not m.group(1) else m.start(2)
+    return cite.Token(text[start:m.end()], -value if negative else value, decimals, percent,
+                      start, m.end())
+
+
+def _leading_dot(body: str, language: str | None) -> bool:
+    """R9E-1: a decimal without its leading zero (".99"), which only English text reads."""
+    return body.startswith('.') and language == 'fr'
+
+
+def scaled_numbers(text: str, language: str | None = None) -> list[cite.Token]:
+    """The numbers of ``text`` written with a magnitude suffix, a scale word, an exponent or
+    a per mille sign (:data:`SCALED_NUMBER`, :data:`PER_MILLE`), as tokens; a hexadecimal
+    identifier is not one, nor an exponent beyond ±300 (:data:`MAX_EXPONENT`, reported by
+    :func:`odd_numbers`)."""
+    import decimal
+    text = HEX_IDENTIFIER.sub(lambda m: ' ' * len(m.group(0)), text)
+    out = []
+    for m in SCALED_NUMBER.finditer(text):
+        if _leading_dot(m.group(2), language):
+            continue
+        body = _scaled_body(m.group(2), language)
+        exponent = _exponent(m, language)
+        if exponent is None or abs(exponent) > MAX_EXPONENT:
+            continue
+        decimals = (len(body.split('.')[1]) if '.' in body else 0) - exponent
+        value = float(decimal.Decimal(body).scaleb(exponent))
+        out.append(_signed_token(text, m, value, decimals, bool(m.group(9))))
+    taken = [(t.start, t.end) for t in out]
+    for pattern, shift in ((PER_MILLE, 1), (PER_MILLE_WORDS, 1), (PERCENT_WORDS, 0)):
+        for m in pattern.finditer(text):
+            if any(a < m.end() and m.start() < b for a, b in taken) \
+                    or _leading_dot(m.group(2), language):
+                continue
+            # A per mille is a tenth of a percent: "1.5‰" is 0.15 %, at one more decimal.
+            body = _scaled_body(m.group(2), language)
+            decimals = (len(body.split('.')[1]) if '.' in body else 0) + shift
+            value = float(decimal.Decimal(body).scaleb(-shift))
+            out.append(_signed_token(text, m, value, decimals, True))
+            taken.append(m.span())
+    return sorted(out, key=lambda t: t.start)
+
+
+def extreme_exponents(text: str, language: str | None = None
+                      ) -> list[tuple[str, int, int, str]]:
+    """R9E-6: the numbers of ``text`` written with an exponent beyond ±300 (:data:`MAX_EXPONENT`),
+    as odd forms ``(text, start, end, form)``."""
+    text = HEX_IDENTIFIER.sub(lambda m: ' ' * len(m.group(0)), text)
+    out = []
+    for m in SCALED_NUMBER.finditer(text):
+        exponent = _exponent(m, language)
+        if exponent is not None and abs(exponent) > MAX_EXPONENT:
+            out.append((m.group(0), m.start(), m.end(), 'exponent beyond ±300'))
+    return out
+
+
+# Round 5 (review E, R5E-5): numeric forms the engine cannot read as one number are
+# reported as untraceable, never left unchecked: digit groups joined by underscores
+# ("241_000"), a number with superscript digits ("10²"), a vulgar fraction ("½", "1½"), a
+# hexadecimal literal ("0x1F"), and any other number glued to letters ("241kEUR", "241kk",
+# "12ms"). An ordinal ("1st", "2nd", "1er", "2e", "3ème") is not a figure; a number glued to
+# "pp" or "pts" is read as percentage points.
+ODD_FORMS = (
+    # Review round 9 (R9E-6): an exponent of four digits or more ("1e9999", "1e-9999"); one of
+    # 301 to 999 is found by :func:`extreme_exponents`.
+    ('exponent beyond ±300',
+     re.compile(r'(?<![\w.,])[-\u2212\u2013]?(?:\d+(?:[.,]\d+)?|\.\d+)[eE][-+]?\d{4,}(?![\w])')),
+    ('hexadecimal literal', re.compile(r'(?<![\w.,])0[xX][0-9a-fA-F]+(?![\w])')),
+    ('digit groups joined by underscores', re.compile(r'(?<![\w.,])\d+(?:_\d+)+(?![\w])')),
+    ('superscript digits',
+     re.compile(rf'(?<![\w.,])\d+(?:[.,]\d+)?[{_SUPERSCRIPTS}\u207b\u207a]+')),
+    ('vulgar fraction', re.compile(r'(?<![\w.,])\d*[\u00bc-\u00be\u2150-\u215f\u2189]')),
+    ('number glued to letters',
+     re.compile(r'(?<![\w.,])(?:\d+(?:[.,]\d+)?|\.\d+)[^\W\d_]\w*')),
+)
+# Review round 9 (R9E-1): French text writes a decimal with a comma and its leading zero; a
+# decimal without it (".99", "-.3", ",5" is not one) is reported, never read or left unchecked.
+FRENCH_ODD_FORMS = (
+    ('decimal without its leading zero', re.compile(r'(?<![\w.,])[-\u2212\u2013]?\.\d+')),
+)
+ORDINAL_SUFFIX = re.compile(r'(?:st|nd|rd|th|er|re|ère|ere|e|ème|eme|nde?|de?)', re.I)
+GLUED_POINTS = re.compile(r'(?<![\w.,])(\d+(?:[.,]\d+)?)(?=(?:pp|pts?)(?![\w]))')
+
+
+def odd_numbers(text: str, language: str | None = None) -> list[tuple[str, int, int, str]]:
+    """The numeric forms of ``text`` that are neither read as a number nor an identifier
+    (:data:`ODD_FORMS`; in French also :data:`FRENCH_ODD_FORMS`; an exponent beyond ±300,
+    :func:`extreme_exponents`): ``[(text, start, end, form)]`` in text order,
+    non-overlapping. Ordinals and numbers glued to "pp" / "pts" are not listed; a
+    hexadecimal identifier is masked first."""
+    out = extreme_exponents(text, language)
+    taken: list[tuple[int, int]] = [(o[1], o[2]) for o in out]
+    text = HEX_IDENTIFIER.sub(lambda m: ' ' * len(m.group(0)), text)
+    forms = (FRENCH_ODD_FORMS if language == 'fr' else ()) + ODD_FORMS
+    for form, pattern in forms:
+        for m in pattern.finditer(text):
+            if any(a < m.end() and m.start() < b for a, b in taken):
+                continue
+            if form == 'number glued to letters':
+                letters = re.sub(r'^[\d.,]+', '', m.group(0))
+                if ORDINAL_SUFFIX.fullmatch(letters) or re.fullmatch(r'(?:pp|pts?)', letters):
+                    continue
+            taken.append(m.span())
+            out.append((m.group(0), m.start(), m.end(), form))
+    return sorted(out, key=lambda x: x[1])
+
+
+def glued_point_numbers(text: str) -> list[cite.Token]:
+    """The numbers glued to "pp" or "pts" ("2.8pp"), as tokens of the number alone, so the
+    percentage-point reading after them applies (:data:`PERCENTAGE_POINTS`)."""
+    out = []
+    for m in GLUED_POINTS.finditer(text):
+        body = m.group(1).replace(',', '.')
+        decimals = len(body.split('.')[1]) if '.' in body else 0
+        out.append(cite.Token(m.group(1), float(body), decimals, False, m.start(), m.end()))
+    return out
+
+
 def glued_numbers(text: str) -> list[cite.Token]:
     """The numbers glued after a word (:data:`GLUED_NUMBER`), as tokens."""
     text = HEX_IDENTIFIER.sub(lambda m: ' ' * len(m.group(0)), text)
@@ -1003,14 +1270,46 @@ def _trace_words(pool: Pool, masked: str, word: wordnum.WordNumber, where: str,
                                 value=word.value, location=at, **extra))
 
 
-def trace_text(pool: Pool, text: str, where: str, locate=None) -> tuple[list[dict], list[dict]]:
+def trace_text(pool: Pool, text: str, where: str, locate=None, *,
+               language: str | None = None) -> tuple[list[dict], list[dict]]:
     """Trace every number of ``text``. ``locate`` (optional) maps an offset of ``text`` to
-    the ``location`` of a finding (C10)."""
+    the ``location`` of a finding (C10). ``language`` is the language the text is written in
+    (review round 4, E4-6: in French a comma is always the decimal separator,
+    :func:`mlkit.study.cite.parse_numbers`); by default the study language of the pool."""
+    language = language or getattr(pool, 'language', None)
     findings, traced = [], []
     masked = _masked(text)
     scopes: dict[tuple[int, int], tuple] = {}
     identifiers = {m.start(1) for m in RULE_IDENTIFIER.finditer(masked)}
-    items = sorted([(t.start, 0, t) for t in cite.parse_numbers(masked) + glued_numbers(masked)]
+    scaled = scaled_numbers(masked, language)
+    # Review round 4: "1.5M" is one number, not "1" followed by ".5M". Round 5 (R5E-5): a
+    # form read as no number ("241kEUR") is reported once, and no part of it is read.
+    odd = [o for o in odd_numbers(masked, language)
+           if not any(t.start <= o[1] < t.end for t in scaled)]
+    # Review round 9 (R9E-2): a cardinal in words followed by a scale word ("two thousand
+    # clients", "trois cents lignes") is reported, never read as the bare cardinal.
+    odd += [w for w in wordnum.unread(masked, pool.units)
+            if not any(a < w[2] and w[1] < b for _, a, b, _ in odd)]
+    odd.sort(key=lambda o: o[1])
+    inside = [(t.start, t.end) for t in scaled] + [(o[1], o[2]) for o in odd]
+    plain = [t for t in cite.parse_numbers(masked, language) + glued_numbers(masked)
+             + glued_point_numbers(masked)
+             if not any(a <= t.start < b for a, b in inside)]
+    for shown, start, _end, form in odd:
+        probe = cite.Token(shown, 0.0, 0, False, start, _end)
+        if _exempt(masked, probe) or _result_id_prefix(pool, masked, probe) \
+                or (re.fullmatch(r'[0-9a-f]+', shown) and RESULT_ID_LEAD.search(
+                    masked[max(0, start - 24):start])):
+            continue
+        findings.append(finding('untraceable_number', where,
+                                f'{shown} is a number written in a form the engine does not '
+                                f'read ({form}), so it cannot be traced to a result. Write the '
+                                'figure with plain digits as the registry shows it, a unit or '
+                                'scale word after a space, and cite its result.',
+                                number=shown, form=form,
+                                location=locate(start) if locate else None,
+                                **({'in_words': True} if form == wordnum.SCALED_FORM else {})))
+    items = sorted([(t.start, 0, t) for t in plain + scaled]
                    + [(w.start, 1, w) for w in wordnum.parse(masked, pool.units)],
                    key=lambda x: x[:2])
     # v0.3 (WP-J): "333 of 459" (two counts of one group, its name in another language or
@@ -1072,6 +1371,12 @@ def trace_text(pool: Pool, text: str, where: str, locate=None) -> tuple[list[dic
             traced.append({'text': tok.text.strip(), 'source': 'structure',
                            'id': structure['id'], 'value': structure['value']})
             continue
+        fact = (pool.partition_match(masked, tok)
+                if label in ('none', 'stale') and not difference else None)
+        if fact is not None:
+            traced.append({'text': tok.text.strip(), 'source': 'partition', 'id': fact['id'],
+                           'value': fact['value']})
+            continue
         if label in ('none', 'stale') and _result_id_prefix(pool, masked, tok):
             traced.append({'text': tok.text.strip(), 'source': 'identifier', 'id': 'result_id',
                            'value': tok.value})
@@ -1130,9 +1435,10 @@ def study_pool(study, *, view: Mapping | None = None, user_texts: Iterable[str] 
                 proposed=proposed, scope=scope)
 
 
-def number_findings(pool: Pool, text: str, where: str) -> list[dict]:
+def number_findings(pool: Pool, text: str, where: str, *,
+                    language: str | None = None) -> list[dict]:
     """The findings of :func:`trace_text` that refuse a number (:data:`NUMBER_CODES`)."""
-    findings, _ = trace_text(pool, text, where)
+    findings, _ = trace_text(pool, text, where, language=language)
     return [f for f in findings if f['code'] in NUMBER_CODES]
 
 

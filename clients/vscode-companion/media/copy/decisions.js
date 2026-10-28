@@ -17,6 +17,9 @@
     byPanel: 'Proposed from this panel by an earlier version; not a decision yet.',
     madeAt: (pid, rev) => (rev === null || rev === undefined ? `Proposal ${pid}` : `Proposal ${pid}, made at revision ${rev}`),
     restatedAs: 'The assistant proposes:',
+    // L3 (owner session 2026-10-26, R4, D4b): a restatement the chat wrote in another language
+    // than the panel's (it gave none in this one) is shown as written, with this marker.
+    chatWording: { en: '(wording of the chat, in English)', fr: '(wording of the chat, in French)' },
     proposedValue: 'In short: ',
     recordedValue: 'Recorded value: ',
     details: 'Details',
@@ -29,6 +32,9 @@
     evidenceTitle: 'Evidence',
     evidenceChip: (activity, rid8) => `${activity} · result ${rid8}…`,
     evidenceChipWords: name => `See ${name} →`,
+    // Third session of 2026-10-26: the result slots a chip or an effect names, in words, in
+    // the panel language (the view held them in English: "Voir the decision-rule evaluation").
+    slotWords: { split: 'the split', 'policy.evaluation': 'the decision-rule evaluation', 'evaluate.regression': 'the model comparison' },
     precisionDelta: (point, low, high) => `Share of successes among the cases picked, against the baseline: ${point} (interval ${low} to ${high})`,
     explore: task => (regression(task) ? 'explore the errors →' : 'try other rules →'),
     holdOpen: 'On hold in your words: ',
@@ -58,6 +64,7 @@
       feature_availability: 'the available variables',
       split: 'the split',
       // WP-A7: the two decisions of WP-A4, in the words of media/copy/junior.js.
+      error_metric: 'the error measure',
       success_criterion: 'the success criterion',
       preprocessing: 'the data preparation',
       // WP-B5: the two decisions of WP-B1.
@@ -72,6 +79,11 @@
     blockedTitle: 'If you confirm it in the chat now, the engine will refuse it:',
     effectsMissing: 'The impact preview is not available.',
     // WP-E1 (R23, ADR 0004 amendment): decisions are made in the chat only.
+    // R16 (owner session 2026-10-26): a choice the chat asks before any proposal exists.
+    choiceTitle: name => `${name.charAt(0).toUpperCase()}${name.slice(1)}: the assistant asks you to choose in the chat`,
+    choiceOptions: 'The options the engine accepts now:',
+    choiceHint: 'Choose in the chat with your assistant: it then proposes your choice, and you adopt it there. This panel records no choice.',
+    choiceAskQuestion: 'Can you explain these options and what each one would mean for my study?',
     answerInChat: 'Answer in the chat',
     answerInChatHint: 'Confirm, change, or withdraw this proposal in the chat with your assistant. This panel records no decision.',
     ask: 'Ask the agent about this',
@@ -93,11 +105,14 @@
     // WP-A7 (ADR 0005): the basis of a confirmation as a chip, with what it means in a hover.
     basisChip: {
       restated: 'restated', endorsed: 'endorsed', delegated_default: 'delegated', explicit: 'your words',
+      // L9 (R20): recorded by the automatic mode chosen at launch; review it in the chat.
+      automatic: 'automatic, to review',
     },
     basisHelp: {
       restated: 'Your words repeat what the proposal says: you restated it.',
       endorsed: 'Your words agree with the proposal without repeating it: you endorsed it.',
       delegated_default: 'You handed this choice to the assistant\'s recommended default, in the chat.',
+      automatic: 'The automatic mode chosen at launch recorded the engine\'s value, without your words. Adopt it or change it in your own words, in the chat.',
       explicit: 'Recorded in your own words before the guided rule named the kinds of answer.',
     },
     channelWords: channel => (channel === 'webview' ? 'in this panel' : channel === 'chat' ? 'in the chat'

@@ -312,7 +312,11 @@ CONTINGENT_TALK_RE = re.compile(
     r'data[- ]contingent|dépend\w* des données|after (?:looking|seeing|we looked|having looked|'
     r'we saw|the look)|looked at the (?:target|outcome)|look(?:s|ed)? at the (?:target|outcome)|'
     r'après avoir (?:regardé|vu|examiné|observé)|regard\w* (?:à )?(?:la|le) (?:cible|résultat)|'
-    r'vu la cible|optimis', re.I)
+    r'vu la cible|optimis|'
+    # Owner session 2026-10-26 (L5, R7): the engine's junior text of the stamp
+    # (``data_contingent_reason.junior_text``) names "look(s) at the target" / "regard(s) sur
+    # la cible".
+    r'look(?:s|\(s\))? at the target|regard(?:s|\(s\))? sur la cible', re.I)
 QUOTE_LINE_RE = re.compile(r'^\s*>', re.M)
 
 

@@ -189,7 +189,7 @@ test('argv: taken from agent.json, paths with spaces and quotes, execFile withou
   await opened.controller.handle({ v: 2, type: 'ready' });
   assert.equal(calls.length, 1);
   assert.equal(calls[0].file, CLI[0]);
-  assert.deepEqual(calls[0].args, [...CLI.slice(1), 'status', '--summary', '--json', '--study', dir]);
+  assert.deepEqual(calls[0].args, [...CLI.slice(1), 'status', '--summary', '--digest', '--json', '--study', dir]);
   assert.equal(calls[0].options.shell, false);
   assert.equal(calls[0].options.cwd, dir);
   const snapshot = fake.calls.panels[0].posted.find(m => m.type === 'snapshot');
@@ -310,7 +310,8 @@ async function readyPanel(respond, { stage = null } = {}) {
   process.env.HYPOTRAIL_COMPANION = '1';
   if (stage) process.env.HYPOTRAIL_COMPANION_STAGE = stage;
   const dir = makeStudy(tmp('with space'), 'my study');
-  // An interrupted execution waits for an acknowledgement (W6, stage v1).
+  // An interrupted execution: since R31 (2026-10-27) it is acknowledged in the chat; the panel
+  // shows it read only and sends nothing for it.
   const executions = { active: [], interrupted: [{ execution_id: 'e_1', activity: 'fit.logistic', reason: 'stopped' }],
     late: [], suspected_interrupted: [] };
   const calls = fakeCli((args, n) => (args.includes('status') ? { payload: summary(dir, n === 1 ? 3 : 4, { executions }) } : respond(args, dir)));
@@ -339,63 +340,57 @@ test('v0 panel (default stage): no write at all; confirm, withdraw, and propose 
   // A v0 message without the v2 envelope is dropped too.
   await controller.handle({ type: 'confirm', proposalId: 'p_1', words: 'yes before the reminder', revision: 3 });
   assert.equal(controller.diagnostics().ignored, 11);
-  // A write of a later stage (W6 is v1) is dropped at v0.
+  // A write of a later stage (W5 is v1) is dropped at v0; an acknowledgement is no message
+  // type at any stage (R31).
+  await controller.handle({ v: 2, type: 'render' });
   await controller.handle({ v: 2, type: 'acknowledge', executionId: 'e_1', words: 'I know it stopped.', revision: 3 });
-  assert.equal(controller.diagnostics().ignored, 12);
+  assert.equal(controller.diagnostics().ignored, 13);
   assert.ok(calls.slice(before).every(c => c.args.includes('status')), 'only reads');
   assert.ok(!calls.some(c => c.args.includes('decide')), 'never a decide command');
   assert.equal(panel.posted.filter(m => m.type === 'outcome').length, 0);
 });
 
-test('acknowledge (W6): exact argv with the typed words, uuid, revision read; blank words never reach the CLI', async () => {
-  const words = '-- I know: the fit stopped, "quoted" & <b>not</b> html';
+test('R31: no acknowledgement reaches the CLI at any stage; Regenerate (W5) runs its exact argv, no shell, then a refresh', async () => {
   const { dir, calls, panel, controller } = await readyPanel(() => ({ code: 0, payload: {
-    schema: 'hypotrail.run/1', ok: true, action: 'run.acknowledge', request_id: 'x', replayed: false, revision: 4,
-    result: { execution_id: 'e_1', status: 'acknowledged', user_words: words },
-    artifacts: { report: { status: 'ok', message: 'The report (reports/study.html) is up to date.' } } } }), { stage: 'v1' });
-  await controller.handle({ v: 2, type: 'acknowledge', executionId: 'e_1', words: '   \n', revision: 3 });
-  assert.equal(panel.posted.at(-1).kind, 'invalid');
-  assert.ok(!calls.some(c => c.args.includes('--acknowledge-interruption')));
-  await controller.handle({ v: 2, type: 'acknowledge', executionId: 'e_1', words, revision: 3 });
-  const ack = calls.find(c => c.args.includes('--acknowledge-interruption'));
-  const rid = ack.args[ack.args.indexOf('--request-id') + 1];
-  assert.match(rid, UUID);
-  assert.deepEqual(ack.args, [...CLI.slice(1), 'run', '--acknowledge-interruption', 'e_1', `--user-words=${words}`,
-    '--channel=webview', '--request-id', rid, '--expected-revision', '3', '--json', '--study', dir]);
-  assert.equal(ack.options.shell, false);
+    schema: 'hypotrail.render/1', ok: true, action: 'render', revision: 3,
+    artifacts: { report: { status: 'ok', message: 'The report (reports/study.html) is up to date.' } } } }), { stage: 'v3' });
+  await controller.handle({ v: 2, type: 'acknowledge', executionId: 'e_1', words: 'I know the fit stopped.', revision: 3 });
+  assert.ok(!calls.some(c => c.args.includes('--acknowledge-interruption')), 'never an acknowledgement');
+  assert.equal(panel.posted.filter(m => m.type === 'outcome').length, 0, 'dropped as an unknown message');
+  await controller.handle({ v: 2, type: 'render' });
+  const render = calls.find(c => c.args.includes('render'));
+  assert.deepEqual(render.args, [...CLI.slice(1), 'render', '--channel=webview', '--json', '--study', dir]);
+  assert.equal(render.options.shell, false);
   const outcome = panel.posted.filter(m => m.type === 'outcome').at(-1);
   assert.equal(outcome.v, 2);
-  assert.equal(outcome.op, 'W6');
+  assert.equal(outcome.op, 'W5');
   assert.equal(outcome.kind, 'ok');
-  assert.equal(outcome.target, 'e_1');
-  assert.equal(outcome.recorded.userWords, words);
   assert.equal(calls.at(-1).args.includes('status'), true, 'the panel refreshes after the outcome');
 });
 
 test('refusal: the engine message is shown verbatim with the human message, then a refresh', async () => {
-  const engineMessage = 'A bare acknowledgement is not an acknowledgement. Say what you know about the interruption.';
+  // R31: the write is Regenerate (W5), the acknowledgement of W6 being withdrawn.
+  const engineMessage = 'This process is read-only: HYPOTRAIL_READ_ONLY=1.';
   const { calls, panel, controller } = await readyPanel(() => ({ code: 2, payload: {
-    schema: 'hypotrail.error/1', ok: false, command: 'run',
-    error: { code: 'ambiguous_confirmation', message: engineMessage,
-      details: { reason: 'bare_acknowledgement', user_words: 'ok', execution_id: 'e_1' } } } }), { stage: 'v1' });
-  await controller.handle({ v: 2, type: 'acknowledge', executionId: 'e_1', words: 'ok', revision: 3 });
+    schema: 'hypotrail.error/1', ok: false, command: 'render',
+    error: { code: 'read_only', message: engineMessage, details: {} } } }), { stage: 'v1' });
+  await controller.handle({ v: 2, type: 'render' });
   const outcome = panel.posted.find(m => m.type === 'outcome');
   assert.equal(outcome.kind, 'refused');
   assert.equal(outcome.exitCode, 2);
-  assert.equal(outcome.refusal.code, 'ambiguous_confirmation');
-  assert.equal(outcome.refusal.reason, 'bare_acknowledgement');
+  assert.equal(outcome.refusal.code, 'read_only');
   assert.equal(outcome.refusal.engineMessage, engineMessage);
-  assert.match(outcome.refusal.human, /only acknowledged.*Nothing was recorded\.$/);
+  assert.match(outcome.refusal.human, /read-only.*Nothing was recorded\.$/);
   assert.ok(calls.at(-1).args.includes('status'));
 });
 
 test('stale revision: the diff is summarised and the panel refreshes', async () => {
   const { panel, controller } = await readyPanel(() => ({ code: 2, payload: {
-    schema: 'hypotrail.error/1', ok: false, command: 'run',
+    schema: 'hypotrail.error/1', ok: false, command: 'render',
     error: { code: 'stale_revision', message: 'Revision is stale: reread hypotrail status before deciding',
       details: { expected_revision: 2, current_revision: 3, changes_since: [{ revision: 3, action: 'decide.note',
         params: { decision_id: 'prediction_time', user_words: 'wait' } }] } } } }), { stage: 'v1' });
-  await controller.handle({ v: 2, type: 'acknowledge', executionId: 'e_1', words: 'I know the fit stopped.', revision: 2 });
+  await controller.handle({ v: 2, type: 'render' });
   const outcome = panel.posted.find(m => m.type === 'outcome');
   assert.equal(outcome.refusal.code, 'stale_revision');
   assert.equal(outcome.refusal.engineMessage, 'Revision is stale: reread hypotrail status before deciding');
@@ -407,7 +402,7 @@ test('stale revision: the diff is summarised and the panel refreshes', async () 
 
 test('a CLI that cannot start or prints no JSON: an unknown outcome, never a success', async () => {
   const { panel, controller } = await readyPanel(() => ({ spawnError: 'ENOENT' }), { stage: 'v1' });
-  await controller.handle({ v: 2, type: 'acknowledge', executionId: 'e_1', words: 'I know the fit stopped.', revision: 3 });
+  await controller.handle({ v: 2, type: 'render' });
   const outcome = panel.posted.find(m => m.type === 'outcome');
   assert.equal(outcome.kind, 'failed');
   assert.match(outcome.message, /could not be started \(ENOENT/);

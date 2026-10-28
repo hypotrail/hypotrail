@@ -2,7 +2,7 @@
 // Deep links and "go to a result" (CLI-CONTRACT-COMPANION §11, COMPANION-ADVANCED §4.2,
 // §12 "URI handler"). WP-U3 implements the signatures frozen by WP-0:
 //
-//   parseDeepLink(uri: {path, query, authority?}) -> {tab, kind, id, study: string | null} | null
+//   parseDeepLink(uri: {path, query, authority?}) -> {kind, id, study: string | null} | null
 //     vscode://hypotrail-local.hypotrail-companion/result/<64 hex>[?study=<abs path>]
 //     .../decision/<decision id>, .../proposal/<p_n>; anything else -> null.
 //   resultIdInput(text: string) -> string | null
@@ -10,7 +10,8 @@
 //
 // extension.js wires them: an invalid link shows "This Hypotrail link is not valid." and
 // opens nothing; a valid one opens the panel (flag, trust, and stage checks) and posts
-// `navigate`. A link never triggers a write: the target is only a tab and an identifier.
+// `navigate`, whose anchor the controller resolves from the summary (ADR 0004 d13, §4.3: a
+// result to `path:<step>/<slot>`). A link never triggers a write: the target is an identifier.
 
 const path = require('path');
 
@@ -51,9 +52,9 @@ function parseDeepLink(uri) {
   const [, kind, id] = parts;
   const q = studyOf(uri.query);
   if (!q.ok) return null;
-  if (kind === 'result' && RESULT_ID.test(id)) return { tab: 'evidence', kind: 'result', id, study: q.study };
-  if (kind === 'decision' && DECISION_IDS.includes(id)) return { tab: 'decisions', kind: 'decision', id, study: q.study };
-  if (kind === 'proposal' && PROPOSAL_ID.test(id)) return { tab: 'decisions', kind: 'proposal', id, study: q.study };
+  if (kind === 'result' && RESULT_ID.test(id)) return { kind: 'result', id, study: q.study };
+  if (kind === 'decision' && DECISION_IDS.includes(id)) return { kind: 'decision', id, study: q.study };
+  if (kind === 'proposal' && PROPOSAL_ID.test(id)) return { kind: 'proposal', id, study: q.study };
   return null;
 }
 

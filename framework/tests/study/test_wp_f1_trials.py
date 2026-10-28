@@ -295,9 +295,11 @@ def _flow(tmp_path, task='binary', n_rows=300, split=CV3) -> Flow:
     flow.decide('split', split)
     flow.model_decisions()
     flow.run('split')
-    explore = next(s for s in st.steps(flow.state()) if s['id'] == 'train_eda')
-    for activity in explore['activities']:
-        flow.run(activity)
+    # Owner session 2026-10-26 (L5): a new study's plan checks the structure first.
+    for step in st.steps(flow.state()):
+        if step['id'] in (st.STRUCTURAL_EDA, 'train_eda'):
+            for activity in step['activities']:
+                flow.run(activity)
     return flow
 
 
@@ -335,7 +337,12 @@ def test_three_variants_are_compared_chosen_and_opened(tmp_path):
     assert view['model_families']['recommendation'] in ('stay_linear', 'compare_nonlinear')
     action = view['next_action']
     assert action['decision'] == 'model_variant'
-    assert action['default_value'] == trials.draft('binary')
+    if view['model_families']['recommendation'] == 'compare_nonlinear':
+        # Owner session 2026-10-26 (L5, D9): the flagged diagnostics draft the EBM too.
+        assert action['default_value']['variants'][0] == trials.draft('binary')['variants'][0]
+        assert [v.get('family') for v in action['default_value']['variants']] == [None, 'ebm']
+    else:
+        assert action['default_value'] == trials.draft('binary')
     value = {'variants': [TUNED, HGB, STRONG]}
     proposed = _propose(flow, 'model_variant', value)['result']
     assert proposed['data_contingent'] in (True, False)
@@ -431,6 +438,9 @@ def test_a_regression_study_chooses_a_tuned_ridge(tmp_path):
     _run_next(flow, 'diag.regression')
     flow.decide('model_choice', 'fit.variant',
                 words='Yes, I choose that model because its error is smaller')
+    # Review round 9 (R9E-4): adopting rests on the final test, so it is opened first.
+    flow.decide('final_test', st.choice_config(flow.state()),
+                words='Yes, I open the final test now, because the model is fixed')
     flow.decide('conclusion', {'verdict': 'adopt_model', 'text': 'The tuned ridge is kept.'},
                 words='Yes, I conclude that, because the tuned model is the one I chose')
     assert flow.state()['decisions']['conclusion']['status'] == 'confirmed'
@@ -483,7 +493,11 @@ def test_source_compatibility_needs_an_exact_destination_and_activity(tmp_path):
     study = read.open(tmp_path / 'study')
     now = registry.code_fingerprint(['mlkit.study.metrics'])['modules']
     assert code_compat.integrity()
-    old = {r['module']: r['from_sha256'] for r in code_compat.ATTESTATIONS}
+    # The pre-WP-J digests: the first edge of each module that covers diag.final_test only.
+    old = {}
+    for r in code_compat.ATTESTATIONS:
+        if r['activities'] == ['diag.final_test']:
+            old.setdefault(r['module'], r['from_sha256'])
     assert set(old) == {'mlkit.study.activities', 'mlkit.study.diagnostics'}
     entry = {'activity': 'diag.final_test', 'code': {'modules': {**old, **now}}}
     assert study.code_changed(entry) == []

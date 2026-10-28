@@ -1,6 +1,6 @@
 // Copy of the Overview view (COMPANION-ADVANCED §6.1, §15): panel-owned English strings.
 // They hold no digit outside placeholders filled from models, never suggest the words of
-// an acknowledgement or a confirmation, and use none of the vocabulary of a decision rule
+// an acknowledgement or a confirmation (both are said in the chat: R23, R31), and use none of the vocabulary of a decision rule
 // (INV-12), so one table serves a binary and a regression study. Owned by WP-U1.
 (function (HT) {
   'use strict';
@@ -45,6 +45,8 @@
     nothingDecided: 'Nothing is decided yet.',
     toConfirmAgain: 'to confirm again',
     delegated: 'left to the assistant',
+    // L9 (R20): recorded by the automatic mode, waiting for your review.
+    automatic: 'automatic, to review',
     recapDetails: 'Details: the engine\'s recap',
     // WP-A7: the success criterion against the evaluation (the term first, then its use).
     criterion: {
@@ -82,7 +84,7 @@
     // screen readers. A step without a label here shows its title.
     journeyLabels: {
       discover_data: 'Data', prediction_time: 'Moment', feature_availability: 'Variables', split: 'Split',
-      success_criterion: 'Criterion', train_eda: 'Explore', preprocessing: 'Preparation', models: 'Models',
+      error_metric: 'Measure', success_criterion: 'Criterion', structural_eda: 'Quality', train_eda: 'Explore', preprocessing: 'Preparation', models: 'Models',
       model_variant: 'Variants', policy: 'Rule', model_choice: 'Choice', final_test: 'Final test', conclusion: 'Conclusion',
     },
     reopenedWhy: 'A step came back: a new proposal or a changed decision asks you to answer again in the chat. The steps after it stay as they are until you do.',
@@ -93,7 +95,7 @@
       lead: 'This panel reads the study through the hypotrail command line and shows it. It keeps nothing of its own: the chat, the report and the notebook stay complete without it.',
       points: [
         'Decisions are proposed, confirmed or withdrawn in the chat only. Here you read them, and a button copies a ready question for the chat.',
-        'The panel can run an exploration chart of the engine, regenerate the report and notebook, acknowledge a run that stopped, and export a handoff pack. Nothing else.',
+        'The panel can run an exploration chart of the engine, regenerate the report and notebook, and export a handoff pack. Nothing else: a run that stopped is acknowledged in the chat.',
         'Every figure is an engine value; hover a number to see where it comes from. "Why?" opens the reasons and caveats behind a sentence.',
         'The language toggle at the top changes the panel only; the study is not touched.',
       ],
@@ -105,6 +107,7 @@
       blocked: 'blocked', reopened: 'reopened, waiting for you' },
     pauseWords: pause => `pause ${pause} · your words`,
     pauseDelegated: pause => `pause ${pause} · delegated`,
+    pauseAutomatic: pause => `pause ${pause} · automatic, to review`,
     pauseWaiting: pause => `pause ${pause} · waiting for you`,
     pauseAgain: pause => `pause ${pause} · confirm again`,
     pauseReopened: pause => `pause ${pause} · new proposal, waiting for you`,
@@ -127,7 +130,7 @@
     thisSession: 'This session',
     sinceStart: 'Since the start of the study',
     keptFits: 'Models unchanged, nothing refitted.',
-    truncated: 'Older changes are not listed. The Decisions tab has the full history.',
+    truncated: 'Older changes are not listed. Each step of the path has its full history.',
     nothingChanged: 'Nothing has changed since then.',
     noDigest: 'The study engine does not list the changes between sessions yet.',
     showSince: 'Show changes since',
@@ -153,6 +156,7 @@
     openInBrowser: 'Open in browser',
     marimoRead: 'Open in Marimo (read)',
     marimoEdit: 'Open in Marimo (edit)',
+    marimoName: (action, label) => `${action}: ${label}`,
     openReportName: 'Open the report in the browser',
     openInEditorName: label => `Open ${label.toLowerCase()} in the editor`,
     launchTitle: 'What "Open in Marimo" does',
@@ -172,11 +176,9 @@
     noExecutions: 'No execution has an unknown outcome or a late result.',
     unknownOutcome: activity => `${activity}: the outcome is unknown. Nothing will be restarted.`,
     lateResult: activity => `${activity}: a result was computed for a state that no longer holds; it is stored, not used.`,
-    reply: 'Your reply, in your own words',
-    replyHint: 'Say that you know this run was interrupted and its outcome is unknown. \'ok\' alone is not enough.',
-    acknowledge: 'Acknowledge in my words',
-    rerunInChat: 'To run it again, ask the agent in the chat.',
-    acknowledgedEarlier: 'Acknowledgements',
+    // R31 (owner decision 2026-10-27): the acknowledgement is made in the chat, not here.
+    ackInChat: 'Acknowledging this interruption is done in the chat, in your own words: say there that you know this run was interrupted and that its outcome is unknown. \'ok\' alone is not enough. This panel records nothing.',
+    rerunInChat: 'Ask in the chat, to acknowledge it or to run it again.',
     checksTitle: 'Checks of the deliverables',
     checksRunning: 'Running the checks...',
     checksClean: 'clean',

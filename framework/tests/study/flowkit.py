@@ -190,6 +190,10 @@ class Flow:
         decisions = self.state()['decisions']
         if not st.has_wp_a4_decisions(self.state()):
             return
+        # Lot 2026-10-28 (CLI-CONTRACT §18.1): a new regression study fixes its error measure
+        # before the criterion (a test choice, not a recommendation).
+        if st.ERROR_METRIC in decisions and decisions[st.ERROR_METRIC]['status'] != 'confirmed':
+            self.decide(st.ERROR_METRIC, {'metric': 'mae'})
         if decisions['success_criterion']['status'] != 'confirmed':
             self.decide('success_criterion', criterion(self.state()))
         if decisions['preprocessing']['status'] != 'confirmed':
@@ -225,6 +229,27 @@ class Flow:
 
     def state(self) -> dict:
         return read.open(self.study).state
+
+
+def previous_generation(study: Path) -> Path:
+    """The study as ``init`` wrote it before owner session 2026-10-26 (L5): without
+    ``exploration_order``, so its plan explores the target before the preparation and its
+    drafts are the earlier ones. The state bytes are rewritten with their digest, as a study
+    of that generation holds them (a test helper; never applied to a real study)."""
+    from mlkit.study import state as st
+    home = Path(study) / '.hypotrail'
+    state = json.loads((home / 'state.json').read_text())
+    state.pop(st.EXPLORATION_ORDER_KEY, None)
+    data = st.dumps(state)
+    (home / 'state.json').write_bytes(data)
+    (home / 'state.sha256').write_text(st.sha_line(st.digest(data)))
+    return Path(study)
+
+
+STRUCTURAL_FIRST_BINARY_STEP_IDS = (
+    'discover_data', 'prediction_time', 'feature_availability', 'split', 'success_criterion',
+    'structural_eda', 'preprocessing', 'train_eda', 'models', 'model_variant', 'model_choice',
+    'policy', 'final_test', 'conclusion')
 
 
 def prepare(case_dir: Path, study: Path, upto: str = 'fits') -> Path:

@@ -38,7 +38,7 @@
     "status": "confirmed"
    }
   },
-  "current_step": "train_eda",
+  "current_step": "structural_eda",
   "plan": [
    {
     "id": "discover_data",
@@ -66,14 +66,19 @@
     "status": "done"
    },
    {
-    "id": "train_eda",
-    "title": "Explore the development rows",
+    "id": "structural_eda",
+    "title": "Check the structure of the data",
     "status": "ready"
    },
    {
     "id": "preprocessing",
     "title": "Decide how the model prepares the variables",
     "status": "done"
+   },
+   {
+    "id": "train_eda",
+    "title": "Explore the target on the development rows",
+    "status": "ready"
    },
    {
     "id": "models",
@@ -108,24 +113,26 @@
   ],
   "next_action": {
    "kind": "run",
-   "step": "train_eda",
-   "activity": "eda.special_values",
-   "message": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+   "step": "structural_eda",
+   "activity": "eda.quality",
+   "message": "Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
    "audience": "junior",
-   "junior_message": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+   "junior_message": "Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: the special-value check, run without asking you. What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+   "junior_digest": "Next: the data quality check, run without asking you. Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Quality check (6 of 14).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",
     "language": "en",
     "revision": 43,
     "position": {
-     "step_id": "train_eda",
+     "step_id": "structural_eda",
      "completed": 11,
-     "total": 13
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -149,7 +156,11 @@
      "continue",
      "explain"
     ],
-    "question": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+    "option_labels": {
+     "continue": "Let's continue",
+     "explain": "Explain first"
+    },
+    "question": "Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
     "evidence_refs": [],
     "detail_topics": [
      "metric",
@@ -327,58 +338,76 @@
   },
   "results": {
    "diag.binary": {
-    "result_id": "a0a322a17b967f02cc77fed8390e6b062771a376ee75c21516d045d93e6fa75a",
+    "result_id": "8547b35ca01463264588fd0ca0aea3ee2c6b43f21dd542ddae8254b6b245af5c",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "policy",
+    "channel": "chat"
    },
    "diag.final_test": {
-    "result_id": "8caab7e0df67b532d57712e1a30c72e4864b9f6beff5dd19e4c4ea42c04253c2",
+    "result_id": "e893f21448fa28cb91c560ff7188568da7f0a8b03a754850148b610a2adc8ebe",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "final_test",
+    "channel": "chat"
    },
    "eda.target_rate": {
-    "result_id": "b567ca7500d6aad9cd8777ec8d3922101d8bfce06f9ec23bfd7379fa324c8fcf",
+    "result_id": "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "train_eda",
+    "channel": "chat"
    },
    "final_test.evaluation": {
-    "result_id": "3f77ae0e7f1973240c458c24a80bc1f996b94956c409a9687c2eb02f409320a4",
+    "result_id": "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "final_test",
+    "channel": "chat"
    },
    "fit.baseline": {
-    "result_id": "21fe57126ab0c0baa933e26480772ebd93649a532cc9de9ec7b258f2315c109f",
+    "result_id": "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "models",
+    "channel": "chat"
    },
    "fit.logistic": {
-    "result_id": "04dadd044e03fd5db27d9e36260c2550277bf678390730f541a58728b2a6d067",
+    "result_id": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "models",
+    "channel": "chat"
    },
    "fit.variant": {
-    "result_id": "1a6d96198637aae76f8d86ef42fa115876e52c5c65b6a666bdd5871144e974d9",
+    "result_id": "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "model_variant",
+    "channel": "chat"
    },
    "policy.evaluation": {
-    "result_id": "aefc4f57b363225b1b919479564e8d91518dc8e952011cfba9ed79fa23da0b95",
+    "result_id": "9b08b1a85b6dc2aefb2cd7410a09d60a988d61420d52b4ae991d8a4e89b62bc8",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "policy",
+    "channel": "chat"
    },
    "split": {
-    "result_id": "ddc90bf6eb0b286e0fed1bf6f3eaa2187a5675e450838e383f5e5a5c3fb40dc4",
+    "result_id": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "split",
+    "channel": "chat"
    }
   },
   "artifacts": {
@@ -477,9 +506,9 @@
     "revision": 34,
     "model": "fit.logistic",
     "rule": "share:0.1",
-    "result_id": "3f77ae0e7f1973240c458c24a80bc1f996b94956c409a9687c2eb02f409320a4",
+    "result_id": "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94",
     "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
-    "time": "2026-10-23T14:14:42.017981+00:00"
+    "time": "2026-10-28T12:43:10.659972+00:00"
    },
    "post_final_test": true,
    "changed_after": [
@@ -501,7 +530,7 @@
    "minimum": 5,
    "unit": "percentage points",
    "rule": "share:0.2",
-   "result_id": "aefc4f57b363225b1b919479564e8d91518dc8e952011cfba9ed79fa23da0b95",
+   "result_id": "9b08b1a85b6dc2aefb2cd7410a09d60a988d61420d52b4ae991d8a4e89b62bc8",
    "contradicts_verdict": false,
    "final_test": {
     "status": "met",
@@ -518,7 +547,7 @@
     "decision_rule": null,
     "decision_status": null,
     "basis": null,
-    "result_id": "3f77ae0e7f1973240c458c24a80bc1f996b94956c409a9687c2eb02f409320a4"
+    "result_id": "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94"
    },
    "model": "fit.logistic",
    "judged_on": "development",
@@ -527,24 +556,24 @@
   "eda_looks": {
    "target_looks": 3,
    "results": [
-    "b567ca7500d6aad9cd8777ec8d3922101d8bfce06f9ec23bfd7379fa324c8fcf",
-    "4aff6119b8e2db1cc9ad88ea2f544bc3384d1e0831c133bd5af046f6b797d34a",
-    "a0a322a17b967f02cc77fed8390e6b062771a376ee75c21516d045d93e6fa75a"
+    "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
+    "6e73621b6f03637b6525a003585c332e6475e8ee92363c6136b0c77105963dfe",
+    "8547b35ca01463264588fd0ca0aea3ee2c6b43f21dd542ddae8254b6b245af5c"
    ]
   },
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
-   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (5-fold cross-validation, kfold stratified); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); model choice: the logistic model; policy share:0.2 (the logistic model on the 3617 out-of-fold development rows: precision 25.2%, recall 43.9%, result aefc4f57); final test opened (the logistic model at share:0.1).",
-   "Now: Explore the development rows; the report and notebook are up to date.",
-   "Next: What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (5-fold cross-validation, kfold stratified); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); model choice: the logistic model; policy share:0.2 (the logistic model on the 3617 out-of-fold development rows: precision 25.2%, recall 43.9%, result 9b08b1a8); final test opened (the logistic model at share:0.1).",
+   "Now: Check the structure of the data; the report and notebook are up to date.",
+   "Next: Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
    "Limit: Something changed after the final test was opened (policy, policy.evaluation): the final test no longer measures what the study now holds, and it is no longer independent evidence for it."
   ],
   "recap_audience": "agent",
   "recap_junior": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
    "Decided: the prediction moment; the feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); the split (5-fold cross-validation, stratified on the outcome); the success criterion (precision gain over the baseline of at least 5 points); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation); the model choice: the logistic model; the decision policy: select the top 20% by score (the logistic model on the 3617 out-of-fold development rows: precision 25.2%, recall 43.9%); the final test, opened once (the logistic model, select the top 10% by score).",
-   "Now: Explore the development rows; the report and notebook are up to date.",
-   "Next: What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+   "Now: Check the structure of the data; the report and notebook are up to date.",
+   "Next: Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
    "Limit: Something changed after the final test was opened (policy, policy.evaluation): the final test no longer measures what the study now holds, and it is no longer independent evidence for it."
   ],
   "mode": "guided",
@@ -614,8 +643,9 @@
     "id": "evidence",
     "title": "Prepare evidence",
     "steps": [
-     "train_eda",
-     "preprocessing"
+     "structural_eda",
+     "preprocessing",
+     "train_eda"
     ]
    },
    {
@@ -683,7 +713,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-23T14:14:08.169761+00:00",
+   "boundary_time": "2026-10-28T12:42:33.367554+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -692,7 +722,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-23T14:14:08.356659+00:00",
+     "time": "2026-10-28T12:42:33.497056+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -715,7 +745,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-23T14:14:08.929930+00:00",
+     "time": "2026-10-28T12:42:34.240658+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -745,7 +775,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-23T14:14:09.669556+00:00",
+     "time": "2026-10-28T12:42:35.248611+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -768,7 +798,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-23T14:14:10.432825+00:00",
+     "time": "2026-10-28T12:42:36.087290+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -798,7 +828,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-23T14:14:11.369908+00:00",
+     "time": "2026-10-28T12:42:37.540808+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -821,7 +851,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-23T14:14:12.346588+00:00",
+     "time": "2026-10-28T12:42:38.743735+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -851,7 +881,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-23T14:14:13.319189+00:00",
+     "time": "2026-10-28T12:42:39.996446+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -874,7 +904,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-23T14:14:14.265362+00:00",
+     "time": "2026-10-28T12:42:40.999130+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -904,7 +934,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-23T14:14:15.154488+00:00",
+     "time": "2026-10-28T12:42:42.270171+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -927,7 +957,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-23T14:14:16.185516+00:00",
+     "time": "2026-10-28T12:42:43.484653+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -957,7 +987,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-23T14:14:17.523993+00:00",
+     "time": "2026-10-28T12:42:44.965664+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -965,7 +995,7 @@
      "note_id": null,
      "activity": "split",
      "slot": "split",
-     "result_id": "ddc90bf6eb0b286e0fed1bf6f3eaa2187a5675e450838e383f5e5a5c3fb40dc4",
+     "result_id": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
      "execution_id": "e_0eee3a0bb608847ca1ac05a7",
      "rules": null,
      "column": null,
@@ -980,7 +1010,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-23T14:14:18.877195+00:00",
+     "time": "2026-10-28T12:42:46.833625+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -988,7 +1018,7 @@
      "note_id": null,
      "activity": "eda.target_rate",
      "slot": "eda.target_rate",
-     "result_id": "b567ca7500d6aad9cd8777ec8d3922101d8bfce06f9ec23bfd7379fa324c8fcf",
+     "result_id": "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
      "execution_id": "e_2ab8c63a63b208bd8731b8b3",
      "rules": null,
      "column": null,
@@ -1003,7 +1033,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-23T14:14:20.099991+00:00",
+     "time": "2026-10-28T12:42:48.364696+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1011,7 +1041,7 @@
      "note_id": null,
      "activity": "fit.baseline",
      "slot": "fit.baseline",
-     "result_id": "21fe57126ab0c0baa933e26480772ebd93649a532cc9de9ec7b258f2315c109f",
+     "result_id": "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
      "execution_id": "e_9c2f7f2c69f91be9c07e4331",
      "rules": null,
      "column": null,
@@ -1026,7 +1056,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-23T14:14:21.867960+00:00",
+     "time": "2026-10-28T12:42:50.237664+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1034,7 +1064,7 @@
      "note_id": null,
      "activity": "fit.logistic",
      "slot": "fit.logistic",
-     "result_id": "04dadd044e03fd5db27d9e36260c2550277bf678390730f541a58728b2a6d067",
+     "result_id": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
      "execution_id": "e_c4434080afdaeb4edd1ce5b5",
      "rules": null,
      "column": null,
@@ -1049,7 +1079,7 @@
     },
     {
      "revision": 20,
-     "time": "2026-10-23T14:14:23.034284+00:00",
+     "time": "2026-10-28T12:42:51.718067+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1072,7 +1102,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-23T14:14:24.199664+00:00",
+     "time": "2026-10-28T12:42:53.257699+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1105,7 +1135,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-23T14:14:26.002606+00:00",
+     "time": "2026-10-28T12:42:55.154287+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1113,7 +1143,7 @@
      "note_id": null,
      "activity": "fit.variant",
      "slot": "fit.variant",
-     "result_id": "1a6d96198637aae76f8d86ef42fa115876e52c5c65b6a666bdd5871144e974d9",
+     "result_id": "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d",
      "execution_id": "e_8b6b767c3df161e7401893c1",
      "rules": null,
      "column": null,
@@ -1128,7 +1158,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-23T14:14:33.529413+00:00",
+     "time": "2026-10-28T12:43:00.491102+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1136,7 +1166,7 @@
      "note_id": null,
      "activity": "policy.evaluation",
      "slot": "policy.evaluation",
-     "result_id": "1af77cbac8a5bbb423ffca691b7d03fbcfb8917468183a4b337b3ba51935d21f",
+     "result_id": "f3d4a09533c0a7f93890b19c206c49a23a647831e26a97304d20bf8fc1d6f871",
      "execution_id": "e_a633b01aa452bb85d7c21822",
      "rules": [
       "share:0.1",
@@ -1154,7 +1184,7 @@
     },
     {
      "revision": 26,
-     "time": "2026-10-23T14:14:34.616326+00:00",
+     "time": "2026-10-28T12:43:01.923995+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1177,7 +1207,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-23T14:14:35.601522+00:00",
+     "time": "2026-10-28T12:43:03.281926+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_choice",
@@ -1211,7 +1241,7 @@
     },
     {
      "revision": 28,
-     "time": "2026-10-23T14:14:36.773417+00:00",
+     "time": "2026-10-28T12:43:04.651756+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
@@ -1234,7 +1264,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-23T14:14:37.723924+00:00",
+     "time": "2026-10-28T12:43:05.827953+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "policy",
@@ -1268,7 +1298,7 @@
     },
     {
      "revision": 30,
-     "time": "2026-10-23T14:14:38.756940+00:00",
+     "time": "2026-10-28T12:43:07.133463+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "final_test",
@@ -1291,7 +1321,7 @@
     },
     {
      "revision": 32,
-     "time": "2026-10-23T14:14:40.183455+00:00",
+     "time": "2026-10-28T12:43:08.544114+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1299,7 +1329,7 @@
      "note_id": null,
      "activity": "diag.binary",
      "slot": "diag.binary",
-     "result_id": "4aff6119b8e2db1cc9ad88ea2f544bc3384d1e0831c133bd5af046f6b797d34a",
+     "result_id": "6e73621b6f03637b6525a003585c332e6475e8ee92363c6136b0c77105963dfe",
      "execution_id": "e_6f568a7e009178d11fe5261f",
      "rules": null,
      "column": null,
@@ -1310,11 +1340,11 @@
      "invalidation": null,
      "text": "The activity diag.binary was computed.",
      "audience": "agent",
-     "junior_text": "An analysis was computed."
+     "junior_text": "The development diagnostics was computed."
     },
     {
      "revision": 33,
-     "time": "2026-10-23T14:14:41.968311+00:00",
+     "time": "2026-10-28T12:43:10.619396+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "final_test",
@@ -1348,7 +1378,7 @@
     },
     {
      "revision": 35,
-     "time": "2026-10-23T14:14:42.713493+00:00",
+     "time": "2026-10-28T12:43:11.165355+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1356,8 +1386,8 @@
      "note_id": null,
      "activity": "final_test.evaluation",
      "slot": "final_test.evaluation",
-     "result_id": "3f77ae0e7f1973240c458c24a80bc1f996b94956c409a9687c2eb02f409320a4",
-     "execution_id": "e_3d67a8043d915da83986fe90",
+     "result_id": "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94",
+     "execution_id": "e_bbd92c0dbf7a62be9ca5ed0d",
      "rules": null,
      "column": null,
      "channel": null,
@@ -1371,7 +1401,7 @@
     },
     {
      "revision": 37,
-     "time": "2026-10-23T14:14:44.451969+00:00",
+     "time": "2026-10-28T12:43:13.168798+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1379,7 +1409,7 @@
      "note_id": null,
      "activity": "diag.final_test",
      "slot": "diag.final_test",
-     "result_id": "8caab7e0df67b532d57712e1a30c72e4864b9f6beff5dd19e4c4ea42c04253c2",
+     "result_id": "e893f21448fa28cb91c560ff7188568da7f0a8b03a754850148b610a2adc8ebe",
      "execution_id": "e_f09116e554021da514197565",
      "rules": null,
      "column": null,
@@ -1394,7 +1424,7 @@
     },
     {
      "revision": 39,
-     "time": "2026-10-23T14:14:52.043276+00:00",
+     "time": "2026-10-28T12:43:18.903355+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1402,7 +1432,7 @@
      "note_id": null,
      "activity": "policy.evaluation",
      "slot": "policy.evaluation",
-     "result_id": "aefc4f57b363225b1b919479564e8d91518dc8e952011cfba9ed79fa23da0b95",
+     "result_id": "9b08b1a85b6dc2aefb2cd7410a09d60a988d61420d52b4ae991d8a4e89b62bc8",
      "execution_id": "e_ed89c3d6b5ceb43c540c9096",
      "rules": [
       "share:0.1",
@@ -1420,7 +1450,7 @@
     },
     {
      "revision": 40,
-     "time": "2026-10-23T14:14:56.213635+00:00",
+     "time": "2026-10-28T12:43:22.652170+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
@@ -1443,7 +1473,7 @@
     },
     {
      "revision": 41,
-     "time": "2026-10-23T14:14:57.492255+00:00",
+     "time": "2026-10-28T12:43:23.943595+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "policy",
@@ -1475,11 +1505,11 @@
      },
      "text": "The policy was confirmed again in the junior's words (channel chat). Models unchanged, nothing refitted. No longer current: the activity diag.binary.",
      "audience": "agent",
-     "junior_text": "You confirmed the policy again. Models unchanged, nothing refitted. No longer current: an analysis."
+     "junior_text": "You confirmed the policy again. Models unchanged, nothing refitted. No longer current: the development diagnostics."
     },
     {
      "revision": 43,
-     "time": "2026-10-23T14:14:59.234691+00:00",
+     "time": "2026-10-28T12:43:25.616375+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1487,7 +1517,7 @@
      "note_id": null,
      "activity": "diag.binary",
      "slot": "diag.binary",
-     "result_id": "a0a322a17b967f02cc77fed8390e6b062771a376ee75c21516d045d93e6fa75a",
+     "result_id": "8547b35ca01463264588fd0ca0aea3ee2c6b43f21dd542ddae8254b6b245af5c",
      "execution_id": "e_8519f7987822bead348d47d9",
      "rules": null,
      "column": null,
@@ -1498,7 +1528,7 @@
      "invalidation": null,
      "text": "The activity diag.binary was replaced. Models unchanged, nothing refitted.",
      "audience": "agent",
-     "junior_text": "An analysis was replaced. Models unchanged, nothing refitted."
+     "junior_text": "The development diagnostics was replaced. Models unchanged, nothing refitted."
     }
    ],
    "truncated": false,
@@ -1517,6 +1547,469 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "119a66c8d1730fb3"
+  "currency": "f267d76f7ce1a5d0",
+  "texts": {
+   "en": {
+    "plan": {
+     "discover_data": "Discover the data",
+     "prediction_time": "Define the prediction moment",
+     "feature_availability": "Decide which variables are available at prediction time",
+     "split": "Split the data before exploring it",
+     "success_criterion": "Fix the success criterion before seeing a model",
+     "structural_eda": "Check the structure of the data",
+     "preprocessing": "Decide how the model prepares the variables",
+     "train_eda": "Explore the target on the development rows",
+     "models": "Fit a baseline and a logistic model",
+     "model_variant": "Choose the variants to compare",
+     "model_choice": "Choose the model",
+     "policy": "Choose a decision policy",
+     "final_test": "Open the final test once",
+     "conclusion": "Conclude proportionately"
+    },
+    "moments": {
+     "frame": "Frame the change",
+     "evidence": "Prepare evidence",
+     "compare": "Work and compare",
+     "conclude": "Conclude and hand over"
+    },
+    "next_action": "Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
+    "choice_options": {},
+    "limits": {
+     "unconfirmed_decisions": "Not confirmed by you yet: the conclusion.",
+     "validation_is_not_independent": "Out-of-fold predictions on the development rows are used to compare the models, the variant and the rule, so they are development evidence, not independent evidence of future performance. Only the sealed final test, opened once, is.",
+     "public_data_already_explored": "The data were explored or published before this study; its rows are not unseen.",
+     "no_time_or_entity_identifier": "The data have no time column or entity identifier, so the study cannot check drift over time or repeated entities across partitions.",
+     "uncertain_features_included": "These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment.",
+     "stale_results": "Some results are out of date and are computed again before they are cited.",
+     "no_causality": "Associations in observational data do not show that acting on a variable would change the outcome.",
+     "workbench_not_tracked": "Experiments in the notebook workbench are not recorded and are not decisions.",
+     "changed_after_final_test": "Something changed after the final test was opened (policy, policy.evaluation): the final test no longer measures what the study now holds, and it is no longer independent evidence for it."
+    },
+    "artifacts": {
+     "editable": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence.",
+     "notebook": "The generated notebook is up to date.",
+     "report": "The report is up to date.",
+     "workbench": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
+    },
+    "recap": [
+     "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
+     "Decided: the prediction moment; the feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); the split (5-fold cross-validation, stratified on the outcome); the success criterion (precision gain over the baseline of at least 5 points); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation); the model choice: the logistic model; the decision policy: select the top 20% by score (the logistic model on the 3617 out-of-fold development rows: precision 25.2%, recall 43.9%); the final test, opened once (the logistic model, select the top 10% by score).",
+     "Now: Check the structure of the data; the report and notebook are up to date.",
+     "Next: Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
+     "Limit: Something changed after the final test was opened (policy, policy.evaluation): the final test no longer measures what the study now holds, and it is no longer independent evidence for it."
+    ],
+    "digest": {
+     "2": "The prediction moment was proposed.",
+     "3": "You confirmed the prediction moment.",
+     "4": "The feature availability was proposed.",
+     "5": "You confirmed the feature availability.",
+     "6": "The split was proposed.",
+     "7": "You confirmed the split.",
+     "8": "The success criterion was proposed.",
+     "9": "You confirmed the success criterion.",
+     "10": "The preparation of the variables was proposed.",
+     "11": "You confirmed the preparation of the variables.",
+     "13": "The split was computed.",
+     "15": "The target rate was computed.",
+     "17": "The baseline model was computed.",
+     "19": "The logistic model was computed.",
+     "20": "Model variant was proposed.",
+     "21": "You confirmed model variant.",
+     "23": "The variant model was computed.",
+     "25": "The policy evaluation was computed for: select the top 10% by score; select the top 100 by score.",
+     "26": "The model choice was proposed: the logistic model.",
+     "27": "You confirmed the model choice.",
+     "28": "The policy was proposed: select the top 10% by score.",
+     "29": "You confirmed the policy.",
+     "30": "Final test was proposed.",
+     "32": "The development diagnostics was computed.",
+     "33": "You confirmed final test.",
+     "35": "The final test evaluation was computed.",
+     "37": "An analysis was computed.",
+     "39": "The policy evaluation was replaced for: select the top 10% by score; select the top 20% by score. Models unchanged, nothing refitted.",
+     "40": "The policy was proposed: select the top 20% by score.",
+     "41": "You confirmed the policy again. Models unchanged, nothing refitted. No longer current: the development diagnostics.",
+     "43": "The development diagnostics was replaced. Models unchanged, nothing refitted."
+    },
+    "goal": {
+     "intended_use": "Teaching simulation: prioritize contacts when call capacity is limited",
+     "decision": "Select contacts to call first",
+     "observation_unit": "A customer contacted during a telephone campaign",
+     "prediction_time": "before the first contact of the campaign, from the client file"
+    },
+    "proposals": {},
+    "question": null,
+    "options": {},
+    "options_note": null,
+    "junior_digest": "Next: the data quality check, run without asking you. Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
+    "headlines": {
+     "prediction_time": "“before the first contact of the campaign, from the client file”.",
+     "feature_availability": "Keep age, balance, contact, default, education, housing, job, loan, marital, pdays, poutcome and previous; exclude campaign (known only after the prediction moment), day (known only after the prediction moment), duration (known only after the prediction moment) and month (known only after the prediction moment).",
+     "split": "Cross-validation on the development rows: 5 folds, stratified on the outcome (seed 20261017); every row is predicted once by a model that did not see it.",
+     "success_criterion": "Adopt only if the precision beats the baseline by at least 5 percentage points at the adopted rule.",
+     "preprocessing": "Default preparation: nothing added, grouped, capped, or transformed.",
+     "model_variant": "Compare the model with a variant: stronger regularisation.",
+     "model_choice": "The logistic model.",
+     "policy": "Select the top 20% by score; precision 25.2% against 11.5% for the baseline.",
+     "final_test": "Open the final test once for Model (logistic regression), rule: Select the 10% highest-scored rows; precision 27.8% against 11.5% for the baseline."
+    },
+    "data_contingent": {},
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before.",
+    "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Quality check (6 of 14).",
+    "step_limit": "The final test measures the chosen configuration once, on rows no choice used: it is the study's independent evidence. It does not establish the performance on later periods or other data, nor a causal effect.",
+    "criterion_words": "precision gain over the baseline of at least 5 points",
+    "step_cards": null,
+    "case_brief": null,
+    "defensibility_note": {
+     "meaning": "Defensible means the study can support its conclusion before a reviewer: every decision taken in your words, the model chosen by you, the final test opened once, the conclusion written, and no stale figure.",
+     "checklist": {
+      "framing_in_your_words": "The framing decisions, taken in your words",
+      "model_chosen_by_you": "The model, chosen by you",
+      "final_test_opened_once": "The final test, opened once",
+      "conclusion_written": "The conclusion, written",
+      "no_stale_figure": "No stale figure"
+     },
+     "not_alarm": "This is not an alarm: it is the list of what the study must gather by the end. It turns to a warning only when something is wrong (a decision to confirm again, a stale figure, an automatic decision to review).",
+     "limits_lead": "The study is defensible, with these limits:"
+    }
+   },
+   "fr": {
+    "plan": {
+     "discover_data": "Découvrir les données",
+     "prediction_time": "Définir le moment de la prédiction",
+     "feature_availability": "Décider quelles variables sont disponibles au moment de la prédiction",
+     "split": "Découper les données avant de les explorer",
+     "success_criterion": "Fixer le critère de succès avant de voir un modèle",
+     "structural_eda": "Vérifier la structure des données",
+     "preprocessing": "Décider comment le modèle prépare les variables",
+     "train_eda": "Explorer la cible sur l'échantillon de développement",
+     "models": "Ajuster un modèle de référence et un modèle logistique",
+     "model_variant": "Choisir les variantes à comparer",
+     "model_choice": "Choisir le modèle",
+     "policy": "Choisir une règle de décision",
+     "final_test": "Ouvrir une fois l'échantillon de test final",
+     "conclusion": "Conclure avec mesure"
+    },
+    "moments": {
+     "frame": "Cadrer le changement",
+     "evidence": "Préparer les preuves",
+     "compare": "Travailler et comparer",
+     "conclude": "Conclure et transmettre"
+    },
+    "next_action": "Quelles colonnes ont des cellules manquantes, des catégories rares ou des valeurs hors de leur plage possible ? Ce contrôle lit les lignes de l'échantillon de développement sans la cible : la préparation décidée d'après lui vient avant tout regard sur la cible.",
+    "choice_options": {},
+    "limits": {
+     "unconfirmed_decisions": "Pas encore confirmé par vous : la conclusion.",
+     "validation_is_not_independent": "Les prédictions hors pli de l'échantillon de développement servent à comparer les modèles, la variante et la règle : ce sont des résultats de développement, pas une preuve indépendante de la performance future. Seul l'échantillon de test final scellé, ouvert une fois, l'est.",
+     "public_data_already_explored": "Les données ont été explorées ou publiées avant cette étude : ses lignes ne sont pas inédites.",
+     "no_time_or_entity_identifier": "Les données n'ont ni colonne de temps ni identifiant d'entité : l'étude ne peut pas vérifier une dérive dans le temps ni des entités répétées entre les échantillons.",
+     "uncertain_features_included": "Ces variables sont utilisées alors que leur disponibilité au moment de la prédiction est incertaine : age, contact, default, education, housing, job, loan, marital. Vérifiez qu'elles sont connues à ce moment-là.",
+     "stale_results": "Certains résultats ne sont plus à jour et sont recalculés avant d'être cités.",
+     "no_causality": "Des associations dans des données observées ne montrent pas qu'agir sur une variable changerait le résultat.",
+     "workbench_not_tracked": "Les essais faits dans l'atelier (workbench) ne sont pas enregistrés et ne sont pas des décisions.",
+     "changed_after_final_test": "Quelque chose a changé après l'ouverture du test final (la règle de décision et policy.evaluation) : le test final ne mesure plus ce que l'étude contient, et n'en est plus une preuve indépendante."
+    },
+    "artifacts": {
+     "editable": "Le notebook éditable de l'étude suit le notebook généré jusqu'à votre première modification ; ensuite il n'est jamais écrasé et ne constitue pas une preuve officielle.",
+     "notebook": "Le notebook généré est à jour.",
+     "report": "Le rapport est à jour.",
+     "workbench": "L'atelier (workbench) est votre espace libre : il est créé une fois, jamais écrasé, et n'est pas suivi par l'étude."
+    },
+    "recap": [
+     "Objectif : « Simulation pédagogique : prioriser les contacts quand la capacité d'appel est limitée » ; la prédiction est faite « before the first contact of the campaign, from the client file ».",
+     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : campaign, day, duration, month; gardées malgré un doute : contact) ; le découpage des données (validation croisée à 5 plis, stratifiée sur le résultat) ; le critère de succès (gain de précision sur le modèle de référence d'au moins 5 points) ; la préparation des variables (par défaut, rien ne change) ; la variante à comparer (une régularisation plus forte) ; le choix du modèle : le modèle logistique ; la règle de décision : sélectionner les 20 % meilleurs scores (le modèle logistique sur les 3617 lignes de l'échantillon de développement, hors pli : précision 25,2 %, rappel 43,9 %) ; l'échantillon de test final, ouvert une fois (le modèle logistique, sélectionner les 10 % meilleurs scores).",
+     "Maintenant : Vérifier la structure des données ; le rapport et le notebook sont à jour.",
+     "Ensuite : Quelles colonnes ont des cellules manquantes, des catégories rares ou des valeurs hors de leur plage possible ? Ce contrôle lit les lignes de l'échantillon de développement sans la cible : la préparation décidée d'après lui vient avant tout regard sur la cible.",
+     "Limite : Quelque chose a changé après l'ouverture du test final (la règle de décision et policy.evaluation) : le test final ne mesure plus ce que l'étude contient, et n'en est plus une preuve indépendante."
+    ],
+    "digest": {
+     "2": "Une proposition a été faite pour le moment de la prédiction.",
+     "3": "Vous avez confirmé le moment de la prédiction.",
+     "4": "Une proposition a été faite pour la disponibilité des variables.",
+     "5": "Vous avez confirmé la disponibilité des variables.",
+     "6": "Une proposition a été faite pour le découpage des données.",
+     "7": "Vous avez confirmé le découpage des données.",
+     "8": "Une proposition a été faite pour le critère de succès.",
+     "9": "Vous avez confirmé le critère de succès.",
+     "10": "Une proposition a été faite pour la préparation des variables.",
+     "11": "Vous avez confirmé la préparation des variables.",
+     "13": "Résultat calculé : le découpage.",
+     "15": "Résultat calculé : le taux de résultat positif.",
+     "17": "Résultat calculé : le modèle de référence.",
+     "19": "Résultat calculé : le modèle logistique.",
+     "20": "Une proposition a été faite pour la variante à comparer.",
+     "21": "Vous avez confirmé la variante à comparer.",
+     "23": "Résultat calculé : le modèle variante.",
+     "25": "Résultat calculé : l'évaluation de la règle, pour : sélectionner les 10 % meilleurs scores; sélectionner les 100 meilleurs scores.",
+     "26": "Une proposition a été faite pour le choix du modèle : le modèle logistique.",
+     "27": "Vous avez confirmé le choix du modèle.",
+     "28": "Une proposition a été faite pour la règle de décision : sélectionner les 10 % meilleurs scores.",
+     "29": "Vous avez confirmé la règle de décision.",
+     "30": "Une proposition a été faite pour l'ouverture de l'échantillon de test final.",
+     "32": "Résultat calculé : les diagnostics de développement.",
+     "33": "Vous avez confirmé l'ouverture de l'échantillon de test final.",
+     "35": "Résultat calculé : l'évaluation sur l'échantillon de test final.",
+     "37": "Résultat calculé : une analyse.",
+     "39": "Résultat remplacé : l'évaluation de la règle, pour : sélectionner les 10 % meilleurs scores; sélectionner les 20 % meilleurs scores. Modèles inchangés, rien n'est réajusté.",
+     "40": "Une proposition a été faite pour la règle de décision : sélectionner les 20 % meilleurs scores.",
+     "41": "Vous avez de nouveau confirmé la règle de décision. Modèles inchangés, rien n'est réajusté. Plus à jour : les diagnostics de développement.",
+     "43": "Résultat remplacé : les diagnostics de développement. Modèles inchangés, rien n'est réajusté."
+    },
+    "goal": {
+     "intended_use": "Simulation pédagogique : prioriser les contacts quand la capacité d'appel est limitée",
+     "decision": "Sélectionner les contacts à appeler en premier",
+     "observation_unit": "Un client contacté pendant une campagne téléphonique",
+     "prediction_time": "before the first contact of the campaign, from the client file"
+    },
+    "proposals": {},
+    "question": null,
+    "options": {},
+    "options_note": null,
+    "junior_digest": "Ensuite : le contrôle de qualité des données, lancé sans vous demander. Quelles colonnes ont des cellules manquantes, des catégories rares ou des valeurs hors de leur plage possible ? Ce contrôle lit les lignes de l'échantillon de développement sans la cible : la préparation décidée d'après lui vient avant tout regard sur la cible.",
+    "headlines": {
+     "prediction_time": "« before the first contact of the campaign, from the client file ».",
+     "feature_availability": "Garder age, balance, contact, default, education, housing, job, loan, marital, pdays, poutcome et previous ; exclure campaign (connue seulement après le moment de la prédiction), day (connue seulement après le moment de la prédiction), duration (connue seulement après le moment de la prédiction) et month (connue seulement après le moment de la prédiction).",
+     "split": "Validation croisée sur les lignes de développement : 5 plis, stratifiés sur le résultat (graine 20261017) ; chaque ligne est prédite une fois par un modèle qui ne l'a pas vue.",
+     "success_criterion": "N'adopter que si la précision dépasse celle du modèle de référence d'au moins 5 points de pourcentage à la règle adoptée.",
+     "preprocessing": "Préparation par défaut : rien d'ajouté, de regroupé, de plafonné ni de transformé.",
+     "model_variant": "Comparer le modèle avec une variante : une régularisation plus forte.",
+     "model_choice": "Le modèle logistique.",
+     "policy": "Sélectionner les 20 % meilleurs scores ; précision 25,2 % contre 11,5 % pour le modèle de référence.",
+     "final_test": "Ouvrir le test final une fois pour : Modèle logistique, règle : Sélectionner les 10 % des lignes aux scores les plus élevés ; précision 27,8 % contre 11,5 % pour le modèle de référence."
+    },
+    "data_contingent": {},
+    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant.",
+    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment de la prédiction, Variables disponibles, Découpage, Critère de succès) ; Préparer les preuves (Contrôle de qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Règle) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Contrôle de qualité (6 sur 14).",
+    "step_limit": "Le test final mesure une fois la configuration choisie, sur des lignes qu'aucun choix n'a utilisées : c'est la preuve indépendante de l'étude. Il n'établit ni la performance sur d'autres périodes ou d'autres données, ni un effet causal.",
+    "criterion_words": "gain de précision sur le modèle de référence d'au moins 5 points",
+    "step_cards": null,
+    "case_brief": null,
+    "defensibility_note": {
+     "meaning": "Défendable veut dire que l'étude peut soutenir sa conclusion devant un relecteur : chaque décision prise avec vos mots, le modèle choisi par vous, le test final ouvert une seule fois, la conclusion écrite, et aucun chiffre périmé.",
+     "checklist": {
+      "framing_in_your_words": "Les décisions de cadrage, prises avec vos mots",
+      "model_chosen_by_you": "Le modèle, choisi par vous",
+      "final_test_opened_once": "Le test final, ouvert une fois",
+      "conclusion_written": "La conclusion, écrite",
+      "no_stale_figure": "Aucun chiffre périmé"
+     },
+     "not_alarm": "Ce n'est pas une alerte : c'est la liste de ce que l'étude devra réunir d'ici la fin. Elle passe en alerte seulement si quelque chose pose problème (décision à reconfirmer, chiffre périmé, décision automatique à relire).",
+     "limits_lead": "L'étude est défendable, avec ces limites :"
+    }
+   }
+  },
+  "panel_contract": 2,
+  "automation": null,
+  "review_queue": null,
+  "defensibility": {
+   "kind": "warn",
+   "count": 5,
+   "items": [
+    {
+     "id": "changed_after_final_test",
+     "severity": "blocking"
+    },
+    {
+     "id": "stale_results",
+     "severity": "caveat"
+    },
+    {
+     "id": "unconfirmed_decisions",
+     "severity": "not_final"
+    },
+    {
+     "id": "uncertain_features_included",
+     "severity": "caveat"
+    },
+    {
+     "id": "validation_is_not_independent",
+     "severity": "not_final"
+    },
+    {
+     "id": "public_data_already_explored",
+     "severity": "context"
+    },
+    {
+     "id": "no_time_or_entity_identifier",
+     "severity": "context"
+    },
+    {
+     "id": "no_causality",
+     "severity": "context"
+    },
+    {
+     "id": "workbench_not_tracked",
+     "severity": "context"
+    }
+   ],
+   "checklist": [
+    {
+     "id": "framing_in_your_words",
+     "done": false
+    },
+    {
+     "id": "model_chosen_by_you",
+     "done": false
+    },
+    {
+     "id": "final_test_opened_once",
+     "done": true
+    },
+    {
+     "id": "conclusion_written",
+     "done": false
+    },
+    {
+     "id": "no_stale_figure",
+     "done": true
+    }
+   ]
+  },
+  "ledger": {
+   "final_test": {
+    "openings": 1,
+    "max": 1
+   },
+   "target_looks": {
+    "eda": 3,
+    "sample": 1,
+    "total": 4
+   },
+   "configurations": {
+    "tried": 2,
+    "reference": true
+   },
+   "variants": {
+    "used": 1,
+    "max": 3,
+    "remaining": 2
+   }
+  },
+  "sample": {
+   "seed": "181e108189c91152",
+   "row_keys": [
+    "L956",
+    "L1078",
+    "L1912",
+    "L2493",
+    "L3029",
+    "L3328",
+    "L3543",
+    "L3975"
+   ],
+   "recorded": true
+  },
+  "headlines": {
+   "prediction_time": {
+    "decision_id": "prediction_time",
+    "basis": "restated",
+    "results": []
+   },
+   "feature_availability": {
+    "decision_id": "feature_availability",
+    "basis": "restated",
+    "results": []
+   },
+   "split": {
+    "decision_id": "split",
+    "basis": "restated",
+    "results": []
+   },
+   "success_criterion": {
+    "decision_id": "success_criterion",
+    "basis": "restated",
+    "results": []
+   },
+   "preprocessing": {
+    "decision_id": "preprocessing",
+    "basis": "restated",
+    "results": []
+   },
+   "model_variant": {
+    "decision_id": "model_variant",
+    "basis": "restated",
+    "results": []
+   },
+   "model_choice": {
+    "decision_id": "model_choice",
+    "basis": "restated",
+    "results": []
+   },
+   "policy": {
+    "decision_id": "policy",
+    "basis": "endorsed",
+    "results": [
+     "9b08b1a85b6dc2aefb2cd7410a09d60a988d61420d52b4ae991d8a4e89b62bc8"
+    ]
+   },
+   "final_test": {
+    "decision_id": "final_test",
+    "basis": "restated",
+    "results": [
+     "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94"
+    ]
+   }
+  },
+  "criterion_configurations": {
+   "metric": "precision_gain",
+   "unit": "share",
+   "bound": {
+    "value": 0.16528850782879806,
+    "reference": 0.11528850782879807,
+    "minimum": 5,
+    "result_id": "9b08b1a85b6dc2aefb2cd7410a09d60a988d61420d52b4ae991d8a4e89b62bc8",
+    "path": "rules.[share:0.2].models.[fit.baseline].precision"
+   },
+   "configurations": [
+    {
+     "slot": "fit.logistic",
+     "value": 0.2524137931034483,
+     "result_id": "9b08b1a85b6dc2aefb2cd7410a09d60a988d61420d52b4ae991d8a4e89b62bc8",
+     "path": "rules.[share:0.2].models.[fit.logistic].precision",
+     "point_meets_bound": true,
+     "gain": 13.712528527465023,
+     "low": 10.899981482345186,
+     "high": 16.389763010908744,
+     "status": "met",
+     "judged_on": "development"
+    },
+    {
+     "slot": "fit.variant",
+     "value": 0.2524137931034483,
+     "result_id": "9b08b1a85b6dc2aefb2cd7410a09d60a988d61420d52b4ae991d8a4e89b62bc8",
+     "path": "rules.[share:0.2].models.[fit.variant].precision",
+     "point_meets_bound": true,
+     "gain": 13.712528527465023,
+     "low": 10.926679362228516,
+     "high": 16.416504414856593,
+     "status": "met",
+     "judged_on": "development"
+    },
+    {
+     "slot": "fit.baseline",
+     "value": 0.11528850782879807,
+     "result_id": "9b08b1a85b6dc2aefb2cd7410a09d60a988d61420d52b4ae991d8a4e89b62bc8",
+     "path": "rules.[share:0.2].models.[fit.baseline].precision",
+     "point_meets_bound": false,
+     "gain": null,
+     "low": null,
+     "high": null,
+     "status": "not_assessed",
+     "judged_on": "development"
+    }
+   ],
+   "final_test": null,
+   "business": null
+  },
+  "data_structure": {
+   "duplicates": {
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": []
+  },
+  "quality_verdicts": null,
+  "case_brief": null,
+  "case_display": null
  }
 }

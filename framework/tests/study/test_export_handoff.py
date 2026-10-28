@@ -307,3 +307,63 @@ def test_the_expected_revision_names_the_folder_or_refuses(study):
     handoff = json.loads((study / 'handoff' / f'revision-{revision}' / 'handoff.json')
                          .read_text(encoding='utf-8'))
     assert handoff['revision'] == revision
+
+
+# --- third session of 2026-10-26 (R22): a French study's pack -------------------------------
+
+def test_a_french_study_with_thousands_of_rows_exports_its_pack(tmp_path):
+    """R22 (blocker): ``handoff.md`` wrote counts in English ("1,050") and was checked in the
+    study language, where "1,050" is the decimal 1.05, so a French study with 1,000 rows or
+    more refused the export with ``untraceable_number`` and wrote nothing. The summary is
+    now written in French, with French number forms (a narrow no-break space between
+    thousands, a decimal comma), and ``check --text handoff.md`` reads it clean."""
+    from mlkit.study import cite
+    case_dir = fk.make_case(tmp_path / 'case', n_rows=1500)['case'].parent
+    flow = fk.Flow(tmp_path / 'study', case_dir, prefix='hf')
+    flow.call('init', '--case', case_dir, '--study', flow.study, '--lang', 'fr')
+    flow.pauses()
+    for activity in ('split', 'eda.target_rate', 'fit.baseline', 'fit.logistic'):
+        flow.run(activity)
+    flow.run('policy.evaluate', '--rule', 'capacity:20')
+    flow.decide('policy', 'capacity:20', 'Oui, on appelle les vingt membres les mieux classés.')
+    flow.call('render', '--study', flow.study)
+    out = tmp_path / 'pack'
+    code, p = export(flow.study, '--out', out, code=0)
+    md = (out / 'handoff.md').read_text(encoding='utf-8')
+    handoff = json.loads((out / 'handoff.json').read_text(encoding='utf-8'))
+    result = check_text(flow.study, out / 'handoff.md')
+    assert result['clean'] and result['counts']['error'] == 0, result['findings']
+    # A count of 1,000 or more, in its French form only.
+    big = [c for c in handoff['results_cited'] if isinstance(c['value'], int)
+           and c['value'] >= 1000]
+    assert big, handoff['results_cited']
+    for c in big:
+        assert c['shown'] == cite.format_value(c['value'], 'int', 'fr')
+        assert c['shown'] in md and f'{c["value"]:,}' not in md
+    assert ' ' in md
+    for c in handoff['results_cited']:
+        assert c['shown'] in md
+    for heading in ('## Objectif', '## Décisions', '## Résultats cités',
+                    '## Registre des lignes lues', '## Pas encore défendable',
+                    '## Points ouverts', '## Reproduire', '## Pas pour un usage en production'):
+        assert heading in md, heading
+    for english in ('## Decisions', '## Cited results', 'Status:', 'Basis:', ' rows, ',
+                    'not an authenticated signature', 'does not authorise'):
+        assert english not in md, english
+    assert md.count(cmd_export.NOT_AUTHENTICATED_FR) == 8
+    # The French words that name a revision or a result exempt the number after them, as
+    # "revision" and "result" do in English.
+    probe = tmp_path / 'probe.md'
+    probe.write_text('Étude à la révision 98765 (résultat 52659681).\n', encoding='utf-8')
+    assert check_text(flow.study, probe)['clean']
+    assert '« Oui, on appelle les vingt membres les mieux classés. »' in md
+    assert tuple(handoff) == cmd_export.HANDOFF_KEYS
+
+
+def test_an_english_pack_keeps_its_words_and_number_forms(study, tmp_path):
+    """R22: the English summary is unchanged (counts with a comma, English labels)."""
+    out = tmp_path / 'pack'
+    export(study, '--out', out, code=0)
+    md = (out / 'handoff.md').read_text(encoding='utf-8')
+    assert md.startswith('# Handoff pack: ') and ' ' not in md
+    assert '## Décisions' not in md and cmd_export.CLOSING in md

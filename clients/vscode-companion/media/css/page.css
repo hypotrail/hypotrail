@@ -1,0 +1,235 @@
+/* The one page (ADR 0004 decision 13; COMPANION-ADVANCED §4.1, §13; approved mockup
+   docs/plans/mockups/panel-synthesis-fr.html). A slate board with chalk text; paper cards for
+   what helps to answer; graph paper for the figures. Only the header and the progress are
+   sticky (PG-2). Colours come from tokens.css; sizes from its six-step type scale. Nothing
+   scrolls sideways except the regions marked data-scroll-ok (NAR-1, NAR-2). */
+
+body { padding: 0 14px var(--s6); }
+#app { max-width: 900px; }
+
+/* --- the sticky region (PG-2) -------------------------------------------------------------- */
+.ht-top { position: sticky; top: 0; z-index: 20; background: var(--ht-bg); border-bottom: 1px solid var(--ht-line);
+  margin: 0 -14px; padding: 0 14px; }
+.ht-headrow { display: flex; flex-wrap: wrap; gap: 3px 5px; align-items: center; padding: 6px 0 2px; }
+.ht-headrow [data-pill] { order: 3; }
+.ht-headrow [data-pill="seal"] { order: 1; }
+.ht-studyname { font: 400 var(--t-h)/1.2 var(--serif); color: var(--chalk); text-shadow: 0 0 1px var(--dust); overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; min-width: 0; max-width: 100%; margin-right: 6px; line-height: 32px; }
+.ht-btns { order: 2; margin-left: auto; display: flex; gap: 6px; }
+button.ht-ib { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; margin: 0; padding: 0 8px;
+  background: transparent; color: var(--ht-fg); border: 1px solid var(--ht-line-strong); border-radius: var(--r-chip); font-size: var(--t-title); }
+button.ht-ib:hover { border-color: var(--ht-accent); color: var(--ht-accent); filter: none; }
+.ht-pills { display: contents; }
+.ht-pill { display: inline-flex; align-items: center; font: 500 var(--t-cap)/1.6 var(--ht-font); border: 1px solid currentColor;
+  border-radius: var(--r-pill); padding: 0 6px; background: transparent; white-space: normal; margin: 0; min-height: 22px; }
+button.ht-pill { cursor: pointer; font-weight: 500; }
+button.ht-pill:hover { filter: none; text-decoration: none; }
+.ht-pill-seal { color: var(--violet); }
+.ht-pill-opened, .ht-pill-changed { background: var(--violet); color: var(--board); border-color: var(--violet); }
+.ht-pill-absent { color: var(--ht-muted); }
+.ht-pill-def { color: var(--chalk2); }
+.ht-pill-def-warn { color: var(--coral); }
+.ht-pill-def-limits { color: var(--chalk2); }
+.ht-pill-auto { color: var(--coral); border-style: dashed; }
+.ht-pill-reviewer { color: var(--ht-info); }
+
+.ht-prog { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; padding: 3px 0 6px; }
+.ht-bar { flex: 1 1 120px; display: flex; gap: 6px; align-items: center; min-width: 80px; }
+.ht-ph { display: flex; gap: 2px; flex: var(--n, 1) 1 0; align-items: center; }
+.ht-ph i { flex: 1 1 0; height: 5px; border-radius: 2px; background: var(--line2); }
+.ht-ph i.ht-seg-done { background: var(--mint); }
+.ht-ph i.ht-seg-current { height: 10px; background: var(--yellow); box-shadow: 0 0 0 1.5px var(--ht-bg), 0 0 0 3px var(--yellow); }
+.ht-ph i.ht-seg-auto { background: transparent; border: 1.5px dashed var(--coral); height: 8px; }
+.ht-plbl { font-size: var(--t-meta); color: var(--chalk2); white-space: nowrap; }
+.ht-plbl b { color: var(--chalk); font-weight: 600; }
+
+/* The popovers open over the page, next to their button (§4.1). */
+.ht-pop { position: absolute; left: 14px; right: 14px; top: calc(100% - 6px); z-index: 30; background: var(--board2);
+  border: 1px solid var(--line2); border-radius: var(--r-card); padding: 10px 12px; box-shadow: var(--shadow); font-size: var(--t-body);
+  color: var(--chalk2); max-height: 70vh; overflow-y: auto; }
+.ht-pop:focus-visible { outline: 2px solid var(--ht-focus); }
+.ht-pop h3 { font: 600 var(--t-cap)/1.4 var(--ht-font); letter-spacing: 0.06em; text-transform: uppercase; color: var(--chalk); margin: 0 0 4px; }
+.ht-pop ol { padding-left: 18px; margin: 0; }
+.ht-pop li { margin: 3px 0; }
+.ht-grp { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; padding: 5px 0;
+  border-top: 1px solid var(--line); }
+.ht-grp:first-child { border-top: 0; }
+.ht-rg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line2); border-radius: var(--r-chip); overflow: hidden; }
+.ht-rg button { margin: 0; min-height: 32px; padding: 2px 10px; background: transparent; color: var(--chalk2); border: 0; border-radius: 0;
+  font-weight: 500; font-size: var(--t-meta); }
+.ht-rg button + button { border-left: 1px solid var(--line2); }
+.ht-rg button[aria-checked="true"] { background: var(--yellow); color: var(--board); font-weight: 600; }
+button.ht-plain { display: block; width: 100%; margin: 0; padding: 7px 0; min-height: 32px; background: transparent; border: 0;
+  border-top: 1px solid var(--line); border-radius: 0; color: var(--chalk2); text-align: left; font-weight: 500; }
+button.ht-plain:hover { color: var(--yellow); filter: none; }
+/* A disabled item of the "more" menu is not only fainter: a dashed border, muted text. */
+button.ht-plain:disabled { border: 1px dashed var(--ht-line-strong); padding: 6px 8px; color: var(--ht-muted); }
+.ht-stageline { font-size: var(--t-meta); padding-top: 6px; border-top: 1px solid var(--line); margin: 0; }
+
+/* --- the flow ------------------------------------------------------------------------------- */
+main { padding: 10px 0 var(--s4); }
+main > section > h2, .ht-tools > h2, .ht-pathblock > h2 { font: 600 var(--t-cap)/1.4 var(--ht-font); letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--faint); margin: var(--s5) 0 6px; }
+main > section:first-child > h2 { margin-top: 4px; }
+.ht-faint { color: var(--ht-faint); font-size: var(--t-meta); }
+.ht-off { color: var(--ht-faint); font-size: var(--t-meta); }
+
+/* To handle (§6.3) */
+.ht-todo { border: 1px solid var(--coral); border-radius: var(--r-card); margin: 0 0 var(--s3); }
+main > .ht-todo > h2 { color: var(--coral); margin: 0; padding: 6px 10px; border-bottom: 1px solid var(--line); letter-spacing: 0.04em; }
+.ht-todo ul { list-style: none; padding: 0 10px; margin: 0; }
+.ht-todo li { padding: 8px 0; color: var(--chalk2); }
+.ht-todo li + li { border-top: 1px solid var(--line); }
+.ht-todo li b { color: var(--chalk); font-weight: 600; }
+.ht-acts { margin-top: 5px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+button.ht-act { margin: 0; padding: 4px 10px; min-height: 32px; background: transparent; color: var(--ht-fg); border: 1px solid var(--line2);
+  border-radius: var(--r-chip); font-weight: 500; font-size: var(--t-meta); }
+button.ht-act:hover { border-color: var(--yellow); color: var(--yellow); filter: none; }
+
+/* Folds of the board (FOLD-1): a chevron, the label, a count on the right. */
+details.ht-p { border-top: 1px solid var(--line); }
+details.ht-p > summary { list-style: none; cursor: pointer; display: flex; gap: 6px; align-items: baseline; padding: 6px 0;
+  min-height: 32px; color: var(--chalk2); }
+details.ht-p > summary::-webkit-details-marker, details.ht-f > summary::-webkit-details-marker,
+.ht-path summary::-webkit-details-marker { display: none; }
+details.ht-p > summary::before { content: "▸"; color: var(--faint); flex: none; }
+details.ht-p[open] > summary::before { content: "▾"; }
+details.ht-p > summary .ht-count { margin-left: auto; font-size: var(--t-meta); color: var(--faint); border: 0; background: none; padding: 0; }
+details.ht-p > :not(summary) { padding: 0 0 10px 14px; }
+details.ht-since { margin-bottom: var(--s2); }
+/* Folds on paper. */
+details.ht-f { border-top: 1px solid var(--ht-line); margin-top: 6px; }
+details.ht-f > summary { list-style: none; cursor: pointer; display: flex; gap: 6px; padding: 6px 0; min-height: 32px; color: var(--ht-muted); }
+details.ht-f > summary::before { content: "▸"; color: var(--ochre-ink); flex: none; }
+details.ht-f[open] > summary::before { content: "▾"; }
+details.ht-f > :not(summary) { padding-bottom: 8px; }
+
+/* Now (§6.5) */
+.ht-who { font: 600 var(--t-cap)/1.4 var(--ht-font); letter-spacing: 0.06em; text-transform: uppercase; color: var(--yellow); margin: 0 0 2px; }
+h3.ht-question { font: 400 var(--t-h)/1.3 var(--serif); color: var(--chalk); margin: 0 0 4px; }
+ul.ht-opts { list-style: none; margin: 6px 0 2px; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 0; color: var(--chalk2); }
+ul.ht-opts li { margin: 0; }
+ul.ht-opts li.ht-opts-lead { color: var(--faint); margin-right: 6px; font-size: var(--t-meta); align-self: center; }
+ul.ht-opts li[data-option] + li[data-option]::before { content: "·"; color: var(--faint); margin: 0 6px; }
+p.ht-opts-note { font-size: var(--t-meta); color: var(--faint); margin: 0; }
+.ht-copywrap { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; max-width: 100%; }
+button.ht-copy { margin: 4px 0 0; padding: 4px 9px; min-height: 32px; max-width: 100%; text-align: left; white-space: normal; background: transparent;
+  color: var(--ht-fg); border: 1px solid var(--line2); border-radius: var(--r-chip); font: 500 var(--t-meta)/1.35 var(--ht-font); }
+button.ht-copy:hover { border-color: var(--yellow); color: var(--yellow); filter: none; }
+.ht-copied { font-size: var(--t-meta); color: var(--mint); }
+.ht-limit { margin: var(--s3) 0 0; color: var(--chalk2); display: flex; gap: 8px; align-items: baseline; }
+.ht-limit::before { content: "◐"; color: var(--coral); flex: none; }
+.ht-next { margin: var(--s3) 0 0; color: var(--chalk2); }
+.ht-next b { color: var(--chalk); font-weight: 600; }
+
+/* The context cards (§6.5.2): paper, graph-paper ruling. */
+.card.ht-ctx { border-left-width: 1px; border-left-color: var(--ht-card-border); padding: 12px 14px; margin: 10px 0 0;
+  background-image: linear-gradient(var(--gridmm) 1px, transparent 1px), linear-gradient(90deg, var(--gridmm) 1px, transparent 1px);
+  background-size: 6px 6px; }
+.card .ht-k { font: 600 var(--t-cap)/1.4 var(--ht-font); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ochre-ink); margin: 0; }
+.card.ht-ctx > h3 { font: 400 var(--t-title)/1.3 var(--serif); color: var(--cardink); margin: 3px 0 6px; }
+.card .ht-frame { font-size: var(--t-meta); color: var(--cardmuted); margin: 0 0 6px; }
+.card .ht-frame b { color: var(--cardink); font-weight: 600; }
+.card .ht-head-line { border-left: 3px solid var(--cardmuted); padding: 2px 0 2px 10px; }
+.card .ht-plainsay { background: var(--cardsoft); border-radius: var(--r-chip); padding: 7px 10px; }
+.card .ht-crit { margin: 8px 0; }
+.card .ht-crit b { color: var(--leaf); }
+.ht-crit-list { font-size: var(--t-meta); color: var(--cardmuted); margin: 2px 0 0; }
+.ht-warnline { color: var(--onboard-red); font-weight: 600; }
+.card .ht-warnline { color: var(--red); }
+.ht-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 3px 14px; margin: 4px 0 6px; }
+.ht-facts b { font-weight: 600; }
+.pg-stale { background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--red) 9%, transparent) 0 8px, transparent 8px 16px) !important; }
+.ht-badge-stale { display: inline-block; font: 600 var(--t-cap)/1.5 var(--ht-font); letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--red); border: 1px solid var(--red); border-radius: var(--r-chip); padding: 0 6px; margin-bottom: 4px; }
+.ht-waiting h3 button.ht-link { font: 400 var(--t-title)/1.3 var(--serif); color: var(--cardink); text-align: left; }
+.ht-predict-now { margin-top: var(--s3); }
+
+/* The step-1 sample (SAMPLE-1): a region that may scroll sideways, the row key and the target first. */
+.ht-sample-cap { font-size: var(--t-meta); font-weight: 600; margin: 10px 0 0; }
+.ht-scrollx { overflow-x: auto; max-width: 100%; margin: 4px 0 0; }
+/* The development / final-test table (HON-1): its cells break between words only, never inside
+   one ("modè/le"); the first column keeps at least its longest word and the region scrolls. */
+table[data-dev-final] th, table[data-dev-final] td { overflow-wrap: normal; word-break: normal; hyphens: manual; }
+table[data-dev-final] :is(th, td):first-child { min-width: 9ch; }
+.ht-scrollx:focus-visible { outline: 2px solid var(--pen); }
+table.ht-sample { border-collapse: collapse; font-size: var(--t-meta); white-space: nowrap; width: auto; min-width: 100%; }
+table.ht-sample th, table.ht-sample td { border-bottom: 1px solid var(--cardline); padding: 3px 6px; text-align: left; }
+table.ht-sample th { color: var(--cardmuted); font-weight: 600; }
+table.ht-sample td.n { text-align: right; font-variant-numeric: tabular-nums; }
+table.ht-sample .ht-key { color: var(--cardmuted); font-family: var(--mono); font-size: var(--t-cap); position: sticky; left: 0; background: var(--card); }
+table.ht-sample .ht-tgt { background: color-mix(in srgb, var(--ochre) 12%, var(--card)); font-weight: 600; }
+table.ht-sample td.ht-q { color: var(--red); font-weight: 700; }
+
+/* The path (§6.6) */
+.ht-ledger { font-size: var(--t-meta); color: var(--faint); margin: 0 0 6px; }
+.ht-ledger b { color: var(--chalk2); font-weight: 600; }
+details.ht-ledger > summary { color: var(--faint); font-size: var(--t-meta); }
+ul.ht-path, ul.pg-steps, ul.ht-results { list-style: none; padding: 0; margin: 0; }
+ul.ht-path > li { border-top: 1px solid var(--line); margin: 0; }
+ul.pg-steps { padding-left: 18px; }
+ul.pg-steps > li { border-top: 1px dashed var(--line); margin: 0; }
+.ht-path summary { list-style: none; cursor: pointer; display: flex; gap: 8px; align-items: baseline; padding: 7px 0; min-height: 32px; flex-wrap: wrap; }
+.ht-path summary::after { content: "›"; color: var(--faint); margin-left: auto; flex: none; }
+.ht-path details[open] > summary::after { transform: rotate(90deg); }
+.ht-path .pg-row { display: flex; gap: 8px; align-items: baseline; padding: 7px 0; flex-wrap: wrap; }
+.ht-mk { width: 14px; text-align: center; flex: none; }
+.ht-mk-done { color: var(--mint); } .ht-mk-current { color: var(--yellow); } .ht-mk-later { color: var(--faint); }
+.ht-mk-auto, .ht-mk-computed, .ht-mk-again, .ht-mk-stale, .ht-mk-held, .ht-mk-delegated { color: var(--coral); }
+.ht-path .ht-t { font-weight: 600; color: var(--chalk); }
+.ht-path .ht-phase-t { font: 600 var(--t-cap)/1.5 var(--ht-font); letter-spacing: 0.07em; text-transform: uppercase; }
+.ht-path .ht-v { color: var(--chalk2); flex: 1 1 160px; min-width: 0; }
+/* R38 (lot P): a long headline wraps; it is never cut at the right edge. */
+.ht-path .ht-v { overflow-wrap: anywhere; white-space: normal; }
+.ht-later, .ht-later .ht-t { color: var(--faint); }
+.ht-later .ht-t { font-weight: 400; }
+.ht-b { font-size: var(--t-cap); white-space: nowrap; border-radius: var(--r-pill); padding: 0 7px; border: 1px solid currentColor; flex: none; line-height: 1.6; }
+.ht-b-current { color: var(--yellow); }
+.ht-b-auto { color: var(--coral); border-style: dashed; }
+.ht-b-computed { color: var(--faint); }
+.ht-b-again, .ht-b-stale, .ht-b-held { color: var(--coral); }
+.ht-b-delegated { color: var(--violet); }
+.pg-detail { padding: 0 0 10px 22px; color: var(--chalk2); }
+.pg-detail .ht-src { display: block; }
+.ht-basis-automatic { color: var(--coral); }
+.ht-res { margin: 4px 0; }
+details.ht-fig > summary { list-style: none; cursor: pointer; color: var(--ht-link); min-height: 32px; padding: 4px 0; }
+details.ht-fig > summary::after { content: none; }
+.ht-slot { font-weight: 400; }
+.ht-fig-body { padding: 0 0 6px; }
+li[aria-current="step"] { font-weight: inherit; }
+li[aria-current="step"] > .pg-row .ht-t { color: var(--yellow); }
+
+/* Tools (§6.7) */
+details.ht-drawer > summary { color: var(--chalk); font-weight: 600; }
+.ht-drawer-body { color: var(--chalk2); }
+ul.ht-links { padding-left: 1.2em; }
+.ht-footer { margin-top: var(--s4); font-size: var(--t-meta); color: var(--faint); border-top: 1px solid var(--line); padding-top: var(--s2); }
+.ht-live:empty { display: none; }
+.ht-skeleton { min-height: 60px; }
+
+/* Notions in place (NOT-1, LS-5) */
+button.ht-term { background: transparent; border: 0; border-bottom: 1px solid currentColor; border-radius: 0; padding: 0; margin: 0;
+  color: inherit; font: inherit; cursor: pointer; min-height: 0; }
+button.ht-term[aria-expanded="true"] { color: var(--yellow); }
+.card button.ht-term[aria-expanded="true"] { color: var(--pen); }
+.ht-tdef { display: block; background: var(--cardsoft); color: var(--cardink); border-left: 3px solid var(--pen); border-radius: 2px;
+  padding: 6px 10px; margin: 4px 0 8px; font-size: var(--t-body); font-weight: 400; font-family: var(--ht-font); text-transform: none; letter-spacing: 0; }
+.ht-tdef dfn { font-style: normal; font-weight: 600; }
+.ht-tdef .ht-here b { color: var(--cardmuted); }
+
+/* Narrow widths (NAR-3): the step line wraps its value under its name below 420 px. */
+@media (max-width: 419px) {
+  .ht-path .ht-v { flex-basis: 100%; padding-left: 22px; }
+  .ht-bar { flex-basis: 100%; }
+}
+
+/* High Contrast and forced colours (THEME-4): the editor's colours and the contrast border. */
+body.vscode-high-contrast .ht-pill, body.vscode-high-contrast-light .ht-pill,
+body.vscode-high-contrast .ht-todo, body.vscode-high-contrast-light .ht-todo { border-color: var(--vscode-contrastBorder, currentColor); }
+@media (forced-colors: active) {
+  .ht-ph i, .ht-ph i.ht-seg-done, .ht-ph i.ht-seg-current { background: CanvasText; forced-color-adjust: none; }
+  .ht-pill, .ht-todo, button.ht-copy, button.ht-ib { border: 1px solid CanvasText; }
+  :focus-visible { outline-color: Highlight; }
+}
+@media (prefers-reduced-motion: reduce) { .ht-path details[open] > summary::after { transform: none; } }

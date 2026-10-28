@@ -1,16 +1,18 @@
-// What if? view (COMPANION-ADVANCED §6.5, stage v2). WP-U3.
+// What if? drawer (COMPANION-ADVANCED §6.7.2, §A.5, stage v2; WP-U3; the tab of the tabbed panel
+// became a drawer of the one page, ADR 0004 d13). page.js places `body` after the drawer's
+// warning (TOOL-4, HON-7).
 //
-// Every state of the tab carries the banner "Experiment, not adopted." (role="note",
-// data-experiment; WI-1). Binary: the policy sandbox. A segmented control (Threshold,
-// Capacity), a slider and a number input bound to it; each move asks `preview_policy` (the
-// controller debounces it and keeps the latest; this view drops an answer whose `seq` is
-// not its latest), a release asks it again with paired intervals. The comparison, the
-// intervals, and the "Ask the agent to propose this" area update in place, so the slider is
-// never re-created under the pointer. Regression: the residual explorer (no slider, none of
-// the decision-rule vocabulary). The panel proposes nothing (v0.3 narrowing, ADR 0004
-// amendment, integrator decision I2): for a value the engine evaluated, it shows the
-// engine's draft and copies a ready question for the chat; the agent proposes it there.
-// Rules are named in words ("top 20%"), the recorded token in the hover (R26).
+// Every state carries the banner "Experiment, not adopted." (role="note", data-experiment;
+// WI-1). Binary: the policy sandbox. A segmented control (Threshold, Capacity), a slider and a
+// number input bound to it; each move asks `preview_policy` (the controller debounces it and
+// keeps the latest; this view drops an answer whose `seq` is not its latest), a release asks
+// it again with paired intervals. The comparison, the intervals, and the "Ask the agent to
+// propose this" area update in place, so the slider is never re-created under the pointer.
+// Regression: the residual explorer (no slider, none of the decision-rule vocabulary). The
+// panel proposes nothing (v0.3 narrowing, ADR 0004 amendment, integrator decision I2): for a
+// value the engine evaluated, it shows the engine's draft and copies a ready question for the
+// chat; the agent proposes it there. Rules are named in words ("top 20%"), the recorded
+// token in the hover (R26).
 (function (HT) {
   'use strict';
   const RULE = /^(threshold:(0(\.[0-9]+)?|1(\.0+)?)|capacity:[1-9][0-9]{0,6}|share:(0\.[0-9]*[1-9][0-9]*|1(\.0+)?))$/;
@@ -124,10 +126,10 @@
    * The engine's draft and "Ask the agent to propose this" (a ready question copied for the
    * chat, no write; WP-E1), or why the value cannot be proposed yet.
    */
-  function proposeArea(ctx, decisionId, value, evaluated, t) {
+  function proposeArea(ctx, decisionId, value, evaluated, t, families) {
     const common = C().common;
     const kids = [];
-    const words = decisionId === 'policy' ? ruleWords(value) : (t.fits && t.fits[value]) || value;
+    const words = decisionId === 'policy' ? ruleWords(value) : fitLabel(t, value, families);
     if (!evaluated) {
       kids.push(ctx.el('p', { 'data-not-evaluated': value, text: t.notEvaluated }));
       if (decisionId === 'policy') {
@@ -266,6 +268,20 @@
 
   function fitName(t, fit) {
     return t.fits[fit] || fit;
+  }
+
+  // A regression fit slot in words (R9UX-5): the copy's name, a variant without one named
+  // generically, and the model family the engine recorded for a variant, when it has one.
+  function fitLabel(t, fit, families) {
+    const slot = String(fit);
+    // Lot P (R45): a variant named by what it is (ridge, EBM), from the study's decision.
+    const named = slot.startsWith('fit.variant') && !(families && families[slot]) && HT.copy.junior.variantLabel
+      ? HT.copy.junior.variantLabel(slot) : null;
+    if (named) return named;
+    const base = (t.fits && t.fits[slot]) || (slot.startsWith('fit.variant') && t.variantFit) || slot;
+    const family = families && families[slot];
+    const familyName = family && t.families && t.families[family];
+    return familyName && t.familyFit ? t.familyFit(base, familyName) : base;
   }
 
   function comparison(ctx, model) {
@@ -488,7 +504,7 @@
     const mid = LABEL + plot / 2;
     const x = v => mid + (Math.max(-top, Math.min(top, v || 0)) / top) * (plot / 2);
     const height = items.length * ROW + 18;
-    const chart = ctx.svg('svg', { viewBox: `0 0 ${W} ${height}`, width: '100%', class: 'ht-chart ht-centred' }, [
+    const chart = ctx.svg('svg', { viewBox: `0 0 ${W} ${height}`, width: W, height, class: 'ht-chart ht-centred' }, [
       ctx.svg('defs', {}, [ctx.svg('pattern', { id, width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, [
         ctx.svg('rect', { width: 6, height: 6, fill: 'surface' }),
         ctx.svg('line', { x1: 0, y1: 0, x2: 0, y2: 6, stroke: 'accent', 'stroke-width': 3 })])]),
@@ -507,8 +523,16 @@
       ctx.svg('text', { x: mid, y: items.length * ROW + 16, class: 'ht-muted-text', 'text-anchor': 'middle', 'aria-hidden': 'true',
         'data-literal': 'axis', text: '0' }),
     ]);
+    // Lesson style (R30): the group predicted the most too low and the most too high.
+    const R = HT.copy.lesson.concl;
+    const known = items.filter(i => i.raw !== null && i.raw !== undefined);
+    const read = known.some(i => !i.small) ? known.filter(i => !i.small) : known;
+    const hi = read.length ? read.reduce((a, b) => (b.raw > a.raw ? b : a)) : null;
+    const lo = read.length ? read.reduce((a, b) => (b.raw < a.raw ? b : a)) : null;
     return ctx.components.figure(container, {
       title, chart,
+      reading: { kind: 'points', concl: !hi ? null : hi !== lo ? R.points(hi.label, HT.components.quote(hi.valueText), lo.label,
+        HT.components.quote(lo.valueText)) : R.one(hi.label, HT.components.quote(hi.valueText)), steps: HT.copy.lesson.whatifBias },
       columns: [{ key: 'label', label: '' }, { key: 'value', label: '' }, { key: 'small', label: '' }],
       rows: items.map(i => ({ label: i.label, value: i.valueText, small: i.small ? HT.copy.core.small : '' })),
     });
@@ -524,7 +548,7 @@
       if (!S.fit || !model.errors[S.fit]) S.fit = model.candidate || (model.models[0] && model.models[0].fit);
       const unit = model.unit ? ` ${model.unit}` : '';
       const f2 = x => fmt(ctx, x, 'f2');
-      const name = fit => t.fits[fit] || fit;
+      const name = fit => fitLabel(t, fit, model.families);
       // Model selector.
       out.push(ctx.el('fieldset', { className: 'card ht-wi-models', 'data-model-selector': true }, [
         ctx.el('legend', { text: t.modelTitle }),
@@ -602,7 +626,7 @@
       ]));
     }
     if (model.resultId && S.fit) {
-      out.push(proposeArea(ctx, 'model_choice', S.fit, model.models.some(m => m.fit === S.fit), t));
+      out.push(proposeArea(ctx, 'model_choice', S.fit, model.models.some(m => m.fit === S.fit), t, model.families));
     }
     return out;
   }
@@ -611,7 +635,7 @@
 
   function render(summary, ctx) {
     const common = C().common;
-    const root = ctx.el('div', { className: 'ht-whatif' }, [ctx.el('h2', { className: 'sr-only', text: ctx.copy.core.tabs.whatif }), banner(ctx)]);
+    const root = ctx.el('div', { className: 'ht-whatif' }, [banner(ctx)]);
     const d = ctx.data('whatif');
     const error = ctx.error('whatif');
     if (error) {
@@ -627,17 +651,52 @@
     }
     if (summary && !ctx.fresh(d)) root.appendChild(ctx.el('p', { className: 'muted', role: 'status', 'data-updating': true, text: common.updating }));
     const model = d.model;
-    const parts = model.task === 'regression' ? renderRegression(ctx, model) : renderBinary(ctx, model);
+    // Lesson style (R30): every chart here is a sandbox on development evidence.
+    const parts = HT.components.withGuide(guideOf(ctx, model),
+      () => (model.task === 'regression' ? renderRegression(ctx, model) : renderBinary(ctx, model)));
     root.appendChild(ctx.el('div', { className: 'ht-wi-body', 'data-whatif': model.task }, parts));
+    const notion = whatifNotion(ctx, model, summary);
+    if (notion) root.appendChild(ctx.components.notions([notion], { 'data-whatif-notions': true }));
     return root;
   }
 
+  /** The frame and the rows of the What if? charts ("Why this chart"). */
+  function guideOf(ctx, model) {
+    const L = HT.copy.lesson;
+    return { frame: L.frames.sandbox, rows: model.n !== null && model.n !== undefined ? L.rowsOf(fmt(ctx, model.n, 'int')) : null };
+  }
+
+  /** The notion of this step: the residual (regression) or a rule on the scores (binary). */
+  function whatifNotion(ctx, model, summary) {
+    const N = HT.copy.lesson.notions;
+    if (model.task === 'regression') {
+      const q = S.fit && model.residuals ? model.residuals[S.fit] : null;
+      const f2 = x => fmt(ctx, x, 'f2');
+      const R = N.residual;
+      return ctx.components.notion({ id: 'residual', term: R.term, tag: 'tool', definition: R.definition,
+        here: q && q.median !== null && q.q25 !== null && q.q75 !== null ? R.here(f2(q.median), f2(q.q25), f2(q.q75)) : null,
+        folds: [{ kind: 'why', body: R.why }, { kind: 'casse', body: R.casse }], keep: R.keep });
+    }
+    const R = N.rule;
+    const rule = S.rule || (summary && summary.decisions && summary.decisions.policy && summary.decisions.policy.value) || null;
+    const words = rule ? HT.copy.junior.value('policy', String(rule).split('@')[0], 'binary') : null;
+    return ctx.components.notion({ id: 'rule', term: R.term, tag: 'rule', definition: R.definition,
+      here: words ? R.here(words) : null, folds: [{ kind: 'why', body: R.why }, { kind: 'casse', body: R.casse }], keep: R.keep });
+  }
+
+  // The one page (ADR 0004 d13): What if? is a drawer (§6.7.2); page.js puts the warning of
+  // TOOL-4 first and this body under it. It reads `whatif` and, for the gain curve, the
+  // case's teaching share (`scenario`, status --json) when the drawer is open (§5).
+  HT.parts = HT.parts || {};
+  HT.parts.whatif = {
+    body(ctx) {
+      ctx.want('whatif');
+      ctx.want('scenario');
+      return render(ctx.snapshot, ctx);
+    },
+  };
   HT.register('whatif', {
-    tab: 'whatif',
     stage: 'v2',
-    // WP-B5: `scenario`, the case's teaching share (status --json), for the gain curve.
-    views: ['scenario', 'whatif'],
-    render,
     onMessage(m, ctx) {
       if (m.type === 'preview_policy_result') {
         const sent = S.sent[m.seq];
@@ -645,7 +704,9 @@
         S.preview = { seq: m.seq, rule: sent.rule, intervals: sent.intervals, model: m.model, revision: m.revision };
         S.pending = false;
         const data = ctx.data('whatif');
-        if (S.nodes.comparison && S.nodes.comparison.isConnected && data) S.nodes.comparison.replaceWith(S.nodes.comparison = comparison(ctx, data.model));
+        if (S.nodes.comparison && S.nodes.comparison.isConnected && data) {
+          S.nodes.comparison.replaceWith(S.nodes.comparison = HT.components.withGuide(guideOf(ctx, data.model), () => comparison(ctx, data.model)));
+        }
         return false;
       }
       if (m.type === 'draft_result') {

@@ -60,7 +60,16 @@ def _now() -> str:
 # --- code and environment ---------------------------------------------------------------
 
 def module_source_path(name: str) -> Path:
-    """The source file of module ``name``, found without importing the module itself."""
+    """The source file of module ``name``, found without importing the module itself; a
+    name ``package/relative/path`` is a data file inside the package folder (round 5,
+    R5E-2: :func:`mlkit.study.read._module_path`)."""
+    if '/' in name:
+        from .read import _module_path
+        path = _module_path(name)
+        if path is None:
+            raise StudyError('unknown_module', f'Module file {name} does not exist.',
+                             details={'module': name})
+        return path
     spec = importlib.util.find_spec(name)
     if spec is None or not spec.origin or not spec.origin.endswith('.py'):
         raise StudyError('unknown_module', f'Module {name} has no Python source file.',

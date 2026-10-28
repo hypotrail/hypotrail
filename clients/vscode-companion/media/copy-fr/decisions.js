@@ -14,6 +14,7 @@
     byPanel: "Proposé depuis ce panneau par une version antérieure ; ce n'est pas encore une décision.",
     madeAt: (pid, rev) => (rev === null || rev === undefined ? `Proposition ${pid}` : `Proposition ${pid}, faite à la révision ${rev}`),
     restatedAs: "L'assistant propose :",
+    chatWording: { en: '(formulation du chat, en anglais)', fr: '(formulation du chat, en français)' },
     proposedValue: 'En bref : ',
     recordedValue: 'Valeur enregistrée : ',
     details: 'Détails',
@@ -26,6 +27,7 @@
     evidenceTitle: 'Preuves',
     evidenceChip: (activity, rid8) => `${activity} · résultat ${rid8}…`,
     evidenceChipWords: name => `Voir ${name} →`,
+    slotWords: { split: 'le découpage', 'policy.evaluation': "l'évaluation de la règle de décision", 'evaluate.regression': 'la comparaison des modèles' },
     precisionDelta: (point, low, high) => `Part de succès parmi les cas retenus, face à la référence : ${point} (intervalle ${low} à ${high})`,
     explore: task => (regression(task) ? 'explorer les erreurs →' : "essayer d'autres règles →"),
     holdOpen: 'En suspens, avec vos mots : ',
@@ -52,6 +54,7 @@
       prediction_time: 'le moment de la prédiction',
       feature_availability: 'les variables disponibles',
       split: 'le découpage',
+      error_metric: "la mesure de l'erreur",
       success_criterion: 'le critère de succès',
       preprocessing: 'la préparation des données',
       model_variant: 'la variante à comparer',
@@ -64,6 +67,11 @@
     supersedesOpen: 'Elle remplace la proposition ouverte en ce moment.',
     blockedTitle: 'Si vous la confirmez maintenant dans le chat, le moteur la refusera :',
     effectsMissing: "L'aperçu de l'impact n'est pas disponible.",
+    // R16 (session du 2026-10-26) : un choix que le chat demande avant toute proposition.
+    choiceTitle: name => `${name.charAt(0).toUpperCase()}${name.slice(1)} : l'assistant vous demande de choisir dans le chat`,
+    choiceOptions: 'Les options que le moteur accepte maintenant :',
+    choiceHint: "Choisissez dans le chat avec votre assistant : il propose ensuite votre choix, et vous l'adoptez là-bas. Ce panneau n'enregistre aucun choix.",
+    choiceAskQuestion: "Pouvez-vous m'expliquer ces options et ce que chacune signifierait pour mon étude ?",
     answerInChat: 'Répondre dans le chat',
     answerInChatHint: "Confirmez, modifiez ou retirez cette proposition dans le chat avec votre assistant. Ce panneau n'enregistre aucune décision.",
     ask: "Interroger l'agent à ce sujet",
@@ -84,11 +92,14 @@
     basisChannel: (basisText, channel) => `${basisText} · ${channel}`,
     basisChip: {
       restated: 'reformulée', endorsed: 'approuvée', delegated_default: 'déléguée', explicit: 'vos mots',
+      // L9 (R20) : enregistrée par le mode automatique choisi au lancement ; à relire dans le chat.
+      automatic: 'automatique, à relire',
     },
     basisHelp: {
       restated: 'Vos mots reprennent ce que dit la proposition : vous l’avez reformulée.',
       endorsed: 'Vos mots approuvent la proposition sans la répéter : vous l’avez approuvée.',
       delegated_default: "Vous avez confié ce choix à la valeur par défaut recommandée par l'assistant, dans le chat.",
+      automatic: "Le mode automatique choisi au lancement a enregistré la valeur du moteur, sans vos mots. Adoptez-la ou changez-la avec vos propres mots, dans le chat.",
       explicit: "Enregistré avec vos propres mots avant que la règle guidée ne nomme les types de réponse.",
     },
     channelWords: channel => (channel === 'webview' ? 'dans ce panneau' : channel === 'chat' ? 'dans le chat'

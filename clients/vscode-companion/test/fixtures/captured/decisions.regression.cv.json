@@ -1,0 +1,626 @@
+{
+ "about": {
+  "schema": "hypotrail.decisions/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "decisions",
+   "--json"
+  ],
+  "note": "The cross-validated Auto MPG study at the model choice (lot P)."
+ },
+ "payload": {
+  "schema": "hypotrail.decisions/1",
+  "ok": true,
+  "study": "/studies/auto mpg cv",
+  "revision": 63,
+  "task": "regression",
+  "decisions": [
+   {
+    "decision_id": "prediction_time",
+    "title": "Define the prediction moment",
+    "pause": 1,
+    "step": "prediction_time",
+    "status": "confirmed",
+    "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the prediction_time exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the prediction_time as stated.",
+     "proposal_id": "p_1",
+     "revision": 3,
+     "time": "2026-10-28T12:47:06.650053+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You decide the prediction_time as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "feature_availability",
+    "title": "Decide which variables are available at prediction time",
+    "pause": 1,
+    "step": "feature_availability",
+    "status": "confirmed",
+    "value": {
+     "acceleration": "available_at_prediction",
+     "cylinders": "available_at_prediction",
+     "displacement": "available_at_prediction",
+     "horsepower": "available_at_prediction",
+     "origin": "available_at_prediction",
+     "weight": "available_at_prediction"
+    },
+    "depends_on": [
+     "prediction_time"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the feature_availability exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the feature_availability as stated.",
+     "proposal_id": "p_2",
+     "revision": 5,
+     "time": "2026-10-28T12:47:08.038281+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You decide the feature_availability as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "split",
+    "title": "Split the data before exploring it",
+    "pause": 2,
+    "step": "split",
+    "status": "confirmed",
+    "value": {
+     "folds": 5,
+     "method": "temporal_folds",
+     "seed": 20261017
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the split exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the split as stated.",
+     "proposal_id": "p_3",
+     "revision": 7,
+     "time": "2026-10-28T12:47:09.607852+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You decide the split as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "error_metric",
+    "title": "Choose how the error is measured",
+    "pause": 2,
+    "step": "error_metric",
+    "status": "confirmed",
+    "value": {
+     "metric": "mae"
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the error_metric exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the error_metric as stated.",
+     "proposal_id": "p_4",
+     "revision": 9,
+     "time": "2026-10-28T12:47:11.131735+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You decide the error_metric as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "success_criterion",
+    "title": "Fix the success criterion before seeing a model",
+    "pause": 2,
+    "step": "success_criterion",
+    "status": "confirmed",
+    "value": {
+     "metric": "mae_reduction",
+     "min_share": 0.1
+    },
+    "depends_on": [
+     "error_metric"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the success_criterion exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the success_criterion as stated.",
+     "proposal_id": "p_5",
+     "revision": 11,
+     "time": "2026-10-28T12:47:12.952699+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You decide the success_criterion as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "preprocessing",
+    "title": "Decide how the model prepares the variables",
+    "pause": 2,
+    "step": "preprocessing",
+    "status": "confirmed",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [
+      "horsepower"
+     ],
+     "missing": "none",
+     "motivated_by": [
+      "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e"
+     ],
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the preprocessing exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You keep the drafted preparation: each change rests on the quality check.",
+     "proposal_id": "p_6",
+     "revision": 19,
+     "time": "2026-10-28T12:47:20.035908+00:00",
+     "authenticated": false,
+     "basis": "endorsed",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You keep the drafted preparation: each change rests on the quality check.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "model_variant",
+    "title": "Choose the variants to compare",
+    "pause": 3,
+    "step": "model_variant",
+    "status": "confirmed",
+    "value": {
+     "variants": [
+      {
+       "kind": "tuned",
+       "question": "Does a ridge penalty chosen by nested cross-validation predict with a smaller error than the unpenalised linear model?"
+      },
+      {
+       "family": "ebm",
+       "kind": "family",
+       "question": "Does an explainable boosting machine follow the curve of horsepower and weight?"
+      }
+     ]
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the model_variant exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You compare a tuned ridge and an EBM with the linear model.",
+     "proposal_id": "p_7",
+     "revision": 55,
+     "time": "2026-10-28T12:47:45.748320+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You compare a tuned ridge and an EBM with the linear model.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "model_choice",
+    "title": "Choose the model",
+    "pause": 3,
+    "step": "model_choice",
+    "status": "open",
+    "value": null,
+    "depends_on": [
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "preprocessing",
+     "model_variant"
+    ],
+    "reason": null,
+    "confirmation": null,
+    "open_proposals": []
+   },
+   {
+    "decision_id": "final_test",
+    "title": "Open the final test once",
+    "pause": 3,
+    "step": "final_test",
+    "status": "open",
+    "value": null,
+    "depends_on": [
+     "error_metric",
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "success_criterion",
+     "preprocessing",
+     "model_variant",
+     "model_choice"
+    ],
+    "reason": null,
+    "confirmation": null,
+    "open_proposals": []
+   },
+   {
+    "decision_id": "conclusion",
+    "title": "Conclude proportionately",
+    "pause": 3,
+    "step": "conclusion",
+    "status": "open",
+    "value": null,
+    "depends_on": [
+     "error_metric",
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "success_criterion",
+     "preprocessing",
+     "model_variant",
+     "model_choice",
+     "final_test"
+    ],
+    "reason": null,
+    "confirmation": null,
+    "open_proposals": []
+   }
+  ],
+  "proposals": [
+   {
+    "proposal_id": "p_1",
+    "decision_id": "prediction_time",
+    "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
+    "restatement": "You decide the prediction_time as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 2,
+    "created": "2026-10-28T12:47:06.105974+00:00",
+    "closed_revision": 3,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_2",
+    "decision_id": "feature_availability",
+    "value": {
+     "acceleration": "available_at_prediction",
+     "cylinders": "available_at_prediction",
+     "displacement": "available_at_prediction",
+     "horsepower": "available_at_prediction",
+     "origin": "available_at_prediction",
+     "weight": "available_at_prediction"
+    },
+    "restatement": "You decide the feature_availability as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 4,
+    "created": "2026-10-28T12:47:07.436121+00:00",
+    "closed_revision": 5,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_3",
+    "decision_id": "split",
+    "value": {
+     "folds": 5,
+     "method": "temporal_folds",
+     "seed": 20261017
+    },
+    "restatement": "You decide the split as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 6,
+    "created": "2026-10-28T12:47:08.939852+00:00",
+    "closed_revision": 7,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_4",
+    "decision_id": "error_metric",
+    "value": {
+     "metric": "mae"
+    },
+    "restatement": "You decide the error_metric as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 8,
+    "created": "2026-10-28T12:47:10.447672+00:00",
+    "closed_revision": 9,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_5",
+    "decision_id": "success_criterion",
+    "value": {
+     "metric": "mae_reduction",
+     "min_share": 0.1
+    },
+    "restatement": "You decide the success_criterion as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 10,
+    "created": "2026-10-28T12:47:12.019217+00:00",
+    "closed_revision": 11,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_6",
+    "decision_id": "preprocessing",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [
+      "horsepower"
+     ],
+     "missing": "none",
+     "motivated_by": [
+      "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e"
+     ],
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
+    },
+    "restatement": "You keep the drafted preparation: each change rests on the quality check.",
+    "rationale": "The quality check motivates it.",
+    "status": "confirmed",
+    "revision": 18,
+    "created": "2026-10-28T12:47:18.186737+00:00",
+    "closed_revision": 19,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_7",
+    "decision_id": "model_variant",
+    "value": {
+     "variants": [
+      {
+       "kind": "tuned",
+       "question": "Does a ridge penalty chosen by nested cross-validation predict with a smaller error than the unpenalised linear model?"
+      },
+      {
+       "family": "ebm",
+       "kind": "family",
+       "question": "Does an explainable boosting machine follow the curve of horsepower and weight?"
+      }
+     ]
+    },
+    "restatement": "You compare a tuned ridge and an EBM with the linear model.",
+    "rationale": "The diagnostics show a curve for horsepower and weight.",
+    "status": "confirmed",
+    "revision": 54,
+    "created": "2026-10-28T12:47:43.708196+00:00",
+    "closed_revision": 55,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   }
+  ],
+  "history": [
+   {
+    "revision": 3,
+    "time": "2026-10-28T12:47:06.650106+00:00",
+    "decision_id": "prediction_time",
+    "proposal_id": "p_1",
+    "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
+    "user_words": "Yes, I want the prediction_time exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 5,
+    "time": "2026-10-28T12:47:08.038363+00:00",
+    "decision_id": "feature_availability",
+    "proposal_id": "p_2",
+    "value": {
+     "acceleration": "available_at_prediction",
+     "cylinders": "available_at_prediction",
+     "displacement": "available_at_prediction",
+     "horsepower": "available_at_prediction",
+     "origin": "available_at_prediction",
+     "weight": "available_at_prediction"
+    },
+    "user_words": "Yes, I want the feature_availability exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 7,
+    "time": "2026-10-28T12:47:09.607909+00:00",
+    "decision_id": "split",
+    "proposal_id": "p_3",
+    "value": {
+     "folds": 5,
+     "method": "temporal_folds",
+     "seed": 20261017
+    },
+    "user_words": "Yes, I want the split exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 9,
+    "time": "2026-10-28T12:47:11.131791+00:00",
+    "decision_id": "error_metric",
+    "proposal_id": "p_4",
+    "value": {
+     "metric": "mae"
+    },
+    "user_words": "Yes, I want the error_metric exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 11,
+    "time": "2026-10-28T12:47:12.952834+00:00",
+    "decision_id": "success_criterion",
+    "proposal_id": "p_5",
+    "value": {
+     "metric": "mae_reduction",
+     "min_share": 0.1
+    },
+    "user_words": "Yes, I want the success_criterion exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 19,
+    "time": "2026-10-28T12:47:20.035979+00:00",
+    "decision_id": "preprocessing",
+    "proposal_id": "p_6",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [
+      "horsepower"
+     ],
+     "missing": "none",
+     "motivated_by": [
+      "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e"
+     ],
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
+    },
+    "user_words": "Yes, I want the preprocessing exactly as you stated it",
+    "basis": "endorsed",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 55,
+    "time": "2026-10-28T12:47:45.754854+00:00",
+    "decision_id": "model_variant",
+    "proposal_id": "p_7",
+    "value": {
+     "variants": [
+      {
+       "kind": "tuned",
+       "question": "Does a ridge penalty chosen by nested cross-validation predict with a smaller error than the unpenalised linear model?"
+      },
+      {
+       "family": "ebm",
+       "kind": "family",
+       "question": "Does an explainable boosting machine follow the curve of horsepower and weight?"
+      }
+     ]
+    },
+    "user_words": "Yes, I want the model_variant exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   }
+  ],
+  "reconfirm_queue": [],
+  "notes": []
+ }
+}

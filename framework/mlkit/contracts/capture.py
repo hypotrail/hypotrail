@@ -12,8 +12,23 @@ final test would open) **before** the final test is opened:
    the declared tolerance refuses the capture (nothing is relaxed);
 3. the bundle is written in a staging directory, reloaded and checked for parity, optionally
    packaged by an injected packager (workshop profile: packaging is required), then moved
-   atomically to ``.hypotrail/predictors/<predictor_id>/`` (content-addressed: the same
-   capture again reuses the verified bundle).
+   atomically to ``.hypotrail/predictors/<predictor_id>/``. The predictor id is the content
+   id of the manifest, whose computation context names the study (its path-independent
+   ``study_id``) and the revision at which the capture started: a capture run again at a
+   later revision gets a new id and a new bundle folder, even for the same configuration;
+   only the same capture at the same revision (an execution retried after an interruption)
+   finds a bundle of its id, which is verified and reused instead of being rewritten. The
+   packages are made from the native bundle after its id exists, so they are not part of
+   the id: a bundle that holds packages lives
+   at ``<predictor_id>+<format>[+<format>...]`` and a capture is reused only from the
+   bundle of the same id *and* the same package formats; the result always reports the
+   packages of the bundle it names (review A3, 2026-10-24). Before a bundle is added or
+   reused, every existing bundle of the same predictor id is verified; an altered one
+   refuses the capture. A reused bundle's packages must be, byte for byte, the ones this
+   capture has just built in staging (packages are deterministic): a package re-made
+   consistently in the held folder verifies, but is refused here (round 5, R5-A3), so the
+   capture never records the artifact id of a package it did not build. The staging folder
+   is removed whatever the outcome.
 
 Its registry result names the predictor id, the digests and the parity. Once a study holds a
 capture, ``final_test.evaluation`` requires a *current* capture of the very configuration it
@@ -36,7 +51,7 @@ import importlib.util
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Mapping
 
 from hypotrail_runtime import RUNTIME_API_VERSION, __version__ as RUNTIME_VERSION
 from hypotrail_runtime.errors import ContractError
@@ -195,7 +210,7 @@ def matching_capture(store, state: Mapping, case, model_inputs: Mapping,
     """The capture the final evaluation must use: None when the study never captured;
     otherwise the current capture of this exact configuration, or a refusal
     (``model_not_captured``)."""
-    from mlkit.study import registry, state as st
+    from mlkit.study import registry
     rid = state['current'].get(CAPTURE)
     if rid is None:
         return None
@@ -203,28 +218,241 @@ def matching_capture(store, state: Mapping, case, model_inputs: Mapping,
     same = (entry['inputs'].get('configuration') == dict(config)
             and entry['inputs'].get('model_inputs') == dict(model_inputs)
             and entry['params'].get('model_params') == dict(model_params))
-    if not same or not st.is_current(state, CAPTURE):
+    if not same:
         _refuse('model_not_captured', 'The captured predictor does not describe the '
-                'configuration the final test would open (or is no longer current).',
+                'configuration the final test would open.',
                 capture=rid, remediation='Run predictor.capture again before opening the '
                                          'final test.')
+    # Review round 2 (E2-1): current by the rule ``status`` and ``evidence`` use (stale map,
+    # code changed under the attestations, upstream), not only by the stale map.
+    problem = currency_problem(store, state)
+    if problem is not None:
+        _refuse('model_not_captured', 'The captured predictor is no longer current: '
+                f'{problem["reason"]}.', capture=rid,
+                remediation='Run predictor.capture again before opening the final test.',
+                stale_reason=problem['reason'], junior_message=problem['junior_message'])
+    return predictor_of(entry)
+
+
+def predictor_of(entry: Mapping) -> dict:
+    """The ``inputs.predictor`` record of the final evaluation, from a capture's entry."""
     values = entry['output']['values']
-    return {'result_id': rid, 'predictor_id': values['predictor_id'],
+    return {'result_id': entry['result_id'], 'predictor_id': values['predictor_id'],
             'bundle': values['bundle'], 'profile': entry['params'].get('profile'),
             'packages': [p['format'] for p in values.get('packages') or []]}
+
+
+# --- before the final test is opened (review round 2, E2-1 and A F1) ----------------------------
+#
+# The final test is opened once. Everything that can refuse the captured predictor is checked
+# before the opening is recorded: the capture's currency by the same rule as ``status`` and
+# ``evidence``, then the bundle verification, the environment check and the parity rows of
+# :func:`load_for_final`. A refusal there leaves the final test sealed and no final-test row is
+# read; the junior is told what to do.
+
+# ``details`` key of a refusal raised before any final-test row was read.
+FINAL_TEST_ROWS_READ = 'final_test_rows_read'
+# ``details.reason`` of a bundle whose packages are not the ones the capture recorded
+# (round 4, R4-A2).
+PACKAGE_NOT_RECORDED = 'package_not_recorded'
+# ``details.reason`` of a runtime that is not the one the bundle binds (round 5, R5-A1);
+# the value ``hypotrail_runtime.predictor.RUNTIME_NOT_BOUND`` sets.
+RUNTIME_NOT_BOUND = 'runtime_not_bound'
+# ``details.reason`` of a reused bundle whose packages are not the ones just built (R5-A3).
+PACKAGES_DIFFER = 'packages_differ'
+NOT_READ = {'en': 'No final-test row was read: the final test is still sealed.',
+            'fr': "Aucune ligne de l'échantillon de test final n'a été lue : il reste scellé."}
+
+
+def _lang(state: Mapping) -> str:
+    from mlkit.study import state as st
+    return 'fr' if st.language_of(state) == 'fr' else 'en'
+
+
+def currency_problem(store, state: Mapping) -> dict | None:
+    """Why the current capture is not current, by the rule of ``status`` and ``evidence``
+    (:meth:`mlkit.study.read.Study.currency` on ``state``), or None (current, or no capture).
+
+    ``{requirement, slot, result_id, reason, code_changed, upstream_not_current, detail,
+    junior_message}``.
+    """
+    from mlkit.study import read
+    rid = state['current'].get(CAPTURE)
+    if rid is None:
+        return None
+    currency = read.Study.at_state(store.study_dir, state).currency(rid)
+    if currency['current']:
+        return None
+    reason = currency['reason'] or {}
+    changed = list(reason.get('code_changed') or [])
+    upstream = list(reason.get('upstream_not_current') or [])
+    text = str(reason.get('reason') or 'it is no longer current')
+    lang = _lang(state)
+    if changed:
+        junior = ('Your captured model was made by code that has changed since (an engine '
+                  'update), so the final test cannot score it. Run predictor.capture again '
+                  'first, then open the final test.' if lang == 'en' else
+                  "Votre modèle capturé a été produit par un code qui a changé depuis (une mise "
+                  "à jour du moteur) : l'échantillon de test final ne peut pas l'évaluer. "
+                  "Relancez d'abord predictor.capture, puis ouvrez l'échantillon de test final.")
+    elif upstream:
+        junior = ('Your captured model was made from results that are no longer current, so '
+                  'the final test cannot score it. Bring those results up to date, run '
+                  'predictor.capture again, then open the final test.' if lang == 'en' else
+                  "Votre modèle capturé a été produit à partir de résultats qui ne sont plus "
+                  "à jour : l'échantillon de test final ne peut pas l'évaluer. Mettez ces "
+                  "résultats à jour, relancez predictor.capture, puis ouvrez l'échantillon de "
+                  "test final.")
+    else:
+        junior = ('Your captured model is no longer current, so the final test cannot score '
+                  'it. Run predictor.capture again first, then open the final test.'
+                  if lang == 'en' else
+                  "Votre modèle capturé n'est plus à jour : l'échantillon de test final ne "
+                  "peut pas l'évaluer. Relancez d'abord predictor.capture, puis ouvrez "
+                  "l'échantillon de test final.")
+    return {'requirement': 'result_current', 'slot': CAPTURE, 'result_id': rid,
+            'reason': text, 'code_changed': changed, 'upstream_not_current': upstream,
+            'detail': f'The capture is not current ({text}): run predictor.capture again before '
+                      'opening the final test. No final-test row was read.',
+            'junior_message': f'{junior} {NOT_READ[lang]}'}
+
+
+def loading_problem(store, state: Mapping, predictor: Mapping | None = None) -> dict | None:
+    """Why :func:`load_for_final` would refuse the current capture (bundle verification,
+    environment, its own parity rows), or None. Reads the bundle only, never a final-test
+    row. ``{requirement: "capture_loadable", slot, result_id, code, contract_code, message,
+    remediation, detail, junior_message}``."""
+    from mlkit.study import registry
+    from mlkit.study.errors import StudyError
+    if predictor is None:
+        rid = state['current'].get(CAPTURE)
+        if rid is None:
+            return None
+        predictor = predictor_of(registry.get(store, rid))
+    try:
+        load_for_final(store, predictor)
+    except StudyError as exc:
+        return loading_refusal(state, predictor, exc)
+    return None
+
+
+def loading_refusal(state: Mapping, predictor: Mapping, exc) -> dict:
+    """The ``capture_loadable`` item of a refusal ``exc`` of :func:`load_for_final`."""
+    details = dict(getattr(exc, 'details', None) or {})
+    contract = details.get('contract_code')
+    lang = _lang(state)
+    if contract == 'environment_unqualified' and details.get('reason') == RUNTIME_NOT_BOUND:
+        # Round 5 (review E, R5E-2): the engine's own runtime is never replaced by the wheel
+        # of a bundle (it is the engine's editable install); capturing again binds the
+        # runtime installed now, and ``run predictor.capture`` recomputes a capture that
+        # cannot be loaded.
+        junior = ('The model runtime installed here (hypotrail_runtime) is not the one your '
+                  'model was captured with: its code changed since, even if its version did '
+                  'not, so it cannot score your model for the final test. Run '
+                  'predictor.capture again (it captures the same choice with the runtime '
+                  'installed now), then open the final test.' if lang == 'en' else
+                  "Le runtime du modèle installé ici (hypotrail_runtime) n'est pas celui de la "
+                  "capture : son code a changé depuis, même si sa version est la même, il ne "
+                  "peut donc pas évaluer votre modèle sur l'échantillon de test final. "
+                  "Relancez predictor.capture (il capture le même choix avec le runtime "
+                  "installé maintenant), puis ouvrez l'échantillon de test final.")
+        details['remediation'] = ('Run hypotrail run predictor.capture again: it captures the '
+                                  'chosen configuration with the runtime installed now. Never '
+                                  "install a bundle's runtime wheel over the engine's own "
+                                  'runtime.')
+    elif contract == 'environment_unqualified':
+        junior = ('This environment differs from the one your model was captured in (a '
+                  'library version changed), so it cannot be loaded for the final test. '
+                  'Install the captured versions again (the environment lock inside the '
+                  'bundle), then open the final test.' if lang == 'en' else
+                  "Cet environnement diffère de celui de la capture (une version de "
+                  "bibliothèque a changé) : le modèle ne peut pas être chargé pour "
+                  "l'échantillon de test final. Réinstallez les versions capturées (le "
+                  "verrou d'environnement du bundle), puis ouvrez l'échantillon de test final.")
+    elif contract == 'artifact_integrity_failed' and details.get('bytecode_folders'):
+        folders = ', '.join(str(f) for f in details['bytecode_folders'])
+        junior = ('Loading the model package in place wrote a Python bytecode cache into the '
+                  f'saved bundle ({folders}), so the bundle no longer verifies. Delete that '
+                  'folder, load packages from a copy from now on, then open the final test.'
+                  if lang == 'en' else
+                  "Le chargement du package du modèle sur place a écrit un cache de bytecode "
+                  f"Python dans le bundle enregistré ({folders}) : le bundle ne se vérifie "
+                  "plus. Supprimez ce dossier, chargez désormais les packages depuis une "
+                  "copie, puis ouvrez l'échantillon de test final.")
+    elif contract == 'artifact_integrity_failed' and details.get('reason') == \
+            PACKAGE_NOT_RECORDED:
+        formats = ', '.join(str(f) for key in ('missing', 'unrecorded', 'changed')
+                            for f in details.get(key) or [])
+        junior = ('The model package in the saved bundle of your captured model is not the one '
+                  f'recorded when it was captured ({formats}): it was replaced, re-made or '
+                  'removed since. Restore the bundle from a copy you trust, or run '
+                  'predictor.capture again, then open the final test.' if lang == 'en' else
+                  "Le package du modèle dans le bundle enregistré n'est pas celui enregistré "
+                  f"lors de la capture ({formats}) : il a été remplacé, refait ou supprimé "
+                  "depuis. Restaurez le bundle depuis une copie de confiance, ou relancez "
+                  "predictor.capture, puis ouvrez l'échantillon de test final.")
+    elif contract == 'artifact_integrity_failed':
+        junior = ('The saved bundle of your captured model does not verify: a file in its '
+                  'folder was added, changed or removed (a .DS_Store or an editor backup, '
+                  'for example). Remove the stray file or restore the bundle, then open the '
+                  'final test.' if lang == 'en' else
+                  "Le bundle enregistré de votre modèle capturé ne se vérifie pas : un fichier "
+                  "de son dossier a été ajouté, modifié ou supprimé (un .DS_Store ou une "
+                  "sauvegarde d'éditeur, par exemple). Retirez le fichier en trop ou restaurez "
+                  "le bundle, puis ouvrez l'échantillon de test final.")
+    else:
+        junior = ('Your captured model cannot be loaded for the final test. Run '
+                  'predictor.capture again first, then open the final test.' if lang == 'en'
+                  else "Votre modèle capturé ne peut pas être chargé pour l'échantillon de "
+                       "test final. Relancez d'abord predictor.capture, puis ouvrez "
+                       "l'échantillon de test final.")
+    return {'requirement': 'capture_loadable', 'slot': CAPTURE,
+            'result_id': predictor.get('result_id'), 'code': getattr(exc, 'code', None),
+            'contract_code': contract, 'message': getattr(exc, 'message', str(exc)),
+            'path': details.get('path'), 'remediation': details.get('remediation'),
+            'detail': 'The captured predictor cannot be loaded for the final test '
+                      f'({getattr(exc, "message", exc)}); fix it before opening. No final-test '
+                      'row was read.',
+            'junior_message': f'{junior} {NOT_READ[lang]}'}
+
+
+def require_loadable(store, state: Mapping, predictor: Mapping) -> None:
+    """Refuse (``precondition_missing``, nothing written) when :func:`load_for_final` would
+    refuse ``predictor``: called before the opening is recorded."""
+    problem = loading_problem(store, state, predictor)
+    if problem is not None:
+        from mlkit.reliability import CommandRefused
+        raise CommandRefused('precondition_missing', 'Opening the final test is not possible '
+                             'yet: the captured predictor cannot be loaded. No final-test row '
+                             'was read.',
+                             details={'missing': [problem],
+                                      'junior_message': problem['junior_message']})
 
 
 # --- computation ---------------------------------------------------------------------------------
 
 def _membership(inputs: Mapping, keys) -> str:
+    """The rows the predictor was fitted on: the development blob, or, when delayed-label
+    rows were kept out of training (the blob then names more rows than the fit used), the
+    blob id the study would give the fitted keys. One digest scheme in this field (review A,
+    round 3): the SHA-256 of the canonical row-keys blob (``records.row_keys_bytes``: sorted,
+    unique, one key per line, each line ending with a newline), as ``store.put_blob``
+    computes it for the development blob."""
+    from mlkit.study import records as rec
     development = inputs.get('development')
-    if development is not None:
+    if development is not None and not inputs.get('training_exclusions'):
         return development['row_keys']
-    return hashlib.sha256('\n'.join(sorted(keys)).encode()).hexdigest()
+    return hashlib.sha256(rec.row_keys_bytes(keys)).hexdigest()
 
 
 def _study_id(store) -> str:
-    return hashlib.sha256(str(Path(store.study_dir).resolve()).encode()).hexdigest()[:16]
+    """The study's identity in the computation context: the export's path-independent
+    ``study_id`` (SHA-256 of the canonical JSON of its creation time, case id, dataset
+    SHA-256 and final-test partition seed, first 16 hex digits), never its folder path, so
+    the context copied into an export or an MLflow package names no local path and the same
+    study read from another folder has the same identity."""
+    from .export_source import study_id
+    return study_id(store.load_state())
 
 
 def predictors_root(store) -> Path:
@@ -235,16 +463,52 @@ def compute(store, plan_: Mapping) -> dict:
     try:
         return _compute(store, plan_)
     except ContractError as exc:
+        if exc.code == 'environment_unqualified' and exc.details.get('reason') == \
+                RUNTIME_NOT_BOUND:
+            raise runtime_refusal(store, exc) from None
         raise cerr.to_study_error(exc) from None
+
+
+def runtime_refusal(store, exc: ContractError):
+    """Round 5 (review E, R5E-1): the capture's own reload refused the runtime installed
+    here, because its folder holds code the wheel just built from it cannot carry (an
+    extension module), or changed while the capture ran. Capturing again with the same
+    folder fails the same way, so the refusal says what to remove (contract code
+    ``environment_unqualified``, ``details.reason: runtime_not_bound``) and carries a junior
+    message in the study language; nothing is captured and the final test stays sealed."""
+    details = dict(exc.details)
+    files = [str(f) for key in ('unexpected', 'changed', 'missing')
+             for f in details.get(key) or []]
+    location = details.get('location') or 'the hypotrail_runtime folder'
+    named = ', '.join(files[:5]) or 'its files'
+    lang = _lang(store.load_state())
+    if lang == 'fr':
+        junior = ("Le runtime du modèle installé ici (hypotrail_runtime) contient du code que "
+                  f"son propre wheel ne peut pas emporter ({named}) : une capture lie, octet "
+                  "par octet, le runtime qui l'a produite, elle ne peut donc pas être gardée. "
+                  "Retirez ces fichiers du dossier du runtime (ou réinstallez le moteur), puis "
+                  "relancez predictor.capture. Rien n'a été capturé ; l'échantillon de test "
+                  "final reste scellé.")
+    else:
+        junior = ('The model runtime installed here (hypotrail_runtime) holds code its own '
+                  f'wheel cannot carry ({named}): a capture binds the runtime that made it '
+                  'byte for byte, so it cannot be kept. Remove those files from the runtime '
+                  'folder (or reinstall the engine), then run predictor.capture again. Nothing '
+                  'was captured; the final test is still sealed.')
+    exc.remediation = (f'Remove {named} from {location} (no wheel of the runtime carries '
+                       'them), or reinstall hypotrail-runtime, then run predictor.capture '
+                       'again.')
+    exc.details = {**details, 'junior_message': junior}
+    return cerr.to_study_error(exc)
 
 
 def _compute(store, plan_: Mapping) -> dict:
     import numpy as np
     from hypotrail_runtime import capture_predictor, fit_predictor
     from hypotrail_runtime.predictor import compare
-    from mlkit.study import activities as act, fit
+    from mlkit.study import activities as act, fit, state as st
     from . import context as cx
-    from .recipe import data_contract_from_case, recipe_from_fit
+    from .recipe import data_contract_from_case, delayed_label_exclusions, recipe_from_fit
     inputs, params = plan_['inputs'], plan_['params']
     case, dataset = act.load(plan_, store)
     development = fit._ordered(dataset.frame)
@@ -255,8 +519,12 @@ def _compute(store, plan_: Mapping) -> dict:
     if 'tuning' in info:
         model_params['tuned_value'] = info['tuning']['value']
     features = list(recipe.features)
+    # Review round 3 (B3-5): the delayed-label rows the fit leaves out are named in the
+    # contract's exclusions (none, and the contract unchanged, in a study without them).
+    exclusions = delayed_label_exclusions(st.delayed_labels_limit(store.load_state())) \
+        if inputs.get('training_exclusions') else []
     contract = data_contract_from_case(case, development, dataset_sha256=plan_['dataset_sha256'],
-                                       features=features)
+                                       features=features, exclusions=exclusions)
     from mlkit.integrations import pandera_validation
     validation = pandera_validation.validate(contract, development[[
         col.name for col in contract.columns if col.role in ('feature', 'target')]],
@@ -297,24 +565,19 @@ def _compute(store, plan_: Mapping) -> dict:
     staging = root / f'.staging-{plan_.get("execution_id") or os.getpid()}'
     if staging.exists():
         shutil.rmtree(staging)
-    packager = load_packager(params.get('packager'))
-    descriptor = capture_predictor(fitted, context, parity[features], staging, packager,
-                                   parity_origin='authorized_development',
-                                   tolerance=params['tolerance'],
-                                   extensions={'hypotrail.engine_parity':
-                                               engine_parity.model_dump(mode='json')})
-    final = root / descriptor.predictor_id
-    if final.exists():
-        from hypotrail_runtime import verify_bundle
-        verify_bundle(final)                 # a verified identical capture is reused
-        shutil.rmtree(staging)
-        reused = True
-    else:
-        os.replace(staging, final)
-        reused = False
+    try:
+        packager = load_packager(params.get('packager'))
+        descriptor = capture_predictor(fitted, context, parity[features], staging, packager,
+                                       parity_origin='authorized_development',
+                                       tolerance=params['tolerance'],
+                                       extensions={'hypotrail.engine_parity':
+                                                   engine_parity.model_dump(mode='json')})
+        final, reused, held = _place(root, staging, descriptor)
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
     values = {
-        'predictor_id': descriptor.predictor_id, 'bundle': f'{PREDICTORS_DIR}/'
-                                                          f'{descriptor.predictor_id}',
+        'predictor_id': descriptor.predictor_id,
+        'bundle': f'{PREDICTORS_DIR}/{final.name}',
         'reused': reused, 'profile': params['profile'],
         'model': params['model'], 'family': recipe.family, 'task': recipe.task,
         'configuration': dict(inputs['configuration']), 'features': features,
@@ -326,24 +589,177 @@ def _compute(store, plan_: Mapping) -> dict:
         'tuning': info.get('tuning') and {'value': info['tuning']['value']},
         'parity': descriptor.parity.model_dump(mode='json') if descriptor.parity else None,
         'engine_parity': engine_parity.model_dump(mode='json'),
-        'packages': [{'format': p.format, 'artifact_id': p.artifact_id}
-                     for p in descriptor.packages],
+        'packages': [{'format': p.format, 'artifact_id': p.artifact_id} for p in held],
         'runtime': dict(params['runtime']), 'computation_id': cx.computation_id(context),
         'limitations': list(LIMITATIONS), 'note': NOTE}
     return {'values': values, 'blobs': {}, 'partition': 'development',
             'n_rows': int(len(development))}
 
 
+def bundle_name(predictor_id: str, formats) -> str:
+    """The folder of a bundle under ``predictors/``: its predictor id, plus the formats of
+    its optional packages (sorted) when it holds any."""
+    formats = sorted(formats)
+    return '+'.join([predictor_id, *formats])
+
+
+def _place(root: Path, staging: Path, descriptor):
+    """Move the staged bundle into place, or reuse the verified bundle of the same id and
+    package formats whose packages are, byte for byte, the ones just built in ``staging``
+    (round 5, R5-A3). Return ``(folder, reused, packages held by that folder)``."""
+    from hypotrail_runtime import verify_bundle
+    pid = descriptor.predictor_id
+    formats = [p.format for p in descriptor.bundle.optional_packages]
+    final = root / bundle_name(pid, formats)
+    # Every bundle of this predictor already in the store is verified first: an altered one
+    # is reported, never silently shadowed by a new folder.
+    for sibling in sorted(root.iterdir()):
+        if sibling.name == pid or sibling.name.startswith(pid + '+'):
+            existing = verify_bundle(sibling)
+            if existing.predictor_id != pid:
+                raise ContractError('artifact_integrity_failed', f'{sibling.name} holds '
+                                    'another predictor.', path=sibling.name,
+                                    remediation='Remove or restore the altered bundle.')
+    if final.exists():
+        existing = verify_bundle(final)      # a verified identical capture is reused
+        held = list(existing.bundle.optional_packages)
+        if sorted(p.format for p in held) != sorted(formats):
+            raise ContractError('artifact_integrity_failed', f'{final.name} does not hold the '
+                                'packages its name declares (packages_differ).',
+                                path=final.name, remediation='Remove or restore the bundle.',
+                                details={'reason': PACKAGES_DIFFER,
+                                         'held': sorted(p.format for p in held),
+                                         'requested': sorted(formats)})
+        changed = packages_differ(final, staging, held, descriptor.bundle.optional_packages)
+        if changed:
+            raise ContractError('artifact_integrity_failed', f'{final.name} holds packages that '
+                                'are not the ones this capture has just built from the same '
+                                f'predictor ({", ".join(changed)}): they were re-made or '
+                                'replaced after the capture, so their artifact id is not '
+                                'recorded.', path=final.name,
+                                remediation=f'Remove the folder {final.name} or restore it from '
+                                            'a copy you trust, then run predictor.capture '
+                                            'again; never re-package or edit a bundle.',
+                                details={'reason': PACKAGES_DIFFER, 'changed': changed})
+        return final, True, held
+    os.replace(staging, final)
+    return final, False, list(descriptor.bundle.optional_packages)
+
+
+def _package_files(bundle: Path, entry) -> dict:
+    """``{relative path: sha256}`` of a package folder of ``bundle`` and its descriptor."""
+    from hypotrail_runtime import canonical
+    folder = bundle / entry.relative_path
+    out = {p.relative_to(bundle).as_posix(): canonical.file_sha256(p)
+           for p in sorted(folder.rglob('*')) if p.is_file()} if folder.is_dir() else {}
+    descriptor = bundle / f'{entry.relative_path}.descriptor.json'
+    if descriptor.is_file():
+        out[descriptor.relative_to(bundle).as_posix()] = canonical.file_sha256(descriptor)
+    return out
+
+
+def packages_differ(held_dir: Path, built_dir: Path, held, built) -> list[str]:
+    """The formats whose package in ``held_dir`` (the reused bundle) is not the one just
+    built in ``built_dir``: another artifact id, or any other byte in the package folder or
+    its descriptor (round 5, R5-A3). Sorted, empty when they are identical."""
+    held_by = {p.format: p for p in held}
+    built_by = {p.format: p for p in built}
+    out = []
+    for fmt in sorted(set(held_by) | set(built_by)):
+        a, b = held_by.get(fmt), built_by.get(fmt)
+        if a is None or b is None or a.artifact_id != b.artifact_id \
+                or a.relative_path != b.relative_path \
+                or _package_files(held_dir, a) != _package_files(built_dir, b):
+            out.append(fmt)
+    return out
+
+
 def load_for_final(store, predictor: Mapping):
     """The verified, reloaded predictor the final evaluation scores with (its own parity
-    rows are checked first)."""
-    from hypotrail_runtime import check_parity, load_predictor
-    root = predictors_root(store)
+    rows are checked first).
+
+    It reads the bundle only, and is called before any final-test row is read (by the
+    evaluation, and before the opening is recorded): a refusal carries
+    ``details.final_test_rows_read: false`` and a ``junior_message`` (review round 2, A F1),
+    so a run that fails here withdraws its opening instead of consuming the final test."""
+    from mlkit.study.errors import StudyError
     try:
-        loaded = load_predictor(Path(store.home) / predictor['bundle'], trusted_roots=[root])
+        return _load_for_final(store, predictor)
+    except StudyError as exc:
+        try:
+            state = store.load_state()
+        except Exception:                 # noqa: BLE001 - the message falls back to English
+            state = {}
+        problem = loading_refusal(state, predictor, exc)
+        exc.details = {**exc.details, FINAL_TEST_ROWS_READ: False,
+                       'junior_message': problem['junior_message'],
+                       'remediation': problem['remediation']}
+        raise
+
+
+def recorded_packages(store, predictor: Mapping) -> list | None:
+    """The packages the capture of ``predictor`` recorded (``values.packages``:
+    ``[{format, artifact_id}]``), or None when the predictor names no capture result."""
+    from mlkit.study import registry
+    rid = predictor.get('result_id')
+    if rid is None:
+        return None
+    values = registry.get(store, rid)['output']['values']
+    return [{'format': p['format'], 'artifact_id': p['artifact_id']}
+            for p in values.get('packages') or []]
+
+
+def package_mismatch(bundle, recorded) -> dict | None:
+    """``{missing, unrecorded, changed}`` (package formats) when the bundle's optional
+    packages are not the ones the capture recorded (round 4, R4-A2), else None."""
+    if recorded is None:
+        return None
+    held = {p.format: p.artifact_id for p in bundle.optional_packages}
+    wanted = {p['format']: p['artifact_id'] for p in recorded}
+    found = {'missing': sorted(set(wanted) - set(held)),
+             'unrecorded': sorted(set(held) - set(wanted)),
+             'changed': sorted(f for f in set(wanted) & set(held) if wanted[f] != held[f])}
+    return found if any(found.values()) else None
+
+
+def loading_problem_of(home, state: Mapping, entry: Mapping) -> dict | None:
+    """Round 5 (review E, R5E-2): :func:`loading_problem` from the study folder ``home``
+    (``.hypotrail``) and the capture's verified registry ``entry``, for the read side
+    (``next_action``), which opens no store. Reads the bundle only."""
+    from mlkit.study.errors import StudyError
+    predictor = predictor_of(entry)
+    recorded = [{'format': p['format'], 'artifact_id': p['artifact_id']}
+                for p in entry['output']['values'].get('packages') or []]
+    try:
+        _load(Path(home), predictor, recorded)
+    except StudyError as exc:
+        return loading_refusal(state, predictor, exc)
+    return None
+
+
+def _load_for_final(store, predictor: Mapping):
+    return _load(Path(store.home), predictor, recorded_packages(store, predictor))
+
+
+def _load(home: Path, predictor: Mapping, recorded):
+    from hypotrail_runtime import check_parity, load_predictor
+    root = home / PREDICTORS_DIR
+    try:
+        loaded = load_predictor(home / predictor['bundle'], trusted_roots=[root])
         if loaded.predictor_id != predictor['predictor_id']:
             raise ContractError('artifact_integrity_failed', 'The bundle holds another '
                                 'predictor.', remediation='Capture again.')
+        # Round 4 (R4-A2): the verified bundle holds the packages the capture recorded, each
+        # with its recorded artifact id (a package is outside the predictor id).
+        mismatch = package_mismatch(loaded.bundle, recorded)
+        if mismatch is not None:
+            raise ContractError('artifact_integrity_failed', 'The packages in the saved bundle '
+                                'are not the ones the capture recorded.',
+                                path=predictor['bundle'],
+                                remediation='Restore the captured bundle from a copy you trust, '
+                                            'or run predictor.capture again, then open the '
+                                            'final test; never re-package or edit a bundle.',
+                                details={'reason': PACKAGE_NOT_RECORDED, **mismatch})
         parity = check_parity(loaded)
         if parity.status != 'ok':
             raise ContractError('artifact_integrity_failed', 'The reloaded predictor does not '

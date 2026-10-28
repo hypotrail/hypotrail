@@ -15,7 +15,7 @@
   "schema": "hypotrail.summary/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 38,
+  "revision": 40,
   "since": null,
   "changed": null,
   "goal": {
@@ -60,18 +60,28 @@
     "status": "done"
    },
    {
+    "id": "error_metric",
+    "title": "Choose how the error is measured",
+    "status": "done"
+   },
+   {
     "id": "success_criterion",
     "title": "Fix the success criterion before seeing a model",
     "status": "done"
    },
    {
-    "id": "train_eda",
-    "title": "Explore the training partition",
+    "id": "structural_eda",
+    "title": "Check the structure of the data",
     "status": "done"
    },
    {
     "id": "preprocessing",
     "title": "Decide how the model prepares the variables",
+    "status": "done"
+   },
+   {
+    "id": "train_eda",
+    "title": "Explore the target on the training rows",
     "status": "done"
    },
    {
@@ -102,7 +112,7 @@
   ],
   "next_action": {
    "kind": "await_user_words",
-   "proposal_id": "p_7",
+   "proposal_id": "p_8",
    "decision": "model_choice",
    "message": "Show the restatement, then ask the closed question \"Do you adopt this decision?\" and record the reply verbatim. A bare \"ok\" before that question is not a decision.",
    "audience": "agent",
@@ -111,15 +121,19 @@
    "recommended": null,
    "question": "Do you adopt this decision?",
    "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Error measure, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Model choice); Conclude and hand over (Final test, Conclusion). Current step: Model choice (12 of 14).",
+   "evidence": [
+    "evaluate.regression"
+   ],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "decision",
     "language": "en",
-    "revision": 38,
+    "revision": 40,
     "position": {
      "step_id": "model_choice",
-     "completed": 9,
-     "total": 12
+     "completed": 11,
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -136,7 +150,7 @@
       "text": "The data were explored or published before this study; its rows are not unseen."
      }
     ],
-    "proposal_id": "p_7",
+    "proposal_id": "p_8",
     "proposal_text": "Adopt the linear model.",
     "recommended_option": "adopt",
     "options": [
@@ -144,6 +158,11 @@
      "change",
      "explain"
     ],
+    "option_labels": {
+     "adopt": "I adopt this decision",
+     "change": "Change something",
+     "explain": "Explain first"
+    },
     "question": "Adopt the linear model.\n\nDo you adopt this decision?",
     "evidence_refs": [],
     "detail_topics": [
@@ -154,11 +173,11 @@
   },
   "open_proposals": [
    {
-    "proposal_id": "p_7",
+    "proposal_id": "p_8",
     "decision_id": "model_choice",
     "value": "fit.linear",
     "restatement": "Adopt the linear model.",
-    "revision": 38
+    "revision": 40
    }
   ],
   "decisions": {
@@ -218,6 +237,18 @@
     "open_proposals": [],
     "feature_basis": null
    },
+   "error_metric": {
+    "status": "confirmed",
+    "value": {
+     "metric": "mae"
+    },
+    "basis": "restated",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the error_metric exactly as you stated it",
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
    "success_criterion": {
     "status": "confirmed",
     "value": {
@@ -270,7 +301,7 @@
     "user_words": null,
     "reason": null,
     "open_proposals": [
-     "p_7"
+     "p_8"
     ],
     "feature_basis": null
    },
@@ -297,73 +328,73 @@
   },
   "results": {
    "eda.correlation": {
-    "result_id": "583c4e2e561f96efa00cc45c89bd21a95c153d3daf307c7cc04e5cbde67227e2",
+    "result_id": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:weight": {
-    "result_id": "b68e2a872bb35e1f4f79f86a4fbc75d82833c936131cf93de5510b32a21caf02",
+    "result_id": "bedade14ed77dd17cb9d696a4706af59a70071a5da92bfea69c2230a50d194fc",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.mean_by:model_year": {
-    "result_id": "c1cd99311d66d56e155b23fdd943442fff76869c4bb78d489d1085ea8634c07f",
+    "result_id": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "8489a7f5ead58fd171e63ebea151219ab58cb469b6ebd4569ce09b2e2703cfc0",
+    "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "5b3c4935c23a87ab6a2572c3286d11a9c894fb657c75c3881573b9743e7e3b11",
+    "result_id": "99cecf8893cdd9dd923e425395c64215db2c07340cc43e8b06a986e632f9f2a7",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "c9643ad268ecb1e31156303bed5abaf6fcdad49b564dd7d086169f65970bd748",
+    "result_id": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_summary": {
-    "result_id": "33e9e3394afc107d0917147c52ec09372bbc9b2ca8a0676c7a61d1dee09c0060",
+    "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "evaluate.regression": {
-    "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+    "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "b6b270c7110f2b295ac5122ae9144119b8671180e19d1a04b05dbef1d25353fb",
+    "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.linear": {
-    "result_id": "6c5edebf385d0f90967eedb40e07575b13b9b18471f8928dcc83ce9dfb476e93",
+    "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "004185cee65589c9d8f1f69db33979c1f781cf40aa81edf7476608f60846074b",
+    "result_id": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "ae74b16b6f43c17895b642ec3576564a4c6ebcf5d6ec69bfdd68895d6f7a4a7f",
+    "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -374,24 +405,24 @@
    "items": {
     "editable": {
      "status": "ok",
-     "revision": 38,
-     "last_ok_revision": 38,
+     "revision": 40,
+     "last_ok_revision": 40,
      "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence.",
      "audience": "agent",
      "junior_message": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence."
     },
     "notebook": {
      "status": "ok",
-     "revision": 38,
-     "last_ok_revision": 38,
+     "revision": 40,
+     "last_ok_revision": 40,
      "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
      "audience": "agent",
      "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
-     "revision": 38,
-     "last_ok_revision": 38,
+     "revision": 40,
+     "last_ok_revision": 40,
      "message": "The report (reports/study.html) is up to date.",
      "audience": "agent",
      "junior_message": "The report is up to date."
@@ -477,7 +508,7 @@
    "minimum": 0.1,
    "unit": "share",
    "rule": null,
-   "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
+   "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
    "contradicts_verdict": false,
    "final_test": null,
    "model": "fit.linear",
@@ -487,23 +518,23 @@
   "eda_looks": {
    "target_looks": 4,
    "results": [
-    "33e9e3394afc107d0917147c52ec09372bbc9b2ca8a0676c7a61d1dee09c0060",
-    "c9643ad268ecb1e31156303bed5abaf6fcdad49b564dd7d086169f65970bd748",
-    "5b3c4935c23a87ab6a2572c3286d11a9c894fb657c75c3881573b9743e7e3b11",
-    "c1cd99311d66d56e155b23fdd943442fff76869c4bb78d489d1085ea8634c07f"
+    "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+    "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+    "99cecf8893cdd9dd923e425395c64215db2c07340cc43e8b06a986e632f9f2a7",
+    "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77"
    ]
   },
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
-   "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result 5821e0cc); the report and notebook are up to date.",
+   "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); error measure; success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation).",
+   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result f1f5a9a3); the report and notebook are up to date.",
    "Next: whether you adopt the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
   "recap_audience": "agent",
   "recap_junior": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
-   "Decided: the prediction moment; the feature availability (excluded acceleration); the split (ordinal cutoff on model_year, validation from 79); the success criterion (validation error at least 10% below the mean baseline); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation).",
+   "Decided: the prediction moment; the feature availability (excluded acceleration); the split (ordinal cutoff on model_year, validation from 79); the error measure; the success criterion (validation error at least 10% below the mean baseline); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation).",
    "Now: Choose the model, waiting for your answer (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg); the report and notebook are up to date.",
    "Next: whether you adopt the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."

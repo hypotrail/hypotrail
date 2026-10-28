@@ -8,6 +8,12 @@ capture, in the workshop profile) is verified again with
 installed; without MLflow that check is ``not_run`` and the artifact is reported
 ``captured``, never ``packaged``.
 
+Round 4 (R4-A2): the packages the bundle holds must be the ones the capture recorded (the
+same formats, each with the ``artifact_id`` the capture recorded); otherwise the export is
+refused (``artifact_integrity_failed``, ``details.reason: package_not_recorded``) before any
+package is verified or loaded. The package is outside the predictor id, so a package
+re-made consistently after the capture would otherwise be exported as the captured one.
+
 Statuses (spec §14): ``missing`` (no predictor), ``captured`` (native bundle verified),
 ``packaged`` (native bundle and its MLflow package verified). The evidence status comes
 from the bundle's evidence binding (``evaluated``, ``unassessed``, ``stale``); a bundle
@@ -25,9 +31,11 @@ from mlkit.integrations import mlflow_packaging as mp
 
 from . import canonical as cj
 from .errors import ExportError, from_packaging
-from .snapshot import PREDICTOR_ROLES, runtime
+from .snapshot import PREDICTOR_ROLES, field, runtime
 
 QUALIFIED_PYTHON = '3.13'
+# The export source extension naming the packages the capture recorded (round 4, R4-A2).
+PACKAGES_EXTENSION = 'hypotrail.packages'
 MAX_BUNDLE_BYTES = 200 * 1024 * 1024
 
 
@@ -40,13 +48,16 @@ def _json(bundle_dir: Path, relative, where: str) -> dict:
 
 
 def read_files(root: Path) -> dict[str, bytes]:
-    """Every file under ``root`` by POSIX relative path; a symlink is refused; bytecode
-    caches (``__pycache__``) are not part of a bundle and are not copied."""
+    """Every file under ``root`` by POSIX relative path; a symlink or a Python bytecode
+    cache (``__pycache__``, ``*.pyc``) is refused, as the runtime refuses it in a bundle."""
     out, total = {}, 0
     for path in sorted(root.rglob('*')):
-        if '__pycache__' in path.relative_to(root).parts:
-            continue
         rel = path.relative_to(root).as_posix()
+        if '__pycache__' in path.relative_to(root).parts or path.suffix in ('.pyc', '.pyo'):
+            raise ExportError('artifact_integrity_failed', 'The bundle holds a Python bytecode '
+                              'cache, written by loading its package in place.', path=rel,
+                              remediation='Delete the __pycache__ folder from the bundle and '
+                                          'load packages from a copy.')
         if path.is_symlink():
             raise ExportError('artifact_integrity_failed', 'The bundle holds a symbolic link.',
                               path=rel, remediation='Capture the predictor again.')
@@ -61,8 +72,60 @@ def read_files(root: Path) -> dict[str, bytes]:
     return out
 
 
-def verify_predictor(bundle_dir: Path, recipe: Mapping, contract: Mapping) -> dict:
-    """The predictor record of a captured bundle, or a refusal."""
+def recorded_packages(source) -> list | None:
+    """The packages the capture recorded, as the export source states them (round 4,
+    R4-A2): ``[{format, artifact_id}]`` from the extension ``hypotrail.packages`` of
+    ``read_export_source``, else the formats of ``predictor.packages`` (no recorded id), or
+    None when the source states neither (a reader that predates both)."""
+    extensions = field(source, 'extensions', None) or {}
+    recorded = extensions.get(PACKAGES_EXTENSION) if isinstance(extensions, Mapping) else None
+    if isinstance(recorded, list):
+        return [{'format': p.get('format'), 'artifact_id': p.get('artifact_id')}
+                if isinstance(p, Mapping) else {'format': None, 'artifact_id': None}
+                for p in recorded]
+    formats = field(field(source, 'predictor', None), 'packages', None)
+    if isinstance(formats, list):
+        return [{'format': f, 'artifact_id': None} for f in formats]
+    return None
+
+
+def check_recorded_packages(bundle: Mapping, recorded) -> None:
+    """Refuse when the bundle's packages are not the ones the capture recorded (round 4,
+    R4-A2): a recorded package missing, a package the capture did not record, or an
+    ``artifact_id`` other than the recorded one. ``recorded`` None checks nothing."""
+    if recorded is None:
+        return
+    held = {p.get('format'): p.get('artifact_id') for p in bundle.get('optional_packages') or []
+            if isinstance(p, Mapping)}
+    wanted = {p.get('format'): p.get('artifact_id') for p in recorded}
+    missing = sorted(str(f) for f in set(wanted) - set(held))
+    unrecorded = sorted(str(f) for f in set(held) - set(wanted))
+    changed = sorted(str(f) for f in set(wanted) & set(held)
+                     if wanted[f] is not None and wanted[f] != held[f])
+    if not (missing or unrecorded or changed):
+        return
+    parts = ([f'missing: {", ".join(missing)}'] if missing else []) + \
+        ([f'not recorded by the capture: {", ".join(unrecorded)}'] if unrecorded else []) + \
+        ([f'another artifact id: {", ".join(changed)}'] if changed else [])
+    raise ExportError('artifact_integrity_failed', 'The packages in the bundle are not the ones '
+                      f'the capture recorded ({"; ".join(parts)}); nothing was written.',
+                      path='predictor.packages',
+                      remediation='Restore the captured bundle from a copy you trust (or run '
+                                  'hypotrail run predictor.capture again before the final test '
+                                  'is opened); never re-package or edit a bundle.',
+                      details={'reason': 'package_not_recorded', 'missing': missing,
+                               'unrecorded': unrecorded, 'changed': changed,
+                               'recorded': [dict(p) for p in recorded],
+                               'held': [{'format': f, 'artifact_id': a}
+                                        for f, a in sorted(held.items(), key=str)]})
+
+
+def verify_predictor(bundle_dir: Path, recipe: Mapping, contract: Mapping, *,
+                     recorded_packages: list | None = None) -> dict:
+    """The predictor record of a captured bundle, or a refusal. ``recorded_packages``
+    (``[{format, artifact_id}]``, round 4) are the packages the capture recorded: the
+    bundle must hold exactly those (:func:`check_recorded_packages`), checked before any
+    package is verified."""
     rt = runtime('verify the captured predictor')
     if not bundle_dir.is_dir() or bundle_dir.is_symlink():
         raise ExportError('model_not_captured', 'The predictor bundle folder is missing.',
@@ -71,11 +134,17 @@ def verify_predictor(bundle_dir: Path, recipe: Mapping, contract: Mapping) -> di
     try:
         rt.verify_bundle(bundle_dir)
     except Exception as error:   # the runtime refuses a bundle it cannot verify
+        # The runtime's own remediation (e.g. delete a bytecode cache) reaches the user.
+        remediation = getattr(error, 'remediation', None) or \
+            'Capture the predictor again; never edit a bundle.'
+        details = {'error': f'{type(error).__name__}: {error}'[:300]}
+        if isinstance(getattr(error, 'details', None), Mapping):
+            details['runtime'] = dict(error.details)
         raise ExportError('artifact_integrity_failed', 'hypotrail_runtime refused the bundle.',
-                          path='predictor.bundle_dir',
-                          remediation='Capture the predictor again; never edit a bundle.',
-                          details={'error': f'{type(error).__name__}: {error}'[:300]}) from error
+                          path='predictor.bundle_dir', remediation=remediation,
+                          details=details) from error
     bundle = _json(bundle_dir, mp.BUNDLE_DOCUMENT, mp.BUNDLE_DOCUMENT)
+    check_recorded_packages(bundle, recorded_packages)
     manifest = _json(bundle_dir, bundle.get('predictor_manifest_path'), 'predictor_manifest_path')
     bundled_recipe = _json(bundle_dir, bundle.get('recipe_path'), 'recipe_path')
     bundled_contract = _json(bundle_dir, bundle.get('data_contract_path'), 'data_contract_path')
@@ -170,4 +239,6 @@ def verify_predictor(bundle_dir: Path, recipe: Mapping, contract: Mapping) -> di
             'package': None if package is None else {
                 'relative_path': package.get('relative_path'),
                 'artifact_id': package.get('artifact_id')},
+            'packages': [{'format': p.get('format'), 'artifact_id': p.get('artifact_id')}
+                         for p in bundle.get('optional_packages') or [] if isinstance(p, Mapping)],
             'checks': checks, 'warnings': warnings}

@@ -36,7 +36,9 @@ from .errors import StudyError
 
 SCHEMA = 'hypotrail.explain/1'
 PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'task', 'terms', 'steps', 'predictions')
-TERM_KEYS = ('id', 'term', 'definition', 'example', 'example_status', 'steps')
+TERM_KEYS = ('id', 'term', 'definition', 'example', 'example_status', 'steps',
+             # L3 (owner session 2026-10-26): the language of ``term`` and ``definition``.
+             'language')
 STEP_TEXT_KEYS = ('context', 'method', 'interpretation', 'consequence')
 STEP_KEYS = ('concept', *STEP_TEXT_KEYS, 'text_status')
 PREDICTION_KEYS = ('id', 'step', 'question', 'choices', 'reveal', 'available')
@@ -185,13 +187,21 @@ def _terms(task: str, plan_steps, citer: cite.Citer, values: Mapping) -> list[di
         if concept:
             concepts.setdefault(concept, []).append(step_id)
     out = []
+    french = texts.report_language() == 'fr'
     for term_id, entry in texts.glossary_terms(task).items():
-        template = entry.get('cited_example')
+        # L3 (owner session 2026-10-26, R4): a French study's term, definition and example in
+        # French where the glossary has them (``language`` says which), never the glossary's
+        # examples of another case (``texts.definition``).
+        definition, language = texts.definition(entry, task)
+        template = (entry.get('cited_example_fr') if french else None) \
+            or entry.get('cited_example')
         example = resolve(template, citer, values) if template else None
         status = 'none' if not template else ('shown' if example else 'needs_results')
-        out.append({'id': term_id, 'term': entry.get('term'),
-                    'definition': entry.get('definition'), 'example': example,
-                    'example_status': status, 'steps': concepts.get(term_id, [])})
+        term = (entry.get('term_fr') or entry.get('term')) if language == 'fr' \
+            else entry.get('term')
+        out.append({'id': term_id, 'term': term, 'definition': definition, 'example': example,
+                    'example_status': status, 'steps': concepts.get(term_id, []),
+                    'language': language})
     return out
 
 
@@ -200,7 +210,9 @@ def _steps(task: str, plan_steps, citer: cite.Citer, values: Mapping) -> dict:
     for step_id in plan_steps:
         content = texts.step(step_id, task)
         term = texts.glossary(content.get('concept'), task) if content.get('concept') else None
-        concept = {'segments': [{'text': term['term']}]} if term else None
+        name = (term.get('term_fr') if term and texts.report_language() == 'fr' else None) \
+            or (term or {}).get('term')
+        concept = {'segments': [{'text': name}]} if term else None
         item, missing = {'concept': concept}, False
         for key in STEP_TEXT_KEYS:
             template = content.get(key)
@@ -214,16 +226,25 @@ def _steps(task: str, plan_steps, citer: cite.Citer, values: Mapping) -> dict:
 
 def _predictions(task: str, citer: cite.Citer, values: Mapping) -> list[dict]:
     out = []
+    # L3 (owner session 2026-10-26): a French study's questions, choices and reveals.
+    fr = texts.report_language() == 'fr'
+
+    def own(node: Mapping, key: str):
+        return (node.get(f'{key}_fr') if fr else None) or node.get(key)
     for q in texts.load('learn').get('predictions', []):
         if q.get('task') != task:
             continue
-        own = dict(values)
-        sign = _sign(q.get('sign'), citer, own)
+        here = dict(values)
+        spec = q.get('sign')
+        if isinstance(spec, Mapping) and fr:
+            spec = {**spec, **{k: spec.get(f'{k}_fr') or spec.get(k)
+                               for k in ('positive', 'negative', 'zero')}}
+        sign = _sign(spec, citer, here)
         if sign is not None:
-            own['sign'] = sign
-        reveal = resolve(q.get('reveal'), citer, own)
-        choices = [{'id': str(c['id']), 'label': str(c['label'])} for c in q['choices']]
-        out.append({'id': q['id'], 'step': q['step'], 'question': q['question'],
+            here['sign'] = sign
+        reveal = resolve(own(q, 'reveal'), citer, here)
+        choices = [{'id': str(c['id']), 'label': str(own(c, 'label'))} for c in q['choices']]
+        out.append({'id': q['id'], 'step': q['step'], 'question': own(q, 'question'),
                     'choices': choices, 'reveal': reveal, 'available': reveal is not None})
     return out
 
@@ -233,7 +254,7 @@ def explain(study_dir, *, term: str | None = None) -> dict:
     study = read.open(study_dir)
     view = view_model.build(study)
     task = st.task_of(view['task'])
-    with texts.study_context(view):
+    with texts.study_context(view), texts.report_language_context(view.get('language')):
         citer = cite.Citer.from_view(view)
         values = placeholders(view)
         plan_steps = [s['id'] for s in view['plan']]

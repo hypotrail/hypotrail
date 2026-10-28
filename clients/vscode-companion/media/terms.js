@@ -3,7 +3,8 @@
 // before media/views/*.js (lib/html.js), so every view can use:
 //
 //   Hypotrail.terms.MAP                      {glossary id: [places where the copy marks it]}
-//   Hypotrail.terms.mark(text, id)           a <span data-term="id"> for a word of the copy
+//   Hypotrail.terms.mark(text, id)           a notion button for a word of the copy (v3), else text
+//   Hypotrail.terms.place(root)              after a render: the open notions, in place
 //   Hypotrail.askAgent(ctx, about, shown, {question?})   the "Ask the agent about this" modal
 //   Hypotrail.askButton(ctx, about, shown, {label?, attrs?, question?, stage?, direct?})
 //                                            its button (stage v2 unless `stage` says
@@ -12,27 +13,28 @@
 //                                            (WP-E1) copies the ready question at once,
 //                                            without the modal.
 //
-// Hovers. With the learning layer on (stage v3, `learningLayer`), every `[data-term]` in the
-// panel whose id is in `explain.terms` (the task filter) gets a tooltip on hover and on
-// focus: the term in bold first, then its definition, then the study's cited example when
-// the engine says it is `shown`. Escape closes it (core.js tooltip host). A term absent
-// from `explain.terms` is not marked. The first hover reads `explain` once; with the layer
-// off nothing is marked and `explain` is never read (LE-3). The Learn view feeds this
-// module the `init` and `explain` messages it receives (media/views/learn.js).
+// Notions in place (ADR 0004 d13, NOT-1, NOT-2). With the learning layer on (stage v3,
+// `learningLayer`), a term the copy marks is a button: pressing it (Enter, Space, a touch)
+// expands, right after its block, the term first, its definition, then "In your study" with
+// the study's cited example when the engine says it is `shown`; pressing it again, or Escape
+// on it, folds it. Its open state is a fold of the page (`term-<id>`, FOLD-1). The first
+// expansion reads `explain` once; with the layer off nothing is marked and `explain` is never
+// read (LE-3). The Learn view feeds this module the `init` and `explain` messages it receives.
 (function (HT) {
   'use strict';
 
   // Every id is a glossary id of at least one task, and is marked in the views
   // (test/learn.test.js; WP-I added the evidence and decisions marks, U5 request R4).
   const MAP = Object.freeze({
-    confirmed_decision: ['learn.layer intro'],
-    proposal: ['decisions cards'],
+    final_test: ['now data card'],
+    development_rows: ['now data card'],
+    proposal: ['page proposal card'],
     base_rate: ['eda target card'],
     class_imbalance: ['eda target card'],
     distribution: ['eda distribution card'],
     target_distribution: ['eda target card'],
     exposure: ['evidence ledger'],
-    stale_result: ['evidence registry'],
+    stale_result: ['page waiting card'],
     validation_partition: ['evidence ledger'],
     selection_on_validation: ['evidence ledger'],
     paired_difference: ['evidence intervals'],
@@ -43,57 +45,75 @@
   });
 
   const state = { layer: false, stage: 'v0', explain: null, requested: false };
-  const attached = new WeakSet();
 
   const active = () => state.layer && Boolean(HT.protocol) && HT.protocol.stageAllows(state.stage, 'v3');
+  const foldId = id => `term-${id}`;
 
-  function content(t) {
+  /**
+   * A term of the panel's copy (NOT-1): from stage v3 with the learning layer on, a button
+   * (`aria-expanded`, a stable `data-fold-id`) that expands, in place, the term's definition
+   * then "In your study" with the study's values (`explain`); below v3, or with the layer off,
+   * plain text (LE-3). A term the engine's glossary does not hold (the task filter) is plain text.
+   */
+  function mark(text, id) {
+    const t = state.explain ? state.explain.terms[id] : undefined;
+    if (!active() || (state.explain && !t)) return HT.el('span', { 'data-term-text': id, text });
+    const open = HT.foldOpen ? HT.foldOpen(foldId(id), false) : false;
+    return HT.el('button', { type: 'button', className: 'ht-term', 'data-term': id, 'data-fold-id': foldId(id),
+      'aria-expanded': open ? 'true' : 'false', text,
+      onclick: () => toggle(id),
+      onkeydown: e => { if (e.key === 'Escape' && HT.foldOpen(foldId(id), false)) { e.preventDefault(); e.stopPropagation(); toggle(id); } } });
+  }
+
+  function toggle(id) {
+    const open = HT.foldOpen(foldId(id), false);
+    HT.setFold(foldId(id), !open);
+    // The learning parts read `explain` once per version (their loader); the notion asks them.
+    if (!open && !state.explain && HT.terms.load && HT.terms.load()) {
+      state.requested = true;
+    } else if (!open && !state.explain && !state.requested) {
+      state.requested = true;
+      HT.send({ type: 'load', view: 'explain' });
+    }
+    HT.rerender();
+  }
+
+  /** The expanded notion of a term (LS-5): the term first, its definition, then the study's example. */
+  function note(id, n) {
     const L = HT.copy.learn;
-    return HT.el('div', { 'data-tooltip-term': true }, [
-      HT.el('strong', { text: t.term }),
-      HT.el('p', { className: 'ht-term-definition', text: t.definition }),
-      t.example ? HT.components.segments(HT.el('p', { className: 'ht-term-example' }), t.example)
-        : t.exampleStatus === 'needs_results' ? HT.el('p', { className: 'muted', text: L.exampleNeeded }) : null,
-    ]);
+    const P = HT.copy.page;
+    const t = state.explain ? state.explain.terms[id] : null;
+    const node = HT.el('span', { className: 'ht-tdef', role: 'note', id: `note-${id}-${n}`, 'data-notion': id }, t ? [
+      // L3: the glossary is the engine's, in the study language; marked when it is not the panel's.
+      HT.el('dfn', { text: t.term }), ': ', HT.components.engineText(t.definition, { lang: HT.studyLanguage ? HT.studyLanguage() : null }),
+      t.example ? HT.components.segments(HT.el('span', { className: 'ht-here', 'data-here': true }, [HT.el('br'), HT.el('b', { text: P.inYourStudy })]), t.example)
+        : t.exampleStatus === 'needs_results' ? HT.el('span', { className: 'muted' }, [HT.el('br'), L.exampleNeeded]) : null,
+    ] : [HT.el('span', { className: 'muted', 'aria-busy': 'true', text: P.notionsReading })]);
+    return node;
   }
 
-  function attach(node) {
-    if (!node || !node.getAttribute || attached.has(node)) return;
-    const t = active() && state.explain ? state.explain.terms[node.getAttribute('data-term')] : null;
-    if (!t) return;               // not in this task's glossary: not marked
-    attached.add(node);
-    node.classList.add('ht-term');
-    HT.tooltip.attach(node, () => content(t));
-  }
-
-  function scan(root) {
-    if (!root || !root.querySelectorAll) return;
-    if (root.hasAttribute && root.hasAttribute('data-term')) attach(root);
-    for (const node of root.querySelectorAll('[data-term]')) attach(node);
-  }
-
-  function requestOnce(event) {
-    if (!active() || state.explain || state.requested) return;
-    const target = event.target && event.target.closest ? event.target.closest('[data-term]') : null;
-    if (!target) return;
-    state.requested = true;
-    HT.send({ type: 'load', view: 'explain' });
-  }
-
-  function start() {
-    if (typeof document === 'undefined') return;
-    const app = document.getElementById('app');
-    if (!app || typeof MutationObserver !== 'function') return;
-    new MutationObserver(records => {
-      for (const r of records) for (const n of r.addedNodes) if (n.nodeType === 1) scan(n);
-    }).observe(app, { childList: true, subtree: true });
-    document.addEventListener('mouseover', requestOnce);
-    document.addEventListener('focusin', requestOnce);
+  /** After a render: each open term's notion goes right after the block that holds its button. */
+  function place(root) {
+    if (!root || !active()) return;
+    let n = 0;
+    const after = new Map();
+    for (const button of root.querySelectorAll('button.ht-term[data-term]')) {
+      const id = button.getAttribute('data-term');
+      if (!HT.foldOpen(foldId(id), false)) continue;
+      n += 1;
+      const block = button.closest('p, h3, h4, li, blockquote, .ht-facts, td, th, .ht-head-line') || button.parentElement;
+      const box = note(id, n);
+      button.setAttribute('aria-controls', box.id);
+      const last = after.get(block) || block;
+      last.after(box);
+      after.set(block, box);
+    }
   }
 
   HT.terms = {
     MAP,
-    mark: (text, id) => HT.el('span', { 'data-term': id, text }),
+    mark,
+    place,
     /** From the `init` message: the stage and the learning-layer preference. */
     configure({ stage, learningLayer }) {
       state.stage = stage;
@@ -109,7 +129,6 @@
     revision() { state.requested = false; },
     explain: () => state.explain,
     active,
-    content,
   };
 
   // --- agent bridge (§6.8) ------------------------------------------------------------------
@@ -162,5 +181,4 @@
 
   HT.askAgent = askAgent;
   HT.askButton = askButton;
-  start();
 })(globalThis.Hypotrail = globalThis.Hypotrail || {});

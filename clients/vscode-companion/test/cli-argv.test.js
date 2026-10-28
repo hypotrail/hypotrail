@@ -40,27 +40,31 @@ test('reads: exact argv (§5)', () => {
   }
 });
 
-test('writes: exact argv of W4-W7 (§7); W1-W3 are withdrawn (v0.3 narrowing)', () => {
-  // ADR 0004 amendment (R23, I2): the panel has no confirm, withdraw, or propose builder.
-  assert.deepEqual(Object.keys(cli.WRITES), ['W4', 'W5', 'W6', 'W7']);
-  for (const name of ['confirmArgv', 'withdrawArgv', 'proposeArgv']) assert.equal(cli[name], undefined, name);
+test('writes: exact argv of W4, W5, W7, W8 (§7); W1-W3 and W6 are withdrawn (v0.3 narrowing, R31)', () => {
+  // ADR 0004 amendments (R23, I2; R31, 2026-10-27): the panel has no confirm, withdraw,
+  // propose, or acknowledgement builder. Decision 14 (R49, 2026-10-28) adds W8.
+  assert.deepEqual(Object.keys(cli.WRITES), ['W4', 'W5', 'W7', 'W8']);
+  for (const name of ['confirmArgv', 'withdrawArgv', 'proposeArgv', 'acknowledgeArgv']) assert.equal(cli[name], undefined, name);
   assert.deepEqual(cli.WRITES.W4(AGENT, { activity: 'eda.distribution', column: '-age', requestId: ID, expectedRevision: 3 }),
     [...A, 'run', 'eda.distribution', '--column=-age', '--channel=webview', '--request-id', ID, '--expected-revision', '3', ...T]);
   assert.deepEqual(cli.WRITES.W5(AGENT), [...A, 'render', '--channel=webview', ...T]);
-  assert.deepEqual(cli.WRITES.W6(AGENT, { executionId: 'e_4c1d', words: 'I know it stopped.', requestId: ID, expectedRevision: 3 }),
-    [...A, 'run', '--acknowledge-interruption', 'e_4c1d', '--user-words=I know it stopped.', '--channel=webview', '--request-id', ID,
-      '--expected-revision', '3', ...T]);
   // CR.6: the export names the revision the junior saw, so the engine refuses a stale one;
   // there is no form without the option (an unknown `legacy` flag changes nothing).
   assert.deepEqual(cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26 }),
     [...A, 'export', 'handoff', '--out=/tmp/hand off/revision-26', '--channel=webview', '--expected-revision', '26', ...T]);
   assert.deepEqual(cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26, legacy: true }),
     cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26 }));
+  // W8 (ADR 0004 decision 14): the Azure ML export, outside the study state, never `--plan`
+  // (a read), never an Azure job; the plan is a read of the same command with `--plan`.
+  assert.deepEqual(cli.WRITES.W8(AGENT, { parent: '/tmp/az ure', revision: 45 }),
+    [...A, 'export', 'azureml', '--out=/tmp/az ure/azureml-revision-45', '--expected-revision', '45', ...T]);
+  assert.throws(() => cli.WRITES.W8(AGENT, { parent: 'relative', revision: 45 }), cli.ArgvError);
+  assert.deepEqual(cli.READS.azureml_plan(AGENT, { revision: 45 }), [...A, 'export', 'azureml', '--expected-revision', '45', '--plan', ...T]);
 });
 
 test('timeouts and buffer (§7, §11)', () => {
   assert.equal(cli.MAX_BUFFER, 16 * 1024 * 1024);
-  assert.deepEqual({ ...cli.TIMEOUTS }, { read: 30000, W4: 300000, W5: 120000, W6: 120000, W7: 120000 });
+  assert.deepEqual({ ...cli.TIMEOUTS }, { read: 30000, W4: 300000, W5: 120000, W7: 120000, W8: 120000 });
 });
 
 test('run: no shell, the buffer, and every failure is a message (never a rejection)', async () => {
@@ -79,4 +83,22 @@ test('run: no shell, the buffer, and every failure is a message (never a rejecti
   res = await cli.run(['/bin/x'], { execFile: fake(cb => cb(Object.assign(new Error('e'), { code: 2 }), 'not json', '')) });
   assert.equal(res.exitCode, 2);
   assert.match(res.failure, /did not print one JSON document/);
+});
+
+test('no builder passes --progress: the panel stays silent on stderr (owner session 2026-10-26, L4)', () => {
+  // `hypotrail run --progress` writes progress lines on stderr for the chat agent's terminal;
+  // the panel never asks for them, so its processes keep the contract "nothing on stderr".
+  const argvs = [
+    cli.statusArgv(AGENT, { digest: true, since: 0 }), cli.decisionsArgv(AGENT), cli.viewArgv(AGENT),
+    cli.previewEffectsArgv(AGENT, { proposalId: 'p_7' }), cli.evidenceArgv(AGENT, { resultId: RID }),
+    cli.previewPolicyArgv(AGENT, { rules: ['capacity:100'], intervals: true }),
+    cli.previewProposalArgv(AGENT, { decisionId: 'policy', value: 'capacity:100' }), cli.checkArgv(AGENT),
+    cli.explainArgv(AGENT), cli.sessionReportArgv(AGENT), cli.dataArgv(AGENT),
+    cli.WRITES.W4(AGENT, { activity: 'eda.distribution', column: 'age', requestId: ID, expectedRevision: 3 }),
+    cli.WRITES.W5(AGENT),
+    cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26 }),
+  ];
+  for (const argv of argvs) assert.ok(!argv.some(token => String(token).includes('--progress')), argv.join(' '));
+  const source = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'lib', 'cli.js'), 'utf8');
+  assert.ok(!source.includes('--progress'));
 });

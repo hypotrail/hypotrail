@@ -25,6 +25,8 @@
     split: 'the split',
     policy: regression(task) ? 'the third decision' : 'the decision rule',
     model_choice: 'the model choice',
+    // Lot 2026-10-28 (R60): the error measure, its own decision before the criterion.
+    error_metric: 'the error measure',
     success_criterion: 'the success criterion',
     preprocessing: 'the data preparation',
     // WP-B1: named in words; WP-B5 gives them their panel views.
@@ -41,6 +43,7 @@
     policy: regression(task) ? 'This decision turns the results into an action.'
       : 'The decision rule turns scores into an action: which cases to act on, given what the team can handle.',
     model_choice: 'The model choice picks the model whose errors on the validation rows fit your use.',
+    error_metric: 'The error measure says how a miss is counted: the mean absolute error (MAE) weighs every miss alike, the root mean squared error (RMSE) weighs one big miss much more.',
     success_criterion: 'The success criterion fixes, before you see the results, how much better than the baseline a model must be to be worth adopting.',
     preprocessing: 'The data preparation says how missing values, rare categories, extreme values and skewed columns are handled; it is learned on the training rows only.',
     // WP-B5: the two decisions of WP-B1.
@@ -59,9 +62,25 @@
     // v0.3 (WP-F1, WP-K): the second and third variants of a list value.
     'fit.variant:2': 'the second variant', 'fit.variant:3': 'the third variant',
   };
+  // Lot P (R45): which variant a slot is, in a few words, from the study's variant decision
+  // (`Hypotrail.studyVariants`, set by the page from the summary at each render).
+  const VARIANT_SLOTS = ['fit.variant', 'fit.variant:2', 'fit.variant:3'];
+  function variantShort(slot) {
+    const i = VARIANT_SLOTS.indexOf(slot);
+    const list = (globalThis.Hypotrail && globalThis.Hypotrail.studyVariants) || [];
+    const v = i >= 0 ? list[i] : null;
+    if (!v || typeof v !== 'object') return null;
+    if (v.kind === 'tuned') return 'ridge';
+    if (v.kind === 'family') return { ebm: 'EBM', hgb: 'boosting' }[v.family] || null;
+    if (v.kind === 'regularisation') return v.strength === 'weak' ? 'less penalised' : 'more penalised';
+    if (v.kind === 'drop_group') return `without ${str(v.group)}`;
+    return null;
+  }
+  const variantLabel = slot => (variantShort(slot) ? `${variantShort(slot)} variant` : null);
   const modelName = (slot, task) => (slot === 'fit.baseline'
-    ? (regression(task) ? 'the mean baseline' : 'the baseline')
-    : MODEL_NAMES[slot] || `the ${str(slot).replace(/^fit\./, '').replace(/_/g, ' ')} model`);
+    ? (regression(task) ? 'the reference (predict the mean)' : 'the baseline')
+    : variantShort(slot) ? `the ${variantShort(slot)} variant`
+      : MODEL_NAMES[slot] || `the ${str(slot).replace(/^fit\./, '').replace(/_/g, ' ')} model`);
 
   function parse(raw) {
     if (raw && typeof raw === 'object') return raw;
@@ -185,8 +204,16 @@
     return `Open the final test once for ${modelName(v.model, task)}${r ? ` (${r.toLowerCase()})` : ''}`;
   }
 
+  /** Lot 2026-10-28 (R60): the error measure in words ({"metric": "mae" | "rmse"}). */
+  function errorMetric(raw) {
+    const v = parse(raw);
+    const m = v && typeof v === 'object' ? v.metric : raw;
+    return { mae: 'The mean absolute error (MAE)', rmse: 'The root mean squared error (RMSE)' }[m] || null;
+  }
+
   // v0.2a (WP-A4): the two governance decisions in words. The share is a recorded value
   // shown as a percentage, not a figure the panel computes from results.
+
   function criterion(raw) {
     const v = parse(raw);
     if (!v || typeof v !== 'object') return null;
@@ -196,7 +223,7 @@
       return `Adopt only if ${metric} beats the baseline by at least ${v.min_points} points`;
     }
     if (typeof v.min_share === 'number') {
-      return `Adopt only if the validation error is at least ${Math.round(100 * v.min_share)}% below the mean baseline`;
+      return `Adopt only if the validation error is at least ${Math.round(100 * v.min_share)}% below the reference (predict the mean)`;
     }
     return null;
   }
@@ -207,11 +234,15 @@
     const parts = [];
     if (v.missing && typeof v.missing === 'object') {
       const flagged = Object.keys(v.missing).filter(k => v.missing[k] === 'indicator');
-      parts.push(flagged.length ? `missing values flagged (${flagged.join(', ')})` : 'missing values not flagged');
+      parts.push(flagged.length ? `an indicator column of missing values (${flagged.join(', ')})` : 'no indicator column of missing values');
     } else {
-      parts.push(v.missing === 'indicator' ? 'missing values flagged' : 'missing values not flagged');
+      parts.push(v.missing === 'indicator' ? 'an indicator column of missing values' : 'no indicator column of missing values');
     }
-    if (v.rare_category_min_rows) parts.push(`categories under ${v.rare_category_min_rows} rows grouped`);
+    if (v.rare_category_min_rows && typeof v.rare_category_min_rows === 'object') {
+      // L8 (R6): a minimum per column.
+      Object.keys(v.rare_category_min_rows).sort().filter(c => v.rare_category_min_rows[c])
+        .forEach(c => parts.push(`categories of ${c} under ${v.rare_category_min_rows[c]} rows grouped`));
+    } else if (v.rare_category_min_rows) parts.push(`categories under ${v.rare_category_min_rows} rows grouped`);
     const caps = v.caps && typeof v.caps === 'object' ? Object.keys(v.caps) : [];
     parts.push(caps.length ? `extreme values capped (${caps.join(', ')})` : 'no capping');
     const logs = Array.isArray(v.log_transform) ? v.log_transform : [];
@@ -260,6 +291,7 @@
         return parts.join(' · ');
       }
       case 'split': return split(raw);
+      case 'error_metric': return errorMetric(raw);
       case 'success_criterion': return criterion(raw);
       case 'preprocessing': return preparation(raw);
       case 'model_variant': return variant(raw);
@@ -288,18 +320,29 @@
       leadTraining: 'The assistant proposed this in the chat. Answer in the chat, in your own words: say what it decides, or what you change.' },
     reconfirm: { title: name => `Confirm ${name} again`, action: 'Open in Decisions',
       lead: 'Something it rests on changed, so your earlier answer no longer holds until you confirm it again.' },
+    // R24 (owner session 2026-10-27): the review of a decision the automatic mode recorded
+    // (`next_action.review`): adopt it or change it in the chat; nothing changed underneath.
+    review: { title: name => `Review ${name}`, action: 'Open in Decisions',
+      lead: 'The automatic mode recorded this decision without your words. Review it in the chat: adopt it in your own words, or say what you change.' },
     acknowledge_interruption: { title: () => 'A run stopped before it finished', action: 'Go to the run',
-      lead: 'Its outcome is unknown. Say in your own words that you know this; nothing restarts by itself.' },
+      lead: 'Its outcome is unknown. Say in the chat, in your own words, that you know this; nothing restarts by itself, and this panel records nothing.' },
     outcome_unknown: { title: () => 'A run stopped before it finished', action: 'Go to the run',
       lead: 'Its outcome is unknown. It is not in progress and does not restart by itself.' },
     propose: { title: step => `Next step: ${step}`, action: null,
       lead: 'Nothing waits for you here. The assistant proposes this step in the chat.' },
+    // R16 (owner session 2026-10-26, D20): a choice the chat asks before any proposal.
+    choice: { title: name => `Choose ${name}, in the chat`, action: 'See the options',
+      lead: 'The assistant asks you to choose in the chat, among the options the engine accepts now. Answer there: this panel records no choice.' },
     run: { title: step => `Next step: ${step}`, action: null,
       lead: 'Nothing waits for you here. The assistant runs this step in the chat.' },
     blocked: { title: step => `Next step: ${step}`, action: null,
       lead: 'This step waits for an earlier one. The assistant guides you in the chat.' },
     done: { title: () => 'Every step is done', action: null,
       lead: 'The report and the notebook carry the study. Read them again before you hand them over.' },
+    // L7 (owner session 2026-10-26, D15): what comes after the study, read only. The text
+    // is the engine's (`next_action.after_study.junior_text`); the plan is asked for in the chat.
+    afterStudyTitle: 'After the study',
+    exportPlanInChat: 'The Azure ML export plan is available for this model: ask the assistant for it in the chat. This panel exports only the handoff pack.',
     other: { title: () => 'Continue in the chat', action: null, lead: 'The assistant guides the next step in the chat.' },
     // WP-B5: the opening of the final test is a chat act. The panel explains it and points
     // to the chat; it never offers a control that opens it.
@@ -332,6 +375,9 @@
     uncertain_features_included: 'caveat', delegated_decisions: 'caveat', small_validation_partition: 'caveat',
     capacity_exceeds_validation: 'caveat', high_cardinality_grouping: 'caveat', grouped_split_unsupported: 'caveat',
     validation_is_not_independent: 'sealed',
+    // Review round 3: development rows left out because their label arrives after the
+    // decision moment (a caveat on every development figure, not a mere context).
+    delayed_labels_excluded: 'caveat',
     // WP-B5: the final test (ADR 0006 and its WP-B1 amendment), the scenario's capacity.
     final_test_sealed: 'sealed', changed_after_final_test: 'caveat', final_test_opening_interrupted: 'blocking',
     capacity_assumed_for_exercise: 'caveat', verdict_contradicts_criterion: 'blocking',
@@ -363,8 +409,10 @@
     high_cardinality_grouping: 'Some rare values were grouped together in a chart.',
     grouped_split_unsupported: 'Related rows may fall on both sides of the split.',
     validation_is_not_independent: 'The validation rows were used to choose, so their figures are not independent evidence.',
+    delayed_labels_excluded: 'A delayed label is an outcome known only some time after the prediction. Some development rows had their outcome only after the start of the final test, so they are left out of the split, the looks at the outcome and every fit.',
     public_data_already_explored: 'The data were published and explored before; its rows are not unseen.',
-    no_time_or_entity_identifier: 'The data have no date or entity identifier, so drift and repeated entities cannot be checked.',
+    // L7 (R17): "more" ids carry no text, so this line holds whatever is missing.
+    no_time_or_entity_identifier: 'The data lack a time order or an entity identifier, so some checks across time or entities cannot be made; the report says which.',
     no_causality: 'The study shows associations; it does not measure the effect of an action.',
     workbench_not_tracked: 'Your workbench is not tracked, so nothing in it counts as evidence.',
     // WP-B5.
@@ -532,7 +580,7 @@
 
   HT.copy.junior = {
     decidedLine, sharePercent, ruleShort, featureName, modes, finalTest: finalTestCopy, finalTestState, changedName,
-    decisionName, why, value, availability, modelName, nextMove,
+    decisionName, why, value, availability, modelName, variantLabel, nextMove,
     SEVERITY, SEVERITY_ORDER, severityLabel, limitText, limitFallback,
     GROUP_OF_KIND, groups, GROUP_ORDER, digestText,
     digestFallback: 'The study changed.',

@@ -76,7 +76,7 @@ def parse(text: str) -> list[Rule]:
         anchored = '/' in line
         line = line.lstrip('/')
         body = _translate(line)
-        regex = f'^{body}$' if anchored else f'^(?:.*/)?{body}$'
+        regex = f'{body}' if anchored else f'(?:.*/)?{body}'
         rules.append(Rule(re.compile(regex), negate, directory_only))
     return rules
 
@@ -87,7 +87,7 @@ def ignored(relative: str, is_dir: bool, rules: list[Rule]) -> bool:
     for rule in rules:
         if rule.directory_only and not is_dir:
             continue
-        if rule.pattern.match(relative):
+        if rule.pattern.fullmatch(relative):
             result = not rule.negate
     return result
 

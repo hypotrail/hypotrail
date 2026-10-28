@@ -47,13 +47,16 @@ times 100; "percentage points" match only a registered difference, ``deltas``, t
 what a number stands for. A number may also repeat a recorded literal: a decision or
 proposal value, a rule of the current policy evaluation, the junior's recorded words, a
 setting, a case statement, or text the junior wrote, passed with ``--allow-user-text``.
-Numbers following "revision" (with the comparison that follows it: "revision 26 instead
-of 24"), "step", "pause", "proposal", or "exit", list markers, and ISO dates are exempt.
+Numbers following "revision" or the French "révision" (with the comparison that follows
+it: "revision 26 instead of 24"), "step", "pause", "proposal", "row", "section", or "exit" (whole words, review round 9:
+"grow 3" and "intersection 4" are figures), list markers, and ISO dates are exempt.
 A rule identifier (``capacity:100``) is never reported. Nor is a result id prefix made only
-of digits (R3): a run of 6 or more digits that follows "result", "result_id", "rid",
+of digits (R3): a run of 6 or more digits that follows "result", "résultat", "result_id", "rid",
 "id", or "execution" ("(result 52659681)"), or that begins a ``result_id`` of the
 registry; a number that traces to a figure is still traced as that figure. A minus sign
-may be ``-`` or the Unicode minus U+2212.
+may be ``-``, the Unicode minus U+2212, or (review round 9) an en dash U+2013 that follows no
+number ("–2.5"; "2–5" and "2 –5" are ranges). In English a decimal may omit its leading zero
+(".99"); French text reports that form.
 
 v0.3 (WP-A): the tracing core lives in :mod:`mlkit.study.numtrace`, shared with ``decide
 propose`` (a text one accepts, the other accepts). A bare "points" is percentage points too;
@@ -215,7 +218,7 @@ def wording(text: str, where: str, locate=None) -> list[dict]:
                                location=at(m)))
         m = FORECAST.search(sentence)
         has_number = bool(cite.parse_numbers(_masked(sentence))) or '\x00num' in sentence \
-            or bool(wordnum.parse(sentence))
+            or bool(wordnum.parse(sentence)) or bool(wordnum.unread(sentence))
         if m and has_number and not NEGATION.search(sentence[:m.start()]) \
                 and not NEGATED_AFTER.match(sentence[m.end():]):
             out.append(finding('forecast_wording', where,
@@ -299,6 +302,14 @@ class _Report(HTMLParser):
     def _place(self) -> tuple[str | None, int]:
         return self.anchor(), self.getpos()[0]
 
+    def language(self) -> str | None:
+        """v4 (R27): the ``lang`` of the nearest enclosing element that has one (a report
+        holds an edition in each language)."""
+        for _, attrs in reversed(self.stack):
+            if attrs.get('lang') in cite.LANGUAGES:
+                return attrs['lang']
+        return None
+
     def _flush(self):
         text = ''.join(self._block).strip()
         if text:
@@ -318,7 +329,8 @@ class _Report(HTMLParser):
         # carrying the same attributes.
         if tag == 'data' or 'data-result-id' in attrs:
             anchor, line = self._place()
-            self.data.append({'attrs': attrs, 'text': '', 'anchor': anchor, 'line': line})
+            self.data.append({'attrs': attrs, 'text': '', 'anchor': anchor, 'line': line,
+                              'lang': self.language()})
 
     def handle_endtag(self, tag):
         for i in range(len(self.stack) - 1, -1, -1):
@@ -355,7 +367,8 @@ def _result_lookup(view: Mapping, study: read.Study) -> dict:
 
 
 def _check_cited(view: Mapping, study: read.Study, rid: str, path: str, raw: str | None,
-                 shown: str, where: str, scale: str | None = None) -> list[dict]:
+                 shown: str, where: str, scale: str | None = None,
+                 language: str | None = None) -> list[dict]:
     by_id = _result_lookup(view, study)
     if rid not in by_id:
         try:
@@ -374,7 +387,10 @@ def _check_cited(view: Mapping, study: read.Study, rid: str, path: str, raw: str
     except (KeyError, StudyError):
         return [finding('value_mismatch', where, f'Result {rid} has no value at {path!r}.',
                         result_id=rid, path=path)]
-    toks = cite.parse_numbers(shown)
+    # Review round 4 (E4-6): the shown text is read as the renderer wrote it, in the study
+    # language (a French report writes 1.286 as "1,286"); v4 (R27): in the language of the
+    # edition that holds it (the nearest ``lang``).
+    toks = cite.parse_numbers(shown, language or view.get('language'))
     try:
         attr_ok = raw is not None and float(raw) == float(value)
         factor = 1.0 if scale is None else float(scale)
@@ -438,7 +454,7 @@ def check_html(view: Mapping, study: read.Study, page: str, where: str) -> list[
                      for f in _check_cited(view, study, a['data-result-id'],
                                            a.get('data-path', ''),
                                            a.get('value', a.get('data-value')), d['text'],
-                                           where, a.get('data-scale'))]
+                                           where, a.get('data-scale'), d.get('lang'))]
     for block, (anchor, line) in zip(parser.blocks, parser.block_places):
         findings += wording(block, where, lambda _offset, a=anchor, n=line: location(where, a, n))
     return findings
@@ -683,10 +699,16 @@ def _read_text(arg: str) -> str:
     if arg == '-':
         return sys.stdin.read()
     path = Path(arg)
-    if not path.exists() or path.is_dir():
-        raise StudyError('invalid_arguments', f'--text: no such file {arg}',
-                         details={'text': arg})
-    return path.read_text(encoding='utf-8')
+    shown = arg if len(arg) <= 200 else arg[:200] + '…'
+    try:
+        if not path.exists() or path.is_dir():
+            raise StudyError('invalid_arguments', f'--text: no such file {shown}',
+                             details={'text': shown})
+        return path.read_text(encoding='utf-8')
+    except OSError as exc:      # e.g. a long message given in place of a path
+        raise StudyError('invalid_arguments', f'--text names no readable file ({exc.strerror})'
+                         '; pass a file path, `-` for stdin, or <(printf ...).',
+                         details={'text': shown}) from None
 
 
 def registry_ids(study: read.Study) -> list[str]:

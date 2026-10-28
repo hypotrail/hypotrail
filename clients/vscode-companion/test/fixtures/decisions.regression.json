@@ -41,7 +41,9 @@
      "mode": "guided",
      "warnings": [],
      "reason_given": null,
-     "adoption_question": false
+     "adoption_question": false,
+     "label": "You decide the prediction_time as stated.",
+     "adopted_from": null
     },
     "open_proposals": []
    },
@@ -76,7 +78,9 @@
      "mode": "guided",
      "warnings": [],
      "reason_given": null,
-     "adoption_question": false
+     "adoption_question": false,
+     "label": "You decide the feature_availability as stated.",
+     "adopted_from": null
     },
     "open_proposals": []
    },
@@ -108,7 +112,9 @@
      "mode": "guided",
      "warnings": [],
      "reason_given": null,
-     "adoption_question": false
+     "adoption_question": false,
+     "label": "You decide the split as stated.",
+     "adopted_from": null
     },
     "open_proposals": []
    },

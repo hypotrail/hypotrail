@@ -46,6 +46,17 @@ the optional ``opening`` record (:data:`OPENING_KEYS`): the final test is opened
 ``final_test.evaluation`` sets the status to ``opened`` when it is reserved, before any
 final-test row is read, so a crash can never let it be scored twice. The other keys do not
 change.
+
+Delayed labels (review-v1 temporal profile with an outcome clock, J1). A development row
+whose outcome becomes available at or after the final boundary (``order.final_start``) has
+a label that is not known at the simulated decision time. :func:`assign` lists those rows
+in ``training_exclusions`` (:data:`TRAINING_EXCLUSIONS_KEYS`, their keys as a blob); they
+stay development rows (structural inspection that reads no target still sees them, since
+their predictors are known at decision time), but no split, training-partition
+exploration, fit, fold, validation score, final refit or predictor capture reads them
+(review 2026-10-24, round 2): :func:`training_exclusions` names them in the identity of
+every such activity (``inputs.training_exclusions``, only when there is at least one, so
+the identities of every other study are unchanged), and :func:`excluded_keys` reads them.
 """
 from __future__ import annotations
 
@@ -65,6 +76,9 @@ OPENED = 'opened'
 # the execution was interrupted: the final test is consumed either way).
 OPENING_KEYS = ('revision', 'execution_id', 'proposal_id', 'user_words', 'model', 'rule',
                 'time', 'result_id')
+# L9 (R20; ADR 0006 amendment of 2026-10-26): an opening by the demonstration's automatic
+# mode also records ``basis: automatic`` (no words); an opening by the junior has no basis.
+OPENING_OPTIONAL_KEYS = ('basis',)
 # Decisions whose confirmation after the opening makes a result "after the final test", and
 # the result slots whose recomputation after it does.
 AFTER_DECISIONS = ('prediction_time', 'feature_availability', 'split', 'success_criterion',
@@ -82,12 +96,24 @@ RECORD_KEYS = ('schema', 'status', 'method', 'fraction', 'seed', 'stratified_on'
 # ``opening`` (WP-B1) once the final test is opened; ``prior_exposed`` (WP-B6a) only when
 # the case declares ``prior_exposed_rows``.
 OPTIONAL_RECORD_KEYS = ('groups', 'opening', 'prior_exposed', 'training_exclusions',
-                        'analysis_protocol')
+                        'analysis_protocol',
+                        # Lot 2026-10-28 (EN-17, R63): the development and sealed counts of
+                        # each target stratum of a new regression study's quantile draw,
+                        # written by ``init`` (``commands.strata_counts``); counts only.
+                        'strata_counts')
+STRATA_COUNT_KEYS = ('stratum', 'development', 'sealed')
 GROUPS_KEYS = ('policy', 'n_groups', 'n_rows', 'moved_rows')
 # ``declared_rows``: the keys the case lists; ``excluded_rows``: those of them the final-test
 # rule would otherwise have sealed (temporal: the ones in the tail; stratified: every one,
 # since each could have been drawn), kept on the development side instead.
 PRIOR_EXPOSED_KEYS = ('path', 'sha256', 'declared_rows', 'excluded_rows')
+# Review-v1 (J1): the development rows kept out of training for a delayed label; ``row_keys``
+# is set by ``init`` (the blob of their keys), ``reasons`` counts them by reason.
+TRAINING_EXCLUSIONS_KEYS = ('n_rows', 'reasons', 'row_keys')
+DELAYED_LABEL_REASON = 'outcome_not_available_before_final'
+# The activities that still read those rows: the structural inspections, which read no target
+# and no split (``activities.STRUCTURAL_EDA``; kept here so readers need no activity module).
+EXCLUSION_EXEMPT_ACTIVITIES = ('eda.quality', 'eda.correlation')
 PART_KEYS = ('n_rows', 'row_keys')
 CHECK_KEYS = ('status', 'n_rows', 'checks', 'reveals')
 CHECK_ITEM_KEYS = ('check', 'column', 'failing_rows')
@@ -365,7 +391,7 @@ def _assign_review(case: Case, index, frame, *, fraction: float, seed: int) -> d
             delayed = [key for key in development if outcome[key] >= start]
             training_excluded.extend(delayed)
             if delayed:
-                exclusion_reasons['outcome_not_available_before_final'] = delayed
+                exclusion_reasons[DELAYED_LABEL_REASON] = delayed
         elif future:
             raise StudyError('unsupported_capability',
                              'A future final partition needs an outcome-availability clock.',
@@ -555,6 +581,58 @@ def development_keys(read_blob: Callable[[str], bytes], development: Mapping | N
     return keys
 
 
+def training_exclusions(state: Mapping) -> dict | None:
+    """``{n_rows, reasons, row_keys}``: the development rows no training, selection or
+    validation reads (a delayed label, review-v1), as an activity's identity records them;
+    None when the study has none (every legacy study, every study without an outcome
+    clock, and a study whose outcome clock leaves no row out), so their identities stay
+    exactly as before."""
+    part = of(state)
+    record = (part or {}).get('training_exclusions')
+    if not isinstance(record, Mapping) or not record.get('n_rows'):
+        return None
+    if not isinstance(record.get('row_keys'), str):
+        raise StudyError('integrity_error', 'The training exclusions name no row-key blob.',
+                         details={'n_rows': record.get('n_rows')})
+    return {'n_rows': int(record['n_rows']),
+            'reasons': [dict(r) for r in record.get('reasons') or []],
+            'row_keys': record['row_keys']}
+
+
+def ignores_exclusions(state: Mapping, entry: Mapping) -> bool:
+    """Whether registry ``entry`` was computed without the study's training exclusions
+    although its activity must leave them out (a result computed before the review 2026-10-24
+    round-2 fix, in a study whose outcome clock leaves rows out): such a result is not
+    current. Always False in a study without exclusions."""
+    exclusions = training_exclusions(state)
+    if exclusions is None or entry.get('activity') in EXCLUSION_EXEMPT_ACTIVITIES:
+        return False
+    return (entry.get('inputs') or {}).get('training_exclusions') != exclusions
+
+
+def excluded_keys(read_blob: Callable[[str], bytes], exclusions: Mapping | None) -> set[str]:
+    """The row keys named by ``exclusions`` (from :func:`training_exclusions`), verified
+    against their count; empty when there are none."""
+    if not exclusions:
+        return set()
+    keys = rec.parse_row_keys(read_blob(exclusions['row_keys']))
+    if len(set(keys)) != exclusions['n_rows']:
+        raise StudyError('integrity_error', 'The training-exclusions blob does not hold the '
+                                            'recorded number of rows.',
+                         details={'expected': exclusions['n_rows'], 'actual': len(set(keys))})
+    return set(keys)
+
+
+def delayed_label_rows(state: Mapping) -> int:
+    """How many development rows are kept out of training for a delayed label (0 when
+    none)."""
+    exclusions = training_exclusions(state)
+    if not exclusions:
+        return 0
+    return sum(int(r.get('count') or 0) for r in exclusions['reasons']
+               if r.get('reason') == DELAYED_LABEL_REASON)
+
+
 STATUS_VIEW_KEYS = ('status', 'rows', 'method', 'fraction', 'development_rows', 'schema_check',
                     # WP-B1: the opening, and what changed after it.
                     'opening', 'post_final_test', 'changed_after',
@@ -581,6 +659,10 @@ def changed_after(state: Mapping, started: Mapping | None = None) -> list[str]:
         if not dec:
             continue
         conf = dec.get('confirmation') or {}
+        if dec.get('status') == 'confirmed' and conf.get('adopted_from'):
+            # L9 (R20): the junior's review adopted an automatic decision with the same
+            # value; nothing changed after the final test.
+            continue
         later = isinstance(conf.get('revision'), int) and conf['revision'] > since
         if dec.get('status') == 'reconfirm_required' or (dec.get('status') == 'confirmed'
                                                           and later):
@@ -616,11 +698,16 @@ def final_test_status(state: Mapping, started: Mapping | None = None) -> dict:
 
 
 def open_record(*, revision: int, execution_id: str, proposal_id: str | None,
-                user_words: str | None, model: str, rule: str | None, time: str) -> dict:
-    """The ``opening`` record (WP-B1), its ``result_id`` null until the promotion."""
-    return {'revision': revision, 'execution_id': execution_id, 'proposal_id': proposal_id,
-            'user_words': user_words, 'model': model, 'rule': rule, 'time': time,
-            'result_id': None}
+                user_words: str | None, model: str, rule: str | None, time: str,
+                basis: str | None = None) -> dict:
+    """The ``opening`` record (WP-B1), its ``result_id`` null until the promotion;
+    ``basis`` (L9) only for an automatic opening."""
+    record = {'revision': revision, 'execution_id': execution_id, 'proposal_id': proposal_id,
+              'user_words': user_words, 'model': model, 'rule': rule, 'time': time,
+              'result_id': None}
+    if basis is not None:
+        record['basis'] = basis
+    return record
 
 
 def validate(part: Any) -> list[dict]:
@@ -655,7 +742,9 @@ def validate(part: Any) -> list[dict]:
                          'problem': 'must equal the development and final-test rows'})
     opening = part.get('opening')
     if part['status'] == OPENED and (not isinstance(opening, dict)
-                                     or set(opening) != set(OPENING_KEYS)):
+                                     or set(opening) - set(OPENING_OPTIONAL_KEYS)
+                                     != set(OPENING_KEYS)
+                                     or opening.get('basis', 'automatic') != 'automatic'):
         problems.append({'path': f'{path}.opening',
                          'problem': 'an opened final test has its opening record '
                                     '{' + ', '.join(OPENING_KEYS) + '}'})
@@ -675,3 +764,98 @@ def validate(part: Any) -> list[dict]:
         problems.append({'path': f'{path}.schema_check',
                          'problem': 'must be {status: pass|fail, n_rows, checks, reveals}'})
     return problems
+
+
+# --- the seeded step-1 sample (CLI-CONTRACT §17.3, contract P1.9) ---------------------------
+
+SAMPLE_ROWS = 8
+SAMPLE_SEED_PREFIX = 'hypotrail.sample/1'
+SAMPLE_SEED_HEX = 16
+
+
+def sample_seed(state: Mapping) -> str:
+    """The seed of the step-1 sample: the first :data:`SAMPLE_SEED_HEX` hex characters of the
+    SHA-256 of ``"hypotrail.sample/1\\n" + case id + "\\n" + created + "\\n" + dataset
+    sha256``. The study's key is its case id and creation stamp (a moved study keeps them),
+    the data's key the recorded dataset digest (a changed dataset draws a new sample)."""
+    import hashlib
+    text = '\n'.join((SAMPLE_SEED_PREFIX, str(state['case']['id']), str(state['created']),
+                      str(state['dataset']['sha256'])))
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()[:SAMPLE_SEED_HEX]
+
+
+def _row_number(key: str) -> int:
+    return int(str(key)[1:])
+
+
+def draw(seed: str, keys, n: int = SAMPLE_ROWS) -> list[str]:
+    """The sample drawn from ``keys``: each key ranked by the SHA-256 hex digest of
+    ``seed + "\\n" + key``, the first ``n`` kept (all of them when fewer), returned in
+    row-key order (``L34`` before ``L69``). Standard library only."""
+    import hashlib
+    ranked = sorted(set(keys), key=lambda k: hashlib.sha256(
+        f'{seed}\n{k}'.encode('utf-8')).hexdigest())
+    return sorted(ranked[:n], key=_row_number)
+
+
+def sample_candidates(state: Mapping, read_blob: Callable[[str], bytes],
+                      all_keys: Callable[[], list[str] | None] | None = None
+                      ) -> list[str] | None:
+    """The row keys the sample is drawn from: the development rows (never a sealed
+    final-test row) less the rows kept out of training for a delayed label (their outcome is
+    not known at the decision moment); in a study without a final test every row, from
+    ``all_keys()``. None when they cannot be listed."""
+    keys = development_keys(read_blob, inputs(state))
+    if keys is None:
+        keys = all_keys() if all_keys is not None else None
+        if keys is None:
+            return None
+    excluded = excluded_keys(read_blob, training_exclusions(state))
+    return [k for k in keys if k not in excluded]
+
+
+def sample(state: Mapping, read_blob: Callable[[str], bytes],
+           all_keys: Callable[[], list[str] | None] | None = None) -> dict | None:
+    """``{seed, row_keys}`` of the step-1 sample, or None when no row can be listed."""
+    keys = sample_candidates(state, read_blob, all_keys)
+    if not keys:
+        return None
+    seed = sample_seed(state)
+    return {'seed': seed, 'row_keys': draw(seed, keys)}
+
+
+def sample_rank(seed: str, key: str) -> str:
+    """The rank of row ``key`` in the draw of ``seed``: the SHA-256 hex digest of
+    ``seed + "\\n" + key`` (the generated notebook recomputes the draw with it)."""
+    import hashlib
+    return hashlib.sha256(f'{seed}\n{key}'.encode('utf-8')).hexdigest()
+
+
+# The exposure records of the sample (``exposure.SAMPLE_PURPOSE``), read on the read side too
+# (the notebook and the read commands import no writer).
+SAMPLE_PURPOSE = 'development_target_sample'
+STRUCTURAL_PURPOSE = 'structural_inspection'
+
+
+def sample_records(entries, seed: str | None = None) -> list:
+    """The ``development_target_sample`` records of ``entries`` (of ``seed`` when given)."""
+    return [e for e in entries if e.get('purpose') == SAMPLE_PURPOSE
+            and (seed is None or e.get('sample_seed') == seed)]
+
+
+def study_sample(state: Mapping, read_blob: Callable[[str], bytes], entries) -> dict | None:
+    """:func:`sample` of a study whose exposure records are ``entries``: a study without a
+    final test draws from the rows its structural inspection recorded at ``init``. None when
+    no row can be listed. Row keys only: no data value is read."""
+    entries = list(entries)
+
+    def every_key():
+        keys: set = set()
+        for entry in entries:
+            if entry.get('purpose') == STRUCTURAL_PURPOSE:
+                keys.update(rec.parse_row_keys(read_blob(entry['row_keys'])))
+        return sorted(keys, key=_row_number) if keys else None
+    try:
+        return sample(state, read_blob, every_key)
+    except (StudyError, KeyError, OSError, ValueError):
+        return None

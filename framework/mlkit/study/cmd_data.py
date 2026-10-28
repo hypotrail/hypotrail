@@ -5,13 +5,18 @@ decision: what one row describes (a case fact), how many development rows and co
 there are, the target and its labels, whether a final test is sealed, a dictionary of the
 columns grouped as the case groups them (type, unit, description and its French label,
 availability as the case states it, special values with their counts, missing cells,
-distinct values, three example values), and five fixed development rows (the first five by
-row key) with the target first.
+distinct values, three example values), the seeded step-1 sample (eight development rows
+drawn at random, target first; contract P1.9), and the development rows holding a declared
+special value, without the target (contract P1.10).
 
 It shows no target rate and no distribution: reading the outcome across rows is
 exploration, done on training rows after the split. The rows shown are development rows
 only (ADR 0006), whose structure ``init`` already recorded as exposure
-(``structural_inspection``); reading them again records nothing.
+(``structural_inspection``). The sample's target values are a counted look, recorded once per
+seed by ``init`` or by the first committed write of an older study still before its split
+(``development_target_sample``, :func:`mlkit.study.exposure.ensure_sample`); this read records
+nothing, so until that record exists the sample is shown without its target (``target_shown:
+false``), for good when the split came first (``exposure.withheld``).
 
 Payload ``hypotrail.data/1``, keys in order: :data:`PAYLOAD_KEYS`. ``--format text``
 prints a readable card (not a contract).
@@ -26,11 +31,20 @@ from . import assurance
 
 SCHEMA = 'hypotrail.data/1'
 PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'observation_unit', 'development',
-                'target', 'final_test', 'groups', 'rows', 'note')
+                'target', 'final_test', 'groups', 'rows', 'note',
+                # Contract P1.10 (CLI-CONTRACT §17.4): the development rows holding a declared
+                # special value, without the target.
+                'special_rows')
+# Contract P1.9 (CLI-CONTRACT §17.3): ``rows`` is the seeded step-1 sample; ``seed``,
+# ``target_shown`` and ``exposure`` come after its earlier keys.
+ROWS_KEYS = ('columns', 'n_rows', 'order', 'items', 'seed', 'target_shown', 'exposure')
+ROWS_ORDER = 'seeded sample'
+ROWS_EXPOSURE_KEYS = ('exposure_id', 'purpose', 'recorded')
+SPECIAL_ROW_KEYS = ('columns', 'n_rows', 'items', 'truncated')
+SPECIAL_ROWS_MAX = 50
 VARIABLE_KEYS = ('name', 'role', 'type', 'unit', 'description', 'description_fr',
                  'availability', 'decided', 'special_values', 'n_missing', 'n_distinct',
                  'examples')
-N_ROWS = 5
 N_EXAMPLES = 3
 UNGROUPED = 'Other columns'
 NOTE = ('These are development rows only; the final test stays sealed. The card shows what '
@@ -41,7 +55,8 @@ NOTE = ('These are development rows only; the final test stays sealed. The card 
 
 def configure(parser: argparse.ArgumentParser) -> None:
     parser.description = ('Read-only data card: row unit, sizes, target labels, grouped column '
-                          'dictionary, and five development rows (never logged).')
+                          'dictionary, eight development rows drawn at random, and the rows '
+                          'holding a special value (never logged).')
 
 
 def _plain(value: Any) -> Any:
@@ -60,6 +75,17 @@ def _fact(state: Mapping, fact_id: str) -> dict | None:
     fact = state['facts'].get(fact_id)
     return {'value': fact['value'], 'status': fact['status'], 'source': fact['source']} \
         if fact else None
+
+
+def _observation_unit(state: Mapping, tr) -> dict:
+    """What one row describes: the case's ``observation_unit`` fact, else its row unit,
+    with ``texts`` ({en, fr}; L3) from the case's translation sidecar."""
+    from . import l10n
+    fact = _fact(state, 'observation_unit')
+    if fact:
+        return {**fact, 'texts': l10n.pair(fact['value'], tr.fact('observation_unit', l10n.FR))}
+    unit = dict(state['structure']['row_unit'])
+    return {**unit, 'texts': l10n.pair(unit.get('value'), tr.row_unit(l10n.FR))}
 
 
 def _final_test_line(final: Mapping, lang: str = 'en') -> dict:
@@ -94,6 +120,114 @@ def _duplicates(case, dataset, lang: str = 'en') -> dict:
                                                   lang)}
 
 
+# Owner batch of 2026-10-28 (R38): the structural facts that condition the split, known at
+# step 1 (CLI-CONTRACT §17.6). Development rows only, counted without reading a value out.
+STRUCTURE_KEYS = ('duplicates', 'groups')
+STRUCTURE_DUPLICATE_KEYS = ('rows', 'identical_feature_rows')
+STRUCTURE_GROUP_KEYS = ('column', 'groups', 'rows_in_repeated_groups')
+GROUP_ROLES = ('group_id', 'identifier')
+DESCRIBING_ROLES = ('feature', 'time')
+
+
+def structure(case, frame) -> dict:
+    """``{duplicates: {rows, identical_feature_rows}, groups: [{column, groups,
+    rows_in_repeated_groups}]}`` of the development rows ``frame`` (R38):
+
+    * ``duplicates.rows``: rows identical to another row on every column, the target included
+      (``data.duplicate_summary``'s ``n_rows``, counted here on the frame);
+    * ``duplicates.identical_feature_rows``: rows identical to another row on every column
+      that describes it (role ``feature`` or ``time``), whatever their target, identifier or
+      group: a pair split across folds is predicted from its twin;
+    * ``groups``: for each declared group or identifier column (role ``group_id`` or
+      ``identifier``, and the case's ``structure.group_column``), the number of distinct
+      values and the rows whose value occurs more than once (rows that the folds can divide);
+      a missing value forms no group.
+    The target is compared, never shown."""
+    columns = [c for c in case.column_names if c in frame.columns]
+    describing = [v['name'] for v in case.document['variables']
+                  if v['role'] in DESCRIBING_ROLES and v['name'] in frame.columns]
+    rows = int(frame[columns].duplicated(keep=False).sum()) if columns and len(frame) else 0
+    twins = (int(frame[describing].duplicated(keep=False).sum())
+             if describing and len(frame) else 0)
+    grouped = [v['name'] for v in case.document['variables']
+               if v['role'] in GROUP_ROLES and v['name'] in frame.columns]
+    declared = (((case.document.get('structure') or {}).get('group_column') or {})
+                .get('value'))
+    if isinstance(declared, str) and declared in frame.columns and declared not in grouped:
+        grouped.append(declared)
+    groups = []
+    for column in grouped:
+        values = frame[column].dropna()
+        counts = values.value_counts()
+        groups.append({'column': column, 'groups': int(len(counts)),
+                       'rows_in_repeated_groups': int(counts[counts > 1].sum())})
+    return {'duplicates': {'rows': rows, 'identical_feature_rows': twins}, 'groups': groups}
+
+
+def structure_of(study) -> dict | None:
+    """:func:`structure` of a study's development rows (the digest's ``data_structure``),
+    or None when the case or its data cannot be read."""
+    from . import case as c
+    from . import data as dt
+    from . import partition
+    try:
+        state = study.state
+        case = c.case_of(state, verify_data=True)
+        keys = partition.development_keys(study.blob, partition.inputs(state))
+        return structure(case, dt.load_development(case, keys).frame)
+    except Exception:                     # noqa: BLE001 - a read never fails on this addition
+        return None
+
+
+def sample_rows(study, frame, case) -> dict:
+    """``rows`` (:data:`ROWS_KEYS`): the seeded step-1 sample (contract P1.9), target first,
+    in row-key order. The target is shown only once the look is recorded
+    (``development_target_sample`` of this seed); a read never records it, so until then
+    every item omits the target column (``target_shown: false``)."""
+    from . import partition
+    state = study.state
+    entries = study.exposure_records()
+    drawn = partition.study_sample(state, study.blob, entries)
+    keys = [k for k in (drawn or {}).get('row_keys', []) if k in frame.index]
+    recorded = partition.sample_records(entries, drawn['seed']) if drawn else []
+    shown = bool(recorded)
+    from . import exposure
+    withheld = exposure.sample_withheld(state, entries, drawn['seed'] if drawn else None)
+    target = case.target_column
+    columns = ([target] if shown else []) + [n for n in case.column_names if n != target]
+    return {'columns': columns, 'n_rows': len(keys), 'order': ROWS_ORDER,
+            'items': [{'row_key': k,
+                       'values': {col: _plain(frame.at[k, col]) for col in columns}}
+                      for k in keys],
+            'seed': drawn['seed'] if drawn else None, 'target_shown': shown,
+            'exposure': {'exposure_id': recorded[0]['exposure_id'] if shown else None,
+                         'purpose': partition.SAMPLE_PURPOSE, 'recorded': shown,
+                         # Why the target stays hidden for good (the split was confirmed
+                         # before the study recorded the look), or null.
+                         'withheld': withheld}}
+
+
+def _special_rows(case, frame, special_masks: Mapping[str, list]) -> dict:
+    """``special_rows`` (:data:`SPECIAL_ROW_KEYS`, contract P1.10): every development row
+    holding at least one declared special value of a column other than the target (matched
+    as the dictionary counts them), in row-key order, at most :data:`SPECIAL_ROWS_MAX`, each
+    without the target. A structural anomaly, not what is predicted: no exposure beyond
+    ``init``'s structural inspection."""
+    target = case.target_column
+    columns = [n for n in case.column_names if n != target]
+    found: dict[str, list[dict]] = {}
+    for name in columns:
+        for value, mask in special_masks.get(name, []):
+            for key in mask[mask].index:
+                found.setdefault(key, []).append({'column': name, 'value': value})
+    keys = sorted(found, key=lambda k: int(str(k)[1:]))
+    return {'columns': columns, 'n_rows': len(keys),
+            'items': [{'row_key': k,
+                       'values': {col: _plain(frame.at[k, col]) for col in columns},
+                       'specials': found[k]} for k in keys[:SPECIAL_ROWS_MAX]],
+            'truncated': len(keys) > SPECIAL_ROWS_MAX}
+
+
 def card(study_dir) -> dict:
     """The ``hypotrail.data/1`` payload of the study at ``study_dir``."""
     from . import case as c
@@ -101,12 +235,16 @@ def card(study_dir) -> dict:
     from . import partition, read
     from .activities import matches
 
-    from . import junior, assurance
+    from . import junior, assurance, l10n
     from . import state as st
     study = read.open(study_dir)
     state = study.state
     language = st.language_of(state)
     case = c.case_of(state, verify_data=True)
+    # L3 (R4, T4-T6; D4b): every case statement the card shows carries ``texts`` ({en, fr}):
+    # the case's words and their French form from the case's translation sidecar (null when
+    # the study recorded none).
+    tr = l10n.translations(state, case.document)
     keys = partition.development_keys(study.blob, partition.inputs(state))
     dataset = dt.load_development(case, keys)
     frame = dataset.frame
@@ -115,6 +253,7 @@ def card(study_dir) -> dict:
     availability = state['decisions']['feature_availability']
     decided = availability['value'] if isinstance(availability['value'], dict) else {}
     groups: dict[str, list[dict]] = {}
+    special_masks: dict[str, list] = {}
     for v in case.document['variables']:
         name = v['name']
         values = frame[name]
@@ -122,8 +261,11 @@ def card(study_dir) -> dict:
         for s in v['special_values']:
             mask = matches(values, s['value'], na_values) & ~special_mask
             special_mask |= mask
+            special_masks.setdefault(name, []).append((s['value'], mask))
             specials.append({'value': s['value'], 'meaning': s['meaning'], 'status': s['status'],
-                             'n_rows': int(mask.sum())})
+                             'n_rows': int(mask.sum()),
+                             'texts': l10n.pair(s['meaning'],
+                                                tr.meaning(name, s['value'], l10n.FR))})
         ordinary = values[~special_mask & values.notna()]
         examples = []
         for x in ordinary.tolist():
@@ -137,7 +279,9 @@ def card(study_dir) -> dict:
                 'description': v['description'],
                 'description_fr': (v.get('labels') or {}).get('fr'),
                 'availability': {'value': a['value'], 'status': a['status'],
-                                 'source': a['source']},
+                                 'source': a['source'],
+                                 'texts': l10n.pair(a['source'],
+                                                    tr.availability_source(name, l10n.FR))},
                 'decided': ({'status': availability['status'], 'value': decided.get(name)}
                             if name in decided else None),
                 'special_values': specials, 'n_missing': int(values.isna().sum()),
@@ -145,17 +289,14 @@ def card(study_dir) -> dict:
                 # apart, as ``eda.quality`` counts them (``cardinality.n_distinct``).
                 'n_distinct': int(ordinary.nunique(dropna=True)), 'examples': examples}
         groups.setdefault(v.get('group') or UNGROUPED, []).append(item)
-    order = sorted(frame.index, key=lambda k: int(str(k)[1:]))[:N_ROWS]
-    columns = [target] + [n for n in case.column_names if n != target]
-    rows = {'columns': columns, 'n_rows': len(order), 'order': 'first rows by row key',
-            'items': [{'row_key': k, 'values': {col: _plain(frame.at[k, col]) for col in columns}}
-                      for k in order]}
+    rows = sample_rows(study, frame, case)
+    special_rows = _special_rows(case, frame, special_masks)
     final = partition.final_test_status(state)
     target_doc = case.document['target']
     variable = case.variables[target]
     payload = {
         'schema': SCHEMA, 'ok': True, 'study': str(study.study_dir), 'revision': study.revision,
-        'observation_unit': _fact(state, 'observation_unit') or state['structure']['row_unit'],
+        'observation_unit': _observation_unit(state, tr),
         'development': {'rows': int(len(frame)), 'columns': len(case.column_names),
                         'partition': 'development' if keys is not None else 'all',
                         # v0.2b (WP-B3): groups of identical records and the case's policy.
@@ -166,11 +307,20 @@ def card(study_dir) -> dict:
                    'unit': variable.get('unit'), 'description': variable['description'],
                    'description_fr': (variable.get('labels') or {}).get('fr')},
         'final_test': _final_test_line(final, language),
-        'groups': [{'group': g, 'variables': items} for g, items in groups.items()],
+        'groups': [{'group': g, 'variables': items,
+                    'texts': l10n.pair(g, tr.group(g, l10n.FR)
+                                       or (junior.UNGROUPED_FR if g == UNGROUPED else None))}
+                   for g, items in groups.items()],
         'rows': rows,
         'note': {'text': NOTE, 'audience': 'junior',
                  'junior_text': junior.DATA_NOTE_FR if language == 'fr' else NOTE},
+        'special_rows': special_rows,
     }
+    # R38 (CLI-CONTRACT §17.6): duplicates and groups known before the split, additive keys
+    # of ``development`` (after its earlier keys).
+    found = structure(case, frame)
+    payload['development']['duplicates'].update(found['duplicates'])
+    payload['development']['groups'] = found['groups']
     payload['note']['text'] = ' '.join(filter(None, (
         NOTE, assurance.scope_notice(case))))
     payload['note']['junior_text'] = ' '.join(filter(None, (
@@ -185,45 +335,99 @@ def main(args: argparse.Namespace):
     return cmd.Outcome(card(args.study))
 
 
+# L3 (owner session 2026-10-26, R4): the labels of the text card of a French study.
+TEXT_WORDS = {
+    'en': {'one_row': 'One row', 'not_stated': 'not stated by the case',
+           'development': 'Development rows: {rows}, columns: {columns}', 'target': 'Target',
+           'in': 'in', 'availability': 'availability (case)', 'special': 'special value',
+           'rows': 'rows', 'missing': 'missing {missing}, distinct {distinct}, examples ',
+           'first': '{n} development rows drawn at random, target included (a counted look '
+                    'at the target), seed {seed}:',
+           'hidden': '{n} development rows drawn at random, seed {seed}; their target is shown '
+                     'once a write records the look:',
+           'withheld': '{n} development rows drawn at random, seed {seed}, without their '
+                       'target: the split was confirmed before this study recorded a look at '
+                       'them, so they are not shown with their target:', 'row': 'row'},
+    'fr': {'one_row': 'Une ligne', 'not_stated': 'non indiqué par le cas',
+           'development': "Lignes de l'échantillon de développement : {rows}, colonnes : "
+                          "{columns}", 'target': 'Cible', 'in': 'en',
+           'availability': 'disponibilité (selon le cas)', 'special': 'valeur spéciale',
+           'rows': 'lignes', 'missing': 'manquants {missing}, distincts {distinct}, exemples ',
+           'first': '{n} lignes de développement tirées au hasard, cible comprise (un regard '
+                    'compté sur la cible), graine {seed} :',
+           'hidden': '{n} lignes de développement tirées au hasard, graine {seed} ; leur cible '
+                     "s'affiche quand une écriture enregistre ce regard :",
+           'withheld': '{n} lignes de développement tirées au hasard, graine {seed}, sans leur '
+                       "cible : le découpage a été confirmé avant que l'étude n'enregistre un "
+                       "regard sur elles, elles ne sont donc pas montrées avec leur cible :",
+           'row': 'ligne'},
+}
+
+
+def _language_of(payload: Mapping) -> str:
+    """The study language of a card: French when its note is given in another text than the
+    English source (``junior_text``, WP-C)."""
+    note = payload.get('note') or {}
+    return 'fr' if note.get('junior_text') and note['junior_text'] != note.get('text') else 'en'
+
+
 def text(payload: Mapping) -> str:
-    """The data card as readable text (``--format text``; not a contract)."""
+    """The data card as readable text (``--format text``; not a contract), in the study
+    language (L3): a French study reads the case's statements in French where the case's
+    translation sidecar gives them (``texts.fr``) and the descriptions' ``description_fr``."""
+    lang = _language_of(payload)
+    w = TEXT_WORDS[lang]
+
+    def say(node, english):
+        return ((node or {}).get('texts') or {}).get(lang) or english
     unit = payload['observation_unit'] or {}
     dev = payload['development']
     t = payload['target']
-    lines = [f'One row: {unit.get("value") or "not stated by the case"}',
-             f'Development rows: {dev["rows"]}, columns: {dev["columns"]}',
-             dev['duplicates']['line']]
+    junior = lang != 'en'
+    colon = ' : ' if junior else ': '
+    lines = [f'{w["one_row"]}{colon}{say(unit, unit.get("value")) or w["not_stated"]}',
+             w['development'].format(rows=dev['rows'], columns=dev['columns']),
+             dev['duplicates']['junior_text'] if junior else dev['duplicates']['line']]
+    # R38: near-duplicates and declared groups, before the split.
+    from . import junior as jr
+    lines.extend(jr.structure_lines(dev.get('duplicates') or {}, dev.get('groups') or [],
+                                    'fr' if junior else 'en'))
+    description = (t.get('description_fr') if junior else None) or t['description']
     if t['task'] == 'binary':
         labels = ' / '.join(str(x) for x in (t['positive_label'], t['negative_label'])
                             if x is not None)
-        lines.append(f'Target: {t["column"]} ({labels}): {t["description"]}')
+        lines.append(f'{w["target"]}{colon}{t["column"]} ({labels}){colon}{description}')
     else:
-        lines.append(f'Target: {t["column"]} (in {t["unit"]}): {t["description"]}')
-    lines.append(payload['final_test']['line'])
+        lines.append(f'{w["target"]}{colon}{t["column"]} ({w["in"]} {t["unit"]}){colon}'
+                     f'{description}')
+    final = payload['final_test']
+    lines.append(final['junior_text'] if junior else final['line'])
     for g in payload['groups']:
         lines.append('')
-        lines.append(f'## {g["group"]}')
+        lines.append(f'## {say(g, g["group"])}')
         for v in g['variables']:
             unit_text = f', {v["unit"]}' if v['unit'] else ''
-            lines.append(f'- {v["name"]} ({v["type"]}{unit_text}, {v["role"]}): '
-                         f'{v["description"]}')
-            if v['description_fr']:
+            shown = (v['description_fr'] if junior else None) or v['description']
+            lines.append(f'- {v["name"]} ({v["type"]}{unit_text}, {v["role"]}){colon}{shown}')
+            if v['description_fr'] and not junior:
                 lines.append(f'    fr: {v["description_fr"]}')
             if v['role'] == 'feature':
                 a = v['availability']
-                lines.append(f'    availability (case): {a["value"]} [{a["status"]}] - '
-                             f'{a["source"]}')
+                lines.append(f'    {w["availability"]}{colon}{a["value"]} [{a["status"]}] - '
+                             f'{say(a, a["source"])}')
             for s in v['special_values']:
-                lines.append(f'    special value {s["value"]!r}: {s["meaning"]} '
-                             f'({s["n_rows"]} rows)')
-            lines.append(f'    missing {v["n_missing"]}, distinct {v["n_distinct"]}, examples '
-                         + ', '.join(repr(x) for x in v['examples']))
+                lines.append(f'    {w["special"]} {s["value"]!r}{colon}{say(s, s["meaning"])} '
+                             f'({s["n_rows"]} {w["rows"]})')
+            lines.append(w['missing'].format(missing=v['n_missing'], distinct=v['n_distinct'])
+                         .join(['    ', '']) + ', '.join(repr(x) for x in v['examples']))
     lines.append('')
     rows = payload['rows']
-    lines.append(f'First {rows["n_rows"]} development rows (target first):')
-    lines.append(' | '.join(['row'] + rows['columns']))
+    lines.append(w['first' if rows.get('target_shown') else
+                   'withheld' if (rows.get('exposure') or {}).get('withheld') else 'hidden'].format(
+        n=rows['n_rows'], seed=rows.get('seed')))
+    lines.append(' | '.join([w['row']] + rows['columns']))
     for r in rows['items']:
         lines.append(' | '.join([r['row_key']] + [str(r['values'][c]) for c in rows['columns']]))
     lines.append('')
-    lines.append(payload['note']['text'])
+    lines.append(payload['note']['junior_text'] if junior else payload['note']['text'])
     return '\n'.join(lines)

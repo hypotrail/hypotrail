@@ -2,15 +2,19 @@
 // The only way this client reads or writes a study: the `hypotrail` CLI (ADR 0002,
 // CLI-CONTRACT §1, CLI-CONTRACT-COMPANION). The argv comes from `.hypotrail/agent.json`;
 // the process is started with child_process.execFile and an argument vector, never
-// through a shell. Free text (the junior's words, a draft's texts, a column) is passed as
+// through a shell. Free text (a draft's texts, a column, a folder) is passed as
 // `--option=value`, so a text that begins with "-" is never read as an option (CW.7).
 //
-// Frozen by WP-0 (COMPANION-ADVANCED §5 and §7). The four write builders W4-W7 are the
-// whole whitelist of writes: their names, signatures, and argv order do not change
+// Frozen by WP-0 (COMPANION-ADVANCED §5 and §7). The write builders W4, W5, W7 and (lot P,
+// ADR 0004 decision 14, owner request R49) W8 are the whole whitelist of writes: their names, signatures, and argv order do not change
 // without the integrator. test/invariants.test.js enumerates WRITES. W1 (confirm), W2
 // (withdraw) and W3 (propose) were withdrawn by the v0.3 narrowing (ADR 0004 amendment,
 // owner decision R23, integrator decision I2): decisions are made in the chat only, and
-// this module has no `decide` write at all (scripts/check_layout.py checks it).
+// this module has no `decide` write at all (scripts/check_layout.py checks it). W6, the
+// acknowledgement of an interrupted execution in typed words, was withdrawn by owner
+// decision R31 (2026-10-27, ADR 0004 amendment): the panel takes no words of the junior,
+// the acknowledgement is made in the chat, and this module has no acknowledgement builder
+// (scripts/check_layout.py checks that too).
 
 const childProcess = require('child_process');
 const path = require('path');
@@ -20,14 +24,13 @@ const READ_TIMEOUT_MS = 30000;
 const WRITE_TIMEOUT_MS = 120000;
 const EDA_TIMEOUT_MS = 300000;
 const TIMEOUTS = Object.freeze({
-  read: READ_TIMEOUT_MS, W4: EDA_TIMEOUT_MS, W5: WRITE_TIMEOUT_MS, W6: WRITE_TIMEOUT_MS, W7: WRITE_TIMEOUT_MS,
+  read: READ_TIMEOUT_MS, W4: EDA_TIMEOUT_MS, W5: WRITE_TIMEOUT_MS, W7: WRITE_TIMEOUT_MS, W8: WRITE_TIMEOUT_MS,
 });
 const MAX_WORDS = 4000;
 const PROPOSAL_ID = /^p_[0-9]+$/;
 const RESULT_ID = /^[0-9a-f]{64}$/;
 const RULE = /^(threshold:(0(\.[0-9]+)?|1(\.0+)?)|capacity:[1-9][0-9]{0,6}|share:(0\.[0-9]*[1-9][0-9]*|1(\.0+)?))$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-const EXECUTION_ID = /^[A-Za-z0-9_.-]{1,100}$/;
 const EDA_ACTIVITY = /^eda\.[a-z_]+$/;
 const DRAFT_DECISIONS = ['policy', 'model_choice'];
 const TOO_LARGE = 'The study\'s evidence is too large to show (more than 16 MB).';
@@ -61,7 +64,7 @@ function mutation(id, rev) {
 
 // --- reads (COMPANION-ADVANCED §5) ----------------------------------------------------------
 
-/** `status --summary [--digest [--since N]] --json --study S`. v0 reads without --digest. */
+/** `status --summary [--digest [--since N]] --json --study S`. The one page reads with --digest at every stage (§5). */
 function statusArgv(agent, { digest = false, since = null } = {}) {
   const argv = [...agent.argv, 'status', '--summary'];
   if (digest) {
@@ -129,13 +132,22 @@ function dataArgv(agent) {
   return [...agent.argv, 'data', ...tail(agent)];
 }
 
+/**
+ * Lot P (R49, ADR 0004 decision 14): `export azureml --expected-revision R --plan --json
+ * --study S`, the Azure ML export plan (CLI-CONTRACT §15): it lists the files and writes
+ * nothing, so the panel reads it like any other read. Never an Azure job.
+ */
+function azuremlPlanArgv(agent, { revision: rev }) {
+  return [...agent.argv, 'export', 'azureml', '--expected-revision', revision(rev), '--plan', ...tail(agent)];
+}
+
 const READS = Object.freeze({
   summary: statusArgv, decisions: decisionsArgv, effects: previewEffectsArgv, evidence: evidenceArgv,
   preview: previewPolicyArgv, draft: previewProposalArgv, check: checkArgv, explain: explainArgv,
-  session_report: sessionReportArgv, view: viewArgv, data: dataArgv,
+  session_report: sessionReportArgv, view: viewArgv, data: dataArgv, azureml_plan: azuremlPlanArgv,
 });
 
-// --- writes W4-W7 (COMPANION-ADVANCED §7) ---------------------------------------------------
+// --- writes W4, W5, W7, W8 (COMPANION-ADVANCED §7; W6 withdrawn by R31; W8 lot P) -----------
 
 // v0.3 (WP-J, R35): every write says it comes from the panel, so the engine records it and
 // the agent can tell the junior "you ran ... from the panel" (digest `channel_actions`).
@@ -154,12 +166,6 @@ function renderArgv(agent) {
   return [...agent.argv, 'render', CHANNEL, ...tail(agent)];
 }
 
-/** W6. `run --acknowledge-interruption <eid> --user-words=<words> ...` */
-function acknowledgeArgv(agent, { executionId, words, requestId: id, expectedRevision }) {
-  return [...agent.argv, 'run', '--acknowledge-interruption', match(executionId, EXECUTION_ID, 'the execution id'),
-    `--user-words=${text(words, 'the words')}`, CHANNEL, ...mutation(id, expectedRevision), ...tail(agent)];
-}
-
 /**
  * W7. `export handoff --out=<parent>/revision-<R> --expected-revision R --json --study S`.
  * The engine refuses a stale R (decision CR.6), so the folder's name and its content name
@@ -176,8 +182,24 @@ function exportArgv(agent, { parent, revision: rev }) {
     ...tail(agent)];
 }
 
+/**
+ * W8 (lot P, owner request R49, ADR 0004 decision 14). `export azureml
+ * --out=<parent>/azureml-revision-<R> --expected-revision R --json --study S`: the Azure ML
+ * project files, written outside the study state (the engine records nothing: no state,
+ * event, exposure or channel record, so no `--channel`). It never runs an Azure job, never
+ * contacts Azure, and the engine refuses an unsupported model (`capability_not_supported`).
+ */
+function exportAzuremlArgv(agent, { parent, revision: rev }) {
+  const folder = text(parent, 'the folder', { max: 4096 });
+  if (!path.isAbsolute(folder)) throw new ArgvError('the folder must be absolute');
+  const inside = path.resolve(agent.studyDir, '.hypotrail');
+  const out = path.join(folder, `azureml-revision-${revision(rev)}`);
+  if (out === inside || out.startsWith(inside + path.sep)) throw new ArgvError('the folder must not be inside .hypotrail');
+  return [...agent.argv, 'export', 'azureml', `--out=${out}`, '--expected-revision', String(revision(rev)), ...tail(agent)];
+}
+
 const WRITES = Object.freeze({
-  W4: runEdaArgv, W5: renderArgv, W6: acknowledgeArgv, W7: exportArgv,
+  W4: runEdaArgv, W5: renderArgv, W7: exportArgv, W8: exportAzuremlArgv,
 });
 
 /**
@@ -221,6 +243,6 @@ module.exports = {
   run, READS, WRITES, TIMEOUTS, MAX_BUFFER, READ_TIMEOUT_MS, WRITE_TIMEOUT_MS, EDA_TIMEOUT_MS, MAX_WORDS,
   ArgvError, TOO_LARGE,
   statusArgv, decisionsArgv, previewEffectsArgv, evidenceArgv, previewPolicyArgv, previewProposalArgv,
-  checkArgv, explainArgv, sessionReportArgv, viewArgv, dataArgv,
-  runEdaArgv, renderArgv, acknowledgeArgv, exportArgv,
+  checkArgv, explainArgv, sessionReportArgv, viewArgv, dataArgv, azuremlPlanArgv,
+  runEdaArgv, renderArgv, exportArgv, exportAzuremlArgv,
 };

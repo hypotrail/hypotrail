@@ -6,7 +6,8 @@ preprocessing, the family, its penalty or tuning grid, the seed) into a recipe w
 complete pipeline (:mod:`hypotrail_runtime.preprocess`) reproduces
 :func:`mlkit.study.fit._fit_predict` on the same rows. Every resolved choice is explicit:
 which columns are read as text, which special values become indicators, which features may
-receive a missing indicator, the rare-category threshold, the caps, the log transforms, the
+receive a missing indicator, the rare-category threshold (one for every column, operation
+``rare_category`` version 1, or one per column, version 2 since L8), the caps, the log transforms, the
 estimator parameters and seeds. A tuned hyperparameter is chosen by the engine's inner
 cross-validation of the rows the recipe is fitted on, before the recipe is written, and
 recorded with its choice. Families the runtime is not qualified for (EBM, histogram
@@ -96,10 +97,17 @@ def recipe_from_fit(case, train, inputs: Mapping, params: Mapping, *,
                       and c not in covered]
         steps.append({'operation': 'missing_indicator', 'version': 1,
                       'parameters': {'columns': candidates}})
-        k = int(pre['rare_category_min_rows'])
-        if k > 0:
+        rare = pre['rare_category_min_rows']
+        if isinstance(rare, Mapping):
+            # L8 (R6): version 2, a minimum per column (the features the fit uses, in their
+            # order; a column the mapping leaves out keeps every category).
+            per_column = {c: int(rare[c]) for c in features if int(rare.get(c, 0) or 0) > 0}
+            if per_column:
+                steps.append({'operation': 'rare_category', 'version': 2,
+                              'parameters': {'min_rows': per_column}})
+        elif int(rare) > 0:
             steps.append({'operation': 'rare_category', 'version': 1,
-                          'parameters': {'min_rows': k}})
+                          'parameters': {'min_rows': int(rare)}})
         caps = {c: [float(q[0]), float(q[1])] for c, q in sorted(pre['caps'].items())
                 if c in features}
         if caps:
@@ -144,12 +152,45 @@ def recipe_from_fit(case, train, inputs: Mapping, params: Mapping, *,
     return validate_recipe(doc), info
 
 
-def data_contract_from_case(case, frame, *, dataset_sha256: str,
-                            features: list[str]) -> DataContract:
+AS_TEXT_EXTENSION = 'hypotrail.auxiliary_as_text'
+
+
+def delayed_label_exclusions(limit: Mapping | None) -> list[dict]:
+    """The data contract's ``exclusions`` for the delayed-label rows of a study
+    (``limit`` is :func:`mlkit.study.state.delayed_labels_limit`, None when there are none):
+    the term first, then the study's example in its own clock, with the count."""
+    from mlkit.study import partition
+    from mlkit.study.state import _clock_value
+    if not limit or not limit.get('n_rows'):
+        return []
+    n = int(limit['n_rows'])
+    clock, start = limit.get('clock'), limit.get('final_start')
+    if clock and start is not None:
+        where = f'{clock} {_clock_value(start)}'
+    else:
+        where = 'the start of the final test'
+    rows = 'row' if n == 1 else 'rows'
+    return [{'rule': partition.DELAYED_LABEL_REASON,
+             'justification': f'A delayed label is an outcome known only some time after the '
+                              f'prediction. Here {n} development {rows} had an outcome known '
+                              f'only at or after the start of the final test ({where}): they '
+                              f'are left out of every fit, the final refit and the captured '
+                              f'predictor, since nobody knew their outcome at that moment.'}]
+
+
+def data_contract_from_case(case, frame, *, dataset_sha256: str, features: list[str],
+                            exclusions: list[dict] | None = None) -> DataContract:
     """The data contract of the case's dataset as the engine reads it: the recipe's features
     (required at inference, in this order), the target (never required at inference), and
-    every other case column as auxiliary (never read by the predictor)."""
-    columns = []
+    every other case column as auxiliary (never read by the predictor).
+
+    An auxiliary column whose pandas type the contract v1 cannot declare (an integer above
+    the int64 range read as ``uint64``, a boolean column with a missing token read as an
+    ``object`` of booleans) is declared ``string`` and listed under the extension
+    ``hypotrail.auxiliary_as_text`` with the type the engine read: a reader of the contract
+    reads its cells as their text (the exported project does). ``exclusions`` lists the
+    rows the engine leaves out of every fit (:func:`delayed_label_exclusions`)."""
+    columns, as_text = [], []
     for v in case.document['variables']:
         name = v['name']
         if name in features:
@@ -165,6 +206,8 @@ def data_contract_from_case(case, frame, *, dataset_sha256: str,
                                     'type the contract v1 cannot declare.', path=name,
                                     remediation='Declare a conversion in the case.')
             found = 'string'
+            if name in frame.columns:
+                as_text.append({'column': name, 'engine_dtype': str(frame[name].dtype)})
         columns.append({'name': name, 'physical_type': found,
                         'semantic_type': SEMANTIC.get(v['type'], 'category'),
                         # Features may be missing: the predictor imputes them (declared, not
@@ -182,9 +225,9 @@ def data_contract_from_case(case, frame, *, dataset_sha256: str,
            'columns': columns,
            'row_identity': {'kind': 'source_position', 'columns': [],
                             'source_hash_required': True},
-           'exclusions': [],
+           'exclusions': [dict(e) for e in exclusions or []],
            'inference_policy': {'required_columns': list(features), 'extra_columns': 'reject',
                                 'conversions': [], 'canonical_order': list(features),
                                 'unknown_categories': 'predictor_handles'},
-           'extensions': {}}
+           'extensions': {AS_TEXT_EXTENSION: as_text} if as_text else {}}
     return validate_data_contract(doc)

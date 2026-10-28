@@ -4,16 +4,25 @@
   'use strict';
   const VERSION = 2;
   const STAGES = ['v0', 'v1', 'v2', 'v3'];
-  const TABS = ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn'];
+  // ADR 0004 d13 (CLI-CONTRACT §17.1.1): the places of the one page are named by anchors.
+  // One grammar with the engine (`companion_env.ANCHOR_RE`) and the page model: a slot is any
+  // run of characters but a control character; `tools:how` is the panel's own fold.
+  const ANCHOR = '^(now|todo:(execution|deliverables|checks|sources|integrity)|path|path:[a-z][a-z0-9_]*(/[^\\u0000-\\u001f\\u007f]+)?|tools:(data|whatif|notions|deliverables|how))$';
   // WP-A7: `data`, the data card of the Data & EDA tab (`hypotrail data`). WP-B5:
   // `scenario`, the teaching scenario's defaults (`status --json`, view.scenario_defaults).
   // v0.3 (WP-K): `trials`, the trial budget and the model-family shortlist of the same read
   // (`status --json`, view.model_selection and view.model_families; CLI-CONTRACT §14).
+  // Lot P (R49, ADR 0004 decision 14): `azureml`, the Azure ML export plan
+  // (`export azureml --plan`, which writes nothing), read at the end of the study.
   const VIEWS = ['summary', 'decisions', 'eda', 'evidence', 'whatif', 'explain', 'check', 'session_report', 'data',
-    'scenario', 'trials'];
+    'scenario', 'trials', 'azureml'];
   // v0.3 narrowing (ADR 0004 amendment, R23, I2): W1 confirm, W2 withdraw and W3 propose
   // are withdrawn; decisions are made in the chat only. The remaining ids keep their numbers.
-  const WRITE_OPS = ['W4', 'W5', 'W6', 'W7'];
+  // Owner decision R31 (2026-10-27, ADR 0004 amendment): W6, the acknowledgement of an
+  // interrupted execution in typed words, is withdrawn too; it is made in the chat.
+  // Lot P (R49, ADR 0004 decision 14, 2026-10-28): W8, the Azure ML export
+  // (`export azureml --out <dir>`), outside the study state, never an Azure job.
+  const WRITE_OPS = ['W4', 'W5', 'W7', 'W8'];
   const OUTCOME_KINDS = ['ok', 'ok_with_problems', 'not_promoted', 'refused', 'failed', 'invalid', 'cancelled'];
   const NAV_KINDS = ['result', 'decision', 'proposal', 'step', 'limit', 'execution', 'term'];
   const ARTIFACTS = ['report', 'notebook', 'editable', 'workbench'];
@@ -28,7 +37,6 @@
   // Field specs: {t: 'str'|'int'|'bool'|'enum'|'obj'|'arr'|'any', opt?, nullable?, ...}.
   const pid = { t: 'str', re: PROPOSAL_ID };
   const rev = { t: 'int', min: 1 };
-  const words = { t: 'str', max: MAX_WORDS };
 
   // Webview -> extension (§8.1). `stage`: the lowest stage that accepts it; `write`: the
   // W id of §7 when the message asks for a write (refused in reviewer mode).
@@ -65,10 +73,8 @@
       fields: { activity: { t: 'str', re: '^eda\\.[a-z_]+$' }, column: { t: 'str', min: 1, max: 200, opt: true }, revision: rev },
     },
     render: { stage: 'v1', write: 'W5', fields: {} },
-    acknowledge: {
-      stage: 'v1', write: 'W6',
-      fields: { executionId: { t: 'str', min: 1, max: 100, re: '^[A-Za-z0-9_.-]+$' }, words, revision: rev },
-    },
+    // R31 (2026-10-27): no `acknowledge` message any more (W6 withdrawn); an interrupted
+    // execution is acknowledged in the chat, and the panel only copies a question for it.
     // WP-I: `resultId` (v1) opens the report at `#r-<rid>` or the notebook at the line that
     // names the result; `line` (v1, a check finding's `location.line`) opens an editor
     // deliverable at that line. The report opens in the browser, so it takes no line.
@@ -105,6 +111,11 @@
       },
     },
     export_handoff: { stage: 'v3', write: 'W7', fields: { revision: rev } },
+    // Lot P (R49, ADR 0004 decision 14): the Azure ML export, outside the study state, only
+    // when the engine says the chosen model is supported (`after_study.azureml.supported`).
+    export_azureml: { stage: 'v3', write: 'W8', fields: { revision: rev } },
+    // Lot P (R51, ADR 0004 decision 14): open What if? in its own read-only editor tab.
+    open_whatif: { stage: 'v2', fields: {} },
     switch_study: { stage: 'v1', fields: {} },
     learn_set: {
       stage: 'v3',
@@ -149,6 +160,12 @@
           fields: { kernel: { t: 'str', nullable: true }, notebook: { t: 'str', nullable: true },
             editable: { t: 'str', nullable: true, opt: true }, workbench: { t: 'str', nullable: true } },
         },
+        // ADR 0004 d13 (CLI-CONTRACT §17.1.5): the contract version the panel speaks
+        // (lib/flag.js PANEL_CONTRACT), compared with the digest's `panel_contract` (skew line).
+        panelContract: { t: 'int', min: 1, opt: true },
+        // Lot P (R51, ADR 0004 decision 14): the surface this document draws: the one page
+        // (`panel`), or the read-only What if? editor tab (`whatif`).
+        surface: { t: 'enum', values: ['panel', 'whatif'], opt: true },
       },
     },
     // CR.1: `currency` is the version, with the revision, a model was read at.
@@ -205,7 +222,10 @@
         currency, model },
     },
     learn_state: { fields: { prefs: { t: 'obj' }, seen: { t: 'obj' }, predictions: { t: 'obj' } } },
-    navigate: { fields: { tab: { t: 'enum', values: TABS }, kind: { t: 'enum', values: NAV_KINDS }, id: { t: 'str', min: 1, max: 100 } } },
+    // ADR 0004 d13 (§4.3): a place of the one page (an anchor), and what it names; the tabbed
+    // form `{tab, kind, id}` is dropped as invalid.
+    navigate: { fields: { anchor: { t: 'str', min: 1, max: 200, re: ANCHOR }, kind: { t: 'enum', values: NAV_KINDS, opt: true },
+      id: { t: 'str', min: 1, max: 100, opt: true } } },
     notice: { fields: { text: { t: 'str' }, politeness: { t: 'enum', values: ['polite', 'assertive'] } } },
   };
 
@@ -314,7 +334,7 @@
   }
 
   return {
-    VERSION, STAGES, TABS, VIEWS, WRITE_OPS, OUTCOME_KINDS, NAV_KINDS, ARTIFACTS, MAX_WORDS,
+    VERSION, STAGES, ANCHOR, VIEWS, WRITE_OPS, OUTCOME_KINDS, NAV_KINDS, ARTIFACTS, MAX_WORDS,
     PROPOSAL_ID, RESULT_ID, RULE, TO_EXTENSION, TO_WEBVIEW,
     validateIncoming, validateOutgoing, explain, stageRank, stageAllows, stageOf, envelope,
     explainIncoming: m => explain(TO_EXTENSION, m),

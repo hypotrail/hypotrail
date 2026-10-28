@@ -24,6 +24,13 @@ MAPS = [
     r'^sources$', r'^commands$', r'\.by_code$', r'\.by_reason$', r'\.coefficients$', r'^terms$',
     r'\.intervals$', r'^intervals$', r'\.deltas$', r'^deltas$', r'\.value$', r'\.params$', r'^params$',
     r'\.options$',
+    # L3 (owner session 2026-10-26, D4b): the junior texts of a summary in each language by
+    # their ids, an EDA result's special-value meanings, the view's case statements.
+    r'^texts\.(en|fr)\.(plan|moments|choice_options|limits|artifacts|digest|goal|proposals)$',
+    r'\.texts\.(en|fr)\.meanings$', r'case_texts\.(facts|special_values|groups|availability)$',
+    # Contract P1 (CLI-CONTRACT §17.2): the headlines by step id, their texts, the
+    # data-contingent texts by proposal id.
+    r'^headlines$', r'^texts\.(en|fr)\.(headlines|data_contingent)$',
 ]
 MAP_RE = [re.compile(p) for p in MAPS]
 # Paths whose objects carry optional keys by design (a session-report timeline line has

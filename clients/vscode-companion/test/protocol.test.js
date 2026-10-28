@@ -24,28 +24,31 @@ const TO_EXTENSION = {
   draft: [{ decisionId: 'policy', value: 'capacity:100', revision: 3 }, ['decisionId', 'split']],
   run_eda: [{ activity: 'eda.distribution', column: 'age', revision: 3 }, ['activity', 'fit.logistic']],
   render: [{}, null],
-  acknowledge: [{ executionId: 'e_1a2b', words: 'I know it was interrupted.', revision: 3 }, ['executionId', 'e 1']],
   open_artifact: [{ artifact: 'report', resultId: RID }, ['artifact', '../etc/passwd']],
   open_marimo: [{ artifact: 'workbench' }, ['artifact', 'report']],
   navigate_external: [{ kind: 'reveal_export', path: '/tmp/x/revision-3' }, ['kind', 'open']],
   ask_agent: [{ about: { kind: 'result', id: 'abcd1234' }, question: '', mode: 'copy' }, ['mode', 'send']],
   export_handoff: [{ revision: 3 }, ['revision', 1.5]],
+  // Lot P (ADR 0004 decision 14): W8, and the What if? editor tab (no field).
+  export_azureml: [{ revision: 3 }, ['revision', 0]],
+  open_whatif: [{}, null],
   switch_study: [{}, null],
   learn_set: [{ key: 'prediction', id: 'binary.train_eda.rare', value: 'rare' }, ['key', 'words']],
 };
 const TO_WEBVIEW = {
-  init: [{ stage: 'v1', reviewer: false, learningLayer: true, chatInsert: false, task: null }, ['stage', 'v9']],
+  init: [{ stage: 'v1', reviewer: false, learningLayer: true, chatInsert: false, task: null, panelContract: 2 }, ['stage', 'v9']],
   snapshot: [{ revision: 3, model: MODEL }, ['model', []]],
   view_data: [{ view: 'decisions', revision: 3, model: MODEL }, ['view', 'nope']],
   load_error: [{ view: null, message: 'm', detail: '' }, ['detail', null]],
-  busy: [{ busy: true, op: 'W6', target: 'e_1' }, ['busy', 'yes']],
-  outcome: [{ op: 'W6', kind: 'refused', target: 'e_1', exitCode: 2, refusal: { code: 'ambiguous_confirmation',
-    reason: 'bare_acknowledgement', engineMessage: 'e', human: 'h', details: [] } }, ['kind', 'confirmed']],
+  busy: [{ busy: true, op: 'W4', target: 'eda.distribution:age' }, ['busy', 'yes']],
+  outcome: [{ op: 'W4', kind: 'refused', target: 'eda.distribution:age', exitCode: 2, refusal: { code: 'stale_revision',
+    reason: null, engineMessage: 'e', human: 'h', details: [] } }, ['kind', 'confirmed']],
   preview_policy_result: [{ seq: 3, revision: 3, model: MODEL }, ['seq', -1]],
   effects: [{ proposalId: 'p_1', revision: 3, model: MODEL }, ['proposalId', 1]],
   draft_result: [{ decisionId: 'policy', value: 'capacity:100', revision: 3, model: MODEL }, ['decisionId', 'conclusion']],
   learn_state: [{ prefs: {}, seen: {}, predictions: {} }, ['seen', []]],
-  navigate: [{ tab: 'evidence', kind: 'result', id: RID }, ['tab', 'nowhere']],
+  // ADR 0004 d13 (§4.3, §8.2): an anchor of CLI-CONTRACT §17.1.1, and what it names.
+  navigate: [{ anchor: 'path:models/fit.linear', kind: 'result', id: RID }, ['anchor', 'tab:evidence']],
   notice: [{ text: 'Copied.', politeness: 'polite' }, ['politeness', 'loud']],
 };
 
@@ -67,21 +70,39 @@ test('webview -> extension: every type validates, an extra field or a wrong type
   for (const bad of [null, [], 'ready', { v: 2 }, { v: 2, type: 'eval' }, { v: 2, type: 'toString' }]) {
     assert.equal(protocol.validateIncoming(bad), null);
   }
-  // v0.3 narrowing (ADR 0004 amendment, R23, I2): no message confirms, withdraws, or proposes.
-  for (const type of ['confirm', 'withdraw', 'propose']) assert.equal(protocol.TO_EXTENSION[type], undefined, type);
+  // v0.3 narrowing (ADR 0004 amendment, R23, I2): no message confirms, withdraws, or proposes;
+  // R31 (amendment of 2026-10-27): none acknowledges an interrupted execution either.
+  for (const type of ['confirm', 'withdraw', 'propose', 'acknowledge']) assert.equal(protocol.TO_EXTENSION[type], undefined, type);
   assert.equal(protocol.validateIncoming({ v: 2, type: 'confirm', proposalId: 'p_1', words: 'Yes.', revision: 3 }), null);
-  assert.deepEqual(protocol.WRITE_OPS, ['W4', 'W5', 'W6', 'W7']);
+  assert.equal(protocol.validateIncoming({ v: 2, type: 'acknowledge', executionId: 'e_1', words: 'I know.', revision: 3 }), null);
+  assert.deepEqual(protocol.WRITE_OPS, ['W4', 'W5', 'W7', 'W8']);
   assert.equal(protocol.validateOutgoing({ v: 2, type: 'busy', busy: true, op: 'W1', target: 'p_1' }), null);
+  assert.equal(protocol.validateOutgoing({ v: 2, type: 'busy', busy: true, op: 'W6', target: 'e_1' }), null);
 });
 
 test('extension -> webview: every type validates, an extra field or a wrong type is dropped', () => {
   cases(protocol.TO_WEBVIEW, protocol.validateOutgoing, TO_WEBVIEW);
+  // ADR 0004 d13: the tabbed form of `navigate` is dropped; every anchor of the grammar passes.
+  assert.equal(protocol.validateOutgoing({ v: 2, type: 'navigate', tab: 'evidence', kind: 'result', id: RID }), null);
+  for (const anchor of ['now', 'todo:execution', 'todo:checks', 'path', 'path:train_eda', 'path:train_eda/eda.rate_by:job',
+    'path:model_variant/fit.variant:2', 'tools:data', 'tools:whatif', 'tools:notions', 'tools:deliverables', 'tools:how',
+    // any column the engine can emit (one grammar with `companion_env.ANCHOR_RE`): accents, spaces, parentheses
+    'path:structural_eda/eda.distribution:Durée (min)', 'path:train_eda/eda.rate_by:Visitor Type']) {
+    assert.ok(protocol.validateOutgoing({ v: 2, type: 'navigate', anchor }), anchor);
+  }
+  for (const anchor of ['', 'later', 'todo:nothing', 'path:Train', 'tools:charts', 'path:split/', 'path:split/a\nb', 'path:split/a\u0007']) {
+    assert.equal(protocol.validateOutgoing({ v: 2, type: 'navigate', anchor }), null, anchor);
+  }
+  // One grammar: the protocol's and the page model's are the same string.
+  assert.equal(new RegExp(protocol.ANCHOR).source, require('../lib/models/page').ANCHOR_RE.source);
 });
 
-test('field rules: words, rules, load, learn_set', () => {
+test('field rules: questions, rules, load, learn_set', () => {
   const ok = m => protocol.validateIncoming({ v: 2, ...m }) !== null;
-  assert.ok(ok({ type: 'acknowledge', executionId: 'e_1', words: 'x'.repeat(4000), revision: 1 }));
-  assert.ok(!ok({ type: 'acknowledge', executionId: 'e_1', words: 'x'.repeat(4001), revision: 1 }));
+  // R31: the only free text the webview sends is the copied question (at most 2,000 characters).
+  const about = { kind: 'execution', id: 'e_1' };
+  assert.ok(ok({ type: 'ask_agent', about, question: 'x'.repeat(2000), mode: 'copy' }));
+  assert.ok(!ok({ type: 'ask_agent', about, question: 'x'.repeat(2001), mode: 'copy' }));
   for (const rule of ['threshold:0', 'threshold:1', 'threshold:1.00', 'threshold:0.35', 'capacity:1', 'capacity:9999999']) {
     assert.ok(ok({ type: 'preview_policy', rules: [rule], intervals: false, seq: 0 }), rule);
   }
@@ -113,7 +134,11 @@ test('stages: every incoming type has one; field stages raise it; writes carry t
     assert.ok(protocol.STAGES.includes(entry.stage), type);
     if (entry.write) writes[type] = entry.write;
   }
-  assert.deepEqual(writes, { run_eda: 'W4', render: 'W5', acknowledge: 'W6', export_handoff: 'W7' });
+  assert.deepEqual(writes, { run_eda: 'W4', render: 'W5', export_handoff: 'W7', export_azureml: 'W8' });
+  // Lot P (ADR 0004 decision 14): W8 from v3 only; the What if? tab opens from v2 and writes nothing.
+  assert.equal(protocol.TO_EXTENSION.export_azureml.stage, 'v3');
+  assert.equal(protocol.TO_EXTENSION.open_whatif.stage, 'v2');
+  assert.equal(protocol.TO_EXTENSION.open_whatif.write, undefined);
   // WP-E1: the agent bridge copies a question at every stage (the read-only proposal card).
   assert.equal(protocol.TO_EXTENSION.ask_agent.stage, 'v0');
   assert.equal(protocol.stageOf({ v: 2, type: 'open_artifact', artifact: 'report' }), 'v0');
@@ -137,7 +162,8 @@ test('media/protocol.js is the generated copy of lib/protocol.js', () => {
 test('round trip: every model of every lib/models/*.js fixture passes as view_data and snapshot', () => {
   const dir = path.join(__dirname, '..', 'lib', 'models');
   let checked = 0;
-  for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.js') && f !== 'common.js')) {
+  // page.js places a SummaryModel (test/page.test.js); it projects no CLI payload.
+  for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.js') && f !== 'common.js' && f !== 'page.js')) {
     const mod = require(path.join(dir, file));
     const fn = Object.entries(mod).find(([k, v]) => /^to[A-Z]\w*Model$/.test(k) && typeof v === 'function');
     assert.ok(fn, `${file} exports a to<Name>Model function`);

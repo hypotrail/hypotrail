@@ -20,6 +20,7 @@ from mlkit.study import read
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import flowkit as fk  # noqa: E402
+from lesson_page import editions  # noqa: E402
 
 
 @pytest.fixture(scope='module')
@@ -91,8 +92,10 @@ def test_a_french_report_gives_the_glossary_definitions_in_french(tmp_path, bank
     fr = entry['definition_fr']
     assert 'découper en plis' in fr
     assert f'<p lang="fr"><strong class="term">{entry["term_fr"]}.</strong> ' in html
-    assert entry['definition'] not in html
-    assert 'lang="fr"' not in english
+    # v4 (R27): the French edition holds no English definition; the English edition of the
+    # English study marks nothing as French
+    assert entry['definition'] not in editions(html)['fr']
+    assert 'lang="fr"' not in editions(english)['en']
     assert flow.call('check', '--study', flow.study)['findings'] == []
 
 

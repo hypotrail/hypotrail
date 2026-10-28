@@ -9,17 +9,22 @@ extension.js            vscode API only: flag and trust checks, commands, URI ha
 lib/flag.js             enabled, stage (v0-v3), learningLayer, reviewer, chatInsert (hidden, forced off: CR.8), env overrides
 lib/study.js            study discovery and agent.json validation (the CLI argv)
 lib/watch.js            fs.watch of .hypotrail/ (debounced), no polling
-lib/cli.js              THE ONLY child_process user: read builders (READS), write builders W4-W7 (WRITES), run()
-                        (W1-W3 withdrawn in v0.3, ADR 0004 decision 8; check_layout refuses a `decide` write)
+lib/cli.js              THE ONLY child_process user: read builders (READS), write builders W4, W5, W7, W8 (WRITES), run()
+                        (W1-W3 withdrawn in v0.3, ADR 0004 decision 8; W6 withdrawn by R31, decision 12;
+                        check_layout refuses a `decide` write and an acknowledgement builder)
 lib/launch.js           the three Marimo launches (WP-A5, ADR 0004 "local launch"): marimo run of the generated
                         notebook, marimo edit of the editable copy and workbench; argv from status --json or agent.json
 lib/protocol.js         hypotrail.panel/2 schema table and validators; emits media/protocol.js
 lib/controller.js       router: validation, stage gate, reviewer refusal, summary, load dispatch,
                         cache + coalescing + read limits, exclusive write lock, outcome mapping
 lib/cache.js            CLI payloads per read key and version (<revision>:<currency>, CR.1); preview:* keys in a bounded list
-lib/handlers/<view>.js  {types, loads, commands, onReady}: one module per view group
+lib/handlers/<view>.js  {types, loads, commands, onReady}: one module per view group (lot P: after.js, the Azure ML
+                        plan read `azureml` and W8; whatif.js `open_whatif`, the read-only What if? editor tab)
 lib/models/<view>.js    pure payload -> model functions (to<Name>Model) + FIXTURES
-                        (WP-A7: lib/models/data.js, the data card of the Data & EDA tab, read with `data`;
+lib/models/page.js      the page model (ADR 0004 d13), UMD: run by the host's tests and, concatenated by
+                        lib/html.js, in the webview as Hypotrail.pageModel (header, To handle, Since, Now,
+                        the path, the tools; what the engine says, never a computation of its own: OP-2)
+                        (WP-A7: lib/models/data.js, the data card of step 1 and of the Data drawer, read with `data`;
                         WP-B5: lib/models/scenario.js, the case's teaching share, read with `status --json`;
                         v0.3 WP-K: lib/models/trials.js, the variant budget and the family shortlist, the
                         same `status --json` read, cache key `view`)
@@ -31,16 +36,31 @@ lib/localstore.js       the globalState schema and limits of spec §10 (WP-U5)
 lib/html.js             the document: media concatenated in a fixed order under one nonce
 media/protocol.js       generated copy of lib/protocol.js (never edit)
 media/format.js         port of cite.fmt_number (cross-tested with Python)
-media/core.js           webview runtime: frame, tabs, live region, modal, tooltip, send(), setState
+media/core.js           webview runtime: render loop, folds (ctx.fold, setFold, FOLD-1) and focus kept across
+                        re-renders, navigation to an anchor, popovers, theme and language, live region,
+                        modal, tooltip, send(), setState, French typography of the panel's own copy
 media/terms.js          glossary marks and hovers; Hypotrail.askAgent / askButton (the one "Ask the agent" helper)
 media/components/*.js   bars, intervalRows, histogram, boxplot, valuesTable, figure, segments, cited, curve (WP-B5);
                         v0.3 (WP-E2): card, why, source, chip, lead, engineText, corr, fluid; the charts are
                         HTML grids sized by CSSOM custom properties, curves redrawn at their container's width
-media/copy/<view>.js    panel-owned English strings (copy/core.js for the frame)
+media/components/lesson.js the lesson style (spec §6.0, 2026-10-27): intro, notion(s), fold, more, reading,
+                        trans, trap, quote, withGuide/currentGuide (a view's frame of evidence merged into
+                        every figure's "Why this chart" and guided reading)
+media/css/tokens.css    the board tokens per VS Code theme class (dark board, white board, High Contrast keeps
+                        the editor's colours; no class: prefers-color-scheme), redefined on paper surfaces
+media/copy/<view>.js    panel-owned English strings (copy/core.js for the frame; copy/lesson.js for the lesson texts)
 media/copy-fr/<view>.js the French translation of the same keys (v0.3, WP-E2, R21; test/copy-fr.test.js)
 media/copy/junior.js    the junior-facing copy keyed by kind/code/id, and decision values in words (WP-A5,
                         two-layer copy, COMPANION-ADVANCED §15.1)
-media/views/<view>.js   one view per tab, registered with Hypotrail.register
+media/views/page.js     the one page: the only view that renders (header, blocks in the fixed order, footer)
+media/views/stepcard.js the step card (lot 2026-10-28, spec §6.13): Now in four blocks, the review form of a done
+                        step, the path by full names; HT.parts.stepcard, called by page.js when the digest has step cards
+media/components/stepcharts.js one drawing per step-card chart kind and per block-1 picture, from `chart_data` or
+                        the registered values of `evidence --json` (EvidenceModel.values); the timeline's slider is display only
+media/views/<part>.js   parts providers (HT.parts.<name>: eda, evidence, decisions, whatif, learn, overview; lot P:
+                        figures, the figures behind each step, the method diagrams, the end's table, "And after",
+                        and the What if? tab drawn when `init.surface` is `whatif`, ADR 0004 decision 14)
+                        whose functions page.js calls; they keep their onMessage and loads
 media/css/*.css         tokens.css (theme), core.css (frame, components), <view>.css
 ```
 
@@ -58,19 +78,19 @@ HT.send({type, ...})  -- {v: 2, ...} -->  controller.handle(raw)
                                             load -> handlers' loads[view] -> ctx.read --> (payload cached per read key and version,
                                                                                        projected by each loader's model)
                                             other -> handlers' types[type](message, ctx)
-                                                       ctx.write(op, {argv, record}) -> W4-W7 argv (exclusive)
+                                                       ctx.write(op, {argv, record}) -> W4, W5, W7, W8 argv (exclusive)
 render(model, ctx) <-- {v: 2, ...} -----  ctx.post(...) validated by protocol.validateOutgoing
 ```
 
-Extension to webview: `init` (stage, reviewer, learningLayer, chatInsert, task, study key), `snapshot` (SummaryModel), `view_data` (a view's model), `load_error`, `busy`, `outcome` (`op` W4-W7, `kind`), `effects`, `preview_policy_result`, `draft_result`, `learn_state`, `navigate`, `notice`. The webview drops anything that fails validation.
+Extension to webview: `init` (stage, reviewer, learningLayer, chatInsert, task, study key), `snapshot` (SummaryModel), `view_data` (a view's model), `load_error`, `busy`, `outcome` (`op` W4, W5, W7, `kind`), `effects`, `preview_policy_result`, `draft_result`, `learn_state`, `navigate`, `notice`. The webview drops anything that fails validation.
 
 ## Frozen interfaces
 
 - **Handlers** (`lib/handlers/<name>.js`, discovered in file order): `types: {messageType: async (message, ctx)}`, `loads: {view: {stage?, when?(settings), key(message), argv(cli, agent, message), model(payload)}}` (`key` names the CLI read: loaders of one command share it and its cached payload, as EDA, Evidence and What if? share `evidence`; `when` false refuses the load like a stage gate), `commands: {name: async (args, ctx)}` (extension commands such as `go_to_result`), `onReady: async ctx`. A type, view, or command claimed twice throws at start. `ready`, `refresh`, `load`, and `load: summary` belong to the controller.
 - **ctx**: `agent`, `settings`, `snapshot()`, `stageAtLeast(s)`, `post(message)`, `read(key, argv, modelFn, {group?, timeoutMs?, cache?})` → `{ok, model, revision, currency, payload, cached?} | {ok: false, message, detail, refusal?}` (the payload is cached per key and version, `<revision>:<currency>` of the last snapshot, CR.1; `cache: false` neither reads nor fills it; `modelFn` runs on every answer), `write(op, {target, argv(requestId), record(payload)})` → the outcome (or null when refused before running; one CLI process per write, never a retry, CR.6; every write empties the non-preview cache), `refresh()`, `invalid(op, message, target)`, `host` (openArtifact, pickFolder, openFile, revealInOS, writeClipboard, executeCommand, notify, globalState, switchStudy), `exists`, `artifactPath(name)`, `cli`, `refusals`, `uuid`, `log`, `diagnostics`.
 - **Models**: each `lib/models/<name>.js` exports `to<Name>Model(payload)` (throws `ModelError` from `lib/models/common.js` on a wrong schema) and `FIXTURES` (names under `test/fixtures/`). `test/protocol.test.js` round-trips every one.
-- **Views**: `Hypotrail.register(name, {tab, stage, views?, outcomes?, render(model, ctx), onMessage?(message, ctx)})`. `model` is the SummaryModel. `views` lists the data views the controller loads when the tab is shown and the snapshot moved past them; `ctx.data(view)` returns `{revision, model, resultId}`. `outcomes` lists the write ops whose outcome the view renders itself (`ctx.outcome(target)`, `ctx.renderOutcome(o)`); the frame's live region shows the others. `onMessage` returning `false` for a forwarded message (effects, preview_policy_result, draft_result, learn_state) skips the re-render.
-- **View ctx**: `init`, `stage`, `reviewer`, `task`, `learningLayer`, `chatInsert`, `snapshot`, `data`, `error`, `busy`, `busyOp`, `busyTarget`, `send`, `load(view, extra)`, `version()` and `fresh(entry)` (whether data `{revision, currency, epoch}` is at the snapshot's version, CR.1: use them, never compare revisions), `stamp(message, epoch?)`, `epoch()` (the count of explicit Refreshes), `retry(view)` (forget a failed load so it can be asked again), `drafts` (`get`, `revision`, `set`, `drop`; `ackDrafts` only since v0.3; a draft is `{text, revision}`, CR.3), `ui` (setState keys of spec §10 only), `wordsArea`, `outcome`, `renderOutcome`, `el`, `svg`, `format`, `components`, `copy`, `gate(stage, node)`, `atLeast`, `modal`, `tooltip`, `navigate`, `placeholder()`, `rerender()`.
+- **Views**: `Hypotrail.register(name, {stage, views?, outcomes?, render?(model, ctx), onMessage?(message, ctx)})`. Since the one page (ADR 0004 d13) only `page` has `render`; the other registrations keep their `onMessage` and `outcomes` and publish their parts in `Hypotrail.parts.<name>`, which `page.js` calls inside its blocks and folds. A part reads its data lazily: `ctx.fold(id, {summary, ...}, body)` builds a fold whose body (and its loads) runs only when it is open, and the open folds are kept in setState (FOLD-1) and survive every re-render with the focus (FOCUS-1). `model` is the SummaryModel and `ctx.page` the page model. `views` lists the data views the controller loads when a fold that needs them is open and the snapshot moved past them; `ctx.data(view)` returns `{revision, model, resultId}`. `outcomes` lists the write ops whose outcome the view renders itself (`ctx.outcome(target)`, `ctx.renderOutcome(o)`); the frame's live region shows the others. `onMessage` returning `false` for a forwarded message (effects, preview_policy_result, draft_result, learn_state) skips the re-render.
+- **View ctx**: `init`, `stage`, `reviewer`, `task`, `learningLayer`, `chatInsert`, `snapshot`, `data`, `error`, `busy`, `busyOp`, `busyTarget`, `send`, `load(view, extra)`, `version()` and `fresh(entry)` (whether data `{revision, currency, epoch}` is at the snapshot's version, CR.1: use them, never compare revisions), `stamp(message, epoch?)`, `epoch()` (the count of explicit Refreshes), `retry(view)` (forget a failed load so it can be asked again), (no `drafts` since R31: the confirmation drafts went with W1 and the acknowledgement drafts with W6), `ui` (setState keys of spec §10 only), `wordsArea`, `outcome`, `renderOutcome`, `el`, `svg`, `format`, `components`, `copy`, `gate(stage, node)`, `atLeast`, `modal`, `tooltip`, `navigate`, `placeholder()`, `rerender()`.
 - **Components** (`Hypotrail.components`): `bars`, `intervalRows`, `histogram`, `boxplot`, `valuesTable`, `figure`, `segments`, `cited`, `textWidth`, with the signatures in each file's header and in the plan §2.2. `bars` and `intervalRows` size their text columns to their texts (`labelWidth`, `valueWidth`, `textWidth` override); `histogram` and `boxplot` take cited cells `{text, cited}` for edges and axis texts.
 - **Frame helpers**: `Hypotrail.askButton(ctx, {kind, id}, shown, {label?, attrs?, question?, stage?, direct?})` (stage v2 unless `stage`; a modal, then `ask_agent`; `direct` copies the ready question at once, WP-E1), `Hypotrail.terms.mark(text, id)` (a glossary-marked word; its id must be in `terms.MAP`), `Hypotrail.registered()` (the registered views, for tests).
 - **Messages added by WP-I**: `open_artifact.resultId` (v1; report anchor or notebook line) and `open_artifact.line` (v1; an editor deliverable at a finding's line); `outcome.recorded.warnings` (W7).
@@ -85,11 +105,12 @@ Extension to webview: `init` (stage, reviewer, learningLayer, chatInsert, task, 
 - Words the junior types go only in `ctx.wordsArea({kind, key, ...attrs})`; no other textarea exists (INV-5, `test/invariants.test.js`).
 - SVG colours are palette names (`Hypotrail.PALETTE`); sizes are attributes or `style.setProperty`; no `style` attribute.
 - Every write control carries `data-write`; the frame removes all of them in reviewer mode.
-- A stage-gated element carries `data-stage` (or comes from `ctx.gate`); a later-stage tab is absent, not disabled.
-- Navigation targets carry `data-nav="<kind>:<id>"` (§4.2); `navigate` scrolls to, focuses, and highlights them.
+- A stage-gated element carries `data-stage` (or comes from `ctx.gate`); a later-stage block, drawer or control is absent, not disabled.
+- Navigation targets carry `data-anchor` (`now`, `todo:<kind>`, `path:<step>`, `tools:<drawer>`, CLI-CONTRACT §17.1); `navigate` opens the folds on the way, scrolls to, focuses, and highlights them.
 - Copy lives in `media/copy/<view>.js`; it has no digits outside placeholders and, in a regression study, none of the words of INV-12. Every key has its French counterpart in `media/copy-fr/<view>.js` (v0.3); the frame swaps the tables when the panel language changes, so views read `Hypotrail.copy.<view>` at render time, never once at load.
 - "Ask the agent about this" is `Hypotrail.askButton`; no view writes the clipboard or calls `navigator.clipboard` (§12, CI.5).
-- `ctx.placeholder()` is kept in the API but every tab now has its real view; loading states carry `aria-busy="true"`.
+- `ctx.placeholder()` is kept in the API; loading states carry `aria-busy="true"`.
+- The engine's texts are shown byte for byte (`HT.components.engineText`, marked `data-verbatim`); the French typography of `core.js` sets only the panel's own copy.
 
 ## Tests and fixtures
 
@@ -99,8 +120,8 @@ Extension to webview: `init` (stage, reviewer, learningLayer, chatInsert, task, 
 
 ## How a view is changed or added
 
-1. Edit `media/views/<view>.js` (keep `HT.register('<view>', {tab, stage, ...})`), `media/copy/<view>.js` (and its French twin in `media/copy-fr/`) and `media/css/<view>.css`.
+1. Edit `media/views/<view>.js` (keep `HT.register('<view>', {stage, ...})` and its `HT.parts.<view>`), call the new part from its place in `media/views/page.js`, and edit `media/copy/<view>.js` (and its French twin in `media/copy-fr/`) and `media/css/<view>.css`.
 2. Write `lib/models/<view>.js` with its `to<Name>Model` and `FIXTURES`.
 3. Fill `lib/handlers/<view>.js`: `loads` for its data views, `types` for its messages, `commands` if it serves an extension command.
-4. Test: `test/<view>.test.js` (fake CLI from `test/fixture-cli.js`), `test/test_webview_<view>.py` (the `open_panel` fixture of `test/conftest.py`).
+4. Test: `test/<view>.test.js` (fake CLI from `test/fixture-cli.js`), `test/test_webview_<view>.py` (the `open_panel` fixture of `test/conftest.py`, and `test/panel_cases.py` to open a case and its folds).
 5. Run the four gate commands of CONTRIBUTING.md. Nothing else needs to change: `lib/html.js` concatenates the new files, the controller discovers the handler.

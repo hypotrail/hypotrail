@@ -179,6 +179,14 @@ REGRESSION_MUTATIONS: tuple[dict, ...] = (
      're_policy': ('evaluate.regression',), 'recompute': (),
      'reconfirm': ('model_choice', 'conclusion'), 'blocked_until': (),
      'notes': BY_MUTATION['model_variant']['notes']},
+    # Lot 2026-10-28 (EN-9): the error measure changed. No result changes (the evaluations
+    # store both errors); the criterion fixed on the measure, the choice made on it and the
+    # conclusion are asked again.
+    {'row': 19, 'mutation': 'error_metric', 'refit': (), 're_eda': (), 're_policy': (),
+     'recompute': (), 'reconfirm': ('success_criterion', 'model_choice', 'conclusion'),
+     'blocked_until': (),
+     'notes': ('No result changes: the evaluations store both errors. The criterion is fixed '
+               'again on the new measure.',)},
     BY_MUTATION['unknown'],
 )
 REGRESSION_BY_MUTATION = {m['mutation']: m for m in REGRESSION_MUTATIONS}
@@ -257,6 +265,9 @@ def classify(decision_id: str, old: Any, new: Any) -> str:
         return ('success_criterion.selection'
                 if rec.canonical(old.get('selection')) != rec.canonical(new.get('selection'))
                 or old.get('metric') != new.get('metric') else 'success_criterion')
+    if decision_id == 'error_metric':
+        return 'error_metric' if isinstance(old, Mapping) and isinstance(new, Mapping) \
+            else 'unknown'
     if decision_id == 'model_variant':
         return 'model_variant' if isinstance(old, Mapping) and isinstance(new, Mapping) \
             else 'unknown'
@@ -372,6 +383,13 @@ def _effects(old_state: Mapping, decision_id: str, old: Any, new: Any) -> dict:
         # reworded): no model changes.
         return no_effects('unchanged_value', 'model_variant confirmed again with the same '
                                              'variants')
+    if decision_id == st.FINAL_TEST:
+        # Review round 4 (E4-1): a final test confirmed again before its opening, on the
+        # configuration the study now chooses (its earlier confirmation no longer held).
+        # Opening it is what reads the final test; confirming it changes no result.
+        return no_effects(FINAL_TEST_RECONFIRMED, 'final_test confirmed again, before its '
+                                                  'opening, on the configuration the study '
+                                                  'chooses')
     mutation = classify(decision_id, old, new)
     table = BY_MUTATION_BY_TASK[st.task_of(old_state)]
     spec = table.get(mutation, table['unknown'])
@@ -451,7 +469,9 @@ DECISION_OF_MUTATION = {'prediction_time': 'prediction_time',
                         'success_criterion': 'success_criterion',
                         'success_criterion.selection': 'success_criterion',
                         # WP-B1.
-                        'model_variant': 'model_variant'}
+                        'model_variant': 'model_variant',
+                        # Lot 2026-10-28 (EN-9).
+                        'error_metric': 'error_metric'}
 # The rows whose mutation can change a confirmed decision, by task (CC §5 ``impacts``):
 # rows 1 to 6 for a binary study, rows 1 to 4 and 13 for a regression study.
 DECISION_MUTATIONS = {
@@ -570,11 +590,22 @@ def apply_effects(state: dict, eff: Mapping, *, revision: int, decision_id: str,
     reconfirmed = []
     for d in eff['reconfirm']:
         if d == st.FINAL_TEST:
-            continue        # WP-B1: the opening is never asked again
+            continue        # WP-B1: the opening is never asked again (see below)
         decision = state['decisions'][d]
         if decision['status'] == 'confirmed':
             decision.update(status='reconfirm_required', reason=reason)
             reconfirmed.append(d)
+    if _final_test_basis_changed(state, eff, decision_id, stale, seeds, reconfirmed):
+        # Review round 4 (E4-1): a final test confirmed but not opened yet (an interrupted
+        # execution refused its opening, or the process stopped between the confirmation and
+        # the opening) was confirmed on what this change replaces: the junior's words no
+        # longer cover what would be opened, so they are asked again. Once opened, the
+        # opening is never asked again (WP-B1).
+        state['decisions'][st.FINAL_TEST].update(
+            status='reconfirm_required',
+            reason=f'the final test was confirmed but not opened, and what its opening rests '
+                   f'on changed: {reason}')
+        reconfirmed.append(st.FINAL_TEST)
     record = {'revision': revision, 'decision_id': decision_id, 'mutation': eff['mutation'],
               'row': eff['row'], 'reason': reason, 'stale_results': stale,
               'stale_slots': sorted(s for s, r in state['current'].items() if r in stale),
@@ -586,8 +617,38 @@ def apply_effects(state: dict, eff: Mapping, *, revision: int, decision_id: str,
     return record
 
 
+def _final_test_basis_changed(state: Mapping, eff: Mapping, decision_id: str, stale: list,
+                              seeds, reconfirmed: list) -> bool:
+    """Review round 4 (E4-1): whether a change undoes the basis of a confirmed final test
+    whose opening has not run: a decision it rests on changed or must be confirmed again, the
+    final test itself was put on hold, or a result its opening rests on
+    (:func:`mlkit.study.opening.selection_slots` and the capture) was replaced or became
+    stale."""
+    decision = (state.get('decisions') or {}).get(st.FINAL_TEST)
+    if not decision or decision.get('status') != 'confirmed' or st.final_test_opened(state):
+        return False
+    if st.FINAL_TEST in eff.get('reconfirm', ()):
+        return True                         # a hold on the final test, or on what it rests on
+    if decision_id in (st.FINAL_TEST, 'conclusion'):
+        return False
+    if [d for d in reconfirmed if d != 'conclusion']:
+        return True
+    if decision_id in st.decision_ids(state) \
+            and eff.get('mutation') not in ('first_confirmation', 'unchanged_value') \
+            and st.FINAL_TEST in dependents(state, decision_id):
+        return True
+    from . import opening
+    slots = opening.selection_slots(state) + [opening.CAPTURE]
+    if decision_id in slots and any(seeds):
+        return True                         # a result the opening rests on was replaced
+    basis = {state['current'][s] for s in slots if state['current'].get(s)}
+    return bool(basis & set(stale))
+
+
 # Mutations recorded only when they invalidate something.
-QUIET_MUTATIONS = ('first_confirmation', 'unchanged_value', 'result_replaced', 'hold_added')
+FINAL_TEST_RECONFIRMED = 'final_test.reconfirmed'
+QUIET_MUTATIONS = ('first_confirmation', 'unchanged_value', 'result_replaced', 'hold_added',
+                   FINAL_TEST_RECONFIRMED)
 
 
 def dependents(state: Mapping, decision_id: str) -> list[str]:
@@ -627,6 +688,11 @@ def outdates_conclusion(state: Mapping, decision_id: str, *, was_confirmed: bool
         what = 'it was confirmed after the conclusion'
     elif rec.canonical(old) != rec.canonical(new):
         what = 'its value changed after the conclusion was confirmed'
+    elif st.basis_class(old_basis) != st.basis_class(new_basis) and st.confirmation_basis(
+            state['decisions'][CONCLUSION].get('confirmation')) == st.AUTOMATIC:
+        # L9 (R20): an automatic conclusion is itself in the review queue, reviewed last; the
+        # review of the decisions before it does not ask for it once per decision.
+        return None
     elif st.basis_class(old_basis) != st.basis_class(new_basis):
         # ADR 0005: ``explicit``, ``endorsed`` and ``restated`` are all the junior's own
         # words; only a change between them and a delegation changes the credit line.

@@ -11,18 +11,21 @@ contract for a case. Three levels stay separate:
    duplicate stable keys.
 
 Nothing is coerced, dropped, imputed or added; the frame and its row order are never
-changed (validation reads it). Unknown categories are reported only when the contract says
+changed (validation reads it). A conversion the contract declares
+(``inference_policy.conversions``, the rules the runtime applies) is honoured as the runtime
+honours it: the column may hold the declared source type, and the values are checked as
+they will be after the conversion; an undeclared type is still refused. Unknown categories are reported only when the contract says
 the predictor does not handle them. :func:`validate` refuses a partition its caller is not
 authorised to read (the final test is never validated through this path before it is opened),
 so value checks can never bypass the exposure policy. Reports bound the examples they show.
 """
 from __future__ import annotations
 
-from typing import Iterable, Mapping
+from typing import Iterable
 
 from hypotrail_runtime.contracts import DataContract, validate_data_contract
 from hypotrail_runtime.errors import ContractError
-from hypotrail_runtime.inference import physical_type
+from hypotrail_runtime.inference import CONVERSIONS, physical_type
 
 MAX_EXAMPLES = 5
 PURPOSES = ('inference', 'training')
@@ -42,13 +45,21 @@ def schema_from_contract(contract, *, purpose: str = 'inference'):
     if purpose not in PURPOSES:
         raise ValueError(f'purpose is one of {PURPOSES}')
     policy = contract.inference_policy
+    # The declared conversions the runtime applies (inference.check_frame): same rule table.
+    accepted_sources = {}
+    for conv in policy.conversions:
+        spec = contract.column(conv.column)
+        if spec is not None and conv.target == spec.physical_type \
+                and CONVERSIONS.get((conv.source, conv.target)) == conv.rule:
+            accepted_sources[conv.column] = conv.source
     columns = {}
     for spec in contract.columns:
         required = (spec.name in policy.required_columns
                     or (purpose == 'training' and spec.role == 'target'))
-        checks = [pa.Check(lambda s, t=spec.physical_type: physical_type(s) == t,
-                           name=f'physical_type={spec.physical_type}',
-                           error=f'physical_type={spec.physical_type}')]
+        allowed = {spec.physical_type, accepted_sources.get(spec.name, spec.physical_type)}
+        label = '|'.join(sorted(allowed))
+        checks = [pa.Check(lambda s, a=frozenset(allowed): physical_type(s) in a,
+                           name=f'physical_type={label}', error=f'physical_type={label}')]
         if spec.allowed_values is not None and policy.unknown_categories == 'reject':
             checks.append(pa.Check.isin(list(spec.allowed_values), ignore_na=True))
         unique = (contract.row_identity.kind == 'stable_key'

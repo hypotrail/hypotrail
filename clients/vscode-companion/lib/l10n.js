@@ -38,6 +38,8 @@ const EN = {
   goTitle: 'Hypotrail: go to a result',
   goPrompt: 'The result id, or its first 8 or more characters, as the report shows it.',
   panelTitle: 'Hypotrail study',
+  // Lot P (R51): the read-only What if? editor tab.
+  whatifTitle: 'Hypotrail: What if? (read only)',
   panelTitleReviewer: 'Hypotrail study (reviewer)',
   // handlers/evidence.js (go to a result)
   resultsUnreadable: message => `The results of this study could not be read: ${message}`,
@@ -52,6 +54,11 @@ const EN = {
   noTerminal: 'This host cannot open a terminal. Nothing was started.',
   terminalReused: (terminal, rel) => `The terminal "${terminal}" already runs ${rel}; it is shown again.`,
   terminalStarted: (mode, rel, terminal) => `Started "marimo ${mode}" for ${rel} in the terminal "${terminal}". Stop it with Ctrl+C in that terminal.`,
+  // handlers/eda.js (W4, a chart of the engine's catalog)
+  edaUnread: 'The list of charts could not be read, so nothing was run.',
+  edaMoved: 'The study changed since this list of charts was shown. Read it again; nothing was run.',
+  edaNotInCatalog: 'This chart is not in the engine\'s EDA catalog for this study. Nothing was run.',
+  edaNotRunnable: 'The engine cannot run this chart yet. Nothing was run.',
   // handlers/whatif.js
   previewNotAsked: message => `The preview could not be asked: ${message}.`,
   previewFailed: message => `The preview could not be computed: ${message}`,
@@ -63,6 +70,8 @@ const EN = {
   notLastExport: 'That folder is not the last export of this panel. Nothing was opened.',
   learningOff: 'The learning layer is off (hypotrail.companion.learningLayer). Nothing was stored.',
   learningUnknown: 'The learning layer does not know that item. Nothing was stored.',
+  // handlers/after.js (lot P, R49)
+  azuremlUnsupported: 'The engine does not support an Azure ML export of the chosen model. Nothing was exported.',
   // bridge.js (what happened to the copied question)
   copied: 'Copied. Paste it into the chat with your assistant.',
   inserted: 'Inserted into the chat input, not sent. Read it, then send it yourself.',
@@ -71,6 +80,7 @@ const EN = {
   // controller.js (outcome lines)
   unknownOutcome: 'The outcome is unknown: the refreshed panel shows whether anything was recorded.',
   reviewerRefusal: 'Read-only reviewer mode.',
+  whatifReadOnly: 'What if? is read only: it records and exports nothing.',
   busyRefusal: 'Another request is in progress.',
   notPromoted: 'The result was computed but not used: the study changed while it ran. Nothing in the study changed.',
   notAvailable: 'Not available in this stage.',
@@ -93,6 +103,7 @@ const FR = {
   exportHere: 'Exporter ici',
   goTitle: 'Hypotrail : aller à un résultat',
   goPrompt: "L'identifiant du résultat, ou ses 8 premiers caractères ou plus, tel que le rapport l'affiche.",
+  whatifTitle: 'Hypotrail : Et si ? (lecture seule)',
   panelTitle: 'Étude Hypotrail',
   panelTitleReviewer: 'Étude Hypotrail (relecture)',
   resultsUnreadable: message => `Les résultats de cette étude n'ont pas pu être lus : ${message}`,
@@ -106,6 +117,10 @@ const FR = {
   noTerminal: "Cet hôte ne peut pas ouvrir de terminal. Rien n'a été lancé.",
   terminalReused: (terminal, rel) => `Le terminal « ${terminal} » exécute déjà ${rel} ; il est affiché de nouveau.`,
   terminalStarted: (mode, rel, terminal) => `« marimo ${mode} » a été lancé pour ${rel} dans le terminal « ${terminal} ». Arrêtez-le avec Ctrl+C dans ce terminal.`,
+  edaUnread: "La liste des graphiques n'a pas pu être lue : rien n'a été lancé.",
+  edaMoved: "L'étude a changé depuis l'affichage de cette liste de graphiques. Relisez-la ; rien n'a été lancé.",
+  edaNotInCatalog: "Ce graphique n'est pas dans le catalogue d'EDA du moteur pour cette étude. Rien n'a été lancé.",
+  edaNotRunnable: "Le moteur ne peut pas encore lancer ce graphique. Rien n'a été lancé.",
   previewNotAsked: message => `L'aperçu n'a pas pu être demandé : ${message}.`,
   previewFailed: message => `L'aperçu n'a pas pu être calculé : ${message}`,
   notDraftable: value => `${value} n'est pas une valeur que le panneau peut préparer. Rien n'a été enregistré.`,
@@ -115,12 +130,14 @@ const FR = {
   notLastExport: "Ce dossier n'est pas le dernier export de ce panneau. Rien n'a été ouvert.",
   learningOff: "La couche d'apprentissage est désactivée (hypotrail.companion.learningLayer). Rien n'a été enregistré.",
   learningUnknown: "La couche d'apprentissage ne connaît pas cet élément. Rien n'a été enregistré.",
+  azuremlUnsupported: "Le moteur ne prend pas en charge un export Azure ML du modèle choisi. Rien n'a été exporté.",
   copied: "Copié. Collez-le dans le chat avec votre assistant.",
   inserted: "Inséré dans la saisie du chat, pas envoyé. Relisez-le, puis envoyez-le vous-même.",
   fellBack: "La saisie du chat n'a pas pu s'ouvrir, la question a donc été copiée. Collez-la dans le chat avec votre assistant.",
   copyFailed: "La question n'a pas pu être copiée. Rien n'a été envoyé.",
   unknownOutcome: "L'issue est inconnue : le panneau actualisé montre si quelque chose a été enregistré.",
   reviewerRefusal: 'Mode relecture, en lecture seule.',
+  whatifReadOnly: "Et si ? est en lecture seule : il n'enregistre et n'exporte rien.",
   busyRefusal: 'Une autre requête est en cours.',
   notPromoted: "Le résultat a été calculé mais pas retenu : l'étude a changé pendant le calcul. Rien n'a changé dans l'étude.",
   notAvailable: "Pas disponible à cette étape.",

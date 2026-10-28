@@ -232,7 +232,8 @@ def concept_map(state: Mapping, proposal: Mapping) -> list[dict]:
         if missing == 'indicator' or (isinstance(missing, Mapping)
                                       and 'indicator' in missing.values()):
             items.append(_terms_concept('missing_indicator'))
-        if value.get('rare_category_min_rows'):
+        from . import governance
+        if governance.rare_grouping(value):                  # L8 (R6): or per column
             items.append(_terms_concept('rare_categories'))
         if value.get('caps'):
             items.append(_terms_concept('caps'))

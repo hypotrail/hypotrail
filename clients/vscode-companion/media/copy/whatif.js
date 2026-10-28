@@ -55,7 +55,7 @@
       notEvaluated: 'This rule has not been evaluated by the engine yet, so the agent cannot propose it yet.',
       askEvaluate: rule => `Ask the agent to evaluate the rule "${rule}"`,
       askEvaluateQuestion: (rule, token) => `Could you evaluate the rule "${rule}" (${token}), so that I can compare it with the rules already evaluated?`,
-      askProposeQuestion: (rule, token) => `Could you propose the decision rule "${rule}" (${token})? I looked at it in the What if? tab, and I will answer your proposal in the chat.`,
+      askProposeQuestion: (rule, token) => `Could you propose the decision rule "${rule}" (${token})? I looked at it in What if?, and I will answer your proposal in the chat.`,
       askAbout: rule => `rule ${rule}`,
       // WP-B5: the gain curve from the engine's registered points (R6).
       gain: {
@@ -79,7 +79,11 @@
     },
     regression: {
       modelTitle: 'Model',
-      fits: { 'fit.linear': 'linear model', 'fit.baseline': 'training mean' },
+      fits: { 'fit.linear': 'linear model', 'fit.baseline': 'mean baseline', 'fit.variant': 'variant model',
+        'fit.variant:2': 'second variant model', 'fit.variant:3': 'third variant model' },
+      variantFit: 'variant model',
+      families: { linear: 'linear', ebm: 'Explainable Boosting Machine', hgb: 'histogram gradient boosting' },
+      familyFit: (name, family) => `${name} (${family})`,
       errorTitle: (description, n) => `Error on ${description} · ${n} validation rows`,
       ordinal: (column, cutoff) => `${column} ≥ ${cutoff}`,
       validationRows: 'the validation rows',
@@ -102,7 +106,7 @@
       noEvaluation: 'The engine has not compared the models yet. The agent compares them in the chat.',
       propose: 'Ask the agent to propose this model',
       notEvaluated: 'The engine has not evaluated this model yet, so the agent cannot propose it yet.',
-      askProposeQuestion: (model, slot) => `Could you propose adopting the ${model} (${slot})? I looked at it in the What if? tab, and I will answer your proposal in the chat.`,
+      askProposeQuestion: (model, slot) => `Could you propose adopting the ${model} (${slot})? I looked at it in What if?, and I will answer your proposal in the chat.`,
       askAbout: model => `model ${model}`,
     },
   };

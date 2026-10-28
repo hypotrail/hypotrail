@@ -32,20 +32,20 @@
   "row": 6,
   "reason": "policy changed (§3.7 row 6: policy.rule_type)",
   "stale_results": [
-   "141c7a9e61e8bebc92cdc5a39d8ce6587c0eb025433d21e0456834045d877f75"
+   "afaa453cc8f7d53ad432be8dffee226bfdd66c8fd342bece0473c320a12625db"
   ],
   "stale_slots": [
    "diag.binary"
   ],
   "kept_slots": [
    "split",
+   "eda.quality",
    "eda.target_rate",
    "eda.special_values",
    "eda.correlation",
    "eda.distribution:age",
    "eda.distribution:job",
    "eda.distribution:previous",
-   "eda.quality",
    "eda.rate_by:job",
    "eda.single_feature_signal",
    "fit.baseline",

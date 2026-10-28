@@ -253,19 +253,16 @@ test('INV-8: refusal explanations never suggest words: no quotation, no example,
   }
 });
 
-test('refusal contexts: W4 run, W6 acknowledge, W7 export, from the payload command (no W3 since v0.3)', () => {
+test('refusal contexts: W4 run, W7 export, from the payload command (no W3 since v0.3, no W6 since R31)', () => {
   assert.equal(refusals.BY_CONTEXT.propose, undefined);
-  assert.equal(refusals.contextOf({ command: 'decide propose' }, 'stale_revision', null, {}), null);
+  // R31 (2026-10-27): the panel sends no acknowledgement, so there is no acknowledge context.
+  assert.equal(refusals.BY_CONTEXT.acknowledge, undefined);
+  assert.equal(refusals.contextOf({ command: 'decide propose' }), null);
   const c = refusals.describe(error('decide confirm', 'stale_revision', 'Revision is stale.'));
   assert.match(c.human, /read the proposal again before answering/);
   const run = refusals.describe(error('run', 'stale_revision', 'Revision is stale.'));
   assert.match(run.human, /before asking for a chart/);
-  const ack = refusals.describe(error('run', 'ambiguous_confirmation', 'A bare acknowledgement is not an acknowledgement.',
-    { reason: 'bare_acknowledgement', execution_id: 'e_1' }));
-  assert.match(ack.human, /acknowledged the interruption/);
-  assert.equal(refusals.contextOf({ command: 'run' }, 'unknown_execution', null, {}), 'acknowledge');
-  assert.equal(refusals.contextOf({ command: 'run' }, 'precondition_missing', null, {}), 'run');
-  assert.equal(refusals.contextOf({ command: 'run' }, 'execution_in_progress', null, { execution_id: 'e_1' }), 'run');
+  assert.equal(refusals.contextOf({ command: 'run' }), 'run');
   const exp = refusals.describe(payload('error.export_target_exists'));
   assert.equal(exp.code, 'export_target_exists');
   assert.match(exp.human, /^The chosen folder already holds files/);
@@ -317,4 +314,78 @@ test('refusals (v0.3, WP-B): the delegated final-test opening has its own explan
     error: { code: 'ambiguous_confirmation', message: 'engine text', details: { reason: 'delegation_not_allowed' } } });
   assert.equal(d.reason, 'delegation_not_allowed');
   assert.match(d.human, /never delegated/);
+});
+
+// --- R16 (owner session 2026-10-26, D20): a choice the chat waits for -------------------------
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { toSummaryModel } = require('../lib/models/summary');
+
+/** The captured binary summary with the conclusion as a choice the chat asks (L1's key). */
+function choiceSummary(options) {
+  const raw = JSON.parse(JSON.stringify(payload('captured/summary.binary.cv.opening')));
+  raw.next_action = { kind: 'propose', step: 'conclusion', decision: 'conclusion', message: 'Propose the conclusion.',
+    audience: 'agent', junior_message: 'The assistant asks you to choose the conclusion.', choice_options: options };
+  return raw;
+}
+
+test('DC-13: the summary carries the choice the chat asks, labels verbatim, malformed options dropped', () => {
+  const options = [
+    { id: 'adopt_policy', value: 'adopt_policy', label: 'Adopter la règle' },
+    { id: 'keep_baseline', value: 'keep_baseline', label: 'Garder la référence' },
+    { id: 'inconclusive', value: 'inconclusive', label: 'Ne pas conclure (non concluant)' },
+    { id: '', value: 'x', label: 'no id' }, { id: 'no_label', value: 'y' }, 'adopt', null,
+  ];
+  const m = toSummaryModel(choiceSummary(options));
+  assert.deepEqual(m.nextAction.choiceOptions, options.slice(0, 3));
+  assert.equal(m.nextAction.decision, 'conclusion');
+  // A model choice value is shown as text (a slot), never parsed; no choice reads as [].
+  const slot = toSummaryModel(choiceSummary([{ id: 'fit.variant:2', value: 'fit.variant:2', label: 'La deuxième variante' }]));
+  assert.deepEqual(slot.nextAction.choiceOptions.map(o => o.value), ['fit.variant:2']);
+  assert.deepEqual(toSummaryModel(payload('captured/summary.binary.cv')).nextAction.choiceOptions, []);
+  // The badge still counts the open proposals only: a choice is answered in the chat.
+  assert.equal(m.waitingCount, toSummaryModel(payload('captured/summary.binary.cv.opening')).waitingCount);
+});
+
+test('DC-13 (W1 integration): the captured conclusion of a real study is a choice; its values read as verdicts', () => {
+  const raw = payload('captured/summary.binary.cv.conclusion');
+  const m = toSummaryModel(raw);
+  assert.deepEqual(m.nextAction.choiceOptions.map(o => [o.id, o.label]), raw.next_action.choice_options.map(o => [o.id, o.label]));
+  assert.deepEqual(m.nextAction.choiceOptions.map(o => o.value), raw.next_action.choice_options.map(o => o.value.verdict));
+  assert.equal(raw.next_action.pause.kind, 'choice');
+});
+
+test('DC-13 (W1 integration): a conclusion option from the engine has the value {verdict}; it reads as its verdict', () => {
+  const engine = [{ id: 'keep_baseline', value: { verdict: 'keep_baseline' }, label: 'Keep the baseline' },
+    { id: 'inconclusive', value: { verdict: 'inconclusive' }, label: 'Do not conclude (inconclusive)' }];
+  const m = toSummaryModel(choiceSummary(engine));
+  assert.deepEqual(m.nextAction.choiceOptions.map(o => o.value), ['keep_baseline', 'inconclusive']);
+  assert.ok(!m.nextAction.choiceOptions.some(o => o.value.includes('{')));
+});
+
+test('evidence chip (third session of 2026-10-26): the result slot reads in the panel language, never "Voir the …"', () => {
+  const saved = globalThis.Hypotrail;
+  globalThis.Hypotrail = { copy: {}, format: { number: x => String(x) } };
+  let en, fr;
+  try {
+    for (const dir of ['copy', 'copy-fr']) {
+      const file = path.join(__dirname, '..', 'media', dir, 'decisions.js');
+      delete require.cache[require.resolve(file)];
+      require(file);
+    }
+    en = globalThis.Hypotrail.copy.decisions;
+    fr = globalThis.Hypotrail.copyFr.decisions;
+  } finally {
+    globalThis.Hypotrail = saved;
+  }
+  assert.equal(en.evidenceChipWords(en.slotWords['policy.evaluation']), 'See the decision-rule evaluation →');
+  assert.equal(fr.evidenceChipWords(fr.slotWords['policy.evaluation']), "Voir l'évaluation de la règle de décision →");
+  assert.equal(fr.evidenceChipWords(fr.slotWords['evaluate.regression']), 'Voir la comparaison des modèles →');
+  assert.equal(fr.slotWords.split, 'le découpage');
+  assert.deepEqual(Object.keys(fr.slotWords).sort(), Object.keys(en.slotWords).sort());
+  const source = fs.readFileSync(path.join(__dirname, '..', 'media', 'views', 'decisions.js'), 'utf8');
+  assert.ok(!source.includes("'the decision-rule evaluation'") && !source.includes("'the model comparison'"),
+    'the view holds no English slot words');
+  assert.match(source, /copyOf\(ctx\)\.slotWords/);
 });

@@ -1,26 +1,22 @@
-// Decisions view (COMPANION-ADVANCED §6.2). Owned by WP-U2.
+// Decision parts (COMPANION-ADVANCED §6.5, §A.2; formerly the Decisions tab, WP-U2). The one
+// page (ADR 0004 d13) places them through media/views/page.js:
 //
-//   v0  the pending decision cards, read only, and the open holds;
-//   v1  the Decisions tab: cards with the pause, the holds and resolved conditions, and
-//       "If you confirm" in words (the engine's `preview effects`, read when a card becomes
-//       visible, at most three at once); the reconfirmation queue; the history, newest
-//       first (R25);
-//   v2  evidence chips on the cards and "Ask the agent" on the queue.
+//   effects      Now's fold "What your answer will change" (NOW-9, v1): the engine's
+//                `preview effects` of the open proposal, read when the fold opens
+//   history      each step's detail in the path (PATH-5, PATH-8, v1): the confirmations
+//                newest first, bases, concerns, corrections, proposals not confirmed
+//   mode         Now's fold "What counts as your answer" (NOW-7, v1)
+//   queueReason  why a decision came back (NOW-5, v1), from the reconfirmation queue
 //
 // v0.3 narrowing (WP-E1; ADR 0004 amendment, owner decision R23, integrator decision I2):
-// the panel records no decision. There is no words field, no "Confirm" and no "Withdraw":
-// each card says "Answer in the chat" and offers "Ask the agent about this", which copies a
-// ready question to the clipboard (at every stage). The proposal id, the revision and the
-// origin are under "Details" (R22). There is no delegation control (INV-4). Study text is
-// always set as text (INV-9).
+// the panel records no decision: no words field, no "Confirm", no "Withdraw", no delegation
+// control (INV-4). Study text is always set as text (INV-9).
 (function (HT) {
   'use strict';
   const el = HT.el;
   const str = x => (typeof x === 'string' ? x : '');
   const arr = x => (Array.isArray(x) ? x : []);
   const MAX_EFFECT_READS = 3;
-  const DRAFT_DECISIONS = ['policy', 'model_choice'];
-  const EVALUATION_SLOT = { policy: 'policy.evaluation', model_choice: 'evaluate.regression' };
 
   // View state: never a decision, never a number of the study. Effects are the engine's
   // previews per proposal and version (revision, currency, Refresh epoch; CR.1);
@@ -35,6 +31,24 @@
   const rid8 = id => str(id).slice(0, 8);
   const J = () => HT.copy.junior;
 
+  /**
+   * L3 (owner session 2026-10-26, R4, D4b): a proposal's restatement, the chat's own words. In
+   * the panel language when the chat gave it in that language; else as written, in its
+   * language (`restatementLang`), with a marker that says whose wording it is.
+   */
+  // L3 (R4, D4b): the `decisions` read gives its step titles in the study language; the
+  // summary's `texts` give them in both, so the titles follow the panel's language switch.
+  function localTitles(model, snapshot) {
+    const tables = snapshot && snapshot.texts;
+    const T = tables && tables[snapshot.textsLanguage];
+    if (!T || !T.plan) return model;
+    const retitle = list => (Array.isArray(list) ? list.map(x => (x && typeof T.plan[x.decisionId] === 'string'
+      ? { ...x, title: T.plan[x.decisionId] } : x)) : list);
+    const out = { ...model };
+    for (const [k, v] of Object.entries(model)) if (Array.isArray(v)) out[k] = retitle(v);
+    return out;
+  }
+
   /** A decision value in words (WP-A5); the recorded value in its hover, never lost. */
   function readable(ctx, decisionId, raw, attrs) {
     const words = J().value(decisionId, raw, taskOf(ctx));
@@ -42,11 +56,12 @@
       title: words && str(raw) ? `${J().nextMove.engineLabel}: ${str(raw)}` : null, ...(attrs || {}), text: words || str(raw) });
   }
 
-  /** Slot names of the engine in words (fit.logistic -> the logistic model). */
+  /** Slot names of the engine in words (fit.logistic -> the logistic model), in the panel
+   * language (third session of 2026-10-26: the copy's `slotWords`, never English in French). */
   function slotWords(ctx, slot) {
     const s = str(slot);
     if (s.startsWith('fit.')) return J().modelName(s, taskOf(ctx));
-    const words = { split: 'the split', 'policy.evaluation': 'the decision-rule evaluation', 'evaluate.regression': 'the model comparison' };
+    const words = copyOf(ctx).slotWords || {};
     return words[s] || s.replace(/[._:]/g, ' ');
   }
 
@@ -77,7 +92,8 @@
     const b = str(basis) || 'explicit';
     const label = b === 'delegated_default' ? c.basis(b, scope) : (c.basisChip[b] || b);
     return el('span', { className: 'dc-basis-cell' }, [
-      el('span', { className: `ht-status dc-basis ${b === 'delegated_default' ? 'ht-st-stale dc-delegated' : 'ht-st-ok'}`,
+      // L9 (R20): an automatic decision waits for the junior's review, like a delegation.
+      el('span', { className: `ht-status dc-basis ${['delegated_default', 'automatic'].includes(b) ? 'ht-st-stale dc-delegated' : 'ht-st-ok'}`,
         'data-basis': b, title: c.basisHelp[b] || null, text: label }),
       channel ? el('span', { className: 'muted dc-channel', 'data-channel': channel, text: ` ${c.channelWords(channel)}` }) : null,
     ]);
@@ -126,47 +142,7 @@
     while (view.waiting.length && view.inflight.size < MAX_EFFECT_READS) wantEffects(view.waiting.shift());
   }
 
-  /** Observe the cards; a visible card asks for its preview. */
-  function observeCards(cards) {
-    if (view.observer) view.observer.disconnect();
-    view.observer = null;
-    if (!cards.length) return;
-    if (typeof IntersectionObserver !== 'function') {
-      for (const card of cards) wantEffects(card.dataset.proposalCard);
-      return;
-    }
-    view.observer = new IntersectionObserver(entries => {
-      for (const entry of entries) if (entry.isIntersecting) wantEffects(entry.target.dataset.proposalCard);
-    });
-    for (const card of cards) view.observer.observe(card);
-  }
-
   // --- small parts ----------------------------------------------------------------------
-
-  function pauseOf(ctx, decisionId) {
-    const step = arr(ctx.snapshot.plan).find(s => s.id === decisionId);
-    return step && Number.isInteger(step.pause) ? step.pause : null;
-  }
-
-  /** Status groups of an availability value shown as text (the summary holds it as JSON). */
-  function availabilityGroups(decisionId, value) {
-    if (decisionId !== 'feature_availability') return null;
-    let parsed = null;
-    try { parsed = JSON.parse(value); } catch (_) { return null; }
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
-    const entries = Object.entries(parsed).filter(([, v]) => typeof v === 'string');
-    if (!entries.length) return null;
-    const order = ['available_at_prediction', 'uncertain_included', 'uncertain_excluded', 'not_available'];
-    const statuses = [...order, ...new Set(entries.map(([, v]) => v).filter(v => !order.includes(v)))];
-    return statuses.map(status => ({ status, columns: entries.filter(([, v]) => v === status).map(([k]) => k) }))
-      .filter(g => g.columns.length);
-  }
-
-  function groupsList(groups, c) {
-    return el('ul', { className: 'dc-groups', 'data-value-groups': true }, groups.map(g =>
-      el('li', { 'data-status': g.status }, [el('span', { className: 'dc-group', text: `${c.availability[g.status] || g.status}: ` }),
-        el('code', { text: g.columns.join(', ') })])));
-  }
 
   function groupsText(groups, c) {
     return groups.map(g => `${c.availability[g.status] || g.status}: ${g.columns.join(', ')}`).join('; ');
@@ -175,50 +151,6 @@
   /** Recorded words in quotes, as text (the quotes are part of the text, not CSS). */
   function quote(text) {
     return el('span', { className: 'dc-quoted' }, ['“', el('span', { 'data-quoted': true, text: str(text) }), '”']);
-  }
-
-  /** Evidence chips (v2): only current results of the evidence read, never a guess. */
-  function evidenceChips(p, ctx, c) {
-    const data = ctx.data('evidence');
-    const model = data && data.model;
-    if (!model) return null;
-    const results = arr(model.results).filter(r => r && (r.current === true) && (r.integrity === undefined || r.integrity === 'ok'));
-    const idOf = r => str(r.resultId || r.result_id);
-    const slotOf = r => str(r.slot);
-    const chips = [];
-    const resultChip = r => el('button', { type: 'button', className: 'dc-chip', 'data-evidence-chip': idOf(r),
-      title: c.evidenceChip(str(r.activity) || slotOf(r), rid8(idOf(r))),
-      text: c.evidenceChipWords(slotWords(ctx, slotOf(r) || str(r.activity))),
-      onclick: () => ctx.navigate({ tab: 'evidence', kind: 'result', id: idOf(r) }) });
-    const id = p.decisionId;
-    if (EVALUATION_SLOT[id]) {
-      const r = results.find(x => slotOf(x) === EVALUATION_SLOT[id] && idOf(x));
-      if (r) chips.push(resultChip(r));
-      if (id === 'policy') {
-        // The paired precision difference of the proposed rule, from the EvidenceModel's
-        // uncertainty of the current policy evaluation (lib/models/evidence.js; WP-I
-        // reconciled U2 with U3). Shown only when the engine evaluated that rule.
-        const u = model.uncertainty && model.uncertainty.kind === 'policy' ? model.uncertainty : null;
-        const rule = u ? arr(u.rules).find(x => x && x.rule === str(p.value)) : null;
-        const metric = rule ? arr(rule.metrics).find(x => x && x.metric === 'precision') : null;
-        const d = metric && metric.delta;
-        if (d && typeof d.point === 'number' && typeof d.low === 'number' && typeof d.high === 'number') {
-          const f = x => `${x > 0 ? '+' : ''}${ctx.format.number(x, 'pct1')}`;
-          chips.push(el('span', { className: 'dc-chip dc-chip-static', 'data-evidence-delta': true },
-            [ctx.components.cited(c.precisionDelta(f(d.point), f(d.low), f(d.high)), { resultId: u.resultId, path: d.path, value: d.point })]));
-        }
-      }
-      chips.push(el('button', { type: 'button', className: 'dc-chip', 'data-explore': id, text: c.explore(taskOf(ctx)),
-        onclick: () => ctx.navigate({ tab: 'whatif', kind: 'decision', id }) }));
-    } else if (id === 'split') {
-      const r = results.find(x => slotOf(x) === 'split' && idOf(x));
-      if (r) chips.push(resultChip(r));
-    } else if (id === 'feature_availability') {
-      for (const r of results.filter(x => slotOf(x).startsWith('eda.') && idOf(x))) chips.push(resultChip(r));
-    }
-    if (!chips.length) return null;
-    return el('div', { className: 'dc-evidence', 'data-stage': 'v2', 'data-evidence': p.proposalId }, [
-      el('h4', { text: c.evidenceTitle }), el('div', { className: 'dc-chips' }, chips)]);
   }
 
   function names(list, c) {
@@ -291,14 +223,13 @@
 
   // --- the pending decision card (read only) ---------------------------------------------
 
-  /**
-   * v0.3 (WP-K): on a variant proposal, the trial budget (a replaced variant still counts)
-   * and the engine's family shortlist, read from the full view (`trials`), so the junior
-   * sees what answering spends before answering in the chat. Read only.
-   */
+  // --- R16: a choice the chat waits for, before any proposal (v1, read only) ----------------
+
+  /** EV-13 (WP-K): the trial budget and the family shortlist, on a variant proposal (v2). */
   function trialsNote(ctx, c) {
     const entry = ctx.data('trials');
-    const m = entry && entry.model;
+    // R47 (lot P): never the budget of an earlier read; the fresh one is asked for (`want`).
+    const m = entry && ctx.fresh(entry) && entry.model;
     if (!m || (!m.budget && !m.families)) return null;
     const T = HT.copy.evidence.variants;
     const b = m.budget;
@@ -308,103 +239,19 @@
     return el('div', { className: 'ht-note dc-trials', role: 'note', 'data-trials-note': b ? `${b.used}/${b.max}` : 'shortlist' }, [
       el('div', {}, [
         el('p', { className: 'title', text: c.trialsTitle }),
-        b ? el('p', { 'data-trial-budget': `${b.used}/${b.max}`, text: T.budgetLine(ctx.format.number(b.used, 'int'),
-          ctx.format.number(b.max, 'int'), ctx.format.number(b.remaining ?? Math.max(0, b.max - b.used), 'int')) }) : null,
+        // R44 (lot P): the budget drawn as a small bar, its line written next to the bar.
+        b ? el('div', { 'data-trial-budget': `${b.used}/${b.max}` }, [HT.parts.figures && HT.parts.figures.budgetBar
+          ? HT.parts.figures.budgetBar(ctx, b, T.budgetLine(ctx.format.number(b.used, 'int'), ctx.format.number(b.max, 'int'),
+            ctx.format.number(b.remaining ?? Math.max(0, b.max - b.used), 'int')))
+          : T.budgetLine(ctx.format.number(b.used, 'int'), ctx.format.number(b.max, 'int'),
+            ctx.format.number(b.remaining ?? Math.max(0, b.max - b.used), 'int'))]) : null,
         b ? el('p', { className: 'muted', text: T.budgetWhy }) : null,
         text ? ctx.components.engineText(text, { lang: texts[lang] ? lang : 'en', tag: 'p', attrs: { 'data-shortlist-text': m.families.recommendation || '' } }) : null,
       ]),
     ]);
   }
 
-  function proposalCard(p, model, ctx, c) {
-    const id = str(p.proposalId);
-    const v1 = ctx.atLeast('v1');
-    const task = taskOf(ctx);
-    // WP-B5: the opening of the final test has its own note (it is opened once, in the chat).
-    const opening = str(p.decisionId) === 'final_test';
-    const groups = v1 ? availabilityGroups(p.decisionId, str(p.value)) : null;
-    const pause = v1 ? pauseOf(ctx, p.decisionId) : null;
-    const holds = arr(p.holds).map(h => el('p', { className: 'hold dc-hold', 'data-hold': str(h.noteId) },
-      [c.holdOpen, quote(h.userWords), c.holdSentence]));
-    const resolved = v1 ? arr(p.resolvedNotes).map(n => el('p', { className: 'dc-resolved', 'data-resolved-note': str(n.noteId) },
-      [c.holdResolved, quote(n.userWords), ' → ', quote(n.resolutionWords || '')])) : [];
-    const fromPanel = p.origin && p.origin.channel === 'webview';
-    const revision = Number.isInteger(p.revision) ? p.revision : null;
-
-    const head = el('div', { className: 'dc-head' }, [
-      el('div', { className: 'dc-head-main' }, [
-        pause ? el('span', { className: 'dc-pill', 'data-pause': pause, text: c.pause(pause, task) }) : null,
-        el('h3', { id: `title-${id}`, text: str(p.decisionTitle) }),
-      ]),
-    ]);
-
-    const card = el('article', { className: 'card dc-card', 'data-proposal-card': id, 'data-decision': str(p.decisionId),
-      'data-nav': `proposal:${id}`, 'aria-labelledby': `title-${id}` }, [
-      head,
-      // The restatement block (R14, R22): what the assistant proposes, then the value in words.
-      el('div', { className: 'dc-restatement', 'data-restatement-block': id }, [
-        el('p', { className: 'dc-lead', text: c.restatedAs }),
-        el('blockquote', { text: str(p.restatement), 'data-restatement': id }),
-        el('div', { className: 'dc-value' }, [el('p', { 'data-proposed-value': id }, [c.proposedValue, readable(ctx, p.decisionId, p.value)]),
-          groups ? groupsList(groups, c) : null]),
-      ]),
-      v1 && ctx.atLeast('v2') ? evidenceChips(p, ctx, c) : null,
-      str(p.decisionId) === 'model_variant' && ctx.atLeast('v2') ? trialsNote(ctx, c) : null,
-      ...holds,
-      ...resolved,
-      v1 ? effectsSection(p, ctx, c) : null,
-      opening ? el('div', { className: 'hold dc-final-chat', role: 'note', 'data-final-test-chat': id }, [
-        el('p', { className: 'title', text: c.finalTestTitle }),
-        // v0.3 (WP-E3): own words and a reason only in the training mode (ADR 0005, decision 8).
-        el('p', { text: str(model.mode) === 'training' ? c.finalTestBodyTraining : c.finalTestBody }),
-        el('p', { className: 'muted', text: c.finalTestOnce }),
-      ]) : el('div', { className: 'dc-answer', role: 'note', 'data-answer-in-chat': id }, [
-        el('p', { className: 'title', text: c.answerInChat }),
-        el('p', { className: 'muted', text: c.answerInChatHint }),
-      ]),
-      el('div', { className: 'dc-actions' }, [
-        // The shared agent-bridge helper of media/terms.js: a ready question, copied (§6.8).
-        HT.askButton(ctx, { kind: 'proposal', id }, c.askAbout(str(p.decisionTitle)),
-          { label: c.ask, attrs: { 'data-ask-proposal': id }, question: c.askQuestion, stage: 'v0', direct: true }),
-      ]),
-      // Internal details (R22): the proposal id, the revision it was made at, its origin,
-      // and the recorded value.
-      el('details', { className: 'ht-details', 'data-value-details': id }, [el('summary', { text: c.details }),
-        el('p', { 'data-made-at': id, text: c.madeAt(id, revision) }),
-        // The glossary term "proposal" (§6.7): marked only when the learning layer is on.
-        el('p', { 'data-origin': fromPanel ? 'webview' : 'agent' }, [HT.terms.mark(fromPanel ? c.byPanel : c.byAgent, 'proposal')]),
-        el('p', {}, [c.recordedValue, el('code', { text: str(p.value) })])]),
-    ]);
-    // A deep link to the decision (CLI-CONTRACT-COMPANION §11) lands on its open card.
-    return v1 ? el('div', { className: 'dc-card-wrap', 'data-nav': `decision:${str(p.decisionId)}` }, [card]) : card;
-  }
-
   // --- reconfirmation queue and history (v1, from `decisions`) ---------------------------------
-
-  function queueSection(data, ctx, c) {
-    const items = arr(data.queue);
-    if (!items.length) return null;
-    return section('h-dc-queue', c.queueTitle, items.map(q => {
-      const id = str(q.decisionId);
-      const prev = q.previous || {};
-      return el('article', { className: 'card dc-queue', 'data-queue-item': id, 'data-nav': `decision:${id}`,
-        'aria-labelledby': `queue-${id}` }, [
-        el('h3', { id: `queue-${id}`, text: str(q.title) }),
-        el('p', { 'data-queue-reason': id, text: str(q.reason) }),
-        el('p', { 'data-previous': id }, [c.previously, quote(prev.userWords),
-          ` (${c.basisChannel(c.basis(str(prev.basis), null), str(prev.channel))})`]),
-        q.openProposal
-          ? el('button', { type: 'button', className: 'secondary', 'data-open-proposal': q.openProposal, text: c.openNew,
-            onclick: () => ctx.navigate({ tab: 'decisions', kind: 'proposal', id: q.openProposal }) })
-          : el('div', {}, [
-            el('p', { className: 'muted', text: c.noNewProposal }),
-            HT.askButton(ctx, { kind: 'decision', id }, str(q.title), { label: c.askShort, attrs: { 'data-ask-decision': id } }),
-            DRAFT_DECISIONS.includes(id) ? ctx.gate('v2', el('button', { type: 'button', className: 'secondary',
-              'data-choose': id, text: c.chooseInWhatIf, onclick: () => ctx.navigate({ tab: 'whatif', kind: 'decision', id }) })) : null,
-          ]),
-      ]);
-    }));
-  }
 
   /** WP-A7 (ADR 0005, R3): the corrections the junior recorded later, in their words. */
   function corrections(data, decisionId, c) {
@@ -412,7 +259,7 @@
       .map(n => el('p', { className: 'dc-correction', 'data-correction': str(n.noteId) }, [c.correction, quote(n.userWords)]));
   }
 
-  function historySection(entry, ctx, c) {
+  function historySection(entry, ctx, c, only = null) {
     const err = ctx.error('decisions');
     const children = [];
     if (err && !entry) {
@@ -431,7 +278,7 @@
     const stale = !ctx.fresh(entry);
     if (stale) children.push(el('p', { className: 'muted', 'data-updating': true, text: ctx.copy.core.updating }));
     const data = entry.model;
-    const rows = arr(data.history);
+    const rows = arr(data.history).filter(h => !only || h.decisionId === only);
     const navSeen = new Set();
     if (rows.length) {
       children.push(el('table', { className: 'dc-history', 'data-history': true }, [
@@ -464,7 +311,7 @@
       children.push(el('p', { className: 'muted', text: c.noHistory }));
     }
     children.push(el('p', { className: 'muted', 'data-not-authenticated': true, text: c.notAuthenticated }));
-    const unconfirmed = arr(data.unconfirmedProposals);
+    const unconfirmed = arr(data.unconfirmedProposals).filter(u => !only || u.decisionId === only);
     if (unconfirmed.length) {
       children.push(el('details', { 'data-unconfirmed': true }, [
         el('summary', { text: c.unconfirmedTitle }),
@@ -476,41 +323,18 @@
         ]))),
       ]));
     }
+    if (only) return el('div', { className: 'dc-step-history', 'data-step-history': only, 'aria-busy': stale ? 'true' : null }, children);
     return section('h-dc-history', c.historyTitle, children, stale ? { 'aria-busy': 'true' } : null);
   }
 
+  // --- lesson style (R30): the notions of this step ----------------------------------------
+
+  // The one page (ADR 0004 d13): the Decisions tab is gone. Now holds the open proposal
+  // (media/views/page.js) and its "What your answer will change" (`effects`, read when its fold
+  // is opened, §5); each step's detail in the path holds its history (`history`, v1, PATH-5,
+  // PATH-8); Now's fold "What counts as your answer" is the mode (`mode`, NOW-7).
   HT.register('decisions', {
-    tab: 'decisions',
     stage: 'v0',
-    views: [],
-    render(model, ctx) {
-      const c = copyOf(ctx);
-      const v1 = ctx.atLeast('v1');
-      view.ctx = ctx;
-      if (v1) ensureLoad(ctx, 'decisions');
-      if (ctx.atLeast('v2')) ensureLoad(ctx, 'evidence');
-      const proposals = arr(model.proposals);
-      // v0.3 (WP-K): the trial budget and the shortlist, only while a variant proposal waits.
-      if (ctx.atLeast('v2') && proposals.some(p => str(p.decisionId) === 'model_variant')) ensureLoad(ctx, 'trials');
-      const cards = proposals.map(p => proposalCard(p, model, ctx, c));
-      const articles = cards.map(n => (n.matches('[data-proposal-card]') ? n : n.querySelector('[data-proposal-card]')));
-      const out = [
-        section('h-proposals', c.waitingTitle, cards.length ? cards
-          : [el('p', { className: 'muted', 'data-nothing-waiting': true, text: v1 ? c.nothingWaiting : c.nothingWaitingV0 })])];
-      if (arr(model.holds).length) {
-        out.push(section('h-holds', c.holdsTitle, [el('ul', {}, arr(model.holds).map(h =>
-          el('li', { 'data-hold-item': str(h.noteId), title: str(h.noteId) }, [`${str(h.decisionTitle)}: `, quote(h.userWords)])))]));
-      }
-      if (v1) {
-        // WP-A7: the mode follows the waiting cards, so what waits for the junior comes first.
-        out.push(modeSection(model, ctx, c));
-        const entry = ctx.data('decisions');
-        if (entry && entry.model) out.push(queueSection(entry.model, ctx, c));
-        out.push(historySection(entry && entry.model ? entry : null, ctx, c));
-        observeCards(articles);
-      }
-      return out;
-    },
     onMessage(m, ctx) {
       if (m.type === 'effects') {
         const epoch = view.effectsEpoch[m.proposalId];
@@ -520,7 +344,6 @@
         return true;
       }
       if (m.type === 'snapshot') {
-        // Previews of proposals that are no longer open are dropped.
         const open = new Set(arr(m.model && m.model.proposals).map(p => p.proposalId));
         for (const pid of Object.keys(view.effects)) if (!open.has(pid)) delete view.effects[pid];
         for (const pid of [...view.inflight]) if (!open.has(pid)) view.inflight.delete(pid);
@@ -529,4 +352,39 @@
       return true;
     },
   });
+  HT.parts = HT.parts || {};
+  HT.parts.decisions = {
+    /** NOW-9: the engine's preview of what confirming the open proposal would invalidate. */
+    effects(ctx, proposal) {
+      view.ctx = ctx;
+      if (!proposal) return null;
+      wantEffects(proposal.proposalId);
+      return effectsSection(proposal, ctx, copyOf(ctx));
+    },
+    /** PATH-5 (v1): the history of one decision, newest first, with bases, concerns, corrections. */
+    history(ctx, decisionId) {
+      view.ctx = ctx;
+      ensureLoad(ctx, 'decisions');
+      const read = ctx.data('decisions');
+      const entry = read && read.model ? { ...read, model: localTitles(read.model, ctx.snapshot) } : read;
+      return historySection(entry && entry.model ? entry : null, ctx, copyOf(ctx), decisionId);
+    },
+    /** WP-K: on Now's proposal of the variants to compare, the trial budget and the shortlist (v2). */
+    trials(ctx) {
+      if (!ctx.atLeast('v2')) return null;
+      ctx.want('trials');
+      return trialsNote(ctx, copyOf(ctx));
+    },
+    /** NOW-7: what counts as an answer in the study's mode (read only). */
+    mode: ctx => modeSection(ctx.snapshot, ctx, copyOf(ctx)),
+    /** NOW-5 (v1): why a decision came back, from the reconfirmation queue; null before the read. */
+    queueReason(ctx, decisionId) {
+      if (!ctx.atLeast('v1')) return null;
+      view.ctx = ctx;
+      ensureLoad(ctx, 'decisions');
+      const read = ctx.data('decisions');
+      const item = read && read.model ? arr(read.model.queue).find(q => q.decisionId === decisionId) : null;
+      return item && str(item.reason) ? str(item.reason) : null;
+    },
+  };
 })(globalThis.Hypotrail = globalThis.Hypotrail || {});

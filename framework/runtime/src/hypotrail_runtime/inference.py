@@ -5,6 +5,17 @@ The same logical contract drives the engine's Pandera schema
 reading of it, used before every prediction. Nothing is coerced, dropped, imputed or added
 silently: a declared conversion (``inference_policy.conversions``) is applied to a copy and
 reported; the caller's frame and its row order are never changed.
+
+Every feature the recipe reads must be present, required by the contract or not: a feature
+outside ``required_columns`` that the input lacks is ``missing_columns``, never a raw
+``KeyError``. A string column is handed to the predictor as Python strings with ``NaN`` for
+a missing value, whatever pandas representation held it (``object`` with ``None`` or
+``NaN``, ``string[python]`` or ``string[pyarrow]`` with ``pd.NA``): the values are
+unchanged, only the missing marker is the one the preparation and the parity rows read.
+
+A numeric feature holding ``inf`` or ``-inf`` is ``contract_invalid`` (issue kind
+``non_finite_values``, with the count and the positions of a few rows), never a raw error of
+the backend; ``NaN`` is a missing value, refused only in a non-nullable column.
 """
 from __future__ import annotations
 
@@ -59,6 +70,7 @@ def check_frame(contract: DataContract, frame: Any, *, features: list[str],
     declared = {c.name: c for c in contract.columns}
     policy = contract.inference_policy
     missing = [c for c in policy.required_columns if c not in names]
+    missing += [c for c in features if c not in names and c not in missing]
     if missing:
         issues.append({'code': 'contract_invalid', 'path': 'input/columns',
                        'kind': 'missing_columns', 'columns': missing})
@@ -88,10 +100,20 @@ def check_frame(contract: DataContract, frame: Any, *, features: list[str],
                                'found': found or str(series.dtype)})
                 continue
         na = series.isna()
+        if spec.physical_type == 'string':
+            series = series.astype(object).where(~na, np.nan)
         if na.any() and not spec.nullable:
             issues.append({'code': 'contract_invalid', 'path': f'input/{name}',
                            'kind': 'missing_values', 'n_rows': int(na.sum()),
                            'rows': _examples(np.flatnonzero(na.to_numpy()))})
+        if spec.physical_type == 'float64':
+            # inf and -inf are not missing values: scikit-learn would refuse them with a raw
+            # ValueError (review round 3). NaN keeps its handling above.
+            infinite = np.isinf(series.to_numpy(dtype='float64', na_value=np.nan))
+            if infinite.any():
+                issues.append({'code': 'contract_invalid', 'path': f'input/{name}',
+                               'kind': 'non_finite_values', 'n_rows': int(infinite.sum()),
+                               'rows': _examples(np.flatnonzero(infinite))})
         if spec.allowed_values is not None and policy.unknown_categories == 'reject':
             allowed = set(spec.allowed_values)
             bad = ~(na | series.isin(allowed))

@@ -4,6 +4,12 @@ subtitle: Un rapport évolutif de l'étude. Il décrit l'état enregistré ; il 
 authority: Cette page ne se met pas à jour seule. L'état lu avec hypotrail status fait foi.
 no_controls: Cette page ne contient aucun contrôle de décision. Les décisions sont prises dans le chat ou avec hypotrail decide, à partir de votre réponse.
 theme_toggle: Changer de thème
+words:
+  rows_read: 'Lignes lues :'
+  intervals: 'Intervalles :'
+  percentile_intervals: intervalles des percentiles.
+  unit: 'Unité :'
+  result: résultat
 generated_for_revision: Généré pour la révision de l'étude
 generated_by_for_revision: Généré par Hypotrail pour la révision de l'étude
 last_written_for_revision: dernière génération pour la révision
@@ -77,6 +83,16 @@ delegated: Déléguée au choix recommandé par l'assistant
 delegated_words: Vos mots déléguant le choix
 delegated_note: Décidé par délégation au choix par défaut de l'assistant, et non par votre propre jugement. Confirmez-le vous-même quand vous le pourrez.
 delegated_restatement: Choix recommandé que vous avez délégué
+# Owner session 2026-10-26 (L9, R20) : le mode automatique, relu à la fin.
+automatic: Enregistrée par le mode automatique, à relire
+automatic_note: Décidé par le mode automatique choisi au lancement, avec la valeur du moteur, et non avec vos mots. Adoptez-la ou changez-la avec vos propres mots avant que l'étude soit défendable.
+automatic_restatement: Ce que le mode automatique a enregistré
+adopted_note: Adoptée avec vos propres mots après son enregistrement par le mode automatique.
+automation_banner_review: "Étude automatique : à relire, pas encore défendable."
+automation_banner_review_detail: Chaque décision marquée comme automatique a été prise par le mode automatique choisi au lancement ; relisez-la avec vos propres mots.
+automation_banner_opened: Le test final a été ouvert automatiquement.
+automation_banner_opened_detail: Le mode démonstration l'a ouvert, et non votre décision. Son unique évaluation est conservée ; l'ouverture ne peut pas être refaite.
+credit_automatic: "Enregistré par le mode automatique, pas encore relu par l'analyste :"
 not_authenticated: Mots enregistrés, pas une signature authentifiée.
 restatement: Reformulation à laquelle vous avez répondu
 proposal_waiting: En attente de votre réponse
@@ -138,6 +154,23 @@ verdict_card:
   final_after_note: Quelque chose a changé après l'ouverture ; le test final ne mesure donc plus l'état actuel de l'étude.
   trials: Configurations comparées
   trials_note: configurations évaluées sur les mêmes lignes ; plus elles sont nombreuses, plus la meilleure peut devoir son rang au hasard.
+  rule_of_figures: Règle de ces chiffres
+  found_by_model: Lignes positives trouvées par le modèle
+  among_selected: '{tp} parmi {selected} lignes sélectionnées{precision}'
+  precision_of: ' (précision {value}{interval})'
+  interval_of: ', intervalle de {low} à {high}'
+  baseline_at_rule: Modèle de référence à la même règle
+  baseline_count: '{tp} en moyenne, sans classement{precision}'
+  precision_gain: Gain de précision sur le modèle de référence
+  points_value: '{point} points de pourcentage{interval}'
+  points_unit: ' points de pourcentage'
+  mae_of: 'Erreur absolue moyenne, {model}'
+  mae_interval: ' (intervalle de {low} à {high})'
+  difference_linear: Différence, modèle linéaire moins modèle de référence
+  difference_variant: Différence, variante moins modèle de référence
+  difference_value: '{point}{interval} ; une valeur négative signifie une erreur plus faible'
+  final_among: '{tp} parmi {selected} lignes sélectionnées{precision} ; {rule}'
+  final_precision: ' (précision {value})'
   status:
     met: Atteint
     uncertain: Incertain, l'intervalle contient zéro
@@ -146,6 +179,9 @@ verdict_card:
 data_section:
   unit: Une ligne
   development: Lignes de développement
+  development_left_out: Lignes de développement écartées pour étiquettes tardives (leur résultat n'était pas encore connu au moment de la décision)
+  development_used: Lignes de développement utilisées par le découpage, les modèles et la sélection
+  final_test: Test final
   columns: Colonnes
   final_test_sealed: lignes sont mises de côté comme test final et restent scellées ; ce rapport ne les lit pas.
   final_test_absent: Cette étude ne possède pas de test final.
@@ -155,12 +191,16 @@ data_section:
   case_unknown: Le cas ne documente pas sa disponibilité ; la variable est utilisée comme connue au moment de la prédiction.
   target: Cible
   dictionary: Colonnes par groupe
-  rows: Premières lignes de développement, cible en premier
-  rows_note: Lignes fixes montrées pour rendre les colonnes concrètes. Il s'agit uniquement de lignes de développement.
+  rows: Huit lignes de développement tirées au hasard, cible comprise (un regard compté sur la cible)
+  rows_note: Uniquement des lignes de développement, tirées au hasard à partir d'une graine fixée pour cette étude, de sorte que la fiche des données, ce rapport et le notebook montrent les mêmes lignes. Les valeurs de leur cible sont un regard sur la cible avant le découpage, inscrit au registre d'exposition.
+  rows_seed: 'Graine du tirage :'
+  rows_hidden: La cible de ces lignes s'affiche quand une écriture enregistre ce regard.
+  rows_withheld: La cible de ces lignes n'est pas montrée, le découpage a été confirmé avant que l'étude n'enregistre un regard sur elles.
   rows_missing: Les lignes d'exemple n'ont pas pu être lues.
   ungrouped: Autres colonnes
   missing: Valeurs manquantes dans les lignes de développement
   scroll_hint: Sur un écran étroit, faites défiler chaque tableau horizontalement.
+  case_word: Cas
   head:
     name: Colonne
     meaning: Signification
@@ -172,11 +212,58 @@ basis:
   restated: Reformulée dans vos mots
   endorsed: Approuvée dans vos mots
   delegated_default: Déléguée à l'assistant
+  automatic: Automatique, à relire
 recorded_at: Enregistrée à la révision
 looks:
   summary: Regards sur le résultat dans les lignes de développement
   note: Chaque exploration qui lit la cible compte comme un regard. Plus il y en a, plus un motif peut être dû au hasard.
   count: regards jusqu'ici
+value_words:
+  rule_capacity: 'Sélectionner les {k} lignes aux scores les plus élevés'
+  rule_threshold: 'Sélectionner chaque ligne de score {t} ou plus'
+  rule_share: 'Sélectionner les {share} des lignes aux scores les plus élevés'
+  with_model: '{words}, avec {model}'
+  model_choice:
+    fit.linear: Utiliser le modèle linéaire
+    fit.logistic: Utiliser le modèle logistique
+    fit.variant: Utiliser la variante du modèle linéaire
+    fit.baseline: "Continuer à prédire la moyenne (la référence)"
+  later_variant: 'Utiliser la {ordinal} variante'
+  use_model: 'Utiliser la {model}'
+  ordinals:
+    second: deuxième
+    third: troisième
+  variants: 'Comparer le modèle avec : {words}'
+  variant: 'Comparer le modèle avec une variante : {words}'
+  final_test: 'Ouvrir le test final une fois pour : {model}'
+  final_test_rule: ', règle : {rule}'
+  cv_kinds:
+    kfold_stratified: stratifiés sur le résultat
+    kfold_quantile: stratifiés sur les quantiles de la cible
+    temporal_folds: "par blocs dans l'ordre du temps"
+  seed: ' (graine {seed})'
+  split_cv: "Validation croisée sur les lignes de développement : {folds} plis, {kind}{seed} ; chaque ligne est prédite une fois par un modèle qui ne l'a pas vue"
+  split_forward: "Validation croisée en avancée temporelle sur les lignes de développement : {folds} plis dans l'ordre du moment de prédiction{gap} ; chaque fenêtre plus tardive est notée une fois par un modèle ajusté sur des lignes antérieures seulement, et les premières lignes (la période de chauffe) servent à l'entraînement sans jamais être notées"
+  forward_gap: ", un écart de {gap} sur l'horloge entre les lignes ajustées et la fenêtre notée"
+  split_group: "Validation croisée sur les lignes de développement : {folds} plis qui ne partagent jamais un groupe ; chaque ligne est prédite une fois par un modèle qui n'a pas vu son groupe"
+  split_ordinal: "Les lignes dont {column} vaut {cutoff} ou plus sont les lignes de validation ; les lignes antérieures entraînent les modèles"
+  split_random: '{kind} : {share} des lignes de développement pour la validation{seed}'
+  split_kinds:
+    stratified_random: Tirage aléatoire stratifié
+    random: Tirage aléatoire
+  criterion_precision_gain: "N'adopter que si la précision dépasse celle du modèle de référence d'au moins {points} points de pourcentage à la règle adoptée"
+  criterion_recall_gain: "N'adopter que si le rappel dépasse celui du modèle de référence d'au moins {points} points de pourcentage à la règle adoptée"
+  criterion_mae_reduction: "N'adopter que si l'erreur absolue moyenne du modèle est inférieure d'au moins {share} à celle de la référence (prédire la moyenne)"
+  missing_all: un indicateur de valeur manquante pour chaque variable qui a des cellules manquantes
+  missing_some: 'des indicateurs de valeur manquante pour {columns}'
+  rare: 'les catégories de moins de {k} {rows} regroupées'
+  rare_rows_cv: lignes sur lesquelles un modèle est ajusté
+  rare_rows: "lignes d'entraînement"
+  rare_column: 'les catégories de {column} de moins de {k} {rows} regroupées'
+  caps: 'des valeurs plafonnées pour {columns}'
+  log_transform: 'une transformation logarithmique de {columns}'
+  preparation_default: 'Préparation par défaut : rien d''ajouté, de regroupé, de plafonné ni de transformé'
+  preparation: 'Préparation : {parts}'
 model_names:
   fit.logistic: Modèle logistique
   fit.baseline: Modèle de référence (sans classement)
@@ -188,6 +275,129 @@ rows_label:
   development: lignes de développement
   final_test: lignes du test final
   all: toutes les lignes
+narrative:
+  availability_detail: Colonne par colonne, avec qui a décidé chaque statut
+  contents: Sommaire
+  skip: Aller au contenu
+  read_from_start: Lire le raisonnement depuis le début
+  howto: Ce rapport raconte l'étude dans l'ordre où elle a été menée. Chaque chapitre donne le choix, pourquoi il a été fait, la preuve à l'endroit où l'argument en a besoin, et ce qui reste incertain. Chaque nombre cite un résultat enregistré ; survolez-le pour voir lequel, et l'annexe liste tous les résultats.
+  howto_label: Comment lire ce rapport
+  where: "Où en est l'étude :"
+  legend: 'Chaque preuve indique quelles lignes elle a lues :'
+  parts:
+    choice: Le choix
+    why: Pourquoi
+    evidence: La preuve
+    uncertain: Ce qui reste incertain
+  chapter_status:
+    done: Exécuté
+    in_progress: En cours
+    pending: Pas encore exécuté
+    absent: Hors du plan de cette étude
+  evidence_class:
+    none: Aucune donnée lue
+    structural: Lecture structurelle, la cible n'est pas lue
+    development: Preuve de développement, a servi à choisir, donc optimiste
+    final: Preuve finale, le test scellé ouvert une fois
+  evidence_short:
+    none: Aucune donnée lue
+    structural: Lecture structurelle
+    development: Preuve de développement
+    final: Preuve finale
+  result_link: Résultat enregistré, en annexe
+  step_words:
+    question: Question.
+    method: Méthode.
+    interpretation: Lecture.
+    consequence: Conséquence.
+  choice_none: Pas encore décidé.
+  case_basis: Énoncé du cas, hypothèse du scénario. Rien n'est décidé à cette étape.
+  objective:
+    decision: Décision que l'étude éclaire
+    intended_use: Usage prévu
+  sealing_basis: Automatique, à la création de l'étude
+  sealing_note: La méthode et la part viennent du cas ; rien n'a été lu avant.
+  exploration_choice: Les explorations menées. Aucune décision n'est prise à cette étape ; chaque regard sur la cible est compté.
+  exploration_none: Aucune exploration n'a encore été menée.
+  structural_heading: La structure, sans lire la cible
+  structural_note: Ces lectures ne regardent pas le résultat ; elles ne peuvent donc pas orienter un choix vers ce qui marche sur ces lignes.
+  target_heading: Les regards sur la cible
+  signal_note: Un contrôle fait pendant l'exploration, après le cadrage, qui demande si une variable seule prédit le résultat si bien qu'il faut se demander si elle est vraiment connue au moment de la prédiction.
+  motivation_heading: Les lectures qui ont motivé cette préparation
+  motivation_none: Aucune lecture n'est enregistrée comme motif de cette préparation.
+  uncertain_none: Rien de particulier n'est enregistré pour ce chapitre. Les limites de toute l'étude sont listées dans la conclusion.
+  pending_chapter: Pas encore exécuté. Ce chapitre se remplit quand ses étapes sont menées.
+  absent_chapter: Le plan de cette étude n'a pas d'étape pour ce chapitre.
+  uncertain_features: 'Variables dont la disponibilité au moment de la prédiction est incertaine :'
+  looks_limit: Plus il y a de regards sur la cible, plus un motif trouvé parmi eux peut être dû au seul hasard ; l'étude les compte.
+  looks_count: regards sur la cible jusqu'ici
+  conclusion_evidence: Les chiffres qui fondent cette conclusion sont dans le verdict et dans le chapitre du test final.
+  next_step: "Et ensuite : le paquet de transmission (hypotrail export handoff) rassemble la conclusion, les choix et ces limites pour l'équipe qui reprend l'étude."
+  versus:
+    heading: Preuve de développement et preuve finale, côte à côte
+    measure: Mesure
+    rows: Lignes
+    base_rate: Taux de positifs, la précision du modèle de référence
+    precision: Précision du modèle à la règle
+    gain: Gain sur le modèle de référence, en points de pourcentage
+    recall: Rappel du modèle à la règle
+    auc: Aire sous la courbe ROC
+    mae: Erreur absolue moyenne du modèle
+    mae_baseline: Erreur absolue moyenne du modèle de référence
+  chapters:
+    verdict: Verdict
+    ch1:
+      title: La question et les données
+      lede: Ce que l'étude doit aider à décider, ce que décrit une ligne, et quelles lignes restent scellées.
+    ch2:
+      title: 'Le cadrage : quand prédit-on, avec quoi ?'
+      lede: Le moment où la prédiction est faite, et les colonnes connues à ce moment.
+    ch3:
+      title: Comment on évalue
+      lede: Comment les lignes servent à comparer les modèles, et le critère de succès fixé avant tout modèle.
+    ch4:
+      title: Ce que l'exploration a montré
+      lede: D'abord la structure, sans lire la cible ; ensuite les regards sur la cible, chacun compté.
+    ch5:
+      title: Comment les variables sont préparées, et pourquoi
+      lede: La préparation des variables et les lectures qui l'ont motivée.
+    ch6:
+      title: Les modèles et leur comparaison
+      lede: Le modèle de référence, le modèle candidat, ce que ses diagnostics ont signalé, et les variantes comparées sur les mêmes lignes.
+    ch7:
+      title: La règle de décision
+      lede: Comment les scores deviennent des actions, et ce que chaque règle trouve par rapport au modèle de référence.
+    ch8:
+      title: Le test final
+      lede: Les lignes scellées, ouvertes une fois pour la configuration choisie ; la seule preuve indépendante de l'étude.
+    ch9:
+      title: La conclusion et ses limites
+      lede: La conclusion dans vos mots, et ce que l'étude ne permet pas de dire.
+    understanding: Compréhension et transmission
+    annex: Annexe
+  annex:
+    intro: Pour vérifier un chiffre ; la lecture du raisonnement n'en a pas besoin.
+    results_note: Chaque résultat cité par le rapport, avec son identité. Survolez un nombre du rapport pour voir son résultat et son chemin ; hypotrail evidence avec --result et l'identifiant du résultat montre toutes ses valeurs enregistrées.
+    cited: valeurs de ce résultat sont citées dans ce rapport
+    rows: Lignes lues
+    all_values: 'Toutes les valeurs enregistrées :'
+    plan: Où en est l'étude
+    facts: Ce que dit le cas
+    history: Historique
+    revision: Révision et livrables
+  charts:
+    folds_question: Une configuration classe-t-elle mieux les lignes que le candidat, pli par pli ?
+    folds_label: Score hors pli de chaque pli, par configuration
+    folds_point: Un pli
+    folds_mean: Moyenne des plis
+    folds_note: Chaque point est le score hors pli d'un pli ; le nombre à droite est la moyenne des plis. Les configurations sont comparées sur les mêmes plis ; une configuration plus basse sur chaque pli classe moins bien les lignes.
+    nonlinearity_question: Le modèle suit-il la forme de {feature}, ou se trompe-t-il de façon systématique d'une tranche de valeurs à l'autre ?
+    nonlinearity_label: Taux observé moins score moyen, par tranche de {feature}
+    nonlinearity_bar: Taux observé moins score moyen
+    nonlinearity_ci: Plus ou moins deux erreurs types
+    nonlinearity_note: Une barre à droite signifie que le modèle prédit trop peu de lignes positives dans cette tranche ; à gauche, trop. Une forme signalée est une forme que le modèle linéaire ne suit pas.
+    points: points de pourcentage
+    range: '{low} à {high}'
 regression:
   sections:
     policy: Comparaison des modèles
@@ -196,14 +406,27 @@ regression:
     rule_none: Aucun modèle choisi.
   verdict:
     adopt_model: Adopter le modèle linéaire
-    keep_baseline: Garder la moyenne de référence
+    keep_baseline: Garder la référence (prédire la moyenne)
     inconclusive: Non concluant
   chosen_model: Modèle choisi
   proposed_model: Modèle proposé
+  narrative:
+    chapters:
+      ch7:
+        title: Le choix du modèle
+        lede: Les modèles comparés sur les mêmes lignes, leurs résidus, et le modèle choisi.
+    # R26: the regression words of these charts (an error, where lower is better; no rate).
+    charts:
+      folds_question: Une configuration se trompe-t-elle moins que le candidat, pli par pli ?
+      folds_label: Erreur absolue moyenne hors pli de chaque pli, par configuration
+      folds_note: Chaque point est l'erreur absolue moyenne hors pli d'un pli ; le nombre à droite est la moyenne des plis. Les configurations sont comparées sur les mêmes plis ; une configuration plus basse sur chaque pli se trompe moins.
+      nonlinearity_label: Valeur observée moins prédiction moyenne, par tranche de {feature}
+      nonlinearity_bar: Valeur observée moins prédiction moyenne
+      nonlinearity_note: Une barre à droite signifie que le modèle prédit trop bas dans cette tranche ; à gauche, trop haut. Une forme signalée est une forme que le modèle linéaire ne suit pas.
   model_missing: Aucune comparaison actuelle de modèles.
   model_note: Les erreurs sont calculées sur les lignes de validation après un choix fait sur elles, dans l'unité de la cible. Elles sont optimistes et ne prédisent pas l'erreur sur de futures lignes.
   model_note_oof: Les erreurs sont des prédictions hors pli sur les lignes de développement, après un choix fait sur elles, dans l'unité de la cible. Ce sont des preuves de développement optimistes ; seul le test final, ouvert une fois, est indépendant.
-  model_paired_heading: Écarts appariés, modèle linéaire moins moyenne de référence (un écart négatif indique une erreur plus faible ; bootstrap apparié sur les mêmes lignes de validation)
+  model_paired_heading: Écarts appariés, modèle linéaire moins référence (prédire la moyenne) (un écart négatif indique une erreur plus faible ; bootstrap apparié sur les mêmes lignes de validation)
   residuals_heading: Résidus sur les lignes de validation (valeur observée moins prédiction)
   residuals_by_heading: Résidus par période
   model_names:
@@ -215,7 +438,7 @@ regression:
     workbench_not_tracked: Les essais dans l'établi ne changent rien et ne prouvent rien.
   cross_validation:
     model_note: Les erreurs sont des prédictions hors pli sur les lignes de développement, après un choix fait sur elles, dans l'unité de la cible. Ce sont des preuves de développement optimistes ; seul le test final, ouvert une fois, est indépendant.
-    model_paired_heading: Écarts appariés, modèle linéaire moins moyenne de référence (un écart négatif indique une erreur plus faible ; bootstrap apparié sur les mêmes prédictions hors pli)
+    model_paired_heading: Écarts appariés, modèle linéaire moins référence (prédire la moyenne) (un écart négatif indique une erreur plus faible ; bootstrap apparié sur les mêmes prédictions hors pli)
     residuals_heading: Résidus des prédictions hors pli (valeur observée moins prédiction)
     not_yet_defensible_extra:
       grouped_split_unsupported: Le résultat du découpage indique combien de valeurs de groupe les plis partagent.
@@ -258,12 +481,16 @@ motivation:
   not_current: Une analyse antérieure qui n'est plus actuelle.
   looks: L'étude avait {n} regard{s} sur le résultat avant cette proposition.
   questions: "Questions à l'origine de cette préparation :"
+  changed_after_validation: Modifié après avoir vu l'évaluation de la valeur précédente ; les chiffres qui ont guidé ce changement peuvent donc être légèrement optimistes. C'est enregistré, pas refusé.
 roles:
   target: La cible
   time: Colonne temporelle, ordonne le découpage
   group_id: Identifiant de groupe, pas une variable du modèle
   id: Identifiant de ligne, pas une variable du modèle
 slot_labels:
+  diag.binary: Diagnostics du modèle sur les prédictions hors pli
+  diag.regression: Diagnostics du modèle sur les prédictions hors pli
+  eda.correlation: Associations entre les variables explicatives (sans lire la cible)
   eda.quality: Qualité des lignes de développement (sans lire la cible)
   eda.single_feature_signal: Signal de chaque variable seule sur les lignes d'entraînement
 not_yet_defensible_extra:
@@ -271,7 +498,7 @@ not_yet_defensible_extra:
   delegated_decisions: Vous avez laissé l'assistant choisir. Le choix est enregistré, mais ses raisons sont celles de l'assistant, pas les vôtres.
   high_cardinality_grouping: Relancez l'exploration avec un --max-groups plus grand pour voir davantage de groupes.
   no_causality: L'étude classe les lignes ; elle ne montre pas qu'agir modifierait le résultat.
-  no_time_or_entity_identifier: Sans colonne temporelle ni identifiant d'entité, la dérive et les entités répétées ne peuvent pas être vérifiées.
+  no_time_or_entity_identifier: Un identifiant d'entité est une colonne qui nomme qui ou quoi une ligne décrit, pour retrouver les entités répétées ; une colonne de temps ou un ordre déclaré dit quand chaque ligne a eu lieu, pour vérifier une dérive.
   open_holds: Vous avez demandé d'attendre. Rien de ce qui est en attente n'est confirmé tant que vos propres mots n'ont pas levé la condition.
   public_data_already_explored: Ces données publiques peuvent déjà avoir été explorées par vous, par d'autres ou par le modèle qui vous assiste.
   small_validation_partition: Avec si peu de lignes de validation, une ou deux lignes peuvent changer un chiffre ; comparez les modèles avec prudence.
@@ -327,6 +554,8 @@ diagnostics:
   hetero_no: Non signalé
   largest_heading: Plus grandes erreurs
   smearing: Transformation de la cible
+  unit_word: 'Unité :'
+  scale_word: 'Échelle :'
   rule_source:
     adopted: la règle que vous avez adoptée
     proposed: la règle proposée au moment du calcul

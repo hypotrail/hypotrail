@@ -36,8 +36,9 @@ HOTEL = REPO_ROOT / 'use-cases' / 'hotel-booking'
 
 SPLIT = {'method': 'stratified_random', 'validation_fraction': 0.3, 'seed': 20261017}
 THRESHOLD = 'threshold:0.2'
-# v0.2a (WP-A4): the success criterion is fixed after the split, before any fit; the
-# preprocessing after the training exploration (the engine's default, as in the walkthrough).
+# v0.2a (WP-A4): the success criterion is fixed after the split, before any fit. Owner session
+# 2026-10-26 (L5, D5): the preprocessing follows the structural check (the engine's draft, as in
+# the walkthrough), before the training exploration.
 CRITERION = {'metric': 'precision_gain', 'min_points': 5}
 REGRESSION_CRITERION = {'metric': 'mae_reduction', 'min_share': 0.1}
 
@@ -598,6 +599,22 @@ class Setup:
     def regression(self) -> bool:
         return self.view().get('task') == 'regression'
 
+    def prepare_variables(self) -> None:
+        """Owner session 2026-10-26 (L5, D5, D6): the structural check, the distributions the
+        engine screens, then the preparation the engine drafts from them, proposed and
+        confirmed before any look at the target (the default in a study of the earlier plan)."""
+        from mlkit.study import governance
+        self.run('eda.quality')
+        na = self.view().get('next_action') or {}
+        while na.get('kind') == 'run' and na.get('activity') == 'eda.distribution':
+            self.run('eda.distribution', '--column', na['options']['column'])
+            na = self.view().get('next_action') or {}
+        value = na.get('default_value') if na.get('decision') == 'preprocessing' else None
+        p = self.propose('preprocessing', value or dict(governance.DEFAULT_PREPROCESSING),
+                         'You adopt the preparation of the variables drafted from the quality '
+                         'check of the columns.')
+        self.confirm(p, 'I confirm this preparation.')
+
     def default_value(self, decision: str):
         """The engine's drafted value for ``decision`` (``next_action.default_value`` when the
         next action is about it)."""
@@ -653,6 +670,7 @@ class Setup:
                                  'The linear model is worth using only if its mean absolute '
                                  'error is at least 10% lower than the mean baseline.')
                 self.confirm(p, 'I confirm: at least 10% less error than the mean.')
+                self.prepare_variables()
                 self.run('eda.target_summary')
                 self.run('eda.special_values')
                 self.run('eda.mean_by', '--column', j['mean_by'])
@@ -661,13 +679,10 @@ class Setup:
                                  'The model is worth using only if its precision beats the '
                                  'baseline by at least 5 points at the rule you adopt.')
                 self.confirm(p, 'I confirm: at least 5 points over the baseline.')
+                self.prepare_variables()
                 self.run('eda.target_rate')
                 self.run('eda.special_values')
                 self.run('eda.rate_by', '--column', j['rate_by'])
-            default = self.default_value('preprocessing')
-            p = self.propose('preprocessing', default, 'You keep the default preparation of the '
-                                                       'variables: nothing added, nothing grouped.')
-            self.confirm(p, 'I confirm the default preparation.')
         if stop >= 4:
             self.run('fit.baseline')
             self.run('fit.linear' if regression else 'fit.logistic')

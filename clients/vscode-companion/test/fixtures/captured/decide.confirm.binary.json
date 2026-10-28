@@ -42,7 +42,7 @@
     "row": 6,
     "reason": "policy changed (§3.7 row 6: policy.rule_type)",
     "stale_results": [
-     "141c7a9e61e8bebc92cdc5a39d8ce6587c0eb025433d21e0456834045d877f75"
+     "afaa453cc8f7d53ad432be8dffee226bfdd66c8fd342bece0473c320a12625db"
     ],
     "stale_slots": [
      "diag.binary"
@@ -105,7 +105,9 @@
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: an analysis, run without asking you. Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
+   "junior_digest": "Next: the development diagnostics, run without asking you. Once it is done, you decide: Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Rule (12 of 14).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",
@@ -113,8 +115,8 @@
     "revision": 52,
     "position": {
      "step_id": "policy",
-     "completed": 10,
-     "total": 13
+     "completed": 11,
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -138,6 +140,10 @@
      "continue",
      "explain"
     ],
+    "option_labels": {
+     "continue": "Let's continue",
+     "explain": "Explain first"
+    },
     "question": "Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
     "evidence_refs": [],
     "detail_topics": [

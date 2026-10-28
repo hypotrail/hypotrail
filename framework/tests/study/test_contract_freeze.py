@@ -137,7 +137,9 @@ ACTION_PARAMS = {'decide.propose': {'decision_id', 'value', 'restatement', 'rati
                  'decide.resolve_note': {'note_id', 'user_words'},
                  'decide.withdraw_note': {'note_id', 'user_words'},
                  # ADR 0005: the confirmation mode, in the user's words.
-                 'study.set_mode': {'mode', 'user_words'}}
+                 'study.set_mode': {'mode', 'user_words'},
+                 # L9 (R20): the one-way end of the automatic mode.
+                 'study.end_automation': {'reason', 'user_words'}}
 # ADR 0005: optional parameters, carried only when given (a replay stays a replay).
 OPTIONAL_ACTION_PARAMS = {'decide.propose': {'channel', 'labels'},
                           'decide.confirm': {'agent_concern', 'adoption_question'},
@@ -165,7 +167,19 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # v0.3 (WP-F1): the selection among the variants and the model families.
              'model_selection', 'model_families', 'assurance',
              # Reliability roadmap J2: derived, null for legacy studies.
-             'requirements', 'completion', 'claim_eligibility', 'presentation')
+             'requirements', 'completion', 'claim_eligibility', 'presentation',
+             # L9 (owner session 2026-10-26, R20): the automatic mode chosen at launch, or
+             # null, and the decisions it recorded that wait for the junior's review.
+             'automation', 'review_queue',
+             # L3 (owner session 2026-10-26, R4; D4 A, D4b): the case's statements in both
+             # languages from its translation sidecar, or null.
+             'case_texts',
+             # R68 (minimal version, 2026-10-28): the imported PDF and the study's own brief.
+             'brief')
+# L3: the tables of ``view.case_texts`` (``mlkit.study.l10n.case_texts``).
+CASE_TEXTS_KEYS = ('facts', 'special_values', 'groups', 'availability', 'row_unit',
+                   # W2 integration: the case declares the glossary's examples its own.
+                   'glossary_examples')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals',
                       # v0.2a (WP-A1): per-feature basis of a feature availability value.
@@ -180,11 +194,18 @@ CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'prop
                           'warnings',
                           # v0.3 (WP-B, R27, R14/R16): a trade-off's reason, the closed
                           # adoption question.
-                          'reason_given', 'adoption_question')
+                          'reason_given', 'adoption_question',
+                          # L3 (owner session 2026-10-26): the restatement in the study
+                          # language.
+                          'label',
+                          # L9 (R20): the automatic confirmation a review adopted.
+                          'adopted_from')
 # Post-acceptance contract (D1): how the user decided. ADR 0005 adds the two recorded kinds
 # of own words of the guided mode; ``explicit`` stays readable and is the request default.
-CONFIRMATION_BASES = ('explicit', 'endorsed', 'restated', 'delegated_default')
-REQUEST_BASES = ('explicit', 'delegated_default')
+CONFIRMATION_BASES = ('explicit', 'endorsed', 'restated', 'delegated_default',
+                      # L9 (R20; ADR 0005 amendment of 2026-10-26): never the junior's words.
+                      'automatic')
+REQUEST_BASES = ('explicit', 'delegated_default', 'automatic')
 # ADR 0005: confirmation modes, languages, the guided reply reasons and warnings.
 MODES = ('guided', 'training', 'express')
 # v0.2b (WP-B2): the three modes are implemented.
@@ -199,7 +220,9 @@ DELEGATION_SCOPES = ('this_decision', 'standing')
 STANDING_DELEGATION_DECISIONS = ('prediction_time', 'feature_availability', 'split')
 # v0.2b (WP-B2): in the express mode, the framing decisions that follow the split too.
 EXPRESS_STANDING_DELEGATION_DECISIONS = ('prediction_time', 'feature_availability', 'split',
-                                         'success_criterion', 'preprocessing')
+                                         'success_criterion', 'preprocessing',
+                                         # Lot 2026-10-28 (EN-11).
+                                         'error_metric')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created',
                       # ADR 0005: restatements per language, and the study-language one,
@@ -240,6 +263,13 @@ B1_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availability', 'spli
 B2_BINARY_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availability', 'split',
                       'success_criterion', 'train_eda', 'preprocessing', 'models',
                       'model_variant', 'model_choice', 'policy', 'final_test', 'conclusion')
+# Owner session 2026-10-26 (L5, D5): a binary study created by ``init`` since L5 checks the
+# structure before the target (``exploration_order: structural_first``); a study created
+# before keeps ``B2_BINARY_STEP_IDS``.
+STRUCTURAL_FIRST_BINARY_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availability',
+                                    'split', 'success_criterion', 'structural_eda',
+                                    'preprocessing', 'train_eda', 'models', 'model_variant',
+                                    'model_choice', 'policy', 'final_test', 'conclusion')
 CV_METHODS = ('kfold_stratified', 'kfold_quantile', 'temporal_folds',
               'forward_chaining', 'ordered_retrospective', 'group_disjoint')
 TRIALS_KEYS = ('count', 'results', 'note')
@@ -251,7 +281,9 @@ FULL_REGRESSION_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availab
                             'success_criterion', 'train_eda', 'preprocessing', 'models',
                             'model_choice', 'conclusion')
 DATA_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'observation_unit', 'development',
-                     'target', 'final_test', 'groups', 'rows', 'note')
+                     'target', 'final_test', 'groups', 'rows', 'note',
+                     # Contract P1.10 (§17.4): the special-value rows, without the target.
+                     'special_rows')
 DATA_VARIABLE_KEYS = ('name', 'role', 'type', 'unit', 'description', 'description_fr',
                       'availability', 'decided', 'special_values', 'n_missing', 'n_distinct',
                       'examples')
@@ -285,13 +317,19 @@ REGRESSION_MUTATION_IDS = {1: 'prediction_time', 2: 'feature_availability.featur
                            # v0.2b (WP-B1).
                            17: 'model_variant',
                            # Reliability roadmap J3: action objective/rule mutation.
-                           18: 'success_criterion.selection', '*': 'unknown'}
+                           18: 'success_criterion.selection',
+                           # Lot 2026-10-28 (EN-9): the error measure.
+                           19: 'error_metric', '*': 'unknown'}
 NEXT_ACTION_KINDS = {'acknowledge_interruption', 'reconfirm', 'await_user_words', 'blocked',
                      'propose', 'run', 'done',
                      # Closure fix F1: a dead execution seen by the read-only lease probe.
                      'outcome_unknown',
                      # v0.2a (WP-A4, R2): step 0, informational.
-                     'show_data_card'}
+                     'show_data_card',
+                     # Review round 6 (area E): a decision the junior put on hold.
+                     'resolve_hold',
+                     # Lot 2026-10-28 (EN-12): the pause after the exploration.
+                     'read_exploration'}
 EXECUTION_VIEW_KEYS = ('active', 'interrupted', 'late', 'suspected_interrupted')
 LIVENESS_VALUES = ('running', 'outcome_unknown', 'not_checked')
 NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independent',
@@ -324,7 +362,12 @@ NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independen
                           'changed_after_final_test',
                           # B6c (H4): keeping the baseline against a criterion met on the
                           # final test.
-                          'verdict_keeps_baseline_against_criterion'}
+                          'verdict_keeps_baseline_against_criterion',
+                          # Review 2026-10-24 round 2: development rows left out of training
+                          # for a delayed label (review-v1 outcome clock).
+                          'delayed_labels_excluded',
+                          # L9 (R20): an automatic study not reviewed yet; a demo's opening.
+                          'automatic_decisions_to_review', 'final_test_opened_automatically'}
 INVALIDATION_KEYS = ('revision', 'decision_id', 'mutation', 'row', 'reason', 'stale_results',
                      'stale_slots', 'reconfirm_required', 'effects', 'previous')
 CONFIRM_INVALIDATION_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',
@@ -388,7 +431,10 @@ AMBIGUOUS_REASONS = {'missing_user_words', 'bare_acknowledgement', 'proposal_not
                      'question_reply', 'conditional_reply',
                      # v0.3 (WP-B): the final-test opening is never delegated (it was
                      # reason_required while a reason was mandatory).
-                     'delegation_not_allowed'}
+                     'delegation_not_allowed',
+                     # L9 (R20): --basis automatic outside an automatic mode in force, or for
+                     # a decision it does not cover (no new error code).
+                     'automation_not_set', 'automation_does_not_cover'}
 REGISTRY_ENTRY_KEYS = ('schema', 'result_id', 'input_key', 'activity', 'params', 'inputs', 'code',
                        'output', 'blobs', 'partition', 'n_rows', 'exposure_id', 'execution_id',
                        'started_revision', 'environment', 'created')
@@ -405,7 +451,9 @@ EXPOSURE_PURPOSES = ('structural_inspection', 'train_eda', 'train_fit',
                      'out_of_fold_policy_selection', 'final_evaluation',
                      # v0.2b (WP-B4): the diagnostics of the development predictions.
                      'development_diagnostics', 'policy_exploration',
-                     'labelled_preview_available')
+                     'labelled_preview_available',
+                     # Contract P1.9 (§17.3): the seeded step-1 sample's target values.
+                     'development_target_sample')
 EXPOSURE_PARTITIONS = ('all', 'train', 'validation', 'development', 'final_test')
 FINAL_TEST_STATUS_KEYS = ('status', 'rows', 'method', 'fraction', 'development_rows',
                           'schema_check',
@@ -424,7 +472,13 @@ EXTENSIONS = {'run': 'mlkit.study.cmd_run', 'render': 'mlkit.study.cmd_render',
               'decisions': 'mlkit.study.cmd_decisions', 'evidence': 'mlkit.study.cmd_evidence',
               'explain': 'mlkit.study.cmd_explain', 'export': 'mlkit.study.cmd_export',
               # v0.2a (WP-A4, R2): the read-only data card.
-              'data': 'mlkit.study.cmd_data'}
+              'data': 'mlkit.study.cmd_data',
+              # ADR 0008: the opt-in understanding and handover review.
+              'understanding': 'mlkit.study.cmd_understanding',
+              # L9 (R20): the automatic mode chosen at init (run, stop).
+              'automation': 'mlkit.study.cmd_automation',
+              # R68 (minimal version, 2026-10-28): the product owner's PDF and the brief.
+              'brief': 'mlkit.study.cmd_brief'}
 # Post-v0.1 observation kit: ``session-report`` and the opt-in session log.
 SESSION_REPORT_SCHEMA = 'hypotrail.session_report/1'
 SESSION_REPORT_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'sources', 'span',
@@ -465,7 +519,9 @@ CHECK_FINDINGS = {'number_outside_result': 'error', 'unknown_result_id': 'error'
 LITERAL_KINDS = ('revision', 'ordinal', 'user_words', 'proposal', 'decision_value', 'case',
                  'identifier', 'parameter', 'environment', 'setting', 'message', 'category',
                  # v0.2a (WP-A6): state counts, the five example rows, chart axis ticks.
-                 'structure', 'data_row', 'axis')
+                 'structure', 'data_row', 'axis',
+                 # v4 (R29): the notebook's code shown in a chapter's "Code" fold.
+                 'code')
 WRITER_MODULES = {'store', 'lock', 'registry', 'exposure', 'dependencies', 'commands', 'cli',
                   'migrate', 'preconditions'}
 
@@ -537,7 +593,7 @@ def test_status_summary_keys(flow):
     assert view.SUMMARY_KEYS == SUMMARY_PAYLOAD_KEYS[6:]
     assert tuple(payload['goal']) == SUMMARY_GOAL_KEYS
     assert [tuple(step) for step in payload['plan']] == [('id', 'title', 'status')] * len(
-        B2_BINARY_STEP_IDS)
+        STRUCTURAL_FIRST_BINARY_STEP_IDS)
     # New binary studies choose the model and its policy separately; legacy B1 stays stable.
     assert tuple(payload['decisions']) == st.B2_DECISION_IDS == B2_DECISION_IDS
     assert all(tuple(d) == SUMMARY_DECISION_KEYS for d in payload['decisions'].values())
@@ -597,7 +653,7 @@ def test_view_model_keys(flow):
         == LIVENESS_VALUES
     assert not [k for k in (*EXECUTION_VIEW_KEYS, *LIVENESS_VALUES, 'liveness')
                 if k not in DOC_TOKENS]
-    assert [s['id'] for s in v['plan']] == list(B2_BINARY_STEP_IDS)
+    assert [s['id'] for s in v['plan']] == list(STRUCTURAL_FIRST_BINARY_STEP_IDS)
     assert all(tuple(s) == STEP_KEYS for s in v['plan'])
     assert {'kind', 'message'} <= set(v['next_action'])
     assert {x['id'] for x in v['not_yet_defensible']} <= NOT_YET_DEFENSIBLE_IDS
@@ -617,6 +673,8 @@ def test_next_action_kinds_and_not_yet_defensible_ids_in_source():
     source = (STUDY_PKG / 'state.py').read_text(encoding='utf-8')
     assert set(re.findall(r"'kind': '([a-z_]+)'", source)) == NEXT_ACTION_KINDS
     defensible = (inspect.getsource(st.not_yet_defensible) + inspect.getsource(view.build)
+                  + inspect.getsource(st.delayed_labels_limit)
+                  + inspect.getsource(st.structure_limit)     # L7 (R17)
                   + inspect.getsource(view._small_data)
                   + inspect.getsource(view.small_partition_warning)
                   + inspect.getsource(view.capacity_warning)
@@ -654,7 +712,15 @@ def test_notes_hold_a_decision_until_the_junior_resolves_them(tmp_path, syntheti
     """P2 (post-v0.1): ``decide note --about`` / ``--resolve``, its state, view, summary and
     refusal keys."""
     assert st.TOP_OPTIONAL_KEYS == ('task', 'notes', 'partition', 'mode', 'language',
-                                    'mode_history', 'exploration')
+                                    'mode_history', 'exploration', 'understanding',
+                                    # L3 (D4 A): the case's translation sidecar of ``init``.
+                                    'case_l10n',
+                                    # L5 (D5): the structural-first plan generation.
+                                    'exploration_order',
+                                    # L9 (R20): the automatic mode chosen at init.
+                                    'automation',
+                                    # R68: the product owner's PDF and the study's brief.
+                                    'brief')
     assert st.NOTE_KEYS == NOTE_STATE_KEYS and st.NOTE_RESOLUTION_KEYS == NOTE_RESOLUTION_KEYS
     assert st.NOTE_KINDS == ('hold', 'correction') and st.NOTE_STATUSES == NOTE_STATUSES
     assert view.NOTE_VIEW_KEYS == NOTE_VIEW_KEYS
@@ -760,7 +826,9 @@ def test_actions_and_their_parameters():
     assert st.REQUEST_BASES == REQUEST_BASES
     assert st.CONFIRMATION_OPTIONAL_KEYS == ('basis', 'delegation_scope', 'agent_concern',
                                             'mode', 'warnings', 'reason_given',
-                                            'adoption_question')
+                                            'adoption_question',
+                                            # L9 (R20): a review's adoption.
+                                            'adopted_from')
     assert {a: set(p) for a, p in cmd.OPTIONAL_PARAMS.items()} == OPTIONAL_ACTION_PARAMS
     assert not set(CONFIRMATION_BASES) - DOC_TOKENS
     assert st.DELEGATION_SCOPES == DELEGATION_SCOPES
@@ -862,7 +930,9 @@ def test_extension_point_signatures():
     assert _params(cmd.register_action) == [('name', 'POSITIONAL_OR_KEYWORD'),
                                             ('factory', 'POSITIONAL_OR_KEYWORD')]
     assert [n for n, _ in _params(cmd.apply)] == ['study_dir', 'action', 'params', 'request_id',
-                                                  'expected_revision', 'command']
+                                                  'expected_revision', 'command',
+                                                  # L9: the automatic runner's own writes.
+                                                  'quiet']
     assert [f for f in cmd.Context.__dataclass_fields__] == ['store', 'request_id']
     assert [f for f in cmd.Outcome.__dataclass_fields__] == ['payload', 'exit_code']
     assert [n for n, _ in _params(registry.put)] == [
@@ -874,7 +944,8 @@ def test_extension_point_signatures():
     assert [n for n, _ in _params(registry.code_fingerprint)] == ['modules']
     assert [n for n, _ in _params(exposure.record)] == [
         'store', 'exposure_id', 'revision', 'activity', 'result_id', 'purpose', 'partition',
-        'row_keys', 'dataset_sha256', 'columns', 'execution_id']
+        'row_keys', 'dataset_sha256', 'columns', 'execution_id',
+        'sample_seed']                                    # contract P1.9, keyword, last
     assert [n for n, _ in _params(exposure.overlap)] == ['old_split', 'new_split', 'store']
     assert [n for n, _ in _params(exposure.summary)] == ['store', 'state']
     assert [n for n, _ in _params(dep.effects)] == ['old_state', 'decision_id', 'old', 'new']
@@ -1032,7 +1103,9 @@ def test_final_test_partition_contract(tmp_path, synthetic_case_dir):
     # optional ``groups`` of a case whose identical records are grouped.
     assert partition.STATUSES == ('sealed', 'opened') and partition.STATUS_ABSENT == 'absent'
     assert partition.OPTIONAL_RECORD_KEYS == ('groups', 'opening', 'prior_exposed',
-                                              'training_exclusions', 'analysis_protocol')
+                                              'training_exclusions', 'analysis_protocol',
+                                              # Lot 2026-10-28 (EN-17).
+                                              'strata_counts')
     # WP-B6a: rows the case declares as already exposed, kept out of the final test; the
     # opening's time in the status view.
     assert partition.PRIOR_EXPOSED_KEYS == ('path', 'sha256', 'declared_rows', 'excluded_rows')
@@ -1275,3 +1348,471 @@ def test_library_integration_v1_contract():
         'contract_code', 'evidence_binding', 'engine_parity', 'semantic_dependencies',
         'evidently_snapshot', 'read_export_source', 'hypotrail.export_source/1'}
     assert not sorted(t for t in tokens if t not in DOC_TOKENS)
+
+
+# --- ADR 0008: the understanding and handover review (CLI-CONTRACT §15) -----------------------
+
+def test_understanding_contract_is_frozen():
+    from mlkit.study import cmd_understanding as cu
+    from mlkit.study.understanding import (CODES, DIMENSIONS, STATE_SCHEMA, canonical,
+                                           evaluate, export, model, policy, snapshot,
+                                           taskset, verify)
+    assert cu.SCHEMA == 'hypotrail.understanding/1'
+    assert STATE_SCHEMA == 'hypotrail.understanding-state/1'
+    assert policy.SCHEMA == 'hypotrail.understanding-policy/1'
+    assert taskset.SCHEMA == 'hypotrail.understanding-tasks/1'
+    assert taskset.TASK_SCHEMA == 'hypotrail.understanding-task/1'
+    assert export.SCHEMA == 'hypotrail.understanding-review/1'
+    assert export.MANIFEST_SCHEMA == 'hypotrail.understanding-export-manifest/1'
+    assert snapshot.PUBLIC_SCHEMA == 'hypotrail.public-source-scope/1'
+    assert evaluate.GATE_SCHEMA == 'hypotrail.understanding-gate/1'
+    assert verify.SCHEMA == 'hypotrail.understanding-verification/1'
+    assert canonical.VERSION == 'hypotrail.canonical-json/1'
+    assert DIMENSIONS == ('D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8')
+    assert policy.MODES == ('off', 'coaching', 'required')
+    assert policy.MILESTONES == ('handoff',)
+    assert policy.KEYS == ('schema', 'policy_id', 'version', 'mode', 'milestones',
+                           'required_dimensions', 'responsibility_profiles',
+                           'critical_dimensions', 'peer_required_dimensions',
+                           'minimum_assurance', 'assistance_rule', 'expiration_rule',
+                           'evidence_retention', 'evidence_requirement', 'context_requirement',
+                           'export_policy', 'exemptions_policy', 'team_coverage', 'role_policy')
+    assert model.DIMENSION_STATUSES == ('not_evaluated', 'demonstrated', 'to_consolidate',
+                                        'needs_review')
+    assert evaluate.DECISIONS == ('not_applicable', 'allowed', 'blocked', 'allowed_by_waiver')
+    assert CODES == ('understanding_disabled', 'policy_invalid', 'unsupported_assurance',
+                     'stale_revision', 'idempotency_conflict', 'invalid_transition',
+                     'context_changed', 'unsupported_case', 'prerequisite_missing',
+                     'evidence_invalid', 'review_required', 'privacy_approval_required',
+                     'evidence_unavailable', 'path_outside_scope', 'git_index_conflict',
+                     'export_stale', 'milestone_blocked', 'unsupported_capability')
+    assert export.FILES == ('understanding-review.json', 'understanding-review.md',
+                            'export-manifest.json')
+    assert export.EXPORT_DIR == 'docs/understanding'
+    assert cu.STUDY_OPTIONAL == ('verify-export',)
+    assert sorted(cu.HANDLERS) == sorted([
+        'policy show', 'policy set', 'plan', 'start', 'status', 'task', 'submit', 'coach',
+        'rectify', 'propose-review', 'review', 'arbitrate', 'select', 'waive', 'handover set',
+        'transfer start', 'transfer submit', 'transfer review', 'close', 'check',
+        'export preview', 'export approve', 'export write', 'git-plan', 'git-stage',
+        'git-receipt', 'relocate'])
+    # Round 2 (C2-1): `relocate` records a declared move, so --author and --reason are
+    # required (checked before any study is opened).
+    out = cli.run(['understanding', 'relocate', '--session', 's', '--repo', '/x', '--study',
+                   '/nonexistent-study', '--request-id', 'r', '--expected-revision', '0'])
+    assert out.exit_code == 2 and out.payload['error']['code'] == 'invalid_arguments'
+    assert '--author' in out.payload['error']['message']
+    assert '--reason' in out.payload['error']['message']
+
+
+
+def test_panel_line_keys_are_frozen_and_documented():
+    """Owner session 2026-10-26 (R1, R1b) and contract P1 (CLI-CONTRACT §17.1, ADR 0004
+    decision 13): ``next_action.panel`` version 2 when the study panel is on, an anchor of
+    the one page in ``where`` and ``shown``. The declared switch from version 1 (the tab form
+    of §3.2: ``tabs``, ``where.tab``, ``shown.tab``, ``shown.section``), which this test
+    pinned before: there is no dual emission (§17.1.5)."""
+    from mlkit.study import companion_env as ce
+    assert ce.PANEL_CONTRACT == 2
+    assert ce.PANEL_KEYS == ('version', 'stage', 'title', 'where', 'shown')
+    assert ce.WHERE_KEYS == ce.SHOWN_KEYS == ('anchor', 'label', 'line')
+    assert ce.TODO_KINDS == ('execution', 'deliverables', 'checks', 'sources', 'integrity')
+    assert ce.DRAWERS == ('data', 'whatif', 'notions', 'deliverables')
+    # Review fix (2026-10-28): one grammar with the panel; a slot holds any character but a
+    # control character (a column with accents, spaces or parentheses), and ``tools:how``.
+    assert ce.ANCHOR_RE.pattern == (
+        r'now|todo:(?:execution|deliverables|checks|sources|integrity)|path'
+        r'|path:[a-z][a-z0-9_]*(?:/[^\x00-\x1f\x7f]+)?'
+        r'|tools:(?:data|whatif|notions|deliverables|how)')
+    assert not hasattr(ce, 'tabs') and not hasattr(ce, 'SECTIONS')
+    assert '`{version, stage, title, where, shown}`' in ' '.join(DOC.split()) or \
+        'Keys** (`companion_env.PANEL_KEYS`, version 2): `version`, `stage`, `title`, `where`, ' \
+        '`shown`' in ' '.join(DOC.split())
+    assert '`{anchor, label, line}`' in DOC
+    for name in ('PANEL_CONTRACT', 'ANCHOR_RE', 'step_of', 'shown_anchor', 'at_stage',
+                 'ANCHOR_LABELS'):
+        assert f'companion_env.{name}' in DOC, name
+    for name in ('CONTENT_LABELS', 'DRAWER_LABELS', 'STEP_LABELS', 'FIGURE_LABELS'):
+        assert name in DOC and hasattr(ce, name), name
+    for kind in ce.TODO_KINDS:
+        assert f'`todo:{kind}`' in DOC, kind
+    for drawer in ce.DRAWERS:
+        assert f'`tools:{drawer}`' in DOC, drawer
+    for content in ce.CONTENTS:
+        assert f'`{content}`' in DOC, content
+
+
+def test_panel_contract_p1_digest_keys(tmp_path, synthetic_case_dir):
+    """Contract P1 (CLI-CONTRACT §17.2): the digest keys after ``texts``, in order, the keys
+    inside existing structures (``--digest`` only), the ``texts`` additions; the plain summary
+    (without ``--digest``) keeps exactly its keys."""
+    import companion_contract as cc
+    from mlkit.study import audience, panel_digest as pd
+    # The owner batch of 2026-10-28 appends its keys after these (§17.6, additive; see
+    # test_owner_batch_2026_10_28_digest_keys), so the P1 keys are read by position.
+    # The lot of 2026-10-28 appends two more (§18, additive; test_lot_2026_10_28_keys).
+    assert view.DIGEST_SUMMARY_KEYS[-12:-4] == ('panel_contract', 'automation', 'review_queue',
+                                                'defensibility', 'ledger', 'sample',
+                                                'headlines', 'criterion_configurations')
+    assert view.LANGUAGE_TEXT_KEYS[10:17] == ('question', 'options', 'options_note',
+                                              'junior_digest', 'headlines', 'data_contingent',
+                                              'sample_note')
+    for name in ('SUMMARY_AUTOMATION_KEYS', 'SUMMARY_REVIEW_KEYS', 'SUMMARY_DEFENSIBILITY_KEYS',
+                 'SUMMARY_LEDGER_KEYS', 'SUMMARY_SAMPLE_KEYS', 'HEADLINE_KEYS',
+                 'SUMMARY_CRITERION_CONFIG_KEYS', 'CRITERION_BOUND_KEYS',
+                 'CRITERION_CONFIGURATION_KEYS', 'FINAL_CONFIGURATION_KEYS'):
+        assert getattr(pd, name) == getattr(cc, name), name
+    assert audience.SEVERITIES == ('blocking', 'caveat', 'not_final', 'context')
+    for key in view.DIGEST_SUMMARY_KEYS[-12:-4] + view.LANGUAGE_TEXT_KEYS[10:17]:
+        assert f'`{key}`' in DOC, key
+    study = tmp_path / 'study'
+    assert _run('init', '--case', synthetic_case_dir, '--study', study).exit_code == 0
+    plain = _run('status', '--summary', '--study', study).payload
+    assert tuple(plain) == cc.SUMMARY_KEYS
+    assert all('channel' not in r and 'step' not in r for r in plain['results'].values())
+    full = _run('status', '--summary', '--digest', '--study', study).payload
+    assert tuple(full) == cc.DIGEST_SUMMARY_KEYS
+    assert full['panel_contract'] == cc.PANEL_CONTRACT
+    assert tuple(full['ledger']) == cc.SUMMARY_LEDGER_KEYS
+    assert tuple(full['sample']) == cc.SUMMARY_SAMPLE_KEYS
+    assert tuple(full['defensibility']) == cc.SUMMARY_DEFENSIBILITY_KEYS
+    for lang in ('en', 'fr'):
+        assert tuple(full['texts'][lang]) == cc.LANGUAGE_TEXT_KEYS
+
+
+def test_lot_2026_10_28_keys():
+    """Lot 2026-10-28 (CLI-CONTRACT §18, additive): the digest keys after
+    ``quality_verdicts``, the ``texts`` additions, the step cards' keys, the error measure's
+    decision set, the new next-action kind; every name documented in §18."""
+    from mlkit.study import case_brief, case_display, panel_digest as pd, step_cards as sc
+    assert view.DIGEST_SUMMARY_KEYS[-2:] == ('case_brief', 'case_display')
+    assert view.LANGUAGE_TEXT_KEYS[-3:] == ('step_cards', 'case_brief', 'defensibility_note')
+    assert sc.SCHEMA == 'hypotrail.step_cards/1'
+    assert sc.CARDS_KEYS == ('schema', 'current', 'total', 'steps')
+    assert sc.STEP_KEYS == ('step', 'n', 'name', 'short', 'moment', 'state', 'picture',
+                            'prepares', 'questions', 'no_chart', 'limit', 'next', 'decision')
+    assert sc.QUESTION_KEYS == ('id', 'n', 'text', 'source', 'chart', 'chart_data',
+                                'other_charts', 'frame', 'status', 'result_id',
+                                'result_revision', 'reading', 'cites', 'verdict', 'folds')
+    assert sc.PICTURE_KEYS == ('kind', 'caption', 'more', 'illustrative', 'data')
+    assert sc.CITE_KEYS == ('name', 'result_id', 'path', 'value', 'text')
+    assert sc.OTHER_CHART_KEYS == ('slot', 'chart', 'result_id', 'result_revision', 'status')
+    assert sc.DECISION_KEYS == ('decision_id', 'words', 'basis', 'who')
+    assert sc.STATUSES == ('answered', 'stale', 'pending', 'no_chart', 'integrity_failed')
+    assert sc.WHO == ('you', 'automatic', 'delegated')
+    assert case_display.CHART_KEYS == ('milestones', 'moment_after', 'slider', 'decided',
+                                       'status', 'columns', 'positions')
+    assert case_display.POSITION_KEYS == ('after', 'kept', 'dropped', 'uncertain')
+    assert case_brief.DIGEST_KEYS == ('fictitious', 'current_method_error', 'target_error')
+    assert pd.SUMMARY_DEFENSIBILITY_KEYS[-1] == 'checklist'
+    assert pd.SUMMARY_CRITERION_CONFIG_KEYS[-1] == 'business'
+    assert pd.BUSINESS_KEYS == ('max_error', 'measure', 'configurations', 'final_test',
+                                'judged_on', 'met')
+    assert st.ERROR_METRIC == 'error_metric' and st.ERROR_METRICS == ('mae', 'rmse')
+    assert st.M1_REGRESSION_DECISION_IDS.index('error_metric') + 1 == \
+        st.M1_REGRESSION_DECISION_IDS.index('success_criterion')
+    section = DOC[DOC.index('## 18. One structure for every step'):]
+    for name in ('read_exploration', 'error_metric', 'strata_counts', 'case_brief',
+                 'case_display', 'business_max_error', 'checklist', 'defensibility_note',
+                 'step_cards', 'criterion_example', 'integrity_failed', 'chart_data',
+                 'result_revision', 'positions', 'business') + sc.STEP_KEYS + sc.QUESTION_KEYS:
+        assert name in section, name
+
+
+def test_owner_batch_2026_10_28_digest_keys():
+    """Owner batch of 2026-10-28 (CLI-CONTRACT §17.6, additive): the digest keys after
+    ``criterion_configurations``, the ``texts`` additions, the ledger's live budget, the
+    structure of the step-1 card, the quality verdicts, the evidence of a proposal, the
+    plan recap, the panel line's form (R35); every name documented."""
+    from mlkit.study import cmd_data, companion_env as ce, drafts, junior
+    # The lot of 2026-10-28 appends its keys after these (§18; test_lot_2026_10_28_keys).
+    assert view.DIGEST_SUMMARY_KEYS[-4:-2] == ('data_structure', 'quality_verdicts')
+    assert view.LANGUAGE_TEXT_KEYS[-6:-3] == ('plan_recap', 'step_limit', 'criterion_words')
+    assert cmd_data.STRUCTURE_KEYS == ('duplicates', 'groups')
+    assert cmd_data.STRUCTURE_DUPLICATE_KEYS == ('rows', 'identical_feature_rows')
+    assert cmd_data.STRUCTURE_GROUP_KEYS == ('column', 'groups', 'rows_in_repeated_groups')
+    assert drafts.VERDICT_KEYS == ('column', 'kept', 'changed', 'parameters', 'checks', 'text')
+    assert drafts.CHECK_KEYS == ('rule', 'value', 'threshold', 'exceeds', 'path', 'words')
+    assert ce.LINE_MARK == {'en': '> 🧭 **Panel** · ', 'fr': '> 🧭 **Panneau** · '}
+    assert ce.SESSION_GAP_MINUTES == view.SESSION_GAP_MINUTES == 20
+    assert set(junior.EVIDENCE_SLOTS) == {'preprocessing', 'model_variant', 'model_choice',
+                                          'policy', 'conclusion'}
+    flat = ' '.join(DOC.split())
+    for key in ('data_structure', 'quality_verdicts', 'plan_recap', 'step_limit',
+                'criterion_words', 'evidence', 'variants', 'identical_feature_rows',
+                'rows_in_repeated_groups', 'rmse_reduction', 'verdicts',
+                'drafts.quality_verdicts', 'companion_env.SESSION_GAP_MINUTES'):
+        assert f'`{key}`' in DOC, key
+    assert '> 🧭 **Panneau** · <place>' in flat
+
+
+def test_l7_after_study_and_structure_limit_contract():
+    """L7 (owner session 2026-10-26: D15, R17): ``next_action.after_study`` on ``done`` and
+    the ``no_time_or_entity_identifier`` keys; every name is documented in CLI-CONTRACT.md
+    (§3.1, §4, §15)."""
+    from mlkit.study import after_study as aft
+    assert aft.AFTER_STUDY_KEYS == ('handoff', 'azureml', 'cloud_status', 'junior_text')
+    assert aft.AZUREML_KEYS == ('supported', 'reason_id', 'reason', 'plan_command', 'model',
+                                'template')
+    assert aft.REASON_IDS == ('study_before_final_test', 'sources_changed', 'no_model_chosen',
+                              'baseline_chosen', 'family_not_supported', 'no_recipe')
+    assert aft.CLOUD_STATUS == 'not_qualified' and aft.TEMPLATE_ID == 'team-azureml-v1'
+    keys = (set(aft.AFTER_STUDY_KEYS) | set(aft.AZUREML_KEYS) | set(aft.REASON_IDS)
+            | {'after_study', 'not_qualified', 'ordered_by', 'state.missing_structure',
+               'state.declared_order', 'state.structure_limit', 'mlkit.study.after_study',
+               'current_revision', 'study_revision'})
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
+    assert '--expected-revision is required: the study at' in DOC
+
+
+# --- Owner session 2026-10-26, wave W1 (lots L1, L2, L4, L7): the integrator's contract
+# commit (plan §1.3). L1's names were pinned in ``test_pause_pickers.py`` until here.
+
+PAUSE_KEYS = ('schema', 'kind', 'language', 'revision', 'position', 'learned', 'limitations',
+              'proposal_id', 'proposal_text', 'recommended_option', 'options', 'option_labels',
+              'question', 'evidence_refs', 'detail_topics')
+PAUSE_KINDS = ('decision', 'action', 'explanation', 'blocked', 'complete', 'choice')
+OPTION_LABELS = {'adopt': ('I adopt this decision', "J'adopte cette décision"),
+                 'change': ('Change something', 'Changer quelque chose'),
+                 'explain': ('Explain first', "Expliquer d'abord"),
+                 'continue': ("Let's continue", 'On continue')}
+CHOICE_OPTION_KEYS = ('id', 'value', 'label')
+CHOICE_DECISIONS = ('model_choice', 'conclusion')
+# The order of the keys the view and the command surfaces append to ``next_action`` (each
+# present only when it applies): the junior-ready keys (v0.3), then ``choice_options`` (L1),
+# ``after_study`` (L7), ``pause`` (J5) and, with the panel on, ``panel`` last (R1, L2).
+# Wave W2 (L5): ``alternatives`` at a drafted preparation, before the junior-ready keys.
+NEXT_ACTION_TAIL = ('alternatives', 'language', 'recommended', 'question', 'junior_digest',
+                    'choice_options', 'after_study', 'pause', 'panel')
+
+
+def test_w1_pause_and_choice_contract():
+    """L1 (R3, R2c): ``hypotrail.pause/1`` keys and kinds, the option labels in both
+    languages, the ``choice_options`` items; every name and label documented (§3.1, J4–J7)."""
+    from mlkit.study import feasibility, guidance, junior
+    assert tuple(guidance.pause({'next_action': {'kind': 'run'}, 'revision': 1})) == PAUSE_KEYS
+    assert guidance.KINDS == PAUSE_KINDS and guidance.SCHEMA == 'hypotrail.pause/1'
+    assert guidance.OPTION_LABELS == OPTION_LABELS
+    assert junior.CHOICE_OPTION_KEYS == CHOICE_OPTION_KEYS
+    assert junior.CHOICE_DECISIONS == CHOICE_DECISIONS
+    assert callable(feasibility.accepts) and callable(junior.choice_options)
+    for name in PAUSE_KEYS + PAUSE_KINDS + ('choice_options', 'junior.choice_options',
+                                            'feasibility.accepts', 'guidance.OPTION_LABELS',
+                                            'junior.CHOICE_OPTION_KEYS'):
+        assert f'`{name}`' in DOC, name
+    flat = ' '.join(DOC.split())
+    for label_en, label_fr in OPTION_LABELS.values():
+        assert f'"{label_en}" / "{label_fr}"' in flat, label_en
+
+
+def test_w1_run_progress_contract():
+    """L4 (R10 level 1, D12): ``run --progress`` is a flag of ``run`` only, its heartbeat at
+    most 10 s, documented in §1 (the stderr clause) and §8.1."""
+    import argparse
+    from mlkit.study import cmd_run, progress
+    parser = argparse.ArgumentParser()
+    cmd_run.configure(parser)
+    assert '--progress' in parser._option_string_actions
+    assert progress.HEARTBEAT_SECONDS == 10.0
+    flat = ' '.join(DOC.split())
+    assert 'except the progress lines of `run --progress`' in flat
+    assert '`progress.HEARTBEAT_SECONDS`' in DOC and '`mlkit.study.progress`' in DOC
+
+
+def test_w1_next_action_key_order(tmp_path, synthetic_case_dir, monkeypatch):
+    """Plan §1.3: the wave's additive ``next_action`` keys come in one fixed order, set by
+    the integrator: in the source (``junior.enrich``, ``view.build``) and in a payload with
+    the panel on, where ``panel`` is the last key; with the panel off it is absent."""
+    from mlkit.study import companion_env as ce, junior
+    enrich = inspect.getsource(junior.enrich)
+    assert enrich.index("action['junior_digest']") < enrich.index("action['choice_options']")
+    build = inspect.getsource(view.build)
+    assert (build.index('junior.enrich(') < build.index("['after_study']")
+            < build.index("['pause'] = guidance.pause"))
+    assert 'panel' not in view.VIEW_KEYS
+
+    def tail(action):
+        return tuple(k for k in action if k in NEXT_ACTION_TAIL)
+
+    def ordered(keys):
+        return list(keys) == sorted(keys, key=NEXT_ACTION_TAIL.index)
+
+    study = tmp_path / 'study'
+    monkeypatch.delenv(ce.ENV_VAR, raising=False)
+    monkeypatch.delenv(ce.STAGE_ENV, raising=False)
+    off = _run('init', '--case', synthetic_case_dir, '--study', study)
+    action = _run('status', '--summary', '--study', study).payload['next_action']
+    assert off.exit_code == 0 and 'panel' not in action and ordered(tail(action))
+    monkeypatch.setenv(ce.ENV_VAR, '1')
+    action = _run('status', '--summary', '--study', study).payload['next_action']
+    assert tail(action) == ('language', 'recommended', 'question', 'junior_digest', 'pause',
+                            'panel')
+    assert list(action)[-1] == 'panel'
+    for key in NEXT_ACTION_TAIL:
+        assert f'`{key}`' in DOC, key
+
+
+def test_l5_contract_constants(tmp_path, synthetic_case_dir):
+    """Owner session 2026-10-26 (L5): the structural-first generation, the drafts' keys and
+    rules, the refusal details of a family outside the catalogue, the calendar declaration;
+    every name documented in CLI-CONTRACT."""
+    from mlkit.study import case as c, drafts
+    assert (st.EXPLORATION_ORDER_KEY, st.STRUCTURAL_FIRST, st.EXPLORATION_ORDERS,
+            st.STRUCTURAL_EDA) == ('exploration_order', 'structural_first',
+                                   ('structural_first',), 'structural_eda')
+    assert st.STRUCTURAL_EDA_STEP['activities'] == ('eda.quality',)
+    assert drafts.REASON_KEYS == ('parameter', 'column', 'rule', 'evidence', 'text')
+    assert drafts.ALTERNATIVE_KEYS == ('value', 'label', 'why')
+    assert drafts.NOT_OFFERED_KEYS == ('name', 'words', 'why')
+    assert drafts.RULES == ('rare_categories', 'missing_indicator', 'cap_declared_range',
+                            'signed_log')
+    assert (drafts.RARE_MIN_DISTINCT, drafts.RARE_MIN_SHARE, drafts.MISSING_MIN_SHARE,
+            drafts.CAP_QUANTILES, drafts.MAX_DISTRIBUTION_RUNS, drafts.SPAN_RATIO) == (
+        20, 0.01, 0.05, [0.005, 0.995], 3, 10)
+    assert drafts.WORKBENCH == 'notebooks/workbench.py'
+    assert c.CALENDAR_UNITS == ('year',) and 'calendar' in c.VARIABLE_OPTIONAL
+    study = tmp_path / 'study'
+    _run('init', '--case', synthetic_case_dir, '--study', study)
+    assert read.open(study).state['exploration_order'] == 'structural_first'
+    refused = _run('decide', 'propose', 'model_variant', '--value-json',
+                   json.dumps({'variants': [{'kind': 'family', 'family': 'svm',
+                                             'question': 'x?'}]}),
+                   '--restatement', 'x', '--rationale', 'x', '--request-id', 'l5',
+                   '--expected-revision', 1, '--study', study)
+    assert refused.payload['error']['code'] == 'invalid_value'
+    assert {'reason', 'asked', 'closest_family', 'workbench', 'junior_message'} <= set(
+        refused.payload['error']['details'])
+    keys = ({st.EXPLORATION_ORDER_KEY, st.STRUCTURAL_FIRST, st.STRUCTURAL_EDA,
+             'alternatives', 'reasons', 'junior_text', 'junior_words', 'not_offered',
+             'family_not_in_catalogue', 'closest_family', 'workbench', 'calendar',
+             'drafts.preprocessing_draft', 'drafts.variant_draft', 'drafts.screened_columns',
+             'drafts.family_refusal', 'drafts.calendar_advisory', 'drafts.contingency_text',
+             'target_look'}
+            | set(drafts.REASON_KEYS) | set(drafts.ALTERNATIVE_KEYS) | set(drafts.RULES)
+            | set(STRUCTURAL_FIRST_BINARY_STEP_IDS))
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
+
+
+# --- Owner session 2026-10-26, wave W2 (lots L3, L5, L6): the integrator's contract commit
+# (plan §1.3). Each lot pinned its own names (L3: ``VIEW_KEYS``, ``CONFIRMATION_VIEW_KEYS``,
+# ``TOP_OPTIONAL_KEYS``, the companion key lists; L5: ``test_l5_contract_constants``); this
+# test pins what the wave adds across lots: the ``next_action`` key order with L5's
+# ``alternatives``, L3's sidecar and ``case_texts`` tables, L6's report chapters and the
+# chapter of every step of every plan generation (L5's ``structural_eda`` included).
+
+def test_w2_contract(tmp_path):
+    from mlkit.study import drafts, junior, l10n, render_html, render_narrative as rn
+    # L5 + W1 order: the drafts amend the runnable action before ``junior.enrich``, which
+    # re-adds ``recommended`` after ``language`` (a drafted ``recommended`` is moved there).
+    runnable = inspect.getsource(view._runnable)
+    assert 'drafts.with_preprocessing_draft' in runnable
+    enrich = inspect.getsource(junior.enrich)
+    assert (enrich.index("action['language'] = lang") < enrich.index("action.pop('recommended'")
+            < enrich.index("action['recommended'] = recommended"))
+    assert 'alternatives' in inspect.getsource(drafts.with_preprocessing_draft)
+    # L3: the translation sidecar and the view's tables of case statements.
+    assert (l10n.SCHEMA, l10n.FILE, l10n.STATE_KEY, l10n.STATE_KEYS) == (
+        'hypotrail.case_l10n/1', 'case.l10n.yaml', 'case_l10n', ('path', 'sha256'))
+    # Contract P1 (§17.2.3) appends its keys after these (pinned in test_panel_contract_p1).
+    assert view.LANGUAGE_TEXT_KEYS[:10] == ('plan', 'moments', 'next_action', 'choice_options',
+                                            'limits', 'artifacts', 'recap', 'digest', 'goal',
+                                            'proposals')
+    auto = REPO / 'use-cases' / 'auto-mpg'
+    study = tmp_path / 'auto'
+    assert _run('init', '--case', auto, '--study', study, '--lang', 'fr').exit_code == 0
+    state = read.open(study).state
+    assert tuple(state[l10n.STATE_KEY]) == l10n.STATE_KEYS
+    payload = _run('status', '--study', study).payload
+    assert tuple(payload['view']['case_texts']) == CASE_TEXTS_KEYS
+    assert state[st.EXPLORATION_ORDER_KEY] == st.STRUCTURAL_FIRST
+    # L6: the narrative report and the chapter of every step of every plan generation.
+    # v4 (owner decision 2026-10-27, R25 to R30): the lesson report, both languages in one
+    # file, the board by default (CLI-CONTRACT §11.5, "Lesson report").
+    assert render_html.TEMPLATE_VERSION == 4
+    assert render_html.LITERAL_KINDS[-1] == 'code'
+    assert rn.CHAPTERS == tuple(f'ch{i}' for i in range(1, 10))
+    assert rn.EVIDENCE_CLASSES == ('none', 'structural', 'development', 'final')
+    steps = {s['id'] for group in (st.STEPS, st.REGRESSION_STEPS, st.FULL_STEPS,
+                                   st.FULL_REGRESSION_STEPS, st.B1_STEPS, st.B2_BINARY_STEPS,
+                                   st.B1_REGRESSION_STEPS) for s in group}
+    steps |= {st.STRUCTURAL_EDA} | {s['id'] for s in st.steps(state)}
+    assert steps <= set(rn.STEP_CHAPTER) and steps <= set(rn.REGRESSION_STEP_CHAPTER)
+    assert rn.STEP_CHAPTER[st.STRUCTURAL_EDA] == rn.STEP_CHAPTER['train_eda'] == 'ch4'
+    for name in ('render_narrative.STEP_CHAPTER', 'REGRESSION_STEP_CHAPTER',
+                 'render_narrative.LIMIT_CHAPTER', 'mlkit.study.render_narrative',
+                 'case_l10n', 'case_texts', 'question_junior', 'alternatives'):
+        assert name in DOC_TOKENS, name
+    for cls in rn.EVIDENCE_CLASSES:
+        assert f'`{cls}`' in DOC, cls
+
+
+def test_l9_automation_contract(tmp_path):
+    """Owner session 2026-10-26 (L9, R20; ADR 0005 and ADR 0006 amendments): the automatic
+    mode's names, the state and view keys, the runner's payload, and the documentation of
+    every new token."""
+    from mlkit.study import automation, partition
+    assert st.AUTOMATIC == 'automatic' and st.AUTOMATIC_ACTOR == 'assistant'
+    assert st.AUTOMATION_MODES == ('until_final_test', 'full_demo')
+    assert st.AUTOMATION_KEYS == ('mode', 'status', 'started_revision', 'ended')
+    assert st.AUTOMATION_STATUSES == ('running', 'ended')
+    assert st.AUTOMATION_ENDED_KEYS == ('revision', 'reason', 'user_words', 'time', 'request_id')
+    assert st.AUTOMATION_END_REASONS == ('reached_end', 'stopped')
+    assert st.DEMO_ONLY_DECISIONS == ('final_test', 'conclusion')
+    assert st.ADOPTED_FROM_KEYS == ('basis', 'proposal_id', 'revision')
+    assert st.MODE_CHANGE_OPTIONAL_KEYS == ('automation',)
+    assert st.AUTOMATION_END_KEYS == ('previous', 'reason')
+    assert st.basis_class('automatic') == 'automatic'
+    assert partition.OPENING_OPTIONAL_KEYS == ('basis',)
+    assert view.REVIEW_QUEUE_KEYS == ('decision_id', 'status', 'value', 'proposal_id',
+                                      'revision')
+    assert cmd.ACTION_END_AUTOMATION == 'study.end_automation'
+    assert automation.SCHEMA == 'hypotrail.automation/1'
+    assert automation.PAYLOAD_KEYS == ('schema', 'ok', 'study', 'revision', 'automation',
+                                       'status', 'stopped_at', 'reason', 'refusal', 'steps',
+                                       'review_queue', 'next_action', 'artifacts')
+    assert automation.STEP_KEYS == ('revision', 'kind', 'decision', 'activity', 'outcome')
+    assert automation.STOP_REASONS == ('reached_end', 'needs_junior', 'no_automatic_value',
+                                       'refused', 'not_promoted', 'automation_not_set',
+                                       'limit')
+    assert set(automation.RULES) == {'model_choice', 'policy', 'conclusion'}
+    # ``auto_value`` comes after the junior-ready keys and before ``pause``.
+    build = inspect.getsource(view.build)
+    assert build.index('junior.enrich(') < build.index('automation.annotate(') \
+        < build.index("['pause'] = guidance.pause(")
+    for name in ('automatic', 'until_final_test', 'full_demo', 'auto_value', 'review_queue',
+                 'automation_not_set', 'automation_does_not_cover', 'reached_end', 'stopped',
+                 'automatic_decisions_to_review', 'final_test_opened_automatically',
+                 'adopted_from', 'study.end_automation', 'hypotrail.automation/1',
+                 'automatic_decisions_reviewed', 'started_revision'):
+        assert name in DOC_TOKENS, name
+    assert 'hypotrail init --case CASE --study DIR [--lang en|fr]' in DOC
+    assert '[--automation until_final_test|full_demo]' in DOC
+    assert 'hypotrail automation run' in DOC and 'hypotrail automation stop' in DOC
+    # A study created without the flag has no key; its view says so.
+    study = tmp_path / 'plain'
+    auto = REPO / 'use-cases' / 'auto-mpg'
+    assert _run('init', '--case', auto, '--study', study).exit_code == 0
+    assert 'automation' not in read.open(study).state
+    v = _run('status', '--study', study).payload['view']
+    assert v['automation'] is None and v['review_queue'] == []
+    assert 'auto_value' not in v['next_action']
+
+
+def test_r23_r24_automation_words_contract():
+    """Owner session 2026-10-27 (R23, R24 of the fourth session of 2026-10-26): the readable
+    summary of ``automation run`` on a terminal (``--json`` keeps the JSON document, a stdout
+    that is not a terminal always gets it), its words module, and the review pause (kind
+    ``decision``, nothing recommended, the reviewed decision's step) are documented; the
+    payload and the pause keep their keys."""
+    from mlkit.study import automation, automation_words, cli, guidance
+    assert cli.TEXT_ON_A_TERMINAL == (('automation', 'run'),)
+    assert callable(automation_words.text_summary) and callable(
+        automation_words.review_restatement)
+    assert automation.PAYLOAD_KEYS[-1] == 'artifacts' and guidance.KINDS == PAUSE_KINDS
+    for name in ('cli.TEXT_ON_A_TERMINAL', 'mlkit.study.automation_words',
+                 'automation_words.text_summary', 'automation_words.review_restatement',
+                 'cite.format_value', 'recommended_option', 'position.step_id'):
+        assert name in DOC_TOKENS, name
+    flat = ' '.join(DOC.split())
+    assert 'hypotrail automation run [--progress] [--json | --format text|json]' in flat
+    assert '**The review pause** (owner session 2026-10-27, R24)' in flat

@@ -14,7 +14,15 @@ agent's rules:
 
 The Copilot files are generated from the same source with a header comment; they are
 **not tested** while directive A1 holds. Placeholders (`{{HYPOTRAIL}}`, `{{STUDY}}`,
-`{{GLOSSARY}}`, `{{SKILL}}`, `{{CHOICE_TOOL}}`) are replaced at install; the CLI invocation is also recorded
+`{{GLOSSARY}}`, `{{SKILL}}`, `{{CHOICE_TOOL}}`) are replaced at install; so are
+`{{RUN_NOTICE}}`, `{{BLOCK_PLACE}}`, `{{CHOICE_STEPS}}`, `{{EXPLAIN_FIRST}}`,
+`{{TEXT_FALLBACK}}`, `{{PAUSE_CARRIER}}`, `{{PANEL_LINE_PLACE}}` and `{{PICKER_RULE}}`, per
+agent (`agent_files.FLAVOUR_TEXTS`): Copilot folds the text written before a tool call, so
+its copy puts the facts, the quoted block and the closed question inside the picker
+question, ends every closed question with the picker (labels from `pause.option_labels`),
+and repeats in the final message what the junior must keep; short progress lines before
+and between tool calls are allowed with Copilot (owner session 2026-10-26, D13). The
+Claude Code copy leaves these slots empty or keeps its own text. The CLI invocation is also recorded
 in `.hypotrail/agent.json`. Existing files are never overwritten. This README is not
 installed. Never add a file here under a loaded name (`CLAUDE.md`, `AGENTS.md`,
 `.claude/`, `.github/`): `framework/tests/study/test_agent_files.py` refuses it.

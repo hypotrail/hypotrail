@@ -1,0 +1,803 @@
+{
+ "about": {
+  "schema": "hypotrail.decisions/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "decisions",
+   "--json"
+  ],
+  "note": "Guided French Auto MPG study at the end: `decisions`."
+ },
+ "payload": {
+  "schema": "hypotrail.decisions/1",
+  "ok": true,
+  "study": "/studies/auto mpg fr",
+  "revision": 73,
+  "task": "regression",
+  "decisions": [
+   {
+    "decision_id": "prediction_time",
+    "title": "Définir le moment de la prédiction",
+    "pause": 1,
+    "step": "prediction_time",
+    "status": "confirmed",
+    "value": "when the record is created, before the outcome",
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the prediction_time exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the prediction_time as stated.",
+     "proposal_id": "p_1",
+     "revision": 3,
+     "time": "2026-10-28T12:10:19.175532+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You decide the prediction_time as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "feature_availability",
+    "title": "Décider quelles variables sont disponibles au moment de la prédiction",
+    "pause": 1,
+    "step": "feature_availability",
+    "status": "confirmed",
+    "value": {
+     "acceleration": "uncertain_excluded",
+     "cylinders": "available_at_prediction",
+     "displacement": "available_at_prediction",
+     "horsepower": "available_at_prediction",
+     "origin": "available_at_prediction",
+     "weight": "available_at_prediction"
+    },
+    "depends_on": [
+     "prediction_time"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the feature_availability exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the feature_availability as stated.",
+     "proposal_id": "p_2",
+     "revision": 5,
+     "time": "2026-10-28T12:10:21.977187+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You decide the feature_availability as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "split",
+    "title": "Découper les données avant de les explorer",
+    "pause": 2,
+    "step": "split",
+    "status": "confirmed",
+    "value": {
+     "folds": 5,
+     "method": "temporal_folds",
+     "seed": 20261017
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the split exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the split as stated.",
+     "proposal_id": "p_3",
+     "revision": 9,
+     "time": "2026-10-28T12:10:26.828968+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You decide the split as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "error_metric",
+    "title": "Choisir comment l'erreur est mesurée",
+    "pause": 2,
+    "step": "error_metric",
+    "status": "confirmed",
+    "value": {
+     "metric": "mae"
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the error_metric exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the error_metric as stated.",
+     "proposal_id": "p_4",
+     "revision": 13,
+     "time": "2026-10-28T12:10:32.449876+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You decide the error_metric as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "success_criterion",
+    "title": "Fixer le critère de succès avant de voir un modèle",
+    "pause": 2,
+    "step": "success_criterion",
+    "status": "confirmed",
+    "value": {
+     "business_max_error": 4.5,
+     "metric": "mae_reduction",
+     "min_share": 0.1
+    },
+    "depends_on": [
+     "error_metric"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the success_criterion exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the success_criterion as stated.",
+     "proposal_id": "p_5",
+     "revision": 15,
+     "time": "2026-10-28T12:10:35.526166+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You decide the success_criterion as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "preprocessing",
+    "title": "Décider comment le modèle prépare les variables",
+    "pause": 2,
+    "step": "preprocessing",
+    "status": "confirmed",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [
+      "horsepower"
+     ],
+     "missing": "none",
+     "motivated_by": [
+      "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e"
+     ],
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the preprocessing exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the preprocessing as stated.",
+     "proposal_id": "p_6",
+     "revision": 21,
+     "time": "2026-10-28T12:10:43.536036+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You decide the preprocessing as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "model_variant",
+    "title": "Choisir les variantes à comparer",
+    "pause": 3,
+    "step": "model_variant",
+    "status": "confirmed",
+    "value": {
+     "variants": [
+      {
+       "kind": "tuned",
+       "question": "Une pénalité ridge choisie par validation croisée imbriquée prédit-elle avec une erreur plus petite que le modèle linéaire sans pénalité ?"
+      },
+      {
+       "family": "ebm",
+       "kind": "family",
+       "question": "Un modèle non linéaire lisible prédit-il avec une erreur plus petite en suivant ce que le modèle linéaire manque : la forme de horsepower et weight ?"
+      }
+     ]
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the model_variant exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the model_variant as stated.",
+     "proposal_id": "p_7",
+     "revision": 53,
+     "time": "2026-10-28T12:11:18.991578+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You decide the model_variant as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "model_choice",
+    "title": "Choisir le modèle",
+    "pause": 3,
+    "step": "model_choice",
+    "status": "confirmed",
+    "value": "fit.linear",
+    "depends_on": [
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "preprocessing",
+     "model_variant"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I choose that model because its error is smaller",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the model_choice as stated.",
+     "proposal_id": "p_8",
+     "revision": 63,
+     "time": "2026-10-28T12:11:46.033015+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": true,
+     "adoption_question": false,
+     "label": "You decide the model_choice as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "final_test",
+    "title": "Ouvrir une fois l'échantillon de test final",
+    "pause": 3,
+    "step": "final_test",
+    "status": "confirmed",
+    "value": {
+     "model": "fit.linear",
+     "rule": null
+    },
+    "depends_on": [
+     "error_metric",
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "success_criterion",
+     "preprocessing",
+     "model_variant",
+     "model_choice"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the final_test as stated.",
+     "proposal_id": "p_9",
+     "revision": 67,
+     "time": "2026-10-28T12:11:56.454586+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": true,
+     "adoption_question": false,
+     "label": "You decide the final_test as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "conclusion",
+    "title": "Conclure avec mesure",
+    "pause": 3,
+    "step": "conclusion",
+    "status": "confirmed",
+    "value": {
+     "text": "The development evidence is all the study can cite: the final test was opened once.",
+     "verdict": "adopt_model"
+    },
+    "depends_on": [
+     "error_metric",
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "success_criterion",
+     "preprocessing",
+     "model_variant",
+     "model_choice",
+     "final_test"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the conclusion exactly as you stated it, because it fits our situation",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the conclusion as stated.",
+     "proposal_id": "p_10",
+     "revision": 73,
+     "time": "2026-10-28T12:12:03.788012+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": true,
+     "adoption_question": false,
+     "label": "You decide the conclusion as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   }
+  ],
+  "proposals": [
+   {
+    "proposal_id": "p_1",
+    "decision_id": "prediction_time",
+    "value": "when the record is created, before the outcome",
+    "restatement": "You decide the prediction_time as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 2,
+    "created": "2026-10-28T12:10:17.290680+00:00",
+    "closed_revision": 3,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_2",
+    "decision_id": "feature_availability",
+    "value": {
+     "acceleration": "uncertain_excluded",
+     "cylinders": "available_at_prediction",
+     "displacement": "available_at_prediction",
+     "horsepower": "available_at_prediction",
+     "origin": "available_at_prediction",
+     "weight": "available_at_prediction"
+    },
+    "restatement": "You decide the feature_availability as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 4,
+    "created": "2026-10-28T12:10:20.571795+00:00",
+    "closed_revision": 5,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_3",
+    "decision_id": "split",
+    "value": {
+     "folds": 5,
+     "method": "temporal_folds",
+     "seed": 20261017
+    },
+    "restatement": "You decide the split as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 6,
+    "created": "2026-10-28T12:10:23.878051+00:00",
+    "closed_revision": 9,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_4",
+    "decision_id": "error_metric",
+    "value": {
+     "metric": "mae"
+    },
+    "restatement": "You decide the error_metric as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 12,
+    "created": "2026-10-28T12:10:31.213017+00:00",
+    "closed_revision": 13,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_5",
+    "decision_id": "success_criterion",
+    "value": {
+     "business_max_error": 4.5,
+     "metric": "mae_reduction",
+     "min_share": 0.1
+    },
+    "restatement": "You decide the success_criterion as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 14,
+    "created": "2026-10-28T12:10:34.173564+00:00",
+    "closed_revision": 15,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_6",
+    "decision_id": "preprocessing",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [
+      "horsepower"
+     ],
+     "missing": "none",
+     "motivated_by": [
+      "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e"
+     ],
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
+    },
+    "restatement": "You decide the preprocessing as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 20,
+    "created": "2026-10-28T12:10:41.972157+00:00",
+    "closed_revision": 21,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_7",
+    "decision_id": "model_variant",
+    "value": {
+     "variants": [
+      {
+       "kind": "tuned",
+       "question": "Une pénalité ridge choisie par validation croisée imbriquée prédit-elle avec une erreur plus petite que le modèle linéaire sans pénalité ?"
+      },
+      {
+       "family": "ebm",
+       "kind": "family",
+       "question": "Un modèle non linéaire lisible prédit-il avec une erreur plus petite en suivant ce que le modèle linéaire manque : la forme de horsepower et weight ?"
+      }
+     ]
+    },
+    "restatement": "You decide the model_variant as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 52,
+    "created": "2026-10-28T12:11:17.241702+00:00",
+    "closed_revision": 53,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_8",
+    "decision_id": "model_choice",
+    "value": "fit.linear",
+    "restatement": "You decide the model_choice as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 62,
+    "created": "2026-10-28T12:11:44.051508+00:00",
+    "closed_revision": 63,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_9",
+    "decision_id": "final_test",
+    "value": {
+     "model": "fit.linear",
+     "rule": null
+    },
+    "restatement": "You decide the final_test as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 66,
+    "created": "2026-10-28T12:11:53.989469+00:00",
+    "closed_revision": 67,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_10",
+    "decision_id": "conclusion",
+    "value": {
+     "text": "The development evidence is all the study can cite: the final test was opened once.",
+     "verdict": "adopt_model"
+    },
+    "restatement": "You decide the conclusion as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 72,
+    "created": "2026-10-28T12:12:01.857936+00:00",
+    "closed_revision": 73,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   }
+  ],
+  "history": [
+   {
+    "revision": 3,
+    "time": "2026-10-28T12:10:19.175601+00:00",
+    "decision_id": "prediction_time",
+    "proposal_id": "p_1",
+    "value": "when the record is created, before the outcome",
+    "user_words": "Yes, I want the prediction_time exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 5,
+    "time": "2026-10-28T12:10:21.977266+00:00",
+    "decision_id": "feature_availability",
+    "proposal_id": "p_2",
+    "value": {
+     "acceleration": "uncertain_excluded",
+     "cylinders": "available_at_prediction",
+     "displacement": "available_at_prediction",
+     "horsepower": "available_at_prediction",
+     "origin": "available_at_prediction",
+     "weight": "available_at_prediction"
+    },
+    "user_words": "Yes, I want the feature_availability exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 9,
+    "time": "2026-10-28T12:10:26.829027+00:00",
+    "decision_id": "split",
+    "proposal_id": "p_3",
+    "value": {
+     "folds": 5,
+     "method": "temporal_folds",
+     "seed": 20261017
+    },
+    "user_words": "Yes, I want the split exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 13,
+    "time": "2026-10-28T12:10:32.449944+00:00",
+    "decision_id": "error_metric",
+    "proposal_id": "p_4",
+    "value": {
+     "metric": "mae"
+    },
+    "user_words": "Yes, I want the error_metric exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 15,
+    "time": "2026-10-28T12:10:35.526227+00:00",
+    "decision_id": "success_criterion",
+    "proposal_id": "p_5",
+    "value": {
+     "business_max_error": 4.5,
+     "metric": "mae_reduction",
+     "min_share": 0.1
+    },
+    "user_words": "Yes, I want the success_criterion exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 21,
+    "time": "2026-10-28T12:10:43.536122+00:00",
+    "decision_id": "preprocessing",
+    "proposal_id": "p_6",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [
+      "horsepower"
+     ],
+     "missing": "none",
+     "motivated_by": [
+      "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e"
+     ],
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
+    },
+    "user_words": "Yes, I want the preprocessing exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 53,
+    "time": "2026-10-28T12:11:18.998349+00:00",
+    "decision_id": "model_variant",
+    "proposal_id": "p_7",
+    "value": {
+     "variants": [
+      {
+       "kind": "tuned",
+       "question": "Une pénalité ridge choisie par validation croisée imbriquée prédit-elle avec une erreur plus petite que le modèle linéaire sans pénalité ?"
+      },
+      {
+       "family": "ebm",
+       "kind": "family",
+       "question": "Un modèle non linéaire lisible prédit-il avec une erreur plus petite en suivant ce que le modèle linéaire manque : la forme de horsepower et weight ?"
+      }
+     ]
+    },
+    "user_words": "Yes, I want the model_variant exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 63,
+    "time": "2026-10-28T12:11:46.033076+00:00",
+    "decision_id": "model_choice",
+    "proposal_id": "p_8",
+    "value": "fit.linear",
+    "user_words": "Yes, I choose that model because its error is smaller",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 67,
+    "time": "2026-10-28T12:11:56.454682+00:00",
+    "decision_id": "final_test",
+    "proposal_id": "p_9",
+    "value": {
+     "model": "fit.linear",
+     "rule": null
+    },
+    "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 73,
+    "time": "2026-10-28T12:12:03.788075+00:00",
+    "decision_id": "conclusion",
+    "proposal_id": "p_10",
+    "value": {
+     "text": "The development evidence is all the study can cite: the final test was opened once.",
+     "verdict": "adopt_model"
+    },
+    "user_words": "Yes, I want the conclusion exactly as you stated it, because it fits our situation",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   }
+  ],
+  "reconfirm_queue": [],
+  "notes": [
+   {
+    "note_id": "n_1",
+    "decision_id": "split",
+    "kind": "hold",
+    "user_words": "Wait until I check the fold count with my manager",
+    "status": "resolved",
+    "revision": 7,
+    "resolution": {
+     "request_id": "g7",
+     "revision": 8,
+     "time": "2026-10-28T12:10:26.041551+00:00",
+     "user_words": "My manager agrees with the fold count"
+    }
+   }
+  ]
+ }
+}

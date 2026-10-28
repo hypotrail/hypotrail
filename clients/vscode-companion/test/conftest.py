@@ -182,7 +182,7 @@ class Panel:
                            {'v': 2, **message})
 
     def init(self, stage='v0', reviewer=False, learningLayer=True, chatInsert=False, task=None, study=STUDY_KEY,  # noqa: N803
-             marimo=None):
+             marimo=None, panelContract=None, language=None):  # noqa: N803
         # `study`: the study key the controller sends (decision CR.2); None leaves it out.
         # `marimo`: the display of the Marimo launches (WP-A5); None leaves it out.
         message = {'type': 'init', 'stage': stage, 'reviewer': reviewer, 'learningLayer': learningLayer,
@@ -191,6 +191,11 @@ class Panel:
             message['study'] = study
         if marimo is not None:
             message['marimo'] = marimo
+        # ADR 0004 d13: the contract the panel speaks (lib/flag.js PANEL_CONTRACT); the setting language.
+        if panelContract is not None:
+            message['panelContract'] = panelContract
+        if language is not None:
+            message['language'] = language
         self.send(message)
 
     def snapshot(self, model: dict) -> None:

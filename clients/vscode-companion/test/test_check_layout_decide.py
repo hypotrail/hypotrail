@@ -50,3 +50,40 @@ def test_other_decide_words_pass(layout, sources):
     changed = {**sources, 'lib/models/effects.js': sources['lib/models/effects.js']
                + "\n// The engine's dry run of a confirmation; the junior decides in the chat.\n"}
     assert layout.companion_decide_errors(changed) == []
+
+
+# R9UX-3: the words VS Code shows for the extension follow the same narrowing.
+
+@pytest.fixture(scope='module')
+def package():
+    import json
+    return json.loads((CLIENT / 'package.json').read_text(encoding='utf-8'))
+
+
+def test_the_real_package_claims_no_decision_write(layout, package):
+    assert layout.companion_package_claim_errors(package) == []
+    assert 'read-only' in package['description'] and 'in the chat' in package['description']
+
+
+@pytest.mark.parametrize('field, text', [
+    ('description', 'Stage v0 only confirms or withdraws a proposal with typed words.'),
+    ('displayName', 'Hypotrail panel: propose and confirm'),
+    ('description', 'The panel proposes a decision.'),
+])
+def test_claiming_a_decision_write_fails(layout, package, field, text):
+    errors = layout.companion_package_claim_errors({**package, field: text})
+    assert len(errors) == 1 and errors[0].startswith(f'Companion client package.json {field} ')
+
+
+def test_claiming_it_in_a_command_title_fails(layout, package):
+    import copy
+    changed = copy.deepcopy(package)
+    changed['contributes']['commands'][0]['title'] = 'Hypotrail: confirm the open proposal'
+    errors = layout.companion_package_claim_errors(changed)
+    assert errors == ["Companion client package.json command hypotrail.companion.open claims a "
+                      "withdrawn decision write: 'confirm'"]
+
+
+def test_showing_proposals_and_confirmed_decisions_passes(layout, package):
+    text = 'Shows the open proposals and the confirmed decisions, read-only.'
+    assert layout.companion_package_claim_errors({**package, 'description': text}) == []

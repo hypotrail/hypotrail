@@ -50,9 +50,11 @@ function compare(en, fr, where, problems) {
   for (const k of Object.keys(fr)) if (!(k in en)) problems.push(`${where}.${k}: not an English key`);
 }
 
-test('copy (R21): every English key of the panel copy has its French counterpart', () => {
+test('copy (R21, LANG-2): every English key of the panel copy has its French counterpart', () => {
   const { en, fr } = load();
   assert.ok(fr, 'media/copy-fr defines Hypotrail.copyFr');
+  // LANG-2: the one page's copy (media/copy/page.js) is covered like every other file.
+  assert.ok(en.page && fr.page, 'media/copy/page.js and media/copy-fr/page.js');
   assert.deepEqual(Object.keys(fr).sort(), Object.keys(en).sort(), 'one French table per English one');
   const problems = [];
   for (const ns of Object.keys(en)) {

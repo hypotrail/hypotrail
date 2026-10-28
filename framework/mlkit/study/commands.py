@@ -59,7 +59,7 @@ from typing import Any, Callable, Mapping
 from mlkit.reliability import CommandRefused, Handler
 
 from . import case as c
-from . import concepts
+from . import companion_env, concepts
 from . import confirm as cf
 from . import data as dt
 from . import dependencies as dep
@@ -94,6 +94,10 @@ ACTION_WITHDRAW_NOTE = 'decide.withdraw_note'
 # ADR 0005: the confirmation mode of the study, set in the user's words.
 ACTION_SET_MODE = 'study.set_mode'
 SET_MODE_PARAMS = frozenset({'mode', 'user_words'})
+# L9 (R20): the one-way end of the automatic mode (``hypotrail automation stop``, or the
+# runner when it reached what the mode covers).
+ACTION_END_AUTOMATION = 'study.end_automation'
+END_AUTOMATION_PARAMS = frozenset({'reason', 'user_words'})
 PROPOSE_PARAMS = frozenset({'decision_id', 'value', 'restatement', 'rationale'})
 # Parameters an action accepts when present (CLI-CONTRACT-COMPANION §9, C9): a propose
 # request carries ``channel`` only when it is not ``chat``, so every request recorded
@@ -368,11 +372,18 @@ def check_proposal_texts(store: StudyStore, texts, value: Any) -> None:
     from . import numtrace
 
     pool = None
+    texts = list(texts)
+    labels = {key.split('.', 1)[1]: text for key, text in texts if key.startswith('labels.')}
     for key, text in texts:
         if not literal_numbers(text, value) and not _has_number(text):
             continue
         pool = pool or numtrace.study_pool(store.study_dir, proposed=value)
-        findings = numtrace.number_findings(pool, text, key)
+        # Review round 4 (E4-6): a label is read in its language, the restatement in the
+        # language a label gives it (``--lang``), any other text in the study language.
+        language = (key.split('.', 1)[1] if key.startswith('labels.') else
+                    next((lang for lang, label in sorted(labels.items()) if label == text),
+                         None))
+        findings = numtrace.number_findings(pool, text, key, language=language)
         if findings:
             numbers = sorted({f['details']['number'] for f in findings})
             raise CommandRefused('literal_number_in_text',
@@ -384,9 +395,10 @@ def check_proposal_texts(store: StudyStore, texts, value: Any) -> None:
 
 
 def _has_number(text: str) -> bool:
-    """A number in digits or in words (``check`` traces both)."""
+    """A number in digits or in words (``check`` traces both), a number in words with a scale
+    word included (review round 9, R9E-2: ``check`` reports it)."""
     from . import cite, wordnum
-    return bool(cite.parse_numbers(text) or wordnum.parse(text))
+    return bool(cite.parse_numbers(text) or wordnum.parse(text) or wordnum.unread(text))
 
 
 def check_conclusion(store: StudyStore, state: Mapping, value: Mapping, restatement: str,
@@ -445,6 +457,25 @@ case_of = c.case_of
 
 def candidate_features(case: c.Case) -> list[str]:
     return [v['name'] for v in case.document['variables'] if v['role'] == 'feature']
+
+
+def strata_counts(case: c.Case, frame, assigned: Mapping) -> list[dict] | None:
+    """Lot 2026-10-28 (EN-17, R63): ``[{stratum, development, sealed}]`` of a regression
+    study's ``quantile_stratified`` draw, ``stratum`` 1 to ``bins`` from the lowest target bin
+    to the highest; counts of the structural assignment just made, no bin edge, no target
+    value. None for any other method (a binary study never shows its class counts)."""
+    record = assigned['record']
+    if case.task != 'regression' or record.get('method') != 'quantile_stratified':
+        return None
+    strata = dict(zip(frame.index, partition._strata(case, frame)))
+    sealed = set(assigned['final_test'])
+    labels = sorted({s for s in strata.values() if s != 'missing'}, key=int)
+    out = []
+    for n, label in enumerate(labels, start=1):
+        keys = [k for k, s in strata.items() if s == label]
+        final = sum(1 for k in keys if k in sealed)
+        out.append({'stratum': n, 'development': len(keys) - final, 'sealed': final})
+    return out
 
 
 def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
@@ -548,6 +579,24 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
             if isinstance(exc, ValueError) and not isinstance(exc, governance.ValueProblem):
                 raise _invalid(str(exc)) from None
             raise _invalid(exc.message, **exc.details) from None
+        # Lot 2026-10-28 (EN-9): with the error measure decided, the criterion is fixed on
+        # that measure.
+        measure = st.confirmed_error_metric(state)
+        if measure is not None and isinstance(value, Mapping) \
+                and criterion.ERROR_METRIC.get(value.get('metric')) != measure:
+            raise _invalid('The success criterion is fixed on the confirmed error measure '
+                           f'({measure.upper()}): use '
+                           f'"{criterion.REDUCTION_OF_ERROR[measure]}", or change the '
+                           'error measure first.',
+                           error_metric=measure,
+                           metrics=[criterion.REDUCTION_OF_ERROR[measure]])
+    elif decision_id == st.ERROR_METRIC:
+        # Lot 2026-10-28 (EN-9): {"metric": "mae" | "rmse"}.
+        if not isinstance(value, Mapping) or set(value) != {'metric'} \
+                or value['metric'] not in st.ERROR_METRICS:
+            raise _invalid('error_metric is {"metric": "mae"} or {"metric": "rmse"}: how the '
+                           'error of a prediction is summarised over the rows.',
+                           keys=['metric'], metrics=list(st.ERROR_METRICS))
     elif decision_id == st.PREPROCESSING:
         try:
             governance.check_preprocessing(value, case_of(state))
@@ -613,10 +662,18 @@ def validate_variant(state: Mapping, value: Any) -> None:
             and trials.variants_of(value)[0]['kind'] not in VARIANT_KEYS:
         problem = 'A variant of kind tuned or family is declared in a list, with its question.'
     if problem is not None:
+        # Owner session 2026-10-26 (L5, R15, D11): a family outside the catalogue gets a
+        # refusal that teaches (same code; the closest family, why the catalogue is closed,
+        # the workbench for a personal exploration that is not study evidence).
+        from . import drafts
+        asked = drafts.unknown_family(value)
+        extra = (drafts.family_refusal(asked, st.language_of(state))
+                 if asked is not None else {})
         raise _invalid(problem + ' model_variant is {"variants": [{"kind": ..., "question": '
                        '...}, ...]} (at most three).', kinds=list(st.VARIANT_KINDS),
                        strengths=list(st.VARIANT_STRENGTHS), groups=sorted(groups),
-                       families=list(trials.VARIANT_FAMILIES), max=trials.MAX_VARIANTS)
+                       families=list(trials.VARIANT_FAMILIES), max=trials.MAX_VARIANTS,
+                       **extra)
     from . import assurance
     if assurance.profile(state) == 'review-v1':
         items = trials.variants_of(value)
@@ -1116,14 +1173,18 @@ def _propose(ctx: Context) -> Handler:
                                                      'task': st.task_of(state)})
         _verify_sources(state)                     # L1: never propose on changed bytes
 
-        if decision_id == st.FINAL_TEST and st.final_test_opened(state):
+        if decision_id == st.FINAL_TEST and st.final_test_opened(state) \
+                and not st.reviews_automatic_opening(state, value):
             raise final_test_opened_refusal(state)
-        if decision_id == st.MODEL_VARIANT:
+        # L9 (R20): the review of an automatic decision proposes the value it recorded, as
+        # it stands (its engine stamps included), so adopting it changes nothing.
+        review = adopted_from(state, decision_id, value, st.EXPLICIT) is not None
+        if decision_id == st.MODEL_VARIANT and not review:
             value = normalize_variant_provenance(state, value)
         validate_value(state, decision_id, value)
         if decision_id == 'policy':
             value = rec.canonical_policy(value)      # L2: one spelling per rule
-        if decision_id == st.PREPROCESSING:
+        if decision_id == st.PREPROCESSING and not review:
             # WP-A4: the motivating results are checked, and the engine stamps the value
             # data-contingent when any of them read the target.
             value = _normalized_preprocessing(ctx.store, state, value)
@@ -1216,6 +1277,67 @@ def _normalized_preprocessing(store, state: Mapping, value: Mapping) -> dict:
         raise _invalid(exc.message, **exc.details) from None
 
 
+# Contract P1.13 (CLI-CONTRACT §17.2.6): the decisions whose change after an evaluation is
+# assessed, and the evaluation that covers an earlier value of each.
+CHANGE_ASSESSED = ('policy', 'model_choice')
+
+
+def _covering_evaluation(store, state: Mapping, decision_id: str, previous: Any) -> str | None:
+    """The result id of the current evaluation that measured ``previous`` (a rule, with its
+    model, or a model), or None: ``policy.evaluation`` (a binary study's rules and models),
+    ``evaluate.regression`` (a regression study's models)."""
+    from . import registry
+    slot = ('evaluate.regression' if st.task_of(state) == st.REGRESSION
+            else 'policy.evaluation')
+    rid = (state.get('current') or {}).get(slot)
+    if rid is None or rid in (state.get('stale') or {}):
+        return None
+    try:
+        params = registry.get(store, rid).get('params') or {}
+    except StudyError:
+        return None
+    models = list(params.get('models') or [])
+    if decision_id == 'model_choice':
+        return rid if previous in models else None
+    rule, _, model = str(previous).partition('@')
+    rules = {rec.canonical_rule(r) for r in params.get('rules') or []}
+    if rec.canonical_rule(rule) not in rules or (model and model not in models):
+        return None
+    return rid
+
+
+def changed_after_validation(store, state: Mapping, decision_id: str,
+                             value: Any) -> tuple[bool, dict | None]:
+    """``(data_contingent, data_contingent_reason)`` of a rule or a model choice (contract
+    P1.13): true when the proposal changes the value of the latest earlier proposal of the
+    decision (proposed, confirmed, superseded or withdrawn) and a current validation or
+    out-of-fold evaluation that measured that earlier value exists; false otherwise. The mark
+    does not depend on how the change came (the panel's What if? records nothing)."""
+    earlier = [p for p in (state.get('proposals') or {}).values()
+               if p.get('decision_id') == decision_id
+               and p.get('revision', 0) <= state['revision']]
+    if not earlier:
+        return False, None
+    previous = max(earlier, key=lambda p: (p['revision'], p['proposal_id']))['value']
+    same = (rec.canonical_policy(previous) == rec.canonical_policy(value)
+            if decision_id == 'policy' else previous == value)
+    if same:
+        return False, None
+    evaluation = _covering_evaluation(store, state, decision_id, previous)
+    if evaluation is None:
+        return False, None
+    from . import junior
+    what = 'rule' if decision_id == 'policy' else 'model choice'
+    return True, {'kind': junior.CHANGED_AFTER_VALIDATION, 'previous_value': previous,
+                  'evaluation': evaluation,
+                  'text': f'This {what} changes the value proposed before ({previous}) after an '
+                          f'evaluation of that value was seen: the development figures that '
+                          f'guided the change are slightly optimistic. Say so to the junior '
+                          f'before presenting it.',
+                  'junior_text': junior.changed_after_validation_text(
+                      decision_id, st.language_of(state))}
+
+
 def data_contingency(store, state: Mapping, decision_id: str,
                      value: Any) -> tuple[bool | None, dict | None]:
     """v0.3 (WP-A, R32): ``(data_contingent, data_contingent_reason)`` of a proposal.
@@ -1238,7 +1360,15 @@ def data_contingency(store, state: Mapping, decision_id: str,
                 diag = registry.get(store, rid)['output']['values']
             except StudyError:
                 diag = None
-        return trials.data_contingency(value, diag, rid)
+        contingent, why = trials.data_contingency(value, diag, rid)
+        if why is not None:
+            # Owner session 2026-10-26 (L5, R7): the stamp in the junior's words.
+            from . import drafts
+            why = {**why, 'junior_text': drafts.variant_contingency_text(
+                list(why.get('families') or []), st.language_of(state))}
+        return contingent, why
+    if decision_id in CHANGE_ASSESSED:
+        return changed_after_validation(store, state, decision_id, value)
     if decision_id != st.PREPROCESSING or not isinstance(value, Mapping):
         return None, None
     contingent = bool(value.get('data_contingent'))
@@ -1265,13 +1395,94 @@ def data_contingency(store, state: Mapping, decision_id: str,
     text = ('This preprocessing is data-contingent: ' + '; '.join(parts) + '. Say so to the '
             'junior before presenting it: a choice made after looking at the outcome makes '
             'the development figures more optimistic.')
+    from . import drafts
     return True, {'target_looks_before': looks['target_looks'],
                   'looks_by_activity': looks['by_activity'], 'look_results': looks['results'],
-                  'motivating_results_reading_target': motivating, 'text': text}
+                  'motivating_results_reading_target': motivating, 'text': text,
+                  # Owner session 2026-10-26 (L5, R7): the stamp in the junior's words, in the
+                  # study language: the term first, this study's looks, why it is recorded.
+                  'junior_text': drafts.contingency_text(
+                      looks['target_looks'], looks['by_activity'], len(motivating),
+                      st.language_of(state))}
+
+
+def _check_automatic(params) -> None:
+    """L9 (R20): the word-independent checks of ``--basis automatic``: no words, no agent
+    concern, no adoption question, no delegation scope, never the choice channel."""
+    if params['user_words'] is not None:
+        raise _invalid('An automatic confirmation records no words: the junior said nothing. '
+                       'Leave --user-words out with --basis automatic.', field='user_words')
+    for key in ('agent_concern', 'adoption_question'):
+        if params.get(key) is not None:
+            raise _invalid(f'{key} goes with the junior\'s own words, never with --basis '
+                           f'automatic.', field=key)
+    if params['delegation_scope'] is not None:
+        raise _invalid('delegation_scope goes with basis delegated_default only.',
+                       field='delegation_scope')
+    if params['channel'] not in st.CONFIRMATION_CHANNELS \
+            or params['channel'] == st.CHOICE_CHANNEL:
+        raise _invalid('An automatic confirmation comes from the chat or the CLI, never from '
+                       'an option the junior picked.', field='channel')
+    if not isinstance(params['actor'], str) or not params['actor'].strip():
+        raise _invalid('actor is a non-empty string.')
+
+
+def automation_refusal(state: Mapping, proposal: Mapping) -> CommandRefused | None:
+    """L9 (R20; ADR 0005 amendment of 2026-10-26): why ``--basis automatic`` cannot confirm
+    ``proposal`` (``ambiguous_confirmation``), or None. ``automation_not_set``: the study has
+    no automatic mode, or it ended (one way). ``automation_does_not_cover``: the mode in force
+    does not record this decision (the final test and the conclusion outside ``full_demo``),
+    or the decision is already confirmed (its review is the junior's)."""
+    decision_id = proposal['decision_id']
+    record = st.automation_of(state)
+    mode = st.automation_in_force(state)
+    details = {'decision_id': decision_id, 'proposal_id': proposal['proposal_id'],
+               'automation': (dict(record) if record is not None else None)}
+    if mode is None:
+        return _ambiguous('automation_not_set',
+                          'This study has no automatic mode in force (none was chosen at '
+                          'init, or it ended): a decision is recorded only in the junior\'s '
+                          'own words or by their delegation.', **details)
+    if not st.automation_covers(state, decision_id) \
+            or state['decisions'][decision_id]['status'] == 'confirmed':
+        return _ambiguous('automation_does_not_cover',
+                          f'The automatic mode {mode} does not record the {decision_id}'
+                          + (' again: it is confirmed, and its review is the junior\'s.'
+                             if state['decisions'][decision_id]['status'] == 'confirmed'
+                             else ': ask the junior.'), **details)
+    return None
+
+
+def _review_refusal(state: Mapping, decision_id: str) -> CommandRefused | None:
+    """L9 (R20): the junior opens the final test only once every automatic decision is
+    reviewed (``precondition_missing``, requirement ``automatic_decisions_reviewed``)."""
+    queue = st.review_queue(state)
+    if decision_id != st.FINAL_TEST or not queue or st.final_test_opened(state):
+        return None
+    from . import audience
+    lang = st.language_of(state)
+    named = audience.join((audience.decision_words(d, lang) for d in queue), lang)
+    junior = (f"Le test final s'ouvre une fois chaque décision automatique relue avec vos "
+              f'propres mots : {named}. Aucune ligne du test final n\'a été lue.'
+              if lang == 'fr' else
+              f'The final test opens once you have reviewed each automatic decision in your own '
+              f'words: {named}. No final-test row was read.')
+    item = {'requirement': 'automatic_decisions_reviewed', 'decisions': queue,
+            'detail': 'Each decision the automatic mode recorded is adopted or changed in the '
+                      'junior\'s own words before they open the final test.',
+            'junior_message': junior}
+    return CommandRefused('precondition_missing',
+                          'Opening the final test needs every automatic decision reviewed in '
+                          'the junior\'s own words first.',
+                          details={'decision_id': decision_id, 'missing': [item],
+                                   'junior_message': junior})
 
 
 def _confirm(ctx: Context) -> Handler:
     def check(params):
+        if params['basis'] == st.AUTOMATIC:
+            _check_automatic(params)
+            return
         words = params['user_words']
         # ADR 0005: the reply rules of every mode (the training rules follow in ``run``).
         reason = cf.reply_problem(words)
@@ -1339,9 +1550,17 @@ def _confirm(ctx: Context) -> Handler:
         if proposal.get('request_id') == ctx.request_id or proposal['revision'] > state['revision']:
             raise _ambiguous('same_request', 'A proposal is confirmed by a later request than the '
                                              'one that created it.', proposal_id=pid)
+        automatic = params['basis'] == st.AUTOMATIC
+        if automatic:
+            refusal = automation_refusal(state, proposal)
+            if refusal is not None:
+                raise refusal
         if proposal['decision_id'] == st.FINAL_TEST:
             decision_id = proposal['decision_id']
-            if decision_id == st.FINAL_TEST and st.final_test_opened(state):
+            # L9 (ADR 0006 amendment): the junior's review of an automatic demo opening
+            # adopts it; it opens nothing again.
+            if decision_id == st.FINAL_TEST and st.final_test_opened(state) \
+                    and not st.reviews_automatic_opening(state, proposal['value']):
                 raise final_test_opened_refusal(state)
             if decision_id == st.FINAL_TEST and params['basis'] == st.DELEGATED_DEFAULT:
                 # WP-B1: the opening is the junior's own act, never delegated. v0.3 (WP-B,
@@ -1351,6 +1570,10 @@ def _confirm(ctx: Context) -> Handler:
                                  'cannot be delegated. Ask them whether they adopt the opening.',
                                  decision_id=decision_id, proposal_id=pid,
                                  user_words=params['user_words'], mode=st.mode_of(state))
+            if not automatic:
+                review = _review_refusal(state, decision_id)
+                if review is not None:
+                    raise review
         if params['basis'] == st.DELEGATED_DEFAULT and not states_default(proposal['restatement']):
             raise _ambiguous('restatement_not_default',
                              f'Proposal {pid} does not say it is the assistant\'s recommended '
@@ -1394,16 +1617,21 @@ def _confirm(ctx: Context) -> Handler:
         delegated = params['basis'] == st.DELEGATED_DEFAULT
         # WP-A9 (B1): accepting one part of the proposal and refusing another is no
         # confirmation, in every mode ("oui pour le plafonnement, pas de log").
-        partial = cf.partial_refusal(words, proposal)
+        partial = None if automatic else cf.partial_refusal(words, proposal)
         if partial is not None:
             raise _ambiguous('conditional_reply', partial_reply_message(decision_id, partial),
                              proposal_id=pid, user_words=words, partial=partial)
         warnings = cf.availability_warnings(words, value) \
-            if decision_id == 'feature_availability' and not delegated else []
+            if decision_id == 'feature_availability' and not delegated and not automatic \
+            else []
         concern = params.get('agent_concern')
         closed = answers_adoption_question(params)
         reason_given = None
-        if delegated:
+        if automatic:
+            # L9 (R20): the engine's value recorded by the automatic mode chosen at launch;
+            # never the junior's words, never a delegation (ADR 0005 amendment).
+            basis_recorded = st.AUTOMATIC
+        elif delegated:
             basis_recorded = st.DELEGATED_DEFAULT
         elif mode == st.TRAINING:
             # v0.2b (WP-B2): the training rules, concept matching and a stop on a contradiction.
@@ -1435,24 +1663,45 @@ def _confirm(ctx: Context) -> Handler:
         plan = confirmation_plan(state, ctx.store, pid, basis=basis_recorded)
         if plan['refusals']:
             raise plan['refusals'][0]
+        actor = st.AUTOMATIC_ACTOR if automatic else params['actor']
+        adopted = adopted_from(state, decision_id, value, basis_recorded)
         # R3 by mode: a recorded warning in express, and in guided once the agent raised it
         # (``--agent-concern``); a contradiction stops a training confirmation before this
         # point. WP-A9 (H3): the warnings are kept on the confirmation record.
         record = _apply_confirmation(state, plan, pid, store=ctx.store,
                                      user_words=words, channel=params['channel'],
-                                     actor=params['actor'], basis=basis_recorded,
+                                     actor=actor, basis=basis_recorded,
                                      delegation_scope=params['delegation_scope'],
                                      agent_concern=concern, mode=mode, warnings=warnings,
                                      reason_given=reason_given,
-                                     adoption_question=closed and not delegated)
+                                     adoption_question=closed and not delegated
+                                     and not automatic, adopted_from=adopted)
         return {'decision_id': decision_id, 'proposal_id': pid, 'status': 'confirmed',
                 'value': copy.deepcopy(value), 'user_words': words,
-                'channel': params['channel'], 'actor': params['actor'],
+                'channel': params['channel'], 'actor': actor,
                 'invalidation': {k: record[k] for k in INVALIDATION_RESULT_KEYS},
                 'basis': basis_recorded, 'delegation_scope': params['delegation_scope'],
                 'agent_concern': concern, 'warnings': warnings, 'mode': mode,
-                'reason_given': reason_given, 'adoption_question': closed and not delegated}
+                'reason_given': reason_given,
+                'adoption_question': closed and not delegated and not automatic}
     return Handler(CONFIRM_PARAMS, run, check)
+
+
+def adopted_from(state: Mapping, decision_id: str, value: Any, basis: str) -> dict | None:
+    """L9 (R20): ``{basis: automatic, proposal_id, revision}`` when a confirmation in the
+    junior's own words adopts, with the same value, the automatic confirmation of a decision
+    still confirmed (its review); None otherwise. An adoption changes nothing: it is never
+    marked as made after the final test."""
+    if basis not in st.OWN_WORDS_BASES:
+        return None
+    decision = state['decisions'][decision_id]
+    conf = decision.get('confirmation')
+    if decision['status'] != 'confirmed' or not isinstance(conf, Mapping) \
+            or st.confirmation_basis(conf) != st.AUTOMATIC \
+            or rec.canonical(decision['value']) != rec.canonical(value):
+        return None
+    return {'basis': st.AUTOMATIC, 'proposal_id': conf.get('proposal_id'),
+            'revision': conf.get('revision')}
 
 
 def answers_adoption_question(params: Mapping) -> bool:
@@ -1582,6 +1831,66 @@ def _diagnostic_rule(store, state: Mapping) -> str | None:
         return None
 
 
+def decision_refusals(state: Mapping, store, decision_id: str, value: Any, *,
+                      validate: bool = True) -> tuple[list[Exception], bool]:
+    """The refusals of confirming ``decision_id`` with ``value`` that depend on the state
+    only and not on any open proposal or words, in the order ``decide confirm`` raises
+    them: the final test already opened, an ``invalid_value`` (when ``validate``), then the
+    preconditions (``precondition_missing``). Returns ``(refusals, valid)``.
+
+    Review round 6 (area E, R6E-1, R6E-2): ``next_action`` checks a ``propose`` with this
+    same function before naming it (:mod:`mlkit.study.feasibility`)."""
+    refusals: list[Exception] = []
+    if decision_id == st.FINAL_TEST and st.final_test_opened(state):
+        if st.reviews_automatic_opening(state, value):
+            # L9 (ADR 0006 amendment): the review of an automatic demo opening adopts it;
+            # nothing is opened or measured again, so no opening precondition applies.
+            return refusals, True
+        refusals.append(final_test_opened_refusal(state))
+    valid = True
+    if validate:
+        try:
+            validate_value(state, decision_id, value)
+        except (CommandRefused, StudyError) as exc:
+            refusals.append(exc)
+            valid = False
+    if valid:
+        try:
+            if decision_id == st.FINAL_TEST:
+                from . import assurance
+                assurance.require_activity(state, 'final_test.evaluation')
+            preconditions.require_decision(state, decision_id, value, store=store)
+        except (CommandRefused, StudyError) as exc:
+            refusals.append(exc)
+    return refusals, valid
+
+
+def confirmation_refusals(state: Mapping, store, proposal_id: str, *,
+                          sources: bool = True) -> tuple[list[Exception], bool]:
+    """The refusals of ``decide confirm`` on the open proposal ``proposal_id`` that depend on
+    the state only, whatever the words, in this order: ``dataset_changed`` (when
+    ``sources``), ``final_test_already_opened``, ``decision_on_hold``, ``proposal_stale``,
+    ``invalid_value``, ``precondition_missing``. Returns ``(refusals, valid)``, ``valid``
+    False when the value is invalid. :func:`confirmation_plan` (so ``decide confirm`` and
+    ``preview effects``) and ``next_action`` (review round 6, R6E-1, R6E-2,
+    :mod:`mlkit.study.feasibility`) use it, so they cannot drift."""
+    proposal = state['proposals'][proposal_id]
+    decision_id, value = proposal['decision_id'], proposal['value']
+    refusals: list[Exception] = []
+    if sources:
+        changes = c.source_changes(state)
+        if changes:
+            refusals.append(c.changed_sources_error(changes))
+    rest, valid = decision_refusals(state, store, decision_id, value)
+    opened = [e for e in rest if getattr(e, 'code', None) == 'final_test_already_opened']
+    refusals += opened
+    for found in (_hold_refusal(state, decision_id, proposal_id), _stale_refusal(state, proposal)):
+        if found is not None:
+            refusals.append(found)
+    refusals += [e for e in rest if e not in opened]
+    return refusals, valid
+
+
 def confirmation_plan(state: Mapping, store, proposal_id: str, *,
                       basis: str = DEFAULT_BASIS) -> dict:
     """What confirming the open proposal ``proposal_id`` would do, whatever the words.
@@ -1610,29 +1919,7 @@ def confirmation_plan(state: Mapping, store, proposal_id: str, *,
     """
     proposal = state['proposals'][proposal_id]
     decision_id, value = proposal['decision_id'], proposal['value']
-    refusals: list[Exception] = []
-    changes = c.source_changes(state)
-    if changes:
-        refusals.append(c.changed_sources_error(changes))
-    if decision_id == st.FINAL_TEST and st.final_test_opened(state):
-        refusals.append(final_test_opened_refusal(state))
-    for found in (_hold_refusal(state, decision_id, proposal_id), _stale_refusal(state, proposal)):
-        if found is not None:
-            refusals.append(found)
-    valid = True
-    try:
-        validate_value(state, decision_id, value)
-    except (CommandRefused, StudyError) as exc:
-        refusals.append(exc)
-        valid = False
-    if valid:
-        try:
-            if decision_id == st.FINAL_TEST:
-                from . import assurance
-                assurance.require_activity(state, 'final_test.evaluation')
-            preconditions.require_decision(state, decision_id, value, store=store)
-        except (CommandRefused, StudyError) as exc:
-            refusals.append(exc)
+    refusals, valid = confirmation_refusals(state, store, proposal_id)
     plan = {'blocked': [refusal_dict(e) for e in refusals], 'refusals': refusals,
             'decision_id': decision_id, 'value': copy.deepcopy(value), 'previous': None,
             'effects': None, 'invalidation': None, 'supersedes_proposal': None}
@@ -1662,7 +1949,8 @@ def confirmation_plan(state: Mapping, store, proposal_id: str, *,
     plan['effects'] = eff
     dry = copy.deepcopy(dict(state))
     plan['invalidation'] = _apply_confirmation(
-        dry, plan, proposal_id, store=store, user_words='(preview)', channel=DEFAULT_CHANNEL,
+        dry, plan, proposal_id, store=store,
+        user_words=None if basis == st.AUTOMATIC else '(preview)', channel=DEFAULT_CHANNEL,
         actor=DEFAULT_ACTOR, basis=basis, delegation_scope=None, time=state['updated'])
     return plan
 
@@ -1672,7 +1960,8 @@ def _apply_confirmation(state: dict, plan: Mapping, proposal_id: str, *, store, 
                         time: str | None = None, agent_concern: str | None = None,
                         mode: str | None = None, warnings: list | None = None,
                         reason_given: bool | None = None,
-                        adoption_question: bool = False) -> dict:
+                        adoption_question: bool = False,
+                        adopted_from: Mapping | None = None) -> dict:
     """Apply a :func:`confirmation_plan` to ``state`` in memory; the invalidation record."""
     decision_id, value = plan['decision_id'], plan['value']
     proposal = state['proposals'][proposal_id]
@@ -1688,7 +1977,8 @@ def _apply_confirmation(state: dict, plan: Mapping, proposal_id: str, *, store, 
                                    agent_concern=agent_concern,
                                    mode=mode if mode is not None else st.mode_of(state),
                                    warnings=warnings, reason_given=reason_given,
-                                   adoption_question=adoption_question)
+                                   adoption_question=adoption_question,
+                                   adopted_from=adopted_from)
     proposal.update(status='confirmed', closed_revision=revision, closed_reason='confirmed')
     decision.update(status='confirmed', value=copy.deepcopy(value), proposal_id=proposal_id,
                     confirmation=confirmation, revision=revision, reason=None)
@@ -1917,6 +2207,71 @@ def _set_mode(ctx: Context) -> Handler:
     return Handler(SET_MODE_PARAMS, run, check)
 
 
+def automation_reached_end(state: Mapping) -> bool:
+    """Whether the automatic mode in force has nothing left that it covers: the next action
+    of the state (:func:`state.next_action`) is a review, the final test in
+    ``until_final_test``, ``done``, or anything else it never carries out."""
+    return st.automation_in_force(state) is not None \
+        and not st.action_covered(state, st.next_action(dict(state)))
+
+
+def _end_automation(ctx: Context) -> Handler:
+    """``study.end_automation`` (L9, R20; ADR 0005 amendment of 2026-10-26): the automatic
+    mode ends, one way. ``reason: stopped`` is the junior stopping it midway, in their own
+    words (``hypotrail automation stop --user-words``); ``reason: reached_end`` is the run
+    reaching what the mode covers (no words: it makes the study stricter). The confirmation
+    mode in force does not change; the end is recorded in ``state.automation.ended`` and in
+    ``mode_history``. Decisions already recorded stay automatic until the junior reviews
+    them."""
+    def check(params):
+        reason, words = params['reason'], params['user_words']
+        if reason not in st.AUTOMATION_END_REASONS:
+            raise _invalid(f'reason is one of {", ".join(st.AUTOMATION_END_REASONS)}.',
+                           field='reason')
+        if reason == 'reached_end':
+            if words is not None:
+                raise _invalid('The end of an automatic run records no words.',
+                               field='user_words')
+            return
+        if not isinstance(words, str) or not words.strip():
+            raise _ambiguous('missing_user_words', 'Stopping the automatic mode needs the '
+                             'junior\'s own words asking for it.')
+        if cf.is_question(words):
+            raise _ambiguous('question_reply', REPLY_MESSAGES['question_reply'],
+                             user_words=words)
+
+    def run(state, params):
+        record = state.get('automation')
+        if st.automation_in_force(state) is None:
+            raise _ambiguous('automation_not_set',
+                             'This study has no automatic mode in force: none was chosen at '
+                             'init, or it already ended (it ends once, one way).',
+                             automation=copy.deepcopy(record))
+        if params['reason'] == 'reached_end' and not automation_reached_end(state):
+            raise CommandRefused('precondition_missing',
+                                 'The automatic mode still covers the next action; it ends by '
+                                 'itself only once it reached what it covers. The junior can '
+                                 'stop it with their own words.',
+                                 details={'missing': [{'requirement': 'automation_reached_end',
+                                                       'detail': 'the next action is one the '
+                                                                 'automatic mode carries out'}]})
+        revision = state['revision'] + 1
+        words = params['user_words'] if params['reason'] == 'stopped' else None
+        mode = st.mode_of(state)
+        time = st.now()
+        record.update(status=st.AUTOMATION_ENDED,
+                      ended={'revision': revision, 'reason': params['reason'],
+                             'user_words': words, 'time': time,
+                             'request_id': ctx.request_id})
+        state.setdefault('mode_history', []).append(
+            {'mode': mode, 'previous': mode, 'user_words': words, 'revision': revision,
+             'time': time, 'request_id': ctx.request_id,
+             'automation': {'previous': record['mode'], 'reason': params['reason']}})
+        return {'automation': copy.deepcopy(record), 'mode': mode,
+                'review_queue': st.review_queue(state)}
+    return Handler(END_AUTOMATION_PARAMS, run, check)
+
+
 register_action(ACTION_PROPOSE, _propose)
 register_action(ACTION_CONFIRM, _confirm)
 register_action(ACTION_WITHDRAW, _withdraw)
@@ -1924,6 +2279,7 @@ register_action(ACTION_NOTE, _note)
 register_action(ACTION_RESOLVE_NOTE, _resolve_note)
 register_action(ACTION_WITHDRAW_NOTE, _withdraw_note)
 register_action(ACTION_SET_MODE, _set_mode)
+register_action(ACTION_END_AUTOMATION, _end_automation)
 
 
 # --- commands ---------------------------------------------------------------------------
@@ -1941,10 +2297,15 @@ def _copy_agent_templates(study_dir: Path, task: str = st.DEFAULT_TASK) -> dict:
 
 
 def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
-         reliability_profile: str | None = None) -> Outcome:
+         reliability_profile: str | None = None, automation: str | None = None) -> Outcome:
     """Create a study on a case (revision 1). Never overwrites an existing study.
-    ``language`` is the study language (ADR 0005, ``init --lang``)."""
+    ``language`` is the study language (ADR 0005, ``init --lang``). ``automation`` (L9, R20;
+    ``init --automation``) is the automatic mode chosen at launch, ``until_final_test`` or
+    ``full_demo``; None (the default) creates a study without one, as before."""
     guard.assert_writable()
+    if automation is not None and automation not in st.AUTOMATION_MODES:
+        raise StudyError('invalid_arguments',
+                         f'automation is one of {", ".join(st.AUTOMATION_MODES)}.')
     lock.require_posix()
     study_dir = Path(study_dir).resolve()
     store = StudyStore(study_dir)
@@ -1958,6 +2319,13 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
     # partition planner is not implemented must be refused without inspecting the source data.
     case = c.require_supported(c.load_case(_case_file(case_path), verify_data=False))
     assurance.require_initialization(case, reliability_profile)
+    # L3 (D4 A): the case's translation sidecar is validated before any data byte is read; a
+    # committed translation that drifted from its case is refused like an invalid case.
+    from . import l10n
+    try:
+        sidecar = l10n.load(case)
+    except l10n.L10nError as exc:
+        raise c.CaseError('invalid_case', str(exc), problems=exc.problems) from exc
     c.verify_dataset(case)
     c.prior_exposed_keys(case)
     # ADR 0006: the final test is assigned and sealed before any look. Row keys and
@@ -1973,6 +2341,9 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
                                 reliability_profile=reliability_profile or 'legacy')
     check = partition.schema_check(case, frame.loc[assigned['final_test']],
                                    frame.loc[assigned['development']])
+    counts = strata_counts(case, frame, assigned)
+    if counts is not None:
+        assigned['record']['strata_counts'] = counts
     del frame
     try:
         development = dt.load_dataset(case, rows=assigned['development'])
@@ -1980,6 +2351,15 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
         raise partition.with_final_test_counts(exc, check)
     partition.refuse_failed_check(case, check)
     state = st.initial_state(case, language=language, reliability_profile=reliability_profile)
+    if sidecar is not None:
+        state[l10n.STATE_KEY] = {'path': sidecar['path'], 'sha256': sidecar['sha256']}
+    # Owner session 2026-10-26 (L5, D5): a new study checks the structure of its data and
+    # decides the preparation before any look at the target. A study created before keeps its
+    # plan (no key, never migrated).
+    state[st.EXPLORATION_ORDER_KEY] = st.STRUCTURAL_FIRST
+    if automation is not None:
+        # L9 (R20, D17): chosen at launch only; no command sets it later.
+        state['automation'] = st.automation_record(automation, state['revision'] + 1)
     study_dir.mkdir(parents=True, exist_ok=True)
     dev_sha = store.put_blob(rec.row_keys_bytes(assigned['development']))
     final_sha = store.put_blob(rec.row_keys_bytes(assigned['final_test']))
@@ -1999,15 +2379,10 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
                                  row_keys=development.index.keys,
                                  dataset_sha256=index.dataset_sha256,
                                  columns=case.column_names)
-        # J4: the data card deterministically shows these labelled development rows. Record
-        # their availability at init; previews remain byte-level read-only afterwards.
-        preview_keys = sorted(development.index.keys,
-                              key=lambda key: int(str(key)[1:]))[:5]
-        exposure.record(store, exposure_id=exposure.new_exposure_id(),
-                        revision=state['revision'], activity='init.labelled_preview',
-                        result_id=None, purpose='labelled_preview_available',
-                        partition=partition.DEVELOPMENT, row_keys=preview_keys,
-                        dataset_sha256=index.dataset_sha256, columns=case.column_names)
+        # Contract P1.9 (CLI-CONTRACT §17.3): the data card, the report and the notebook show
+        # the seeded step-1 sample, target included: a counted look at the target, recorded
+        # once per seed. It replaces J4's ``init.labelled_preview`` for a study created now.
+        exposure.ensure_sample(store, state)
         exposure.record(store, exposure_id=exposure.new_exposure_id(),
                         revision=state['revision'], activity=partition.ACTIVITY,
                         result_id=None, purpose=partition.EXPOSURE_PURPOSE,
@@ -2020,6 +2395,7 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
     notices = [n for n in (launch.install_settings(study_dir),) if n is not None]
     notices.extend(assurance.initial_notices(case, language))
     launch.install_gitignore(study_dir)
+    launch.install_readme(study_dir, case, language)
     ignored = sorted(n for n in IGNORED_CASE_SOURCES if (case.root / n).exists())
     snapshot = read.open(study_dir).state
     return Outcome({'schema': SCHEMAS['init'], 'ok': True, 'study': str(study_dir),
@@ -2028,15 +2404,27 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
                     'structural_exposure': {'exposure_id': record['exposure_id'],
                                             'n_rows': record['n_rows']},
                     'final_test': partition.final_test_status(snapshot),
-                    'plan': st.derive_plan(snapshot),
-                    'next_action': audience.next_action(st.next_action(snapshot),
-                                                       st.language_of(snapshot)),
+                    # L3 (R4, T2): the plan in the study language, as ``status`` gives it.
+                    'plan': _localized_plan(snapshot),
+                    'next_action': companion_env.annotate(
+                        audience.next_action(st.next_action(snapshot), st.language_of(snapshot)),
+                        study_dir, st.language_of(snapshot), produced={'command': 'init'}),
                     'agent_instructions': agent,
                     'ignored_sources': ignored,
                     'note': 'Companion files next to the case are not read: their statuses are '
                             'tutorial choices, not decisions. Every decision starts open.',
                     'notices': notices,
                     'deliverables': launch.deliverables(study_dir)})
+
+
+def _localized_plan(state: Mapping) -> list[dict]:
+    """The derived plan with each step's title and question in the study language
+    (:func:`mlkit.study.junior.step_text`, the path ``view.build`` takes for ``status``)."""
+    from . import junior
+    language = st.language_of(state)
+    return [{**step, 'title': junior.step_text(step['title'], language),
+             'question': junior.step_text(step['question'], language)}
+            for step in st.derive_plan(state)]
 
 
 SUMMARY_FIXED_KEYS = ('schema', 'ok', 'study', 'revision')
@@ -2056,10 +2444,14 @@ def status(study_dir, since: int | None = None, summary: bool = False,
     leases = lock.probe_leases(study_dir)
     study = read.open(study_dir)
     built = view.build(study, leases=leases)
+    # R1 (2026-10-26): where the study panel shows this step, only when the panel is on;
+    # R1b: a read shows nothing new (``panel.shown``), except the data card at step 0.
+    companion_env.annotate(built['next_action'], study.study_dir, built.get('language'),
+                           produced={'command': 'status'}, plan=built['plan'])
     if summary:
         out = view.summary(built)
         if digest:
-            out = view.with_digest(study, built, out, since=since)
+            out = view.with_digest(study, built, out, since=since, leases=leases)
         payload = {'schema': SUMMARY_SCHEMA, 'ok': True, 'study': str(study.study_dir),
                    'revision': study.revision, 'since': since,
                    'changed': None if since is None else study.revision > since, **out}
@@ -2093,17 +2485,23 @@ def plan(study_dir) -> Outcome:
 
     study = read.open(study_dir)
     state = study.state
-    steps = st.derive_plan(state)
+    # L3 (R4, T2): the step titles and questions in the study language, as ``status``.
+    steps = _localized_plan(state)
     # v0.3 (WP-C): the view's next action, with its junior-ready keys (the same as status).
     return Outcome({'schema': SCHEMAS['plan'], 'ok': True, 'study': str(study.study_dir),
                     'revision': study.revision, 'steps': steps,
                     'current_step': next((s['id'] for s in steps if s['current']), None),
-                    'next_action': view.build(study)['next_action']})
+                    'next_action': _with_panel(view.build(study), study.study_dir,
+                                               {'command': 'plan'})})
 
 
 def apply(study_dir, *, action: str, params: dict, request_id: str, expected_revision: int,
-          command: str = 'decide') -> Outcome:
-    """Apply one registered action through ``apply_command`` and describe the receipt."""
+          command: str = 'decide', quiet: bool = False) -> Outcome:
+    """Apply one registered action through ``apply_command`` and describe the receipt.
+
+    ``quiet`` (L9, the automatic runner only): the deliverables are not rendered after the
+    commit and ``next_action`` is not refreshed (``null``); the runner renders once at the
+    end and reads the view itself."""
     guard.assert_writable()
     store = StudyStore(study_dir)
     if not store.exists():
@@ -2116,7 +2514,11 @@ def apply(study_dir, *, action: str, params: dict, request_id: str, expected_rev
     if optional and action in available:
         handler = available[action]
         available[action] = Handler(handler.params | optional, handler.run, handler.check)
-    receipt = store.execute(request, available)
+    # Contract P1.9 (§17.3): a study created before the step-1 sample records its look with
+    # its first write that commits, under the same lock; a refused write records nothing.
+    receipt = store.execute(request, available,
+                            on_commit=lambda state: exposure.ensure_sample_after_commit(store,
+                                                                                      state))
     payload = {'schema': SCHEMAS['decide'], 'ok': True, 'study': str(store.study_dir),
                'action': action, 'request_id': request_id,
                'replayed': bool(receipt.get('replayed')), 'revision': receipt['revision'],
@@ -2136,26 +2538,47 @@ def apply(study_dir, *, action: str, params: dict, request_id: str, expected_rev
             payload['revision'] = max(payload['revision'],
                                       read.open(store.study_dir).state['revision'])
     code = EXIT_OK
+    if quiet:
+        payload['next_action'] = None
+        return Outcome(payload, code)
     if not payload['replayed']:
         artifacts = after_commit(store.study_dir, payload)
         if artifacts is not None:
             payload['artifacts'] = artifacts
             if any(a.get('status') in ('stale', 'failed') for a in artifacts.values()):
                 code = EXIT_ARTIFACT_STALE
-    payload['next_action'] = refreshed_next_action(store.study_dir)
+    # R1b (2026-10-26): what this write produced, for ``next_action.panel.shown``.
+    result = payload['result'] if isinstance(payload['result'], dict) else {}
+    produced = {'command': 'decide', 'action': action, 'opening': result.get('opening'),
+                'kind': params.get(NOTE_KIND_PARAM, st.HOLD),
+                # Contract P1 (§17.1.3): a confirmation or a withdrawal names its step.
+                'decision_id': result.get('decision_id') or params.get('decision_id')}
+    payload['next_action'] = refreshed_next_action(store.study_dir, produced)
     return Outcome(payload, code)
 
 
-def refreshed_next_action(study_dir) -> dict | None:
+def refreshed_next_action(study_dir, produced: Mapping | None = None) -> dict | None:
     """v0.3 (WP-J): the study's ``next_action`` after a write, as ``status`` gives it (its
     junior-ready keys included), so the agent needs no ``status`` call between a write and
-    the next pause. None when the view cannot be built (the write itself stands)."""
+    the next pause. None when the view cannot be built (the write itself stands).
+    ``produced`` describes the write (R1b, ``companion_env.shown_section``)."""
     from . import view
     try:
         leases = lock.probe_leases(study_dir)
-        return view.build(read.open(study_dir), leases=leases)['next_action']
+        return _with_panel(view.build(read.open(study_dir), leases=leases), study_dir,
+                           produced)
     except Exception:                     # noqa: BLE001 - a read never undoes a write
         return None
+
+
+def _with_panel(built: dict, study_dir, produced: Mapping | None = None) -> dict | None:
+    """R1 (2026-10-26): the view's ``next_action`` with ``panel`` (where the study panel
+    shows this step and, R1b, what the command ``produced``) when the panel is on
+    (:mod:`mlkit.study.companion_env`); unchanged otherwise. Added by the command surfaces
+    only, never by the view the deliverables are rendered from, so they do not depend on
+    the environment."""
+    return companion_env.annotate(built['next_action'], study_dir, built.get('language'),
+                                  produced=produced, plan=built.get('plan'))
 
 
 OPENING_KEYS = ('status', 'execution_id', 'result_id', 'revision', 'error')
@@ -2171,6 +2594,15 @@ def _opening(store: StudyStore, payload: dict, request_id: str) -> dict | None:
     if result.get('decision_id') != st.FINAL_TEST:
         return None
     from . import executions
+    state = read.open(store.study_dir).state
+    recorded = (state.get('partition') or {}).get('opening') or {}
+    if not payload['replayed'] and st.final_test_opened(state) \
+            and recorded.get('proposal_id') != result.get('proposal_id'):
+        # L9 (ADR 0006 amendment): the junior's review of an automatic demo opening adopts
+        # it; the final test was opened once, by the automatic mode, and is not opened again.
+        return {'status': 'opened', 'execution_id': recorded.get('execution_id'),
+                'result_id': recorded.get('result_id'), 'revision': state['revision'],
+                'error': None}
     if payload['replayed']:
         state = read.open(store.study_dir).state
         opening = (state.get('partition') or {}).get('opening') or {}
@@ -2178,13 +2610,21 @@ def _opening(store: StudyStore, payload: dict, request_id: str) -> dict | None:
                 'execution_id': opening.get('execution_id'),
                 'result_id': opening.get('result_id'), 'revision': state['revision'],
                 'error': None}
+    # Review round 9 (R9E-5): the opening's own request id is derived at a fixed length (it
+    # was ``<request_id>:final_test.evaluation``, over the 200-character limit for a long
+    # request id, so the confirmation committed and the opening was refused). Only this first
+    # run uses it: a replayed confirmation reads the recorded opening from the state (above),
+    # whatever key an earlier engine reserved it under.
     try:
         outcome = executions.run(store.study_dir, 'final_test.evaluation', {},
-                                 request_id=f'{request_id}:final_test.evaluation',
+                                 request_id=executions.derived_request_id(
+                                     'final_test.evaluation', request_id),
                                  expected_revision=payload['revision'], render=False)
     except Exception as exc:
         # Refused before its reservation (nothing opened), or failed after it (the final test
         # is opened and consumed: run.fail recorded the failure and the rows it may have read).
+        # Review round 2 (A F1): a failure before any final-test row was read (the captured
+        # predictor refused when loaded) withdraws the opening, so it reads as refused.
         state = read.open(store.study_dir).state
         opening = (state.get('partition') or {}).get('opening') or {}
         error = (refusal_dict(exc) if isinstance(exc, (CommandRefused, StudyError)) else

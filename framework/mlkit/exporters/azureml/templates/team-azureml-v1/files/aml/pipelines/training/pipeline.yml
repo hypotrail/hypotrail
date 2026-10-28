@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-name: @@text:component_prefix@@_pipeline
+name: @@yaml:component_pipeline@@
 version: @@yaml:component_version@@
 description: @@yaml:pipeline_description@@
 # <inputs_and_outputs>

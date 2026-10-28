@@ -34,6 +34,12 @@
       "family": "linear",
       "output_kind": "regression_point",
       "qualification": "local: native and MLflow pyfunc parity on synthetic and Auto MPG-like fixtures; Azure: not qualified"
+    },
+    {
+      "task": "binary",
+      "family": "logistic",
+      "output_kind": "binary_score",
+      "qualification": "local: native and MLflow pyfunc parity of the positive-class score on synthetic binary and Bank/Hotel-like fixtures; the decision rule is metadata, never applied in the model output; Azure: not qualified"
     }
   ],
   "python": "3.13",

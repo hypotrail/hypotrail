@@ -136,6 +136,24 @@ class Chat:
         return self('run', activity, *options, '--request-id', self.rid(f'run-{activity}'),
                     '--expected-revision', self.rev(), expect=expect)
 
+def _structural_preparation(chat) -> dict:
+    """Owner session 2026-10-26 (L5, D5, D6): the structural check of a new study, the
+    screened distributions ``next_action`` names, then the drafted preparation, proposed and
+    confirmed before any look at the target (not data-contingent)."""
+    assert chat.run('eda.quality')['status'] == 'promoted'
+    action = chat.status()['view']['next_action']
+    while action['kind'] == 'run' and action['activity'] == 'eda.distribution':
+        chat.run('eda.distribution', '--column', action['options']['column'])
+        action = chat.status()['view']['next_action']
+    assert (action['kind'], action['decision']) == ('propose', 'preprocessing'), action
+    value = action['default_value']
+    p = chat.propose('preprocessing', value, 'You adopt the preparation drafted from the '
+                                             'quality check of the columns.')
+    chat.confirm(p, 'I confirm this preparation.')
+    recorded = chat.status()['view']['decisions']['preprocessing']['value']
+    assert recorded['data_contingent'] is False and recorded['target_looks_before'] == 0
+    return value
+
 
 class Tags(HTMLParser):
     def __init__(self):
@@ -170,12 +188,14 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     code, init = fk.hyp('init', '--case', case_dir, '--study', study, cwd=work)
     assert code == 0 and init['agent_instructions']['status'] == 'copied'
     # WP-A4: step 0, the success criterion and the preprocessing join the plan; WP-B1: the
-    # variant before the model choice, the opening of the final test after it.
+    # variant before the model choice, the opening of the final test after it. Owner session
+    # 2026-10-26 (L5, D5): the structural check, then the preparation, then the target.
     assert [s['id'] for s in init['plan']] == ['discover_data', 'prediction_time',
                                                'feature_availability', 'split',
-                                               'success_criterion', 'train_eda',
-                                               'preprocessing', 'models', 'model_variant',
-                                               'model_choice', 'final_test', 'conclusion']
+                                               'success_criterion', 'structural_eda',
+                                               'preprocessing', 'train_eda', 'models',
+                                               'model_variant', 'model_choice', 'final_test',
+                                               'conclusion']
     claude = (study / 'CLAUDE.md').read_text()
     assert '### Regression study' in claude and 'evaluate.regression' in claude
     assert 'hypotrail:task' not in claude
@@ -262,7 +282,9 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
                      'below the error of the mean baseline.')
     chat.confirm(p, 'I confirm: at least 10% less error than the mean.')
 
-    # 4. training EDA (an activity of a binary study is refused)
+    # 4. the structural check and the drafted preparation (owner session 2026-10-26, L5),
+    # then the training EDA (an activity of a binary study is refused)
+    _structural_preparation(chat)
     assert chat.run('eda.target_rate', expect=2)['error']['code'] == 'invalid_arguments'
     summary = chat.run('eda.target_summary')['values']
     assert summary['n_rows'] == parts['train']['n_rows'] and summary['n_missing'] == 0
@@ -275,11 +297,7 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     eda_exposure = [r for r in fk.exposure_records(study) if r['purpose'] == 'train_eda']
     assert {r['partition'] for r in eda_exposure} == {'train'}
 
-    # 5. the default preprocessing (WP-A4), then both fits
-    default = chat.status()['view']['next_action']['default_value']
-    p = chat.propose('preprocessing', default, 'You keep the default preparation of the '
-                                               'variables: nothing added, nothing grouped.')
-    chat.confirm(p, 'I confirm the default preparation.')
+    # 5. both fits (the preparation was decided before the target, above)
     baseline = chat.run('fit.baseline')
     linear = chat.run('fit.linear')
     assert baseline['values']['model'] == 'train_mean'

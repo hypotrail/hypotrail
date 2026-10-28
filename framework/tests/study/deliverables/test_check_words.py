@@ -94,9 +94,11 @@ def test_a_regression_target_unit_is_a_count_noun():
 
 @pytest.mark.parametrize('draft, number', [
     ('Roughly one call in fifty ends in a subscription.', 'one call in fifty'),
-    ('The model combines the forty-three kept columns.', 'forty-three'),
+    # Contract P1.9: the data card's sample is drawn from the study's seed (its creation
+    # stamp), so a number a cell may hold (43, an age) can be traced to it; these cannot.
+    ('The model combines the ninety thousand kept columns.', 'ninety thousand'),
     ('Environ un client sur cinquante souscrit.', 'un client sur cinquante'),
-    ('The logistic model ranks quarante-trois clients first.', 'quarante-trois'),
+    ('The logistic model ranks quatre-vingt-dix mille clients first.', 'quatre-vingt-dix mille'),
     ('Two thirds of the rows are negatives.', 'Two thirds'),
     ('About one client in six subscribes.', 'one client in six'),
 ])

@@ -1,7 +1,7 @@
 """``hypotrail run``: execute one activity, or acknowledge an interrupted execution.
 
     hypotrail run ACTIVITY [--column X [--max-groups N]] [--rule RULE ...] [--channel C]
-                  --request-id ID --expected-revision REV --study DIR
+                  [--progress] --request-id ID --expected-revision REV --study DIR
     hypotrail run --acknowledge-interruption EXECUTION_ID --user-words TEXT
                   --request-id ID --expected-revision REV --study DIR
 
@@ -27,10 +27,18 @@ refusals included).
 Test hooks, honoured only with ``HYPOTRAIL_TEST_HOOKS=1``: ``HYPOTRAIL_FAULT`` set to
 ``run_after_reserve`` or ``run_before_promote`` ends the process abruptly at that
 point (``os._exit``); ``run_pause_before_promote:DIR`` writes ``DIR/ready`` and waits
-for ``DIR/go`` before promoting; ``run_fail_before_promote`` makes the computation fail;
+for ``DIR/go`` before promoting; ``run_slow_compute:SECONDS`` makes the computation last
+that much longer (for ``--progress``); ``run_fail_before_promote`` makes the computation fail;
 ``recover_kill`` and ``fail_kill`` end the process after an execution's exposure is
 recorded and before the ``run.recover`` or ``run.fail`` commit (review fix M2). Several
 faults may be listed, comma-separated.
+
+``--progress`` (owner session 2026-10-26, L4, R10) writes progress lines on stderr while
+the activity computes and the deliverables are regenerated (:mod:`mlkit.study.progress`):
+one line at the start, a heartbeat at least every 10 s, one line at the end, in the study
+language. stdout is the same JSON document with or without it; without it nothing is written
+to stderr. ``HYPOTRAIL_PROGRESS_INTERVAL`` (with ``HYPOTRAIL_TEST_HOOKS=1`` only) shortens
+the heartbeat for tests.
 
 pandas and scikit-learn are imported only by the computation.
 """
@@ -38,6 +46,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 import time
 from pathlib import Path
 
@@ -78,6 +87,11 @@ def configure(parser: argparse.ArgumentParser) -> None:
     # choices: a value outside state.CHANNELS is invalid_value (details.field).
     parser.add_argument('--channel', default=None,
                         help='chat (the default), cli, or webview: where the run came from')
+    # Owner session 2026-10-26 (L4, R10): progress lines on stderr, in the study language;
+    # stdout stays the one JSON document. The study panel never passes it.
+    parser.add_argument('--progress', action='store_true',
+                        help='write progress lines on stderr while the activity runs (a '
+                             'heartbeat at least every 10 s); stdout is unchanged')
     parser.add_argument('--request-id', required=True,
                         help='fresh per intent; replay the same one after a timeout')
     parser.add_argument('--expected-revision', required=True, type=int,
@@ -97,6 +111,12 @@ def _pause(folder: Path):
             if time.monotonic() > deadline:
                 raise TimeoutError('test pause was never released')
             time.sleep(0.05)
+    return hook
+
+
+def _slow(seconds: float):
+    def hook(_plan) -> None:
+        time.sleep(seconds)
     return hook
 
 
@@ -124,7 +144,18 @@ def test_hooks() -> dict:
             hooks['fail_kill'] = _die
         elif fault.startswith('run_pause_before_promote:'):
             hooks['before_promote'] = _pause(Path(fault.split(':', 1)[1]))
+        elif fault.startswith('run_slow_compute:'):
+            hooks['during_compute'] = _slow(float(fault.split(':', 1)[1]))
     return hooks
+
+
+def progress_interval() -> float:
+    """The heartbeat of ``--progress``: :data:`mlkit.study.progress.HEARTBEAT_SECONDS`, or
+    ``HYPOTRAIL_PROGRESS_INTERVAL`` seconds under ``HYPOTRAIL_TEST_HOOKS=1`` (tests only)."""
+    from . import progress
+    if os.environ.get(HOOKS_ENV) == '1' and os.environ.get(progress.INTERVAL_ENV):
+        return float(os.environ[progress.INTERVAL_ENV])
+    return progress.HEARTBEAT_SECONDS
 
 
 def main(args: argparse.Namespace) -> cmd.Outcome:
@@ -161,7 +192,9 @@ def main(args: argparse.Namespace) -> cmd.Outcome:
                    'profile': args.profile, 'packager': args.packager}
         return executions.run(args.study, args.activity, options, request_id=args.request_id,
                               expected_revision=args.expected_revision, hooks=test_hooks(),
-                              channel=args.channel)
+                              channel=args.channel,
+                              progress=sys.stderr if args.progress else None,
+                              progress_interval=progress_interval())
     except (CommandRefused, StudyError) as exc:
         if exc.code == 'interrupted_execution_pending':
             return cmd.Outcome(cmd.error_payload('run', exc), cmd.EXIT_UNKNOWN_OUTCOME)

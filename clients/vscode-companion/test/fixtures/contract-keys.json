@@ -32,6 +32,59 @@
     "trials",
     "scenario_defaults",
     "language"
+   ],
+   "next_action.pause": [
+    "schema",
+    "kind",
+    "language",
+    "revision",
+    "position",
+    "learned",
+    "limitations",
+    "proposal_id",
+    "proposal_text",
+    "recommended_option",
+    "options",
+    "option_labels",
+    "question",
+    "evidence_refs",
+    "detail_topics"
+   ],
+   "next_action.choice_options[]": [
+    "id",
+    "value",
+    "label"
+   ],
+   "next_action.after_study": [
+    "handoff",
+    "azureml",
+    "cloud_status",
+    "junior_text"
+   ],
+   "next_action.after_study.azureml": [
+    "supported",
+    "reason_id",
+    "reason",
+    "plan_command",
+    "model",
+    "template"
+   ],
+   "next_action.panel": [
+    "version",
+    "stage",
+    "title",
+    "where",
+    "shown"
+   ],
+   "next_action.panel.shown": [
+    "anchor",
+    "label",
+    "line"
+   ],
+   "next_action.panel.where": [
+    "anchor",
+    "label",
+    "line"
    ]
   },
   "hypotrail.summary/1+digest": {
@@ -70,7 +123,20 @@
     "last_session",
     "digest",
     "task",
-    "currency"
+    "currency",
+    "texts",
+    "panel_contract",
+    "automation",
+    "review_queue",
+    "defensibility",
+    "ledger",
+    "sample",
+    "headlines",
+    "criterion_configurations",
+    "data_structure",
+    "quality_verdicts",
+    "case_brief",
+    "case_display"
    ],
    "moments[]": [
     "id",
@@ -138,6 +204,95 @@
     "runs_started",
     "runs_failed",
     "invalidations"
+   ],
+   "next_action.pause": [
+    "schema",
+    "kind",
+    "language",
+    "revision",
+    "position",
+    "learned",
+    "limitations",
+    "proposal_id",
+    "proposal_text",
+    "recommended_option",
+    "options",
+    "option_labels",
+    "question",
+    "evidence_refs",
+    "detail_topics"
+   ],
+   "next_action.choice_options[]": [
+    "id",
+    "value",
+    "label"
+   ],
+   "next_action.after_study": [
+    "handoff",
+    "azureml",
+    "cloud_status",
+    "junior_text"
+   ],
+   "next_action.after_study.azureml": [
+    "supported",
+    "reason_id",
+    "reason",
+    "plan_command",
+    "model",
+    "template"
+   ],
+   "next_action.panel": [
+    "version",
+    "stage",
+    "title",
+    "where",
+    "shown"
+   ],
+   "next_action.panel.shown": [
+    "anchor",
+    "label",
+    "line"
+   ],
+   "next_action.panel.where": [
+    "anchor",
+    "label",
+    "line"
+   ],
+   "automation": [
+    "variant",
+    "active",
+    "started_revision",
+    "ended"
+   ],
+   "review_queue": [
+    "items",
+    "done",
+    "total"
+   ],
+   "defensibility": [
+    "kind",
+    "count",
+    "items",
+    "checklist"
+   ],
+   "ledger": [
+    "final_test",
+    "target_looks",
+    "configurations",
+    "variants"
+   ],
+   "sample": [
+    "seed",
+    "row_keys",
+    "recorded"
+   ],
+   "criterion_configurations": [
+    "metric",
+    "unit",
+    "bound",
+    "configurations",
+    "final_test",
+    "business"
    ]
   },
   "hypotrail.decisions/1": {
@@ -314,7 +469,9 @@
     "execution_id",
     "exposure_id",
     "values",
-    "headline"
+    "headline",
+    "question_junior",
+    "texts"
    ],
    "lineage": [
     "nodes",
@@ -356,7 +513,8 @@
     "records",
     "activities",
     "first_revision",
-    "last_revision"
+    "last_revision",
+    "note"
    ],
    "impacts[]": [
     "decision_id",
@@ -440,7 +598,8 @@
     "definition",
     "example",
     "example_status",
-    "steps"
+    "steps",
+    "language"
    ],
    "steps.*": [
     "concept",
@@ -591,7 +750,8 @@
     "values",
     "result",
     "artifacts",
-    "next_action"
+    "next_action",
+    "question_junior"
    ]
   },
   "hypotrail.session_report/1": {
@@ -627,7 +787,8 @@
     "final_test",
     "groups",
     "rows",
-    "note"
+    "note",
+    "special_rows"
    ],
    "groups[].variables[]": [
     "name",
@@ -642,6 +803,21 @@
     "n_missing",
     "n_distinct",
     "examples"
+   ],
+   "rows": [
+    "columns",
+    "n_rows",
+    "order",
+    "items",
+    "seed",
+    "target_shown",
+    "exposure"
+   ],
+   "special_rows": [
+    "columns",
+    "n_rows",
+    "items",
+    "truncated"
    ]
   }
  },

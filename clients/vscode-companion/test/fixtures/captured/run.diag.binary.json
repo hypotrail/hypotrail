@@ -21,7 +21,7 @@
   "activity": "diag.binary",
   "execution_id": "e_6ed23e1b9a8128024e723b74",
   "status": "promoted",
-  "result_id": "141c7a9e61e8bebc92cdc5a39d8ce6587c0eb025433d21e0456834045d877f75",
+  "result_id": "afaa453cc8f7d53ad432be8dffee226bfdd66c8fd342bece0473c320a12625db",
   "values": {
    "question": "Where does the model err at the rule, and can its score be read as a probability?",
    "evidence": "development",
@@ -1191,7 +1191,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "9862ea70cd991c27bc2d11c7748ee06c0514189636fbee20bd159298cecc7ad4"
+     "predictions": "3c6fd1dc403d60d9e2733e78500db47196ded2d65d48e4e73d854fc08bd96249"
     },
     "fit.variant": {
      "confusion": {
@@ -2345,7 +2345,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "72ea4d078e01dc503ae3a4710f0c2adf0f594cd47f473b340831f928c482ecf5"
+     "predictions": "688c2df4c82592b31ada7e6b4ceeb8459c10e721ef7182c04f525aabbd3d83c4"
     }
    },
    "coefficient_rows": 2531,
@@ -2583,14 +2583,14 @@
    "activity": "diag.binary",
    "slot": "diag.binary",
    "status": "promoted",
-   "result_id": "141c7a9e61e8bebc92cdc5a39d8ce6587c0eb025433d21e0456834045d877f75",
-   "input_key": "10166e25addb6b5b2b9d74f3540eba252e231fcfc2dab5a341535d35012c1db8",
+   "result_id": "afaa453cc8f7d53ad432be8dffee226bfdd66c8fd342bece0473c320a12625db",
+   "input_key": "a3615061259a7fd9bf80be537e6b4608f14b5812a78b235d48cb739603c4fc5b",
    "reason": null,
    "started_revision": 46,
    "invalidation": null,
    "exposure_ids": [
-    "x_97da67740cde4bc2a8069734d082c9ca",
-    "x_eb2b791299544971a0d846c0a921b059"
+    "x_404597c020734ad19cafd3435e4f0d7e",
+    "x_97fb296ced704b94a5004ad8d026a031"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2632,26 +2632,21 @@
    }
   },
   "next_action": {
-   "kind": "propose",
+   "kind": "run",
    "step": "final_test",
-   "decision": "final_test",
-   "message": "Now that the model and the rule are chosen, do you open the sealed final test, once, to measure the chosen configuration on rows nothing has seen? After this, any change is made after the final test.",
-   "default_value": {
-    "model": "fit.logistic",
-    "rule": "threshold:0.2"
+   "activity": "predictor.capture",
+   "message": "Run predictor.capture before proposing to open the final test: the export template supports the chosen model, and only a model captured before the opening is exported as the evaluated model (afterwards the Azure ML export carries the recipe only). The final test stays sealed.",
+   "audience": "agent",
+   "junior_message": "Before the final test is opened, the engine captures the chosen model: it fits it once on every development row, reloads it and checks that it gives the same predictions, so that the Azure ML export carries the evaluated model. No final-test row is read.",
+   "options": {
+    "profile": "workshop"
    },
-   "audience": "junior",
-   "junior_message": "Now that the model and the rule are chosen, do you open the sealed final test, once, to measure the chosen configuration on rows nothing has seen? After this, any change is made after the final test.",
    "language": "en",
-   "recommended": {
-    "value": {
-     "model": "fit.logistic",
-     "rule": "threshold:0.2"
-    },
-    "why": "This is the configuration you chose; the holdout (final test) measures it once."
-   },
-   "question": "Do you open the holdout (final test) now, once?",
-   "junior_digest": "Holdout (final test): rows sealed since the start. Opened once, it measures the chosen configuration on rows no choice used; it is the study's only independent evidence. After the opening, any change is reported as made after the final test. Recommended: This is the configuration you chose; the holdout (final test) measures it once. It holds 904 rows.",
+   "recommended": null,
+   "question": null,
+   "junior_digest": "Next: the captured model, run without asking you. Before the final test is opened, the engine captures the chosen model: it fits it once on every development row, reloads it and checks that it gives the same predictions, so that the Azure ML export carries the evaluated model. No final-test row is read.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Final test (13 of 14).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",
@@ -2659,8 +2654,8 @@
     "revision": 47,
     "position": {
      "step_id": "final_test",
-     "completed": 11,
-     "total": 13
+     "completed": 12,
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -2684,13 +2679,18 @@
      "continue",
      "explain"
     ],
-    "question": "Do you open the holdout (final test) now, once?",
+    "option_labels": {
+     "continue": "Let's continue",
+     "explain": "Explain first"
+    },
+    "question": "Before the final test is opened, the engine captures the chosen model: it fits it once on every development row, reloads it and checks that it gives the same predictions, so that the Azure ML export carries the evaluated model. No final-test row is read.",
     "evidence_refs": [],
     "detail_topics": [
      "metric",
      "uncertainty"
     ]
    }
-  }
+  },
+  "question_junior": "Where does the model err at the rule, and can its score be read as a probability?"
  }
 }

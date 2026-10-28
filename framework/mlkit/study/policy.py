@@ -40,6 +40,8 @@ from typing import Mapping
 
 import numpy as np
 
+from .progress import step     # L8 (R10 level 2): a no-op unless ``run --progress`` listens
+
 RULE_TYPES = ('threshold', 'capacity', 'share')
 GAIN_SHARES = (0.05, 0.1, 0.2)
 METRICS = ('precision', 'recall', 'volume')
@@ -371,6 +373,7 @@ def paired_bootstrap(y, scores: Mapping[str, object], rule, B: int, seed: int, *
     samples = {name: np.empty((B, len(METRICS))) for name in names}
     if groups is None:
         for b in range(B):
+            step('replicate', b + 1, B)
             idx = rng.integers(0, n, n)
             yb = y[idx]
             for name in names:
@@ -384,6 +387,7 @@ def paired_bootstrap(y, scores: Mapping[str, object], rule, B: int, seed: int, *
             local.append((fold, np.arange(start, start + len(ix))))
             start += len(ix)
         for b in range(B):
+            step('replicate', b + 1, B)
             idx = np.concatenate([ix[rng.integers(0, len(ix), len(ix))] for _, ix in folds])
             yb = y[idx]
             for name in names:

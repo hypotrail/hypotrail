@@ -1,0 +1,732 @@
+# Understanding and handover task bank (ADR 0008, SPEC-COMPREHENSION §08).
+# Drafted by the implementation agent from this case's contract; NOT yet reviewed by a person.
+# qualification.status stays to_qualify until an ML referent and a person in charge of the
+# handover have reviewed the rubrics and recorded their review; until then this bank never
+# produces a required result. Prompts cite the study through {decision:...}, {fact:...} and
+# {case:...} references resolved at capture: no figure is written here.
+schema: hypotrail.understanding-tasks/1
+taskset_id: hotel-understanding
+taskset_version: 1
+case_id: hotel-booking-resort-v1
+case_contract_version: hypotrail.case/1
+locale: en
+qualification:
+  status: to_qualify
+  reviews: []
+rubrics:
+- rubric_id: hotel-d1
+  version: 1
+  dimension_id: D1
+  criteria:
+  - criterion_id: unit_population
+    text: Names the unit of observation and the population the study covers, in the case terms.
+    mandatory: true
+    not_applicable_allowed: false
+  - criterion_id: decision_moment
+    text: Says what decision the prediction supports and at which moment the prediction is made, and why
+      that moment matters for the inputs.
+    mandatory: true
+    not_applicable_allowed: false
+  error_signs:
+  - Describes the target only, without the decision it supports.
+  - Places the prediction after the information it needs is known.
+  acceptable_evidence:
+  - A reference to the case facts or to the confirmed prediction moment.
+  uncertain_cases:
+  - The case leaves part of the population unspecified; saying so is correct.
+  demonstrated_when: Both mandatory criteria are met with the case terms, by a paraphrase or not.
+  dependency_keys:
+  - study:decision:prediction_time
+  - case:contract
+  hints:
+  - 'Start from the row: what does one line of the data describe?'
+  - Who acts on the prediction, and what do they know at that moment?
+- rubric_id: hotel-d2
+  version: 1
+  dimension_id: D2
+  criteria:
+  - criterion_id: availability_rule
+    text: Links the inclusion of an input to its availability at the prediction moment, with the rule
+      or decision that applies.
+    mandatory: true
+    not_applicable_allowed: false
+  - criterion_id: effect_on_validity
+    text: Explains what an input known only later does to the measured performance and to the conclusion.
+    mandatory: true
+    not_applicable_allowed: false
+  - criterion_id: where_to_change
+    text: Points to where the input selection is decided or changed.
+    mandatory: false
+    not_applicable_allowed: false
+  error_signs:
+  - Says only "leakage" without linking it to the prediction moment.
+  - Proposes to keep the input because it improves the score.
+  acceptable_evidence:
+  - The confirmed availability decision, the data card, or the mapped selection code.
+  uncertain_cases:
+  - An input whose timing the case documents as uncertain; asking the owner is correct.
+  demonstrated_when: The two mandatory criteria are met; the location is a bonus.
+  dependency_keys:
+  - study:decision:feature_availability
+  - study:decision:prediction_time
+  - case:contract
+  - data:dataset
+  hints:
+  - Ask when each value is recorded relative to the prediction moment.
+  - What would the model be able to use in production, and what only in this file?
+- rubric_id: hotel-d3
+  version: 1
+  dimension_id: D3
+  criteria:
+  - criterion_id: partition_role
+    text: Explains the role of each partition (development folds or validation, final test) and why the
+      final test is looked at once.
+    mandatory: true
+    not_applicable_allowed: false
+  - criterion_id: exposure_kept
+    text: States that changing the split after looking at results does not make the seen rows unseen,
+      and that the exposure history is kept.
+    mandatory: true
+    not_applicable_allowed: false
+  error_signs:
+  - Proposes to re-split and present a new test as independent.
+  - Treats validation results as final evidence.
+  acceptable_evidence:
+  - The confirmed split decision and the exposure ledger of the report.
+  uncertain_cases:
+  - A temporal split whose time column has gaps; naming the limit is correct.
+  demonstrated_when: Both mandatory criteria are met.
+  dependency_keys:
+  - study:decision:split
+  - study:partition
+  hints:
+  - Which rows has anyone already looked at, and how is that recorded?
+  - What makes a test independent of the choices made on it?
+- rubric_id: hotel-d4
+  version: 1
+  dimension_id: D4
+  criteria:
+  - criterion_id: reference_comparison
+    text: Compares the model with the baseline on the criterion the study fixed before any model, at the
+      adopted rule.
+    mandatory: true
+    not_applicable_allowed: false
+  - criterion_id: operational_scope
+    text: Says which operational conclusion is justified and what information is still missing, without
+      turning a metric into a business promise.
+    mandatory: true
+    not_applicable_allowed: false
+  error_signs:
+  - Cites a ranking metric as proof of business value.
+  - Ignores the uncertainty of the gain.
+  acceptable_evidence:
+  - The confirmed success criterion and the cited results of the report.
+  uncertain_cases:
+  - 'The final test is not opened yet: development evidence only, which is correct to say.'
+  demonstrated_when: Both mandatory criteria are met with the criterion of this study.
+  dependency_keys:
+  - study:decision:success_criterion
+  - role:result
+  hints:
+  - Which criterion did you fix before the first model?
+  - What does the gain mean for the team that acts on the ranking?
+- rubric_id: hotel-d5
+  version: 1
+  dimension_id: D5
+  criteria:
+  - criterion_id: learned_where
+    text: Names what each transformation learns and on which rows it is fitted (within each fold, not
+      on all rows).
+    mandatory: true
+    not_applicable_allowed: false
+  - criterion_id: train_predict_consistency
+    text: Explains how the same fitted transformation is applied at prediction time.
+    mandatory: true
+    not_applicable_allowed: false
+  error_signs:
+  - Fits an imputation or a scaling on all rows before splitting.
+  - Recomputes the transformation on the rows to predict.
+  acceptable_evidence:
+  - The confirmed preprocessing decision or the mapped transformation code.
+  uncertain_cases:
+  - A transformation with no learned parameter; saying so is correct.
+  demonstrated_when: Both mandatory criteria are met.
+  dependency_keys:
+  - study:decision:preprocessing
+  - role:transform_recipe
+  hints:
+  - For each step, what number does it learn from data?
+  - Which rows exist when that number is learned?
+- rubric_id: hotel-d6
+  version: 1
+  dimension_id: D6
+  criteria:
+  - criterion_id: path_in_out
+    text: Follows the path from an input row to the output through the mapped code, naming the files.
+    mandatory: true
+    not_applicable_allowed: false
+  - criterion_id: locate_control
+    text: Locates where a given control (availability check, partition guard) is implemented, or says
+      it is absent.
+    mandatory: true
+    not_applicable_allowed: false
+  - criterion_id: diagnose
+    text: Proposes how to diagnose an anomaly without changing the reference study.
+    mandatory: false
+    not_applicable_allowed: false
+  error_signs:
+  - Describes the code from memory without a file reference.
+  - Proposes to edit the reference study to reproduce a defect.
+  acceptable_evidence:
+  - Paths of the mapped code files.
+  uncertain_cases:
+  - A control implemented by the engine rather than the project code; saying so is correct.
+  demonstrated_when: Both mandatory criteria are met with file references.
+  dependency_keys:
+  - role:code
+  - engine:code
+  hints:
+  - Open the mapped files and follow one row.
+  - Search for where the input list is built.
+- rubric_id: hotel-d7
+  version: 1
+  dimension_id: D7
+  criteria:
+  - criterion_id: assumptions
+    text: States the assumptions the conclusion rests on and the uses it does not cover.
+    mandatory: true
+    not_applicable_allowed: false
+  - criterion_id: blocking_conditions
+    text: Names conditions that would forbid a conclusion (a criterion not met, a stale result, a leakage
+      doubt).
+    mandatory: true
+    not_applicable_allowed: false
+  error_signs:
+  - Turns a retrospective association into a promise about future cases.
+  - Claims a causal effect.
+  acceptable_evidence:
+  - The "not yet defensible" section and the case facts.
+  uncertain_cases:
+  - A limit the case documents as unknown; naming it is correct.
+  demonstrated_when: Both mandatory criteria are met.
+  dependency_keys:
+  - case:contract
+  - study:decision:success_criterion
+  hints:
+  - What would have to be true for the conclusion to hold next year?
+  - Read the "not yet defensible" list.
+- rubric_id: hotel-d8
+  version: 1
+  dimension_id: D8
+  criteria:
+  - criterion_id: dependencies_env
+    text: Says where the dependency versions and the environment are pinned and how to reproduce the study
+      safely.
+    mandatory: true
+    not_applicable_allowed: false
+  - criterion_id: security_rules
+    text: Names the security and data rules that apply before adopting generated code, and what to do
+      when provenance or behaviour cannot be established.
+    mandatory: true
+    not_applicable_allowed: false
+  - criterion_id: rollback
+    text: Names a point of return and the change that a reviewer must verify.
+    mandatory: false
+    not_applicable_allowed: false
+  error_signs:
+  - Says the code is safe because it passed a questionnaire.
+  - Adopts a dependency without checking its provenance.
+  acceptable_evidence:
+  - The dependency lock, the mapped security rules, the environment commands.
+  uncertain_cases:
+  - No security rule is mapped; escalating is the expected answer.
+  demonstrated_when: Both mandatory criteria are met; a correct answer certifies nothing about the dependency.
+  dependency_keys:
+  - engine:dependency_lock
+  - role:security_rule
+  hints:
+  - Where is the lock file, and who reviews a change to it?
+  - What do you do when you cannot tell where a snippet comes from?
+tasks:
+- task_id: hotel-d1-a
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D1
+  responsibility_tags:
+  - analyst
+  - pipeline
+  kind: explain
+  prompt_template: 'The case describes one row as: {fact:observation_unit}. In your own words, who or
+    what is predicted, which decision the prediction supports ({fact:decision}), and why the moment of
+    prediction you confirmed ({decision:prediction_time}) constrains the inputs.'
+  required_refs:
+  - fact:observation_unit
+  - fact:decision
+  - decision:prediction_time
+  source_refs:
+  - case:contract
+  rubric_id: hotel-d1
+  variant_family: d1-purpose
+  variant_id: a
+  dependency_keys: []
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d1-b
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D1
+  responsibility_tags:
+  - analyst
+  - pipeline
+  kind: predict_consequence
+  prompt_template: Suppose the team moved the prediction later than the moment you confirmed ({decision:prediction_time}).
+    What would change for the population predicted and for the decision ({fact:decision})? Explain with
+    the case terms.
+  required_refs:
+  - decision:prediction_time
+  - fact:decision
+  source_refs:
+  - case:contract
+  rubric_id: hotel-d1
+  variant_family: d1-purpose
+  variant_id: b
+  dependency_keys: []
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d2-a
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D2
+  responsibility_tags:
+  - analyst
+  - pipeline
+  kind: explain
+  prompt_template: One input of this case would only be known after the event the study predicts ({case:target}).
+    Without naming the answer from memory, how do you find such an input with the data card and the availability
+    decision you confirmed, what must change in the input selection, and why? Point to the rule concerned.
+  required_refs:
+  - case:target
+  source_refs:
+  - case:contract
+  - study:decision:feature_availability
+  rubric_id: hotel-d2
+  variant_family: d2-leakage
+  variant_id: a
+  dependency_keys: []
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d2-b
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D2
+  responsibility_tags:
+  - analyst
+  - pipeline
+  kind: predict_consequence
+  prompt_template: A colleague proposes to keep an input recorded after the prediction moment ({decision:prediction_time})
+    because it raises the validation score. Predict what happens to the measured performance and to the
+    conclusion, and say where in this study that input would be excluded.
+  required_refs:
+  - decision:prediction_time
+  source_refs:
+  - case:contract
+  rubric_id: hotel-d2
+  variant_family: d2-leakage
+  variant_id: b
+  dependency_keys: []
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d3-a
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D3
+  responsibility_tags:
+  - analyst
+  - pipeline
+  kind: explain
+  prompt_template: 'Your split is: {decision:split}. Explain the role of each partition of this study
+    and why the final test is opened only once.'
+  required_refs:
+  - decision:split
+  source_refs:
+  - case:contract
+  rubric_id: hotel-d3
+  variant_family: d3-evaluation
+  variant_id: a
+  dependency_keys: []
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d3-b
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D3
+  responsibility_tags:
+  - analyst
+  - pipeline
+  kind: predict_consequence
+  prompt_template: Results have already been looked at. Someone proposes to change the split ({decision:split})
+    and present a new test as independent. Can they? Explain what the exposure history of this study records
+    and what it implies.
+  required_refs:
+  - decision:split
+  source_refs:
+  - case:contract
+  rubric_id: hotel-d3
+  variant_family: d3-evaluation
+  variant_id: b
+  dependency_keys: []
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d4-a
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D4
+  responsibility_tags:
+  - analyst
+  kind: explain
+  prompt_template: 'Your success criterion is: {decision:success_criterion}. The model improves a ranking
+    metric. Which operational conclusion is justified for the decision of this case ({fact:decision}),
+    and which information is still missing?'
+  required_refs:
+  - decision:success_criterion
+  - fact:decision
+  - result:policy.evaluation
+  source_refs:
+  - case:contract
+  rubric_id: hotel-d4
+  variant_family: d4-results
+  variant_id: a
+  dependency_keys: []
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d4-b
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D4
+  responsibility_tags:
+  - analyst
+  kind: predict_consequence
+  prompt_template: If the team could act on twice as many cases as the rule you evaluate, what would you
+    expect to happen to the gain against the baseline under your criterion ({decision:success_criterion}),
+    and what would you check before saying so?
+  required_refs:
+  - decision:success_criterion
+  - result:policy.evaluation
+  source_refs:
+  - case:contract
+  rubric_id: hotel-d4
+  variant_family: d4-results
+  variant_id: b
+  dependency_keys: []
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d5-a
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D5
+  responsibility_tags:
+  - pipeline
+  kind: explain
+  prompt_template: 'Your preprocessing is: {decision:preprocessing}. For each step, say what it learns
+    and on which rows it is fitted, and how the same step is applied when the model predicts.'
+  required_refs:
+  - decision:preprocessing
+  source_refs:
+  - case:contract
+  rubric_id: hotel-d5
+  variant_family: d5-transforms
+  variant_id: a
+  dependency_keys:
+  - role:transform_recipe
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d5-b
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D5
+  responsibility_tags:
+  - pipeline
+  kind: diagnose
+  prompt_template: On a synthetic pipeline (not this study), missing values are imputed with the mean
+    of all rows before the split. Locate the problem, predict its effect on the validation score, and
+    say where the correction belongs.
+  required_refs: []
+  source_refs: []
+  rubric_id: hotel-d5
+  variant_family: d5-transforms
+  variant_id: b
+  dependency_keys:
+  - role:transform_recipe
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d6-a
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D6
+  responsibility_tags:
+  - pipeline
+  kind: explain
+  prompt_template: Using the mapped code of the repository, follow one input row to the prediction and
+    name the files on the way. Where is the list of inputs built?
+  required_refs: []
+  source_refs: []
+  rubric_id: hotel-d6
+  variant_family: d6-implementation
+  variant_id: a
+  dependency_keys:
+  - role:code
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d6-b
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D6
+  responsibility_tags:
+  - pipeline
+  kind: diagnose
+  prompt_template: The prediction for one row looks wrong. Without changing the reference study, how would
+    you locate the cause in the mapped code? Name the control you would check first and where it is implemented.
+  required_refs: []
+  source_refs: []
+  rubric_id: hotel-d6
+  variant_family: d6-implementation
+  variant_id: b
+  dependency_keys:
+  - role:code
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d7-a
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D7
+  responsibility_tags:
+  - analyst
+  - pipeline
+  kind: explain
+  prompt_template: Under your success criterion ({decision:success_criterion}), which assumptions does
+    a conclusion of this study rest on, which uses does it not cover ({fact:intended_use}), and which
+    conditions would forbid a conclusion?
+  required_refs:
+  - decision:success_criterion
+  - fact:intended_use
+  source_refs:
+  - case:contract
+  rubric_id: hotel-d7
+  variant_family: d7-limits
+  variant_id: a
+  dependency_keys: []
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d7-b
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D7
+  responsibility_tags:
+  - analyst
+  - pipeline
+  kind: predict_consequence
+  prompt_template: A manager wants to apply the result to next year. What would have to be true for that,
+    and what in this study would you report as not yet defensible?
+  required_refs: []
+  source_refs:
+  - case:contract
+  rubric_id: hotel-d7
+  variant_family: d7-limits
+  variant_id: b
+  dependency_keys: []
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d8-a
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D8
+  responsibility_tags:
+  - analyst
+  - pipeline
+  kind: explain
+  prompt_template: Where do you check the version of a dependency and the security rules that apply before
+    adopting generated code in this project? What do you do if you cannot establish its provenance or
+    behaviour?
+  required_refs: []
+  source_refs: []
+  rubric_id: hotel-d8
+  variant_family: d8-safety
+  variant_id: a
+  dependency_keys:
+  - role:security_rule
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-d8-b
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D8
+  responsibility_tags:
+  - analyst
+  - pipeline
+  kind: predict_consequence
+  prompt_template: An assistant suggests adding a new library to speed up the pipeline. Which check comes
+    first, who must verify the change, and where is the point of return if it misbehaves?
+  required_refs: []
+  source_refs: []
+  rubric_id: hotel-d8
+  variant_family: d8-safety
+  variant_id: b
+  dependency_keys:
+  - role:security_rule
+  permitted_resources:
+  - repository
+  - report
+  - documentation
+  - data card
+  prohibited_actions:
+  - asking an assistant to write the answer
+  - changing the reference study
+  locale: en
+- task_id: hotel-transfer-a
+  task_version: 1
+  case_contract_version: hypotrail.case/1
+  dimension_ids:
+  - D2
+  - D5
+  - D6
+  responsibility_tags:
+  - peer
+  kind: transfer
+  prompt_template: With the handover note and the repository only, find the transformation applied to
+    the inputs, explain on which rows it learns, and say where you would act if one input became unavailable.
+    Cite the files you used.
+  required_refs: []
+  source_refs: []
+  rubric_id: hotel-d5
+  variant_family: transfer-takeover
+  variant_id: a
+  dependency_keys:
+  - role:transform_recipe
+  - role:code
+  permitted_resources:
+  - repository
+  - handover note
+  prohibited_actions:
+  - asking the author during the task without recording it
+  locale: en

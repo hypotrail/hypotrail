@@ -87,25 +87,52 @@
    "recommended": null,
    "question": "Do you adopt this decision?",
    "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Choice (11 of 13).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "decision",
     "language": "en",
     "revision": 30,
-    "position": {"step_id": "model_choice", "completed": 9, "total": 12},
+    "position": {
+     "step_id": "model_choice",
+     "completed": 9,
+     "total": 12
+    },
     "learned": [],
     "limitations": [
-     {"code": "unconfirmed_decisions", "text": "Not confirmed by you yet: model choice, final test and conclusion."},
-     {"code": "validation_is_not_independent", "text": "Validation rows are used to compare models and choose one."},
-     {"code": "public_data_already_explored", "text": "The public data were already explored."}
+     {
+      "code": "unconfirmed_decisions",
+      "text": "Not confirmed by you yet: model choice, final test and conclusion."
+     },
+     {
+      "code": "validation_is_not_independent",
+      "text": "Validation rows are used to compare models and choose one."
+     },
+     {
+      "code": "public_data_already_explored",
+      "text": "The public data were already explored."
+     }
     ],
     "proposal_id": "p_4",
     "proposal_text": "Adopt the linear model.",
     "recommended_option": "adopt",
-    "options": ["adopt", "change", "explain"],
+    "options": [
+     "adopt",
+     "change",
+     "explain"
+    ],
+    "option_labels": {
+     "adopt": "I adopt this decision",
+     "change": "Change something",
+     "explain": "Explain first"
+    },
     "question": "Do you adopt this decision?",
     "evidence_refs": [],
-    "detail_topics": ["metric", "uncertainty"]
+    "detail_topics": [
+     "metric",
+     "uncertainty"
+    ]
    }
   },
   "open_proposals": [
@@ -117,7 +144,9 @@
     "revision": 22,
     "origin": {
      "channel": "webview"
-    }
+    },
+    "data_contingent": false,
+    "evidence": []
    }
   ],
   "decisions": {
@@ -228,49 +257,65 @@
     "result_id": "49cddc6cff8134ce50749f83219d748241878a1fc340404bce011dfa513d7b92",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "train_eda",
+    "channel": "chat"
    },
    "eda.special_values": {
     "result_id": "56a67260f0ed30142d0779b01923172e7a37c73ced6845235cf6e8041802d85f",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "train_eda",
+    "channel": "chat"
    },
    "eda.target_summary": {
     "result_id": "3f7320adae5a5c60034155213b03bc18b3842dc256cd51a77f11b1997548e276",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "train_eda",
+    "channel": "chat"
    },
    "evaluate.regression": {
     "result_id": "142ac050de162499aa31cd03b837cd162f25d7cfef4d83b9b3d6e8d3cbef5301",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "model_choice",
+    "channel": "chat"
    },
    "fit.baseline": {
     "result_id": "148b20ff6b8ad1dd05c9a0e5259d63d2463b88aca0260981efecb308ac96c41a",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "models",
+    "channel": "chat"
    },
    "fit.linear": {
     "result_id": "e2fb692df878075e4c417702a123201226c5e353aa479172a91bef7d9a517c7c",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "models",
+    "channel": "chat"
    },
    "split": {
     "result_id": "6e96c20fe6026d4dc33b7a4b70ede72858d12d2b33195cb10763fc11be19df88",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "split",
+    "channel": "chat"
    },
    "fit.variant": {
     "result_id": "3dba08aad798ad0b76e1452aa4e6712afb3bcd6abf7e8327060d54189fdf640d",
     "current": true,
     "stale_reason": null,
-    "integrity": "ok"
+    "integrity": "ok",
+    "step": "models",
+    "channel": "chat"
    }
   },
   "artifacts": {
@@ -431,11 +476,11 @@
      "path": "notebooks/study_editable.py",
      "argv": [
       "uv",
-      "edit",
+      "run",
       "--project",
       "/hypotrail/framework",
       "marimo",
-      "run",
+      "edit",
       "/studies/auto mpg/notebooks/study_editable.py"
      ]
     },
@@ -597,6 +642,266 @@
    "channel_actions": []
   },
   "task": "regression",
-  "currency": "2b8e61f0c4a9d375"
+  "currency": "2b8e61f0c4a9d375",
+  "texts": {
+   "en": {
+    "plan": {
+     "prediction_time": "Define the prediction moment",
+     "feature_availability": "Decide which variables are available at prediction time",
+     "split": "Split the data before exploring it",
+     "train_eda": "Explore the training partition",
+     "models": "Fit a mean baseline and a linear model",
+     "model_choice": "Choose the model",
+     "conclusion": "Conclude proportionately"
+    },
+    "moments": {
+     "frame": "Frame the change",
+     "evidence": "Prepare evidence",
+     "compare": "Work and compare",
+     "conclude": "Conclude and hand over"
+    },
+    "next_action": "A proposal on the model choice is waiting for your answer. Read its restatement and reply in your own words; a bare \"ok\" does not decide.",
+    "choice_options": {},
+    "limits": {
+     "unconfirmed_decisions": "Not confirmed by you yet: the model choice and the conclusion.",
+     "validation_is_not_independent": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error.",
+     "public_data_already_explored": "The data were explored or published before this study; its rows are not unseen.",
+     "grouped_split_unsupported": "Rows that share a value of car_name can fall in both partitions: this version has no grouped split, so a split reports how many group values its partitions share instead of preventing it. Validation rows of a shared group are not independent of the training rows.",
+     "no_causality": "Associations in observational data do not show that acting on a variable would change the outcome."
+    },
+    "artifacts": {
+     "editable": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence.",
+     "notebook": "The generated notebook is up to date.",
+     "report": "The report is up to date.",
+     "workbench": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
+    },
+    "recap": [
+     "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
+     "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79).",
+     "Now: Choose the model (validation MAE: the mean baseline 10.10 mpg; the linear model 6.31 mpg); the report and notebook are up to date.",
+     "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
+     "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
+    ],
+    "digest": {
+     "21": "The regression evaluation was added: the linear model and the training mean compared on the validation rows.",
+     "22": "The model choice was proposed: the linear model."
+    },
+    "goal": {
+     "intended_use": "Exercise: estimate a future model fuel efficiency from technical characteristics",
+     "decision": "Compare estimation methods without a real decision",
+     "observation_unit": "A vehicle model for a model year",
+     "prediction_time": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured"
+    },
+    "proposals": {
+     "p_4": "Adopt the linear model."
+    },
+    "question": "Do you adopt this decision?",
+    "options": {},
+    "options_note": null,
+    "junior_digest": null,
+    "headlines": {},
+    "data_contingent": {},
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before.",
+    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Choice (11 of 13).",
+    "step_limit": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error.",
+    "criterion_words": "validation error at least 10% below the reference (predict the mean)",
+    "step_cards": null,
+    "case_brief": {
+     "source": "Use-case brief · Confluence, space \"Vehicle product\" · written by the PO · fictitious scenario for the simulation (only the provenance of the data is real)",
+     "problem": "The Design team must announce the fuel efficiency of a new model as soon as its technical sheet is approved, about six months before the road tests. Today an engineer estimates it by hand by comparing with a similar model; mean gap observed, about 4.5 mpg.",
+     "decision": "Which prototypes to send first to the fuel-efficiency tests (about twenty tests a year), and which provisional figure to show in the first product sheets.",
+     "objective": "Estimate the fuel efficiency from the technical sheet alone, clearly better than the manual estimate (aim at a mean gap of about 3.5 mpg), with a range.",
+     "production": "A prediction service called by the design tool for each new technical sheet; the estimate and its range are read by an engineer before any use; the model is retrained every year with the new tests.",
+     "data_provenance": {
+      "real": "Real: the \"Auto MPG\" dataset of the UCI Machine Learning Repository (from StatLib, Carnegie Mellon; used by Quinlan in 1993): 398 car models sold in the United States from 1970 to 1982, one row per model and model year.",
+      "scenario": "In the scenario: it serves as history until the extract of the internal test warehouse arrives. The data are public and already much explored: no row is truly \"never seen\"."
+     },
+     "users_and_cost_of_error": {
+      "users": "Users: the design engineers and the product manager.",
+      "cost": "Cost of an error: announcing a fuel use that is too low exposes to a public correction; an estimate that is too high can wrongly drop a prototype from the tests. The PO notes that large errors on a flagship model are especially awkward: a point to discuss when choosing the error measure."
+     },
+     "out_of_scope_and_risks": {
+      "out_of_scope": "Out of scope: the official homologation (it stays measured on the road); explaining the causes of fuel use.",
+      "risks": "Risks: recent cars differ from older ones (the model can drift); the data stop in 1982."
+     },
+     "links": {
+      "prediction_moment": "The prediction moment will be the approval of the technical sheet (step 2).",
+      "error_measure": "The error measure will have to reflect this cost (step 5).",
+      "conclusion": "The conclusion will say whether the estimate does better than the current method."
+     }
+    },
+    "defensibility_note": {
+     "meaning": "Defensible means the study can support its conclusion before a reviewer: every decision taken in your words, the model chosen by you, the final test opened once, the conclusion written, and no stale figure.",
+     "checklist": {
+      "framing_in_your_words": "The framing decisions, taken in your words",
+      "model_chosen_by_you": "The model, chosen by you",
+      "final_test_opened_once": "The final test, opened once",
+      "conclusion_written": "The conclusion, written",
+      "no_stale_figure": "No stale figure"
+     },
+     "not_alarm": "This is not an alarm: it is the list of what the study must gather by the end. It turns to a warning only when something is wrong (a decision to confirm again, a stale figure, an automatic decision to review).",
+     "limits_lead": "The study is defensible, with these limits:"
+    }
+   },
+   "fr": null
+  },
+  "panel_contract": 2,
+  "automation": null,
+  "review_queue": null,
+  "defensibility": {
+   "kind": "pending",
+   "count": 3,
+   "items": [
+    {
+     "id": "unconfirmed_decisions",
+     "severity": "not_final"
+    },
+    {
+     "id": "validation_is_not_independent",
+     "severity": "not_final"
+    },
+    {
+     "id": "public_data_already_explored",
+     "severity": "context"
+    },
+    {
+     "id": "grouped_split_unsupported",
+     "severity": "caveat"
+    },
+    {
+     "id": "no_causality",
+     "severity": "context"
+    },
+    {
+     "id": "workbench_not_tracked",
+     "severity": "context"
+    }
+   ],
+   "checklist": [
+    {
+     "id": "framing_in_your_words",
+     "done": false
+    },
+    {
+     "id": "model_chosen_by_you",
+     "done": false
+    },
+    {
+     "id": "final_test_opened_once",
+     "done": false
+    },
+    {
+     "id": "conclusion_written",
+     "done": false
+    },
+    {
+     "id": "no_stale_figure",
+     "done": true
+    }
+   ]
+  },
+  "ledger": {
+   "final_test": {
+    "openings": 0,
+    "max": 1
+   },
+   "target_looks": {
+    "eda": 4,
+    "sample": 1,
+    "total": 5
+   },
+   "configurations": {
+    "tried": 2,
+    "reference": true
+   },
+   "variants": {
+    "used": 1,
+    "max": 3,
+    "remaining": 2
+   }
+  },
+  "sample": {
+   "seed": "bf788f1b245ca3dd",
+   "row_keys": [
+    "L128",
+    "L181",
+    "L203",
+    "L226",
+    "L232",
+    "L258",
+    "L271",
+    "L375"
+   ],
+   "recorded": true
+  },
+  "headlines": {},
+  "criterion_configurations": null,
+  "data_structure": {
+   "duplicates": {
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": [
+    {
+     "column": "car_name",
+     "groups": 254,
+     "rows_in_repeated_groups": 107
+    }
+   ]
+  },
+  "quality_verdicts": null,
+  "case_brief": {
+   "fictitious": true,
+   "current_method_error": {
+    "value": 4.5,
+    "unit": "mpg",
+    "measure": "mae"
+   },
+   "target_error": {
+    "value": 3.5,
+    "unit": "mpg",
+    "measure": "mae"
+   }
+  },
+  "case_display": {
+   "columns": {
+    "mpg": {
+     "en": "mpg",
+     "fr": "mpg"
+    },
+    "cylinders": {
+     "en": "cylinders",
+     "fr": "cylindres"
+    },
+    "displacement": {
+     "en": "displacement",
+     "fr": "cylindrée"
+    },
+    "horsepower": {
+     "en": "horsepower",
+     "fr": "puissance"
+    },
+    "weight": {
+     "en": "weight",
+     "fr": "poids"
+    },
+    "acceleration": {
+     "en": "acceleration",
+     "fr": "accélération"
+    },
+    "model_year": {
+     "en": "model year",
+     "fr": "année du modèle"
+    },
+    "origin": {
+     "en": "origin",
+     "fr": "origine"
+    },
+    "car_name": {
+     "en": "car name",
+     "fr": "nom de la voiture"
+    }
+   }
+  }
  }
 }

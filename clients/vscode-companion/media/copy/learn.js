@@ -52,8 +52,11 @@
     exportFile: (file, bytes) => `${file} · ${bytes} bytes`,
     exportOut: out => `Folder: ${out}`,
     exportIncomplete: words => `The pack is incomplete: ${words}.`,
-    exportStaleReport: 'The report was not current, so it is not in the pack. Regenerate it in Overview and export again if you need it.',
+    exportStaleReport: 'The report was not current, so it is not in the pack. Regenerate it in Deliverables and export again if you need it.',
     openFolder: 'Open folder',
+    // L7 (owner session 2026-10-26, D15): what comes after the study, read only.
+    afterStudyTitle: 'After the study',
+    exportPlanInChat: 'The Azure ML export plan is available for this model: ask the assistant for it in the chat. This panel exports only the handoff pack.',
     reviewerLine: 'A reviewer can open this study read-only with "Hypotrail: open the study panel (reviewer, read-only)".',
     // Session report (§6.6.3)
     reportTitle: 'Session report (for an observed session)',

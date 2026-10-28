@@ -6,7 +6,8 @@
 //
 // Frozen by WP-0 (docs/plans/COMPANION-ADVANCED-PLAN.md §2.2 item 5). Order:
 //   CSS: media/css/tokens.css, media/css/core.css, then the other media/css/*.css (a-z);
-//   JS:  media/protocol.js, media/format.js, media/core.js, media/components/*.js (a-z),
+//   JS:  media/protocol.js, media/format.js, lib/models/page.js (the page model, ADR 0004 d13:
+//        one pure function shared with the extension's tests), media/core.js, media/components/*.js (a-z),
 //        media/copy/core.js, the other media/copy/*.js (a-z), media/copy-fr/*.js (a-z; v0.3
 //        WP-E2, the French translation of the same keys), media/terms.js (if present),
 //        media/views/*.js (a-z), then `Hypotrail.start();`.
@@ -17,6 +18,8 @@ const path = require('path');
 const crypto = require('crypto');
 
 const MEDIA = path.join(__dirname, '..', 'media');
+// The page model is a pure function of lib/models/ that the webview runs too (relative to media/).
+const PAGE_MODEL = '../lib/models/page.js';
 
 function csp(nonce) {
   return [
@@ -48,7 +51,7 @@ function listDir(dir, ext) {
 function files(media = MEDIA) {
   const has = rel => fs.existsSync(path.join(media, rel));
   const css = ['css/tokens.css', 'css/core.css', ...listDir('css', '.css').filter(f => f !== 'css/tokens.css' && f !== 'css/core.css')];
-  const js = ['protocol.js', 'format.js', 'core.js', ...listDir('components', '.js'), 'copy/core.js',
+  const js = ['protocol.js', 'format.js', PAGE_MODEL, 'core.js', ...listDir('components', '.js'), 'copy/core.js',
     ...listDir('copy', '.js').filter(f => f !== 'copy/core.js'), ...listDir('copy-fr', '.js'),
     ...(has('terms.js') ? ['terms.js'] : []),
     ...listDir('views', '.js')];
@@ -58,7 +61,7 @@ function files(media = MEDIA) {
 function read(rel, kind) {
   const text = fs.readFileSync(path.join(MEDIA, rel), 'utf8');
   if (text.includes('</script') || text.includes('</style')) throw new Error(`media must not close its own element (${rel})`);
-  return `/* --- media/${rel} (${kind}) --- */\n${text}`;
+  return `/* --- ${rel.startsWith('../') ? rel.slice(3) : `media/${rel}`} (${kind}) --- */\n${text}`;
 }
 
 function renderHtml({ nonce = newNonce() } = {}) {

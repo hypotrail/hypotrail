@@ -1,15 +1,17 @@
 """``hypotrail`` command-line interface (plan §4, ``docs/specs/CLI-CONTRACT.md``).
 
     hypotrail init --case CASE --study DIR [--lang en|fr]
+                   [--automation until_final_test|full_demo]                 (L9, R20)
+                   [--brief-pdf FILE]                                        (R68)
     hypotrail status --study DIR [--since REV] [--json] [--summary [--fields KEY,...]]
     hypotrail plan --study DIR
     hypotrail decide propose DECISION (--value TEXT | --value-json JSON)
                      --restatement TEXT --rationale TEXT [--lang en|fr]
                      [--restatement-en TEXT] [--restatement-fr TEXT]
                      --request-id ID --expected-revision REV --study DIR
-    hypotrail decide confirm (PROPOSAL | --proposal PROPOSAL) --user-words TEXT
+    hypotrail decide confirm (PROPOSAL | --proposal PROPOSAL) [--user-words TEXT]
                      [--channel chat|cli|webview|choice] [--adoption-question] [--actor NAME]
-                     [--basis explicit|delegated_default]
+                     [--basis explicit|delegated_default|automatic]
                      [--delegation-scope this_decision|standing] [--agent-concern TEXT]
                      --request-id ID --expected-revision REV --study DIR
     hypotrail decide withdraw PROPOSAL [--reason TEXT]
@@ -37,7 +39,9 @@ behind the companion's own feature flag on the client side)::
     hypotrail decide propose ... [--channel chat|cli|webview]           (C9, WP-E1)
 
 Output is JSON on stdout by default (one document); ``--format text`` prints a short
-human summary. ``--study`` is mandatory: the study is never taken from the current
+human summary. One exception (owner session 2026-10-27, R23): ``automation run`` without
+``--format`` or ``--json`` prints its readable summary when stdout is a terminal, and the JSON
+document otherwise (a pipe, a file, an agent's tool). ``--study`` is mandatory: the study is never taken from the current
 directory or from ``OSML_ROOT``.
 
 Exit codes: 0 success or replay; 1 internal error; 2 refusal without effect; 3 the
@@ -57,6 +61,7 @@ import importlib
 import importlib.util
 import json
 import sys
+from pathlib import Path
 from typing import Sequence
 
 from mlkit.reliability import CommandRefused
@@ -81,6 +86,12 @@ EXTENSIONS = {
     'export': 'mlkit.study.cmd_export',
     # v0.2a (WP-A4, R2): the read-only data card.
     'data': 'mlkit.study.cmd_data',
+    # ADR 0008: the opt-in understanding and handover review (off by default).
+    'understanding': 'mlkit.study.cmd_understanding',
+    # Owner session 2026-10-26 (L9, R20): the automatic mode chosen at init (run, stop).
+    'automation': 'mlkit.study.cmd_automation',
+    # R68 (minimal version, 2026-10-28): the product owner's PDF and the study's own brief.
+    'brief': 'mlkit.study.cmd_brief',
 }
 # One line per extension command for ``hypotrail --help`` (v0.2a, WP-A1): the help lists
 # every command without importing the extension modules.
@@ -94,7 +105,10 @@ EXTENSION_HELP = {
     'evidence': 'read-only results, lineage, rows read, and exploration catalog',
     'explain': 'glossary terms, step texts, and examples cited from this study',
     'export': 'export a handoff pack of the study into a new folder',
-    'data': 'read-only data card: row unit, sizes, grouped columns, five development rows',
+    'data': 'read-only data card: row unit, sizes, grouped columns, eight sample rows',
+    'understanding': 'opt-in understanding and handover review (off by default; ADR 0008)',
+    'automation': 'run the automatic mode chosen at init, or stop it in the junior\'s words',
+    'brief': "import the product owner's PDF, or record the study's brief in the junior's words",
 }
 REFUSALS = (CommandRefused, StudyError, CaseError)
 
@@ -115,9 +129,10 @@ class Parser(argparse.ArgumentParser):
         raise ArgumentError(message)
 
 
-def _common() -> argparse.ArgumentParser:
+def _common(study_required: bool = True) -> argparse.ArgumentParser:
     common = Parser(add_help=False)
-    common.add_argument('--study', required=True, help='study directory (holds .hypotrail/)')
+    common.add_argument('--study', required=study_required, default=None,
+                        help='study directory (holds .hypotrail/)')
     common.add_argument('--format', choices=('json', 'text'), default='json')
     common.add_argument('--json', dest='format', action='store_const', const='json',
                         help='JSON output (the default)')
@@ -150,6 +165,15 @@ def build_parser(extension: str | None = None, *, listing: bool = False
                    help='the study language: surfaces show restatements in it (ADR 0005)')
     p.add_argument('--reliability-profile', choices=('legacy', 'review-v1'), default=None,
                    help='opt-in reliability profile; review-v1 enforces the declared evaluation protocol')
+    p.add_argument('--automation', choices=st.AUTOMATION_MODES, default=None,
+                   help='the automatic mode, chosen at launch only (L9): until_final_test '
+                        'records every decision before the final test with the engine\'s '
+                        'values; full_demo also opens the final test and concludes (a '
+                        'demonstration). Every automatic decision is reviewed at the end')
+    p.add_argument('--brief-pdf', default=None, metavar='FILE',
+                   help="the product owner's PDF: right after creating the study, run `brief "
+                        "import` on it (R68); the study's brief stays pending until the "
+                        "junior adopts a draft citing its pages")
     p = sub.add_parser('status', parents=[common], help='read-only view of the study')
     p.add_argument('--since', type=int, default=None, help='report revisions after REV')
     p.add_argument('--summary', action='store_true',
@@ -190,8 +214,9 @@ def build_parser(extension: str | None = None, *, listing: bool = False
     p.add_argument('proposal_id', nargs='?', default=None)
     p.add_argument('--proposal', default=None, dest='proposal_flag', metavar='PROPOSAL',
                    help='the open proposal the words answer (same as the positional PROPOSAL)')
-    p.add_argument('--user-words', required=True,
-                   help="the user's verbatim reply to the restatement")
+    p.add_argument('--user-words', default=None,
+                   help="the user's verbatim reply to the restatement (required, except with "
+                        '--basis automatic, which records no words)')
     p.add_argument('--channel', choices=st.CONFIRMATION_CHANNELS, default=cmd.DEFAULT_CHANNEL,
                    help='chat (the default), cli, webview, or choice: the junior picked the '
                         'adoption option of an interactive choice; --user-words is the option '
@@ -205,7 +230,8 @@ def build_parser(extension: str | None = None, *, listing: bool = False
                    help="explicit (the default): the junior's own reply decides (recorded as "
                         'endorsed or restated); delegated_default: the reply explicitly '
                         "delegates to the assistant's recommended default, which the "
-                        'restatement states')
+                        'restatement states; automatic: the automatic mode chosen at init '
+                        'records the engine\'s value (no words; reviewed at the end, L9)')
     p.add_argument('--delegation-scope', choices=st.DELEGATION_SCOPES, default=None,
                    help='with delegated_default: this_decision (the junior delegated at this '
                         'pause) or standing (an earlier delegation for questions they cannot '
@@ -246,7 +272,11 @@ def build_parser(extension: str | None = None, *, listing: bool = False
 
     if extension is not None:
         module = importlib.import_module(EXTENSIONS[extension])
-        p = sub.add_parser(extension, parents=[common], help=EXTENSION_HELP.get(extension))
+        # ADR 0008: a module may name verbs that need no study (the standalone verifier);
+        # their ``--study`` is optional and the module checks it for the other verbs.
+        optional = bool(getattr(module, 'STUDY_OPTIONAL', ()))
+        p = sub.add_parser(extension, parents=[_common(not optional) if optional else common],
+                           help=EXTENSION_HELP.get(extension))
         module.configure(p)
     elif listing:
         for name in EXTENSIONS:
@@ -282,6 +312,8 @@ def _decide(args) -> cmd.Outcome:
     elif args.verb == 'confirm':
         if (args.proposal_id is None) == (args.proposal_flag is None):
             raise ArgumentError('decide confirm names one proposal: PROPOSAL or --proposal')
+        if args.user_words is None and args.basis != st.AUTOMATIC:
+            raise ArgumentError('the following arguments are required: --user-words')
         action, params = cmd.ACTION_CONFIRM, {'proposal_id': args.proposal_id
                                               or args.proposal_flag,
                                               'user_words': args.user_words,
@@ -311,8 +343,23 @@ def _decide(args) -> cmd.Outcome:
 
 def dispatch(args) -> cmd.Outcome:
     if args.command == 'init':
-        return cmd.init(args.case, args.study, language=args.lang,
-                        reliability_profile=args.reliability_profile)
+        if args.brief_pdf is None:
+            return cmd.init(args.case, args.study, language=args.lang,
+                            reliability_profile=args.reliability_profile,
+                            automation=args.automation)
+        from . import cmd_brief
+        cmd_brief.extract(Path(args.brief_pdf))      # a refused PDF creates no study
+        out = cmd.init(args.case, args.study, language=args.lang,
+                       reliability_profile=args.reliability_profile,
+                       automation=args.automation)
+        if out.exit_code != 0:
+            return out
+        imported = cmd_brief.import_pdf(Path(args.study), Path(args.brief_pdf),
+                                        expected_revision=out.payload['revision'])
+        out.payload['revision'] = imported.payload['revision']
+        out.payload['next_action'] = imported.payload['next_action']
+        out.payload['brief'] = {k: imported.payload.get(k) for k in ('result', 'then')}
+        return out
     if args.command == 'mode':
         return cmd.apply(args.study, action=cmd.ACTION_SET_MODE,
                          params={'mode': args.mode, 'user_words': args.user_words},
@@ -374,6 +421,13 @@ def _text(payload: dict) -> str:
             lines.append(f'changes since revision {payload["since"]}: '
                          f'{len(payload["changes_since"])}')
         lines.append('not yet defensible: ' + ', '.join(x['id'] for x in v['not_yet_defensible']))
+        # R68: the product owner's PDF and the study's own brief.
+        brief = v.get('brief') or {}
+        source, confirmed = brief.get('source'), brief.get('confirmed')
+        lines.append('brief: ' + (f'PDF {source["pdf"]} imported ({source["pages"]} pages)'
+                                  if source else 'no PDF imported') + '; '
+                     + (f'brief confirmed at revision {confirmed["revision"]}' if confirmed
+                        else 'no brief confirmed in this study'))
         return '\n'.join(lines)
     if schema == cmd.SCHEMAS['plan']:
         return '\n'.join(f'{"> " if s["current"] else "  "}{s["id"]}: {s["status"]} - '
@@ -391,6 +445,10 @@ def _text(payload: dict) -> str:
         lines = [f'study created at {payload["study"]} (revision {payload["revision"]}) on case '
                  f'{payload["case"]["id"]}', f'next action: {payload["next_action"]["message"]}']
         lines += [f'notice: {n["message"]}' for n in payload.get('notices') or []]
+        if payload.get('brief'):
+            r = payload['brief']['result']
+            lines.append(f'PO brief imported: {r["pdf"]} ({r["pages"]} pages, {r["source"]}); '
+                         'the brief stays pending until the junior adopts a draft')
         for name, launch in ((payload.get('deliverables') or {}).get('launch') or {}).items():
             lines.append(f'open the {name}: {launch["shell"]}')
         return '\n'.join(lines)
@@ -404,6 +462,13 @@ def _text(payload: dict) -> str:
     if schema == 'hypotrail.data/1':
         from .cmd_data import text
         return text(payload)
+    if schema.startswith('hypotrail.understanding'):
+        from .cmd_understanding import text
+        return text(payload)
+    if schema == 'hypotrail.automation/1':
+        # Owner session 2026-10-27 (R23): the run in the junior's words, not the full JSON.
+        from .automation_words import text_summary
+        return text_summary(payload)
     return json.dumps(payload, ensure_ascii=False, indent=2)
 
 
@@ -416,13 +481,32 @@ def emit(outcome: cmd.Outcome, fmt: str, stream=None) -> None:
     stream.flush()
 
 
-def _wanted_format(argv: Sequence[str]) -> str:
+# Commands whose output is the readable summary by default when stdout is a terminal (owner
+# session 2026-10-27, R23): ``--format json`` or ``--json`` keeps the JSON document there,
+# and stdout that is not a terminal always gets the JSON document.
+TEXT_ON_A_TERMINAL = (('automation', 'run'),)
+
+
+def _isatty(stream) -> bool:
+    try:
+        return bool(stream.isatty())
+    except (AttributeError, ValueError, OSError):
+        return False
+
+
+def _wanted_format(argv: Sequence[str], stream=None) -> str:
     argv = list(argv)
     if '--format' in argv:
         i = argv.index('--format')
         if i + 1 < len(argv) and argv[i + 1] in ('json', 'text'):
             return argv[i + 1]
-    return 'text' if '--format=text' in argv else 'json'
+    if '--format=text' in argv:
+        return 'text'
+    if '--format=json' in argv or '--json' in argv:
+        return 'json'
+    if tuple(argv[:2]) in TEXT_ON_A_TERMINAL and _isatty(stream or sys.stdout):
+        return 'text'
+    return 'json'
 
 
 def run(argv: Sequence[str] | None = None) -> cmd.Outcome:
@@ -432,6 +516,8 @@ def run(argv: Sequence[str] | None = None) -> cmd.Outcome:
     is recorded there, without content, after it is final.
     """
     argv = list(sys.argv[1:] if argv is None else argv)
+    from . import companion_env
+    companion_env.command_started()      # R35: the panel line of a session's first message
     outcome = _run(argv)
     from . import sessionlog
 
@@ -443,7 +529,9 @@ def _run(argv: list) -> cmd.Outcome:
     name = argv[0] if argv else ''
     # A command with a verb is named with it (`decide confirm`, `export handoff`), as its
     # own payloads name it (WP-I).
-    command = ' '.join(argv[:2]) if name in ('decide', 'export', 'mode') else name
+    command = ' '.join(argv[:2]) if name in ('decide', 'export', 'mode', 'understanding',
+                                             'automation', 'brief') \
+        else name
     try:
         extension = name if name in EXTENSIONS else None
         if extension and importlib.util.find_spec(EXTENSIONS[extension]) is None:

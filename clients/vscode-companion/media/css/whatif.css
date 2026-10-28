@@ -4,8 +4,8 @@
 .ht-wi-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
 .ht-segmented { display: inline-flex; border: 1px solid var(--ht-border); border-radius: 8px; overflow: hidden; }
 .ht-segmented button { margin: 0; border-radius: 0; }
-.ht-wi-slider-row { display: flex; align-items: center; gap: 12px; }
-.ht-wi-slider-row input[type="range"] { flex: 1; min-width: 160px; }
+.ht-wi-slider-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.ht-wi-slider-row input[type="range"] { flex: 1 1 140px; min-width: 0; }
 .ht-wi-slider-row input[type="number"] { width: 7em; }
 .ht-wi-share { margin: 6px 0 0; }
 .ht-wi-counts { margin: 6px 0; }

@@ -45,9 +45,14 @@ This module imports neither pandas nor scikit-learn; the computation does, lazil
 """
 from __future__ import annotations
 
+import contextlib
 import hashlib
+import io
+import logging
+import os
+import warnings
 from pathlib import Path
-from typing import Callable, Mapping
+from typing import Callable, Mapping, TextIO
 
 from mlkit import reliability
 from mlkit.reliability import CommandRefused, Handler
@@ -55,7 +60,7 @@ from mlkit.reliability import CommandRefused, Handler
 from . import activities as act
 from . import commands as cmd
 from . import dependencies as dep
-from . import exposure, guard, lock, partition, registry
+from . import companion_env, exposure, guard, lock, partition, progress as progress_mod, registry
 from . import records as rec
 from . import state as st
 from .errors import StudyError
@@ -66,7 +71,10 @@ PAYLOAD_KEYS = ('schema', 'ok', 'study', 'action', 'request_id', 'replayed', 're
                 'activity', 'execution_id', 'status', 'result_id', 'values', 'result',
                 'artifacts',
                 # v0.3 (WP-J): the next action after the run, as status gives it.
-                'next_action')
+                'next_action',
+                # L3 (owner session 2026-10-26, R4): the question the result answers, in the
+                # study language (``values.question`` stays the stored English), or null.
+                'question_junior')
 RESERVE, PROMOTE, FAIL, RECOVER, ACKNOWLEDGE = ('run.reserve', 'run.promote', 'run.fail',
                                                'run.recover', 'run.acknowledge')
 STATUSES = ('running', 'promoted', 'late_not_promoted', 'already_current', 'failed',
@@ -131,6 +139,34 @@ def _reserve(ctx: cmd.Context) -> Handler:
             raise _interrupted_refusal(state)
         cmd._verify_sources(state)
         activity = act.canonical(params['activity'])
+        if activity == act.FINAL and st.final_test_opened(state):
+            # Before planning: once opened, the plan's own refusals (a capture no longer
+            # current) would name a remedy that no longer exists.
+            raise cmd.final_test_opened_refusal(state)
+        if activity == act.FINAL:
+            # Review round 3 (E3-3): every result the opening rests on (the split, the fits,
+            # the variants, the evaluation, the diagnostics under review-v1) is current by the
+            # rule of ``status`` before anything is marked opened; the plan checks the capture
+            # (E2-1) and that it loads (A F1). Review round 4 (E4-1): and the whole rule of the
+            # confirmation holds now (the stale map, the configuration the study chooses now,
+            # nothing to confirm again, the confirmation itself), so a confirmed final test
+            # whose opening did not run never opens on evidence or a choice that changed.
+            from . import assurance, preconditions
+            # The profile's refusals keep their place first (as in the plan).
+            assurance.require_activity(state, activity)
+            preconditions.refuse_missing(preconditions.opening_missing(state, ctx.store),
+                                         'Opening the final test')
+        if activity == act.DIAG_FINAL and st.final_test_opened(state):
+            # Review round 3 (E3-4): the final evaluation the diagnostics read is never
+            # recomputed; when it is not current, say so before the plan names a remedy (run
+            # it again) that no longer exists.
+            final = state['current'].get(act.FINAL)
+            if final is not None:
+                from . import read
+                currency = read.Study.at_state(ctx.store.study_dir, state).currency(final)
+                if not currency['current']:
+                    raise _not_recomputable(state, activity, state['current'].get(activity),
+                                            currency, final_currency=True)
         plan = act.plan(ctx.store, state, activity, params['options'], with_exposure=True)
         eid = params['execution_id']
         for other, running in sorted(state['executions']['active'].items()):
@@ -146,15 +182,22 @@ def _reserve(ctx: cmd.Context) -> Handler:
         if activity == act.FINAL:
             # WP-B1: the final test is opened here, before any of its rows is read, so the
             # one evaluation can never be scored twice (an interrupted one consumes it too).
-            if st.final_test_opened(state):
-                raise cmd.final_test_opened_refusal(state)
+            if plan['inputs'].get('predictor'):
+                # Review round 2 (A F1): the captured predictor is loaded as the evaluation
+                # will load it (bundle, environment, parity rows) before the opening is
+                # recorded; a refusal leaves the final test sealed. The plan already checked
+                # that the capture is current by the rule of ``status`` (E2-1).
+                from mlkit.contracts import capture
+                capture.require_loadable(ctx.store, state, plan['inputs']['predictor'])
             config = state['decisions'][st.FINAL_TEST]['value'] or {}
             conf = state['decisions'][st.FINAL_TEST]['confirmation'] or {}
             state['partition']['status'] = partition.OPENED
             state['partition']['opening'] = partition.open_record(
                 revision=revision, execution_id=eid, proposal_id=conf.get('proposal_id'),
                 user_words=conf.get('user_words'), model=config.get('model'),
-                rule=config.get('rule'), time=st.now())
+                rule=config.get('rule'), time=st.now(),
+                # L9 (ADR 0006 amendment): the demo's automatic opening says so, for good.
+                basis=st.AUTOMATIC if st.confirmation_basis(conf) == st.AUTOMATIC else None)
         record = {'execution_id': eid, 'activity': activity, 'slot': plan['slot'],
                   'options': plan['options'], 'request_id': ctx.request_id, 'status': 'running',
                   'started_revision': revision, 'started': st.now(),
@@ -241,8 +284,20 @@ def _fail(ctx: cmd.Context) -> Handler:
             event = state.setdefault('exploration', {'events': {}})['events'][eid]
             event.update(status='failed', error=params['error'], finished=st.now(),
                          finished_revision=state['revision'] + 1)
-        return {'execution_id': eid, 'activity': record['activity'], 'status': 'failed',
-                'error': params['error'], 'started_revision': record['started_revision']}
+        out = {'execution_id': eid, 'activity': record['activity'], 'status': 'failed',
+               'error': params['error'], 'started_revision': record['started_revision']}
+        part = state.get('partition') or {}
+        opening = part.get('opening') or {}
+        if params.get('final_test_unread') and record['activity'] == act.FINAL \
+                and opening.get('execution_id') == eid and opening.get('result_id') is None:
+            # Review round 2 (A F1): the evaluation failed before it read any final-test row
+            # (its captured predictor was refused when loaded): the opening it recorded is
+            # withdrawn and the final test is sealed again; no final-test exposure was
+            # recorded. The confirmation of ``final_test`` stands.
+            part['status'] = 'sealed'
+            part.pop('opening', None)
+            out['final_test'] = 'sealed'
+        return out
     return Handler(frozenset({'execution_id', 'error'}), run)
 
 
@@ -328,7 +383,10 @@ def _apply(store: StudyStore, state: dict, request_id: str, action: str, params:
 
 # v0.3 (WP-J, R35): the channel a run or an acknowledgement came from, recorded only when it
 # is not the chat, so every earlier request keeps its identity (a replay stays a replay).
-OPTIONAL_PARAMS = {RESERVE: frozenset({'channel'}), ACKNOWLEDGE: frozenset({'channel'})}
+OPTIONAL_PARAMS = {RESERVE: frozenset({'channel'}), ACKNOWLEDGE: frozenset({'channel'}),
+                   # Review round 2 (A F1): a final evaluation that failed before reading any
+                   # final-test row (only then is it given).
+                   FAIL: frozenset({'final_test_unread'})}
 
 
 def channel_param(channel: str | None) -> dict:
@@ -412,18 +470,35 @@ def _payload(store: StudyStore, *, action: str, request_id: str, replayed: bool,
             'values': values, 'result': result, 'artifacts': None}
 
 
-def _outcome(store: StudyStore, payload: dict, *, render: bool) -> cmd.Outcome:
+def _outcome(store: StudyStore, payload: dict, *, render: bool,
+             reporter: progress_mod.Reporter | None = None) -> cmd.Outcome:
     code = cmd.EXIT_UNKNOWN_OUTCOME if payload['status'] == 'interrupted_unknown' else cmd.EXIT_OK
     if render and not payload['replayed']:
-        artifacts = cmd.after_commit(store.study_dir, payload)
+        with progress_mod.phase_of(reporter, 'deliverables'):
+            artifacts = cmd.after_commit(store.study_dir, payload)
         if artifacts is not None:
             payload['artifacts'] = artifacts
             if code == cmd.EXIT_OK and any(a.get('status') in ('stale', 'failed')
                                            for a in artifacts.values()):
                 code = cmd.EXIT_ARTIFACT_STALE
-    # v0.3 (WP-J): the next action after the run, as ``status`` gives it.
-    payload['next_action'] = cmd.refreshed_next_action(store.study_dir)
+    # v0.3 (WP-J): the next action after the run, as ``status`` gives it; R1b (2026-10-26):
+    # with what the run produced, for ``next_action.panel.shown``.
+    produced = {'command': 'run', 'action': payload['action'], 'activity': payload['activity'],
+                'slot': (payload['result'] or {}).get('slot'), 'status': payload['status'],
+                # Contract P1 (§17.1.1): a chart that read no target is filed under the
+                # structural step.
+                'target_read': _target_read(payload)}
+    payload['next_action'] = cmd.refreshed_next_action(store.study_dir, produced)
+    from . import l10n
+    payload['question_junior'] = l10n.question_junior(
+        payload['values'], (payload['next_action'] or {}).get('language') or l10n.EN)
     return cmd.Outcome(payload, code)
+
+
+def _target_read(payload: Mapping) -> bool | None:
+    """Whether a run's result read the target (``companion_env.target_read_of``)."""
+    values = payload.get('values') if isinstance(payload.get('values'), Mapping) else {}
+    return companion_env.target_read_of(payload.get('activity'), values)
 
 
 def describe(store: StudyStore, state: Mapping, request_id: str, *,
@@ -468,25 +543,69 @@ def _store(study_dir) -> StudyStore:
 Hook = Callable[[dict], None]
 
 
+# Third session of 2026-10-26: the journey now captures the chosen model (with the MLflow
+# workshop package) before the opening, so a CLI run of ``predictor.capture`` or of the
+# final evaluation that loads it wrote MLflow's warnings, log lines and download progress
+# bars on stderr, where a handled outcome writes nothing (CLI-CONTRACT, NR-17) and the
+# junior's agent reads ``--progress`` lines. The packaging module is fingerprinted, so the
+# noise is silenced here, around the computation only: Python warnings, the ``mlflow``
+# loggers, the artifact progress bar, and stray writes to ``sys.stderr``. The ``--progress``
+# reporter keeps the stream it was given; a failure is still raised and recorded.
+QUIET_ACTIVITIES = (act.CAPTURE, act.FINAL)
+_PROGRESS_BAR_ENV = 'MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR'
+
+
+@contextlib.contextmanager
+def _quiet_packaging(activity: str):
+    if activity not in QUIET_ACTIVITIES:
+        yield
+        return
+    logger = logging.getLogger('mlflow')
+    level, previous = logger.level, os.environ.get(_PROGRESS_BAR_ENV)
+    os.environ[_PROGRESS_BAR_ENV] = 'false'
+    logger.setLevel(logging.ERROR)
+    try:
+        with warnings.catch_warnings(), contextlib.redirect_stderr(io.StringIO()):
+            warnings.simplefilter('ignore')
+            yield
+    finally:
+        logger.setLevel(level)
+        if previous is None:
+            os.environ.pop(_PROGRESS_BAR_ENV, None)
+        else:
+            os.environ[_PROGRESS_BAR_ENV] = previous
+
+
 def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
         expected_revision: int, hooks: Mapping[str, Hook] | None = None,
-        render: bool = True, channel: str | None = None) -> cmd.Outcome:
+        render: bool = True, channel: str | None = None, progress: TextIO | None = None,
+        progress_interval: float = progress_mod.HEARTBEAT_SECONDS) -> cmd.Outcome:
     """Run one activity (reserve, compute, promote) and describe the outcome.
 
     ``hooks`` (tests only) maps ``after_reserve`` and ``before_promote`` to callables
     that receive the plan. ``render`` False leaves the deliverables to the caller (the
     opening of the final test renders once, after the confirmation it follows).
+    ``progress`` (``run --progress``: stderr) receives the progress lines of the computation
+    and of the deliverables, in the study language (:mod:`mlkit.study.progress`); nothing is
+    written to it otherwise, and the returned payload is the same.
     """
     act.guard_read_only()
     hooks = dict(hooks or {})
     store = _store(study_dir)
+    requested = activity if ':' in str(activity) or not (options or {}).get('column') \
+        else f'{activity}:{options["column"]}'
     activity, options = act.resolve(activity, options)    # v0.3 (WP-F1): fit.variant:2
     activity = act.canonical(activity)
     options = act.normalize_options(activity, options)
     eid = execution_id(request_id)
-    params = {'activity': activity, 'options': options, 'execution_id': eid,
-              **channel_param(channel)}
     with store.writing() as state:
+        if activity == act.CAPTURE and not options:
+            # Round 5 (review E, R5E-3): a capture run again without --profile or --packager
+            # keeps the options of the capture it replaces, so an MLflow package is never
+            # dropped by a re-capture; give --profile base to capture without one.
+            options = capture_options(store, state)
+        params = {'activity': activity, 'options': options, 'execution_id': eid,
+                  **channel_param(channel)}
         recover(store, state, hooks)
         if request_id in state['receipts']:
             _apply(store, state, request_id, RESERVE, params, expected_revision)
@@ -503,23 +622,42 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
         except BaseException:
             lease.release()
             raise
+        # Contract P1.9 (§17.3): a study created before the step-1 sample records its look
+        # once the run's reservation commits, under the same lock; a refused run, a replay
+        # and an already-current result record nothing.
+        exposure.ensure_sample_after_commit(store, state)
         plan = _PLANS.pop(eid)
         _history(store, eid, state['executions']['active'][eid])
+        reporter = (progress_mod.Reporter(progress, st.language_of(state),
+                                          interval=progress_interval)
+                    if progress is not None else None)
     try:
         if 'after_reserve' in hooks:
             hooks['after_reserve'](plan)
-        output = act.compute(store, plan)
+        with progress_mod.phase_of(reporter, 'activity', requested), \
+                _quiet_packaging(activity):
+            output = act.compute(store, plan)
+            if 'during_compute' in hooks:
+                hooks['during_compute'](plan)
         if 'before_promote' in hooks:
             hooks['before_promote'](plan)
     except Exception as exc:
         with store.writing() as state:
             error = exc.to_dict() if hasattr(exc, 'to_dict') else {
                 'code': 'internal_error', 'message': f'{type(exc).__name__}: {exc}'}
-            _record_exposures(store, state, eid, activity, plan['exposures'], None, once=True)
+            # Review round 2 (A F1): a final evaluation that failed before reading any
+            # final-test row records only the rows it read, and the opening is withdrawn.
+            # (``capture.FINAL_TEST_ROWS_READ``; capture is not imported for other runs.)
+            unread = activity == act.FINAL and isinstance(exc, StudyError) \
+                and exc.details.get('final_test_rows_read') is False
+            exposures = [x for x in plan['exposures']
+                         if not (unread and x['partition'] == partition.FINAL_TEST)]
+            _record_exposures(store, state, eid, activity, exposures, None, once=True)
             if 'fail_kill' in hooks:
                 hooks['fail_kill'](plan)
             _apply(store, state, derived_request_id('fail', request_id), FAIL,
-                   {'execution_id': eid, 'error': error})
+                   {'execution_id': eid, 'error': error,
+                    **({'final_test_unread': True} if unread else {})})
             _history(store, eid, {**plan_summary(plan, eid), 'status': 'failed', 'error': error})
             lease.release()
         raise
@@ -554,7 +692,22 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
         payload = _payload(store, action='run', request_id=request_id, replayed=False,
                            revision=state['revision'], activity=activity, eid=eid,
                            status=result['status'], result_id=put['result_id'], result=result)
-    return _outcome(store, payload, render=render)
+    return _outcome(store, payload, render=render, reporter=reporter)
+
+
+def capture_options(store, state: Mapping) -> dict:
+    """Round 5 (review E, R5E-3): the options of the study's current capture (``profile``
+    other than the default, ``packager``), as ``run`` takes them; ``{}`` when the study holds
+    no capture or its entry cannot be read. A re-capture defaults to them."""
+    rid = state['current'].get(act.CAPTURE)
+    if rid is None:
+        return {}
+    try:
+        params = registry.get(store, rid).get('params') or {}
+    except StudyError:
+        return {}
+    from .view import capture_options as options_of      # the one rule, read side too
+    return act.normalize_options(act.CAPTURE, options_of(params))
 
 
 def plan_summary(plan: Mapping, eid: str) -> dict:
@@ -563,8 +716,25 @@ def plan_summary(plan: Mapping, eid: str) -> dict:
 
 
 def _already_current(store, state, activity, options, request_id) -> dict | None:
+    """The ``already_current`` answer to a request the slot's result answers, or None.
+
+    Review round 2 (E2-2, E2-3): the result must be current by the rule ``status`` and
+    ``evidence`` use (:meth:`mlkit.study.read.Study.currency`: stale map, code changed under
+    the code attestations, upstream), and it answers the request when the request's plan has
+    its params and inputs and the same modules, each with the digest the result recorded or
+    one an exact attestation declares equivalent for this activity (the rule of
+    ``code_changed``). An unattested change of any module, a different module set or any
+    other input is a new request. A result that is not current and cannot be recomputed
+    (the final test is opened once) is refused with that reason, never ``already_current``.
+    """
+    from . import read
     slot = act.slot_of(activity, options)
     rid = state['current'].get(slot)
+    snapshot = read.Study.at_state(store.study_dir, state)
+    if activity == act.FINAL and st.final_test_opened(state) and rid is not None:
+        currency = snapshot.currency(rid)
+        if not currency['current']:
+            raise _not_recomputable(state, act.FINAL, rid, currency)
     if rid is None or not st.is_current(state, slot):
         return None
     try:
@@ -572,14 +742,112 @@ def _already_current(store, state, activity, options, request_id) -> dict | None
         entry = registry.get(store, rid)
     except (CommandRefused, StudyError):
         return None
-    if entry['input_key'] != now['input_key']:
+    if not _answers(snapshot, entry, now):
+        return None
+    if activity == act.CAPTURE and not st.final_test_opened(state):
+        # Round 5 (review E, R5E-2): a capture the final evaluation could not load (another
+        # runtime installed, an altered bundle, another environment) does not answer the
+        # request, whatever its fingerprint says: it is computed again.
+        from mlkit.contracts import capture
+        if capture.loading_problem(store, state) is not None:
+            return None
+    currency = snapshot.currency(rid)
+    if not currency['current']:
+        final = state['current'].get(act.FINAL)
+        if activity == act.DIAG_FINAL and final in ((currency['reason'] or {})
+                                                    .get('upstream_not_current') or []):
+            # Recomputing gives the same result: the final evaluation it reads is not
+            # current and is never recomputed.
+            raise _not_recomputable(state, activity, rid, currency)
         return None
     return _payload(store, action='run', request_id=request_id, replayed=False,
                     revision=state['revision'], activity=activity, eid=entry['execution_id'],
                     status='already_current', result_id=rid,
-                    result={'input_key': now['input_key'],
+                    result={'input_key': entry['input_key'],
                             'note': 'The current result already answers this request on the '
                                     'current state; nothing was computed.'})
+
+
+def _answers(snapshot, entry: Mapping, now: Mapping) -> bool:
+    """Whether the registry ``entry`` answers the request planned as ``now`` (E2-3)."""
+    if entry['input_key'] == now['input_key']:
+        return True
+    if entry['activity'] != now['activity'] \
+            or set(entry['code']['modules']) != set(now['code']['modules']):
+        return False
+    same_inputs = rec.input_key(now['activity'], act.rec_json(now['params']),
+                                act.rec_json(now['inputs']),
+                                entry['code']['fingerprint']) == entry['input_key']
+    return same_inputs and not snapshot.code_changed(entry)
+
+
+def _not_recomputable(state: Mapping, activity: str, rid: str | None,
+                      currency: Mapping | None, *, final_currency: bool = False
+                      ) -> CommandRefused:
+    """E2-2: a final-test result that is not current, after the opening: it cannot be
+    recomputed, so the request is refused with the reason instead of ``already_current``.
+
+    Review round 3 (E3-4): with ``final_currency``, ``currency`` is that of the final
+    evaluation ``diag.final_test`` would read (``rid`` is the diagnostics result, None when
+    there is none yet); the junior message is in the study language."""
+    reason = (currency or {}).get('reason') or {}
+    why = reason.get('reason') or 'not current'
+    opening = (state.get('partition') or {}).get('opening') or {}
+    fr = st.language_of(state) == 'fr'
+    if activity == act.FINAL:
+        message = (f'The final evaluation is not current ({why}) and cannot be recomputed: the '
+                   'final test was already opened, and it is opened once. Its recorded figures '
+                   'stay as history, shown as not current.')
+        junior = ("Votre résultat sur l'échantillon de test final n'est plus à jour et ne peut "
+                  "pas être recalculé : le test final ne s'ouvre qu'une fois. Ses chiffres "
+                  "restent dans l'étude comme historique, marqués comme n'étant plus à jour."
+                  if fr else
+                  'Your final-test result is no longer current and cannot be computed again: '
+                  'the final test is opened only once. Its figures stay in the study as '
+                  'history, marked not current.')
+        code = 'final_test_already_opened'
+    elif final_currency:
+        message = (f'{activity} cannot be computed: the final evaluation it reads is not '
+                   f'current ({why}) and cannot be recomputed, since the final test was already '
+                   'opened and it is opened once. Its recorded figures stay as history, shown '
+                   'as not current.')
+        junior = ("Les diagnostics du test final ne peuvent pas être calculés : le résultat "
+                  "sur l'échantillon de test final qu'ils lisent n'est plus à jour, et il ne "
+                  "peut pas être recalculé, car le test final ne s'ouvre qu'une fois. Ses "
+                  "chiffres restent dans l'étude comme historique, marqués comme n'étant plus "
+                  "à jour." if fr else
+                  'The final-test diagnostics cannot be computed: the final-test result they '
+                  'read is no longer current, and it cannot be computed again, since the final '
+                  'test is opened only once. Its figures stay in the study as history, marked '
+                  'not current.')
+        code = 'precondition_missing'
+    else:
+        message = (f'{activity} is not current ({why}) and recomputing it cannot make it '
+                   'current: the final evaluation it reads is not current and is never '
+                   'recomputed (the final test is opened once).')
+        junior = ("Les diagnostics du test final ne sont plus à jour, car le résultat sur "
+                  "l'échantillon de test final qu'ils lisent ne l'est plus ; ce résultat ne "
+                  "peut pas être recalculé, car le test final ne s'ouvre qu'une fois."
+                  if fr else
+                  'The final-test diagnostics are not current because the final-test result '
+                  'they read is no longer current; that result cannot be computed again, since '
+                  'the final test is opened only once.')
+        code = 'precondition_missing'
+    details = {'slot': activity, 'result_id': rid, 'current': False, 'stale_reason': why,
+               'code_changed': list(reason.get('code_changed') or []),
+               'upstream_not_current': list(reason.get('upstream_not_current') or []),
+               'opening': {k: opening.get(k) for k in ('revision', 'model', 'rule',
+                                                       'result_id')},
+               'junior_message': junior}
+    if final_currency:
+        # The reason is the final evaluation's (the diagnostics may not exist yet).
+        details['final_result_id'] = state['current'].get(act.FINAL)
+        details['delayed_labels_included'] = bool(reason.get('delayed_labels_included'))
+    if code == 'precondition_missing':
+        details['missing'] = [{'requirement': 'result_current', 'slot': act.FINAL,
+                               'detail': 'The final evaluation is not current and is never '
+                                         'recomputed.'}]
+    return CommandRefused(code, message, details=details)
 
 
 def acknowledge(study_dir, execution: str, *, request_id: str, expected_revision: int,

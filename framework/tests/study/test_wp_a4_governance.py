@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from mlkit.study import case as c, governance, read, state as st, store as sto
+from mlkit.study import case as c, governance, partition, read, state as st, store as sto
 
 import flowkit as fk
 from flowkit import Flow
@@ -80,10 +80,11 @@ def test_the_data_card_shows_development_rows_grouped_without_any_rate(tmp_path)
     assert pdays['value'] == -1 and pdays['n_rows'] > 0
     assert all(len(v['examples']) <= 3 for v in variables.values())
     rows = card['rows']
-    assert rows['columns'][0] == 'y' and rows['n_rows'] == 5
+    # Contract P1.9: the seeded step-1 sample, eight development rows, target first.
+    assert rows['columns'][0] == 'y' and rows['n_rows'] == 8
     keys = [r['row_key'] for r in rows['items']]
     development = fk.partition_keys(flow.study, 'development')
-    assert keys == sorted(development, key=lambda k: int(k[1:]))[:5]
+    assert keys == partition.draw(rows['seed'], development)
     assert not set(keys) & set(fk.partition_keys(flow.study, 'final_test'))
     text = json.dumps(card)
     assert '"rate"' not in text and 'share' not in text          # no target rate, no distribution
@@ -138,8 +139,9 @@ def test_step_zero_shows_the_data_card_until_the_first_proposal(tmp_path):
     assert init['next_action']['kind'] == 'show_data_card'
     view = flow.view()
     assert view['current_step'] == 'discover_data'
-    # WP-B2: a new binary study has separate model-choice and policy steps.
-    assert [s['id'] for s in view['plan']] == list(st.B2_BINARY_STEP_IDS)
+    # WP-B2: a new binary study has separate model-choice and policy steps. Owner session
+    # 2026-10-26 (L5, D5): it checks the structure before the preparation and the target.
+    assert [s['id'] for s in view['plan']] == list(fk.STRUCTURAL_FIRST_BINARY_STEP_IDS)
     nxt = view['next_action']
     assert nxt['audience'] == 'agent' and 'hypotrail data' in nxt['message']
     assert 'hypotrail' not in nxt['junior_message'] and 'Nothing is decided' in nxt['junior_message']
@@ -155,9 +157,12 @@ def test_step_zero_shows_the_data_card_until_the_first_proposal(tmp_path):
 
 # --- the two decisions before the models -------------------------------------------------
 
-def test_fits_wait_for_the_success_criterion_and_the_preprocessing(tmp_path):
+@pytest.mark.parametrize('generation', ['previous', 'structural_first'])
+def test_fits_wait_for_the_success_criterion_and_the_preprocessing(tmp_path, generation):
     flow = Flow(tmp_path / 'study', fk.BANK)
     flow.init()
+    if generation == 'previous':
+        fk.previous_generation(flow.study)
     flow.pauses(model_decisions=False)
     flow.run('split')
     refused = flow.run('fit.baseline', expect=2)
@@ -173,6 +178,17 @@ def test_fits_wait_for_the_success_criterion_and_the_preprocessing(tmp_path):
     flow.decide('success_criterion', {'metric': 'precision_gain', 'min_points': 5})
     flow.run('eda.special_values')
     nxt = flow.view()['next_action']
+    if generation == 'structural_first':
+        # Owner session 2026-10-26 (L5, D5, D6): the quality check is a step before the
+        # preparation (and the screened distributions, one column each); the draft cites it.
+        assert (nxt['kind'], nxt['activity']) == ('run', 'eda.quality')
+        while nxt['kind'] == 'run':
+            options = [x for k, v in (nxt.get('options') or {}).items() for x in (f'--{k}', v)]
+            flow.run(nxt['activity'], *options)
+            nxt = flow.view()['next_action']
+        assert nxt['decision'] == 'preprocessing'
+        assert nxt['default_value']['motivated_by'][0] == flow.state()['current']['eda.quality']
+        return
     assert nxt['decision'] == 'preprocessing'
     assert nxt['default_value'] == governance.DEFAULT_PREPROCESSING
 
@@ -389,6 +405,9 @@ def test_an_adopting_verdict_below_the_criterion_is_a_check_warning(tmp_path, ba
                     'Yes, I want 60 points over the baseline', '--request-id', flow.rid(),
                     '--expected-revision', flow.rev(), '--study', flow.study)
     assert out['result']['invalidation']['mutation'] == 'success_criterion'
+    # Review round 9 (R9E-4): adopting rests on the final test, so it is opened first.
+    flow.decide('final_test', st.choice_config(flow.state()),
+                'Yes, I open the final test now, because the model and the rule are fixed')
     _conclude(flow, 'adopt_policy')
     view = flow.view()
     assert view['criterion']['status'] == 'not_met' and view['criterion']['contradicts_verdict']

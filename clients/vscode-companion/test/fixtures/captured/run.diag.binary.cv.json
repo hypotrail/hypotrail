@@ -21,7 +21,7 @@
   "activity": "diag.binary",
   "execution_id": "e_6f568a7e009178d11fe5261f",
   "status": "promoted",
-  "result_id": "4aff6119b8e2db1cc9ad88ea2f544bc3384d1e0831c133bd5af046f6b797d34a",
+  "result_id": "6e73621b6f03637b6525a003585c332e6475e8ee92363c6136b0c77105963dfe",
   "values": {
    "question": "Where does the model err at the rule, and can its score be read as a probability?",
    "evidence": "development",
@@ -1193,7 +1193,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "04dadd044e03fd5db27d9e36260c2550277bf678390730f541a58728b2a6d067"
+     "predictions": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e"
     },
     "fit.variant": {
      "confusion": {
@@ -2349,7 +2349,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "1a6d96198637aae76f8d86ef42fa115876e52c5c65b6a666bdd5871144e974d9"
+     "predictions": "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d"
     }
    },
    "coefficient_rows": 3617,
@@ -2611,13 +2611,13 @@
    "activity": "diag.binary",
    "slot": "diag.binary",
    "status": "promoted",
-   "result_id": "4aff6119b8e2db1cc9ad88ea2f544bc3384d1e0831c133bd5af046f6b797d34a",
-   "input_key": "c7e9bbfd096c25e698ede6e9f4f7cdc44e6473bf8edc12933ecfd7a631b7485f",
+   "result_id": "6e73621b6f03637b6525a003585c332e6475e8ee92363c6136b0c77105963dfe",
+   "input_key": "dada7d7d08f4e98a46607ccfb212b59e5144d17859dea99b57db0a54cfad69c4",
    "reason": null,
    "started_revision": 31,
    "invalidation": null,
    "exposure_ids": [
-    "x_088cfd6ff28a43b188577737baeb78a9"
+    "x_9f805f775f074076832c2c4d4774d317"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2669,15 +2669,17 @@
    "recommended": null,
    "question": "Do you adopt this decision?",
    "junior_digest": "Proposal on the opening of the final test: \"You open the sealed final test once, for the chosen configuration.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Final test (13 of 14).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "decision",
     "language": "en",
     "revision": 32,
     "position": {
-     "step_id": "train_eda",
+     "step_id": "structural_eda",
      "completed": 10,
-     "total": 13
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -2702,6 +2704,11 @@
      "change",
      "explain"
     ],
+    "option_labels": {
+     "adopt": "I adopt this decision",
+     "change": "Change something",
+     "explain": "Explain first"
+    },
     "question": "You open the sealed final test once, for the chosen configuration.\n\nDo you adopt this decision?",
     "evidence_refs": [],
     "detail_topics": [
@@ -2709,6 +2716,7 @@
      "uncertainty"
     ]
    }
-  }
+  },
+  "question_junior": "Where does the model err at the rule, and can its score be read as a probability?"
  }
 }

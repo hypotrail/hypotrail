@@ -13,8 +13,9 @@ File kinds:
 * ``adapted``: same path as in the team template, fixed new content (for example an inert
   ``cli-aliases.sh`` or steps that call the runtime);
 * ``rendered``: a template file whose ``@@filter:name@@`` markers are replaced from the
-  snapshot (``text``: raw, ``yaml``: a JSON scalar or flow value, valid YAML, ``py``: a
-  Python literal, ``json``); an unknown marker refuses the export;
+  snapshot (``text``: raw, never in a YAML file; ``yaml``: a quoted scalar or a flow or
+  block value whose texts are quoted; ``py``: a Python literal; ``json``); an unknown
+  marker refuses the export;
 * ``added``: a new path from the layout allowlist, fixed content;
 * ``shared``: a byte copy of a standalone generator module, so the project computes what
   the generator computed (``canonical``, ``projection``, ``transfer``, ``azure_yaml``,
@@ -40,12 +41,23 @@ EXPORT_SCHEMA = 'hypotrail.export_manifest/1'
 READINESS_SCHEMA = 'hypotrail.export_readiness/1'
 MARKER = re.compile(r'@@([a-z]+):([a-z0-9_]+)@@')
 MISSING = 'MISSING-'
+OMEGACONF_MISSING = '???'
+# Configuration keys the exported project refuses wherever they appear (its
+# ``projection.check_shape``): ``_target_`` would make the configuration an object to
+# instantiate. Hydra's other instantiation keys (``_args_``, ``_recursive_``, ``_convert_``,
+# ``_partial_``) mean nothing without ``_target_`` and compose and freeze as plain keys
+# (round 9, R9AB-6: checked by exporting a column of each name).
+HYDRA_RESERVED_KEYS = ('_target_',)
 KINDS = ('preserved', 'adapted', 'rendered', 'added', 'shared', 'generated', 'copied')
 MANIFEST_PATH = 'data/hypotrail/contracts/export-manifest.json'
 SUMS_PATH = 'data/hypotrail/SHA256SUMS'
 EVALUATED = 'data/hypotrail/models/evaluated/'
 RUNTIME_DIR = 'aml/pipelines/training/runtime/'
-LOCK_REQUIREMENT = re.compile(r'^([A-Za-z0-9][A-Za-z0-9._-]*)==([^\s;#]+)\s*$')
+LOCK_REQUIREMENT = re.compile(r'([A-Za-z0-9][A-Za-z0-9._-]*)==([^\s;#]+)\s*')
+# The four command components of aml/components/ and their display names.
+COMPONENTS = {'prep_data': 'PrepData', 'split_data': 'SplitData', 'train_model': 'TrainModel',
+              'evaluate_model': 'EvaluateModel'}
+YAML_SUFFIXES = ('.yml', '.yaml')
 
 
 @dataclass(frozen=True)
@@ -68,8 +80,55 @@ def _value(profile_value, field: str):
     return profile_value if profile_value is not None else f'{MISSING}{field.replace(".", "-")}'
 
 
+# Review round 3 (B3-4): every text written into a YAML file of the project is a
+# double-quoted scalar whose characters outside YAML's printable set, and its line breaks
+# (NEL, U+2028, U+2029), are escapes. A quoted scalar is never re-typed by a YAML resolver
+# (OmegaConf's reads an unquoted ``1e9`` as a float) and never folded, so it reads back as
+# the exact text; the texts OmegaConf interprets even when quoted (``???``, ``${``) are
+# encoded or refused before rendering (:func:`_config_preprocessing`, :func:`_no_interpolation`).
+YAML_BREAKS = '\x85\u2028\u2029\ufeff'
+
+
+def _yaml_printable(ch: str) -> bool:
+    o = ord(ch)
+    return ch not in YAML_BREAKS and (0x20 <= o <= 0x7E or 0xA0 <= o <= 0xD7FF
+                                      or 0xE000 <= o <= 0xFFFD or 0x10000 <= o <= 0x10FFFF)
+
+
+def yaml_quoted(text: str) -> str:
+    """``text`` as a YAML double-quoted scalar that every YAML loader reads back exactly."""
+    out = ['"']
+    for ch in text:
+        if ch == '"':
+            out.append('\\"')
+        elif ch == '\\':
+            out.append('\\\\')
+        elif _yaml_printable(ch):
+            out.append(ch)
+        elif ord(ch) <= 0xFF:
+            out.append(f'\\x{ord(ch):02x}')
+        elif ord(ch) <= 0xFFFF:
+            out.append(f'\\u{ord(ch):04x}')
+        else:
+            out.append(f'\\U{ord(ch):08x}')
+    out.append('"')
+    return ''.join(out)
+
+
+def _yaml_flow(value) -> str:
+    if isinstance(value, dict):
+        return '{' + ', '.join(f'{yaml_quoted(str(k))}: {_yaml_flow(value[k])}'
+                               for k in sorted(value)) + '}'
+    if isinstance(value, list):
+        return '[' + ', '.join(_yaml_flow(v) for v in value) + ']'
+    if isinstance(value, str):
+        return yaml_quoted(value)
+    return json.dumps(value)
+
+
 def _yaml(value) -> str:
-    return json.dumps(cj.normalise(value), ensure_ascii=False, sort_keys=True)
+    """A YAML flow value (a JSON-like scalar, list or mapping) whose texts are quoted."""
+    return _yaml_flow(cj.normalise(value))
 
 
 def _py(value, indent: int = 0) -> str:
@@ -94,14 +153,33 @@ def _py(value, indent: int = 0) -> str:
     return repr(value)
 
 
-FILTERS = {'text': lambda v: str(v), 'yaml': _yaml, 'json': _yaml, 'py': _py}
+def _json(value) -> str:
+    return json.dumps(cj.normalise(value), ensure_ascii=False, sort_keys=True)
+
+
+FILTERS = {'text': lambda v: str(v), 'yaml': _yaml, 'json': _json, 'py': _py}
+
+
+def _quoted_dumper():
+    """A PyYAML safe dumper that writes every text (mapping keys included) double-quoted."""
+    import yaml
+
+    class QuotedDumper(yaml.SafeDumper):
+        pass
+
+    def text(dumper, data):
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='"')
+    QuotedDumper.add_representer(str, text)
+    return QuotedDumper
 
 
 def _yaml_block(value, indent: int) -> str:
-    """A non-empty mapping or list as block YAML under its key, indented by ``indent``."""
+    """A non-empty mapping or list as block YAML under its key, indented by ``indent``; its
+    texts are double-quoted scalars (PyYAML escapes NEL, U+2028, U+2029 and the characters
+    outside YAML's printable set in that style)."""
     import yaml
-    dumped = yaml.safe_dump(cj.normalise(value), sort_keys=True, default_flow_style=False,
-                            allow_unicode=True, width=1000)
+    dumped = yaml.dump(cj.normalise(value), Dumper=_quoted_dumper(), sort_keys=True,
+                       default_flow_style=False, allow_unicode=True, width=10 ** 9)
     pad = ' ' * (indent + 2)
     return '\n' + '\n'.join(pad + line for line in dumped.rstrip('\n').split('\n'))
 
@@ -112,6 +190,12 @@ def substitute(text: str, context: Mapping, where: str) -> str:
         if kind not in FILTERS or name not in context:
             raise ExportError('template_layout_mismatch', f'Unknown template marker {match.group(0)}.',
                               path=where, remediation='The template and the generator disagree.')
+        if kind == 'text' and where.endswith(YAML_SUFFIXES):
+            # Review round 4 (R4-B1): a raw text in YAML is re-typed by the loader ("2026",
+            # "True", "null", "1.10"); a YAML file takes the quoted ``yaml`` filter only.
+            raise ExportError('template_layout_mismatch', f'The YAML template uses the raw '
+                              f'marker {match.group(0)}.', path=where,
+                              remediation='Use @@yaml:...@@ for a value of a YAML file.')
         value = context[name]
         if kind == 'yaml' and isinstance(value, (dict, list)) and value:
             line = text[text.rfind('\n', 0, match.start()) + 1:match.start()]
@@ -139,7 +223,7 @@ def lock_bytes(template: layout.Template, snapshot: Snapshot) -> tuple[bytes, st
             stripped = line.strip()
             if not stripped or stripped.startswith('#'):
                 continue
-            match = LOCK_REQUIREMENT.match(stripped)
+            match = LOCK_REQUIREMENT.fullmatch(stripped)
             if not match:
                 raise ExportError('environment_unqualified',
                                   f'The {origin} lock has a line this template cannot pin.',
@@ -180,6 +264,30 @@ def _verdict(snapshot: Snapshot) -> str:
     return 'no conclusion is recorded; nothing here establishes a result.'
 
 
+def _output_sentence(recipe: Mapping) -> str:
+    """What the model returns, term first (README)."""
+    output = recipe['output_contract']
+    column = (output.get('columns') or ['prediction'])[0]
+    if output.get('kind') == 'binary_score':
+        return (f'`{column}` (`binary_score`): a score between 0 and 1, the estimated '
+                f'probability that `{recipe["target"]["name"]}` is '
+                f'`{output.get("positive_label")}`, the positive label the study recorded. '
+                '`predict` and the MLflow package return this score, never a class.')
+    unit = output.get('unit')
+    return (f'`{column}` (`{output.get("kind")}`): the predicted value of '
+            f'`{recipe["target"]["name"]}`' + (f', in {unit}.' if unit else '.'))
+
+
+def _decision_rule_item(rule) -> str:
+    """The README item of the adopted decision rule (R19): metadata, never applied."""
+    if not isinstance(rule, Mapping):
+        return '- Decision rule: none; a regression study adopts no decision rule.'
+    model = f' for the model `{rule["model"]}`' if rule.get('model') else ''
+    return (f'- Decision rule adopted by the study{model}: `{rule["rule"]}`. {rule["meaning"]} '
+            'It is carried as metadata only (`decision_rule` in '
+            '`data/hypotrail/contracts/deployment-snapshot.json` and `readiness.json`).')
+
+
 def context(snapshot: Snapshot, normal: Mapping, missing: list, template: layout.Template,
             identities: Mapping) -> dict:
     recipe, contract, plan = snapshot.recipe, snapshot.data_contract, snapshot.plan
@@ -201,16 +309,32 @@ def context(snapshot: Snapshot, normal: Mapping, missing: list, template: layout
     if not predictor:
         limitations.append('No captured model: the evaluated model is not in this export; '
                            'the recipe is, and run-local builds a new candidate from it.')
+    rule = doc.get('decision_rule')
+    if isinstance(rule, Mapping):
+        limitations.append(f'The decision rule `{rule["rule"]}` is metadata: the model, '
+                           '`predict` and the MLflow package return the positive-class score '
+                           'only. Acting on rows (comparing a score with a threshold, or ranking '
+                           'a batch for a capacity or a share) is a separate step outside this '
+                           'export, not qualified here.')
     limitations.append('Azure ML execution is not qualified by this export: it needs an '
                        'authorised recipe run in a workspace.')
     final = plan['final_test']
+    display = ''.join(p.capitalize() for p in _slug(case_id).split('_'))
+    environment = (_value(normal['environment']['name'], 'environment.name'),
+                   _value(normal['environment']['version'], 'environment.version'))
+    data_asset = (_value(normal['data_asset']['name'], 'data_asset.name'),
+                  _value(normal['data_asset']['version'], 'data_asset.version'))
+    compute = _value(normal['compute'], 'compute')
     return {
         'project_title': f'{doc.get("case", {}).get("title") or case_id} (Hypotrail export)',
         'project_name': project,
         'project_version': '0.1.0',
         'project_description': f'Azure ML project of Hypotrail study {doc["study_id"]}',
-        'component_prefix': project,
-        'display_suffix': ''.join(p.capitalize() for p in _slug(case_id).split('_')),
+        # Review round 4 (R4-B1): every value of an Azure YAML file is one whole quoted
+        # scalar, references (azureml:<name>:<version>) and composed names included.
+        **{f'component_{step}': f'{project}_{step}' for step in COMPONENTS},
+        **{f'display_{step}': COMPONENTS[step] + display for step in COMPONENTS},
+        'component_pipeline': f'{project}_pipeline',
         'component_version': identities['export_id'][:16],
         'template_id': template.id, 'template_version': template.version,
         'template_source_sha256': template.layout['source_sha256'],
@@ -236,10 +360,13 @@ def context(snapshot: Snapshot, normal: Mapping, missing: list, template: layout
         'parameters_inline': json.dumps(recipe['parameters'], sort_keys=True),
         'features': recipe['features'], 'features_inline': ', '.join(f'`{f}`' for f in
                                                                    recipe['features']),
-        'feature_types': recipe['feature_types'], 'preprocessing': recipe['preprocessing'],
+        'feature_types': recipe['feature_types'],
+        'preprocessing': _config_preprocessing(recipe['preprocessing']),
         'seeds': recipe['seeds'], 'output_contract': recipe['output_contract'],
         'target': target, 'target_name': target['name'],
         'target_unit_suffix': f' (in {unit})' if unit else '',
+        'output_sentence': _output_sentence(recipe),
+        'decision_rule_item': _decision_rule_item(doc.get('decision_rule')),
         'metrics': snapshot.metrics,
         'selection_decision': recipe['selection_reference'].get('decision_id'),
         'selection_reference': recipe['selection_reference'],
@@ -270,15 +397,16 @@ def context(snapshot: Snapshot, normal: Mapping, missing: list, template: layout
                for c in columns]),
         'limitations_list': '\n'.join(f'- {x}' for x in limitations),
         'python_version': template.document['python'],
+        'python_dependency': f'python={template.document["python"]}',
         'subscription_id': _value(normal['subscription_id'], 'subscription_id'),
-        'compute': _value(normal['compute'], 'compute'),
+        'compute': compute, 'compute_ref': f'azureml:{compute}',
         'experiment_name': normal['experiment_name'] or project,
-        'data_asset_name': _value(normal['data_asset']['name'], 'data_asset.name'),
-        'data_asset_version': _value(normal['data_asset']['version'], 'data_asset.version'),
+        'data_asset_name': data_asset[0], 'data_asset_version': data_asset[1],
+        'data_asset_ref': f'azureml:{data_asset[0]}:{data_asset[1]}',
         'data_asset_description': f'Development rows, contracts and evaluated model of study '
                                   f'{doc["study_id"]} (no final test).',
-        'environment_name': _value(normal['environment']['name'], 'environment.name'),
-        'environment_version': _value(normal['environment']['version'], 'environment.version'),
+        'environment_name': environment[0], 'environment_version': environment[1],
+        'environment_ref': f'azureml:{environment[0]}:{environment[1]}',
         'environment_description': 'Python 3.13 environment of the Hypotrail export.',
         'base_image': _value(normal['environment']['base_image'], 'environment.base_image'),
         # Optional: without a name, the team template's pipeline variable is kept.
@@ -288,7 +416,6 @@ def context(snapshot: Snapshot, normal: Mapping, missing: list, template: layout
                            'recipe; technical checks only.',
         'pipeline_description': 'Prepare, split by the recorded plan, fit a rebuilt candidate, '
                                 'check it.',
-        'mlflow_tracking_cloud': 'false',
         'packaging_format': 'mlflow_pyfunc',
         'packaging_required': True,
         'parity_features_relpath': parity_rel or '<parity features file>',
@@ -343,12 +470,14 @@ def _target_yaml(normal: Mapping, missing: list) -> bytes:
                 'missing_fields': list(missing)}
     head = ('# Destination profile (hypotrail.azure_target/1), normalised by the export. It holds\n'
             '# no credential. Operational only: the scientific contracts are in data/hypotrail.\n')
-    return (head + yaml.safe_dump(document, sort_keys=True, allow_unicode=True)).encode('utf-8')
+    # Quoted texts (R4-B1): ``safe_dump`` leaves ``1e9`` plain, which OmegaConf reads as a float.
+    return (head + yaml.dump(document, Dumper=_quoted_dumper(), sort_keys=True,
+                             allow_unicode=True, width=10 ** 9)).encode('utf-8')
 
 
 def readiness(snapshot: Snapshot, missing: list, identities: Mapping) -> dict:
     predictor = snapshot.predictor
-    return {
+    out = {
         'schema_version': READINESS_SCHEMA,
         'export_id': identities['export_id'],
         'snapshot_id': identities['snapshot_id'],
@@ -364,6 +493,13 @@ def readiness(snapshot: Snapshot, missing: list, identities: Mapping) -> dict:
         'production_authorisation': 'outside_scope',
         'azure_qualification': 'not_qualified',
     }
+    rule = snapshot.document.get('decision_rule')
+    if isinstance(rule, Mapping):
+        # R19 (binary only): the adopted rule, as metadata; never applied in the model output.
+        out['decision_rule'] = {'rule': rule['rule'], 'kind': rule['kind'],
+                                'applied_in_model_output': False,
+                                'needs_batch_ranking': rule['needs_batch_ranking']}
+    return out
 
 
 def identities(snapshot: Snapshot, normal: Mapping, template: layout.Template) -> dict:
@@ -389,14 +525,43 @@ def _shared(module: str) -> bytes:
     return path.read_bytes()
 
 
+def _config_preprocessing(preprocessing):
+    """The recipe's preprocessing as the Hydra configuration carries it: a literal value of
+    the dataset that OmegaConf would interpret (``???``, ``${``) is encoded
+    (:func:`projection.encode_literals`) and decoded by the projection, never refused."""
+    try:
+        return projection.encode_literals(preprocessing)
+    except projection.ProjectionError as error:
+        raise ExportError('contract_invalid', f'The recipe preprocessing cannot be carried in '
+                          f'the project configuration: {error}', path=error.path,
+                          remediation='Report this recipe; it is not changed to export.') from error
+
+
+def _refuse_interpreted(path: str) -> None:
+    raise ExportError('contract_invalid', 'A recipe or plan value contains "${" or "@@", is '
+                      '"???", or is a configuration key named "_target_", which the project '
+                      'configuration would interpret.',
+                      path=path, remediation='Rename the value in the case of the study '
+                                             '(a name or a unit), then export.')
+
+
 def _no_interpolation(value, path: str) -> None:
-    """A scientific value rendered into Hydra YAML may not look like an interpolation."""
-    if isinstance(value, str) and ('${' in value or '@@' in value):
-        raise ExportError('contract_invalid', 'A recipe or plan value contains "${" or "@@", '
-                          'which the project configuration would interpret.', path=path,
-                          remediation='Rename the value in the study.')
+    """A scientific value rendered into Hydra YAML may not look like an interpolation, nor
+    be OmegaConf's mandatory-missing marker ``???`` (read back as a missing value). It is
+    checked on the values as the configuration carries them: the literals of the recipe's
+    preprocessing are encoded, every other value (a name, a unit the case states) is refused
+    with a remediation the junior can follow.
+
+    Round 9 (review AB, R9AB-6): a mapping key in :data:`HYDRA_RESERVED_KEYS` is refused the
+    same way. A column named ``_target_`` becomes a key of ``feature_types``, and the project
+    refuses any ``_target_`` key when it freezes its configuration (no object is built from
+    configuration), so the export would be one its own ``validate`` fails."""
+    if isinstance(value, str) and ('${' in value or '@@' in value or value == OMEGACONF_MISSING):
+        _refuse_interpreted(path)
     if isinstance(value, Mapping):
         for key, item in value.items():
+            if key in HYDRA_RESERVED_KEYS:
+                _refuse_interpreted(f'{path}.{key}')
             _no_interpolation(key, f'{path}.{key}')
             _no_interpolation(item, f'{path}.{key}')
     elif isinstance(value, list):
@@ -409,7 +574,9 @@ def render(snapshot: Snapshot, normal: Mapping, missing: list,
     """``(files, summary)``: every file of the project, in path order, and the identities,
     statuses and checks the command reports."""
     ids = identities(snapshot, normal, template)
-    _no_interpolation(ids['scientific'], 'scientific_projection')
+    carried = {**ids['scientific'],
+               'preprocessing': _config_preprocessing(ids['scientific']['preprocessing'])}
+    _no_interpolation(carried, 'scientific_projection')
     ctx = context(snapshot, normal, missing, template, ids)
     lock, lock_status = lock_bytes(template, snapshot)
     ready = readiness(snapshot, missing, ids)
@@ -481,18 +648,38 @@ def render(snapshot: Snapshot, normal: Mapping, missing: list,
     return ordered, summary
 
 
+def load_config(data: bytes):
+    """One configuration file as the project reads it: through OmegaConf's YAML loader and
+    resolution (which re-types some unquoted texts, reads ``???`` as missing and ``${`` as
+    an interpolation) when OmegaConf is installed, else through PyYAML's safe loader."""
+    text = data.decode('utf-8')
+    try:
+        from omegaconf import OmegaConf
+    except ImportError:
+        import yaml
+        return yaml.safe_load(text)
+    return OmegaConf.to_container(OmegaConf.create(text), resolve=True, throw_on_missing=True)
+
+
 def _self_check(files: list[File], ids: Mapping, missing: list) -> None:
-    """The rendered configuration projects to the expected identity, and a configured
-    export holds no missing-value marker in an executable file."""
-    import yaml
+    """The rendered configuration projects to the expected identity, read as the project
+    reads it (:func:`load_config`), and a configured export holds no missing-value marker in
+    an executable file."""
     by_path = {f.path: f for f in files}
-    container = {'hypotrail': yaml.safe_load(by_path['src/conf/hypotrail/replay.yaml'].data),
-                 'components': {}}
-    for step in ('data_preparation', 'data_splitting', 'training', 'evaluation'):
-        container['components'][step] = yaml.safe_load(
-            by_path[f'src/conf/components/{step}/default.yaml'].data)
-    actual = projection.from_config(container)
-    if cj.canonical_sha256(actual) != ids['scientific_sha256']:
+    try:
+        container = {'hypotrail': load_config(by_path['src/conf/hypotrail/replay.yaml'].data),
+                     'components': {}}
+        for step in ('data_preparation', 'data_splitting', 'training', 'evaluation'):
+            container['components'][step] = load_config(
+                by_path[f'src/conf/components/{step}/default.yaml'].data)
+        actual = projection.from_config(container)
+        sha = cj.canonical_sha256(actual)
+    except Exception as error:   # an OmegaConf, YAML or re-typed value of the rendered files
+        raise ExportError('scientific_config_changed', 'The rendered configuration cannot be '
+                          'read back as written; nothing was written.', path='src/conf',
+                          remediation='Report this generator defect.',
+                          details={'error': f'{type(error).__name__}: {error}'[:300]}) from error
+    if sha != ids['scientific_sha256']:
         raise ExportError('scientific_config_changed', 'The rendered configuration does not '
                           'project to the selected recipe; nothing was written.',
                           path='src/conf', remediation='Report this generator defect.',

@@ -46,11 +46,18 @@ PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'task', 'results', 'truncat
 RESULT_KEYS = ('result_id', 'activity', 'slot', 'promoted', 'current', 'stale_reason',
                'integrity', 'partition', 'n_rows', 'params', 'upstream', 'downstream',
                'created', 'started_revision', 'execution_id', 'exposure_id', 'values',
-               'headline')
+               'headline',
+               # L3 (owner session 2026-10-26, R4; D4b): the question a shown result answers
+               # in the study language, and the junior texts of an ``eda.*`` result in both
+               # languages (:func:`mlkit.study.l10n.eda_texts`).
+               'question_junior', 'texts')
 EXPOSURE_RECORD_KEYS = ('exposure_id', 'revision', 'time', 'activity', 'result_id',
                         'execution_id', 'purpose', 'partition', 'n_rows', 'columns')
 LEDGER_KEYS = ('purpose', 'partition', 'rows', 'records', 'activities', 'first_revision',
-               'last_revision')
+               'last_revision',
+               # Contract P1.9 (CLI-CONTRACT §17.3): the note of the step-1 sample's entry, in
+               # the study language (``exposure.SAMPLE_NOTE``); null for every other purpose.
+               'note')
 IMPACT_KEYS = ('decision_id', 'mutation', 'row', 'change', 'stale_slots', 'kept_slots', 'refit',
                'reconfirm', 'notes')
 DETAIL_KEYS = ('result_id', 'values', 'params', 'inputs', 'code', 'environment', 'blobs',
@@ -157,12 +164,17 @@ def _cross_validated(study: read.Study, entry: Mapping) -> bool:
 
 
 def _headline(task: str, activity: str | None, rid: str, citer: cite.Citer,
-              values: Mapping, cv: bool = False) -> dict | None:
+              values: Mapping, cv: bool = False, lang: str = 'en') -> dict | None:
     data = texts.load('evidence')
     name = 'regression_headlines' if task == st.REGRESSION else 'headlines'
-    table = data.get(name) or {}
-    if cv:
-        table = {**table, **(data.get(name.replace('headlines', 'cv_headlines')) or {})}
+    cv_name = name.replace('headlines', 'cv_headlines')
+    # L3 (owner session 2026-10-26, R4): a French study reads the French headline where the
+    # content gives one (``fr`` of ``content/evidence.yaml``), else the English one.
+    sources = [data] + ([data.get('fr') or {}] if lang == 'fr' else [])
+    table = {}
+    for names in ([name, cv_name] if cv else [name]):
+        for source in sources:
+            table.update(source.get(names) or {})
     template = table.get(activity or '')
     if not template:
         return None
@@ -174,6 +186,9 @@ def _result_items(study: read.Study, view: Mapping, selected: list[dict], slots:
                   values: Mapping) -> list[dict]:
     out = []
     task = view['task']
+    from . import l10n
+    language = view.get('language') or l10n.EN
+    tr = l10n.translations(study.state)
     for item in selected:
         rid, entry, integrity = item['rid'], item['entry'], item['integrity']
         promoted_slot = slots.get(rid)
@@ -198,8 +213,13 @@ def _result_items(study: read.Study, view: Mapping, selected: list[dict], slots:
             'execution_id': entry.get('execution_id'), 'exposure_id': entry.get('exposure_id'),
             'values': entry['output'].get('values') if shown else None,
             'headline': _headline(task, entry.get('activity'), rid, citer, values,
-                                  _cross_validated(study, entry))
+                                  _cross_validated(study, entry), language)
             if shown else None})
+        stored = entry['output'].get('values') if shown else None
+        out[-1]['question_junior'] = l10n.question_junior(stored, language)
+        out[-1]['texts'] = (l10n.eda_texts_pair(stored, tr)
+                            if stored is not None and str(entry.get('activity') or '')
+                            .startswith('eda.') else None)
         if integrity != 'ok' and out[-1]['stale_reason'] is None:
             out[-1]['stale_reason'] = {'reason': integrity, 'since': None}
     return out
@@ -302,8 +322,12 @@ def _exposure(study: read.Study) -> dict:
                 else min(row['first_revision'], revision)
             row['last_revision'] = revision if row['last_revision'] is None \
                 else max(row['last_revision'], revision)
+    from . import exposure
+    language = study.state.get('language') or 'en'
     for key, row in ledger.items():
         row['rows'] = len(rows[key])
+        row['note'] = (exposure.sample_note(language) if row['purpose'] == exposure.SAMPLE_PURPOSE
+                       else None)
     purpose_rank = {p: i for i, p in enumerate(rec.EXPOSURE_PURPOSES)}
     part_rank = {p: i for i, p in enumerate(PARTITION_ORDER)}
     ordered = sorted(ledger.values(), key=lambda x: (

@@ -93,6 +93,87 @@ svg.chart circle.mean{fill:var(--paper);stroke:var(--ink);stroke-width:2}
 @media (forced-colors:active){svg.chart rect,svg.chart circle{forced-color-adjust:none}}
 '''
 
+# v4 (R25): the charts on graph paper, in the "tableau noir" charter. Every mark the renderer
+# draws carries a class styled here, never an inline colour; the series of a model has the
+# same colour in every chart (``s-lin``, ``s-base``, ``s-ridge``, ``s-ebm``, ``s-v3``).
+CHART_CSS_LESSON = '''
+figure[data-chart]{margin:6px 0 8px;padding:0;min-width:0}
+figure[data-chart] figcaption{font-family:var(--serif);font-size:15px;color:var(--cardink);margin:2px 0 8px}
+figure[data-chart] figcaption strong{font:600 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--cardmuted);margin-right:4px}
+.chart-frame{overflow-x:auto;-webkit-overflow-scrolling:touch;position:relative;max-width:100%}
+svg.chart{display:block;width:100%;min-width:520px;max-width:720px;height:auto;overflow:visible}
+svg.chart text{font:12px var(--sans);fill:var(--cardink)}
+svg.chart text.axis,svg.chart text.note{font:11px var(--mono);fill:var(--cardmuted)}
+svg.chart text.note{font-family:var(--sans)}
+svg.chart text.val,svg.chart text[data-result-id]{font:600 11.5px var(--mono);fill:var(--cardink)}
+svg.chart text.flag{fill:var(--ochre);font-weight:700}
+svg.chart text.inbar{font:700 14px var(--mono);fill:#fff}
+svg.chart text.inbar.s{fill:var(--red)}
+svg.chart text.thr-t{font:600 11px var(--sans);fill:var(--red)}
+svg.chart line.grid{stroke:rgba(34,48,43,.09);stroke-width:1}
+svg.chart line.ref{stroke:rgba(34,48,43,.5);stroke-width:1.3;stroke-dasharray:5 4}
+svg.chart line.zero{stroke:rgba(34,48,43,.6);stroke-width:1.3}
+svg.chart line.diag{stroke:rgba(34,48,43,.4);stroke-width:1.2;stroke-dasharray:5 4}
+svg.chart line.thr{stroke:var(--red);stroke-width:1.8;stroke-dasharray:6 4}
+svg.chart rect.zone{fill:rgba(31,122,68,.08)}
+svg.chart line.ci{stroke:var(--cardink);stroke-width:1.8}
+svg.chart line.whisker{stroke:var(--cardmuted);stroke-width:1.4}
+svg.chart line.median{stroke:var(--cardink);stroke-width:2.6}
+svg.chart circle.mean{fill:var(--card);stroke:var(--cardink);stroke-width:2}
+svg.chart rect.m,svg.chart circle.m{fill:var(--pen);opacity:.82}
+svg.chart circle.mo{fill:var(--card);stroke:var(--pen);stroke-width:2}
+svg.chart rect.b{fill:var(--cardmuted);opacity:.5}
+svg.chart rect.band{fill:var(--pen);opacity:.1}
+svg.chart rect.box{fill:rgba(30,78,158,.16);stroke:var(--s-lin);stroke-width:1.4}
+svg.chart rect.box.b{fill:rgba(176,116,24,.16);stroke:var(--s-base)}
+svg.chart rect.flagged{fill:var(--ochre)}
+svg.chart rect.unused{fill:var(--cardmuted);opacity:.3}
+svg.chart rect.cpos{fill:var(--pen)}
+svg.chart rect.cneg{fill:#C2571A}
+svg.chart rect.cflag{stroke:var(--cardink);stroke-width:2}
+svg.chart polyline.m{fill:none;stroke:var(--pen);stroke-width:2.4}
+svg.chart polyline.m.final{stroke:var(--s-ok)}
+svg.chart polyline.b{fill:none;stroke:var(--cardmuted);stroke-width:2;stroke-dasharray:5 4}
+svg.chart circle.pt{fill:var(--pen);opacity:.45}
+svg.chart circle.pt.final{fill:var(--s-ok);opacity:.55}
+svg.chart circle.bin{fill:var(--card);stroke:var(--cardink);stroke-width:2}
+svg.chart rect.part.dev{fill:var(--pen);opacity:.78}
+svg.chart rect.part.sealed{fill:var(--card);stroke:var(--red);stroke-width:2;stroke-dasharray:5 3}
+svg.chart rect.fold{fill:rgba(30,78,158,.16);stroke:var(--s-lin);stroke-width:1.2}
+svg.chart .s-lin{--sc:var(--s-lin)}svg.chart .s-base{--sc:var(--s-base)}svg.chart .s-ridge{--sc:var(--s-ridge)}svg.chart .s-ebm{--sc:var(--s-ebm)}svg.chart .s-v3{--sc:var(--s-v3)}
+svg.chart circle.dot{fill:var(--sc,var(--pen));stroke:var(--card);stroke-width:1}
+svg.chart circle.dot.open{fill:var(--card);stroke:var(--sc,var(--pen));stroke-width:2}
+svg.chart line.ci[class*="s-"]{stroke:var(--sc)}
+svg.chart rect.box[class*="s-"]{stroke:var(--sc);fill:var(--sc);fill-opacity:.16}
+svg.chart rect.bar{fill:var(--sc,var(--pen));opacity:.8}
+svg.chart polyline.ln{fill:none;stroke:var(--sc,var(--pen));stroke-width:2.2}
+.legend,.keys{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--cardmuted);margin:4px 0}
+.legend span:before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-2px;background:var(--pen);opacity:.82}
+.legend span.b:before{background:var(--cardmuted);opacity:.5}
+.legend span.band:before{background:var(--pen);opacity:.1}
+.legend span.flagged:before{background:var(--ochre)}
+.legend span.unused:before{opacity:.3}
+.legend span.outline:before{background:none;border:2px solid var(--cardink);width:9px;height:9px}
+.legend span.box:before{background:rgba(30,78,158,.16);border:1.4px solid var(--s-lin)}
+.legend span.box.b:before{background:rgba(176,116,24,.16);border-color:var(--s-base)}
+.legend span.final:before{background:#C2571A}
+.legend span.line:before{height:0;border-radius:0;background:none;border-top:3px solid var(--pen);vertical-align:3px}
+.legend span.line.final:before{border-top-color:var(--s-ok)}
+.legend span.diag:before{height:0;border-radius:0;background:none;border-top:2px dashed var(--cardmuted);vertical-align:3px;opacity:1}
+.legend span.bin:before{background:var(--card);border:2px solid var(--cardink);border-radius:50%;width:9px;height:9px}
+.legend span.pt:before{border-radius:50%;opacity:.45}
+.legend span.pt.final:before{background:var(--s-ok);opacity:.55}
+.legend span.ci:before{height:0;border-radius:0;background:none;border-top:2px solid var(--cardink);vertical-align:3px}
+.keys span{display:inline-flex;align-items:center}
+.keys i.sw{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:5px;background:var(--pen)}
+.keys i.sw.lin{background:var(--s-lin)}.keys i.sw.base{background:var(--s-base)}.keys i.sw.ridge{background:var(--s-ridge)}.keys i.sw.ebm{background:var(--s-ebm)}.keys i.sw.v3{background:var(--s-v3)}
+.keys i.sw.dot{width:9px;height:9px;border-radius:50%;background:var(--cardink)}
+.keys i.sw.dot.open{background:var(--card);border:2px solid var(--cardink)}
+.keys i.sw.ci{height:2px;background:var(--cardink)}
+.keys i.sw.thr{height:0;border-top:2px dashed var(--red);background:none}
+@media (forced-colors:active){svg.chart rect,svg.chart circle{forced-color-adjust:none}}
+'''
+
 
 def lit(kind: str, text: Any, x: float, y: float, anchor: str = 'start',
         cls: str = '') -> str:
@@ -127,12 +208,21 @@ def _ticks(lo: float, hi: float, n: int = 4) -> list[float]:
 
 
 def _tick_text(value: float, percent: bool) -> str:
+    """A drawing scale's tick in the edition's number format (v4: a French chart writes
+    "1 613" and "2,5", never "1,613")."""
+    from . import texts
     if percent:
         shown = 100 * value
-        return f'{shown:.0f}%' if abs(shown - round(shown)) < 1e-9 else f'{shown:.1f}%'
-    if abs(value - round(value)) < 1e-9:
-        return f'{round(value):,}'
-    return f'{value:.2f}'.rstrip('0').rstrip('.') if abs(value) < 10 else f'{value:.1f}'
+        text = f'{shown:.0f}%' if abs(shown - round(shown)) < 1e-9 else f'{shown:.1f}%'
+    elif abs(value - round(value)) < 1e-9:
+        text = f'{round(value):,}'
+    else:
+        text = f'{value:.2f}'.rstrip('0').rstrip('.') if abs(value) < 10 else f'{value:.1f}'
+    if texts.report_language() == 'fr':
+        text = text.translate(cite.FR_SEPARATORS)
+        if text.endswith('%'):
+            text = text[:-1] + '\u00a0%'
+    return text
 
 
 class Scale:
@@ -329,14 +419,16 @@ def by_group(citer: cite.Citer, rid: str, values: Mapping, *, rate: bool) -> str
     chart = (values.get('null_band') or {}).get('chart') or {}
     note = ''
     if chart:
+        # one sentence per text node, so the French edition translates each
+        # (``l10n_report``)
         if chart.get('outside'):
-            note = ('The spread between groups is larger than every one of the shuffles of the '
-                    'target: a pattern unlikely to be chance alone. ')
+            note = ('<span>The spread between groups is larger than every one of the shuffles '
+                    'of the target: a pattern unlikely to be chance alone.</span> ')
         else:
-            note = ('The spread between groups stays within what shuffling the target draws: '
-                    'it is not distinguishable from chance. ')
-    note += (f'Dashed line: the overall value on {_rows()}. An association between groups, '
-             'not an effect of the variable.')
+            note = ('<span>The spread between groups stays within what shuffling the target '
+                    'draws: it is not distinguishable from chance.</span> ')
+    note += (f'<span>Dashed line: the overall value on {_rows()}. An association between '
+             'groups, not an effect of the variable.</span>')
     column = str(values.get('column', ''))
     question = values.get('question') or f'Does the outcome differ across the groups of {column}?'
     note += ' Intervals: <span data-literal="setting">95%</span> level.'
@@ -470,12 +562,50 @@ def selection(citer: cite.Citer, rid: str, values: Mapping, rule_words,
 # --- 4. regression: residuals ---------------------------------------------------------------
 
 MODEL_NAMES = {'fit.linear': 'Linear model', 'fit.baseline': 'Mean baseline'}
+# v4 (R25): one series class per model, the same in every chart (the CSS colours them).
+SERIES = {'fit.linear': 'lin', 'fit.logistic': 'lin', 'fit.baseline': 'base',
+          'fit.variant': 'ridge', 'fit.variant:2': 'ebm', 'fit.variant:3': 'v3'}
+MODEL_ORDER = ('fit.baseline', 'fit.linear', 'fit.logistic', 'fit.variant', 'fit.variant:2',
+               'fit.variant:3')
+
+
+def _words(key: str) -> str:
+    """A chart word of ``content/lesson.yaml`` (``charts``) in the edition's language."""
+    from . import texts
+    return texts.say(texts.lesson(f'charts.{key}'))
+
+
+def _name(model: str) -> str:
+    from .render_html import model_name
+    return model_name(model)
+
+
+def _short_name(model: str) -> str:
+    from .render_html import model_short
+    return model_short(model)
+
+
+def _ordered(models) -> list[str]:
+    known = [m for m in MODEL_ORDER if m in models]
+    return known + sorted(m for m in models if m not in known)
+
+
+def _series(model: str) -> str:
+    return SERIES.get(model, 'v3')
+
+
+def _model_legend(models) -> str:
+    return '<p class="keys">' + ''.join(
+        f'<span><i class="sw {_series(m)}"></i>{e(_name(m))}</span>' for m in models) + '</p>'
 
 
 def residuals(citer: cite.Citer, rid: str, values: Mapping) -> str:
+    """v4 (R25, figure 7.4): the residual distribution of every model, one box each (the
+    middle half, the median, whiskers from the 5th to the 95th percentile), on one axis
+    with the zero line; the median cited at the right."""
     res = values.get('residuals') if isinstance(values.get('residuals'), Mapping) else {}
     keys = ('q05', 'q25', 'median', 'q75', 'q95')
-    models = [m for m in ('fit.linear', 'fit.baseline')
+    models = [m for m in _ordered(res)
               if isinstance(res.get(m), Mapping) and all(_num(res[m].get(k)) for k in keys)]
     if not models:
         return ''
@@ -486,79 +616,283 @@ def residuals(citer: cite.Citer, rid: str, values: Mapping) -> str:
     body, y = [], TOP + 6
     for m in models:
         r = res[m]
-        cls = 'box' if m == 'fit.linear' else 'box b'
         cy = y + 14
         base = cite.format_path(['residuals', m])
-        body.append(lit('identifier', MODEL_NAMES[m], LEFT - 8, cy + 4, 'end'))
+        body.append(lit('identifier', short(_name(m), 24), LEFT - 8, cy + 4, 'end'))
         body.append(f'<line class="whisker" x1="{scale(r["q05"]):.1f}" y1="{cy}" '
                     f'x2="{scale(r["q95"]):.1f}" y2="{cy}"/>')
-        body.append(f'<rect class="{cls}" x="{scale(r["q25"]):.1f}" y="{cy - 11}" '
+        body.append(f'<rect class="box s-{_series(m)}" x="{scale(r["q25"]):.1f}" y="{cy - 11}" '
                     f'width="{max(1.0, scale(r["q75"]) - scale(r["q25"])):.1f}" height="22" '
-                    f'rx="4"><title>{MODEL_NAMES[m]}</title></rect>')
+                    f'rx="3"><title>{e(_name(m))}</title></rect>')
         body.append(f'<line class="median" x1="{scale(r["median"]):.1f}" y1="{cy - 13}" '
                     f'x2="{scale(r["median"]):.1f}" y2="{cy + 13}"/>')
         body.append(citer.svg_num(rid, f'{base}.median', 'f2', x=WIDTH - RIGHT + 2,
-                                  y=cy + 4, prefix='median '))
+                                  y=cy + 4))
         y += 40
     x0 = scale(0)
     body.append(f'<line class="zero" x1="{x0:.1f}" y1="{TOP - 6}" x2="{x0:.1f}" y2="{y - 6}"/>')
     body.insert(0, scale.axis(TOP - 6, y - 4))
     svg = _svg(y + AXIS - 4, ''.join(body), f'Residuals of each model on the {_scored()}')
     unit = values.get('unit')
-    unit_note = f' Unit: <span data-literal="case">{e(unit)}</span>.' if unit else ''
-    note = (f'Residual: observed minus predicted, on the {_scored()}. Line: from the '
-            '<span data-literal="setting">5th</span> to the '
-            '<span data-literal="setting">95th</span> percentile; box: the middle half; thick '
-            'line: the median. A box away from the zero line means the model is biased on '
-            'these rows.' + unit_note)
-    return figure('residuals', 'How far from the observed value are the predictions of each '
-                  f'model on the {_scored()}?', svg,
-                  legend(('box', 'Linear model'), ('box b', 'Mean baseline')), note)
+    unit_note = f' {e(_words("unit"))} <span data-literal="case">{e(unit)}</span>.' if unit else ''
+    note = e(_words('residual_boxes_note')) + unit_note
+    return figure('residuals', _words('residual_boxes_question'), svg, _model_legend(models),
+                  note)
+
+
+def period_label(value) -> str:
+    """A period group of ``residuals_by`` ("70 to 72 year (19xx)") in the edition's language:
+    the engine's "to" in words, the case's unit as recorded."""
+    from . import texts
+    text = str(value)
+    if texts.report_language() == 'fr':
+        low, sep, rest = text.partition(' to ')
+        if sep:
+            return f'{low} à {rest}'
+    return text
 
 
 def residuals_by(citer: cite.Citer, rid: str, values: Mapping) -> str:
+    """v4 (R25, figure 7.3): the mean residual by period, one bar per model in each period
+    (paired bars), the zero line drawn; the candidate's value cited."""
     blocks = values.get('residuals_by') or []
     if not blocks or not isinstance(blocks[0], Mapping):
         return ''
     block = blocks[0]
     groups = [(j, g) for j, g in enumerate(block.get('groups') or [])
-              if isinstance(g, Mapping)
-              and _num(((g.get('models') or {}).get('fit.linear') or {}).get('mean_residual'))]
-    if not groups:
+              if isinstance(g, Mapping) and isinstance(g.get('models'), Mapping)]
+    models = _ordered({m for _, g in groups for m, v in g['models'].items()
+                       if isinstance(v, Mapping) and _num(v.get('mean_residual'))})
+    candidate = values.get('candidate') or ('fit.linear' if 'fit.linear' in models
+                                            else (models[0] if models else None))
+    groups = [(j, g) for j, g in groups if _num((g['models'].get(candidate) or {}).get(
+        'mean_residual'))]
+    if not groups or not models:
         return ''
-    vals = [0.0] + [g['models'][m]['mean_residual'] for _, g in groups
-                    for m in ('fit.linear', 'fit.baseline')
+    vals = [0.0] + [g['models'][m]['mean_residual'] for _, g in groups for m in models
                     if _num((g['models'].get(m) or {}).get('mean_residual'))]
     lo, hi = min(vals), max(vals)
     pad = (hi - lo) * 0.08 or 1
     scale = Scale(lo - pad, hi + pad, x1=WIDTH - RIGHT - 10)
+    bar = 7
     body, y = [], TOP
     for j, g in groups:
-        cy = y + 11
-        body.append(lit('category', g.get('value', ''), LEFT - 60, cy + 4, 'end'))
+        height = bar * len(models) + 8
+        cy = y + height / 2
+        body.append(lit('category', short(period_label(g.get('value', '')), 18), LEFT - 60,
+                        cy + 4, 'end'))
         body.append(citer.svg_num(rid, f'residuals_by.0.groups.{j}.n_rows', 'int', x=LEFT - 8,
                                   y=cy + 4, anchor='end', cls='axis', prefix='n '))
-        for m, cls, dy in (('fit.linear', 'm', -4), ('fit.baseline', 'b', 6)):
+        for k, m in enumerate(models):
             v = (g['models'].get(m) or {}).get('mean_residual')
             if not _num(v):
                 continue
             x0, x1 = sorted((scale(0), scale(v)))
-            body.append(f'<rect class="{cls}" x="{x0:.1f}" y="{cy + dy - 4}" '
-                        f'width="{max(1.0, x1 - x0):.1f}" height="8" rx="3">'
-                        f'<title>{MODEL_NAMES[m]}</title></rect>')
-        body.append(citer.svg_num(rid, f'residuals_by.0.groups.{j}.models.[fit.linear].'
-                                       f'mean_residual', 'f2', x=WIDTH - RIGHT + 2, y=cy + 4))
-        y += ROW
+            body.append(f'<rect class="bar s-{_series(m)}" x="{x0:.1f}" y="{y + 4 + k * bar:.1f}" '
+                        f'width="{max(1.0, x1 - x0):.1f}" height="{bar - 1}" rx="2">'
+                        f'<title>{e(_name(m))}</title></rect>')
+        body.append(citer.svg_num(rid, f'residuals_by.0.groups.{j}.models.'
+                                       f'{cite.format_path([candidate])}.mean_residual', 'f2',
+                                  x=WIDTH - RIGHT + 2, y=cy + 4))
+        y += height + 6
     x0 = scale(0)
     body.append(f'<line class="zero" x1="{x0:.1f}" y1="{TOP - 6}" x2="{x0:.1f}" y2="{y}"/>')
     body.insert(0, scale.axis(TOP - 6, y + 2))
     column = str(block.get('column', ''))
     svg = _svg(y + AXIS, ''.join(body), f'Mean residual by {column}')
-    note = (f'Mean residual (observed minus predicted) of the {_scored()} of each group; the '
-            'value shown is the linear model\'s. Groups with few rows are noisy.')
-    return figure(f'residuals_by:{column}', f'Does the error drift across the values of '
-                  f'{column}?', svg, legend(('m', 'Linear model'), ('b', 'Mean baseline')),
-                  note)
+    note = e(_words('residual_period_note'))
+    return figure(f'residuals_by:{column}',
+                  _words('residual_period_question').replace('{column}', column), svg,
+                  _model_legend(models), note)
+
+
+def errors_bar(citer: cite.Citer, rid: str, values: Mapping, *, metric: str = 'mae',
+               bar: float | None = None, bar_label: str = '', lower_better: bool = True,
+               fmt: str = 'f2') -> str:
+    """v4 (R25, figure V): each model's figure with its bootstrap interval on one axis, and
+    the criterion's bar: a line drawn at ``bar`` (a position for the drawing, computed from
+    recorded values, never shown as a number), the zone that meets it shaded."""
+    models = values.get('models') if isinstance(values.get('models'), Mapping) else {}
+    intervals = values.get('intervals') if isinstance(values.get('intervals'), Mapping) else {}
+    rows = [m for m in _ordered(models)
+            if isinstance(models.get(m), Mapping) and _num(models[m].get(metric))]
+    if not rows:
+        return ''
+    edges = [models[m][metric] for m in rows] + ([bar] if _num(bar) else [])
+    for m in rows:
+        iv = (intervals.get(m) or {}).get(metric) or {}
+        edges += [v for v in (iv.get('low'), iv.get('high')) if _num(v)]
+    lo, hi = min(edges), max(edges)
+    pad = (hi - lo) * 0.1 or 0.5
+    lo = max(0.0, lo - pad) if lo >= 0 else lo - pad
+    scale = Scale(lo, hi + pad, x1=WIDTH - RIGHT - 10)
+    body, y = [], TOP + 6
+    if _num(bar):
+        xb = scale(bar)
+        x_lo, x_hi = (scale(lo), xb) if lower_better else (xb, scale(hi + pad))
+        body.append(f'<rect class="zone" x="{x_lo:.1f}" y="{TOP - 6}" '
+                    f'width="{max(0.0, x_hi - x_lo):.1f}" height="{len(rows) * 30 + 12}"/>')
+    for m in rows:
+        cy = y + 10
+        body.append(lit('identifier', short(_name(m), 24), LEFT - 8, cy + 4, 'end'))
+        iv = (intervals.get(m) or {}).get(metric) or {}
+        if _num(iv.get('low')) and _num(iv.get('high')):
+            body.append(f'<line class="ci s-{_series(m)}" x1="{scale(iv["low"]):.1f}" y1="{cy}" '
+                        f'x2="{scale(iv["high"]):.1f}" y2="{cy}"/>')
+        body.append(f'<circle class="dot s-{_series(m)}" cx="{scale(models[m][metric]):.1f}" '
+                    f'cy="{cy}" r="5.5"><title>{e(_name(m))}</title></circle>')
+        body.append(citer.svg_num(rid, cite.format_path(['models', m, metric]), fmt,
+                                  x=WIDTH - RIGHT + 2, y=cy + 4))
+        y += 30
+    if _num(bar):
+        xb = scale(bar)
+        body.append(f'<line class="thr" x1="{xb:.1f}" y1="{TOP - 10}" x2="{xb:.1f}" '
+                    f'y2="{y}"/>')
+        body.append(f'<text x="{xb + 4:.1f}" y="{TOP - 12}" class="thr-t">{e(bar_label)}</text>')
+    body.insert(0, scale.axis(TOP - 6, y, percent=fmt.startswith('pct')))
+    svg = _svg(y + AXIS, ''.join(body), _words('errors_label'))
+    items = [('dot', _words('errors_dot')), ('ci', _words('errors_ci'))]
+    if _num(bar):
+        items.append(('thr', _words('errors_bar')))
+    lg = '<p class="keys">' + ''.join(f'<span><i class="sw {c}"></i>{e(t)}</span>'
+                                       for c, t in items) + '</p>'
+    return figure('errors_bar', _words('errors_question'), svg, lg + _model_legend(rows))
+
+
+def paired_differences(citer: cite.Citer, rid: str, values: Mapping, metric: str = 'mae',
+                       fmt: str = 'f2', reference_words: str = '',
+                       candidate_words: str = '') -> str:
+    """v4 (R25, figure 7.1): the paired differences recorded by the evaluation: each model
+    minus the reference (``deltas``) and each variant minus the candidate (``comparisons``),
+    with their bootstrap intervals and the zero line."""
+    rows = []
+    for key, group, against in (('deltas', values.get('deltas'), reference_words),
+                                ('comparisons', values.get('comparisons'), candidate_words)):
+        if not isinstance(group, Mapping):
+            continue
+        for m in _ordered(group):
+            d = (group.get(m) or {}).get(metric) if isinstance(group.get(m), Mapping) else None
+            if isinstance(d, Mapping) and all(_num(d.get(k)) for k in ('point', 'low', 'high')):
+                rows.append((key, m, d, against))
+    if not rows:
+        return ''
+    edges = [0.0] + [d[k] for _, _, d, _ in rows for k in ('point', 'low', 'high')]
+    k = 100 if fmt.startswith('pts') else 1
+    lo, hi = min(edges) * k, max(edges) * k
+    pad = (hi - lo) * 0.1 or 0.5
+    scale = Scale(lo - pad, hi + pad, x1=WIDTH - RIGHT - 10)
+    body, y = [], TOP + 4
+    for key, m, d, against in rows:
+        cy = y + 10
+        label = f'{_short_name(m)} − {against}' if against else short(_name(m), 24)
+        body.append(lit('identifier', label, LEFT - 8, cy + 4, 'end'))
+        excl = d['low'] > 0 or d['high'] < 0
+        body.append(f'<line class="ci s-{_series(m)}" x1="{scale(d["low"] * k):.1f}" y1="{cy}" '
+                    f'x2="{scale(d["high"] * k):.1f}" y2="{cy}"/>')
+        body.append(f'<circle class="dot s-{_series(m)}{"" if excl else " open"}" '
+                    f'cx="{scale(d["point"] * k):.1f}" cy="{cy}" r="5.5">'
+                    f'<title>{e(_name(m))}</title></circle>')
+        body.append(citer.svg_num(rid, cite.format_path([key, m, metric, 'point']), fmt,
+                                  x=WIDTH - RIGHT + 2, y=cy + 4))
+        y += 30
+    x0 = scale(0)
+    body.append(f'<line class="zero" x1="{x0:.1f}" y1="{TOP - 6}" x2="{x0:.1f}" y2="{y}"/>')
+    body.insert(0, scale.axis(TOP - 6, y))
+    svg = _svg(y + AXIS, ''.join(body), _words('paired_label'))
+    lg = ('<p class="keys">'
+          f'<span><i class="sw dot"></i>{e(_words("paired_excludes"))}</span>'
+          f'<span><i class="sw dot open"></i>{e(_words("paired_includes"))}</span></p>')
+    return figure('paired_differences', _words('paired_question'), svg, lg,
+                  e(_words('paired_note')))
+
+
+def parts_bar(total: int, development: int, sealed: int, language: str,
+              opened: bool = False) -> str:
+    """v4 (R25, figure 1.1): the rows of the file in two parts, development and sealed,
+    drawn to scale; the counts are recorded literals of the study state."""
+    if not (total and total > 0):
+        return ''
+    x1 = WIDTH - 20
+    span = x1 - 20
+    w_dev = span * development / total
+    fmt = lambda n: cite.format_value(n, 'int', language)  # noqa: E731
+    final_words = _words('parts_opened' if opened else 'parts_sealed')
+    body = [f'<rect class="part dev" x="20" y="{TOP}" width="{w_dev:.1f}" height="34" rx="3">'
+            f'<title>{e(_words("parts_dev"))}</title></rect>']
+    if sealed:
+        body.append(f'<rect class="part sealed" x="{20 + w_dev:.1f}" y="{TOP}" '
+                    f'width="{span - w_dev:.1f}" height="34" rx="3">'
+                    f'<title>{e(final_words)}</title></rect>')
+    body.append(f'<text x="26" y="{TOP + 22}" class="inbar" data-literal="structure">'
+                f'{e(fmt(development))}</text>')
+    if sealed:
+        body.append(f'<text x="{x1 - 6:.1f}" y="{TOP + 22}" text-anchor="end" class="inbar s" '
+                    f'data-literal="structure">{e(fmt(sealed))}</text>')
+    body.append(f'<text x="20" y="{TOP + 52}" class="note">{e(_words("parts_dev"))}</text>')
+    if sealed:
+        body.append(f'<text x="{x1:.1f}" y="{TOP + 52}" text-anchor="end" class="note">'
+                    f'{e(final_words)}</text>')
+    svg = _svg(TOP + 64, ''.join(body), _words('parts_label'))
+    return figure('parts', _words('parts_question'), svg)
+
+
+def fold_blocks(citer: cite.Citer, rid: str, values: Mapping) -> str:
+    """v4 (R25, figure 3.1): the folds of the split as blocks, each with its rows (cited) and,
+    under a time order, the range of the time column (cited)."""
+    folds = [(i, f) for i, f in enumerate(values.get('fold_rows') or [])
+             if isinstance(f, Mapping) and _num(f.get('n_rows'))]
+    if not folds:
+        return ''
+    ranges = {r.get('fold'): (i, r) for i, r in enumerate(values.get('fold_ranges') or [])
+              if isinstance(r, Mapping)}
+    total = sum(f['n_rows'] for _, f in folds) or 1
+    span = WIDTH - 40
+    body, x = [], 20.0
+    for i, f in folds:
+        w = span * f['n_rows'] / total
+        body.append(f'<rect class="fold" x="{x + 1:.1f}" y="{TOP}" width="{max(1.0, w - 2):.1f}" '
+                    f'height="40" rx="3"><title>{e(_words("fold"))}</title></rect>')
+        body.append(f'<text x="{x + w / 2:.1f}" y="{TOP - 8}" text-anchor="middle" '
+                    f'class="axis" data-literal="ordinal">{e(str(f.get("fold")))}</text>')
+        body.append(citer.svg_num(rid, f'fold_rows.{i}.n_rows', 'int', x=x + w / 2, y=TOP + 25,
+                                  anchor='middle', prefix='n '))
+        found = ranges.get(f.get('fold'))
+        if found and _num(found[1].get('min')) and _num(found[1].get('max')):
+            j = found[0]
+            body.append(citer.svg_num(rid, f'fold_ranges.{j}.min', 'auto', x=x + w / 2 - 4,
+                                      y=TOP + 58, anchor='end', cls='axis'))
+            body.append(f'<text x="{x + w / 2:.1f}" y="{TOP + 58}" text-anchor="middle" '
+                        f'class="axis">–</text>')
+            body.append(citer.svg_num(rid, f'fold_ranges.{j}.max', 'auto', x=x + w / 2 + 4,
+                                      y=TOP + 58, anchor='start', cls='axis'))
+        x += w
+    order = values.get('order_column')
+    svg = _svg(TOP + 70, ''.join(body), _words('folds_label'))
+    note = e(_words('folds_note'))
+    if order:
+        note += f' {e(_words("folds_order"))} <code data-literal="identifier">{e(order)}</code>.'
+    return figure('fold_blocks', _words('folds_question'), svg, '', note)
+
+
+def looks_chart(by_activity: Mapping, labels: Mapping, language: str) -> str:
+    """v4 (R25, figure 4.2): the looks at the target by activity (counts recorded in the
+    study state, ``view.eda_looks``)."""
+    items = [(a, n) for a, n in sorted(by_activity.items()) if _num(n) and n > 0]
+    if not items:
+        return ''
+    scale = Scale(0, _nice_max(max(n for _, n in items)), x1=WIDTH - RIGHT - 20)
+    body, y = [], TOP
+    for a, n in items:
+        cy = y + 13
+        body.append(lit('category', short(labels.get(a, a), 26), LEFT - 8, cy + 4, 'end'))
+        w = max(1.0, scale(n) - scale(0))
+        body.append(f'<rect class="m" x="{LEFT}" y="{y + 3}" width="{w:.1f}" height="18" rx="3">'
+                    f'<title>{e(str(labels.get(a, a)))}</title></rect>')
+        body.append(f'<text x="{LEFT + w + 6:.1f}" y="{cy + 4:.1f}" class="val" '
+                    f'data-literal="structure">{e(cite.format_value(n, "int", language))}</text>')
+        y += ROW
+    svg = _svg(y + 10, ''.join(body), _words('looks_label'))
+    return figure('looks', _words('looks_question'), svg)
 
 
 # --- v0.3 (WP-J, R17, R28): a column's distribution and the predictor correlations ---------
@@ -687,8 +1021,9 @@ def correlation(citer: cite.Citer, rid: str, values: Mapping) -> str:
     flagged = [(i, p) for i, p in pairs if p.get('flag') and _num(p.get('value'))]
     flagged.sort(key=lambda ip: -abs(ip[1]['value']))
     level = citer.num(rid, 'level', 'f2') if citer.has(rid, 'level') else ''
-    note = ('Columns are in the same order as the rows, grouped so that associated '
-            'predictors sit together; a darker cell is a stronger association. ')
+    # one sentence per text node, so the French edition translates each (``l10n_report``)
+    note = ('<span>Columns are in the same order as the rows, grouped so that associated '
+            'predictors sit together; a darker cell is a stronger association.</span> ')
     if flagged:
         items = '; '.join(f'<code data-literal="identifier">{e(str(p.get("a")))}</code> and '
                           f'<code data-literal="identifier">{e(str(p.get("b")))}</code> '
@@ -697,7 +1032,102 @@ def correlation(citer: cite.Citer, rid: str, values: Mapping) -> str:
         note += f'Pairs at or above {level} in size: {items}. '
     else:
         note += f'No pair reaches {level} in size. '
-    note += ('The target is not read: this is not a look at the outcome. A flagged pair only '
-             'asks whether both predictors are needed.')
+    note += ('<span>The target is not read: this is not a look at the outcome. A flagged pair '
+             'only asks whether both predictors are needed.</span>')
     return figure('correlation', values.get('question') or
                   'Which predictors carry nearly the same information?', svg, lg, note)
+
+
+# --- L6 (R8): two charts of the narrative report, drawn from recorded values only ----------
+
+def fold_scores(citer: cite.Citer, rid: str, selection: Mapping, names: list[str],
+                words: Mapping) -> str:
+    """v4 (R25, figure 6.8): each configuration's out-of-fold score fold by fold, one line
+    per configuration across the folds (``model_selection.configurations.<i>.per_fold``),
+    the mean of the folds cited at the right. ``names`` are the configurations' names in the
+    edition's language; ``words`` the labels of ``narrative.charts`` (whose regression
+    overlay says that a lower error is better). Empty when fewer than two configurations
+    have their folds."""
+    configs = [(i, c) for i, c in enumerate(selection.get('configurations') or [])
+               if isinstance(c, Mapping) and isinstance(c.get('per_fold'), list)
+               and c['per_fold'] and all(_num(v) for v in c['per_fold']) and _num(c.get('mean'))]
+    if len(configs) < 2:
+        return ''
+    fmt = 'f3' if selection.get('metric') == 'roc_auc' else 'f2'
+    every = [v for _, c in configs for v in c['per_fold']]
+    pad = (max(every) - min(every)) * 0.1 or 0.01
+    lo, hi = min(every) - pad, max(every) + pad
+    k = max(len(c['per_fold']) for _, c in configs)
+    x0, x1, top, bottom = LEFT, WIDTH - RIGHT - 20, TOP, TOP + 190
+    px = (lambda j: x0 + (x1 - x0) * (j / (k - 1) if k > 1 else 0.5))
+    py = (lambda v: bottom - (v - lo) / ((hi - lo) or 1) * (bottom - top))
+    body = []
+    for t in _ticks(lo, hi):
+        y = py(t)
+        body.append(f'<line class="grid" x1="{x0}" y1="{y:.1f}" x2="{x1}" y2="{y:.1f}"/>')
+        body.append(lit('axis', _tick_text(t, False), x0 - 6, y + 4, 'end', 'axis'))
+    for j in range(k):
+        body.append(f'<text x="{px(j):.1f}" y="{bottom + 18}" text-anchor="middle" class="axis" '
+                    f'data-literal="ordinal">{j + 1}</text>')
+    for row, (i, c) in enumerate(configs):
+        slot = str(c.get('slot'))
+        pts = ' '.join(f'{px(j):.1f},{py(v):.1f}' for j, v in enumerate(c['per_fold']))
+        body.append(f'<polyline class="ln s-{_series(slot)}" points="{pts}">'
+                    f'<title>{e(names[row] if row < len(names) else slot)}</title></polyline>')
+        for j, v in enumerate(c['per_fold']):
+            body.append(f'<circle class="dot s-{_series(slot)}" cx="{px(j):.1f}" cy="{py(v):.1f}" '
+                        f'r="3.5"/>')
+        # the mean of the folds, one line each at the right (never overlapping)
+        body.append(f'<circle class="dot s-{_series(slot)}" cx="{WIDTH - RIGHT + 2:.1f}" '
+                    f'cy="{top + 4 + row * 18:.1f}" r="4"/>')
+        body.append(citer.svg_num(rid, f'model_selection.configurations.{i}.mean', fmt,
+                                  x=WIDTH - RIGHT + 10, y=top + 8 + row * 18))
+    svg = _svg(bottom + 40, ''.join(body), words['folds_label'])
+    lg = '<p class="keys">' + ''.join(
+        f'<span><i class="sw {_series(str(c.get("slot")))}"></i>'
+        f'{e(names[row] if row < len(names) else str(c.get("slot")))}</span>'
+        for row, (_, c) in enumerate(configs)) + '</p>'
+    return figure('fold_scores', words['folds_question'], svg, lg, e(words['folds_note']))
+
+
+def nonlinearity(citer: cite.Citer, rid: str, index: int, check: Mapping, words: Mapping,
+                 *, binary: bool) -> str:
+    """The gap between the observed outcome and the mean prediction in each range of one
+    feature (``linear_checks.nonlinearity.<index>.bins``), with plus or minus two standard
+    errors drawn: the shape a linear model does not follow. Binary gaps are shown in
+    percentage points (``pts1``), regression gaps in the target's unit."""
+    bins = [(j, b) for j, b in enumerate(check.get('bins') or [])
+            if isinstance(b, Mapping) and _num(b.get('gap')) and _num(b.get('se'))]
+    if len(bins) < 2:
+        return ''
+    k = 100 if binary else 1          # the binary gap is drawn in percentage points
+    reach = max(abs(b['gap']) + 2 * b['se'] for _, b in bins) * k * 1.1 or 0.01
+    scale = Scale(-reach, reach, x1=WIDTH - RIGHT - 10)
+    fmt = 'pts1' if binary else 'f2'
+    feature = str(check.get('feature', ''))
+    body, y = [], TOP
+    x0 = scale(0)
+    for j, b in bins:
+        cy = y + 11
+        low, high = b.get('low'), b.get('high')
+        label = (words['range'].format(low=_tick_text(low, False), high=_tick_text(high, False))
+                 if _num(low) and _num(high) else str(b.get('bin', '')))
+        body.append(lit('category', short(label), LEFT - 8, cy + 4, 'end'))
+        gap, se = b['gap'] * k, b['se'] * k
+        xa, xb = sorted((x0, scale(gap)))
+        body.append(f'<rect class="m" x="{xa:.1f}" y="{cy - 7}" width="{max(1.0, xb - xa):.1f}" '
+                    f'height="14" rx="3"/>')
+        body.append(f'<line class="ci" x1="{scale(gap - 2 * se):.1f}" y1="{cy}" '
+                    f'x2="{scale(gap + 2 * se):.1f}" y2="{cy}"/>')
+        base = f'linear_checks.nonlinearity.{index}.bins.{j}.gap'
+        body.append(citer.svg_num(rid, base, fmt, x=WIDTH - RIGHT + 4, y=cy + 4))
+        y += ROW
+    body.append(f'<line class="zero" x1="{x0:.1f}" y1="{TOP - 8}" x2="{x0:.1f}" y2="{y}"/>')
+    body.insert(0, scale.axis(TOP - 8, y + 2))
+    svg = _svg(y + AXIS, ''.join(body), words['nonlinearity_label'].format(feature=feature))
+    bar = f'{words["nonlinearity_bar"]} ({words["points"]})' if binary \
+        else words['nonlinearity_bar']
+    lg = legend(('m', bar), ('ci', words['nonlinearity_ci']))
+    return figure(f'nonlinearity:{feature}',
+                  words['nonlinearity_question'].format(feature=feature), svg, lg,
+                  e(words['nonlinearity_note']))

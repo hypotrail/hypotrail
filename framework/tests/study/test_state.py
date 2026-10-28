@@ -101,7 +101,12 @@ def test_auto_mpg_initial_state_is_a_regression_study():
     # the models (st.REGRESSION_DECISION_IDS stays the set of a study created before);
     # WP-B1: it names a variant before the choice and may open the final test after it
     # (st.FULL_REGRESSION_DECISION_IDS stays the set of a study created before WP-B1).
-    assert tuple(auto['decisions']) == st.B1_REGRESSION_DECISION_IDS == (
+    # Lot 2026-10-28 (CLI-CONTRACT §18.1): it also fixes the error measure before the
+    # criterion (st.B1_REGRESSION_DECISION_IDS stays the set of a study created before).
+    assert tuple(auto['decisions']) == st.M1_REGRESSION_DECISION_IDS == (
+        'prediction_time', 'feature_availability', 'split', 'error_metric', 'success_criterion',
+        'preprocessing', 'model_variant', 'model_choice', 'final_test', 'conclusion')
+    assert st.B1_REGRESSION_DECISION_IDS == (
         'prediction_time', 'feature_availability', 'split', 'success_criterion',
         'preprocessing', 'model_variant', 'model_choice', 'final_test', 'conclusion')
     assert st.FULL_REGRESSION_DECISION_IDS == (
@@ -110,12 +115,17 @@ def test_auto_mpg_initial_state_is_a_regression_study():
     assert st.REGRESSION_DECISION_IDS == (
         'prediction_time', 'feature_availability', 'split', 'model_choice', 'conclusion')
     assert auto['decisions']['conclusion']['depends_on'] == [
-        'prediction_time', 'feature_availability', 'split', 'success_criterion',
+        'error_metric', 'prediction_time', 'feature_availability', 'split', 'success_criterion',
         'preprocessing', 'model_variant', 'model_choice', 'final_test']
+    assert auto['decisions']['success_criterion']['depends_on'] == ['error_metric']
     assert _a4(auto)['decisions']['conclusion']['depends_on'] == [
         'prediction_time', 'feature_availability', 'split', 'success_criterion',
         'preprocessing', 'model_choice']
-    assert [s['id'] for s in st.derive_plan(auto)] == list(st.B1_REGRESSION_STEP_IDS) == [
+    assert [s['id'] for s in st.derive_plan(auto)] == [
+        'discover_data', 'prediction_time', 'feature_availability', 'split', 'error_metric',
+        'success_criterion', 'train_eda', 'preprocessing', 'models', 'model_variant',
+        'model_choice', 'final_test', 'conclusion']
+    assert list(st.B1_REGRESSION_STEP_IDS) == [
         'discover_data', 'prediction_time', 'feature_availability', 'split', 'success_criterion',
         'train_eda', 'preprocessing', 'models', 'model_variant', 'model_choice', 'final_test',
         'conclusion']
@@ -276,8 +286,14 @@ def test_plan_and_next_action_follow_the_three_pauses(state):
     state['stale']['r_policy'] = {'reason': 'split changed', 'since': 9}
     assert _kinds(state)[8] == 'ready' and st.next_action(state)['activity'] == 'policy.evaluation'
     state['decisions']['policy'].update(status='reconfirm_required', reason='split changed')
+    # Review round 4 (E4-3): its confirmation needs a current evaluation, so that runs first
+    # (confirming it now would be refused), then the policy is asked again.
+    assert st.next_action(state) == {**st.next_action(state), 'kind': 'run',
+                                     'activity': 'policy.evaluation', 'reconfirm': 'policy'}
+    del state['stale']['r_policy']
     assert st.next_action(state) == {**st.next_action(state), 'kind': 'reconfirm',
-                                     'decision': 'policy'}
+                                     'decision': 'policy', 'default_value': 'capacity:100'}
+    state['stale']['r_policy'] = {'reason': 'split changed', 'since': 9}
     state['executions']['interrupted']['e1'] = {'status': 'interrupted_unknown'}
     assert st.next_action(state) == {**st.next_action(state), 'kind': 'acknowledge_interruption',
                                      'execution_id': 'e1'}
@@ -378,6 +394,96 @@ def test_not_yet_defensible_reflects_state(state):
     assert items['uncertain_features_included']['features'] == ['reminders_sent']
     assert items['stale_results']['results'] == ['r1']
     assert 'feature_availability' not in items['unconfirmed_decisions']['decisions']
+
+
+def _structure(state, time=None, group=None, order=None):
+    """The state with a time column, a group column and a sealed final test that follows
+    ``order`` (a temporal partition) or not (a stratified one)."""
+    out = copy.deepcopy(state)
+    out['structure']['time_column']['value'] = time
+    out['structure']['group_column']['value'] = group
+    out['partition'] = ({'method': 'temporal', 'order': {'by': order, 'direction': 'ascending'}}
+                        if order else {'method': 'stratified', 'order': None})
+    return out
+
+
+def _structure_item(state):
+    return next((x for x in st.not_yet_defensible(state)
+                 if x['id'] == 'no_time_or_entity_identifier'), None)
+
+
+@pytest.mark.parametrize('time, group, order, missing', [
+    (None, None, None, ['time_column', 'group_column']),     # nothing declared
+    (None, None, 'line', ['group_column']),                  # Hotel: an order, no entity
+    (None, None, 'arrival', ['group_column']),               # an order column
+    ('model_year', None, None, ['group_column']),            # a time column, no entity
+    (None, 'car_name', None, ['time_column']),               # an entity, no time
+    (None, 'car_name', 'line', None),                        # an order and an entity
+    ('model_year', 'car_name', None, None),                  # both declared
+])
+def test_the_structure_limit_names_only_what_is_missing(state, time, group, order, missing):
+    """L7 (R17, J-LIMIT): a declared order (a temporal final test) is a time order; the
+    limit names only what is missing, in English and in French, and says what a temporal
+    final test can show."""
+    from mlkit.study import junior
+    item = _structure_item(_structure(state, time, group, order))
+    if missing is None:
+        assert item is None
+        return
+    assert item['missing'] == missing
+    english, french = item['text'], junior.limit_fr(item)
+    # The report quotes them: no causal or forecast wording for `check` to flag.
+    from mlkit.study import cmd_check
+    assert cmd_check.wording(english, 'limit') == [] and cmd_check.wording(french, 'limit') == []
+    if 'time_column' in missing:
+        assert 'time column' in english and 'drift over time' in english
+        assert 'colonne de temps' in french and 'dérive' in french
+    else:
+        assert 'time column' not in english and 'drift' not in english
+        assert 'colonne de temps' not in french and 'dérive' not in french
+    if 'group_column' in missing:
+        assert 'entity identifier' in english and "identifiant d'entité" in french
+    else:
+        assert 'entity' not in english and 'entité' not in french
+    if order:
+        assert item['ordered_by'] == order
+        words = ("the order of the file's lines" if order == 'line' else f'the column {order}')
+        assert (f'The rows follow a declared order ({words})' in english
+                and 'a shift between the development period and the final period, not its '
+                    'cause.' in english)
+        assert 'Les lignes suivent un ordre déclaré' in french and "sans en expliquer l'origine" in french
+    else:
+        assert 'ordered_by' not in item and 'declared order (' not in english
+        assert 'ordre déclaré (' not in french
+
+
+def test_the_hotel_like_structure_limit_has_no_time_part(state):
+    """R17 as the owner saw it: no time column, ``order: {by: line}``, a temporal final
+    test; the closing limits never say "ni colonne de temps"."""
+    from mlkit.study import junior
+    item = _structure_item(_structure(state, order='line'))
+    assert item['missing'] == ['group_column']
+    assert item['text'].startswith('The data have no entity identifier, so the study cannot '
+                                   'check whether the same entity appears in several '
+                                   'partitions.')
+    assert junior.limit_fr(item).startswith(
+        "Les données n'ont pas d'identifiant d'entité : l'étude ne peut pas vérifier qu'une "
+        'même entité apparaît dans plusieurs échantillons.')
+    assert 'ni colonne de temps' not in junior.limit_fr(item)
+    # The cross-validation follows the same rule (folds follow time).
+    assert st.cv_method(_structure(state, order='line')) == 'temporal_folds'
+
+
+def test_a_legacy_study_without_partition_keeps_both_missing(state):
+    legacy = copy.deepcopy(state)
+    legacy.pop('partition', None)
+    legacy['structure']['time_column']['value'] = None
+    legacy['structure']['group_column']['value'] = None
+    item = _structure_item(legacy)
+    assert item['missing'] == ['time_column', 'group_column'] and 'ordered_by' not in item
+    assert item['text'] == ('The data have no time column or entity identifier, so the study '
+                            'cannot check drift over time or repeated entities across '
+                            'partitions.')
 
 
 def test_derived_views_do_not_mutate_state(state):

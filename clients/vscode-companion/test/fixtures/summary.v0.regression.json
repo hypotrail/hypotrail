@@ -86,6 +86,8 @@
    "recommended": null,
    "question": "Do you adopt this decision?",
    "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Choice (11 of 13).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "decision",
@@ -102,6 +104,7 @@
     "proposal_text": "Adopt the linear model.",
     "recommended_option": "adopt",
     "options": ["adopt", "change", "explain"],
+    "option_labels": {"adopt": "I adopt this decision", "change": "Change something", "explain": "Explain first"},
     "question": "Do you adopt this decision?",
     "evidence_refs": [],
     "detail_topics": ["metric", "uncertainty"]
@@ -427,11 +430,11 @@
      "path": "notebooks/study_editable.py",
      "argv": [
       "uv",
-      "edit",
+      "run",
       "--project",
       "/hypotrail/framework",
       "marimo",
-      "run",
+      "edit",
       "/studies/auto mpg/notebooks/study_editable.py"
      ]
     },

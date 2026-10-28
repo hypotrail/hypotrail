@@ -1,0 +1,119 @@
+/* The lesson pattern of the panel (2026-10-27, owner-approved mockup docs/plans/mockups/
+   panel-lesson-style-fr.html; notes R29, R30): the journey rail and what remains, the sticky
+   position line under the tabs, "At this step" at the top of each tab, the notions (the term
+   first, then "In this study", folds, "What we keep"), the guided reading of every chart
+   ("Why this chart", "How to read it", "What we conclude", "Watch out"), "Learn more" folds
+   and the "Next" line at the end of each tab. Tokens of tokens.css only; no inline style. */
+
+/* --- the journey rail (on the board, above the tabs) -------------------------------------- */
+
+@keyframes ht-pulse { 50% { box-shadow: 0 0 0 7px transparent; } }
+
+/* --- the sticky position line under the tabs ---------------------------------------------- */
+
+/* --- "At this step" and the lead on the board --------------------------------------------- */
+.ht-intro { margin: var(--s2) 0 var(--s3); border-left: 2px solid var(--teal); padding: 3px 0 3px var(--s3); font-family: var(--serif);
+  font-size: var(--t-title); line-height: 1.5; color: var(--chalk); text-shadow: 0 0 1px var(--dust); max-width: 80ch; }
+.ht-ie { display: block; font-family: var(--ht-font); font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--teal); text-shadow: none; margin-bottom: 1px; }
+
+/* --- notions: the term first, then "In this study", folds, "What we keep" --------------------- */
+.ht-notions { margin: var(--s3) 0; padding: 0; list-style: none; counter-reset: ht-notion; }
+.ht-notion { border-top: 1.5px dashed var(--line); padding: var(--s3) 0 var(--s3); margin: 0; }
+.ht-notion > h4 { position: relative; padding-left: 36px; font-family: var(--serif); font-weight: 400; font-size: var(--t-title);
+  line-height: 1.35; color: var(--chalk); text-shadow: 0 0 1px var(--dust); min-height: 26px; margin: 0; }
+.ht-notion > h4::before { counter-increment: ht-notion; content: counter(ht-notion); position: absolute; left: 0; top: -1px; width: 26px; height: 26px;
+  border-radius: 50%; border: 1.5px solid var(--yellow); color: var(--yellow); font: 600 var(--t-meta)/1 var(--ht-font); display: grid;
+  place-items: center; text-shadow: none; }
+.ht-notion > h4 .ht-ntag { font: 600 var(--t-cap) var(--ht-font); letter-spacing: 0.07em; text-transform: uppercase; border: 1px solid currentColor;
+  border-radius: var(--r-chip); padding: 0 5px; margin-left: 6px; vertical-align: 2px; text-shadow: none; color: var(--teal); }
+.ht-idee { color: var(--chalk); line-height: 1.55; margin-top: 4px; }
+.ht-idee p { margin: 4px 0; }
+.ht-nlead { color: var(--chalk2); border-left: 2px solid var(--line2); padding-left: 10px; margin: 2px 0 var(--s2); }
+.ht-nlead .ht-k { display: block; }
+.ht-idee strong { color: var(--yellow); font-weight: 600; }
+.ht-terme { border-left: 2px solid var(--ac, var(--yellow)); padding: 1px 0 1px 10px; }
+.ht-terme dfn { font-family: var(--serif); font-style: normal; font-size: var(--t-title); color: var(--chalk); text-shadow: 0 0 1px var(--dust);
+  border-bottom: 2px solid var(--ac, var(--yellow)); }
+.ht-ici { color: var(--chalk2); }
+.ht-ici .ht-k, .ht-k { display: inline; font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint);
+  margin-right: 4px; }
+.ht-garde { margin: 10px 0 0; font-family: var(--serif); font-size: var(--t-title); line-height: 1.45; color: var(--chalk); text-shadow: 0 0 1px var(--dust);
+  border-left: 3px solid var(--yellow); padding: 3px 0 3px var(--s3); }
+.ht-garde .ht-k { display: block; font-family: var(--ht-font); color: var(--faint); text-shadow: none; margin-bottom: 1px; }
+
+/* Folds on paper: Example, Why it holds, Where it breaks, Learn more, How to read it. */
+details.ht-fold { margin: 7px 0 0; background: var(--card); color: var(--cardink); border-radius: var(--r-card); border: 1px solid var(--ht-contrast);
+  border-left: 4px solid var(--fold, var(--yellow)); box-shadow: 0 10px 20px -16px rgba(0, 0, 0, 0.6); }
+details.ht-fold > summary { cursor: pointer; list-style: none; padding: 6px var(--s3); font-size: var(--t-meta); font-weight: 600; color: var(--cardink); }
+details.ht-fold > summary::-webkit-details-marker { display: none; }
+details.ht-fold > summary::before { content: "▸"; display: inline-block; width: 14px; color: var(--cardmuted); }
+details.ht-fold[open] > summary::before { content: "▾"; }
+details.ht-fold > summary small { font-weight: 400; color: var(--cardmuted); margin-left: 4px; font-size: var(--t-meta); }
+details.ht-fold .ht-in { padding: 0 14px 10px; }
+details.ht-fold .ht-in p, details.ht-fold .ht-in li { line-height: 1.5; margin: 4px 0; }
+details.ht-fold .ht-in ul, details.ht-fold .ht-in ol { padding-left: 18px; }
+details.ht-fold .ht-in strong { color: var(--cardink); }
+details.ht-ex { --fold: var(--teal); }
+details.ht-whyfold { --fold: var(--plum); }
+details.ht-casse { --fold: var(--pink); }
+details.ht-more { --fold: var(--ochre); }
+details.ht-lire { --fold: var(--slate); }
+.ht-mk2 { font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ochre-ink); margin-right: 6px; }
+body.vscode-light details.ht-ex, body.vscode-light details.ht-casse { --fold: var(--ochre); }
+
+/* --- the guided reading of a chart --------------------------------------------------------- */
+.ht-pq { background: var(--card); color: var(--cardink); border: 1px solid var(--cardline); border-radius: var(--r-card);
+  padding: 5px 9px 6px; margin: 2px 0 8px; }
+.ht-pq .ht-pk, .ht-concl .ht-pk, .ht-attn .ht-pk { display: block; font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ochre-ink); }
+.ht-pq .ht-qq { font-family: var(--serif); font-size: var(--t-body); line-height: 1.4; color: var(--cardink); margin: 1px 0 3px; }
+.ht-pq .ht-fm { display: flex; flex-wrap: wrap; gap: 1px 12px; font-size: var(--t-cap); line-height: 1.45; color: var(--cardmuted); margin: 0; }
+.ht-pq .ht-fm strong { color: var(--cardink); font-weight: 600; }
+.ht-reading { margin-top: 6px; }
+.ht-concl { margin: 7px 0 0; background: var(--card); color: var(--cardink); border-left: 3px solid var(--slate); border-radius: 0 var(--r-card) var(--r-card) 0;
+  padding: 5px 9px 6px; font-size: var(--t-meta); line-height: 1.5; }
+.ht-concl .ht-pk { color: var(--slate); }
+.ht-attn { margin: 7px 0 0; background: var(--card); color: var(--cardink); border: 1.5px dashed var(--red); border-radius: var(--r-card);
+  padding: 5px 9px 6px; font-size: var(--t-meta); line-height: 1.45; }
+.ht-attn .ht-pk { color: var(--red); }
+
+/* --- "Next": the transition at the end of each tab ----------------------------------------- */
+.ht-trans { margin: var(--s5) 0 0; padding: var(--s2) var(--s3) 10px; border: 1.5px dashed var(--line2); border-radius: var(--r-card);
+  font-size: var(--t-meta); color: var(--ht-muted); }
+.ht-trans .ht-tk { display: block; font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--yellow);
+  margin-bottom: 2px; }
+.ht-trans p { margin: 0; }
+.ht-trans button.ht-link { display: inline-block; margin-top: 5px; font-size: var(--t-meta); }
+
+/* --- a trap on the board, a line that comes back on the board -------------------------------- */
+.ht-trap { border: 1.5px solid var(--onboard-red); border-radius: var(--r-card); padding: 6px 10px; margin: var(--s2) 0; font-size: var(--t-meta);
+  transform: rotate(-0.3deg); color: var(--ht-fg); }
+.card .ht-trap { border-color: var(--red); background: color-mix(in srgb, var(--red) 6%, var(--card)); }
+.ht-trap .ht-tt { display: block; font-size: var(--t-cap); font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--onboard-red); }
+.card .ht-trap .ht-tt { color: var(--red); }
+
+/* High contrast and reduced motion: no pulse, no chalk filter, no tilt. */
+
+body.vscode-high-contrast .ht-trap, body.vscode-high-contrast-light .ht-trap { transform: none; }
+body.vscode-high-contrast details.ht-fold, body.vscode-high-contrast-light details.ht-fold { border: 1px solid var(--vscode-contrastBorder, CanvasText);
+  border-left-width: 4px; box-shadow: none; }
+@media (prefers-reduced-motion: reduce) {
+  .ht-trap { transform: none; }
+}
+@media (forced-colors: active) {
+  .ht-pq, .ht-concl, .ht-attn, details.ht-fold, .ht-trans { border: 1px solid CanvasText; }
+}
+
+/* Wide panels: the notions' body sits under the term, past its number. */
+@media (min-width: 700px) {
+  .ht-notion > .ht-idee, .ht-notion > details.ht-fold, .ht-notion > .ht-garde { margin-left: 36px; }
+}
+
+/* The half disc of development evidence (the charter's mark), drawn in CSS. */
+.ht-hd { display: inline-block; width: 0.78em; height: 0.78em; border-radius: 50%; border: 1.5px solid currentColor;
+  background: linear-gradient(90deg, currentColor 50%, transparent 50%); vertical-align: -0.06em; margin-right: 0.25em; font-style: normal; }
+/* A narrow panel keeps the next move in its first screen: the rail's caption (the position
+   line under the tabs says the same) and its legend (each mark has its words in its hover
+   and for screen readers) are left out below 560 px. */
+

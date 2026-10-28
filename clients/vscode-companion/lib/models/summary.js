@@ -25,7 +25,10 @@ const ARTIFACT_LABELS = { report: 'Report', notebook: 'Generated notebook',
   editable: 'Editable study notebook', workbench: 'Workbench' };
 const PROPOSAL_ID = /^p_[0-9]+$/;
 // The items of `not_yet_defensible.top` that the frame's alert strip shows (§4.1).
-const ALERT_IDS = ['sources_changed', 'interrupted_executions', 'result_integrity'];
+const ALERT_IDS = ['sources_changed', 'interrupted_executions', 'result_integrity',
+  // L9 (owner session 2026-10-26, R20): the banners of an automatic study, read only
+  // (`not_yet_defensible`, CLI-CONTRACT §4): decisions to review, and a demo's opening.
+  'automatic_decisions_to_review', 'final_test_opened_automatically'];
 // The pause of each decision when the summary has no `pauses` (v0 summaries).
 const DECISION_PAUSE = { prediction_time: 1, feature_availability: 1, split: 2, policy: 3, model_choice: 3, conclusion: 3 };
 const SUMMARY_KEYS = ['study', 'revision', 'task', 'recap', 'goal', 'currentStep', 'plan', 'moments', 'pauses',
@@ -39,7 +42,26 @@ const SUMMARY_KEYS = ['study', 'revision', 'task', 'recap', 'goal', 'currentStep
   // WP-B5: the count of model configurations evaluated so far (CLI-CONTRACT §12, a disclosure).
   'trials',
   // v0.3 (WP-E2, R21): the study language (`en`, `fr`), which the panel's `auto` follows.
-  'language'];
+  'language',
+  // L3 (owner session 2026-10-26, R4, D4b): the junior texts of the summary in both languages
+  // (`texts` of `status --summary --digest`), or null: the panel shows the ones of its own
+  // language (media/core.js `localize`).
+  'texts',
+  // Lot 2026-10-28 (one structure for every step, R54-R67): the step cards of
+  // `texts.<lang>.step_cards` per language, the case's display names and its brief, and the
+  // data structure of step 1 (`data_structure`); null when the digest has none (an older engine).
+  'stepCards', 'caseDisplay', 'caseBrief', 'dataStructure'];
+// The tables of `texts.<language>` (CLI-CONTRACT-COMPANION §1, `view.LANGUAGE_TEXT_KEYS`).
+const TEXT_TABLES = ['plan', 'moments', 'choice_options', 'limits', 'artifacts', 'digest', 'goal', 'proposals',
+  // Contract P1 (CLI-CONTRACT §17.2.3): the headlines of the done steps, the data-contingent
+  // proposals' notes; `options` (ordered), `question`, `options_note`, `junior_digest` and
+  // `sample_note` are read apart below.
+  'headlines', 'data_contingent'];
+// Contract P1 (§17.2.2): the severities of the defensibility items, the kinds of the pill.
+const SEVERITIES = ['blocking', 'caveat', 'not_final', 'context'];
+const DEFENSIBILITY_KINDS = ['pending', 'warn', 'limits'];
+const CONFIG_STATUSES = ['met', 'uncertain', 'not_met', 'not_assessed'];
+const RESULT_CHANNELS = ['chat', 'webview', 'cli'];
 // The statuses of the success criterion (CLI-CONTRACT §11.4).
 const CRITERION_STATUSES = ['met', 'uncertain', 'not_met', 'not_assessed'];
 const num = x => (typeof x === 'number' && Number.isFinite(x) ? x : null);
@@ -126,6 +148,232 @@ function finalTestModel(raw) {
   };
 }
 
+/**
+ * R16: `next_action.choice_options` as `[{id, value, label}]` (the value as shown text);
+ * entries without an id or a label are dropped, so a malformed list reads as no choice.
+ * W1 integration: a conclusion option's value is `{"verdict": ...}` (CLI-CONTRACT §3.1), shown
+ * as its verdict, never as raw JSON.
+ */
+function choiceValueText(value) {
+  if (value && typeof value === 'object' && !Array.isArray(value) && typeof value.verdict === 'string') return value.verdict;
+  return showValue(value);
+}
+
+function choiceOptionsOf(raw) {
+  return list(raw).filter(o => o && typeof o === 'object' && typeof o.id === 'string' && o.id
+    && typeof o.label === 'string' && o.label.trim())
+    .map(o => ({ id: o.id, value: choiceValueText(o.value), label: o.label }));
+}
+
+/**
+ * Owner session 2026-10-26 (L7, D15): `next_action.after_study` on `done`, read only: the
+ * engine's junior text (the study language; no command, id or revision) and whether the
+ * Azure ML export plan is available from the chat (`azureml.supported`). The commands it
+ * carries are the agent's and are not kept: the panel offers no new write (W4, W5, W7 only).
+ * Null when absent or without a junior text.
+ */
+function afterStudyOf(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const juniorText = str(raw.junior_text).trim();
+  if (!juniorText) return null;
+  const azure = raw.azureml && typeof raw.azureml === 'object' ? raw.azureml : {};
+  const model = azure.model && typeof azure.model === 'object' ? azure.model : null;
+  // R49 (lot P): what the "And after" block shows next to the plan read: the engine's reason
+  // when the model is not supported, the family named by the support matrix. Never a command.
+  return { juniorText, exportPlanAvailable: azure.supported === true, cloudStatus: strOrNull(raw.cloud_status),
+    azureReason: strOrNull(azure.reason), azureFamily: model ? strOrNull(model.family) : null };
+}
+
+/**
+ * Lot P (R41): the digest's `quality_verdicts` `{result_id, columns: [{column, kept, changed,
+ * parameters, checks: [{rule, value, threshold, exceeds, path, words}], text}]}`, the engine's
+ * verdict per column (its words are in the study language), or null.
+ */
+function qualityVerdictsOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const num = x => (typeof x === 'number' && Number.isFinite(x) ? x : null);
+  return {
+    resultId: strOrNull(raw.result_id),
+    columns: list(raw.columns).filter(c => c && typeof c.column === 'string').map(c => ({
+      column: c.column, kept: c.kept !== false, changed: c.changed === true, parameters: list(c.parameters).map(str).filter(Boolean),
+      text: strOrNull(c.text),
+      checks: list(c.checks).filter(k => k && typeof k.rule === 'string').map(k => ({ rule: k.rule, value: num(k.value),
+        threshold: num(k.threshold), exceeds: k.exceeds === true, path: strOrNull(k.path), words: strOrNull(k.words) })),
+    })),
+  };
+}
+
+/** Lot P (R40): `evidence` as a list of slots (strings, or objects with `slot`). */
+function evidenceOf(raw) {
+  return list(raw).map(x => (typeof x === 'string' ? x : x && typeof x === 'object' ? str(x.slot) : ''))
+    .filter(x => x && x.length <= 200);
+}
+
+/**
+ * L3 (D4b): `texts` as `{en, fr}` tables of strings (a text the engine has not in that
+ * language is null), or null when the summary has none (`status --summary` without
+ * `--digest`, an older engine). Nothing is translated here: the strings are the engine's.
+ */
+function textsOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const out = {};
+  for (const lang of ['en', 'fr']) {
+    const t = obj(raw[lang]);
+    const table = {};
+    for (const name of TEXT_TABLES) {
+      table[name] = {};
+      for (const [id, text] of Object.entries(obj(t[name]))) table[name][id] = typeof text === 'string' && text.trim() ? text : null;
+    }
+    table.next_action = typeof t.next_action === 'string' && t.next_action.trim() ? t.next_action : null;
+    table.recap = list(t.recap).filter(x => typeof x === 'string');
+    // Contract P1 (§17.2.3): the question the chat asks now, its options in the chat's order,
+    // the note on their order, and the term-first digest; null (or []) when absent.
+    const text = x => (typeof x === 'string' && x.trim() ? x : null);
+    table.question = text(t.question);
+    table.options = Object.entries(obj(t.options)).filter(([id, label]) => id && text(label)).map(([id, label]) => ({ id, label }));
+    table.options_note = text(t.options_note);
+    table.junior_digest = text(t.junior_digest);
+    table.sample_note = text(t.sample_note);
+    // Lot P (R43, R48): the limit line of the current step, and the criterion in words fit to
+    // where it is judged (the engine's; null from an older engine).
+    table.step_limit = text(t.step_limit);
+    table.criterion_words = text(t.criterion_words);
+    // Lot 2026-10-28 (R65, §18.7): the defensibility note `{meaning, checklist {id: text},
+    // not_alarm, limits_lead}`, null from an older engine.
+    const note = t.defensibility_note && typeof t.defensibility_note === 'object' && !Array.isArray(t.defensibility_note)
+      ? t.defensibility_note : null;
+    table.defensibility_note = note ? { meaning: text(note.meaning), not_alarm: text(note.not_alarm), limits_lead: text(note.limits_lead),
+      checklist: Object.fromEntries(Object.entries(obj(note.checklist)).filter(([, v]) => text(v))) } : null;
+    out[lang] = table;
+  }
+  return out;
+}
+
+/** Contract P1 (§17.2.1): `automation`, or null for a study created without it. */
+function automationOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const ended = raw.ended && typeof raw.ended === 'object' && !Array.isArray(raw.ended)
+    ? { revision: int(raw.ended.revision), reason: strOrNull(raw.ended.reason) } : null;
+  return { variant: raw.variant === 'full_demo' ? 'full_demo' : 'until_final_test', active: raw.active === true,
+    startedRevision: int(raw.started_revision), ended };
+}
+
+/** Contract P1 (§17.2.1): `review_queue` as `{items, done, total}`, or null. */
+function reviewQueueOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const items = list(raw.items).filter(i => i && typeof i.decision_id === 'string').map(i => ({
+    decisionId: i.decision_id, status: str(i.status), value: showValue(i.value), proposalId: strOrNull(i.proposal_id),
+    revision: int(i.revision) }));
+  const total = int(raw.total);
+  const done = int(raw.done);
+  return { items, done: done === null ? 0 : done, total: total === null ? items.length : total };
+}
+
+/** Contract P1 (§17.2.2): the defensibility pill, the engine's reading; null when absent. */
+function defensibilityOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !DEFENSIBILITY_KINDS.includes(raw.kind)) return null;
+  return { kind: raw.kind, count: int(raw.count) === null ? 0 : int(raw.count),
+    items: list(raw.items).filter(i => i && typeof i.id === 'string' && i.id)
+      .map(i => ({ id: i.id, severity: SEVERITIES.includes(i.severity) ? i.severity : 'caveat' })),
+    // Lot 2026-10-28 (R65, CLI-CONTRACT §18.7): the engine's checklist of what a defensible
+    // study gathers, `[{id, done}]` (ids `panel_digest.CHECKLIST_IDS`); [] from an older engine.
+    // The limits stay `items`; the checklist's texts are `texts.<lang>.defensibility_note`.
+    checklist: list(raw.checklist).filter(i => i && typeof i.id === 'string' && i.id && typeof i.done === 'boolean')
+      .map(i => ({ id: i.id, done: i.done })) };
+}
+
+/** Contract P1 (§17.2.2): the counts of the path's ledger line; null when absent. */
+function ledgerOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const ft = raw.final_test && typeof raw.final_test === 'object' ? raw.final_test : null;
+  const looks = obj(raw.target_looks);
+  const conf = obj(raw.configurations);
+  return {
+    finalTest: ft ? { openings: int(ft.openings) || 0, max: int(ft.max) === null ? 1 : int(ft.max) } : null,
+    // Lot P (R47): the live variant budget of the digest (`ledger.variants`), null when absent.
+    variants: raw.variants && typeof raw.variants === 'object' && int(raw.variants.max) !== null && int(raw.variants.used) !== null
+      ? { max: int(raw.variants.max), used: int(raw.variants.used), remaining: int(raw.variants.remaining) } : null,
+    targetLooks: { eda: int(looks.eda) || 0, sample: int(looks.sample) || 0, total: int(looks.total) || 0 },
+    configurations: { tried: int(conf.tried) || 0, reference: conf.reference === true },
+  };
+}
+
+/** Contract P1 (§17.2.2): the step-1 sample's seed, keys, and whether its look is recorded. */
+function sampleOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  return { seed: str(raw.seed), rowKeys: list(raw.row_keys).map(str).filter(Boolean), recorded: raw.recorded === true };
+}
+
+/** Contract P1 (§17.2.2): `{step: {decisionId, basis, results}}` of the done steps; null when absent. */
+function headlinesOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const out = {};
+  for (const [step, h] of Object.entries(raw)) {
+    if (!h || typeof h !== 'object') continue;
+    out[step] = { decisionId: strOrNull(h.decision_id), basis: strOrNull(h.basis), results: list(h.results).map(str).filter(Boolean) };
+  }
+  return out;
+}
+
+/** Contract P1 (§17.2.4): the criterion per configuration with its absolute bound; null when absent. */
+function criterionConfigurationsOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const b = obj(raw.bound);
+  return {
+    metric: str(raw.metric), unit: strOrNull(raw.unit),
+    bound: { value: num(b.value), reference: num(b.reference), minimum: num(b.minimum), resultId: strOrNull(b.result_id),
+      path: str(b.path) },
+    configurations: list(raw.configurations).filter(c => c && typeof c.slot === 'string').map(c => ({
+      slot: c.slot, value: num(c.value), resultId: strOrNull(c.result_id), path: str(c.path),
+      pointMeetsBound: c.point_meets_bound === true, gain: num(c.gain), low: num(c.low), high: num(c.high),
+      status: CONFIG_STATUSES.includes(c.status) ? c.status : 'not_assessed',
+      judgedOn: c.judged_on === 'final_test' ? 'final_test' : 'development', business: businessOf(c.business) })),
+    // The configuration judged on the opened final test, every figure the final test's (its
+    // bound from the final test's own baseline); null before the opening or from an older engine.
+    finalTest: finalConfigurationOf(raw.final_test),
+    // Lot 2026-10-28 (R67): the business bar of a two-level criterion, null with one level.
+    business: businessOf(raw.business),
+  };
+}
+
+/** R67: `{value, unit, status, met}` of the business bar (absolute, the measure's unit), or null. */
+function businessOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || num(raw.value) === null) return null;
+  return { value: num(raw.value), unit: strOrNull(raw.unit), status: CONFIG_STATUSES.includes(raw.status) ? raw.status : null,
+    met: typeof raw.met === 'boolean' ? raw.met : null, resultId: strOrNull(raw.result_id), path: str(raw.path) };
+}
+
+function finalConfigurationOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || typeof raw.slot !== 'string') return null;
+  const b = obj(raw.bound);
+  return {
+    slot: raw.slot, value: num(raw.value), resultId: strOrNull(raw.result_id), path: str(raw.path),
+    pointMeetsBound: raw.point_meets_bound === true, gain: num(raw.gain), low: num(raw.low), high: num(raw.high),
+    status: CONFIG_STATUSES.includes(raw.status) ? raw.status : 'not_assessed',
+    bound: { value: num(b.value), reference: num(b.reference), minimum: num(b.minimum), resultId: strOrNull(b.result_id), path: str(b.path) },
+    business: businessOf(raw.business),
+  };
+}
+
+/** `results` of the summary: one entry per slot, with the digest's `step` and `channel` (P1.8) when sent. */
+function resultsOf(raw) {
+  const out = {};
+  for (const [slot, r] of Object.entries(obj(raw))) {
+    if (!r || typeof r !== 'object') continue;
+    // The engine's `stale_reason` is `{reason, since}` (CLI-CONTRACT §4, H2); older fixtures
+    // carried the sentence alone. The model keeps the engine's sentence without its reference
+    // to the contract's table ("(§3.7 row 14: preprocessing)"), which is not for the junior.
+    const raw = r.stale_reason && typeof r.stale_reason === 'object' ? r.stale_reason.reason : r.stale_reason;
+    const why = typeof raw === 'string' ? raw.replace(/\s*\(§[^)]*\)/g, '').trim() || null : null;
+    out[slot] = { resultId: str(r.result_id), current: r.current === true, staleReason: strOrNull(why),
+      integrity: strOrNull(r.integrity), channel: RESULT_CHANNELS.includes(r.channel) ? r.channel : null,
+      // Contract P1 (§17.1.1, §17.2.5): the step the engine files the result under, null when
+      // it files it nowhere; absent (undefined) from an engine before the key (HON-9).
+      ...('step' in r ? { step: strOrNull(r.step) } : {}) };
+  }
+  return out;
+}
+
 function taskOf(summary, plan) {
   if (summary.task === 'binary' || summary.task === 'regression') return summary.task;
   if (plan.some(s => s.id === 'model_choice')) return 'regression';
@@ -196,6 +444,149 @@ function currencyOf(summary) {
   return crypto.createHash('sha256').update(JSON.stringify(basis)).digest('hex').slice(0, 16);
 }
 
+// --- lot 2026-10-28: the step cards (one structure for every step) ---------------------------
+
+const CARD_STATES = ['upcoming', 'current', 'done'];
+// `integrity_failed` (CLI-CONTRACT §18.8, LOT §8.12): the result failed its integrity check; no reading.
+const QUESTION_STATUSES = ['answered', 'stale', 'pending', 'no_chart', 'integrity_failed'];
+const EVIDENCE_FRAMES = ['none', 'structure', 'development', 'final', 'illustration'];
+const WHO = ['you', 'automatic', 'delegated'];
+const text = x => (typeof x === 'string' && x.trim() ? x : null);
+const plain = x => (x && typeof x === 'object' && !Array.isArray(x) ? x : null);
+// chart_data and picture data are engine objects drawn as they are: copied as JSON, so a
+// value reaches the drawing as data only.
+const json = x => (x === null || x === undefined ? null : JSON.parse(JSON.stringify(x)));
+
+function readingOf(raw) {
+  const r = plain(raw);
+  if (!r) return null;
+  const out = { see: text(r.see), conclude: text(r.conclude), cannot: text(r.cannot) };
+  return out.see || out.conclude || out.cannot ? out : null;
+}
+
+function questionOf(q, i) {
+  const src = obj(q.source);
+  const frame = obj(q.frame);
+  const v = plain(q.verdict);
+  return {
+    id: str(q.id), n: int(q.n) || i + 1, text: text(q.text) || '',
+    source: { kind: strOrNull(src.kind), slot: strOrNull(src.slot), key: strOrNull(src.key) },
+    chart: strOrNull(q.chart), chartData: plain(q.chart_data) ? json(q.chart_data) : null,
+    otherCharts: list(q.other_charts).filter(o => o && typeof o === 'object').map(o => ({ slot: strOrNull(o.slot), chart: strOrNull(o.chart),
+      resultId: strOrNull(o.result_id), resultRevision: int(o.result_revision), status: strOrNull(o.status) })),
+    frame: { evidence: EVIDENCE_FRAMES.includes(frame.evidence) ? frame.evidence : 'none', rows: text(frame.rows) },
+    status: QUESTION_STATUSES.includes(q.status) ? q.status : 'pending',
+    resultId: strOrNull(q.result_id), resultRevision: int(q.result_revision),
+    reading: readingOf(q.reading),
+    cites: list(q.cites).filter(c => c && typeof c === 'object').map(c => ({ name: str(c.name), resultId: strOrNull(c.result_id),
+      path: str(c.path), value: typeof c.value === 'number' || typeof c.value === 'string' ? c.value : null, text: str(c.text) })),
+    verdict: v ? { label: text(v.label) || '', met: v.met === true, value: num(v.value), bound: num(v.bound),
+      resultId: strOrNull(v.result_id), path: str(v.path) } : null,
+    folds: { how: text(obj(q.folds).how), trap: text(obj(q.folds).trap) },
+  };
+}
+
+function cardOf(c) {
+  const pic = obj(c.picture);
+  const d = plain(c.decision);
+  return {
+    step: str(c.step), n: int(c.n), name: text(c.name) || str(c.step), short: text(c.short) || text(c.name) || str(c.step),
+    moment: text(c.moment), state: CARD_STATES.includes(c.state) ? c.state : 'upcoming',
+    picture: plain(c.picture) ? { kind: strOrNull(pic.kind), caption: text(pic.caption), more: text(pic.more),
+      illustrative: pic.illustrative === true, data: plain(pic.data) ? json(pic.data) : null } : null,
+    prepares: text(c.prepares),
+    questions: list(c.questions).filter(q => q && typeof q === 'object' && typeof q.id === 'string').map(questionOf),
+    noChart: text(c.no_chart), limit: text(c.limit), next: text(c.next),
+    decision: d ? { decisionId: strOrNull(d.decision_id), words: text(d.words), basis: strOrNull(d.basis),
+      who: WHO.includes(d.who) ? d.who : null } : null,
+  };
+}
+
+/** `texts.<lang>.step_cards` (`hypotrail.step_cards/1`) per language, or null when no language has one. */
+function stepCardsOf(texts) {
+  if (!plain(texts)) return null;
+  const out = {};
+  let any = false;
+  for (const lang of ['en', 'fr']) {
+    const t = plain(obj(texts[lang]).step_cards);
+    if (!t || t.schema !== 'hypotrail.step_cards/1' || !Array.isArray(t.steps)) { out[lang] = null; continue; }
+    out[lang] = { current: strOrNull(t.current), total: int(t.total) || t.steps.length,
+      steps: t.steps.filter(c => c && typeof c === 'object' && typeof c.step === 'string').map(cardOf) };
+    any = true;
+  }
+  return any ? out : null;
+}
+
+/** `case_display` (EN-18): `{columns: {name: {en, fr}}}`, or null. */
+function caseDisplayOf(raw) {
+  const r = plain(raw);
+  if (!r || !plain(r.columns)) return null;
+  const columns = {};
+  for (const [name, v] of Object.entries(r.columns)) {
+    const o = plain(v);
+    if (o && (text(o.en) || text(o.fr))) columns[name] = { en: text(o.en), fr: text(o.fr) };
+  }
+  return { columns };
+}
+
+const BRIEF_FIELDS = ['problem', 'decision', 'objective', 'production', 'data_provenance', 'users_and_cost_of_error',
+  'out_of_scope_and_risks'];
+
+// A brief's field in one language: a string, `{en, fr}`, or (the engine's `texts.<lang>.case_brief`,
+// §18.5) an object of parts already in that language (`data_provenance {real, scenario}`), joined.
+const inLang = (v, lang) => (typeof v === 'string' ? text(v)
+  : plain(v) && ('en' in v || 'fr' in v) ? text(v[lang])
+    : plain(v) ? text(Object.values(v).filter(x => typeof x === 'string' && x.trim()).join(' ')) : null);
+
+/**
+ * R66: the case brief (`case_brief` of the digest, or `texts.<lang>.case_brief`), per language:
+ * its fields as the engine wrote them and the PO's two business numbers. Null when the case has none.
+ */
+function caseBriefOf(raw, texts) {
+  const out = {};
+  let any = false;
+  for (const lang of ['en', 'fr']) {
+    const own = plain(obj(obj(texts)[lang]).case_brief);
+    const top = plain(raw);
+    // The engine (CLI-CONTRACT §18.5) puts the texts in `texts.<lang>.case_brief` and the
+    // numbers and the fictitious flag at the top level (`case_brief {fictitious,
+    // current_method_error, target_error}`): the two are merged, the texts first.
+    // R68 (workshop 2026-10-28): the PO's PDF imported, no brief adopted yet (`{pending, pdf}`).
+    if (own && own.pending === true) { out[lang] = { pending: true, pdf: strOrNull(own.pdf) }; any = true; continue; }
+    const b = own ? { ...(top || {}), ...own } : (top && plain(top[lang]) ? top[lang] : top);
+    if (!b) { out[lang] = null; continue; }
+    if (own && top) for (const k of ['fictitious', 'current_method_error', 'target_error']) if (own[k] === undefined && top[k] !== undefined) b[k] = top[k];
+    const src = b.source;
+    const fields = {};
+    for (const f of BRIEF_FIELDS) fields[f] = inLang(b[f], lang);
+    const links = plain(b.links) && !text(b.links.en) && !text(b.links.fr)
+      ? Object.fromEntries(Object.entries(b.links).map(([k, v]) => [k, inLang(v, lang)]).filter(([, v]) => v))
+      : inLang(b.links, lang);
+    const numberOf = v => (typeof v === 'number' ? { value: num(v), unit: null } : plain(v) ? { value: num(v.value), unit: strOrNull(v.unit) } : null);
+    const source = typeof src === 'string' || (plain(src) && (text(src.en) || text(src.fr)))
+      ? { text: inLang(src, lang), fictitious: b.fictitious === true }
+      : plain(src) ? { text: inLang(src.text, lang) || inLang(src.label, lang), fictitious: src.fictitious === true || b.fictitious === true } : null;
+    if (!fields.problem && !fields.objective) { out[lang] = null; continue; }
+    // Adopted from the PDF: its name and the pages each field cites (`{field: [page, ...]}`).
+    const citations = plain(b.citations) ? Object.fromEntries(Object.entries(b.citations)
+      .map(([k, v]) => [k, Array.isArray(v) ? v.filter(Number.isInteger) : []]).filter(([, v]) => v.length)) : {};
+    out[lang] = { source, ...fields, links, currentMethodError: numberOf(b.current_method_error), targetError: numberOf(b.target_error),
+      fromPdf: strOrNull(b.from_pdf), citations };
+    any = true;
+  }
+  return any ? out : null;
+}
+
+/** `data_structure` (P1, step 1): duplicates and repeated groups, counts only; null when absent. */
+function dataStructureOf(raw) {
+  const r = plain(raw);
+  if (!r) return null;
+  const d = obj(r.duplicates);
+  return { duplicates: { rows: int(d.rows), identicalFeatureRows: int(d.identical_feature_rows) },
+    groups: list(r.groups).filter(g => g && typeof g.column === 'string').map(g => ({ column: g.column, groups: int(g.groups),
+      rowsInRepeatedGroups: int(g.rows_in_repeated_groups) })) };
+}
+
 function toSummaryModel(summary) {
   if (!summary || summary.schema !== SUMMARY_SCHEMA || summary.ok !== true || !Number.isInteger(summary.revision)) {
     throw new SummaryError('The CLI did not return a hypotrail.summary/1 document.');
@@ -255,6 +646,14 @@ function toSummaryModel(summary) {
       restatement: str(p.restatement),
       revision: Number.isInteger(p.revision) ? p.revision : null,
       origin: p.origin && typeof p.origin === 'object' && typeof p.origin.channel === 'string' ? { channel: p.origin.channel } : null,
+      // Contract P1 (§17.2.6): the engine's mark of a result-dependent change (true, false,
+      // or null: not assessed, or an older engine).
+      dataContingent: typeof p.data_contingent === 'boolean' ? p.data_contingent : null,
+      // Lot P (R39, R40): the registered results a proposal cites, so Now places their figures:
+      // the engine's `evidence` (slots, or {slot}) when it sends it; else the result ids its
+      // value names in `motivated_by` (the drafted preparation). Placement only, nothing derived.
+      evidence: evidenceOf(p.evidence),
+      motivatedBy: list(p.value && typeof p.value === 'object' ? p.value.motivated_by : null).map(str).filter(x => /^[0-9a-f]{64}$/.test(x)),
       holds: holds.filter(h => h.decisionId === str(p.decision_id)).map(h => ({ noteId: h.noteId, userWords: h.userWords })),
       resolvedNotes: notes.filter(n => n.status === 'resolved' && n.decisionId === str(p.decision_id))
         .map(n => ({ noteId: n.noteId, userWords: n.userWords, resolutionWords: n.resolutionWords })),
@@ -262,7 +661,7 @@ function toSummaryModel(summary) {
   const items = (summary.artifacts && summary.artifacts.items) || {};
   const artifacts = Object.keys(ARTIFACT_PATHS).filter(name => items[name]).map(name => ({
     name, label: ARTIFACT_LABELS[name], path: ARTIFACT_PATHS[name],
-    status: str(items[name].status), message: str(items[name].message),
+    status: str(items[name].status), message: str(items[name].message), revision: int(items[name].revision),
     audience: audienceOf(items[name].audience),
     juniorMessage: juniorOf(items[name].message, items[name].audience, items[name].junior_message),
   }));
@@ -290,7 +689,19 @@ function toSummaryModel(summary) {
     nextAction: { kind: str(next.kind), message: str(next.message), proposalId: strOrNull(next.proposal_id),
       decision: strOrNull(next.decision), executionId: strOrNull(next.execution_id),
       step: strOrNull(next.step), activity: strOrNull(next.activity),
-      audience: audienceOf(next.audience), juniorMessage: juniorOf(next.message, next.audience, next.junior_message) },
+      audience: audienceOf(next.audience), juniorMessage: juniorOf(next.message, next.audience, next.junior_message),
+      // R16 (owner session 2026-10-26): a choice the chat asks before any proposal exists
+      // (the conclusion, the model choice): the values the engine accepts now, labelled in
+      // the study language (`next_action.choice_options`, CLI-CONTRACT §3.1). Read only.
+      choiceOptions: choiceOptionsOf(next.choice_options),
+      // R24 (owner session 2026-10-27): the review of a decision the automatic mode recorded
+      // (`next_action.review`, a `reconfirm` or an `await_user_words`): an adoption question,
+      // not a change underneath (CLI-CONTRACT §3.1, §5.5). Read only.
+      review: next.review === true && ['reconfirm', 'await_user_words'].includes(str(next.kind)),
+      // L7 (D15): what comes after the study, at `done` (CLI-CONTRACT §3.1). Read only.
+      afterStudy: next.kind === 'done' ? afterStudyOf(next.after_study) : null,
+      // Lot P (R40): the results a next action cites (a draft before its proposal exists).
+      evidence: evidenceOf(next.evidence) },
     artifacts,
     artifactsStatus: str(summary.artifacts && summary.artifacts.status),
     proposals,
@@ -327,14 +738,40 @@ function toSummaryModel(summary) {
     trials: summary.trials && typeof summary.trials === 'object' && !Array.isArray(summary.trials)
       ? { count: int(summary.trials.count) } : null,
     language: summary.language === 'fr' || summary.language === 'en' ? summary.language : null,
+    texts: textsOf(summary.texts),
+    results: resultsOf(summary.results),
+    panelContract: int(summary.panel_contract),
+    automation: automationOf(summary.automation),
+    reviewQueue: reviewQueueOf(summary.review_queue),
+    defensibility: defensibilityOf(summary.defensibility),
+    ledger: ledgerOf(summary.ledger),
+    sample: sampleOf(summary.sample),
+    headlines: headlinesOf(summary.headlines),
+    criterionConfigurations: criterionConfigurationsOf(summary.criterion_configurations),
+    // Lot P (R41): the per-column verdicts of the quality check (digest `quality_verdicts`).
+    qualityVerdicts: qualityVerdictsOf(summary.quality_verdicts),
+    stepCards: stepCardsOf(summary.texts),
+    caseDisplay: caseDisplayOf(summary.case_display),
+    caseBrief: caseBriefOf(summary.case_brief, summary.texts),
+    dataStructure: dataStructureOf(summary.data_structure),
   };
 }
 
 const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary', 'summary.regression', 'summary.binary.health',
-  'captured/summary.binary.cv', 'captured/summary.binary.cv.opening'];
+  'captured/summary.binary.cv', 'captured/summary.binary.cv.opening',
+  // Contract P1, the one-page states captured from the engine (PANEL-ONE-PAGE-PLAN E-8).
+  'captured/summary.regression.step1', 'captured/summary.regression.choice', 'captured/summary.regression.reopened',
+  'captured/summary.regression.interrupted', 'captured/summary.regression.review', 'captured/summary.regression.done',
+  // Lot P: the cross-validated Auto MPG study (the preparation, the variants, the choice, the end).
+  'captured/summary.regression.cv.preparation', 'captured/summary.regression.cv.variants', 'captured/summary.regression.cv.choice',
+  'captured/summary.regression.cv.done',
+  // Lot 2026-10-28: hand-made step-card states of Auto MPG (spec §7.2), to be recaptured.
+  'stepcards/summary.data', 'stepcards/summary.moment', 'stepcards/summary.split', 'stepcards/summary.metric',
+  'stepcards/summary.criterion', 'stepcards/summary.exploration', 'stepcards/summary.choice', 'stepcards/summary.conclusion',
+  'stepcards/summary.done'];
 
 // v0 name, kept for the migrated tests and older callers.
 const toModel = toSummaryModel;
 
-module.exports = { toSummaryModel, toModel, currencyOf, juniorOf, CRITERION_STATUSES, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
+module.exports = { toSummaryModel, toModel, currencyOf, SEVERITIES, DEFENSIBILITY_KINDS, juniorOf, choiceOptionsOf, afterStudyOf, textsOf, TEXT_TABLES, CRITERION_STATUSES, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
   SUMMARY_KEYS, ALERT_IDS, GENERATED, FIXTURES };

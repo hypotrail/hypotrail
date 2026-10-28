@@ -72,8 +72,10 @@ def test_report_works_offline_without_decision_controls(browser, full_study):
     context, page, requests, errors = _open(browser, report)
     try:
         assert requests == [] and errors == []
-        assert page.locator('button').count() == 1
+        # v4 (R27, R28): the theme and the language buttons only; neither decides anything
+        assert page.locator('button').count() == 2
         assert page.locator('button[data-theme-toggle]').count() == 1
+        assert page.locator('button[data-lang-toggle]').count() == 1
         for selector in ('input', 'form', 'select', 'textarea', '[role=slider]',
                          '[contenteditable]', 'iframe', 'a[href^="http"]'):
             assert page.locator(selector).count() == 0, selector
@@ -86,15 +88,17 @@ def test_report_works_offline_without_decision_controls(browser, full_study):
         rules = view.build(full_study)['results']['policy.evaluation']['values']['rules']
         assert page.locator('#policy table.metrics tbody tr').count() == sum(
             len(r['models']) for r in rules.values()) == 4
-        # status is written in words, not shown by colour alone
-        assert 'Confirmed decision' in page.inner_text('#decisions')
+        # status is written in words, not shown by colour alone (L6: each decision sits in
+        # the chapter of its step; the framing is chapter two)
+        assert 'Confirmed decision' in page.inner_text('#ch2')
+        # R28: the board (dark) by default; the whiteboard is a choice for the visit
         body = page.locator('body')
-        assert 'dark' not in (body.get_attribute('class') or '')
+        assert 'white' not in (body.get_attribute('class') or '')
         page.click('button[data-theme-toggle]')
-        assert 'dark' in body.get_attribute('class')
+        assert 'white' in body.get_attribute('class')
         assert page.get_attribute('button[data-theme-toggle]', 'aria-pressed') == 'true'
         page.click('button[data-theme-toggle]')
-        assert 'dark' not in body.get_attribute('class')
+        assert 'white' not in body.get_attribute('class')
     finally:
         context.close()
 
@@ -123,13 +127,21 @@ def test_report_never_scrolls_sideways_on_a_narrow_screen(browser, full_study, t
         context.close()
 
 
-def test_report_follows_a_dark_preference(browser, full_study):
-    context, page, requests, errors = _open(browser, full_study / mf.ARTIFACTS['report'], 'dark')
-    try:
-        assert requests == [] and errors == []
-        assert 'dark' in page.locator('body').get_attribute('class')
-    finally:
-        context.close()
+def test_report_is_on_the_board_whatever_the_preference(browser, full_study):
+    """R28 (owner decision 2026-10-27): the board (dark) is the default; the system
+    preference is not read, and nothing is stored."""
+    import re
+    for scheme in ('light', 'dark'):
+        context, page, requests, errors = _open(browser, full_study / mf.ARTIFACTS['report'],
+                                                scheme)
+        try:
+            assert requests == [] and errors == []
+            assert 'white' not in (page.locator('body').get_attribute('class') or '')
+            colour = page.evaluate('getComputedStyle(document.body).backgroundColor')
+            assert sum(int(x) for x in re.findall(r'\d+', colour)[:3]) < 200, scheme
+            assert page.evaluate('window.localStorage.length') == 0
+        finally:
+            context.close()
 
 
 def test_report_anchors_one_per_cited_result_and_no_editor_link(browser, full_study):
@@ -177,6 +189,6 @@ def test_stale_banner_is_visible_offline(browser, full_study, monkeypatch):
         alert = page.locator('[role=alert][data-hypotrail-banner=stale]')
         assert alert.count() == 1 and alert.is_visible()
         assert 'Stale report.' in alert.inner_text()
-        assert page.locator('button').count() == 1
+        assert page.locator('button').count() == 2
     finally:
         context.close()

@@ -15,6 +15,7 @@ terms:
     term: Leakage
     term_fr: "fuite d'information (leakage)"
     definition: A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use. For example, the duration of the last call to a client is known only once the call has ended, so a model that uses it to decide whom to call relies on information it cannot have before the call; it looks excellent on past calls and is useless in a campaign.
+    definition_fr: "Une variable qui porte une information postérieure au moment de la prédiction. Elle fait paraître un modèle meilleur sur les données passées qu'il ne peut l'être en usage. Par exemple, la durée du dernier appel à un client n'est connue qu'une fois l'appel terminé : un modèle qui s'en sert pour décider qui appeler s'appuie sur une information qu'il ne peut pas avoir avant l'appel ; il paraît excellent sur les appels passés et ne sert à rien dans une campagne."
   feature_availability:
     term: Feature availability
     term_fr: "disponibilité des variables"
@@ -26,6 +27,7 @@ terms:
     definition: Rows held apart from model fitting and used to compare models and choose a policy. Once used to choose, they are no longer independent evidence.
     definition_fr: "Des lignes tenues à l'écart de l'ajustement des modèles et utilisées pour comparer les modèles et choisir une règle. Une fois utilisées pour choisir, elles ne sont plus un résultat indépendant."
     cited_example: "Here {{slot:split:partitions.validation.n_rows|int}} rows are held apart for validation and {{slot:split:partitions.train.n_rows|int}} rows train the models."
+    cited_example_fr: "Ici, {{slot:split:partitions.validation.n_rows|int}} lignes sont tenues à l'écart pour la validation et {{slot:split:partitions.train.n_rows|int}} lignes entraînent les modèles."
   stratified_split:
     term: Stratified split
     term_fr: "découpage stratifié"
@@ -33,6 +35,7 @@ terms:
     definition_fr: "Un découpage aléatoire des lignes qui garde une part semblable de résultats positifs dans le jeu d'entraînement et le jeu de validation."
     example: Here the training partition has <n_positive_train> positive rows out of <n_train> and the validation partition <n_positive_validation> out of <n_validation>, close shares by construction.
     cited_example: "Here the positive outcome occurs in {{slot:split:partitions.train.rate|pct1}} of the training rows and in {{slot:split:partitions.validation.rate|pct1}} of the validation rows, close shares by construction."
+    cited_example_fr: "Ici, le résultat positif apparaît dans {{slot:split:partitions.train.rate|pct1}} des lignes d'entraînement et dans {{slot:split:partitions.validation.rate|pct1}} des lignes de validation, des parts proches par construction."
   exposure:
     term: Data exposure
     term_fr: "exposition des données"
@@ -47,12 +50,14 @@ terms:
     term: Class imbalance
     term_fr: "déséquilibre des classes"
     definition: An outcome that occurs in a small share of the rows. A model can then look accurate by predicting the common outcome everywhere, so it is judged against the base rate.
+    definition_fr: "Un résultat qui n'apparaît que dans une petite part des lignes. Un modèle peut alors paraître exact en prédisant partout le résultat le plus fréquent ; il est donc jugé par rapport au taux de base."
   base_rate:
     term: Base rate
     term_fr: "taux de base"
     definition: The share of rows with the positive outcome. Any model must be compared with what this share alone would give. For example, when few clients subscribe a term deposit, a model that predicts "no" for everyone is right for most clients and finds no subscriber; the base rate is the bar any call list must beat.
     definition_fr: "La part des lignes dont le résultat est positif. Tout modèle doit être comparé à ce que cette part seule donnerait. Par exemple, quand peu de clients souscrivent un dépôt à terme, un modèle qui prédit « non » pour tout le monde a raison pour la plupart des clients et ne trouve aucun souscripteur ; le taux de base est la barre que toute liste d'appels doit dépasser."
     cited_example: "In this study's training rows the positive outcome occurs in {{slot:eda.target_rate:rate|pct1}} of rows."
+    cited_example_fr: "Dans les lignes d'entraînement de cette étude, le résultat positif apparaît dans {{slot:eda.target_rate:rate|pct1}} des lignes."
   special_value:
     term: Special value
     term_fr: "valeur spéciale"
@@ -64,6 +69,7 @@ terms:
     definition: The simplest reference model, a constant score equal to the training base rate. Keeping the baseline is a valid conclusion.
     definition_fr: "Le modèle de référence le plus simple, un score constant égal au taux de base du jeu d'entraînement. Garder le modèle de référence est une conclusion valable."
     cited_example: "Here the baseline gives every row the training base rate, {{slot:fit.baseline:train_rate|pct1}}, so it cannot rank the rows."
+    cited_example_fr: "Ici, le modèle de référence donne à chaque ligne le taux de base d'entraînement, {{slot:fit.baseline:train_rate|pct1}}, donc il ne peut pas classer les lignes."
   logistic_regression:
     term: Logistic regression
     term_fr: "régression logistique"
@@ -73,6 +79,7 @@ terms:
     term: Score
     term_fr: "score"
     definition: The number a model gives to each row to rank it. A higher score places the row earlier in the queue.
+    definition_fr: "Le nombre qu'un modèle donne à chaque ligne pour la classer. Un score plus élevé place la ligne plus tôt dans la file."
   policy:
     term: Decision policy
     term_fr: "règle de décision"
@@ -82,10 +89,12 @@ terms:
     term: Threshold rule
     term_fr: "règle de seuil"
     definition: Act on every row whose score is at least the threshold. The number of actions then depends on the data.
+    definition_fr: "Agir sur chaque ligne dont le score atteint au moins le seuil. Le nombre d'actions dépend alors des données."
   capacity:
     term: Capacity rule
     term_fr: "règle de capacité"
     definition: Act on a fixed number of the highest-scored rows, matching what the team can actually handle. A share rule states the capacity as a share of the scored rows instead (the top tenth, for example), so it carries over to a population of another size.
+    definition_fr: "Agir sur un nombre fixé des lignes aux scores les plus élevés, à la mesure de ce que l'équipe peut réellement traiter. Une règle de part exprime la capacité comme une part des lignes notées (le meilleur dixième, par exemple) : elle se transpose ainsi à une population d'une autre taille."
   precision:
     term: Precision
     term_fr: "précision"
@@ -93,6 +102,7 @@ terms:
     definition_fr: "Parmi les lignes sur lesquelles on agit, la part qui se révèle positive."
     example: Here the logistic model's rule selects <selected> of the <n> validation rows and <true_positives> of them are positive, a precision of <precision>.
     cited_example: "At <rule>, {{slot:policy.evaluation:rules.[<rule>].models.[fit.logistic].precision|pct1}} of the validation rows the logistic model acts on turn out positive."
+    cited_example_fr: "Avec <rule>, {{slot:policy.evaluation:rules.[<rule>].models.[fit.logistic].precision|pct1}} des lignes de validation sur lesquelles le modèle logistique agit se révèlent positives."
   recall:
     term: Recall
     term_fr: "rappel"
@@ -100,6 +110,7 @@ terms:
     definition_fr: "Parmi toutes les lignes positives, la part que la règle atteint."
     example: Here the validation rows hold <n_positive> positive rows and the rule reaches <true_positives> of them, a recall of <recall>. A small capacity keeps recall low even when precision is high.
     cited_example: "At <rule>, the logistic model reaches {{slot:policy.evaluation:rules.[<rule>].models.[fit.logistic].recall|pct1}} of the positive validation rows."
+    cited_example_fr: "Avec <rule>, le modèle logistique atteint {{slot:policy.evaluation:rules.[<rule>].models.[fit.logistic].recall|pct1}} des lignes de validation positives."
   volume:
     term: Volume
     term_fr: "volume"
@@ -120,18 +131,23 @@ terms:
     term: Paired difference
     term_fr: "différence appariée"
     definition: The difference between two models measured on the same rows, such as the logistic model's precision minus the baseline's at one rule. Pairing removes the noise of which rows each model was measured on.
+    definition_fr: "L'écart entre deux modèles mesuré sur les mêmes lignes, comme la précision du modèle logistique moins celle du modèle de référence avec une règle. L'appariement retire le bruit dû aux lignes sur lesquelles chaque modèle a été mesuré."
     example: Here the logistic model's precision minus the baseline's at <rule> is <delta>, between <low> and <high> on resamples of the validation rows. An interval that contains zero does not show that one model is better.
     cited_example: "At <rule>, the logistic model's precision minus the baseline's is {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.point|pct1}}, between {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.low|pct1}} and {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.high|pct1}} on resamples of the validation rows."
+    cited_example_fr: "Avec <rule>, la précision du modèle logistique moins celle du modèle de référence vaut {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.point|pct1}}, entre {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.low|pct1}} et {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.high|pct1}} sur des rééchantillonnages des lignes de validation."
   confidence_interval:
     term: Confidence interval
     term_fr: "intervalle de confiance"
     definition: A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for a future campaign. For example, a precision interval that runs from close to the base rate to well above it says that the call list may barely beat calling clients at random.
+    definition_fr: "Une plage qui montre de combien un chiffre pourrait bouger si d'autres lignes avaient été tirées. Dans cette étude, c'est un intervalle des percentiles du bootstrap apparié : il décrit la variabilité de ces lignes de validation, pas une plage garantie pour une future campagne. Par exemple, un intervalle de précision qui va d'à peine plus que le taux de base à bien au-dessus dit que la liste d'appels pourrait à peine faire mieux qu'appeler des clients au hasard."
     example: Here the logistic model's precision at <rule> ranges from <low> to <high> on resamples of the <n> validation rows; a wide range means the figure is uncertain.
     cited_example: "At <rule>, the logistic model's precision ranges from {{slot:policy.evaluation:rules.[<rule>].intervals.[fit.logistic].precision.low|pct1}} to {{slot:policy.evaluation:rules.[<rule>].intervals.[fit.logistic].precision.high|pct1}} on resamples of the validation rows."
+    cited_example_fr: "Avec <rule>, la précision du modèle logistique va de {{slot:policy.evaluation:rules.[<rule>].intervals.[fit.logistic].precision.low|pct1}} à {{slot:policy.evaluation:rules.[<rule>].intervals.[fit.logistic].precision.high|pct1}} sur des rééchantillonnages des lignes de validation."
   percentile_interval:
     term: Percentile interval
     term_fr: "intervalle des percentiles"
     definition: The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the performance of a future campaign.
+    definition_fr: "La plage entre deux percentiles des répétitions du bootstrap. Elle montre la variabilité d'échantillonnage sur ces lignes, pas la performance d'une future campagne."
   selection_on_validation:
     term: Selection on validation
     term_fr: "sélection sur le jeu de validation"
@@ -161,6 +177,7 @@ terms:
     term: Stale result
     term_fr: "résultat périmé"
     definition: A result computed under decisions that have since changed. It is kept for the record but is not cited.
+    definition_fr: "Un résultat calculé sous des décisions qui ont changé depuis. Il est gardé pour l'historique mais n'est pas cité."
   # v0.2a (WP-A1): terms a junior meets in model evaluation and preparation. Each definition
   # gives the term first, then explains it with an example of a campaign that calls clients
   # about a term deposit (a regression study reads its own versions below).
@@ -168,14 +185,17 @@ terms:
     term: AUC (area under the ROC curve)
     term_fr: "AUC (aire sous la courbe ROC)"
     definition: The chance that a randomly drawn positive row gets a higher score than a randomly drawn negative row. It judges the ranking over every possible cut-off, not the result of one decision rule. For example, for a campaign that ranks clients before calling them about a term deposit, an AUC of one half means the ranking puts subscribers ahead of non-subscribers no better than chance.
+    definition_fr: "La probabilité qu'une ligne positive tirée au hasard obtienne un score plus élevé qu'une ligne négative tirée au hasard. Elle juge le classement sur tous les seuils possibles, pas le résultat d'une règle de décision. Par exemple, pour une campagne qui classe des clients avant de les appeler au sujet d'un dépôt à terme, une AUC d'un demi signifie que le classement ne place pas les souscripteurs devant les non-souscripteurs mieux que le hasard."
   average_precision:
     term: Average precision (AP)
     term_fr: "average precision (AP, aire sous la courbe précision-rappel)"
     definition: A weighted sum of precision values, weighted by each increase in recall as the threshold moves down the ranked list. It is not an arbitrary trapezoidal area under a precision-recall curve. Unlike the AUC, it depends on the base rate. For example, it describes how pure the top of a client call list stays as recall increases.
+    definition_fr: "Une somme pondérée de valeurs de précision, pondérées par chaque hausse du rappel quand le seuil descend dans la liste classée. Ce n'est pas une aire trapézoïdale arbitraire sous une courbe précision-rappel. Contrairement à l'AUC, elle dépend du taux de base. Par exemple, elle décrit à quel point le haut d'une liste d'appels de clients reste pur quand le rappel augmente."
   lift:
     term: Lift
     term_fr: "lift"
     definition: The precision of the rows acted on divided by the base rate. A lift above one means the rule finds positive rows more often than acting at random would. For example, if the clients called first subscribe twice as often as the clients in general, the lift of that call list is two.
+    definition_fr: "La précision des lignes sur lesquelles on agit divisée par le taux de base. Un lift supérieur à un signifie que la règle trouve des lignes positives plus souvent qu'en agissant au hasard. Par exemple, si les clients appelés en premier souscrivent deux fois plus souvent que les clients en général, le lift de cette liste d'appels vaut deux."
   calibration:
     term: Calibration
     term_fr: "calibration"
@@ -185,6 +205,7 @@ terms:
     term: Overfitting
     term_fr: "surapprentissage (overfitting)"
     definition: A model that fits the noise of its training set as well as its pattern. It looks better on the rows it was fitted on than on new rows. For example, a model that memorises which months of the training clients had many subscriptions can score those clients well and the next campaign badly; the gap between training and validation figures reveals it.
+    definition_fr: "Un modèle qui apprend le bruit de son jeu d'entraînement en plus de sa structure. Il paraît meilleur sur les lignes sur lesquelles il a été ajusté que sur de nouvelles lignes. Par exemple, un modèle qui mémorise les mois où les clients d'entraînement ont beaucoup souscrit peut bien noter ces clients et mal la campagne suivante ; l'écart entre les chiffres d'entraînement et de validation le révèle."
   regularisation:
     term: Regularisation
     term_fr: "régularisation"
@@ -194,14 +215,17 @@ terms:
     term: One-hot encoding
     term_fr: "encodage one-hot"
     definition: Turning a category column into one indicator column per category, set for the rows that have that category. A linear model needs it because categories have no order. For example, the job of a client becomes one indicator per job, such as "technician" or "retired", and the model learns a weight for each.
+    definition_fr: "Transformer une colonne de catégories en une colonne indicatrice par catégorie, activée pour les lignes qui ont cette catégorie. Un modèle linéaire en a besoin parce que les catégories n'ont pas d'ordre. Par exemple, le métier d'un client devient un indicateur par métier, comme « technician » ou « retired », et le modèle apprend un poids pour chacun."
   imputation:
     term: Imputation
     term_fr: "imputation"
     definition: Filling a missing value with a substitute, such as the median of the training set, before fitting. The substitute is computed on the training set only, and an indicator can record that the value was missing. For example, a client whose account balance is missing would get the median balance of the training clients, never a figure computed with validation clients.
+    definition_fr: "Remplacer une valeur manquante par un substitut, comme la médiane du jeu d'entraînement, avant l'ajustement. Le substitut est calculé sur le jeu d'entraînement seulement, et un indicateur peut garder la trace de la valeur manquante. Par exemple, un client dont le solde de compte manque recevrait le solde médian des clients d'entraînement, jamais un chiffre calculé avec les clients de validation."
   standardisation:
     term: Standardisation
     term_fr: "standardisation"
     definition: Rescaling a numeric column to a mean of zero and a standard deviation of one, with both computed on the training set. It puts features on one scale, so their weights and a penalty treat them alike. For example, a client's age in years and account balance in euros are rescaled so that the weight on balance is not tiny only because euro amounts are large numbers.
+    definition_fr: "Remettre une colonne numérique à l'échelle avec une moyenne de zéro et un écart-type de un, tous deux calculés sur le jeu d'entraînement. Cela met les variables sur une même échelle, pour que leurs poids et une pénalité les traitent de la même façon. Par exemple, l'âge d'un client en années et le solde de son compte en euros sont remis à l'échelle pour que le poids du solde ne soit pas minuscule seulement parce que les montants en euros sont de grands nombres."
   cross_validation:
     term: k-fold cross-validation
     term_fr: "validation croisée à k plis"
@@ -212,10 +236,12 @@ terms:
     term: Out-of-fold predictions
     term_fr: "prédictions hors pli"
     definition: The score of a development row given by the model fitted on the training folds, the folds other than the row's own validation fold, so by a model that never saw that row. Every development row gets one, and the comparisons and the decision rule are read on them; they are development evidence, because the choice is made on them. For example, a client in the third fold is scored by the model fitted on the other folds' clients.
+    definition_fr: "Le score d'une ligne de développement donné par le modèle ajusté sur les plis d'entraînement, les plis autres que le pli de validation de cette ligne, donc par un modèle qui n'a jamais vu cette ligne. Chaque ligne de développement en reçoit un, et les comparaisons et la règle de décision se lisent dessus ; ce sont des résultats de développement, parce que le choix est fait sur eux. Par exemple, un client du troisième pli est noté par le modèle ajusté sur les clients des autres plis."
   fold_spread:
     term: Fold spread
     term_fr: "dispersion entre plis"
     definition: How much a figure moves from one validation fold to another, given as its lowest and highest fold value. It is not a confidence interval, since it describes the folds of this development set, while a confidence interval describes how a figure could move with another sample. A difference between two models smaller than the spread is not a difference this study can see. For example, if the ranking quality of the call list ranges widely across folds, a small gain of the variant over the candidate says little.
+    definition_fr: "De combien un chiffre bouge d'un pli de validation à l'autre, donné par sa valeur de pli la plus basse et la plus haute. Ce n'est pas un intervalle de confiance : elle décrit les plis de cet échantillon de développement, alors qu'un intervalle de confiance décrit comment un chiffre pourrait bouger avec un autre échantillon. Un écart entre deux modèles plus petit que la dispersion n'est pas un écart que cette étude peut voir. Par exemple, si la qualité du classement de la liste d'appels varie beaucoup d'un pli à l'autre, un petit gain de la variante sur le candidat dit peu de chose."
   final_test:
     term: Holdout (final test)
     term_fr: "échantillon de test final (holdout)"
@@ -230,10 +256,18 @@ terms:
     term: Wilson interval
     term_fr: "intervalle de Wilson"
     definition: An interval for a proportion, such as a positive rate in a group, that stays inside zero and one and remains sensible for small groups and rates close to zero. It shows how much the rate could move with another sample of the same size. For example, a rate computed on a few dozen clients gets a wide interval, the same rate on a thousand clients a narrow one.
+    definition_fr: "Un intervalle pour une proportion, comme un taux de positifs dans un groupe, qui reste entre zéro et un et reste raisonnable pour de petits groupes et des taux proches de zéro. Il montre de combien le taux pourrait bouger avec un autre échantillon de même taille. Par exemple, un taux calculé sur quelques dizaines de clients reçoit un intervalle large, le même taux sur mille clients un intervalle étroit."
   permutation_null_band:
     term: Permutation null band
     term_fr: "bande nulle par permutation"
     definition: The range of a chart's figures after shuffling the outcome among the training rows several times with a fixed seed, which breaks any real link between the variable and the outcome. A pattern that stays inside the band is what chance alone draws; one above every shuffle is unlikely to be chance alone. For example, if the rates by job group differ less than they do after shuffling who subscribed, the differences are not evidence of anything.
+    definition_fr: "L'étendue des chiffres d'un graphique après avoir mélangé plusieurs fois le résultat entre les lignes d'entraînement avec une graine fixe, ce qui casse tout lien réel entre la variable et le résultat. Un motif qui reste dans la bande est ce que le hasard seul produit ; un motif au-dessus de chaque mélange a peu de chances de venir du seul hasard. Par exemple, si les taux par métier diffèrent moins qu'après avoir mélangé qui a souscrit, les écarts ne prouvent rien."
+  # Owner session 2026-10-26 (L5, R7): the term the stamp of a preparation rests on.
+  target_look:
+    term: Look at the target
+    term_fr: "regard sur la cible"
+    definition: An analysis that read the variable to predict, such as its rate or its distribution, the special values read with it, or a summary of it by group. Each one is counted. The more looks, the more a pattern found among them can be chance. For example, the quality check of the columns reads no target and is not a look; the distribution of the variable to predict is one.
+    definition_fr: "Une analyse qui a lu la variable à prédire, comme son taux ou sa distribution, les valeurs spéciales lues avec elle, ou un résumé par groupe. Chacune est comptée. Plus il y a de regards, plus une forme trouvée parmi eux peut être due au hasard. Par exemple, le contrôle de qualité des colonnes ne lit pas la cible et n'est pas un regard ; la distribution de la variable à prédire en est un."
   data_contingent_decision:
     term: Data-contingent decision
     term_fr: "décision dépendante des données"
@@ -248,6 +282,7 @@ terms:
     term: Single-feature signal
     term_fr: "signal d'une variable seule"
     definition: How well one variable alone predicts the outcome, measured out of fold on the training rows. A variable that predicts far better than the others raises a question about when its value becomes known, because a value recorded at or after the outcome would leak it. It never decides which variables to keep. For example, the length of the last call predicts the answer of that call very well, because it is only known once the call has ended.
+    definition_fr: "À quel point une variable seule prédit le résultat, mesuré hors pli sur les lignes d'entraînement. Une variable qui prédit bien mieux que les autres pose une question sur le moment où sa valeur devient connue, parce qu'une valeur enregistrée au moment du résultat ou après le ferait fuir. Elle ne décide jamais quelles variables garder. Par exemple, la durée du dernier appel prédit très bien la réponse à cet appel, parce qu'elle n'est connue qu'une fois l'appel terminé."
   # v0.2b (WP-B4, R9): the terms of the model diagnostics.
   confusion_matrix:
     term: Confusion matrix
@@ -289,18 +324,38 @@ terms:
     term: Training set
     term_fr: jeu d'entraînement
     definition: The rows a model is fitted on. Under k-fold cross-validation each model's training set is the training folds, every fold but the one it is measured on. For example, with five folds of the clients, each model learns from four folds of clients.
+    definition_fr: "Les lignes sur lesquelles un modèle est ajusté. En validation croisée à k plis, le jeu d'entraînement de chaque modèle est formé des plis d'entraînement, tous les plis sauf celui sur lequel il est mesuré. Par exemple, avec cinq plis de clients, chaque modèle apprend de quatre plis de clients."
   fold:
     term: Fold
     term_fr: pli
     definition: One of the k parts the development set is divided into for k-fold cross-validation. Each fold is in turn the validation fold, measured by a model fitted on the other folds, the training folds. For example, with five folds the clients of the third fold are scored by a model that learnt from the clients of the four other folds.
+    definition_fr: "Une des k parties en lesquelles l'échantillon de développement est découpé pour la validation croisée à k plis. Chaque pli est à son tour le pli de validation, mesuré par un modèle ajusté sur les autres plis, les plis d'entraînement. Par exemple, avec cinq plis, les clients du troisième pli sont notés par un modèle qui a appris des clients des quatre autres plis."
   sample:
     term: Sample
     term_fr: échantillon
     definition: A set of rows drawn from the population the study is about; a figure computed on it would move with another sample of the same size. For example, the development set is one sample of the clients, and the holdout another one.
+    definition_fr: "Un ensemble de lignes tirées de la population sur laquelle porte l'étude ; un chiffre calculé dessus bougerait avec un autre échantillon de même taille. Par exemple, l'échantillon de développement est un échantillon des clients, et l'échantillon de test final (holdout) en est un autre."
+  # Review round 4 (E4-5): the explicit plans of review-v1 studies that follow time.
+  forward_chaining:
+    term: Forward-chaining cross-validation
+    term_fr: "validation croisée progressive (forward chaining)"
+    definition: Cross-validation that follows the order of prediction time. The development rows are cut into consecutive windows; each later window is scored once by a model fitted only on earlier rows whose outcome was already known, and the first window, the warm-up, only trains and is never scored. A choice made with it is still optimistic. For example, the clients of the third window are scored by a model fitted on the clients of the first two windows, never on later ones.
+    definition_fr: "Une validation croisée qui suit l'ordre du moment de la prédiction. Les lignes de développement sont découpées en fenêtres successives ; chaque fenêtre suivante est évaluée une fois par un modèle ajusté seulement sur des lignes plus anciennes dont le résultat était déjà connu, et la première fenêtre, la période d'amorçage, sert seulement à l'entraînement et n'est jamais évaluée. Un choix fait avec elle reste optimiste. Par exemple, les clients de la troisième fenêtre sont évalués par un modèle ajusté sur les clients des deux premières fenêtres, jamais sur des fenêtres plus récentes."
 # Regression study (M3). A regression study hides the binary-only terms below and reads
 # ``regression_terms`` where its definitions differ or are new (mlkit.study.texts).
 binary_only: [base_rate, class_imbalance, stratified_split, logistic_regression, score, policy, threshold, capacity, precision, recall, volume, tie_at_cut, auc, average_precision, lift, calibration, wilson_interval, confusion_matrix, gain_curve, roc_curve, brier_score]
 regression_terms:
+  # v4 (R26): no rate in a regression report.
+  target_look:
+    term: Look at the target
+    term_fr: regard sur la cible
+    definition: "An analysis that read the variable to predict, such as its distribution or its summary, the special values read with it, or its mean by group. Each one is counted. The more looks, the more a pattern found among them can be chance. For example, the quality check of the columns reads no target and is not a look; the distribution of the variable to predict is one."
+    definition_fr: "Une analyse qui a lu la variable à prédire, comme sa distribution ou son résumé, les valeurs spéciales lues avec elle, ou sa moyenne par groupe. Chacune est comptée. Plus il y a de regards, plus une forme trouvée parmi eux peut être due au hasard. Par exemple, le contrôle de qualité des colonnes ne lit pas la cible et n'est pas un regard ; la distribution de la variable à prédire en est un."
+  forward_chaining:
+    term: Forward-chaining cross-validation
+    term_fr: "validation croisée progressive (forward chaining)"
+    definition: Cross-validation that follows the order of prediction time. The development rows are cut into consecutive windows; each later window is predicted once by a model fitted only on earlier rows whose target was already known, and the first window, the warm-up, only trains and is never predicted. A choice made with it is still optimistic. For example, the cars of the third window are predicted by a model fitted on the cars of the first two windows, never on later ones.
+    definition_fr: "Une validation croisée qui suit l'ordre du moment de la prédiction. Les lignes de développement sont découpées en fenêtres successives ; chaque fenêtre suivante est prédite une fois par un modèle ajusté seulement sur des lignes plus anciennes dont la cible était déjà connue, et la première fenêtre, la période d'amorçage, sert seulement à l'entraînement et n'est jamais prédite. Un choix fait avec elle reste optimiste. Par exemple, les voitures de la troisième fenêtre sont prédites par un modèle ajusté sur les voitures des deux premières fenêtres, jamais sur des fenêtres plus récentes."
   success_criterion:
     term: Success criterion
     term_fr: "critère de succès"
@@ -317,34 +372,41 @@ regression_terms:
     definition: Rows held apart from model fitting and used to compare models and choose one. Once used to choose, they are no longer independent evidence.
     definition_fr: "Des lignes tenues à l'écart de l'ajustement des modèles et utilisées pour comparer les modèles et en choisir un. Une fois utilisées pour choisir, elles ne sont plus un résultat indépendant."
     cited_example: "Here {{slot:split:partitions.validation.n_rows|int}} rows are held apart for validation and {{slot:split:partitions.train.n_rows|int}} rows train the models."
+    cited_example_fr: "Ici, {{slot:split:partitions.validation.n_rows|int}} lignes sont tenues à l'écart pour la validation et {{slot:split:partitions.train.n_rows|int}} lignes entraînent les modèles."
   random_split:
     term: Random split
     term_fr: "découpage aléatoire"
     definition: A random division of the rows between training and validation, with a recorded seed. It assumes the rows are exchangeable, which a time order or repeated entities can contradict.
+    definition_fr: "Un découpage aléatoire des lignes entre entraînement et validation, avec une graine enregistrée. Il suppose que les lignes sont échangeables, ce qu'un ordre dans le temps ou des entités répétées peuvent contredire."
   ordinal_split:
     term: Ordinal (temporal) split
     term_fr: "découpage ordinal (temporel)"
     definition: A split on an ordered column such as a model year. Rows at or after a cutoff are validation rows and earlier rows train the model, so the validation asks whether a model fitted on the past holds on later periods.
+    definition_fr: "Un découpage sur une colonne ordonnée, comme une année de modèle. Les lignes à partir d'un seuil sont des lignes de validation et les lignes antérieures entraînent le modèle : la validation demande si un modèle ajusté sur le passé tient sur des périodes plus récentes."
   extrapolation:
     term: Extrapolation
     term_fr: "extrapolation"
     definition: Predicting for values outside the range the model was fitted on, such as later years. A model can be accurate inside its training range and biased outside it.
+    definition_fr: "Prédire pour des valeurs hors de la plage sur laquelle le modèle a été ajusté, comme des années plus récentes. Un modèle peut être exact dans sa plage d'entraînement et biaisé en dehors."
   group_overlap:
     term: Group overlap
     term_fr: "chevauchement des groupes"
     definition: Rows that describe the same entity, such as one name recorded in several years, falling in both partitions. Their validation rows are not independent of the training rows; the study reports how many groups are shared.
+    definition_fr: "Des lignes qui décrivent la même entité, comme un même nom enregistré sur plusieurs années, qui tombent dans les deux partitions. Leurs lignes de validation ne sont pas indépendantes des lignes d'entraînement ; l'étude indique combien de groupes sont partagés."
   target_distribution:
     term: Target distribution
     term_fr: "distribution de la cible"
     definition: How the values of the target spread, summarised by the mean, the standard deviation, and the quartiles. Any model is compared with the simplest guess, the training mean.
     definition_fr: "La façon dont les valeurs de la cible se répartissent, résumée par la moyenne, l'écart type et les quartiles. Tout modèle est comparé à la prédiction la plus simple, la moyenne du jeu d'entraînement."
     cited_example: "On this study's training rows the target has a mean of {{slot:eda.target_summary:mean|f2}} <unit> and a standard deviation of {{slot:eda.target_summary:sd|f2}} <unit>."
+    cited_example_fr: "Sur les lignes d'entraînement de cette étude, la cible a une moyenne de {{slot:eda.target_summary:mean|f2}} <unit> et un écart-type de {{slot:eda.target_summary:sd|f2}} <unit>."
   baseline:
     term: Baseline
     term_fr: "modèle de référence (baseline)"
     definition: The simplest reference model, here the training mean of the target predicted for every row. Keeping the baseline is a valid conclusion.
     definition_fr: "Le modèle de référence le plus simple, ici la moyenne de la cible sur le jeu d'entraînement, prédite pour chaque ligne. Garder le modèle de référence est une conclusion valable."
     cited_example: "Here the mean baseline predicts {{slot:fit.baseline:train_mean|f2}} <unit> for every row, the mean of the training rows."
+    cited_example_fr: "Ici, la référence (prédire la moyenne) prédit {{slot:fit.baseline:train_mean|f2}} <unit> pour chaque ligne, la moyenne des lignes d'entraînement."
   linear_regression:
     term: Linear regression
     term_fr: "régression linéaire"
@@ -354,6 +416,7 @@ regression_terms:
     term: Prediction
     term_fr: "prédiction"
     definition: The value a model gives for the target of a row, in the unit of the target.
+    definition_fr: "La valeur qu'un modèle donne pour la cible d'une ligne, dans l'unité de la cible."
   residual:
     term: Residual
     term_fr: "résidu"
@@ -365,18 +428,21 @@ regression_terms:
     definition: The mean residual. A bias far from zero means the model is systematically too low or too high, for example on later periods than the ones it was fitted on.
     definition_fr: "Le résidu moyen. Un biais loin de zéro signifie que le modèle est systématiquement trop bas ou trop haut, par exemple sur des périodes plus récentes que celles sur lesquelles il a été ajusté."
     cited_example: "Here the mean residual of the linear model on the validation rows is {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}} <unit>."
+    cited_example_fr: "Ici, le résidu moyen du modèle linéaire sur les lignes de validation vaut {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}} <unit>."
   mae:
     term: Mean absolute error (MAE)
     term_fr: "erreur absolue moyenne (MAE)"
     definition: The average size of the residuals, in the unit of the target. It reads directly as the typical error of one prediction.
     definition_fr: "La taille moyenne des résidus, dans l'unité de la cible. Elle se lit directement comme l'erreur typique d'une prédiction."
     cited_example: "Here the linear model's validation MAE is {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit>, against {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> for the mean baseline."
+    cited_example_fr: "Ici, la MAE de validation du modèle linéaire vaut {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit>, contre {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> pour la référence (prédire la moyenne)."
   rmse:
     term: Root mean squared error (RMSE)
     term_fr: "racine de l'erreur quadratique moyenne (RMSE)"
     definition: The square root of the average squared residual, in the unit of the target. Squaring weighs large errors more, so a gap between RMSE and MAE signals a few large errors.
     definition_fr: "La racine carrée de la moyenne des résidus au carré, dans l'unité de la cible. Le carré pèse davantage les grandes erreurs : un écart entre RMSE et MAE signale quelques grandes erreurs."
     cited_example: "Here the linear model's validation RMSE is {{slot:evaluate.regression:models.[fit.linear].rmse|f2}} <unit>, against {{slot:evaluate.regression:models.[fit.baseline].rmse|f2}} <unit> for the mean baseline."
+    cited_example_fr: "Ici, la RMSE de validation du modèle linéaire vaut {{slot:evaluate.regression:models.[fit.linear].rmse|f2}} <unit>, contre {{slot:evaluate.regression:models.[fit.baseline].rmse|f2}} <unit> pour la référence (prédire la moyenne)."
   paired_bootstrap:
     term: Paired bootstrap
     term_fr: "bootstrap apparié"
@@ -387,18 +453,23 @@ regression_terms:
     term: Paired difference
     term_fr: "différence appariée"
     definition: The difference between two models measured on the same rows, such as the linear model's MAE minus the baseline's. Pairing removes the noise of which rows each model was measured on.
+    definition_fr: "L'écart entre deux modèles mesuré sur les mêmes lignes, comme la MAE du modèle linéaire moins celle du modèle de référence. L'appariement retire le bruit dû aux lignes sur lesquelles chaque modèle a été mesuré."
     example: Here the linear model's MAE minus the baseline's is <delta> <unit>, between <low> and <high> on resamples of the validation rows. Below zero means the linear model errs less on these rows; an interval that contains zero does not show that one model is better.
     cited_example: "Here the linear model's MAE minus the baseline's is {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} <unit>, between {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} and {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} on resamples of the validation rows."
+    cited_example_fr: "Ici, la MAE du modèle linéaire moins celle du modèle de référence vaut {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} <unit>, entre {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} et {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} sur des rééchantillonnages des lignes de validation."
   confidence_interval:
     term: Confidence interval
     term_fr: "intervalle de confiance"
     definition: A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for future rows.
+    definition_fr: "Une plage qui montre de combien un chiffre pourrait bouger si d'autres lignes avaient été tirées. Dans cette étude, c'est un intervalle des percentiles du bootstrap apparié : il décrit la variabilité de ces lignes de validation, pas une plage garantie pour de futures lignes."
     example: Here the linear model's MAE ranges from <low> to <high> <unit> on resamples of the <n> validation rows; a wide range means the error is uncertain.
     cited_example: "Here the linear model's MAE ranges from {{slot:evaluate.regression:intervals.[fit.linear].mae.low|f2}} to {{slot:evaluate.regression:intervals.[fit.linear].mae.high|f2}} <unit> on resamples of the validation rows."
+    cited_example_fr: "Ici, la MAE du modèle linéaire va de {{slot:evaluate.regression:intervals.[fit.linear].mae.low|f2}} à {{slot:evaluate.regression:intervals.[fit.linear].mae.high|f2}} <unit> sur des rééchantillonnages des lignes de validation."
   percentile_interval:
     term: Percentile interval
     term_fr: "intervalle des percentiles"
     definition: The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the error on future rows.
+    definition_fr: "La plage entre deux percentiles des répétitions du bootstrap. Elle montre la variabilité d'échantillonnage sur ces lignes, pas l'erreur sur de futures lignes."
   selection_on_validation:
     term: Selection on validation
     term_fr: "sélection sur le jeu de validation"
@@ -409,10 +480,12 @@ regression_terms:
     term: Leakage
     term_fr: "fuite d'information (leakage)"
     definition: A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use. For example, a fuel consumption measured on a road test would reveal a car's fuel efficiency, but it is known only after the measurement the model is meant to anticipate.
+    definition_fr: "Une variable qui porte une information postérieure au moment de la prédiction. Elle fait paraître un modèle meilleur sur les données passées qu'il ne peut l'être en usage. Par exemple, une consommation mesurée lors d'un essai sur route révélerait la consommation d'une voiture, mais elle n'est connue qu'après la mesure que le modèle doit anticiper."
   overfitting:
     term: Overfitting
     term_fr: "surapprentissage (overfitting)"
     definition: A model that fits the noise of its training set as well as its pattern. It looks better on the rows it was fitted on than on new rows. For example, a model that memorises the fuel efficiency of the car names it was fitted on predicts those cars well and later model years badly; the gap between training and validation errors reveals it.
+    definition_fr: "Un modèle qui apprend le bruit de son jeu d'entraînement en plus de sa structure. Il paraît meilleur sur les lignes sur lesquelles il a été ajusté que sur de nouvelles lignes. Par exemple, un modèle qui mémorise la consommation des noms de voitures sur lesquels il a été ajusté prédit bien ces voitures et mal les années de modèle suivantes ; l'écart entre les erreurs d'entraînement et de validation le révèle."
   regularisation:
     term: Regularisation
     term_fr: "régularisation"
@@ -422,14 +495,17 @@ regression_terms:
     term: One-hot encoding
     term_fr: "encodage one-hot"
     definition: Turning a category column into one indicator column per category, set for the rows that have that category. A linear model needs it because categories have no order. For example, the origin of a car is coded as a region number; it becomes one indicator per region instead of a number the model would read as a measurement.
+    definition_fr: "Transformer une colonne de catégories en une colonne indicatrice par catégorie, activée pour les lignes qui ont cette catégorie. Un modèle linéaire en a besoin parce que les catégories n'ont pas d'ordre. Par exemple, l'origine d'une voiture est codée par un numéro de région ; elle devient un indicateur par région au lieu d'un nombre que le modèle lirait comme une mesure."
   imputation:
     term: Imputation
     term_fr: "imputation"
     definition: Filling a missing value with a substitute, such as the median of the training set, before fitting. The substitute is computed on the training set only, and an indicator can record that the value was missing. For example, the cars whose engine power is missing get the median engine power of the training cars, never a figure computed with validation cars.
+    definition_fr: "Remplacer une valeur manquante par un substitut, comme la médiane du jeu d'entraînement, avant l'ajustement. Le substitut est calculé sur le jeu d'entraînement seulement, et un indicateur peut garder la trace de la valeur manquante. Par exemple, les voitures dont la puissance manque reçoivent la puissance médiane des voitures d'entraînement, jamais un chiffre calculé avec les voitures de validation."
   standardisation:
     term: Standardisation
     term_fr: "standardisation"
     definition: Rescaling a numeric column to a mean of zero and a standard deviation of one, with both computed on the training set. It puts features on one scale, so their weights and a penalty treat them alike. For example, weight in pounds and acceleration in seconds are rescaled so that the weight given to a car's weight is not tiny only because pounds are large numbers.
+    definition_fr: "Remettre une colonne numérique à l'échelle avec une moyenne de zéro et un écart-type de un, tous deux calculés sur le jeu d'entraînement. Cela met les variables sur une même échelle, pour que leurs poids et une pénalité les traitent de la même façon. Par exemple, le poids en livres et l'accélération en secondes sont remis à l'échelle pour que le poids donné au poids d'une voiture ne soit pas minuscule seulement parce que les livres sont de grands nombres."
   cross_validation:
     term: k-fold cross-validation
     term_fr: "validation croisée à k plis"
@@ -440,10 +516,12 @@ regression_terms:
     term: Out-of-fold predictions
     term_fr: "prédictions hors pli"
     definition: The prediction for a development row made by the model fitted on the training folds, the folds other than the row's own validation fold, so by a model that never saw that row. Every development row gets one, and the errors and the model choice are read on them; they are development evidence, because the choice is made on them. For example, a car in the third fold is predicted by the model fitted on the other folds' cars.
+    definition_fr: "La prédiction pour une ligne de développement faite par le modèle ajusté sur les plis d'entraînement, les plis autres que le pli de validation de cette ligne, donc par un modèle qui n'a jamais vu cette ligne. Chaque ligne de développement en reçoit une, et les erreurs et le choix du modèle se lisent dessus ; ce sont des résultats de développement, parce que le choix est fait sur elles. Par exemple, une voiture du troisième pli est prédite par le modèle ajusté sur les voitures des autres plis."
   fold_spread:
     term: Fold spread
     term_fr: "dispersion entre plis"
     definition: How much a figure moves from one validation fold to another, given as its lowest and highest fold value. It is not a confidence interval, since it describes the folds of this development set, while a confidence interval describes how a figure could move with another sample. A difference between two models smaller than the spread is not a difference this study can see. For example, if the mean error ranges widely across folds, a small gain of the variant over the candidate says little.
+    definition_fr: "De combien un chiffre bouge d'un pli de validation à l'autre, donné par sa valeur de pli la plus basse et la plus haute. Ce n'est pas un intervalle de confiance : elle décrit les plis de cet échantillon de développement, alors qu'un intervalle de confiance décrit comment un chiffre pourrait bouger avec un autre échantillon. Un écart entre deux modèles plus petit que la dispersion n'est pas un écart que cette étude peut voir. Par exemple, si l'erreur moyenne varie beaucoup d'un pli à l'autre, un petit gain de la variante sur le candidat dit peu de chose."
   final_test:
     term: Holdout (final test)
     term_fr: "échantillon de test final (holdout)"
@@ -489,16 +567,20 @@ cv_terms:
     definition_fr: "La façon dont les valeurs d'une colonne se répartissent sur les lignes : la fréquence de chaque valeur ou, pour une mesure, son étendue, ses quartiles et ses cellules manquantes. Elle est lue sur l'échantillon de développement ; le test final reste non lu."
   base_rate:
     cited_example: "In this study's development rows the positive outcome occurs in {{slot:eda.target_rate:rate|pct1}} of rows."
+    cited_example_fr: "Dans les lignes de développement de cette étude, le résultat positif apparaît dans {{slot:eda.target_rate:rate|pct1}} des lignes."
   baseline:
     definition: The simplest reference model, a constant score equal to the base rate of the development rows. Keeping the baseline is a valid conclusion.
     definition_fr: "Le modèle de référence le plus simple, un score constant égal au taux de base de l'échantillon de développement. Garder le modèle de référence est une conclusion valable."
     cited_example: "Here the baseline gives every row the base rate of the development rows, {{slot:fit.baseline:train_rate|pct1}}, so it cannot rank the rows."
+    cited_example_fr: "Ici, le modèle de référence donne à chaque ligne le taux de base des lignes de développement, {{slot:fit.baseline:train_rate|pct1}}, donc il ne peut pas classer les lignes."
   precision:
     example: Here the logistic model's rule selects <selected> of the <n> development rows predicted out of fold and <true_positives> of them are positive, a precision of <precision>.
     cited_example: "At <rule>, {{slot:policy.evaluation:rules.[<rule>].models.[fit.logistic].precision|pct1}} of the development rows the logistic model acts on, out of fold, turn out positive."
+    cited_example_fr: "Avec <rule>, {{slot:policy.evaluation:rules.[<rule>].models.[fit.logistic].precision|pct1}} des lignes de développement sur lesquelles le modèle logistique agit, hors pli, se révèlent positives."
   recall:
     example: Here the development rows hold <n_positive> positive rows and the rule reaches <true_positives> of them, out of fold, a recall of <recall>. A small capacity keeps recall low even when precision is high.
     cited_example: "At <rule>, the logistic model reaches {{slot:policy.evaluation:rules.[<rule>].models.[fit.logistic].recall|pct1}} of the positive development rows, out of fold."
+    cited_example_fr: "Avec <rule>, le modèle logistique atteint {{slot:policy.evaluation:rules.[<rule>].models.[fit.logistic].recall|pct1}} des lignes de développement positives, hors pli."
   paired_bootstrap:
     definition: Resampling the same out-of-fold predictions for both policies at once, within each fold, so the interval describes their difference rather than each one separately.
     definition_fr: "Rééchantillonner les mêmes prédictions hors pli pour les deux règles à la fois, à l'intérieur de chaque pli, pour que l'intervalle décrive leur différence plutôt que chacune séparément."
@@ -506,10 +588,13 @@ cv_terms:
   paired_difference:
     example: Here the logistic model's precision minus the baseline's at <rule> is <delta>, between <low> and <high> on resamples of the out-of-fold predictions. An interval that contains zero does not show that one model is better.
     cited_example: "At <rule>, the logistic model's precision minus the baseline's is {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.point|pct1}}, between {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.low|pct1}} and {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.high|pct1}} on resamples of the out-of-fold predictions."
+    cited_example_fr: "Avec <rule>, la précision du modèle logistique moins celle du modèle de référence vaut {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.point|pct1}}, entre {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.low|pct1}} et {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.high|pct1}} sur des rééchantillonnages des prédictions hors pli."
   confidence_interval:
     definition: A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these out-of-fold predictions, not a guaranteed range for a future campaign. For example, a precision interval that runs from close to the base rate to well above it says that the call list may barely beat calling clients at random.
+    definition_fr: "Une plage qui montre de combien un chiffre pourrait bouger si d'autres lignes avaient été tirées. Dans cette étude, c'est un intervalle des percentiles du bootstrap apparié : il décrit la variabilité de ces prédictions hors pli, pas une plage garantie pour une future campagne. Par exemple, un intervalle de précision qui va d'à peine plus que le taux de base à bien au-dessus dit que la liste d'appels pourrait à peine faire mieux qu'appeler des clients au hasard."
     example: Here the logistic model's precision at <rule> ranges from <low> to <high> on resamples of the <n> development rows predicted out of fold; a wide range means the figure is uncertain.
     cited_example: "At <rule>, the logistic model's precision ranges from {{slot:policy.evaluation:rules.[<rule>].intervals.[fit.logistic].precision.low|pct1}} to {{slot:policy.evaluation:rules.[<rule>].intervals.[fit.logistic].precision.high|pct1}} on resamples of the out-of-fold predictions."
+    cited_example_fr: "Avec <rule>, la précision du modèle logistique va de {{slot:policy.evaluation:rules.[<rule>].intervals.[fit.logistic].precision.low|pct1}} à {{slot:policy.evaluation:rules.[<rule>].intervals.[fit.logistic].precision.high|pct1}} sur des rééchantillonnages des prédictions hors pli."
   selection_on_validation:
     term: Selection on development evidence
     term_fr: "sélection sur des résultats de développement"
@@ -517,11 +602,13 @@ cv_terms:
     definition_fr: "Choisir un modèle, un seuil ou une capacité en regardant des résultats hors pli. Les chiffres retenus sont optimistes pour cette raison ; seul le test final, ouvert une fois, est indépendant."
   permutation_null_band:
     definition: The range of a chart's figures after shuffling the outcome among the development rows several times with a fixed seed, which breaks any real link between the variable and the outcome. A pattern that stays inside the band is what chance alone draws; one above every shuffle is unlikely to be chance alone.
+    definition_fr: "L'étendue des chiffres d'un graphique après avoir mélangé plusieurs fois le résultat entre les lignes de développement avec une graine fixe, ce qui casse tout lien réel entre la variable et le résultat. Un motif qui reste dans la bande est ce que le hasard seul produit ; un motif au-dessus de chaque mélange a peu de chances de venir du seul hasard."
   data_contingent_decision:
     definition: A decision chosen after looking at the outcome in the data. It is allowed, but it is recorded with the analyses that motivated it, because a choice adapted to the development rows makes the out-of-fold figures slightly optimistic. For example, capping a variable because a chart of the outcome looked odd at its extremes is a data-contingent preparation.
     definition_fr: "Une décision choisie après avoir regardé le résultat dans les données. Elle est permise, mais enregistrée avec les analyses qui l'ont motivée, car un choix adapté à l'échantillon de développement rend les chiffres hors pli un peu optimistes. Par exemple, plafonner une variable parce qu'un graphique du résultat semblait étrange à ses extrêmes est une préparation dépendante des données."
   single_feature_signal:
     definition: How well one variable alone predicts the outcome, measured out of fold on the development rows. A variable that predicts far better than the others raises a question about when its value becomes known, because a value recorded at or after the outcome would leak it. It never decides which variables to keep.
+    definition_fr: "À quel point une variable seule prédit le résultat, mesuré hors pli sur les lignes de développement. Une variable qui prédit bien mieux que les autres pose une question sur le moment où sa valeur devient connue, parce qu'une valeur enregistrée au moment du résultat ou après le ferait fuir. Elle ne décide jamais quelles variables garder."
 regression_cv_terms:
   development_rows:
     definition: Every row outside the sealed final test, the rows the study may explore, divide into folds, and use to choose. What they show is development evidence, not final evidence. For example, the cars in the development rows feed the exploration, the model fits, and the comparison of models, while the sealed cars stay unread.
@@ -533,16 +620,21 @@ regression_cv_terms:
     definition: How the values of the target spread, summarised by the mean, the standard deviation, and the quartiles. Any model is compared with the simplest guess, the mean.
     definition_fr: "La façon dont les valeurs de la cible se répartissent, résumée par la moyenne, l'écart type et les quartiles. Tout modèle est comparé à la prédiction la plus simple, la moyenne."
     cited_example: "On this study's development rows the target has a mean of {{slot:eda.target_summary:mean|f2}} <unit> and a standard deviation of {{slot:eda.target_summary:sd|f2}} <unit>."
+    cited_example_fr: "Sur les lignes de développement de cette étude, la cible a une moyenne de {{slot:eda.target_summary:mean|f2}} <unit> et un écart-type de {{slot:eda.target_summary:sd|f2}} <unit>."
   baseline:
     definition: The simplest reference model, here the mean of the target over the rows it is fitted on, predicted for every row (each fold gets the mean of the other folds). Keeping the baseline is a valid conclusion.
     definition_fr: "Le modèle de référence le plus simple, ici la moyenne de la cible sur les lignes sur lesquelles il est ajusté, prédite pour chaque ligne (chaque pli reçoit la moyenne des autres plis). Garder le modèle de référence est une conclusion valable."
     cited_example: "Here the mean of the development rows is {{slot:fit.baseline:train_mean|f2}} <unit>; each fold is predicted with the mean of the other folds."
+    cited_example_fr: "Ici, la moyenne des lignes de développement vaut {{slot:fit.baseline:train_mean|f2}} <unit> ; chaque pli est prédit avec la moyenne des autres plis."
   bias:
     cited_example: "Here the mean residual of the linear model out of fold is {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}} <unit>."
+    cited_example_fr: "Ici, le résidu moyen du modèle linéaire hors pli vaut {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}} <unit>."
   mae:
     cited_example: "Here the linear model's out-of-fold MAE is {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit>, against {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> for the mean baseline."
+    cited_example_fr: "Ici, la MAE hors pli du modèle linéaire vaut {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit>, contre {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> pour la référence (prédire la moyenne)."
   rmse:
     cited_example: "Here the linear model's out-of-fold RMSE is {{slot:evaluate.regression:models.[fit.linear].rmse|f2}} <unit>, against {{slot:evaluate.regression:models.[fit.baseline].rmse|f2}} <unit> for the mean baseline."
+    cited_example_fr: "Ici, la RMSE hors pli du modèle linéaire vaut {{slot:evaluate.regression:models.[fit.linear].rmse|f2}} <unit>, contre {{slot:evaluate.regression:models.[fit.baseline].rmse|f2}} <unit> pour la référence (prédire la moyenne)."
   paired_bootstrap:
     definition: Resampling the same out-of-fold predictions for both models at once, so the interval describes their difference rather than each one separately.
     definition_fr: "Rééchantillonner les mêmes prédictions hors pli pour les deux modèles à la fois, pour que l'intervalle décrive leur différence plutôt que chacun séparément."
@@ -550,10 +642,13 @@ regression_cv_terms:
   paired_difference:
     example: Here the linear model's MAE minus the baseline's is <delta> <unit>, between <low> and <high> on resamples of the out-of-fold predictions. Below zero means the linear model errs less on these rows; an interval that contains zero does not show that one model is better.
     cited_example: "Here the linear model's MAE minus the baseline's is {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} <unit>, between {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} and {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} on resamples of the out-of-fold predictions."
+    cited_example_fr: "Ici, la MAE du modèle linéaire moins celle du modèle de référence vaut {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} <unit>, entre {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} et {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} sur des rééchantillonnages des prédictions hors pli."
   confidence_interval:
     definition: A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these out-of-fold predictions, not a guaranteed range for future rows.
+    definition_fr: "Une plage qui montre de combien un chiffre pourrait bouger si d'autres lignes avaient été tirées. Dans cette étude, c'est un intervalle des percentiles du bootstrap apparié : il décrit la variabilité de ces prédictions hors pli, pas une plage garantie pour de futures lignes."
     example: Here the linear model's MAE ranges from <low> to <high> <unit> on resamples of the <n> development rows predicted out of fold; a wide range means the error is uncertain.
     cited_example: "Here the linear model's MAE ranges from {{slot:evaluate.regression:intervals.[fit.linear].mae.low|f2}} to {{slot:evaluate.regression:intervals.[fit.linear].mae.high|f2}} <unit> on resamples of the out-of-fold predictions."
+    cited_example_fr: "Ici, la MAE du modèle linéaire va de {{slot:evaluate.regression:intervals.[fit.linear].mae.low|f2}} à {{slot:evaluate.regression:intervals.[fit.linear].mae.high|f2}} <unit> sur des rééchantillonnages des prédictions hors pli."
   selection_on_validation:
     term: Selection on development evidence
     term_fr: "sélection sur des résultats de développement"

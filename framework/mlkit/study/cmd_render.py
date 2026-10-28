@@ -74,50 +74,111 @@ def _pseudo_state(view: dict) -> dict:
 
 
 def _variables(view: dict) -> list[dict]:
+    """The case's variables for the report's dictionary; in a French study (L3, owner session
+    2026-10-26, R4) with each description and group in French where the case gives them (the
+    variable's ``labels.fr``, the translation sidecar recorded at ``init``: ``view.case_texts``)."""
     from . import case as c
 
     try:
-        return list(c.load_case(view['case']['path'], verify_data=False).document['variables'])
+        document = c.load_case(view['case']['path'], verify_data=False).document
+        variables = list(document['variables'])
     except Exception:      # the report still renders without the variable dictionary
         return []
-
-
-SAMPLE_ROWS = 5
+    if view.get('language') != 'fr':
+        return variables
+    groups = (view.get('case_texts') or {}).get('groups') or {}
+    out = []
+    for v in variables:
+        french = dict(v)
+        description = (v.get('labels') or {}).get('fr')
+        if description:
+            french['description'] = description
+        group = (groups.get(v.get('group')) or {}).get('fr')
+        if group:
+            french['group'] = group
+        out.append(french)
+    return out
 
 
 def sample_rows(study: Path, view: dict) -> dict | None:
-    """The five fixed development rows of the report's data section (v0.2a, WP-A6): the
-    first development rows by position in the file, target first, as recorded (text).
+    """The seeded step-1 sample of the report's data section (contract P1.9, CLI-CONTRACT
+    §17.3): eight development rows drawn at random, target first, as recorded (text), with
+    the seed (``{columns, rows, seed, target_shown, withheld}``).
 
-    The same rows as ``hypotrail data`` (the first five by row key), read with the standard
-    library so that a render never imports pandas. Development rows only: the sealed final
-    test is never read (ADR 0006); ``init`` already recorded their structure as exposure.
-    None when they cannot be read (the report then says so)."""
-    from . import case as c, data as dt, partition, read
+    The same rows as ``hypotrail data`` (``partition.sample``), read with the standard library
+    so that a render never imports pandas, and only those lines. Development rows only: the
+    sealed final test is never read (ADR 0006). The target is shown only when the look is
+    recorded (render records it first, :func:`render_all`). None when they cannot be read
+    (the report then says so)."""
+    from . import case as c, data as dt, exposure, read
 
     try:
         snapshot = read.open(study)
+        entries = snapshot.exposure_records()
+        drawn = exposure.current_sample(snapshot, snapshot.state, entries)
+        if drawn is None:
+            return None
+        shown = bool(exposure.sample_records(entries, drawn['seed']))
+        withheld = exposure.sample_withheld(snapshot.state, entries, drawn['seed'])
         case = c.load_case(view['case']['path'], verify_data=False)
-        keys = partition.development_keys(snapshot.blob, partition.inputs(snapshot.state))
         lines = case.dataset_path.read_bytes().decode(case.dataset['encoding']).split('\n')
         first = 2 if case.dataset['header'] else 1
         body = lines[1:] if case.dataset['header'] else lines
-        candidates = (sorted(keys, key=lambda k: int(str(k)[1:])) if keys is not None
-                      else [f'L{first + i}' for i in range(len(body))])
-        wanted = candidates[:SAMPLE_ROWS]
         split = dt._field_splitter(case)
         names = case.column_names
         target = case.target_column
-        columns = [target] + [n for n in names if n != target]
+        columns = ([target] if shown else []) + [n for n in names if n != target]
         rows = []
-        for key in wanted:
+        for key in drawn['row_keys']:
             fields = split(body[int(key[1:]) - first].rstrip('\r'))
             if len(fields) != len(names):
                 return None
             record = dict(zip(names, fields))
             rows.append({'row_key': key, 'values': {col: record[col] for col in columns}})
-        return {'columns': columns, 'rows': rows}
+        return {'columns': columns, 'rows': rows, 'seed': drawn['seed'],
+                'target_shown': shown, 'withheld': withheld}
     except Exception:          # the report still renders, without the example rows
+        return None
+
+
+def _decision_marks(study: Path, view: dict) -> dict:
+    """Contract P1.13: the decisions changed after an evaluation of the earlier value
+    (``panel_digest.decision_marks``); empty when they cannot be read."""
+    from . import panel_digest, read
+    try:
+        return panel_digest.decision_marks(read.open(study), view)
+    except Exception:          # noqa: BLE001 - the report renders without the mark
+        return {}
+
+
+def _understanding(study: Path) -> str:
+    """The understanding section (ADR 0008), empty when the study never enabled it."""
+    from . import read
+    state = read.load_state(study)
+    if 'understanding' not in state:
+        return ''
+    from .understanding import render
+    try:
+        return render.section(study, state)
+    except Exception:          # noqa: BLE001 - the report renders; status shows the review
+        return ('<section class="card" id="understanding"><h2>Understanding and handover'
+                '</h2><p>The review summary could not be read; run hypotrail understanding '
+                'status.</p></section>')
+
+
+def twin_view(study: Path, view: dict) -> dict | None:
+    """v4 (R27): the study read in the other language (no write, no clock), for the second
+    edition of the report: the plan, the limits and the next action in that language, the
+    restatements the agent gave in it (``view.language_texts`` reads the summary's the same
+    way). None when it cannot be built (the report then derives it from ``view``)."""
+    from . import read, view as view_model
+    try:
+        snapshot = read.open(study)
+        state = snapshot.state
+        other = 'fr' if (view.get('language') or 'en') == 'en' else 'en'
+        twin = read.Study.at_state(snapshot.study_dir, {**state, 'language': other})
+        return view_model.build(twin)
+    except Exception:
         return None
 
 
@@ -129,8 +190,12 @@ def _render_report(study: Path, view: dict, manifest: dict, surfaces: dict) -> d
     path = study / mf.ARTIFACTS['report']
     try:
         _inject('render_html')
-        page, consumed = render_html.build(view, surfaces=surfaces, variables=_variables(view),
-                                           sample=sample_rows(study, view))
+        with render_html.changed_after_validation_context(_decision_marks(study, view)):
+            page, consumed = render_html.build(view, surfaces=surfaces,
+                                               variables=_variables(view),
+                                               sample=sample_rows(study, view),
+                                               understanding=_understanding(study),
+                                               twin=twin_view(study, view))
         data = page.encode('utf-8')
         atomic_write(path, data)
     except Exception as exc:
@@ -196,6 +261,12 @@ def render_all(study_dir) -> dict:
     # Marimo's code generator is imported by render_notebook only when the notebook text
     # changes (cached template); most commits render without importing it.
     with lock.writer_lock(study):
+        # Contract P1.9: render is a write; a study created before the step-1 sample records
+        # its look here when no write did, after the sources are checked, so the report shows
+        # the target it records (none once the split is confirmed, ``exposure.ensure_sample``).
+        from . import exposure
+        store = StudyStore(study)
+        exposure.ensure_sample(store, store.load_state())
         view = view_model.build(study)
         manifest = mf.load(study)
         items = _render_notebooks(study, view, manifest)

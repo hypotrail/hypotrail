@@ -67,26 +67,21 @@
    }
   },
   "next_action": {
-   "kind": "propose",
+   "kind": "run",
    "step": "final_test",
-   "decision": "final_test",
-   "message": "Now that the model and the rule are chosen, do you open the sealed final test, once, to measure the chosen configuration on rows nothing has seen? After this, any change is made after the final test.",
-   "default_value": {
-    "model": "fit.logistic",
-    "rule": "threshold:0.2"
+   "activity": "predictor.capture",
+   "message": "Run predictor.capture before proposing to open the final test: the export template supports the chosen model, and only a model captured before the opening is exported as the evaluated model (afterwards the Azure ML export carries the recipe only). The final test stays sealed.",
+   "audience": "agent",
+   "junior_message": "Before the final test is opened, the engine captures the chosen model: it fits it once on every development row, reloads it and checks that it gives the same predictions, so that the Azure ML export carries the evaluated model. No final-test row is read.",
+   "options": {
+    "profile": "workshop"
    },
-   "audience": "junior",
-   "junior_message": "Now that the model and the rule are chosen, do you open the sealed final test, once, to measure the chosen configuration on rows nothing has seen? After this, any change is made after the final test.",
    "language": "en",
-   "recommended": {
-    "value": {
-     "model": "fit.logistic",
-     "rule": "threshold:0.2"
-    },
-    "why": "This is the configuration you chose; the holdout (final test) measures it once."
-   },
-   "question": "Do you open the holdout (final test) now, once?",
-   "junior_digest": "Holdout (final test): rows sealed since the start. Opened once, it measures the chosen configuration on rows no choice used; it is the study's only independent evidence. After the opening, any change is reported as made after the final test. Recommended: This is the configuration you chose; the holdout (final test) measures it once. It holds 904 rows.",
+   "recommended": null,
+   "question": null,
+   "junior_digest": "Next: the captured model, run without asking you. Before the final test is opened, the engine captures the chosen model: it fits it once on every development row, reloads it and checks that it gives the same predictions, so that the Azure ML export carries the evaluated model. No final-test row is read.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Final test (13 of 14).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",
@@ -94,8 +89,8 @@
     "revision": 52,
     "position": {
      "step_id": "final_test",
-     "completed": 11,
-     "total": 13
+     "completed": 12,
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -119,7 +114,11 @@
      "continue",
      "explain"
     ],
-    "question": "Do you open the holdout (final test) now, once?",
+    "option_labels": {
+     "continue": "Let's continue",
+     "explain": "Explain first"
+    },
+    "question": "Before the final test is opened, the engine captures the chosen model: it fits it once on every development row, reloads it and checks that it gives the same predictions, so that the Azure ML export carries the evaluated model. No final-test row is read.",
     "evidence_refs": [],
     "detail_topics": [
      "metric",

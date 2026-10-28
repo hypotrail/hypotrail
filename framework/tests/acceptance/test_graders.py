@@ -460,8 +460,9 @@ def test_scenarios_contract():
     ids = [s['id'] for s in doc['scenarios']]
     # WP-A8: S0 (step 0), S10 (reason check, R3), S11 (sealed final test) join S1-S9;
     # WP-B6b: S12 (the final test opened once) and S13 (diagnostics before the opening);
-    # WP-H: S14 (a whole study, adopting each proposal).
-    assert ids == [f'S{i}' for i in range(0, 15)]
+    # WP-H: S14 (a whole study, adopting each proposal). Owner session 2026-10-26 (L5,
+    # D11): S15 (the junior asks for an SVM).
+    assert ids == [f'S{i}' for i in range(0, 16)]
     assert doc['defaults']['requires'] == ['hypotrail_cli', 'claude_cli']
     assert set(doc['defaults']['cases']) == {'bank', 'synthetic'}
     said = [step['say'] for s in doc['scenarios'] for chat in s['chats'] for step in chat]

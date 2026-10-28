@@ -15,7 +15,10 @@ fits. ``run-local`` fits a new candidate and is never called by ``validate``. ``
 and ``submit`` print the Azure CLI commands; they run them only with ``--execute``:
 ``preflight`` reads Azure, ``submit`` writes to it (assets, then one pipeline job). Nothing
 here deploys an endpoint or registers a model. Each command prints one JSON document; a
-refusal exits with code 2, a failed check with code 1.
+refusal exits with code 2 (including a refusal of ``hypotrail_runtime``, an unreadable or
+malformed input file and a configuration Hydra cannot compose), a failed check with code 1,
+and an unexpected exception is reported as ``internal_error`` with code 1. ``validate``
+writes ``outputs/validation.json`` whatever its checks found.
 """
 
 from __future__ import annotations
@@ -29,7 +32,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .hypotrail import azure_yaml, canonical, contracts, runtime_bridge, transfer
-from .hypotrail.errors import ProjectError
+from .hypotrail.errors import ProjectError, from_exception, internal_error
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -42,7 +45,7 @@ TARGET = CONF_DIR / "azure" / "target.yaml"
 MISSING = "MISSING-"
 STEPS = ("data_preparation", "data_splitting", "training", "evaluation")
 UPLOAD_ALLOWED = re.compile(
-    r"^(src/.+|\.amlignore|\.gitignore|\.pre-commit-config\.yaml|README\.md|environment\.yml|pyproject\.toml)$",
+    r"(src/.+|\.amlignore|\.gitignore|\.pre-commit-config\.yaml|README\.md|environment\.yml|pyproject\.toml)",
 )
 # Credential shapes, written in pieces so that this file does not match itself.
 SECRET = re.compile(
@@ -78,8 +81,10 @@ def _target() -> dict:
 def _check(checks: list, check_id: str, function: Callable[[], object]) -> None:
     try:
         result = function()
-    except ProjectError as error:
-        checks.append({"id": check_id, "status": "failed", "error": error.to_dict()})
+    except Exception as error:  # noqa: BLE001 - every failure of a check is reported, never raised
+        refusal = from_exception(error)
+        found = refusal.to_dict() if refusal is not None else internal_error(error)["error"]
+        checks.append({"id": check_id, "status": "failed", "error": found})
         return
     status, detail = result if isinstance(result, tuple) else (result, None)
     item = {"id": check_id, "status": status}
@@ -91,17 +96,60 @@ def _check(checks: list, check_id: str, function: Callable[[], object]) -> None:
 # --- validate --------------------------------------------------------------------------
 
 
-def _hydra_config() -> tuple[str, str | None]:
-    if not (runtime_bridge.available("hydra") and runtime_bridge.available("omegaconf")):
-        return "not_run", "Hydra is not installed."
+def _has_hydra() -> bool:
+    return runtime_bridge.available("hydra") and runtime_bridge.available("omegaconf")
+
+
+def _frozen_config() -> dict:
+    """Compose and freeze the project's configuration, as every step does first."""
     from hydra import compose, initialize_config_dir
 
     from .hypotrail.config import freeze
 
     with initialize_config_dir(config_dir=str(CONF_DIR), version_base=None):
         cfg = compose(config_name="config")
-    frozen = freeze(cfg)
+    return freeze(cfg)
+
+
+def _hydra_config() -> tuple[str, str | None]:
+    if not _has_hydra():
+        return "not_run", "Hydra is not installed."
+    frozen = _frozen_config()
+    # The configuration's own expected identity can be edited with it: the authority is the
+    # checksummed projection of the data folder, which every step also verifies.
+    reference = contracts.load_json(DATA_DIR / contracts.FILES["projection"])
+    if canonical.canonical_sha256(reference) != frozen["scientific_sha256"]:
+        from .hypotrail import projection
+
+        actual = projection.from_config(frozen["config"])
+        raise ProjectError(
+            "scientific_config_changed",
+            "The scientific configuration differs from the study's exported projection.",
+            path="src/conf",
+            remediation="Restore the exported configuration files; a new experiment is a new activity of the study.",
+            details={"differences": projection.differences(reference, actual)[:20]},
+        )
     return "passed", frozen["scientific_sha256"]
+
+
+def _contract_identities() -> tuple[str, object]:
+    """Bind the plan, the snapshot and the evaluated model to the configuration (R9AB-1).
+
+    The checks every step makes first (``contracts.load``): SHA256SUMS is written with the
+    data folder, so it proves no accidental change, not that the plan, the snapshot or the
+    evaluated model are the ones the configuration names.
+    """
+    if not _has_hydra():
+        return "not_run", "Hydra is not installed."
+    frozen = _frozen_config()
+    # The data folder of this project, whatever the working directory (operational).
+    frozen["config"]["data_dir"] = str(DATA_DIR)
+    found = contracts.load(frozen)
+    return "passed", {
+        "snapshot_id": frozen["config"]["hypotrail"]["snapshot_id"],
+        "plan_keys_sha256": found.plan["keys_sha256"],
+        "evaluated_predictor_id": contracts.evaluated_predictor_id(found.snapshot),
+    }
 
 
 def _azure_yaml() -> tuple[str, object]:
@@ -130,7 +178,7 @@ def _markers() -> tuple[str, object]:
 
 def _upload() -> tuple[str, object]:
     files = transfer.transferable(ROOT)
-    outside = [f for f in files if not UPLOAD_ALLOWED.match(f)]
+    outside = [f for f in files if not UPLOAD_ALLOWED.fullmatch(f)]
     if outside:
         raise ProjectError(
             "contract_invalid",
@@ -167,13 +215,14 @@ def _evaluated() -> tuple[str, object]:
     if not runtime_bridge.available("hypotrail_runtime"):
         return "not_run", "hypotrail_runtime is not installed."
     rt = runtime_bridge.runtime()
-    rt.verify_bundle(folder)
+    snapshot = contracts.load_json(DATA_DIR / contracts.FILES["snapshot"])
+    contracts.check_evaluated(DATA_DIR, snapshot, rt.verify_bundle(folder).predictor_id)
     bundle = contracts.load_json(folder / "predictor_bundle.json")
     spec = mp.ParitySpec.from_bundle(bundle)
     features = mp.read_table(mp.inside(folder, spec.features_path, "parity.features_path"))
     expected = mp.read_table(mp.inside(folder, spec.expected_outputs_path, "parity.expected_outputs_path"))
     result = mp.compare(
-        mp.batch_frame(rt.load_predictor(folder, trusted_roots=[folder]).predict(features.copy())),
+        mp.batch_frame(rt.load_predictor(folder, trusted_roots=[folder.resolve()]).predict(features.copy())),
         expected,
         spec.rtol,
         spec.atol,
@@ -200,6 +249,7 @@ def _mlflow_package() -> tuple[str, object]:
     packages = [p for p in bundle.get("optional_packages") or [] if p.get("format") == mp.FORMAT]
     if not packages:
         return "missing", "The evaluated model has no MLflow package."
+    contracts.check_evaluated(DATA_DIR, contracts.load_json(DATA_DIR / contracts.FILES["snapshot"]))
     if not (runtime_bridge.available("hypotrail_runtime") and runtime_bridge.available("mlflow")):
         return "not_run", "hypotrail_runtime or MLflow is not installed."
     result = mp.ArtifactPackager(runtime_bridge.runtime()).verify(folder, folder / packages[0]["relative_path"])
@@ -225,6 +275,7 @@ def validate(_args: argparse.Namespace) -> int:
     _check(checks, "data_checksums", lambda: ("passed", len(contracts.verify_data_dir(DATA_DIR))))
     _check(checks, "code_contract_copies", _code_copies)
     _check(checks, "hydra_config_frozen", _hydra_config)
+    _check(checks, "contract_identities", _contract_identities)
     _check(checks, "azure_yaml_graph", _azure_yaml)
     _check(checks, "configuration_markers", _markers)
     _check(checks, "code_upload_content", _upload)
@@ -233,7 +284,10 @@ def validate(_args: argparse.Namespace) -> int:
     _check(checks, "evaluated_model_mlflow_package", _mlflow_package)
     _check(checks, "development_rows", _development_rows)
     failed = [c["id"] for c in checks if c["status"] == "failed"]
-    manifest_sha = contracts.sha256_file(DATA_DIR / "contracts" / "export-manifest.json")
+    try:
+        manifest_sha = contracts.sha256_file(DATA_DIR / contracts.FILES["manifest"])
+    except OSError:
+        manifest_sha = None
     document = {
         "schema_version": "hypotrail.local_validation/1",
         "status": "failed" if failed else "passed",
@@ -277,7 +331,12 @@ def predict(args: argparse.Namespace) -> int:
             remediation="The study exported its recipe only; run-local builds a new candidate.",
         )
     rt = runtime_bridge.runtime()
-    rt.verify_bundle(folder)
+    predictor_id = rt.verify_bundle(folder).predictor_id
+    if not args.model:
+        # The default model is the export's evaluated one: the predictor its snapshot names.
+        contracts.verify_data_dir(DATA_DIR)
+        snapshot = contracts.load_json(DATA_DIR / contracts.FILES["snapshot"])
+        contracts.check_evaluated(DATA_DIR, snapshot, predictor_id)
     bundle = contracts.load_json(folder / "predictor_bundle.json")
     manifest = contracts.load_json(folder / bundle["predictor_manifest_path"])
     if args.parity:
@@ -287,9 +346,17 @@ def predict(args: argparse.Namespace) -> int:
         source = Path(args.input)
     else:
         raise ProjectError("contract_invalid", "Give --input FILE or --parity.", path="input")
-    # Rows given by a user are typed as the data contract declares (never by inference).
-    features = mp.read_table(source) if args.parity else contracts.typed_features(source, bundle_contract(folder))
-    predictor = rt.load_predictor(folder, trusted_roots=[folder])
+    # Rows given by a user are typed as the data contract declares (never by inference); a
+    # runtime parity frame (hypotrail.parity_frame/1, such as the model's own parity features)
+    # carries its declared types and is read by the runtime.
+    if args.parity:
+        features = mp.read_table(source)
+    elif _is_parity_frame(source):
+        features = _parity_frame(source)
+    else:
+        features = contracts.typed_features(source, bundle_contract(folder))
+    contracts.refuse_non_finite(features, bundle_contract(folder))
+    predictor = rt.load_predictor(folder, trusted_roots=[folder.resolve()])
     frame = mp.batch_frame(predictor.predict(features))
     document = {
         "schema_version": "hypotrail.predictions/1",
@@ -299,21 +366,88 @@ def predict(args: argparse.Namespace) -> int:
         "columns": list(frame.columns),
         "rows": json.loads(frame.to_json(orient="records")),
     }
+    if (manifest.get("output_contract") or {}).get("kind") == "binary_score":
+        # R19: the rows hold the positive-class score; the study's decision rule is metadata
+        # (the export's snapshot), never applied to these rows.
+        snapshot = contracts.load_json(DATA_DIR / contracts.FILES["snapshot"])
+        document["decision_rule"] = contracts.decision_rule(snapshot)
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(canonical.pretty_bytes(document))
     return _emit({"ok": True, "output": str(out), "rows": len(frame), "predictor_id": document["predictor_id"]})
 
 
+def _is_parity_frame(path: Path) -> bool:
+    """Return whether ``path`` is a JSON parity frame of the runtime (not a CSV of rows)."""
+    if path.suffix.lower() != ".json" or not path.is_file():
+        return False
+    try:
+        document = canonical.loads_strict(path.read_text(encoding="utf-8"))
+    except ValueError:
+        return False
+    return isinstance(document, dict) and document.get("schema_version") == "hypotrail.parity_frame/1"
+
+
+def _parity_frame(path: Path) -> object:
+    """Read a runtime parity frame given as input; a malformed one is a refusal."""
+    from .hypotrail import mlflow_packaging as mp
+
+    try:
+        return mp.read_table(path)
+    except Exception as error:  # a structured refusal is kept; any other failure is the input's
+        if from_exception(error) is not None:
+            raise
+        raise ProjectError(
+            "contract_invalid",
+            "The input is not a valid hypotrail.parity_frame/1 document.",
+            path=str(path),
+            remediation="Give a parity frame written by the runtime, or a CSV of feature values with a header.",
+            details={"error": f"{type(error).__name__}: {error}"[:300]},
+        ) from error
+
+
 # --- materialize -----------------------------------------------------------------------
 
 
-def _source_lines(source: Path, contract: dict, wanted: set[str]) -> tuple[list[str], list[list[str]]]:
-    """Return the development rows of a positional source, selected by line before parsing."""
-    import csv
-    import io
-    import shlex
+# The engine's record reader (``mlkit.study.data.row_index`` and ``_field_splitter``), copied
+# here because this project never imports the engine; it gives the row keys (the values are
+# read by the engine's pandas call, ``contracts.read_source``): records are split on "\n" only (never
+# on U+2028, form feed, NEL or a lone "\r", which ``str.splitlines`` would split on), a final
+# empty line is dropped, a trailing "\r" is removed, and fields are split by ``csv.reader``
+# on one line, or, for ``whitespace``, by the engine's tokenizer (a quoted field with doubled
+# quotes, or a run of non-space characters; no shell rules for backslashes or apostrophes).
+# The keys are physical line numbers: ``L2`` is the first data line of a file with a header.
+MAX_LISTED = 20
 
+
+def _whitespace_tokenizer(quotechar: str) -> Callable[[str], list[str]]:
+    """Return the engine's whitespace field splitter for ``quotechar``."""
+    q = re.escape(quotechar)
+    pattern = re.compile(rf"{q}((?:[^{q}]|{q}{q})*){q}|(\S+)")
+
+    def split(line: str) -> list[str]:
+        return [bare or quoted.replace(quotechar * 2, quotechar) for quoted, bare in pattern.findall(line)]
+
+    return split
+
+
+def _field_splitter(parser: dict) -> Callable[[str], list[str]]:
+    """Return the engine's field splitter of the data contract's parser."""
+    import csv
+
+    quotechar = parser.get("quotechar", '"')
+    delimiter = parser.get("delimiter", ",")
+    if delimiter == "whitespace":
+        return _whitespace_tokenizer(quotechar)
+    return lambda line: next(csv.reader([line], delimiter=delimiter, quotechar=quotechar), [])
+
+
+def _records(source: Path, contract: dict) -> list[tuple[str, list[str]]]:
+    """Return every record of a positional source with its engine row key, in file order.
+
+    A line that does not hold exactly one record of the contract's width is refused, as the
+    engine refuses it: such a file cannot be the one the study read.
+    """
     parser = contract["parser"]
     identity = contract["row_identity"]
     if identity.get("kind") != "source_position":
@@ -322,47 +456,73 @@ def _source_lines(source: Path, contract: dict, wanted: set[str]) -> tuple[list[
             "Only source_position row keys are materialised by this version.",
             path="row_identity.kind",
         )
-    text = source.read_bytes().decode(parser.get("encoding", "utf-8"))
-    lines = text.splitlines()
-    header = 1 if parser.get("header") else 0
+    encoding = parser.get("encoding", "utf-8")
+    try:
+        text = source.read_bytes().decode(encoding)
+    except UnicodeDecodeError as error:
+        raise ProjectError(
+            "data_identity_mismatch",
+            f"The source file is not {encoding} text.",
+            path=str(source),
+            remediation="Use the file the study was made on.",
+        ) from error
+    lines = text.split("\n")
+    if lines and lines[-1] == "":
+        lines.pop()
+    first = 2 if parser.get("header") else 1
+    body = lines[1:] if parser.get("header") else lines
     prefix = identity.get("prefix", "L")
-    names = [c["name"] for c in contract["columns"]]
-    rows, keys = [], []
-    # Keys are physical line numbers, as the engine records them (``L2`` is the first data
-    # line of a file with a header).
-    for number, line in enumerate(lines[header:], 1 + header):
-        key = f"{prefix}{number}"
-        if key not in wanted:
+    split = _field_splitter(parser)
+    width = len(contract["columns"])
+    records, problems = [], []
+    for offset, raw in enumerate(body):
+        key = f"{prefix}{first + offset}"
+        fields = split(raw.rstrip("\r"))
+        if len(fields) != width:
+            problems.append({"row_key": key, "expected": width, "found": len(fields)})
             continue
-        if parser.get("delimiter") == "whitespace":
-            values = shlex.split(line, posix=True)
-        else:
-            values = next(
-                csv.reader(
-                    io.StringIO(line), delimiter=parser.get("delimiter", ","), quotechar=parser.get("quotechar", '"'),
-                ),
-            )
-        if len(values) != len(names):
-            raise ProjectError(
-                "data_identity_mismatch",
-                "A source line does not have the contract's columns.",
-                path=key,
-                details={"expected": len(names), "found": len(values)},
-            )
-        keys.append(key)
-        rows.append(values)
-    return keys, rows
+        records.append((key, fields))
+    if problems:
+        raise ProjectError(
+            "data_identity_mismatch",
+            "A source line does not hold exactly one record of the contract's columns.",
+            path=problems[0]["row_key"],
+            remediation="Use the file the study was made on; the engine reads one record per line.",
+            details={"problems": problems[:MAX_LISTED], "count": len(problems)},
+        )
+    return records
+
+
+def _source_lines(source: Path, contract: dict, wanted: set[str]) -> tuple[list[str], list[list[str]]]:
+    """Return the development rows of a positional source (keys and fields), in file order."""
+    pairs = [(key, fields) for key, fields in _records(source, contract) if key in wanted]
+    return [key for key, _ in pairs], [fields for _, fields in pairs]
+
+
+def _pandas_version() -> str:
+    import pandas as pd
+
+    return pd.__version__
 
 
 def materialize(args: argparse.Namespace) -> int:
-    """Extract the development rows of the original file into data/hypotrail/development."""
-    import csv
+    """Extract the development rows of the original file into data/hypotrail/development.
 
+    The row keys are the engine's (its record splitter); the values are read by the
+    engine's own ``pandas.read_csv`` call on the whole file (``contracts.read_source``) and
+    converted as the engine converts them (``contracts.engine_values``).
+    """
     from .hypotrail.steps import development_keys
 
     contracts.verify_data_dir(DATA_DIR)
     contract = contracts.load_json(DATA_DIR / "contracts" / "data-contract.json")
     plan = contracts.load_json(DATA_DIR / "contracts" / "development-plan.json")
+    # The rows extracted are the plan's development rows only if the plan is the study's
+    # (R9AB-1): the scientific projection, which every step and validate compare with the
+    # configuration, names its protocol and key digest; the snapshot its roles and final test.
+    reference = contracts.load_json(DATA_DIR / contracts.FILES["projection"])["plan"]
+    snapshot = contracts.load_json(DATA_DIR / contracts.FILES["snapshot"])
+    contracts.check_plan(plan, reference["protocol_id"], reference["keys_sha256"], snapshot)
     source = Path(args.source)
     if contracts.sha256_file(source) != contract["source_sha256"]:
         raise ProjectError(
@@ -372,29 +532,43 @@ def materialize(args: argparse.Namespace) -> int:
             remediation="Use the file the study was made on; a modified file is a new source.",
         )
     wanted = development_keys(plan)
-    keys, rows = _source_lines(source, contract, set(wanted))
-    if sorted(keys) != sorted(wanted):
+    records = _records(source, contract)
+    # The study recorded how many records the file holds: a reader that split records
+    # differently would shift every key after the difference.
+    expected = plan.get("n_source_records")
+    if isinstance(expected, int) and len(records) != expected:
+        raise ProjectError(
+            "data_identity_mismatch",
+            "The source does not split into the records the study counted.",
+            path=str(source),
+            remediation="Use the file the study was made on, unmodified.",
+            details={"records_found": len(records), "records_expected": expected},
+        )
+    keys = [key for key, _ in records]
+    if not set(wanted) <= set(keys):
         raise ProjectError(
             "data_identity_mismatch", "The source does not hold every development row.", path=str(source),
         )
-    order = {k: i for i, k in enumerate(wanted)}
-    pairs = sorted(zip(keys, rows, strict=False), key=lambda kv: order[kv[0]])
+    # The values are the engine's: the same pandas.read_csv call on the whole file, the rows
+    # restricted to the development rows (file order), the engine's numeric conversion.
+    frame = contracts.read_source(source, contract, keys)
+    wanted_set = set(wanted)
+    development = frame.loc[[key for key in keys if key in wanted_set]]
+    development = contracts.engine_values(development, contract, str(source)).loc[wanted]
     folder = DATA_DIR / "development"
     folder.mkdir(parents=True, exist_ok=True)
     target = folder / "development.csv"
-    with target.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.writer(handle, lineterminator="\n")
-        writer.writerow([contracts.KEY_COLUMN] + [c["name"] for c in contract["columns"]])
-        for key, values in pairs:
-            writer.writerow([key, *values])
+    contracts.write_rows(development.reset_index(), target)
     manifest = {
         "schema_version": contracts.MATERIALIZATION_SCHEMA,
         "source_sha256": contract["source_sha256"],
         "materialization_sha256": contracts.sha256_file(target),
         "row_key_column": contracts.KEY_COLUMN,
-        "n_rows": len(pairs),
+        "n_rows": len(development),
         "development_keys_sha256": canonical.canonical_sha256(wanted),
         "final_test_rows_included": False,
+        "values": "read as the engine read them: pandas.read_csv with the data contract's parser",
+        "pandas_version": _pandas_version(),
     }
     (folder / contracts.DEVELOPMENT_MANIFEST).write_bytes(canonical.pretty_bytes(manifest))
     return _emit({"ok": True, **manifest})
@@ -403,13 +577,72 @@ def materialize(args: argparse.Namespace) -> int:
 # --- run-local -------------------------------------------------------------------------
 
 
+_HYDRA_QUOTE = re.compile(r"(\\*)'")
+_OMEGACONF_INTERPOLATION = re.compile(r"(\\*)\$\{")
+REFUSAL_LINES = 40
+
+
+def hydra_quoted(text: str) -> str:
+    r"""Return ``text`` as one single-quoted value of Hydra's override grammar.
+
+    Hydra reads every character of a quoted value literally (``(``, ``,``, ``=``, ``[``,
+    spaces, non-ASCII), except a quote, escaped as ``\'``, and the backslashes before a
+    quote or the closing quote, doubled. OmegaConf then resolves ``${`` in the value: it is
+    escaped as ``\${`` (and the backslashes before it doubled), so the step reads ``text``.
+    """
+    text = _OMEGACONF_INTERPOLATION.sub(lambda m: "\\" * (2 * len(m.group(1))) + "\\${", text)
+    text = _HYDRA_QUOTE.sub(lambda m: "\\" * (2 * len(m.group(1))) + "\\'", text)
+    trailing = len(text) - len(text.rstrip("\\"))
+    return "'" + text + "\\" * trailing + "'"
+
+
+def _step_refusal(step: str, returncode: int, stdout: str, stderr: str) -> dict:
+    """Return the refusal a failed step printed (its last JSON refusal line), or a step failure."""
+    for line in reversed(stdout.splitlines() + stderr.splitlines()):
+        start = line.find("{")
+        if start < 0:
+            continue
+        try:
+            document = json.loads(line[start:])
+        except ValueError:
+            continue
+        if isinstance(document, dict) and isinstance(document.get("error"), dict) and "code" in document["error"]:
+            return document["error"]
+    return {
+        "code": "step_failed",
+        "path": f"src/pipeline/{step}/main.py",
+        "message": f"The step {step} stopped with exit code {returncode} without a refusal.",
+        "remediation": "Read the step's output in details (or on stderr) and report it if it is not a refusal.",
+        "details": {"exit_code": returncode, "output_tail": (stdout + stderr).splitlines()[-REFUSAL_LINES:]},
+    }
+
+
+def _hydra_run_dir(base: Path) -> str:
+    """Return Hydra's own run folder (``<run dir>/hydra``), refused when its path holds ``${``.
+
+    Hydra creates the folder from ``hydra.run.dir`` resolved once, then stores its absolute
+    path in ``hydra.runtime.output_dir`` and resolves that text again: no escape keeps a
+    ``${`` of the path literal in both, so such a folder is refused before any step runs.
+    """
+    folder = str(base / "hydra")
+    if "${" in folder:
+        raise ProjectError(
+            "invalid_arguments",
+            "The run folder's path holds '${', which Hydra cannot use for its own run folder.",
+            path=str(base),
+            remediation="Run from a project folder, and pass a --run-dir, whose path holds no '${'.",
+        )
+    return folder
+
+
 def run_local(args: argparse.Namespace) -> int:
     """Run the four steps in order as separate processes, as Azure ML would."""
     if args.mode != "rebuild_final_candidate":
         raise ProjectError(
             "capability_not_supported", f"Mode {args.mode!r} is not available in this version.", path="mode",
         )
-    base = Path(args.run_dir) if args.run_dir else OUTPUTS / "local-run"
+    # The steps run in the project folder: a relative --run-dir is read from here, once.
+    base = Path(args.run_dir).absolute() if args.run_dir else OUTPUTS / "local-run"
     if base.exists() and any(base.iterdir()):
         raise ProjectError(
             "destination_not_empty",
@@ -417,13 +650,18 @@ def run_local(args: argparse.Namespace) -> int:
             path=str(base),
             remediation="Pass a new --run-dir; runs never overwrite each other.",
         )
+    # Each path is one quoted Hydra value: a folder named "My Project (2)" or "Smith, Jane"
+    # is read as written, never as Hydra's grammar (a sweep, a function, a list).
     overrides = [
-        f"preprocessed_data.path={base / '02_processed'}",
-        f"train_data.path={base / '03_partitions'}",
-        f"models.path={base / '04_model'}",
-        f"reports.path={base / '05_reports'}",
-        f"hydra.run.dir={base / 'hydra'}",
+        f"{key}={hydra_quoted(str(base / folder))}"
+        for key, folder in (
+            ("preprocessed_data.path", "02_processed"),
+            ("train_data.path", "03_partitions"),
+            ("models.path", "04_model"),
+            ("reports.path", "05_reports"),
+        )
     ]
+    overrides.append(f"hydra.run.dir={hydra_quoted(_hydra_run_dir(base))}")
     for step in STEPS:
         # The steps' logs go to stderr, so this command still prints one JSON document.
         # This interpreter and this project's own modules only.
@@ -431,10 +669,15 @@ def run_local(args: argparse.Namespace) -> int:
             [sys.executable, "-m", f"src.pipeline.{step}.main", *overrides],  # noqa: S603
             cwd=ROOT,
             check=False,
-            stdout=sys.stderr,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
         )
+        sys.stderr.write(result.stdout + result.stderr)
         if result.returncode != 0:
-            return _emit({"ok": False, "failed_step": step, "run_dir": str(base)}, 2)
+            error = _step_refusal(step, result.returncode, result.stdout, result.stderr)
+            return _emit({"ok": False, "failed_step": step, "run_dir": str(base), "error": error}, 2)
     report = contracts.load_json(base / "05_reports" / "technical-report.json")
     return _emit(
         {
@@ -681,12 +924,15 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run one command; a refusal prints its JSON and returns 2."""
+    """Run one command; a refusal prints its JSON and returns 2, an unexpected error 1."""
     args = build_parser().parse_args(argv)
     try:
         return args.handler(args)
-    except ProjectError as error:
-        sys.stdout.write(error.to_json() + "\n")
+    except Exception as error:  # noqa: BLE001 - every outcome is one JSON document
+        refusal = from_exception(error)
+        if refusal is None:
+            return _emit(internal_error(error), 1)
+        sys.stdout.write(refusal.to_json() + "\n")
         return 2
 
 

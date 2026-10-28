@@ -252,7 +252,7 @@ def test_eda_is_refused_before_the_split_result(tmp_path, cases):
                 'detail': 'Split the data before exploring or fitting it.'} in \
             payload['error']['details']['missing']
     assert [r['purpose'] for r in fk.exposure_records(flow.study)] == \
-        ['structural_inspection', 'labelled_preview_available', 'sealed']
+        ['structural_inspection', 'development_target_sample', 'sealed']
 
 
 def test_eda_on_a_stale_split_is_refused_and_a_late_eda_is_not_promoted(flow):

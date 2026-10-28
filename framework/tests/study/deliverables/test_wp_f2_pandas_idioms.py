@@ -105,7 +105,7 @@ def test_a_french_study_reads_its_notebook_narrative_in_french(tmp_path):
         f.run(activity)
     f.call('render', '--study', f.study)
     source = (f.study / rn.GENERATED).read_text(encoding='utf-8')
-    canonical = {step['id']: step['title'] for step in st.steps('binary')}
+    canonical = {step['id']: step['title'] for step in st.steps(f.state())}
     for step in f.view()['plan']:
         localized = junior.step_text(canonical[step['id']], 'fr')
         assert localized in source, step['id']

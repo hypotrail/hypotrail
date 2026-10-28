@@ -17,7 +17,9 @@ const EVIDENCE_SCHEMA = 'hypotrail.evidence/1';
 const EDA_KEYS = ['revision', 'task', 'cards', 'catalog', 'rowsSeen'];
 // WP-A7: `question`, the question the result answers (the engine's `values.question`), which
 // titles its card.
-const CARD_KEYS = ['slot', 'activity', 'column', 'resultId', 'current', 'kind', 'question', 'data'];
+// L3 (owner session 2026-10-26, R4, D4b): `texts`, the result's junior texts in both languages
+// (`{en, fr}` of {question, note, warnings, meanings}, the engine's), or null.
+const CARD_KEYS = ['slot', 'activity', 'column', 'resultId', 'current', 'kind', 'question', 'data', 'texts'];
 
 // Gallery order (§6.3): the target, the special values, the by-column results, then the
 // distributions; by column name inside a group.
@@ -239,8 +241,41 @@ function quality(v, f) {
       .filter(c => c.rare.length),
     ranges: list(v.ranges).map((r, i) => ({ column: str(r && r.column), min: cite(v, `ranges.${i}.min`, f.min),
       max: cite(v, `ranges.${i}.max`, f.max), declared: Boolean(r && r.declared),
-      nBelow: cite(v, `ranges.${i}.n_below`, f.n_below), nAbove: cite(v, `ranges.${i}.n_above`, f.n_above) })),
+      nBelow: cite(v, `ranges.${i}.n_below`, f.n_below), nAbove: cite(v, `ranges.${i}.n_above`, f.n_above),
+      // Lot P (R41): the figures the preparation draft reads per column (its quantiles and its
+      // skewness), and the engine's verdict for the column when it sends one.
+      type: strOrNull(r && r.type), nSpecial: cite(v, `ranges.${i}.n_special`, f.n_special),
+      quantiles: quantilesOf(r && r.quantiles), skewness: cite(v, `ranges.${i}.skewness`, 'auto'),
+      verdict: verdictOf(r && r.verdict) || verdictOf(list(v.verdicts).find(x => x && x.column === str(r && r.column))) })),
+    // Lot P (R41): the engine's verdicts of the columns that have no range (a category).
+    verdicts: list(v.verdicts).filter(x => x && typeof x.column === 'string').map(x => ({ column: x.column, ...verdictOf(x) })),
   };
+}
+
+/**
+ * Lot P (R41): the quantiles of a range (`{"0.01": .., "0.5": .., "0.99": ..}`), as plain
+ * numbers: their keys hold a dot, so they have no citable path; the panel draws them (the
+ * box and the median of a strip) and writes only the cited minimum and maximum.
+ */
+function quantilesOf(raw) {
+  const q = obj(raw);
+  return { q01: num(q['0.01']), q50: num(q['0.5']), q99: num(q['0.99']) };
+}
+
+/**
+ * Lot P (R41): the engine's per-column verdict of the preparation draft, when it sends one
+ * (the engine agent's additive key; read with fallbacks, never derived here): `{changed
+ * (a transform drafted, or null), parameter, texts {en, fr}, threshold}`.
+ */
+function verdictOf(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const t = obj(raw.texts);
+  const text = x => (typeof x === 'string' && x.trim() ? x : null);
+  const texts = { en: text(t.en) || text(raw.text) || text(raw.junior_text), fr: text(t.fr) };
+  const changed = typeof raw.changed === 'boolean' ? raw.changed
+    : typeof raw.decision === 'string' ? raw.decision !== 'no_change' && raw.decision !== 'none' : null;
+  return { changed, parameter: strOrNull(raw.parameter) || strOrNull(raw.rule), texts,
+    threshold: text(raw.threshold) || (num(raw.threshold) !== null ? String(raw.threshold) : null) };
 }
 
 /** v0.3 (WP-E2, R28): the predictor-versus-predictor association matrix (no target). */
@@ -281,6 +316,20 @@ function columnOf(r) {
   return slot.includes(':') ? slot.slice(slot.indexOf(':') + 1) : null;
 }
 
+/** The engine's `texts` of an EDA result (L3): per language, the strings it gives, else null. */
+function edaTexts(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const text = x => (typeof x === 'string' && x.trim() ? x : null);
+  const out = {};
+  for (const lang of ['en', 'fr']) {
+    const t = obj(raw[lang]);
+    const meanings = {};
+    for (const [k, v] of Object.entries(obj(t.meanings))) meanings[k] = text(v);
+    out[lang] = { question: text(t.question), note: text(t.note), warnings: list(t.warnings).map(text), meanings };
+  }
+  return out;
+}
+
 function card(r) {
   const activity = str(r.activity);
   const current = r.current === true && r.integrity === 'ok' && r.values !== null && typeof r.values === 'object';
@@ -288,6 +337,7 @@ function card(r) {
   return {
     slot: str(r.slot), activity, column: columnOf(r), resultId: str(r.result_id), current,
     kind: KINDS[activity], question: current ? str(values.question) : '', data: current ? cardData(activity, r.values) : null,
+    texts: current ? edaTexts(r.texts) : null,
   };
 }
 

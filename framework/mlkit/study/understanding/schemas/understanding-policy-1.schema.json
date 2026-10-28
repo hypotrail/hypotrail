@@ -1,0 +1,270 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "hypotrail.understanding-policy/1"
+    },
+    "policy_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "mode": {
+      "enum": [
+        "off",
+        "coaching",
+        "required"
+      ]
+    },
+    "milestones": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "handoff"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "required_dimensions": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "D1",
+          "D2",
+          "D3",
+          "D4",
+          "D5",
+          "D6",
+          "D7",
+          "D8"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "responsibility_profiles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "D1",
+            "D2",
+            "D3",
+            "D4",
+            "D5",
+            "D6",
+            "D7",
+            "D8"
+          ]
+        },
+        "uniqueItems": true
+      }
+    },
+    "critical_dimensions": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "D1",
+          "D2",
+          "D3",
+          "D4",
+          "D5",
+          "D6",
+          "D7",
+          "D8"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "peer_required_dimensions": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "D1",
+          "D2",
+          "D3",
+          "D4",
+          "D5",
+          "D6",
+          "D7",
+          "D8"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "minimum_assurance": {
+      "const": "human_declared"
+    },
+    "assistance_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "critical": {
+          "enum": [
+            "unaided_required",
+            "aided_allowed"
+          ]
+        },
+        "other": {
+          "enum": [
+            "unaided_required",
+            "aided_allowed"
+          ]
+        }
+      },
+      "required": [
+        "critical",
+        "other"
+      ]
+    },
+    "expiration_rule": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "none"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "until"
+            },
+            "date": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          "required": [
+            "kind",
+            "date"
+          ]
+        }
+      ]
+    },
+    "evidence_retention": {
+      "const": "durable"
+    },
+    "evidence_requirement": {
+      "enum": [
+        "payloads_available",
+        "recorded_decisions"
+      ]
+    },
+    "context_requirement": {
+      "enum": [
+        "complete",
+        "public_only"
+      ]
+    },
+    "export_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "include_excerpts": {
+          "type": "boolean"
+        },
+        "include_contacts": {
+          "type": "boolean"
+        },
+        "external_sources": {
+          "enum": [
+            "allowed",
+            "forbidden"
+          ]
+        }
+      },
+      "required": [
+        "include_excerpts",
+        "include_contacts",
+        "external_sources"
+      ]
+    },
+    "exemptions_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "waivers_allowed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "waivers_allowed"
+      ]
+    },
+    "team_coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "minimum_people": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 10
+        }
+      },
+      "required": [
+        "minimum_people"
+      ]
+    },
+    "role_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "arbiters": {
+          "anyOf": [
+            {
+              "const": "any_declared"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            }
+          ]
+        }
+      },
+      "required": [
+        "arbiters"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "policy_id",
+    "version",
+    "mode",
+    "milestones",
+    "required_dimensions",
+    "responsibility_profiles",
+    "critical_dimensions",
+    "peer_required_dimensions",
+    "minimum_assurance",
+    "assistance_rule",
+    "expiration_rule",
+    "evidence_retention",
+    "evidence_requirement",
+    "context_requirement",
+    "export_policy",
+    "exemptions_policy",
+    "team_coverage",
+    "role_policy"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "understanding-policy-1.schema.json",
+  "title": "hypotrail.understanding-policy/1",
+  "description": "external_verified and purge_after_days are refused by the engine in version 1 (not implemented), never lowered."
+}

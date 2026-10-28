@@ -414,3 +414,91 @@ def test_the_rendered_configuration_is_block_yaml(export):
     text = (out / 'src/conf/components/training/default.yaml').read_text()
     assert 'params: {}\n' in text
     assert not [line for line in text.splitlines() if line != line.rstrip()]
+
+
+# --- R18 (L7, D16): the revision flag is required and the refusal names the revision ----
+
+def _initialised_study(tmp_path):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'study'))
+    import flowkit as fk
+    case_dir = fk.make_case(tmp_path / 'case', n_rows=120)['case'].parent
+    flow = fk.Flow(tmp_path / 'my study', case_dir)
+    flow.init()
+    return flow
+
+
+def test_a_missing_expected_revision_names_the_current_revision(tmp_path):
+    import os
+    from mlkit.study import cli
+    flow = _initialised_study(tmp_path)
+    import flowkit as fk
+    before = fk.tree_digest(flow.study)
+    revision = flow.rev()
+    where = os.path.abspath(flow.study)
+    outcome = cli.run(['export', 'azureml', '--study', str(flow.study), '--plan'])
+    assert outcome.exit_code == 2
+    error = outcome.payload['error']
+    assert error['code'] == 'invalid_arguments'
+    assert error['message'] == (f'--expected-revision is required: the study at {where} is '
+                                f'at revision {revision}; add --expected-revision {revision}.')
+    details = error['details']
+    assert details['path'] == 'expected_revision' and details['reason'] == 'missing'
+    assert details['current_revision'] == revision and details['study'] == where
+    assert f'--expected-revision {revision}' in details['remediation']
+    assert fk.tree_digest(flow.study) == before            # read-only, nothing written
+    # A malformed value keeps its message, with the current revision in the details.
+    from mlkit.exporters.azureml import export_azureml
+    with pytest.raises(ExportError) as malformed:
+        export_azureml(flow.study, expected_revision=-1, plan=True)
+    assert malformed.value.code == 'invalid_arguments'
+    assert malformed.value.message == '--expected-revision must be a revision number.'
+    assert malformed.value.details['reason'] == 'malformed'
+    assert malformed.value.details['current_revision'] == revision
+    # A stale revision keeps its code and names the current revision.
+    stale = cli.run(['export', 'azureml', '--study', str(flow.study), '--plan',
+                     '--expected-revision', str(revision + 1)])
+    assert stale.exit_code == 2
+    assert stale.payload['error']['code'] == 'stale_revision'
+    # The right revision on a study that chose nothing: the refusal names the study folder
+    # and its revision, so a wrong --study is obvious (R18, R19 notes).
+    nothing = cli.run(['export', 'azureml', '--study', str(flow.study), '--plan',
+                       '--expected-revision', str(revision)])
+    assert nothing.exit_code == 2
+    refused = nothing.payload['error']
+    assert refused['code'] == 'capability_not_supported'
+    assert refused['details']['reason'] == 'no_recipe'
+    assert refused['details']['study'] == where
+    assert refused['details']['study_revision'] == revision
+    assert refused['message'].endswith(f'(Study: {where}, revision {revision}.)')
+    assert refused['details']['path'] == 'scientific_contracts.model_recipe'
+    assert refused['details']['remediation']
+    assert fk.tree_digest(flow.study) == before
+
+
+def test_a_missing_expected_revision_on_a_folder_without_study(tmp_path):
+    import os
+    from mlkit.study import cli
+    outcome = cli.run(['export', 'azureml', '--study', str(tmp_path / 'nothing'), '--plan'])
+    assert outcome.exit_code == 2
+    error = outcome.payload['error']
+    assert error['code'] == 'invalid_arguments'
+    where = os.path.abspath(tmp_path / 'nothing')
+    assert error['message'] == (f'--expected-revision is required, and {where} holds no '
+                                'readable study: check the --study folder.')
+    assert error['details']['current_revision'] is None
+    assert error['details']['reason'] == 'missing' and error['details']['study'] == where
+
+
+def test_a_model_not_captured_refusal_names_the_study(export, material, tmp_path):
+    """The stale-capture refusal (``model_not_captured``) names the study and revision."""
+    import os
+    source = _source(material, bundle_dir=None)
+    source['predictor'] = {'status': 'stale', 'capture_result_id': 'r-capture-1'}
+    source['final_test'] = {'status': 'sealed'}
+    error = _refused(export, 'model_not_captured', reader=fx.reader_of(source))
+    assert error.details['reason'] == 'capture_not_current_selection'
+    assert error.details['study'] == os.path.abspath(tmp_path / 'study')
+    assert error.details['study_revision'] == fx.REVISION
+    assert error.message.endswith(f'(Study: {os.path.abspath(tmp_path / "study")}, '
+                                  f'revision {fx.REVISION}.)')
+    assert error.details['path'] == 'predictor.status' and error.details['remediation']

@@ -72,6 +72,18 @@ activity of the other task is refused (``invalid_arguments``).
 
 ``HYPOTRAIL_READ_ONLY=1`` makes :func:`compute` refuse (``read_only``): a notebook
 opened read-only can display results but never produce one.
+
+Delayed labels (review-v1, review 2026-10-24 round 2). A development row whose outcome is
+available only at or after the final boundary (``partition.training_exclusions``) has a
+label the junior could not know at the simulated decision time. Every activity except the
+structural inspections (:data:`STRUCTURAL_EDA`, which read no target and no split) names
+those rows in its identity (``inputs.training_exclusions``, only when there is at least
+one) and never reads them: :func:`load` leaves them out of the development rows it
+returns, so the split, and through it every exploration of the training rows, every fit,
+fold and validation score, are made without them, and so are the final refit and the
+predictor capture; the exposure a plan records leaves them out too (rows already recorded
+stay recorded). A plan whose upstream result was computed with those rows is refused
+(``precondition_missing``) until that result is computed again.
 """
 from __future__ import annotations
 
@@ -215,6 +227,9 @@ MODULES = {
                  'mlkit.study.regression'),
     # Library integration v1: the engine fit it is compared with, the recipe translation and
     # the runtime that fits, captures and reloads it (and the libraries that compute it).
+    # Round 5 (review E, R5E-2): every file of the runtime's wheel, which the bundle binds
+    # byte for byte, so a runtime that differs anywhere is a new capture (a data file is
+    # named ``package/relative path``, :func:`mlkit.study.read._module_path`).
     CAPTURE: (_BASE, 'mlkit.study.fit', 'mlkit.classical', 'mlkit.study.governance',
               'mlkit.study.families', 'mlkit.study.trials', 'mlkit.contracts.capture',
               'mlkit.contracts.recipe', 'mlkit.contracts.context',
@@ -222,7 +237,14 @@ MODULES = {
               'hypotrail_runtime.contracts', 'hypotrail_runtime.preprocess',
               'hypotrail_runtime.predictor', 'hypotrail_runtime.families',
               'hypotrail_runtime.inference', 'hypotrail_runtime.canonical', 'sklearn',
-              'mlkit.integrations.mlflow_packaging'),
+              'mlkit.integrations.mlflow_packaging', 'hypotrail_runtime.errors',
+              'hypotrail_runtime.packaging', 'hypotrail_runtime.wheel',
+              'hypotrail_runtime.schemas', 'hypotrail_runtime.schemas.__main__',
+              *(f'hypotrail_runtime/schemas/{name}-v1.schema.json' for name in (
+                  'computation_context', 'data_contract', 'diagnostic_result',
+                  'evidence_binding', 'export_source', 'model_recipe', 'package_descriptor',
+                  'parity_result', 'predictor_artifact', 'predictor_bundle',
+                  'uncertainty_result'))),
     # The Evidently versions it calls are in its params (semantic dependencies).
     POPULATION: (_BASE, 'mlkit.contracts.population', 'mlkit.contracts.context',
                  'mlkit.integrations.evidently_diagnostics', 'hypotrail_runtime.contracts',
@@ -504,6 +526,14 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                          else activity)
     case = case_of(state)
     inputs = _base_inputs(state)
+    # Review 2026-10-24 round 2: rows whose label is not known at the simulated decision
+    # time are read by no activity but the structural inspections (none in most studies).
+    exclusions = (None if activity in partition.EXCLUSION_EXEMPT_ACTIVITIES
+                  else partition.training_exclusions(state))
+    held_out: set[str] = set()
+    if exclusions is not None:
+        inputs['training_exclusions'] = exclusions
+        held_out = partition.excluded_keys(store.read_blob, exclusions)
     params: dict[str, Any] = {}
     # Human-authored wording belongs in the result we present, but not in the numerical
     # identity of the evaluation.  Keep a frozen copy in the in-memory execution plan: the
@@ -514,6 +544,8 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
 
     def expose(purpose, partition, keys, columns):
         if with_exposure:
+            if held_out:
+                keys = [k for k in keys if k not in held_out]
             data = rec.row_keys_bytes(keys)
             exposures.append({'purpose': purpose, 'partition': partition,
                               'row_keys': store.put_blob(data),
@@ -769,6 +801,8 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                 expose('policy_exploration' if activity == POLICY_INSPECT
                        else 'validation_policy_selection',
                        'validation', keys['validation'], [target])
+    if exclusions is not None:
+        _require_without_delayed_labels(store, inputs, exclusions, activity)
     modules = (REGRESSION_MODULES.get(activity, MODULES[activity]) if task == 'regression'
                else MODULES[activity])
     code = registry.code_fingerprint(modules)
@@ -999,6 +1033,28 @@ def model_plan(state: Mapping, case: c.Case, activity: str,
     return inputs, params
 
 
+def _require_without_delayed_labels(store, inputs: Mapping, exclusions: Mapping,
+                                    activity: str) -> None:
+    """Refuse a plan whose upstream results (``inputs.results``, history roles left out)
+    were computed with the rows of ``exclusions`` (review 2026-10-24 round 2): a split, a fit
+    or an evaluation made before those rows were left out must be computed again first."""
+    stale = []
+    results = inputs.get('results') or {}
+    for role in sorted(results):
+        if role in rec.HISTORY_ROLES:
+            continue
+        entry = registry.get(store, results[role])
+        if entry['activity'] in partition.EXCLUSION_EXEMPT_ACTIVITIES:
+            continue
+        if entry['inputs'].get('training_exclusions') != exclusions:
+            stale.append({'requirement': 'computed_without_delayed_labels',
+                          'slot': role, 'result_id': results[role],
+                          'detail': 'This result was computed with development rows whose '
+                                    'outcome is known only after the final boundary; run '
+                                    'it again so that it leaves them out.'})
+    _refuse(stale, f'Running {activity}')
+
+
 def _plan_final(store, state: Mapping, case: c.Case, inputs: dict, params: dict,
                 exposures: list, expose) -> None:
     """WP-B1: the identity and reads of ``final_test.evaluation`` (in place). The chosen
@@ -1208,7 +1264,9 @@ def load(plan_: Mapping, store):
 
     The dataset holds the study's development rows only (ADR 0006,
     :func:`mlkit.study.data.load_development`): the sealed final test never reaches an
-    activity."""
+    activity. A plan that names ``training_exclusions`` (review-v1, delayed labels) gets the
+    development rows less those: a row whose label is not known at the simulated decision
+    time reaches no split, exploration, fit, validation score, refit or capture."""
     from . import data as dt
     path = plan_['case_path']
     if os.path.isdir(path):
@@ -1228,6 +1286,13 @@ def load(plan_: Mapping, store):
                          details={'expected_sha256': plan_['dataset_sha256'],
                                   'actual_sha256': case.dataset['sha256']})
     keys = partition.development_keys(store.read_blob, plan_['inputs'].get('development'))
+    held_out = partition.excluded_keys(store.read_blob,
+                                       plan_['inputs'].get('training_exclusions'))
+    if held_out:
+        if keys is None or not held_out <= set(keys):
+            raise StudyError('integrity_error', 'The training exclusions name rows that are '
+                                                'not development rows.')
+        keys = [k for k in keys if k not in held_out]
     return case, dt.load_development(case, keys)
 
 
@@ -1752,13 +1817,29 @@ def _overlap(store, previous: str, since: int | None, parts: Mapping) -> dict:
     return out
 
 
+DELAYED_LABELS_NOTE = ('Development rows whose outcome is known only at or after the start of '
+                       'the final test are left out: at the decision time their labels were '
+                       'not known yet.')
+
+
+def _with_exclusions(plan_: Mapping, out: dict) -> dict:
+    """``out`` with ``values.training_exclusions`` (``{n_rows, reasons, note}``) when the
+    plan left delayed-label rows out (review 2026-10-24 round 2); unchanged otherwise."""
+    exclusions = plan_['inputs'].get('training_exclusions')
+    if exclusions:
+        out['values']['training_exclusions'] = {
+            'n_rows': exclusions['n_rows'],
+            'reasons': [dict(r) for r in exclusions['reasons']], 'note': DELAYED_LABELS_NOTE}
+    return out
+
+
 def compute(store, plan_: Mapping) -> dict:
     """Run the computation of ``plan_`` (from :func:`plan`) and return
     ``{values, blobs, partition, n_rows}``. Never touches state."""
     guard_read_only()
     activity = plan_['activity']
     if activity == SPLIT:
-        return compute_split(store, plan_)
+        return _with_exclusions(plan_, compute_split(store, plan_))
     if activity == QUALITY:
         from . import eda
         case, dataset = load(plan_, store)
@@ -1814,7 +1895,7 @@ def compute(store, plan_: Mapping) -> dict:
         return fit.compute(activity, case, rows(dataset, keys['train']),
                            rows(dataset, keys['validation']), plan_['inputs'], plan_['params'])
     if activity == FINAL:
-        return compute_final(store, plan_)
+        return _with_exclusions(plan_, compute_final(store, plan_))
     if activity in DEVELOPMENT_DIAGNOSTICS:
         return compute_diagnostics(store, plan_)
     if activity == DIAG_FINAL:

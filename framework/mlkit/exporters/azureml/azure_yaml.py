@@ -19,11 +19,11 @@ from pathlib import Path
 
 EXPRESSION = re.compile(r'\$\{\{\s*([^}]*?)\s*\}\}')
 FORMS = {
-    'component': re.compile(r'^(inputs|outputs)\.([A-Za-z_][A-Za-z0-9_]*)$'),
-    'pipeline': re.compile(r'^parent\.(?:(inputs|outputs)\.([A-Za-z_][A-Za-z0-9_]*)|jobs\.'
-                           r'([A-Za-z_][A-Za-z0-9_]*)\.outputs\.([A-Za-z_][A-Za-z0-9_]*))$'),
+    'component': re.compile(r'(inputs|outputs)\.([A-Za-z_][A-Za-z0-9_]*)'),
+    'pipeline': re.compile(r'parent\.(?:(inputs|outputs)\.([A-Za-z_][A-Za-z0-9_]*)|jobs\.'
+                           r'([A-Za-z_][A-Za-z0-9_]*)\.outputs\.([A-Za-z_][A-Za-z0-9_]*))'),
 }
-ASSET_REF = re.compile(r'^azureml:[A-Za-z0-9][A-Za-z0-9_.-]*:[A-Za-z0-9][A-Za-z0-9_.-]*$')
+ASSET_REF = re.compile(r'azureml:[A-Za-z0-9][A-Za-z0-9_.-]*:[A-Za-z0-9][A-Za-z0-9_.-]*')
 LATEST = re.compile(r'(@latest\b|:latest\b)')
 JOB = 'aml/pipelines/training/pipeline-job.yml'
 PIPELINE = 'aml/pipelines/training/pipeline.yml'
@@ -55,7 +55,7 @@ def check_component(root: Path, rel: str, problems: list) -> dict:
     command = str(doc.get('command') or '')
     used = set()
     for expr in expressions(command):
-        match = FORMS['component'].match(expr)
+        match = FORMS['component'].fullmatch(expr)
         if not match:
             problems.append(f'{rel}: expression ${{{{{expr}}}}} is not inputs.X or outputs.X')
             continue
@@ -70,7 +70,7 @@ def check_component(root: Path, rel: str, problems: list) -> dict:
         if ('outputs', name) not in used:
             problems.append(f'{rel}: output {name} is declared but not written by the command')
     environment = str(doc.get('environment') or '')
-    if not ASSET_REF.match(environment):
+    if not ASSET_REF.fullmatch(environment):
         problems.append(f'{rel}: environment {environment!r} is not azureml:<name>:<version>')
     if doc.get('code') != './../../':
         problems.append(f'{rel}: code must be ./../../ (the project root, filtered by .amlignore)')
@@ -109,7 +109,7 @@ def check(root) -> tuple[list[str], dict]:
                 if not isinstance(value, str):
                     continue
                 for expr in expressions(value):
-                    match = FORMS['pipeline'].match(expr)
+                    match = FORMS['pipeline'].fullmatch(expr)
                     if not match:
                         problems.append(f'{PIPELINE}: job {name}: ${{{{{expr}}}}} is not a '
                                         'parent.inputs, parent.outputs or parent.jobs reference')
@@ -146,7 +146,7 @@ def check(root) -> tuple[list[str], dict]:
                         f'{sorted(p_inputs)}')
     for key, value in j_inputs.items():
         path = str((value or {}).get('path') or '')
-        if not ASSET_REF.match(path):
+        if not ASSET_REF.fullmatch(path):
             problems.append(f'{JOB}: input {key} path {path!r} is not azureml:<name>:<version>')
     compute = str(job.get('compute') or '')
     if not compute.startswith('azureml:') or len(compute) <= len('azureml:'):
