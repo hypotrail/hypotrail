@@ -168,6 +168,12 @@
       madeUp: 'made-up example · no data of the study',
       aria: (list, mae, rmse) => `Made-up example: errors ${list}; their mean, the MAE, is ${mae}; the root of the mean of their squares, the RMSE, is about ${rmse}.`,
     },
+    criterionExample: {
+      aria: "Made-up example: the reference, the criterion's minimum, the current method, the PO's target",
+      labels: { reference: 'reference', minimum: pct => `criterion ${pct}%`, current_method: 'current method', target: "PO's target" },
+      notes: { reference: 'predict the mean', minimum: 'statistical minimum', current_method: 'manual estimate', target: '"clearly better"' },
+      axis: unit => `mean error (${unit}) · made-up example`,
+    },
     bars: {
       aria: 'Bars of the made-up example',
       missingAria: 'Share of missing cells per column, development rows',

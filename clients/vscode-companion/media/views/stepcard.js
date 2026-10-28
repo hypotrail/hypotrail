@@ -123,7 +123,7 @@
       const running = page && page.now && page.now.kind === 'run';
       return el('p', { className: 'sc-pending', 'data-status': 'pending', text: running ? c.pending : c.notComputed });
     }
-    if (q.status === 'failed') return el('p', { className: 'sc-pending', 'data-status': 'failed', text: c.failed });
+    if (q.status === 'integrity_failed') return el('p', { className: 'sc-pending', 'data-status': 'integrity_failed', text: c.failed });
     return null;
   }
 
@@ -173,14 +173,17 @@
     const c = C().brief;
     const txt = (t, tag = 'span') => (t ? HT.components.engineText(t, { tag, lang: own }) : null);
     const keys = ['problem', 'decision', 'objective', 'production'];
+    // The PO's numbers as the brief writes them (4,5, not 4,50).
+    const brief1 = v => (Number.isInteger(v) ? 'int' : 'f1');
     const unit = (n, fallback) => (n && n.unit) || fallback || '';
     const target = ctx.snapshot.criterionConfigurations ? ctx.snapshot.criterionConfigurations.unit : '';
-    const numbers = [b.currentMethodError && ok(b.currentMethodError.value) ? c.currentError(ctx.format.number(b.currentMethodError.value, 'auto'), unit(b.currentMethodError, target)) : null,
-      b.targetError && ok(b.targetError.value) ? c.targetError(ctx.format.number(b.targetError.value, 'auto'), unit(b.targetError, target)) : null].filter(Boolean);
+    const numbers = [b.currentMethodError && ok(b.currentMethodError.value) ? c.currentError(ctx.format.number(b.currentMethodError.value, brief1(b.currentMethodError.value)), unit(b.currentMethodError, target)) : null,
+      b.targetError && ok(b.targetError.value) ? c.targetError(ctx.format.number(b.targetError.value, brief1(b.targetError.value)), unit(b.targetError, target)) : null].filter(Boolean);
     const links = b.links && typeof b.links === 'object' ? Object.values(b.links).filter(Boolean) : b.links ? [b.links] : [];
     return el('section', { className: 'sc-blk', 'data-block': 'brief' }, [blockHead(0, C().blocks.brief),
       el('div', { className: 'sc-briefcard', 'data-case-brief': own }, [
-        el('p', { className: 'sc-bsrc' }, [c.source, b.source && b.source.text ? [' · ', txt(b.source.text)] : null,
+        // The engine's source line names the brief itself; the panel's label only without it.
+        el('p', { className: 'sc-bsrc' }, [b.source && b.source.text ? txt(b.source.text) : c.source,
           b.source && b.source.fictitious ? [' · ', el('b', { 'data-fictitious': true, text: c.fictitious })] : null]),
         el('dl', { className: 'sc-bkey' }, keys.filter(k => b[k]).flatMap(k => [el('dt', { text: c[k] }), txt(b[k], 'dd')])),
         numbers.length ? el('p', { className: 'sc-bnum', 'data-brief-numbers': true, text: numbers.join(' · ') }) : null,

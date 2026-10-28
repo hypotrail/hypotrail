@@ -506,6 +506,15 @@
     return [box(300, 46 + bars.length * 27, d.label || c.aria, kids, { 'data-bars': String(bars.length) })];
   }
 
+  function criterionExample(ctx, d) {
+    const c = C().criterionExample;
+    const tone = { reference: 'grey', minimum: 'acc', current_method: 'orange', target: 'leaf' };
+    const pct = ok(d.min_share) ? ctx.format.number(d.min_share * 100, 'int') : '';
+    const bars = arr(d.bars).filter(b => b && ok(b.value) && c.labels[b.id]).map(b => ({ id: b.id, value: b.value, tone: tone[b.id],
+      label: typeof c.labels[b.id] === 'function' ? c.labels[b.id](pct) : c.labels[b.id], note: c.notes[b.id] }));
+    return barsFromData(ctx, { bars, unit: d.unit, label: c.aria, axis_label: c.axis(d.unit || '') });
+  }
+
   // --- block 3 charts read from registered results ------------------------------------------
 
   function sampleTable(ctx, q) {
@@ -1015,7 +1024,9 @@
     folds: (ctx, q) => (q.chartData ? foldsChart(ctx, q, q.chartData) : [unavailable()]),
     metric_bars: (ctx, q) => (q.chartData ? metricBars(ctx, q, q.chartData) : [unavailable()]),
     bars: (ctx, q) => (q.chartData && arr(q.chartData.bars).length ? barsFromData(ctx, q.chartData) : missingBars(ctx, q)),
-    criterion_bars: (ctx, q) => (q.chartData ? barsFromData(ctx, q.chartData) || [unavailable()] : [unavailable()]),
+    // CLI-CONTRACT §18.8 (R67): the engine's made-up four bars `{illustrative, unit, min_share,
+    // bars [{id, value, source}]}`; the labels are the panel's, the values the engine's.
+    criterion_example: (ctx, q) => (q.chartData ? criterionExample(ctx, q.chartData) || [unavailable()] : [unavailable()]),
     verdicts_table: (ctx, q) => verdictsTable(ctx, q, q.id === 'prep.unchanged' ? 'unchanged' : 'all'),
     distribution_before_after: distributionBeforeAfter,
     histogram: targetSummary,

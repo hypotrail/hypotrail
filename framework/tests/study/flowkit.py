@@ -190,6 +190,10 @@ class Flow:
         decisions = self.state()['decisions']
         if not st.has_wp_a4_decisions(self.state()):
             return
+        # Lot 2026-10-28 (CLI-CONTRACT §18.1): a new regression study fixes its error measure
+        # before the criterion (a test choice, not a recommendation).
+        if st.ERROR_METRIC in decisions and decisions[st.ERROR_METRIC]['status'] != 'confirmed':
+            self.decide(st.ERROR_METRIC, {'metric': 'mae'})
         if decisions['success_criterion']['status'] != 'confirmed':
             self.decide('success_criterion', criterion(self.state()))
         if decisions['preprocessing']['status'] != 'confirmed':

@@ -160,6 +160,12 @@
       madeUp: "exemple fictif · aucune donnée de l'étude",
       aria: (list, mae, rmse) => `Exemple fictif : erreurs ${list} ; leur moyenne, la MAE, vaut ${mae} ; la racine de la moyenne des carrés, la RMSE, vaut environ ${rmse}.`,
     },
+    criterionExample: {
+      aria: 'Exemple fictif : la référence, le minimum du critère, la méthode actuelle, l’objectif du PO',
+      labels: { reference: 'référence', minimum: pct => `critère ${pct} %`, current_method: 'méthode actuelle', target: 'objectif du PO' },
+      notes: { reference: 'prédire la moyenne', minimum: 'minimum statistique', current_method: 'estimation manuelle', target: '« nettement mieux »' },
+      axis: unit => `erreur moyenne (${unit}) · exemple fictif`,
+    },
     bars: {
       aria: "Barres de l'exemple fictif",
       missingAria: 'Part de cellules manquantes par colonne, lignes de développement',

@@ -167,6 +167,8 @@ details[open] > summary .sc-chev { transform: rotate(90deg); }
 .ht-def-meaning { font-size: 0.84rem; margin: 4px 0; }
 .ht-def-done { color: var(--ht-ok); }
 .ht-def-note { font-size: 0.78rem; color: var(--ht-faint); margin-top: 6px; }
+.ht-def-check { list-style: none; padding-left: 0; margin: 6px 0; }
+.ht-def-lead { font-size: 0.84rem; margin: 8px 0 2px; font-weight: 600; }
 
 /* --- SVG roles ------------------------------------------------------------------------------ */
 .sc-f-none { fill: none; } .sc-s-none { stroke: none; }

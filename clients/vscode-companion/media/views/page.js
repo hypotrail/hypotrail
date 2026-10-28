@@ -129,20 +129,30 @@
 
   function defensibilityPopover(ctx, d) {
     const c = C().defensible;
+    const texts = (ctx.snapshot || {}).texts || {};
+    const lang = ctx.language();
+    const note = (texts[lang] && texts[lang].defensibility_note) || null;
+    const checklist = arr(d.checklist);
     return el('div', { className: 'ht-pop', id: 'ht-pop-def', role: 'dialog', tabindex: '-1', 'data-popover': 'def',
       'aria-labelledby': 'ht-pop-def-h' }, [
       el('h3', { id: 'ht-pop-def-h', text: c.headings[d.kind] }),
       // R65 (lot 2026-10-28): what "defensible" means, then the engine's list, a tick on what is
       // done when the engine says so, "not an alarm" while the study is on its way.
-      el('p', { className: 'ht-def-meaning', 'data-def-meaning': true, text: c.meaning }),
-      el('ol', { 'data-defensibility-items': String(d.items.length) }, d.items.map(i => el('li', { 'data-item': i.id,
-        'data-done': typeof i.done === 'boolean' ? String(i.done) : null, className: i.done === true ? 'ht-def-done' : null }, [
-        typeof i.done === 'boolean' ? el('span', { className: 'ht-def-tick', 'aria-hidden': 'true', text: i.done ? '✓ ' : '○ ' }) : null,
-        typeof i.done === 'boolean' ? el('span', { className: 'sr-only', text: i.done ? c.doneWord : c.todoWord }) : null,
+      // The engine's note (`texts.<lang>.defensibility_note`, CLI-CONTRACT §18.7) when it has one,
+      // else the panel's words; its checklist `defensibility.checklist` ticks what is done.
+      el('p', { className: 'ht-def-meaning', 'data-def-meaning': true, text: (note && note.meaning) || c.meaning }),
+      checklist.length ? el('ul', { className: 'ht-def-check', 'data-defensibility-checklist': String(checklist.length) },
+        checklist.map(i => el('li', { 'data-check': i.id, 'data-done': String(i.done), className: i.done ? 'ht-def-done' : null }, [
+          el('span', { className: 'ht-def-tick', 'aria-hidden': 'true', text: i.done ? '✓ ' : '○ ' }),
+          el('span', { className: 'sr-only', text: i.done ? c.doneWord : c.todoWord }),
+          (note && note.checklist[i.id]) || i.id.replace(/_/g, ' '),
+        ]))) : null,
+      d.kind === 'pending' ? el('p', { className: 'ht-def-note', 'data-def-note': true, text: (note && note.not_alarm) || c.notAlarm }) : null,
+      checklist.length && note && note.limits_lead ? el('p', { className: 'ht-def-lead', 'data-def-limits-lead': true, text: note.limits_lead }) : null,
+      el('ol', { 'data-defensibility-items': String(d.items.length) }, d.items.map(i => el('li', { 'data-item': i.id }, [
         engine(limitWords(ctx, i.id)),
         i.severity ? [' ', el('span', { className: `ht-tag ht-sev-${i.severity}`, 'data-severity': i.severity, text: c.severity[i.severity] })] : null,
       ]))),
-      d.kind === 'pending' ? el('p', { className: 'ht-def-note', 'data-def-note': true, text: c.notAlarm }) : null,
     ]);
   }
 

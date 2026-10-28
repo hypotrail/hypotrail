@@ -1,0 +1,656 @@
+{
+ "about": {
+  "schema": "hypotrail.data/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "data",
+   "--json"
+  ],
+  "note": "Guided French Auto MPG study at the end: `data`."
+ },
+ "payload": {
+  "schema": "hypotrail.data/1",
+  "ok": true,
+  "study": "/studies/auto mpg fr",
+  "revision": 73,
+  "observation_unit": {
+   "value": "A vehicle model for a model year",
+   "status": "scenario_assumption",
+   "source": "Inspection: documentation describes unique names, but some recur across years",
+   "texts": {
+    "en": "A vehicle model for a model year",
+    "fr": "Un modèle de véhicule pour une année de modèle"
+   }
+  },
+  "development": {
+   "rows": 318,
+   "columns": 9,
+   "partition": "development",
+   "duplicates": {
+    "policy": null,
+    "n_groups": 0,
+    "n_rows": 0,
+    "n_extra_rows": 0,
+    "definition": "records identical on every column, the target included",
+    "line": "No two development rows are identical.",
+    "audience": "junior",
+    "junior_text": "Aucune ligne de l'échantillon de développement n'est identique à une autre.",
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": [
+    {
+     "column": "car_name",
+     "groups": 254,
+     "rows_in_repeated_groups": 107
+    }
+   ]
+  },
+  "target": {
+   "column": "mpg",
+   "task": "regression",
+   "positive_label": null,
+   "negative_label": null,
+   "unit": "mpg",
+   "description": "Miles per gallon: higher values mean lower fuel consumption.",
+   "description_fr": "Miles par gallon : une valeur plus élevée signifie une consommation de carburant plus faible."
+  },
+  "final_test": {
+   "status": "opened",
+   "rows": 80,
+   "method": "quantile_stratified",
+   "fraction": 0.2,
+   "development_rows": 318,
+   "schema_check": "pass",
+   "opening": {
+    "revision": 68,
+    "model": "fit.linear",
+    "rule": null,
+    "result_id": "0ca6e67ef45e12749f4dd3dee5d79d676a9ffda40dfad121de2e17106320b07e",
+    "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
+    "time": "2026-10-28T12:11:56.540372+00:00"
+   },
+   "post_final_test": false,
+   "changed_after": [],
+   "excluded_prior_exposed": 0,
+   "line": "80 rows are set aside as the final test and stay sealed: nothing here reads them.",
+   "audience": "junior",
+   "junior_text": "80 lignes sont mises de côté comme échantillon de test final (holdout). Cette vue ne les lit pas ; le fichier source local reste accessible."
+  },
+  "groups": [
+   {
+    "group": "Outcome",
+    "variables": [
+     {
+      "name": "mpg",
+      "role": "target",
+      "type": "numeric",
+      "unit": "mpg",
+      "description": "Miles per gallon: higher values mean lower fuel consumption.",
+      "description_fr": "Miles par gallon : une valeur plus élevée signifie une consommation de carburant plus faible.",
+      "availability": {
+       "value": "not_available",
+       "status": "scenario_assumption",
+       "source": "Teaching scenario assumption; not established by the dataset documentation",
+       "texts": {
+        "en": "Teaching scenario assumption; not established by the dataset documentation",
+        "fr": "Hypothèse du scénario pédagogique ; non établi par la documentation des données"
+       }
+      },
+      "decided": null,
+      "special_values": [],
+      "n_missing": 0,
+      "n_distinct": 117,
+      "examples": [
+       18,
+       15,
+       16
+      ]
+     }
+    ],
+    "texts": {
+     "en": "Outcome",
+     "fr": "Résultat"
+    }
+   },
+   {
+    "group": "Engine",
+    "variables": [
+     {
+      "name": "cylinders",
+      "role": "feature",
+      "type": "integer",
+      "unit": "cylinders",
+      "description": "Number of cylinders.",
+      "description_fr": "Nombre de cylindres.",
+      "availability": {
+       "value": "available_at_prediction",
+       "status": "scenario_assumption",
+       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+       "texts": {
+        "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+        "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+       }
+      },
+      "decided": {
+       "status": "confirmed",
+       "value": "available_at_prediction"
+      },
+      "special_values": [],
+      "n_missing": 0,
+      "n_distinct": 5,
+      "examples": [
+       8,
+       6,
+       4
+      ]
+     },
+     {
+      "name": "displacement",
+      "role": "feature",
+      "type": "numeric",
+      "unit": "cubic inches (assumed)",
+      "description": "Engine displacement.",
+      "description_fr": "Cylindrée du moteur.",
+      "availability": {
+       "value": "available_at_prediction",
+       "status": "scenario_assumption",
+       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+       "texts": {
+        "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+        "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+       }
+      },
+      "decided": {
+       "status": "confirmed",
+       "value": "available_at_prediction"
+      },
+      "special_values": [],
+      "n_missing": 0,
+      "n_distinct": 78,
+      "examples": [
+       307,
+       350,
+       318
+      ]
+     },
+     {
+      "name": "horsepower",
+      "role": "feature",
+      "type": "numeric",
+      "unit": "horsepower (assumed)",
+      "description": "Engine horsepower.",
+      "description_fr": "Puissance du moteur.",
+      "availability": {
+       "value": "available_at_prediction",
+       "status": "scenario_assumption",
+       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+       "texts": {
+        "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+        "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+       }
+      },
+      "decided": {
+       "status": "confirmed",
+       "value": "available_at_prediction"
+      },
+      "special_values": [
+       {
+        "value": "?",
+        "meaning": "Missing value.",
+        "status": "observed",
+        "n_rows": 6,
+        "texts": {
+         "en": "Missing value.",
+         "fr": "Valeur manquante."
+        }
+       }
+      ],
+      "n_missing": 6,
+      "n_distinct": 84,
+      "examples": [
+       130,
+       165,
+       150
+      ]
+     }
+    ],
+    "texts": {
+     "en": "Engine",
+     "fr": "Moteur"
+    }
+   },
+   {
+    "group": "Body and performance",
+    "variables": [
+     {
+      "name": "weight",
+      "role": "feature",
+      "type": "numeric",
+      "unit": "pounds (assumed)",
+      "description": "Vehicle weight.",
+      "description_fr": "Poids du véhicule.",
+      "availability": {
+       "value": "available_at_prediction",
+       "status": "scenario_assumption",
+       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+       "texts": {
+        "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+        "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+       }
+      },
+      "decided": {
+       "status": "confirmed",
+       "value": "available_at_prediction"
+      },
+      "special_values": [],
+      "n_missing": 0,
+      "n_distinct": 290,
+      "examples": [
+       3504,
+       3693,
+       3436
+      ]
+     },
+     {
+      "name": "acceleration",
+      "role": "feature",
+      "type": "numeric",
+      "unit": "seconds (assumed)",
+      "description": "Acceleration time; not used by models in this exercise.",
+      "description_fr": "Temps d'accélération ; non utilisé par les modèles dans cet exercice.",
+      "availability": {
+       "value": "unknown",
+       "status": "unknown",
+       "source": "Availability at prediction time is not documented",
+       "texts": {
+        "en": "Availability at prediction time is not documented",
+        "fr": "La disponibilité au moment de la prédiction n'est pas documentée"
+       }
+      },
+      "decided": {
+       "status": "confirmed",
+       "value": "uncertain_excluded"
+      },
+      "special_values": [],
+      "n_missing": 0,
+      "n_distinct": 90,
+      "examples": [
+       12,
+       11.5,
+       11
+      ]
+     }
+    ],
+    "texts": {
+     "en": "Body and performance",
+     "fr": "Carrosserie et performances"
+    }
+   },
+   {
+    "group": "Model",
+    "variables": [
+     {
+      "name": "model_year",
+      "role": "time",
+      "type": "integer",
+      "unit": "year (19xx)",
+      "description": "Model year, coded 70 to 82 (read as 1970 to 1982).",
+      "description_fr": "Année du modèle, codée de 70 à 82 (lue comme 1970 à 1982).",
+      "availability": {
+       "value": "available_at_prediction",
+       "status": "scenario_assumption",
+       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+       "texts": {
+        "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+        "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+       }
+      },
+      "decided": null,
+      "special_values": [],
+      "n_missing": 0,
+      "n_distinct": 13,
+      "examples": [
+       70,
+       71,
+       72
+      ]
+     },
+     {
+      "name": "origin",
+      "role": "feature",
+      "type": "category",
+      "unit": null,
+      "description": "Origin code 1, 2, or 3.",
+      "description_fr": "Code d'origine 1, 2 ou 3.",
+      "availability": {
+       "value": "available_at_prediction",
+       "status": "scenario_assumption",
+       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+       "texts": {
+        "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+        "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+       }
+      },
+      "decided": {
+       "status": "confirmed",
+       "value": "available_at_prediction"
+      },
+      "special_values": [],
+      "n_missing": 0,
+      "n_distinct": 3,
+      "examples": [
+       1,
+       2,
+       3
+      ]
+     },
+     {
+      "name": "car_name",
+      "role": "group_id",
+      "type": "string",
+      "unit": null,
+      "description": "Car model name. The documentation states that it is unique for each instance, but some names occur in several rows.",
+      "description_fr": "Nom du modèle de voiture. La documentation indique qu'il est unique pour chaque ligne, mais certains noms apparaissent sur plusieurs lignes.",
+      "availability": {
+       "value": "available_at_prediction",
+       "status": "scenario_assumption",
+       "source": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+       "texts": {
+        "en": "Teaching scenario assumption; the dataset documentation does not establish availability at prediction time",
+        "fr": "Hypothèse du scénario pédagogique ; la documentation des données n'établit pas la disponibilité au moment de la prédiction"
+       }
+      },
+      "decided": null,
+      "special_values": [],
+      "n_missing": 0,
+      "n_distinct": 254,
+      "examples": [
+       "chevrolet chevelle malibu",
+       "buick skylark 320",
+       "plymouth satellite"
+      ]
+     }
+    ],
+    "texts": {
+     "en": "Model",
+     "fr": "Modèle"
+    }
+   }
+  ],
+  "rows": {
+   "columns": [
+    "mpg",
+    "cylinders",
+    "displacement",
+    "horsepower",
+    "weight",
+    "acceleration",
+    "model_year",
+    "origin",
+    "car_name"
+   ],
+   "n_rows": 8,
+   "order": "seeded sample",
+   "items": [
+    {
+     "row_key": "L55",
+     "values": {
+      "mpg": 35,
+      "cylinders": 4,
+      "displacement": 72,
+      "horsepower": 69,
+      "weight": 1613,
+      "acceleration": 18,
+      "model_year": 71,
+      "origin": 3,
+      "car_name": "datsun 1200"
+     }
+    },
+    {
+     "row_key": "L92",
+     "values": {
+      "mpg": 13,
+      "cylinders": 8,
+      "displacement": 400,
+      "horsepower": 150,
+      "weight": 4464,
+      "acceleration": 12,
+      "model_year": 73,
+      "origin": 1,
+      "car_name": "chevrolet caprice classic"
+     }
+    },
+    {
+     "row_key": "L181",
+     "values": {
+      "mpg": 25,
+      "cylinders": 4,
+      "displacement": 121,
+      "horsepower": 115,
+      "weight": 2671,
+      "acceleration": 13.5,
+      "model_year": 75,
+      "origin": 2,
+      "car_name": "saab 99le"
+     }
+    },
+    {
+     "row_key": "L185",
+     "values": {
+      "mpg": 25,
+      "cylinders": 4,
+      "displacement": 140,
+      "horsepower": 92,
+      "weight": 2572,
+      "acceleration": 14.9,
+      "model_year": 76,
+      "origin": 1,
+      "car_name": "capri ii"
+     }
+    },
+    {
+     "row_key": "L299",
+     "values": {
+      "mpg": 23,
+      "cylinders": 8,
+      "displacement": 350,
+      "horsepower": 125,
+      "weight": 3900,
+      "acceleration": 17.4,
+      "model_year": 79,
+      "origin": 1,
+      "car_name": "cadillac eldorado"
+     }
+    },
+    {
+     "row_key": "L325",
+     "values": {
+      "mpg": 40.8,
+      "cylinders": 4,
+      "displacement": 85,
+      "horsepower": 65,
+      "weight": 2110,
+      "acceleration": 19.2,
+      "model_year": 80,
+      "origin": 3,
+      "car_name": "datsun 210"
+     }
+    },
+    {
+     "row_key": "L381",
+     "values": {
+      "mpg": 36,
+      "cylinders": 4,
+      "displacement": 120,
+      "horsepower": 88,
+      "weight": 2160,
+      "acceleration": 14.5,
+      "model_year": 82,
+      "origin": 3,
+      "car_name": "nissan stanza xe"
+     }
+    },
+    {
+     "row_key": "L396",
+     "values": {
+      "mpg": 32,
+      "cylinders": 4,
+      "displacement": 135,
+      "horsepower": 84,
+      "weight": 2295,
+      "acceleration": 11.6,
+      "model_year": 82,
+      "origin": 1,
+      "car_name": "dodge rampage"
+     }
+    }
+   ],
+   "seed": "b54b7df4a57cc38c",
+   "target_shown": true,
+   "exposure": {
+    "exposure_id": "x_36c8131ea76b475aaa187a7514644d71",
+    "purpose": "development_target_sample",
+    "recorded": true,
+    "withheld": null
+   }
+  },
+  "note": {
+   "text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored after the split, on the rows it leaves for exploration. The test is reserved by the protocol; the local source file remains accessible. Confirmations are agent-reported, not independently authenticated. Cross-study history is not enforced.",
+   "audience": "junior",
+   "junior_text": "Ce sont uniquement des lignes de l'échantillon de développement ; l'échantillon de test final reste scellé. La fiche montre le sens des colonnes et quelques lignes, jamais la fréquence du résultat : elle est explorée après le découpage. Le test est réservé par le protocole ; le fichier source local reste accessible. Les confirmations sont rapportées par l'agent, sans authentification indépendante. L'historique entre études n'est pas imposé."
+  },
+  "special_rows": {
+   "columns": [
+    "cylinders",
+    "displacement",
+    "horsepower",
+    "weight",
+    "acceleration",
+    "model_year",
+    "origin",
+    "car_name"
+   ],
+   "n_rows": 6,
+   "items": [
+    {
+     "row_key": "L33",
+     "values": {
+      "cylinders": 4,
+      "displacement": 98,
+      "horsepower": null,
+      "weight": 2046,
+      "acceleration": 19,
+      "model_year": 71,
+      "origin": 1,
+      "car_name": "ford pinto"
+     },
+     "specials": [
+      {
+       "column": "horsepower",
+       "value": "?"
+      }
+     ]
+    },
+    {
+     "row_key": "L127",
+     "values": {
+      "cylinders": 6,
+      "displacement": 200,
+      "horsepower": null,
+      "weight": 2875,
+      "acceleration": 17,
+      "model_year": 74,
+      "origin": 1,
+      "car_name": "ford maverick"
+     },
+     "specials": [
+      {
+       "column": "horsepower",
+       "value": "?"
+      }
+     ]
+    },
+    {
+     "row_key": "L331",
+     "values": {
+      "cylinders": 4,
+      "displacement": 85,
+      "horsepower": null,
+      "weight": 1835,
+      "acceleration": 17.3,
+      "model_year": 80,
+      "origin": 2,
+      "car_name": "renault lecar deluxe"
+     },
+     "specials": [
+      {
+       "column": "horsepower",
+       "value": "?"
+      }
+     ]
+    },
+    {
+     "row_key": "L337",
+     "values": {
+      "cylinders": 4,
+      "displacement": 140,
+      "horsepower": null,
+      "weight": 2905,
+      "acceleration": 14.3,
+      "model_year": 80,
+      "origin": 1,
+      "car_name": "ford mustang cobra"
+     },
+     "specials": [
+      {
+       "column": "horsepower",
+       "value": "?"
+      }
+     ]
+    },
+    {
+     "row_key": "L355",
+     "values": {
+      "cylinders": 4,
+      "displacement": 100,
+      "horsepower": null,
+      "weight": 2320,
+      "acceleration": 15.8,
+      "model_year": 81,
+      "origin": 2,
+      "car_name": "renault 18i"
+     },
+     "specials": [
+      {
+       "column": "horsepower",
+       "value": "?"
+      }
+     ]
+    },
+    {
+     "row_key": "L375",
+     "values": {
+      "cylinders": 4,
+      "displacement": 151,
+      "horsepower": null,
+      "weight": 3035,
+      "acceleration": 20.5,
+      "model_year": 82,
+      "origin": 1,
+      "car_name": "amc concord dl"
+     },
+     "specials": [
+      {
+       "column": "horsepower",
+       "value": "?"
+      }
+     ]
+    }
+   ],
+   "truncated": false
+  }
+ }
+}

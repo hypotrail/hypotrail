@@ -134,7 +134,9 @@
     "headlines",
     "criterion_configurations",
     "data_structure",
-    "quality_verdicts"
+    "quality_verdicts",
+    "case_brief",
+    "case_display"
    ],
    "moments[]": [
     "id",
@@ -270,7 +272,8 @@
    "defensibility": [
     "kind",
     "count",
-    "items"
+    "items",
+    "checklist"
    ],
    "ledger": [
     "final_test",
@@ -288,7 +291,8 @@
     "unit",
     "bound",
     "configurations",
-    "final_test"
+    "final_test",
+    "business"
    ]
   },
   "hypotrail.decisions/1": {

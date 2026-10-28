@@ -233,6 +233,9 @@ def _run_pending(flow) -> dict:
     that next action."""
     for _ in range(30):
         nxt = flow.view()['next_action']
+        if nxt['kind'] == 'read_exploration':
+            # Lot 2026-10-28 (§18.2): the junior read the exploration and answered "continue".
+            nxt = dict(nxt['then'])
         if nxt['kind'] != 'run':
             return nxt
         # A run the engine asks with options (a chart of one column) gets them as given.
@@ -606,6 +609,9 @@ def cross_validated_regression(cap: Capture) -> None:
     flow.decide('feature_availability', fk.availability(AUTO))
     flow.decide('split', st.b1_default_value(flow.state(), 'split'))
     state = flow.state()
+    if state['decisions'].get(st.ERROR_METRIC, {}).get('status', 'confirmed') != 'confirmed':
+        flow.decide(st.ERROR_METRIC, {'metric': 'mae'})   # lot 2026-10-28 (§18.1)
+        state = flow.state()
     if state['decisions']['success_criterion']['status'] != 'confirmed':
         flow.decide('success_criterion', fk.criterion(state))
     nxt = _run_pending(flow)

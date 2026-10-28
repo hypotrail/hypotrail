@@ -167,11 +167,12 @@
   /** The pill of PG-6: the engine's `defensibility`, else the neutral fallback (HON-5). */
   function defensibilityOf(s) {
     if (s.defensibility) {
-      return { kind: s.defensibility.kind, count: s.defensibility.count, items: arr(s.defensibility.items), fallback: false };
+      return { kind: s.defensibility.kind, count: s.defensibility.count, items: arr(s.defensibility.items),
+        checklist: arr(s.defensibility.checklist), fallback: false };
     }
     const nyd = obj(s.notYetDefensible);
     const ids = [...arr(nyd.top).map(i => i.id), ...arr(nyd.more)];
-    return { kind: 'fallback', count: ids.length, items: ids.map(id => ({ id, severity: null })), fallback: true };
+    return { kind: 'fallback', count: ids.length, items: ids.map(id => ({ id, severity: null })), checklist: [], fallback: true };
   }
 
   /** PG-7: active, a demonstration (for good), or ended with a review still open; else null. */

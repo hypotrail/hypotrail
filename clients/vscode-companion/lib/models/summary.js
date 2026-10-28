@@ -238,6 +238,12 @@ function textsOf(raw) {
     // where it is judged (the engine's; null from an older engine).
     table.step_limit = text(t.step_limit);
     table.criterion_words = text(t.criterion_words);
+    // Lot 2026-10-28 (R65, §18.7): the defensibility note `{meaning, checklist {id: text},
+    // not_alarm, limits_lead}`, null from an older engine.
+    const note = t.defensibility_note && typeof t.defensibility_note === 'object' && !Array.isArray(t.defensibility_note)
+      ? t.defensibility_note : null;
+    table.defensibility_note = note ? { meaning: text(note.meaning), not_alarm: text(note.not_alarm), limits_lead: text(note.limits_lead),
+      checklist: Object.fromEntries(Object.entries(obj(note.checklist)).filter(([, v]) => text(v))) } : null;
     out[lang] = table;
   }
   return out;
@@ -268,10 +274,12 @@ function defensibilityOf(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !DEFENSIBILITY_KINDS.includes(raw.kind)) return null;
   return { kind: raw.kind, count: int(raw.count) === null ? 0 : int(raw.count),
     items: list(raw.items).filter(i => i && typeof i.id === 'string' && i.id)
-      .map(i => ({ id: i.id, severity: SEVERITIES.includes(i.severity) ? i.severity : 'caveat',
-        // Lot 2026-10-28 (R65): whether the engine counts the item as done (its checklist's tick),
-        // null when it does not say (an older engine).
-        done: typeof i.done === 'boolean' ? i.done : null })) };
+      .map(i => ({ id: i.id, severity: SEVERITIES.includes(i.severity) ? i.severity : 'caveat' })),
+    // Lot 2026-10-28 (R65, CLI-CONTRACT §18.7): the engine's checklist of what a defensible
+    // study gathers, `[{id, done}]` (ids `panel_digest.CHECKLIST_IDS`); [] from an older engine.
+    // The limits stay `items`; the checklist's texts are `texts.<lang>.defensibility_note`.
+    checklist: list(raw.checklist).filter(i => i && typeof i.id === 'string' && i.id && typeof i.done === 'boolean')
+      .map(i => ({ id: i.id, done: i.done })) };
 }
 
 /** Contract P1 (§17.2.2): the counts of the path's ledger line; null when absent. */
@@ -439,7 +447,8 @@ function currencyOf(summary) {
 // --- lot 2026-10-28: the step cards (one structure for every step) ---------------------------
 
 const CARD_STATES = ['upcoming', 'current', 'done'];
-const QUESTION_STATUSES = ['answered', 'stale', 'pending', 'no_chart', 'failed'];
+// `integrity_failed` (CLI-CONTRACT §18.8, LOT §8.12): the result failed its integrity check; no reading.
+const QUESTION_STATUSES = ['answered', 'stale', 'pending', 'no_chart', 'integrity_failed'];
 const EVIDENCE_FRAMES = ['none', 'structure', 'development', 'final', 'illustration'];
 const WHO = ['you', 'automatic', 'delegated'];
 const text = x => (typeof x === 'string' && x.trim() ? x : null);
@@ -523,8 +532,11 @@ function caseDisplayOf(raw) {
 const BRIEF_FIELDS = ['problem', 'decision', 'objective', 'production', 'data_provenance', 'users_and_cost_of_error',
   'out_of_scope_and_risks'];
 
-/** A brief's field in one language: a string, or `{en, fr}`. */
-const inLang = (v, lang) => (typeof v === 'string' ? text(v) : plain(v) ? text(v[lang]) : null);
+// A brief's field in one language: a string, `{en, fr}`, or (the engine's `texts.<lang>.case_brief`,
+// §18.5) an object of parts already in that language (`data_provenance {real, scenario}`), joined.
+const inLang = (v, lang) => (typeof v === 'string' ? text(v)
+  : plain(v) && ('en' in v || 'fr' in v) ? text(v[lang])
+    : plain(v) ? text(Object.values(v).filter(x => typeof x === 'string' && x.trim()).join(' ')) : null);
 
 /**
  * R66: the case brief (`case_brief` of the digest, or `texts.<lang>.case_brief`), per language:
@@ -536,8 +548,12 @@ function caseBriefOf(raw, texts) {
   for (const lang of ['en', 'fr']) {
     const own = plain(obj(obj(texts)[lang]).case_brief);
     const top = plain(raw);
-    const b = own || (top && plain(top[lang]) ? top[lang] : top);
+    // The engine (CLI-CONTRACT §18.5) puts the texts in `texts.<lang>.case_brief` and the
+    // numbers and the fictitious flag at the top level (`case_brief {fictitious,
+    // current_method_error, target_error}`): the two are merged, the texts first.
+    const b = own ? { ...(top || {}), ...own } : (top && plain(top[lang]) ? top[lang] : top);
     if (!b) { out[lang] = null; continue; }
+    if (own && top) for (const k of ['fictitious', 'current_method_error', 'target_error']) if (own[k] === undefined && top[k] !== undefined) b[k] = top[k];
     const src = b.source;
     const fields = {};
     for (const f of BRIEF_FIELDS) fields[f] = inLang(b[f], lang);

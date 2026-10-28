@@ -133,6 +133,11 @@ def value_words(view: Mapping, decision: str | None, value: Any) -> str:
         return f'{words}{_colon(lang)}{text}' if text else words
     if decision == 'policy':
         return audience.policy_words(value, lang)
+    if decision == 'error_metric' and isinstance(value, Mapping) and value.get('metric') in ('mae', 'rmse'):
+        # Lot 2026-10-28 (§18.1): the measure in words, never its JSON value.
+        return {'mae': _t(lang, 'the mean absolute error (MAE)', "l'erreur absolue moyenne (MAE)"),
+                'rmse': _t(lang, 'the root mean squared error (RMSE)',
+                           "la racine de l'erreur quadratique moyenne (RMSE)")}[value['metric']]
     if isinstance(value, str) and decision not in ('model_choice',):
         return value
     from . import render_html, texts

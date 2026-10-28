@@ -126,6 +126,8 @@ class Study {
   modelDecisions() {
     const decisions = this.view().decisions;
     if (!decisions.success_criterion) return;   // a study created before WP-A4
+    // Lot 2026-10-28 (CLI-CONTRACT §18.1): a new regression study chooses its error measure first.
+    if (decisions.error_metric) this.decide('error_metric', { metric: 'mae' });
     this.decide('success_criterion', this.task === 'binary'
       ? { metric: 'precision_gain', min_points: 5 } : { metric: 'mae_reduction', min_share: 0.1 });
     this.decide('preprocessing', { missing: 'none', rare_category_min_rows: 0, caps: {}, log_transform: [] });

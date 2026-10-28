@@ -29,8 +29,8 @@ no_chart_pending:
   en: Not computed yet.
   fr: Pas encore calculé.
 verdicts:
-  over: {en: threshold exceeded, fr: seuil dépassé}
-  under: {en: under the threshold, fr: sous le seuil}
+  over: {en: limit exceeded, fr: seuil dépassé}
+  under: {en: under the limit, fr: sous le seuil}
   met: {en: met, fr: atteint}
   not_met: {en: not met, fr: non atteint}
 business:
@@ -139,10 +139,10 @@ steps:
       fr: "Ensuite : le contrôle de qualité, colonne par colonne, sans regarder la cible."
   structural_eda:
     caption:
-      en: "Checks per column: empty cells, rare categories, long tails, values out of range. Each has its threshold, fixed beforehand."
+      en: "Checks per column: empty cells, rare categories, long tails, values out of range. Each has its limit, fixed beforehand."
       fr: "Des contrôles par colonne : cellules vides, catégories rares, longues traînes, valeurs hors plage. Chacun a son seuil, fixé d'avance."
     more:
-      en: The checks read the columns of the development rows, never the target. A threshold crossed triggers a preparation proposal; it changes nothing by itself.
+      en: The checks read the columns of the development rows, never the target. A limit crossed triggers a preparation proposal; it changes nothing by itself.
       fr: Les contrôles lisent les colonnes des lignes de développement, jamais la cible. Un seuil franchi déclenche une proposition de préparation ; il ne change rien tout seul.
     prepares:
       en: These answers prepare the Preparation, which columns to transform and why.
@@ -359,7 +359,7 @@ questions:
           en: "Kept columns: {n_kept}; excluded: {n_excluded}; not variables: {n_not_feature}."
           fr: "Colonnes gardées : {n_kept} ; exclues : {n_excluded} ; pas des variables : {n_not_feature}."
         conclude:
-          en: The models will read only the allowed columns. Excluding an uncertain column may cost a little precision; including it would rest the model on information perhaps absent at the moment.
+          en: The models will read only the allowed columns. Excluding an uncertain column may cost a little accuracy; including it would rest the model on information perhaps absent at the moment.
           fr: Les modèles ne liront que les colonnes permises. Exclure une colonne incertaine peut coûter un peu de précision ; l'inclure ferait reposer le modèle sur une information peut-être absente au moment voulu.
         cannot:
           en: The board does not say how much an excluded column would have helped, nor whether the kept ones are enough.
@@ -520,7 +520,7 @@ questions:
           en: The chart does not say why these values are missing, nor whether they are missing at random.
           fr: Le graphique ne dit pas pourquoi ces valeurs manquent, ni si elles manquent au hasard.
     how:
-      en: One bar per column, the share of empty cells; the line is the threshold.
+      en: One bar per column, the share of empty cells; the line is the limit.
       fr: Une barre par colonne, la part de cellules vides ; la ligne est le seuil.
     trap:
       en: A very short bar is still a problem if the column is read as text.
@@ -532,29 +532,29 @@ questions:
     reading:
       flagged:
         see:
-          en: "{column} exceeds the skewness threshold, {value} for a threshold of {threshold}; other columns under their thresholds: {n_others}."
+          en: "{column} exceeds the skewness limit, {value} for a limit of {threshold}; other columns under their limits: {n_others}."
           fr: "« {column} » dépasse le seuil d'asymétrie, {value} pour un seuil de {threshold} ; autres colonnes sous leurs seuils : {n_others}."
         conclude:
-          en: The preparation proposal rests on these verdicts; a column over a threshold gets a transformation, the others have no recorded reason to change.
+          en: The preparation proposal rests on these verdicts; a column over a limit gets a transformation, the others have no recorded reason to change.
           fr: La proposition de préparation repose sur ces verdicts ; une colonne au-dessus d'un seuil reçoit une transformation, les autres n'ont pas de motif de changement enregistré.
         cannot:
-          en: A threshold crossed does not say that a transformation will reduce the error; only the models will measure it.
+          en: A limit crossed does not say that a transformation will reduce the error; only the models will measure it.
           fr: Un seuil franchi ne dit pas qu'une transformation réduira l'erreur ; seuls les modèles le mesureront.
       none:
         see:
-          en: "The {n_columns} columns stay under their skewness and tail thresholds."
+          en: "The {n_columns} columns stay under their skewness and tail limits."
           fr: "Les {n_columns} colonnes restent sous leurs seuils d'asymétrie et de traîne."
         conclude:
           en: No rule asks to transform a column; the preparation has no recorded reason to change one.
           fr: Aucune règle ne demande de transformer une colonne ; la préparation n'a pas de motif enregistré d'en changer une.
         cannot:
-          en: Under the threshold does not mean without effect; a transformation could still change the error.
+          en: Under the limit does not mean without effect; a transformation could still change the error.
           fr: Sous le seuil ne veut pas dire sans effet ; une transformation pourrait quand même changer l'erreur.
     how:
-      en: One line per check; the verdict compares the value with the threshold fixed before the check.
+      en: One line per check; the verdict compares the value with the limit fixed before the check.
       fr: Une ligne par contrôle ; le verdict compare la valeur au seuil fixé avant le contrôle.
     trap:
-      en: Skewness sums up a shape in one number; two columns on either side of the threshold look more alike than their verdicts.
+      en: Skewness sums up a shape in one number; two columns on either side of the limit look more alike than their verdicts.
       fr: L'asymétrie résume une forme en un nombre ; deux colonnes de part et d'autre du seuil se ressemblent plus que leurs verdicts.
   prep.changed:
     text:
@@ -563,7 +563,7 @@ questions:
     reading:
       changed:
         see:
-          en: "{column} has a tail of high values, skewness {value} for a threshold of {threshold}; the log draws the large values closer."
+          en: "{column} has a tail of high values, skewness {value} for a limit of {threshold}; the log draws the large values closer."
           fr: "« {column} » a une traîne de valeurs hautes, asymétrie {value} pour un seuil de {threshold} ; le log resserre les grandes valeurs."
         conclude:
           en: The log narrows the large values, which would otherwise weigh much on a straight line; it is learnt on the training part of each fold.
@@ -573,13 +573,13 @@ questions:
           fr: L'histogramme ne lit pas la cible ; il ne dit pas si le log réduira l'erreur.
       none:
         see:
-          en: No column gets a transformation; every check stays under its threshold.
+          en: No column gets a transformation; every check stays under its limit.
           fr: Aucune colonne ne reçoit de transformation ; chaque contrôle reste sous son seuil.
         conclude:
           en: The columns enter the models as they are.
           fr: Les colonnes entrent dans les modèles telles qu'elles sont.
         cannot:
-          en: Under the threshold does not mean without effect on the error.
+          en: Under the limit does not mean without effect on the error.
           fr: Sous le seuil ne veut pas dire sans effet sur l'erreur.
     how:
       en: Left, the column as written; right, its log.
@@ -594,19 +594,19 @@ questions:
     reading:
       default:
         see:
-          en: "Columns left as they are: {n_unchanged}; each of their checks stays under its threshold."
+          en: "Columns left as they are: {n_unchanged}; each of their checks stays under its limit."
           fr: "Colonnes laissées telles quelles : {n_unchanged} ; chacun de leurs contrôles reste sous son seuil."
         conclude:
           en: These columns enter the models as they are; no rule asks to change them, and a change without a recorded reason would be made by eye.
           fr: Ces colonnes entrent dans les modèles telles qu'elles sont ; aucune règle ne demande de les changer, et un changement sans motif enregistré serait fait à l'œil.
         cannot:
-          en: Under the threshold does not mean without effect; a transformation could still change the error.
+          en: Under the limit does not mean without effect; a transformation could still change the error.
           fr: Sous le seuil ne veut pas dire sans effet ; une transformation pourrait quand même changer l'erreur.
     how:
       en: One line per column left as it is, with the rule that leaves it.
       fr: Une ligne par colonne laissée telle quelle, avec la règle qui la laisse.
     trap:
-      en: No change is a decision like any other; it has its reason, here the threshold.
+      en: No change is a decision like any other; it has its reason, here the limit.
       fr: Aucun changement est une décision comme une autre ; elle a sa raison, ici le seuil.
   explore.target:
     text:

@@ -1,8 +1,9 @@
 """Lot 2026-10-28 (one structure for every step; docs/plans/LOT-2026-10-28-SPEC.md §5, §7.4,
-binding §8 and §9): the step card in headless Chromium, over hand-made digests of the Auto MPG
-study (``fixtures/stepcards/``, built by ``fixtures/stepcards/build.py`` from the captured
-cross-validated study until the integrator recaptures them from the engine) and the captured
-registered values (``captured/evidence.regression.cv.done``). This is not a VS Code session.
+binding §8 and §9): the step card in headless Chromium, over digests of a French Auto MPG study
+captured from the real engine (``fixtures/stepcards/``, written by
+``fixtures/stepcards/capture.py``: a guided study walked by the engine tests' journey walker, and a
+``full_demo`` automatic one) and the views of that study at the end (``evidence``, ``status``,
+``decisions``, ``data``). This is not a VS Code session.
 
 The tests the spec keeps (§8): T-P1 (Now in four blocks at the exploration), T-P2 without the
 replay (the review form of every done step, full names, equal axes, the folds' legend, the
@@ -19,20 +20,22 @@ import pytest
 import themes
 from panel_cases import STYLE_GUARD, set_language
 
-STATES = ['data', 'moment', 'split', 'metric', 'criterion', 'exploration', 'choice', 'conclusion', 'done']
+STATES = ['data', 'moment', 'variables', 'split', 'metric', 'criterion', 'quality', 'preparation', 'exploration', 'models',
+          'variants', 'choice', 'final', 'conclusion', 'done', 'done.automatic']
+NO_DECISION = ('discover_data', 'structural_eda', 'train_eda', 'models')
 CONCL = "() => [...document.querySelectorAll('[data-block=\"now\"] [data-lesson-concl], [data-block=\"now\"] .ht-concl, [data-block=\"now\"] [data-guided-reading]')].length"
 
 
 @pytest.fixture(scope='module')
 def sc_views(model):
     out = {f'summary.{s}': model('summary', f'stepcards/summary.{s}') for s in STATES}
-    ev = 'captured/evidence.regression.cv.done'
+    ev = 'stepcards/evidence.done'
     out['evidence'] = model('evidence', ev)
     out['eda'] = model('eda', ev)
     out['whatif'] = model('whatif', ev)
-    out['trials'] = model('trials', 'captured/status.regression.cv.done')
-    out['decisions'] = model('decisions', 'captured/decisions.regression.cv')
-    out['data'] = model('data', 'captured/data.regression.cv')
+    out['trials'] = model('trials', 'stepcards/status.done')
+    out['decisions'] = model('decisions', 'stepcards/decisions.done')
+    out['data'] = model('data', 'stepcards/data.done')
     out['plain'] = model('summary', 'captured/summary.regression.cv.preparation')
     return out
 
@@ -105,8 +108,9 @@ def test_tp2_review_names_charts_and_slider(open_panel, sc_views):
         form.wait_for(timeout=5000)
         assert form.count() == 1, step
         assert form.locator('[data-answer], .sc-ra').count() >= 1, step
-        if step not in ('structural_eda',):
-            assert form.locator('.sc-decided').count() == 1, step
+        # The decision taken, exactly where the engine's card has one (the data card, the quality
+        # check, the exploration and the models record none).
+        assert form.locator('.sc-decided').count() == (0 if step in NO_DECISION else 1), step
         page.locator(f'li[data-step="{step}"] > details > summary').click()
         form.wait_for(state='detached', timeout=5000)
     sent = len(p.posted())
@@ -178,6 +182,33 @@ def test_fallback_without_step_cards(open_panel, sc_views):
     assert now.locator('h3[data-question]').count() >= 1, "today's question"
     assert p.page.locator('[data-step-card-path]').count() == 0
     assert p.page.locator('[data-block="path"] [data-phase-kind]').count() >= 1, "today's path"
+    assert p.clean(), (p.errors, p.requests)
+
+
+def test_r65_r66_engine_brief_and_checklist(open_panel, sc_views):
+    """R66 and R65 on the engine's keys (CLI-CONTRACT §18.5, §18.7): the brief's texts with the
+    top-level numbers and fictitious flag; the pill's note lists `defensibility.checklist` with the
+    engine's texts and ticks, then the limits of `defensibility.items`."""
+    p = open_state(open_panel, sc_views, 'done', width=420)
+    page = p.page
+    page.locator('[data-pill="defensible"]').click()
+    pop = page.locator('[data-popover="def"]')
+    pop.wait_for(timeout=5000)
+    checks = pop.locator('[data-check]')
+    assert [c.get_attribute('data-check') for c in checks.all()] == [
+        'framing_in_your_words', 'model_chosen_by_you', 'final_test_opened_once', 'conclusion_written', 'no_stale_figure']
+    assert pop.locator('[data-check="final_test_opened_once"]').get_attribute('data-done') == 'true'
+    assert 'Le test final, ouvert une fois' in pop.inner_text()
+    assert pop.locator('[data-def-limits-lead]').count() == 1 and pop.locator('[data-item]').count() >= 1
+    p = open_state(open_panel, sc_views, 'data', width=420)
+    brief = p.page.locator('[data-block="brief"]')
+    assert brief.locator('[data-fictitious]').count() == 1
+    numbers = brief.locator('[data-brief-numbers]').inner_text()
+    assert '4,5 ' in numbers and '3,5 ' in numbers, numbers
+    brief.locator('[data-fold-id="sc-brief-data_provenance"] > summary').click()
+    brief.locator('[data-fold-id="sc-brief-data_provenance"] > :not(summary)').first.wait_for(timeout=5000)
+    assert 'UCI Machine Learning Repository' in brief.locator('[data-fold-id="sc-brief-data_provenance"]').inner_text()
+    assert brief.inner_text().count("Fiche du cas d'usage") == 1, 'the source label is not repeated'
     assert p.clean(), (p.errors, p.requests)
 
 
