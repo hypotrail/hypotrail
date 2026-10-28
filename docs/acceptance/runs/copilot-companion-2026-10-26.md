@@ -950,3 +950,14 @@ its warning.
   de la prédiction non documentée") and its place on the R57 timeline (the same timeline,
   with the prediction moment, reused here). Display only; the decision stays in the chat.
   Noted only, not fixed.
+- **R59. Show what a 5-fold cross-validation is, at the split step (owner remark,
+  2026-10-28).** At the split proposal Now shows only the partition strip (318 development /
+  80 sealed). Add the illustrative cross-validation diagram right there, before any fit: the
+  318 development rows as 5 time-ordered blocks (with their model years), drawn as 5 rounds
+  where each round colours one block "validation" and the four others "entraînement", an arrow
+  "chaque ligne est prédite une fois par un modèle qui ne l'a pas vue", and the sealed 80 rows
+  aside, never used. It explains the term (term first, then the study's own blocks) and stays
+  in the path detail (R55); the R53 diagram after the fits can reuse it with the per-block
+  errors. Also: the proposal still says "validation croisée à k plis, avec 5 plis" (R36's
+  "k = 5" fix not applied to this text): say "validation croisée à 5 plis" once. Noted only,
+  not fixed.
