@@ -1061,3 +1061,17 @@ its warning.
   a two-level criterion, both fixed before any model — the statistical minimum vs the
   reference and a business bar vs the current method (an absolute error from the brief) — the
   conclusion reporting both. Shown in the all-steps mockup.
+- **R68. Start a study from the PO's PDF (owner request, 2026-10-28).** A descriptive PDF
+  written by a PO (business context, problem, decision, users, data source, production target,
+  current method and its error, constraints) is converted into the study's contract: the case
+  brief of R66 (`case-brief.yaml`) and, where the PDF states them, case fields such as the
+  target, the unit, the prediction moment and column availability. Design to respect the
+  engine's rules: (1) `hypotrail brief import --pdf <file>` extracts the text deterministically
+  (no language model in the engine) and stores it with page numbers as a source of the study;
+  (2) the chat agent drafts the brief from that text, every field citing its page; (3) the
+  draft is a proposal: the junior reviews it in the chat and confirms or changes each part, in
+  their own words, before it counts (nothing in the PDF becomes a confirmed decision by
+  itself); (4) gaps the PDF does not answer are listed as open questions, never invented;
+  (5) the panel shows the brief with "drafted from the PDF, page n" marks and what remains to
+  confirm. A sample PO PDF for Auto MPG (fictitious scenario of R66/R67) ships for the
+  workshop. Noted, to implement after the current lot.
