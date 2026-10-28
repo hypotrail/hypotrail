@@ -1,5 +1,7 @@
 # Atelier Auto MPG dans GitHub Codespaces : guide de l'organisateur
 
+Les participants suivent [README.md](README.md) : option 1 Codespaces (après un fork), option 2 en local.
+
 Ce guide prépare l'atelier « Déléguer une étude ML » (binômes : une personne junior en ML avec un ou une data engineer ou PM) dans GitHub Codespaces : le chat Copilot avec l'agent Hypotrail, le panneau d'étude (étape v3), le rapport HTML, les notebooks Marimo, et la démonstration de l'export Azure ML en fin de matinée (plan seulement, aucun job Azure).
 
 Fichiers concernés :
@@ -26,7 +28,7 @@ Le panneau n'est pas publié : `--extensionDevelopmentPath` n'existe pas dans Co
 Sans prébuild, la création d'un codespace télécharge l'image, installe uv, synchronise l'environnement du moteur (scikit-learn, Marimo, InterpretML, MLflow, etc.) et empaquette le panneau : compter 4 à 6 minutes. Avec un prébuild, ce travail est déjà fait : environ 1 minute.
 
 1. Dépôt > *Settings > Codespaces > Set up prebuild*.
-2. Branche : `claude/codespaces-mpg-workshop` (ou `main` une fois la branche fusionnée).
+2. Branche : `main`. Un prébuild ne sert qu'au dépôt où il est configuré : les codespaces créés sur les forks des participants ne l'utilisent pas (première création en 4 à 6 minutes, à faire avant l'atelier).
 3. Configuration : `.devcontainer/devcontainer.json`.
 4. Région : celle des participants (Europe West).
 5. Déclenchement : *On configuration change* (ou *Every push* si la branche bouge encore ce soir).
@@ -37,8 +39,8 @@ Sans prébuild, la création d'un codespace télécharge l'image, installe uv, s
 
 ## 3. Ouvrir un codespace sur la branche
 
-- Interface : page du dépôt > *Code > Codespaces > … > New with options* : branche `claude/codespaces-mpg-workshop` (ou `main` après fusion), région, machine **4-core**, *Create codespace*.
-- Ligne de commande : `gh codespace create -R chadlis/hypotrail -b claude/codespaces-mpg-workshop -m standardLinux32gb` puis `gh codespace code` (bureau) ou ouverture depuis github.com/codespaces.
+- Interface : page du dépôt (ou du fork) > *Code > Codespaces > … > New with options* : branche `main`, région, machine **4-core**, *Create codespace*.
+- Ligne de commande : `gh codespace create -R chadlis/hypotrail -b main -m standardLinux32gb` puis `gh codespace code` (bureau) ou ouverture depuis github.com/codespaces.
 
 Chaque binôme a son propre codespace : les études restent dans ce codespace (`/workspaces/hypotrail/studies/`).
 
@@ -54,21 +56,21 @@ Chaque binôme a son propre codespace : les études restent dans ce codespace (`
 
    Le script crée l'étude, active le panneau à l'étape v3 dans `studies/binome-03/.vscode/settings.json`, vérifie que le panneau est installé, affiche la suite, puis rouvre la fenêtre sur le dossier de l'étude (`code -r`). Sans `--open`, faire *File > Open Folder…* > `/workspaces/hypotrail/studies/binome-03`. **Le dossier ouvert doit être l'étude** : Copilot lit `.github/agents/` et `.github/copilot-instructions.md` à la racine du dossier ouvert.
 4. Si VS Code le demande, faire confiance au dossier (le panneau exige un espace de travail approuvé).
-5. Palette (`Ctrl+Shift+P`) : **Hypotrail: open the study panel**. À l'étape v3, on voit les onglets Overview, Decisions, Data & EDA, Evidence, What if? et Learn & hand off.
+5. Palette (`Ctrl+Shift+P`) : **Hypotrail: open the study panel**. Le panneau tient sur une page : le bloc « Maintenant », le parcours des étapes (chaque carte d'étape avec sa question, ses graphiques et « ce qu'on voit / ce qu'on en conclut / ce qu'on ne peut pas conclure »), le tiroir « Livrables » ; What if? s'ouvre dans un second onglet.
 6. Chat Copilot (`Ctrl+Alt+I`) : choisir l'agent **Hypotrail** dans la liste des agents ; dans l'icône des outils (*Configure Tools*), vérifier que `vscode/askQuestions` est coché.
-7. Écrire **On commence**. L'agent lance des commandes `uv run --project /workspaces/hypotrail/framework hypotrail …` dans le terminal : les autoriser (« Allow », ou l'autorisation pour la session).
+7. Écrire **On commence** (ou, avec `--from-pdf`, « Prépare l'étude à partir de la fiche du PO »). L'agent lance des commandes `uv run --project /workspaces/hypotrail/framework hypotrail …` : la règle de l'atelier (hook `.github/hooks/hypotrail.json`, voir README.md) les autorise sans demande et refuse toute lecture brute du fichier de données ; si VS Code demande quand même (hooks en préversion), « Allow in this Session », jamais « Allow all ».
 
-Le rapport HTML est dans `studies/<nom>/reports/study.html` dès le premier rendu ; le panneau l'ouvre (« Your deliverables »), ainsi que les notebooks Marimo (« Open in Marimo »). Marimo démarre sur le port 2718, puis 2719, 2720… : ouvrir le lien affiché dans le terminal (`Ctrl+clic`), il contient le jeton d'accès ; l'onglet *Ports* liste les ports transférés.
+Le rapport HTML est dans `studies/<nom>/reports/study.html` dès le premier rendu ; le panneau l'ouvre (tiroir « Livrables »), ainsi que les notebooks Marimo (« Ouvrir dans Marimo »). Marimo démarre sur le port 2718, puis 2719, 2720… : ouvrir le lien affiché dans le terminal (`Ctrl+clic`), il contient le jeton d'accès ; l'onglet *Ports* liste les ports transférés.
 
 ## 5. Commandes de démonstration (organisateur)
 
-Mode automatique (il n'existe qu'avec le moteur de la branche de fonctionnalités `claude/zealous-franklin-gywbya` ; sur un `main` qui ne l'a pas encore, le script refuse avec un message clair) :
+Mode automatique (choisi à la création de l'étude) :
 
 ```sh
 scripts/workshop/new-mpg-study.sh demo-orga --automation until_final_test --open
 ```
 
-Puis, dans le chat avec l'agent Hypotrail : « On commence ». L'agent lance `automation run --progress` : sept décisions enregistrées comme automatiques, 22 calculs, environ 30 secondes ; il s'arrête avant le test final, qui reste scellé. Chaque décision automatique reste à relire et à adopter ou changer avec ses propres mots : l'étude n'est pas défendable avant. La variante `full_demo` ouvre aussi le test final automatiquement ; l'étude est alors marquée comme démonstration, définitivement.
+Puis, dans le chat avec l'agent Hypotrail : « On commence ». L'agent lance `automation run --progress` : huit décisions enregistrées comme automatiques, 22 calculs, environ 35 secondes ; il s'arrête avant le test final, qui reste scellé. Chaque décision automatique reste à relire et à adopter ou changer avec ses propres mots : l'étude n'est pas défendable avant. La variante `full_demo` ouvre aussi le test final automatiquement ; l'étude est alors marquée comme démonstration, définitivement.
 
 Sans le chat (secours, même résultat) :
 
@@ -134,12 +136,12 @@ Tarifs publics GitHub (à vérifier sur la page de facturation Codespaces) : env
 
 ## 8. Répétition de ce soir
 
-- [ ] Fusionner la branche `claude/codespaces-mpg-workshop` dans `main` (PR), ou garder la branche pour demain.
+- [ ] Vérifier en répétition que le hook de l'atelier est bien appliqué par Copilot (les commandes `hypotrail` passent sans demande, `.github/hooks/hypotrail-hook.log` se remplit) ; sinon, consigne « Allow in this Session ».
 - [ ] Activer Codespaces pour l'organisation, la facturation et une limite de dépense ; vérifier l'accès au dépôt et la licence Copilot de chaque participant.
 - [ ] Créer le prébuild (section 2) et attendre *Ready*.
 - [ ] Créer un codespace neuf en 4 cœurs et chronométrer le démarrage.
 - [ ] Dans le terminal : `uv --version`, `ls framework/.venv/bin/hypotrail`, `echo $HYPOTRAIL_COMPANION_STAGE` (v3), `code --list-extensions | grep hypotrail` (`hypotrail-local.hypotrail-companion`).
-- [ ] `scripts/workshop/new-mpg-study.sh essai --open` ; faire confiance au dossier ; ouvrir le panneau : les six onglets de v3 s'affichent. C'est le premier passage du panneau dans un vrai VS Code (`clients/vscode-companion/MANUAL-TEST.md`) : noter toute anomalie, et garder le plan B sans panneau.
+- [ ] `scripts/workshop/new-mpg-study.sh essai --open` ; faire confiance au dossier ; ouvrir le panneau : la page unique s'affiche (bloc « Maintenant », parcours, cartes d'étape). C'est le premier passage du panneau dans un vrai VS Code (`clients/vscode-companion/MANUAL-TEST.md`) : noter toute anomalie, et garder le plan B sans panneau.
 - [ ] Chat : agent Hypotrail visible, `vscode/askQuestions` coché, « On commence » : la fiche des données, puis la première pause avec le sélecteur (adopter, changer, expliquer).
 - [ ] Depuis le panneau, « Open in Marimo (read) » : le port 2718 est transféré et le notebook s'affiche.
 - [ ] Démo : `scripts/workshop/new-mpg-study.sh demo-orga --automation until_final_test --open`, « On commence », puis `scripts/workshop/new-mpg-study.sh --azureml-plan demo-orga`.

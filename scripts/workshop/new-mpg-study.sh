@@ -19,8 +19,11 @@
 # It is made by `hypotrail init` on use-cases/auto-mpg, run from this repository's engine
 # (uv run --project <repo>/framework), so the study's agent files (.github/agents,
 # .github/copilot-instructions.md, CLAUDE.md) record that command. The script then adds the
-# study panel's flag and stage v3 to the study's .vscode/settings.json and checks that the
-# panel is installed in VS Code. Nothing that exists is overwritten.
+# study panel's flag and stage v3 to the study's .vscode/settings.json, installs the workshop's
+# Copilot hook (.github/hooks/hypotrail.json, scripts/workshop/hooks/pretool.py: the agent's
+# plain `uv run ... hypotrail` commands run without a prompt, any raw read of the data file is
+# refused, everything else is asked as usual), and checks that the panel is installed in VS
+# Code. Nothing that exists is overwritten.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -119,13 +122,29 @@ if missing:
         handle.write('\n')
 PYEOF
 
+# Workshop hook (VS Code agent hooks, preview): see scripts/workshop/hooks/pretool.py.
+"$PY" - "$study" "$REPO" "$PY" <<'PYEOF'
+import json, os, shlex, sys
+study, repo, py = sys.argv[1], sys.argv[2], sys.argv[3]
+path = os.path.join(study, '.github', 'hooks', 'hypotrail.json')
+if not os.path.exists(path):
+    command = shlex.join([py, os.path.join(repo, 'scripts', 'workshop', 'hooks', 'pretool.py'),
+                          '--repo', repo, '--data-file', 'auto-mpg.data',
+                          '--log', os.path.join(study, '.github', 'hooks', 'hypotrail-hook.log')])
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as handle:
+        json.dump({'hooks': {'PreToolUse': [{'type': 'command', 'command': command, 'timeout': 10}]}},
+                  handle, indent=2)
+        handle.write('\n')
+PYEOF
+
 rev="$(revision_of "$study")" || fail "the study was created but 'hypotrail status' failed"
 
 # Panel installed? Only checkable from a VS Code integrated terminal.
 panel_note=""
 if [ -n "${VSCODE_IPC_HOOK_CLI:-}" ] && command -v code >/dev/null 2>&1; then
   bash "$REPO/scripts/workshop/install-panel.sh" --quiet \
-    || panel_note="panel: not installed, see docs/workshop/CODESPACES.md (Dépannage)"
+    || panel_note="panel: not installed, see docs/workshop/README.md (Dépannage)"
 fi
 
 first_fr="On commence" first_en="On commence"
@@ -153,10 +172,12 @@ Ensuite, dans l'ordre :
   3. Chat Copilot (Ctrl+Alt+I) : choisir l'agent « Hypotrail » dans la liste des agents ;
      dans « Configure Tools », vérifier que vscode/askQuestions est coché.
   4. Écrire : $first_fr
-     (autoriser les commandes « uv run ... hypotrail » que l'agent lance dans le terminal)
+     Les commandes « uv run ... hypotrail » de l'agent passent sans demande (règle de
+     l'atelier : .github/hooks/hypotrail.json, journal hypotrail-hook.log). Si VS Code
+     demande quand même : lire la commande, puis « Allow in this Session ».
 
 Rapport HTML : $study/reports/study.html (dès le premier rendu) ; notebooks Marimo :
-  section « Your deliverables » du panneau, boutons « Open in Marimo »
+  tiroir « Livrables » du panneau, boutons « Ouvrir dans Marimo »
 Fin d'atelier, plan d'export Azure ML (n'écrit rien, aucun job Azure) :
   scripts/workshop/new-mpg-study.sh --azureml-plan $name
 CLI directe : $shell_hyp status --summary --study "$study" --format text
@@ -176,7 +197,9 @@ Next, in order:
   3. Copilot chat (Ctrl+Alt+I): pick the "Hypotrail" agent in the agent list; in
      "Configure Tools", check that vscode/askQuestions is enabled.
   4. Type: $first_en
-     (allow the "uv run ... hypotrail" commands the agent runs in the terminal)
+     The agent's "uv run ... hypotrail" commands run without a prompt (workshop rule:
+     .github/hooks/hypotrail.json, log hypotrail-hook.log). If VS Code still asks: read
+     the command, then "Allow in this Session".
 
 HTML report: $study/reports/study.html (from the first render); Marimo notebooks:
   the panel's "Your deliverables" section, "Open in Marimo" buttons
