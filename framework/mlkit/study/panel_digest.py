@@ -35,7 +35,12 @@ HEADLINE_KEYS = ('decision_id', 'basis', 'results')
 SUMMARY_CRITERION_CONFIG_KEYS = ('metric', 'unit', 'bound', 'configurations',
                                  # The configuration judged on the opened final test, with
                                  # its own bound from the final test's baseline (§17.2.4).
-                                 'final_test')
+                                 'final_test',
+                                 # Lot 2026-10-28 (R67, CLI-CONTRACT §18): the business bar,
+                                 # the criterion's second level; null without one.
+                                 'business')
+BUSINESS_KEYS = ('max_error', 'measure', 'configurations', 'final_test', 'judged_on', 'met')
+BUSINESS_CONFIGURATION_KEYS = ('slot', 'value', 'met')
 CRITERION_BOUND_KEYS = ('value', 'reference', 'minimum', 'result_id', 'path')
 CRITERION_CONFIGURATION_KEYS = ('slot', 'value', 'result_id', 'path', 'point_meets_bound',
                                 'gain', 'low', 'high', 'status', 'judged_on')
@@ -521,7 +526,25 @@ def criterion_configurations(built: Mapping) -> dict | None:
             if item['slot'] == crit.get('model'):
                 item.update(judged_on='final_test', status=final.get('status') or item['status'])
         out['final_test'] = _final_configuration(built, value, crit, final)
+    out['business'] = _business(crit, out)
     return {k: out[k] for k in SUMMARY_CRITERION_CONFIG_KEYS}
+
+
+def _business(crit: Mapping, out: Mapping) -> dict | None:
+    """R67: the business bar of the criterion (``view.criterion.business``, from registered
+    values), with each development configuration's error against it; null without a bar."""
+    business = crit.get('business')
+    if not isinstance(business, Mapping):
+        return None
+    bar = business['max_error']
+    configurations = [{'slot': c['slot'], 'value': c['value'],
+                       'met': c['value'] <= bar + TOLERANCE}
+                      for c in out.get('configurations') or [] if cite.is_number(c.get('value'))]
+    final = business.get('final_test')
+    return {'max_error': bar, 'measure': business.get('measure'),
+            'configurations': configurations,
+            'final_test': dict(final) if isinstance(final, Mapping) else None,
+            'judged_on': business.get('judged_on'), 'met': business.get('met')}
 
 
 def _final_configuration(built: Mapping, value: Mapping, crit: Mapping,

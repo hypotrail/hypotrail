@@ -459,6 +459,25 @@ def candidate_features(case: c.Case) -> list[str]:
     return [v['name'] for v in case.document['variables'] if v['role'] == 'feature']
 
 
+def strata_counts(case: c.Case, frame, assigned: Mapping) -> list[dict] | None:
+    """Lot 2026-10-28 (EN-17, R63): ``[{stratum, development, sealed}]`` of a regression
+    study's ``quantile_stratified`` draw, ``stratum`` 1 to ``bins`` from the lowest target bin
+    to the highest; counts of the structural assignment just made, no bin edge, no target
+    value. None for any other method (a binary study never shows its class counts)."""
+    record = assigned['record']
+    if case.task != 'regression' or record.get('method') != 'quantile_stratified':
+        return None
+    strata = dict(zip(frame.index, partition._strata(case, frame)))
+    sealed = set(assigned['final_test'])
+    labels = sorted({s for s in strata.values() if s != 'missing'}, key=int)
+    out = []
+    for n, label in enumerate(labels, start=1):
+        keys = [k for k, s in strata.items() if s == label]
+        final = sum(1 for k in keys if k in sealed)
+        out.append({'stratum': n, 'development': len(keys) - final, 'sealed': final})
+    return out
+
+
 def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
     """Refuse a value that does not fit ``decision_id`` (``invalid_value``)."""
     if decision_id == 'prediction_time':
@@ -560,6 +579,24 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
             if isinstance(exc, ValueError) and not isinstance(exc, governance.ValueProblem):
                 raise _invalid(str(exc)) from None
             raise _invalid(exc.message, **exc.details) from None
+        # Lot 2026-10-28 (EN-9): with the error measure decided, the criterion is fixed on
+        # that measure.
+        measure = st.confirmed_error_metric(state)
+        if measure is not None and isinstance(value, Mapping) \
+                and criterion.ERROR_METRIC.get(value.get('metric')) != measure:
+            raise _invalid('The success criterion is fixed on the confirmed error measure '
+                           f'({measure.upper()}): use '
+                           f'"{criterion.REDUCTION_OF_ERROR[measure]}", or change the '
+                           'error measure first.',
+                           error_metric=measure,
+                           metrics=[criterion.REDUCTION_OF_ERROR[measure]])
+    elif decision_id == st.ERROR_METRIC:
+        # Lot 2026-10-28 (EN-9): {"metric": "mae" | "rmse"}.
+        if not isinstance(value, Mapping) or set(value) != {'metric'} \
+                or value['metric'] not in st.ERROR_METRICS:
+            raise _invalid('error_metric is {"metric": "mae"} or {"metric": "rmse"}: how the '
+                           'error of a prediction is summarised over the rows.',
+                           keys=['metric'], metrics=list(st.ERROR_METRICS))
     elif decision_id == st.PREPROCESSING:
         try:
             governance.check_preprocessing(value, case_of(state))
@@ -2304,6 +2341,9 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
                                 reliability_profile=reliability_profile or 'legacy')
     check = partition.schema_check(case, frame.loc[assigned['final_test']],
                                    frame.loc[assigned['development']])
+    counts = strata_counts(case, frame, assigned)
+    if counts is not None:
+        assigned['record']['strata_counts'] = counts
     del frame
     try:
         development = dt.load_dataset(case, rows=assigned['development'])

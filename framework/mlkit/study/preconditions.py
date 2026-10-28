@@ -109,6 +109,13 @@ def decision_requires(state: Mapping, decision_id: str) -> tuple[str, ...]:
             if st.has_explicit_binary_model_choice(state):
                 extra = extra + ('model_choice',)
         base = tuple(dict.fromkeys(base + extra))
+    if st.has_error_metric(state):
+        # Lot 2026-10-28 (EN-9): the measure is fixed after the split, and the criterion on
+        # that measure after it.
+        if decision_id == st.ERROR_METRIC:
+            base = ('prediction_time', 'feature_availability', 'split')
+        elif decision_id == st.SUCCESS_CRITERION:
+            base = tuple(dict.fromkeys(base + (st.ERROR_METRIC,)))
     return base
 
 

@@ -699,7 +699,9 @@ DECISION_LABELS = {'prediction_time': 'prediction moment',
                    # v0.2a (WP-A4)
                    'success_criterion': 'success criterion', 'preprocessing': 'preprocessing',
                    # v0.2b (WP-B1)
-                   'model_variant': 'variant', 'final_test': 'final test'}
+                   'model_variant': 'variant', 'final_test': 'final test',
+                   # Lot 2026-10-28 (EN-9)
+                   'error_metric': 'error measure'}
 # A regression study's model choice (M3), in words: the recap never says "policy".
 MODEL_CHOICE_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean baseline',
                       'fit.variant': 'the variant', 'fit.variant:2': 'the second variant',
@@ -1659,6 +1661,10 @@ def _runnable(study: read.Study, state: Mapping, action: dict | None) -> dict | 
         run = drafts.exploration_run(study, state, action, st.language_of(state))
         if run is not None:
             return run
+        if kind == 'run' and activity == 'fit.baseline' and st.has_error_metric(state) \
+                and drafts.exploration_complete(study, state):
+            # Lot 2026-10-28 (EN-12, R61): a pause, so the charts are read before any model.
+            return st.read_exploration_action(action)
     if kind == 'propose' and st.structural_first(state) \
             and action.get('decision') in (st.PREPROCESSING, st.MODEL_VARIANT):
         # Owner session 2026-10-26 (L5, R5, R13; D6, D9): the drafts read the evidence. The

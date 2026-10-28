@@ -96,7 +96,12 @@ RECORD_KEYS = ('schema', 'status', 'method', 'fraction', 'seed', 'stratified_on'
 # ``opening`` (WP-B1) once the final test is opened; ``prior_exposed`` (WP-B6a) only when
 # the case declares ``prior_exposed_rows``.
 OPTIONAL_RECORD_KEYS = ('groups', 'opening', 'prior_exposed', 'training_exclusions',
-                        'analysis_protocol')
+                        'analysis_protocol',
+                        # Lot 2026-10-28 (EN-17, R63): the development and sealed counts of
+                        # each target stratum of a new regression study's quantile draw,
+                        # written by ``init`` (``commands.strata_counts``); counts only.
+                        'strata_counts')
+STRATA_COUNT_KEYS = ('stratum', 'development', 'sealed')
 GROUPS_KEYS = ('policy', 'n_groups', 'n_rows', 'moved_rows')
 # ``declared_rows``: the keys the case lists; ``excluded_rows``: those of them the final-test
 # rule would otherwise have sealed (temporal: the ones in the tail; stratified: every one,

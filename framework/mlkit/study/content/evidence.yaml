@@ -109,3 +109,4 @@ changes:
   model_choice: a different model choice
   preprocessing: a different preparation of the variables
   success_criterion: a different success criterion
+  error_metric: a different error measure

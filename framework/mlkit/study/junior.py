@@ -75,6 +75,15 @@ def _steps_fr() -> dict[str, str]:
         st.VARIANT_STEP['title']: 'Choisir les variantes à comparer',
         st.MODEL_CHOICE_STEP['title']: 'Choisir le modèle',
         st.FINAL_TEST_STEP['title']: "Ouvrir une fois l'échantillon de test final",
+        # Lot 2026-10-28 (EN-9).
+        st.ERROR_METRIC_STEP['title']: "Choisir comment l'erreur est mesurée",
+        st.ERROR_METRIC_STEP['question']:
+            "L'erreur d'une prédiction est l'écart entre la valeur observée et la valeur "
+            "prédite. L'erreur absolue moyenne (MAE) fait la moyenne de ces écarts ; la racine "
+            "de l'erreur quadratique moyenne (RMSE) fait la moyenne de leurs carrés, puis en "
+            'prend la racine : un gros raté y pèse beaucoup plus. Laquelle des deux mesure '
+            "l'erreur de cette étude ? Elle est choisie maintenant, avant tout ajustement de "
+            'modèle.',
         cv['train_eda']['title']: "Explorer l'échantillon de développement",
         # questions
         S['prediction_time']['question']: 'À quel moment la prédiction est-elle faite, et '
@@ -277,6 +286,7 @@ def all_step_texts() -> list[str]:
                   dict(st.PREPROCESSING_STEP, question=st.STRUCTURAL_PREPROCESSING_QUESTION)]
     structural += [dict(st.STEPS[3], **texts) for texts in st.STRUCTURAL_TRAIN_EDA_TEXTS.values()]
     groups.append(tuple(structural))
+    groups.append((st.ERROR_METRIC_STEP,))              # lot 2026-10-28 (EN-9)
     out: list[str] = []
     for g in groups:
         for s in g:
@@ -635,6 +645,16 @@ def case_fact(view: Mapping, state: Mapping, fact_id: str, lang: str) -> dict | 
     return {**fact, 'value': french} if french else fact
 
 
+def _unit_of(state) -> str | None:
+    """The unit of a regression study's target (the case's), or None."""
+    from .case import case_of
+    try:
+        case = case_of(state)
+    except Exception:                    # noqa: BLE001 - a case that cannot be read: no unit
+        return None
+    return case.target_unit if case.task == st.REGRESSION else None
+
+
 def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> dict | None:
     """The engine's default for the decision ``action`` proposes, with a one-line why."""
     if action.get('kind') != 'propose':
@@ -696,6 +716,16 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
             'La pénalité choisie par validation croisée imbriquée est le contrôle le plus '
             'simple que le candidat n\'apprend pas du bruit ; elle compte comme un essai du '
             'budget de trois.'),
+        # Lot 2026-10-28 (EN-10).
+        st.ERROR_METRIC: _t(
+            lang, 'The MAE: every error weighs the same, and it reads in '
+                  f'{_unit_of(state) or "the unit of the target"}. The RMSE is the alternative: '
+                  'one big miss weighs much more; choose it if one big miss costs much more '
+                  'than several small ones.',
+            "La MAE : chaque erreur pèse pareil, et elle se lit en "
+            f"{_unit_of(state) or 'unité de la cible'}. La RMSE est l'autre choix : un gros "
+            'raté y pèse beaucoup plus ; à choisir si un gros raté coûte bien plus que '
+            'plusieurs petits.'),
         'final_test': _t(
             lang, 'This is the configuration you chose; the holdout (final test) measures it '
                   'once.',
@@ -793,12 +823,22 @@ def _recommended_criterion(action: Mapping, lang: str) -> dict | None:
     value = dict(middle['value'])
     if options.get('task') == st.REGRESSION:
         pct = round(100 * float(value['min_share']))
-        why = _t(lang, f'The middle option, {pct}% less error than the mean baseline: a moderate '
-                       'bar chosen by convention, not from the costs of this case. Keep it, or '
-                       'name the minimum your team needs.',
-                 f"L'option du milieu, {pct} % d'erreur en moins que la moyenne de référence : "
-                 'un seuil modéré, choisi par convention et non à partir des coûts de ce cas. '
-                 "Gardez-le, ou indiquez le minimum dont votre équipe a besoin.")
+        why = _t(lang, f'The middle option, {pct}% less error than the reference (predict the '
+                       'mean): a moderate bar chosen by convention, not from the costs of this '
+                       'case. Keep it, or name the minimum your team needs.',
+                 f"L'option du milieu, {pct} % d'erreur en moins que la référence (prédire la "
+                 'moyenne) : un seuil modéré, choisi par convention et non à partir des coûts '
+                 "de ce cas. Gardez-le, ou indiquez le minimum dont votre équipe a besoin.")
+        bar = value.get('business_max_error')
+        if isinstance(bar, (int, float)):
+            # R67: the business bar of the use-case brief, judged with the minimum.
+            from .cite import format_value
+            why += _t(lang, ' The business bar is the current method\'s error, '
+                            f'{format_value(bar, "f1", "en")} from the use-case brief: both '
+                            'levels are fixed now and judged on the final test.',
+                      " La barre métier est l'erreur de la méthode actuelle, "
+                      f'{format_value(bar, "f1", "fr")} selon la fiche du cas d\'usage : les '
+                      'deux niveaux sont fixés maintenant et jugés sur le test final.')
         if any(m.get('metric') == 'rmse_reduction' for m in options.get('metrics') or []):
             # R46: the metric is a decision; MAE is proposed by default, and why.
             why += _t(lang, ' The metric is the mean absolute error (MAE): every error weighs '
@@ -880,8 +920,14 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
         return _t(lang, 'Is the condition you set met now?',
                   'La condition que vous avez posée est-elle remplie maintenant ?')
     if kind == 'show_data_card':
-        return _t(lang, 'Shall we look at the data card together?',
-                  'On regarde ensemble la fiche des données ?')
+        # Lot 2026-10-28 (EN-13, R54): the question says what is shown and names the next
+        # step by its full name.
+        return _t(lang, 'The data card is shown. Shall we move on to the prediction moment?',
+                  'La fiche des données est affichée. On passe au moment de la prédiction ?')
+    if kind == 'read_exploration':
+        # Lot 2026-10-28 (EN-12, R61): the pause after the exploration.
+        return _t(lang, "The exploration's charts are shown. Shall we move on to the models?",
+                  "Les graphiques de l'exploration sont affichés. On passe aux modèles ?")
     if kind != 'propose':
         return None
     task = view.get('task') or st.BINARY
@@ -925,6 +971,11 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
                                    'parameter for a reason you can state?',
                              'Gardez-vous la préparation par défaut, ou changez-vous un '
                              'paramètre pour une raison que vous pouvez énoncer ?')),
+        # Lot 2026-10-28 (EN-10, R54): the question names the drafted measure.
+        st.ERROR_METRIC: _t(lang, 'Which error measure do we keep: the mean absolute error '
+                                  '(MAE)?',
+                            "Quelle mesure de l'erreur retient-on : l'erreur absolue moyenne "
+                            '(MAE) ?'),
         'model_variant': _t(lang, 'Which variants, at most three, should be compared with '
                                   'the candidate, and which question does each answer?',
                             'Quelles variantes, trois au plus, comparer au candidat, et à '
@@ -1358,9 +1409,18 @@ def enrich(view: dict, state: Mapping, case=None, *, accepts=None) -> dict:
     if action.get('kind') in ('propose', 'await_user_words') \
             and decision == st.SUCCESS_CRITERION:
         from . import criterion
+        measure = business = None
+        if isinstance(state, Mapping) and st.has_error_metric(state):
+            # Lot 2026-10-28 (EN-9, R67): a study deciding its error measure fixes the
+            # criterion on it, with the business bar of the use-case brief by default.
+            from . import case_brief
+            measure = st.confirmed_error_metric(state)
+            business = case_brief.business_bar(case_brief.of_state(state),
+                                               measure or st.DEFAULT_ERROR_METRIC)
         action['criterion_options'] = criterion.options(
             view, lang, unit=case.target_unit if case is not None
-            and getattr(case, 'task', None) == 'regression' else None)
+            and getattr(case, 'task', None) == 'regression' else None,
+            measure=measure, business=business)
     ctx = _context(view, state, case)
     action['language'] = lang
     recommended = _recommended(action, view, state, lang)
@@ -1453,7 +1513,7 @@ STEP_LIMITS = {
         "performance sur d'autres périodes ou d'autres données, ni un effet causal."),
 }
 FRAME_STEPS = ('discover_data', 'prediction_time', 'feature_availability', 'split',
-               st.SUCCESS_CRITERION)
+               st.ERROR_METRIC, st.SUCCESS_CRITERION)
 
 
 def step_limit(view: Mapping, lang: str) -> str | None:

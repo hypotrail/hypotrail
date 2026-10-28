@@ -804,6 +804,19 @@ def has_error_metric(state: Mapping | str | None) -> bool:
     return isinstance(state, str)
 
 
+def confirmed_error_metric(state: Mapping | None) -> str | None:
+    """Lot 2026-10-28 (EN-9): the error measure (``mae`` or ``rmse``) a study holds
+    (confirmed, or awaiting reconfirmation), else None (a study without the decision too)."""
+    if not isinstance(state, Mapping):
+        return None
+    decision = (state.get('decisions') or {}).get(ERROR_METRIC) or {}
+    value = decision.get('value')
+    if decision.get('status') in ('confirmed', 'reconfirm_required') \
+            and isinstance(value, Mapping) and value.get('metric') in ERROR_METRICS:
+        return value['metric']
+    return None
+
+
 def decision_ids(state: Mapping | str | None = None) -> tuple[str, ...]:
     """The decisions of a study (or of a task name, for a new study)."""
     if has_wp_b1_decisions(state):
@@ -1667,6 +1680,19 @@ def _planned_action(state: dict) -> dict:
     return {'kind': 'done', 'message': 'Every step is done. Review what is not yet defensible.'}
 
 
+def read_exploration_action(then: Mapping) -> dict:
+    """Lot 2026-10-28 (EN-12, R61): the pause after the exploration of a study holding the new
+    decision set (:func:`has_error_metric`): every exploration chart is current and no model is
+    fitted yet; the junior reads the charts, then ``then`` (the ``run`` of the first fit) is
+    carried out. Stateless: it disappears once ``fit.baseline`` is registered."""
+    return {'kind': 'read_exploration', 'step': then.get('step') or 'train_eda',
+            'then': {'kind': 'run', 'activity': then.get('activity'),
+                     'command': f'hypotrail run {then.get("activity")}'},
+            'message': 'The exploration charts are current and no model is fitted yet. Ask the '
+                       'junior whether to move on to the models (a picker: continue, or explain '
+                       'first); on "continue", run then.command.'}
+
+
 def _reconfirm_action(state: dict, decision_id: str) -> dict:
     """The action of a decision to confirm again (``reconfirm``, or the ``run`` first of a
     result its confirmation needs, E4-3)."""
@@ -1719,6 +1745,18 @@ def _propose_action(state: dict, step: Mapping) -> dict:
     return action
 
 
+def _criterion_off_measure(state: Mapping, decision_id: str) -> bool:
+    """Lot 2026-10-28 (§8.12 of its spec): a criterion fixed on another measure than the
+    confirmed error measure cannot be confirmed again as it stands; it is proposed afresh."""
+    if decision_id != SUCCESS_CRITERION:
+        return False
+    measure = confirmed_error_metric(state)
+    value = (state['decisions'].get(SUCCESS_CRITERION) or {}).get('value')
+    if measure is None or not isinstance(value, Mapping):
+        return False
+    return {'mae_reduction': 'mae', 'rmse_reduction': 'rmse'}.get(value.get('metric')) != measure
+
+
 def decision_action(state: dict, decision_id: str) -> dict | None:
     """Review round 6 (area E): the action ``next_action`` gives for one decision, wherever
     it stands in the plan: ``await_user_words`` on its latest open proposal, else
@@ -1731,7 +1769,8 @@ def decision_action(state: dict, decision_id: str) -> dict | None:
                      key=lambda p: (p['revision'], p['proposal_id']))
     if pending:
         return _await_action(state, pending[-1])
-    if decision['status'] == 'reconfirm_required':
+    if decision['status'] == 'reconfirm_required' \
+            and not _criterion_off_measure(state, decision_id):
         return _reconfirm_action(state, decision_id)
     step = next((s for s in derive_plan(state) if s['decision'] == decision_id), None)
     return _propose_action(state, step) if step is not None else None
@@ -1964,7 +2003,8 @@ def action_covered(state: Mapping, action: Mapping | None) -> bool:
     if kind == 'run':
         return action.get('activity') not in ('final_test.evaluation',) \
             or automation_in_force(state) == FULL_DEMO
-    if kind == 'show_data_card':
+    if kind in ('show_data_card', 'read_exploration'):
+        # Lot 2026-10-28 (EN-12): the automatic mode runs the pause's ``then`` itself.
         return True
     if kind in ('propose', 'reconfirm', 'await_user_words'):
         return automation_covers(state, action.get('decision'))

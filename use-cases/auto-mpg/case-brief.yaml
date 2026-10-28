@@ -1,0 +1,56 @@
+# The product owner's brief of the use case (hypotrail.case-brief/1; lot 2026-10-28, owner
+# remark R66). A FICTITIOUS scenario written for the simulation: only the provenance of the
+# data is real. The business numbers come from the product owner, never from the data; no
+# result reads them. {current_method_error} and {target_error} are filled from the numbers
+# below. Read by mlkit.study.case_brief; not a source of any result.
+schema: hypotrail.case-brief/1
+source:
+  fictitious: true
+  text:
+    en: Use-case brief · Confluence, space "Vehicle product" · written by the PO · fictitious scenario for the simulation (only the provenance of the data is real)
+    fr: Fiche du cas d'usage · Confluence, espace « Produit véhicules » · rédigée par le PO · scénario fictif pour la simulation (seule la provenance des données est réelle)
+problem:
+  en: The Design team must announce the fuel efficiency of a new model as soon as its technical sheet is approved, about six months before the road tests. Today an engineer estimates it by hand by comparing with a similar model; mean gap observed, about {current_method_error}.
+  fr: L'équipe Conception doit annoncer la consommation d'un nouveau modèle dès que sa fiche technique est validée, environ six mois avant les essais sur route. Aujourd'hui, un ingénieur l'estime à la main en comparant avec un modèle proche ; écart moyen constaté, environ {current_method_error}.
+decision:
+  en: Which prototypes to send first to the fuel-efficiency tests (about twenty tests a year), and which provisional figure to show in the first product sheets.
+  fr: Quels prototypes envoyer d'abord aux essais de consommation (une vingtaine d'essais par an), et quel chiffre provisoire afficher dans les premières fiches produit.
+objective:
+  en: Estimate the fuel efficiency from the technical sheet alone, clearly better than the manual estimate (aim at a mean gap of about {target_error}), with a range.
+  fr: Estimer la consommation à partir de la fiche technique seule, nettement mieux que l'estimation manuelle (viser un écart moyen d'environ {target_error}), avec une fourchette.
+production:
+  en: A prediction service called by the design tool for each new technical sheet; the estimate and its range are read by an engineer before any use; the model is retrained every year with the new tests.
+  fr: Un service de prédiction appelé par l'outil de conception à chaque nouvelle fiche ; l'estimation et sa fourchette sont relues par un ingénieur avant tout usage ; le modèle est réentraîné chaque année avec les nouveaux essais.
+data_provenance:
+  real:
+    en: 'Real: the "Auto MPG" dataset of the UCI Machine Learning Repository (from StatLib, Carnegie Mellon; used by Quinlan in 1993): 398 car models sold in the United States from 1970 to 1982, one row per model and model year.'
+    fr: 'Réel : le jeu « Auto MPG » du UCI Machine Learning Repository (issu de StatLib, Carnegie Mellon ; utilisé par Quinlan en 1993) : 398 modèles de voitures vendus aux États-Unis de 1970 à 1982, une ligne par modèle et par année.'
+  scenario:
+    en: 'In the scenario: it serves as history until the extract of the internal test warehouse arrives. The data are public and already much explored: no row is truly "never seen".'
+    fr: 'Dans le scénario : il sert d''historique en attendant l''extraction de l''entrepôt interne des essais. Les données sont publiques et déjà très explorées : aucune ligne n''est vraiment « jamais vue ».'
+users_and_cost_of_error:
+  users:
+    en: 'Users: the design engineers and the product manager.'
+    fr: 'Utilisateurs : les ingénieurs de conception et le chef de produit.'
+  cost:
+    en: 'Cost of an error: announcing a fuel use that is too low exposes to a public correction; an estimate that is too high can wrongly drop a prototype from the tests. The PO notes that large errors on a flagship model are especially awkward: a point to discuss when choosing the error measure.'
+    fr: 'Coût d''une erreur : annoncer une consommation trop basse expose à une correction publique ; une estimation trop haute peut faire écarter à tort un prototype des essais. Le PO note que les grosses erreurs sur un modèle phare sont particulièrement gênantes : un point à discuter au choix de la mesure de l''erreur.'
+out_of_scope_and_risks:
+  out_of_scope:
+    en: 'Out of scope: the official homologation (it stays measured on the road); explaining the causes of fuel use.'
+    fr: 'Hors périmètre : l''homologation officielle (elle reste mesurée sur route) ; expliquer les causes de la consommation.'
+  risks:
+    en: 'Risks: recent cars differ from older ones (the model can drift); the data stop in 1982.'
+    fr: 'Risques : les voitures récentes diffèrent des anciennes (le modèle peut dériver) ; les données s''arrêtent en 1982.'
+links:
+  prediction_moment:
+    en: The prediction moment will be the approval of the technical sheet (step 2).
+    fr: Le moment de la prédiction sera la validation de la fiche technique (étape 2).
+  error_measure:
+    en: The error measure will have to reflect this cost (step 5).
+    fr: La mesure de l'erreur devra refléter ce coût (étape 5).
+  conclusion:
+    en: The conclusion will say whether the estimate does better than the current method.
+    fr: La conclusion dira si l'estimation fait mieux que la méthode actuelle.
+current_method_error: {value: 4.5, unit: mpg, measure: mae}
+target_error: {value: 3.5, unit: mpg, measure: mae}

@@ -16,6 +16,7 @@ decisions:
   conclusion: the conclusion
   model_choice: the model choice
   success_criterion: the success criterion
+  error_metric: the error measure
   preprocessing: the preparation of the variables
 activities:
   split: the split
