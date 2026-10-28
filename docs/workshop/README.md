@@ -123,9 +123,7 @@ Puis faites la partie [Vérification commune](#vérification-commune).
    - choisissez l'agent **hypotrail** ;
    - dans *Configure Tools*, vérifiez que `vscode/askQuestions` est coché.
 4. Écrivez « On commence ». L'agent lance des commandes `uv run … hypotrail` et affiche la fiche des données.
-5. **Envoyez une capture d'écran à l'organisateur** (panneau et chat visibles), ou décrivez le blocage.
 
-Vous pouvez supprimer `studies/essai` ensuite. Le jour J, on crée une étude neuve.
 
 ### Les autorisations de l'agent : une règle visible
 
