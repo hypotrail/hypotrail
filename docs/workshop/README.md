@@ -2,7 +2,7 @@
 
 Cette page s'adresse aux participants de l'atelier « Découvrir le développement ML assisté par agents ». **L'installation se fait avant l'atelier**, de préférence au plus tard trois jours avant : le jour J, on n'a plus qu'à créer son étude.
 
-Dépôt : [https://github.com/hypotrail/hypotrail](https://github.com/hypotrail/hypotrail). Version mise en page : [README.html](README.html) (même contenu, à ouvrir dans un navigateur).
+Dépôt : [https://github.com/hypotrail/hypotrail](https://github.com/hypotrail/hypotrail). Version mise en page (même contenu) : [ouvrir dans le navigateur](https://htmlpreview.github.io/?https://github.com/hypotrail/hypotrail/blob/main/docs/workshop/README.html), ou le fichier [README.html](README.html).
 
 Il y a deux façons de travailler :
 
