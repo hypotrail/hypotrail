@@ -2395,6 +2395,7 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
     notices = [n for n in (launch.install_settings(study_dir),) if n is not None]
     notices.extend(assurance.initial_notices(case, language))
     launch.install_gitignore(study_dir)
+    launch.install_readme(study_dir, case, language)
     ignored = sorted(n for n in IGNORED_CASE_SOURCES if (case.root / n).exists())
     snapshot = read.open(study_dir).state
     return Outcome({'schema': SCHEMAS['init'], 'ok': True, 'study': str(study_dir),

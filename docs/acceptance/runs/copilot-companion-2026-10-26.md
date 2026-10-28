@@ -1097,4 +1097,6 @@ its warning.
   `brief/` the PO's PDF and its extracted text, `notebooks/`, `reports/`), and how to look at
   the data (panel step 1, `hypotrail data`, the notebooks); and adds a read-only symbolic link
   `data/` → the case's data folder (never a copy; the hash check stays on the case's file;
-  on systems without symlinks, the README alone). Noted only, not fixed.
+  on systems without symlinks, the README alone). Fixed 2026-10-28: `launch.install_readme`
+  (README in the study language, relative `data` link, each only if absent); the README warns
+  that opening the raw file shows the sealed final-test rows and is not recorded.

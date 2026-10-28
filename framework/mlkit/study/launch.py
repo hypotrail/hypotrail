@@ -8,6 +8,9 @@ A study's notebooks import ``mlkit``, which is installed in the engine's environ
   absent**; otherwise it returns a notice with the line to add (:func:`install_settings`);
 * ``hypotrail init`` adds ``__marimo__/`` (Marimo's cache folder) to the study's
   ``.gitignore``, creating the file or appending the line once (:func:`install_gitignore`);
+* ``hypotrail init`` writes ``README.md`` (where the data are, what each folder holds, how to
+  look at the data) and a ``data`` link to the case's data folder, never a copy, each only if
+  absent (:func:`install_readme`, owner remark R69);
 * :func:`deliverables` gives the exact commands that open the generated notebook read-only
   (``marimo run``) and the workbench for editing (``marimo edit``) with the engine's
   environment, for the init payload and ``status --summary``. Surfaces show or launch them;
@@ -27,6 +30,8 @@ SETTINGS = '.vscode/settings.json'
 INTERPRETER_KEY = 'python.defaultInterpreterPath'
 GITIGNORE = '.gitignore'
 MARIMO_CACHE = '__marimo__/'
+README = 'README.md'
+DATA_LINK = 'data'
 AGENT_FILE = '.hypotrail/agent.json'
 # The notebooks and how they open: generated is read-only; editable follows it until the
 # junior changes it; workbench is always the junior's free space.
@@ -101,6 +106,84 @@ def install_gitignore(study_dir) -> bool:
     with open(path, 'a', encoding='utf-8') as handle:
         handle.write(f'{sep}{MARIMO_CACHE}\n')
     return True
+
+
+_README = {
+    'en': """# Study on the case `{case}`
+
+## Where are the data?
+
+The data are **not copied** into this folder. They stay in the case's folder:
+
+- data file: `{dataset}`
+- case description: `{case_file}`
+
+`{link}` is a link to the case's data folder, for convenience. Do not edit those files: the
+study recorded their fingerprint (`.hypotrail/`) and refuses data that changed.
+
+Opening the raw file shows every row, the sealed final-test rows included, and that look is
+not recorded. To look at the data in a way the study counts, use step 1 of the study panel,
+`hypotrail data --study .`, or the notebooks.
+
+## What each folder holds
+
+- `.hypotrail/`: the study's state (decisions, results, rows read). Written by `hypotrail` only.
+- `notebooks/`: `study_generated.py` (regenerated, read only), `study_editable.py` (your copy),
+  `workbench.py` (your free space).
+- `reports/study.html`: the evolving report.
+- `brief/`: the product owner's PDF and its draft brief, when the study started from one.
+- `.github/`, `.claude/`, `CLAUDE.md`: the instructions of the chat agent.
+""",
+    'fr': """# Étude sur le cas `{case}`
+
+## Où sont les données ?
+
+Les données ne sont **pas copiées** dans ce dossier. Elles restent dans le dossier du cas :
+
+- fichier de données : `{dataset}`
+- description du cas : `{case_file}`
+
+`{link}` est un lien vers le dossier de données du cas, pour y accéder facilement. Ne modifiez
+pas ces fichiers : l'étude a enregistré leur empreinte (`.hypotrail/`) et refuse des données
+qui ont changé.
+
+Ouvrir le fichier brut montre toutes les lignes, y compris celles du test final scellé, et ce
+regard n'est pas enregistré. Pour regarder les données d'une façon que l'étude compte, utilisez
+l'étape 1 du panneau de l'étude, `hypotrail data --study .` ou les notebooks.
+
+## Ce que contient chaque dossier
+
+- `.hypotrail/` : l'état de l'étude (décisions, résultats, lignes lues). Écrit par `hypotrail`
+  seulement.
+- `notebooks/` : `study_generated.py` (régénéré, en lecture), `study_editable.py` (votre
+  copie), `workbench.py` (votre espace libre).
+- `reports/study.html` : le rapport qui évolue avec l'étude.
+- `brief/` : le PDF du PO et son brief brouillon, quand l'étude part d'un PDF.
+- `.github/`, `.claude/`, `CLAUDE.md` : les instructions de l'agent du chat.
+""",
+}
+
+
+def install_readme(study_dir, case, language: str = 'en') -> bool:
+    """R69: ``README.md`` and the ``data`` link (relative, to the case's data folder), each
+    only if absent; the README alone where links cannot be made. True when the link exists."""
+    study = Path(study_dir).resolve()
+    target = case.dataset_path.resolve().parent
+    link = study / DATA_LINK
+    if not os.path.lexists(link):
+        try:
+            os.symlink(os.path.relpath(target, study), link, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            pass
+    linked = link.is_symlink()
+    readme = study / README
+    if not readme.exists():
+        text = _README.get(language, _README['en'])
+        here = 'data/' if linked else '(no link: ' + str(target) + ')'
+        readme.write_text(text.format(case=case.root.name, dataset=case.dataset_path.resolve(),
+                                      case_file=case.root.resolve() / 'case.yaml', link=here),
+                          encoding='utf-8')
+    return linked
 
 
 def _recorded_cli(study: Path) -> list[str] | None:
