@@ -800,3 +800,16 @@ its warning.
   drives the criterion, the one-standard-error rule and the comparison figures. Engine work:
   the regression criterion and selection must accept RMSE (today MAE only). Noted only, not
   fixed.
+- **R47. The trial budget reads "0 variantes sur 3 utilisées" after two variants ran (owner
+  remark, 2026-10-28; bug).** At the model choice the selection card shows "Budget d'essais : 0
+  variantes sur 3 utilisées, 3 restantes" while the penalised ridge and the EBM were confirmed
+  and fitted (both appear in the same table). The engine's count (`trials.used_specs`: the
+  variants of every confirmed `model_variant` proposal and of the decision's value) should give
+  2. The panel's card takes the live budget of the full view (`ctx.data('trials')`) or else
+  the budget the evaluation stored (`evaluate.regression` inputs `trial_budget`,
+  `activities.py` ~829); one of the two is read at the wrong time or empty. To investigate
+  with a real study at this state (which source the card used, and what `status` /
+  `evidence` return), fix the source, and add a real-CLI check that the budget reads 2/3 after
+  two confirmed variants. Also: the same card prints a mean ± "ET" table next to a paired
+  chart whose intervals are bootstrap 95 % in the first card and ± one standard error in the
+  second; say which in each title and keep one convention per screen. Noted only, not fixed.
