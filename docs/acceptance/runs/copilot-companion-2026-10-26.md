@@ -696,3 +696,22 @@ its warning.
   step-1 message already mentions the missing values. The recap must list the steps of the
   study's actual plan, in order, from the engine's plan (not a fixed sentence). Noted only, not
   fixed.
+- **R38. Order of the split and the quality check (owner question, 2026-10-28).** The split is
+  decided before the quality check, which is intended (the evaluation protocol is fixed before
+  any data-dependent preparation; the quality check reads development rows only, never the
+  target). But the structural facts that condition the split (duplicates and near-duplicates,
+  groups such as `car_name`, time order) should be known before the split decision: move the
+  duplicate and group detection into the step-1 data card. Also on the path: the "Données" row
+  has no headline, and the "Critère" headline is cut at the right edge instead of wrapping.
+  Noted only, not fixed.
+- **R39. A proposal that cites a distribution must show it (owner remark, 2026-10-28).** At the
+  preparation proposal, the chat and the panel's Now say "log signé à horsepower parce que sa
+  distribution a une longue traîne de grandes valeurs", but Now shows no figure: "Pour répondre,
+  regardez" has no chart of horsepower (histogram or box, quantiles, skewness) from the quality
+  check. Every proposal that rests on a data fact must show that fact's figure in Now (here the
+  quality check's distribution of the column concerned, with the skewness and the quantiles
+  that triggered the draft), with its guided reading. Also in the same card: "En bref :
+  Valeurs manquantes non signalées" reads as "no missing values" although horsepower has 6;
+  the wording must say what it means (no missing-value indicator column). Seen in the same
+  session: Claude Code did show a picker at this proposal (R37's question is about the other
+  pauses). Noted only, not fixed.
