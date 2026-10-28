@@ -871,3 +871,15 @@ its warning.
   amendment (decision 13 says What if? is a drawer of the one page) and spec update. Noted
   only, not fixed. Note: the threshold sandbox exists for binary tasks only; Auto MPG, a
   regression, has no threshold.
+- **R52. Report: one aggregated table for development vs final (owner remark, 2026-10-28).**
+  The report's evidence section shows two side-by-side cards, "Preuve finale" and "Preuve de
+  développement", each a list of label/value lines that do not align, so the difference
+  between development and final cannot be read at a glance. Replace them with one table:
+  rows = the configurations (linear model, ridge variant, EBM variant, reference = predict the
+  mean), then the paired difference with the reference and the success criterion; columns =
+  "Développement (hors pli, a servi à choisir)" and "Test final (lu une fois)", each value with
+  its interval; the chosen configuration's row highlighted. Configurations the final test did
+  not measure read "non mesuré : le test final ne mesure que le modèle choisi" rather than an
+  empty cell. Draw the same as dots with intervals on one scale under the table (R42/R48), and
+  keep the frame marks (◐ development, ● final). Applies to the panel's end state too.
+  Noted only, not fixed.
