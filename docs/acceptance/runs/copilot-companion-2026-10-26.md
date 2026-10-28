@@ -857,3 +857,17 @@ its warning.
   card; final test and conclusion: the final evidence). "D'où ça vient" and "Ask the agent"
   stay as small secondary links. The path then reads as the study's notebook, consistent with
   the report's chapters. Noted only, not fixed.
+- **R51. What if? in its own VS Code editor tab, with its full content back (owner decision,
+  2026-10-28).** In the one page, What if? is a drawer at the bottom of a narrow panel and, for
+  a regression, only lets the junior pick a model and see its MAE again (a duplicate of the
+  choice). Decision: a button in the panel opens What if? in a separate, wide VS Code editor
+  tab (a second read-only webview of the same extension; the panel keeps its one page). It
+  shows what the tabbed panel showed: for a binary task the policy sandbox (threshold / share
+  of cases acted on, precision, gains and costs, the evaluated rules); for a regression the
+  residual explorer (errors by feature and by model year, the largest errors, observed vs
+  predicted per configuration). Same rules as the panel: read only, nothing recorded or
+  decided, no new write; the draft "ask the agent to propose this" stays a clipboard copy.
+  The red warning becomes one calm line (R44 style) with a fold for the why. Needs an ADR 0004
+  amendment (decision 13 says What if? is a drawer of the one page) and spec update. Noted
+  only, not fixed. Note: the threshold sandbox exists for binary tasks only; Auto MPG, a
+  regression, has no threshold.
