@@ -1,0 +1,125 @@
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2138 >>
+stream
+BT /F2 15 Tf 64 758 Td (Fiche du cas d'usage : estimer la consommation dès la) Tj ET
+BT /F2 15 Tf 64 738 Td (fiche technique) Tj ET
+BT /F1 8 Tf 64 720 Td (Confluence > Espace « Produit véhicules » > Cas d'usage data > Estimation de la consommation) Tj ET
+BT /F1 10 Tf 64 702 Td (Rédigée par : le PO Produit véhicules · Statut : prête pour l'étude · Version 1.2) Tj ET
+BT /F2 10 Tf 64 682 Td (SCÉNARIO FICTIF pour la simulation de l'atelier : l'entreprise, les équipes et les) Tj ET
+BT /F2 10 Tf 64 668 Td (chiffres métier sont inventés. Seule la provenance des données est réelle \(jeu public) Tj ET
+BT /F2 10 Tf 64 654 Td (UCI Auto MPG\).) Tj ET
+BT /F2 12 Tf 64 627 Td (1. Contexte et problème) Tj ET
+BT /F1 10 Tf 64 609 Td (L'équipe Conception doit annoncer la consommation d'un nouveau modèle dès que sa fiche) Tj ET
+BT /F1 10 Tf 64 595 Td (technique est validée, environ six mois avant les essais sur route.) Tj ET
+BT /F1 10 Tf 64 577 Td (Aujourd'hui, un ingénieur l'estime à la main en comparant avec un modèle proche de la gamme.) Tj ET
+BT /F1 10 Tf 64 563 Td (Sur les deux dernières années, l'écart moyen constaté entre cette estimation et la) Tj ET
+BT /F1 10 Tf 64 549 Td (consommation mesurée aux essais est d'environ 4,5 mpg \(écart absolu moyen\).) Tj ET
+BT /F2 12 Tf 64 522 Td (2. Décision que l'estimation doit éclairer) Tj ET
+BT /F1 10 Tf 68 506 Td (•) Tj ET
+BT /F1 10 Tf 78 506 Td (Quels prototypes envoyer d'abord aux essais de consommation : nous avons une vingtaine) Tj ET
+BT /F1 10 Tf 78 492 Td (d'essais par an, et ils sont chers.) Tj ET
+BT /F1 10 Tf 68 476 Td (•) Tj ET
+BT /F1 10 Tf 78 476 Td (Quel chiffre provisoire afficher dans les premières fiches produit, avant les essais.) Tj ET
+BT /F2 12 Tf 64 449 Td (3. Utilisateurs) Tj ET
+BT /F1 10 Tf 68 433 Td (•) Tj ET
+BT /F1 10 Tf 78 433 Td (Les ingénieurs de conception, qui saisissent la fiche technique.) Tj ET
+BT /F1 10 Tf 68 417 Td (•) Tj ET
+BT /F1 10 Tf 78 417 Td (Le chef de produit, qui arbitre l'ordre des essais et valide les fiches produit.) Tj ET
+BT /F1 8 Tf 64 40 Td (Scénario fictif pour la simulation · Confluence « Produit véhicules » · page 1/3) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2191 >>
+stream
+BT /F2 12 Tf 64 751 Td (4. Objectif) Tj ET
+BT /F1 10 Tf 64 733 Td (Estimer la consommation \(en mpg\) à partir de la fiche technique seule, nettement mieux que) Tj ET
+BT /F1 10 Tf 64 719 Td (l'estimation manuelle : nous visons un écart moyen d'environ 3,5 mpg \(écart absolu moyen\),) Tj ET
+BT /F1 10 Tf 64 705 Td (avec une fourchette autour de chaque estimation.) Tj ET
+BT /F2 12 Tf 64 678 Td (5. Mise en production envisagée) Tj ET
+BT /F1 10 Tf 64 660 Td (Un service de prédiction appelé par l'outil de conception à chaque nouvelle fiche technique.) Tj ET
+BT /F1 10 Tf 64 646 Td (L'estimation et sa fourchette sont relues par un ingénieur avant tout usage. Le modèle) Tj ET
+BT /F1 10 Tf 64 632 Td (serait réentraîné chaque année avec les nouveaux essais.) Tj ET
+BT /F2 12 Tf 64 605 Td (6. Données) Tj ET
+BT /F1 10 Tf 68 589 Td (•) Tj ET
+BT /F1 10 Tf 78 589 Td (Source : le jeu « Auto MPG » du UCI Machine Learning Repository \(issu de StatLib,) Tj ET
+BT /F1 10 Tf 78 575 Td (Carnegie Mellon ; utilisé par Quinlan en 1993\). 398 modèles de voitures vendus aux) Tj ET
+BT /F1 10 Tf 78 561 Td (États-Unis de 1970 à 1982, une ligne par modèle et par année.) Tj ET
+BT /F1 10 Tf 68 545 Td (•) Tj ET
+BT /F1 10 Tf 78 545 Td (Colonnes : consommation \(mpg\), cylindres, cylindrée, puissance, poids, accélération,) Tj ET
+BT /F1 10 Tf 78 531 Td (année du modèle, origine, nom du modèle.) Tj ET
+BT /F1 10 Tf 68 515 Td (•) Tj ET
+BT /F1 10 Tf 78 515 Td (Dans notre scénario, ce jeu sert d'historique en attendant l'extraction de l'entrepôt) Tj ET
+BT /F1 10 Tf 78 501 Td (interne des essais. Les données sont publiques et déjà très explorées : aucune ligne) Tj ET
+BT /F1 10 Tf 78 487 Td (n'est vraiment « jamais vue ».) Tj ET
+BT /F2 12 Tf 64 460 Td (7. Coût d'une erreur) Tj ET
+BT /F1 10 Tf 64 442 Td (Annoncer une consommation trop basse nous expose à une correction publique. Une estimation) Tj ET
+BT /F1 10 Tf 64 428 Td (trop haute peut faire écarter à tort un prototype des essais. Les grosses erreurs sur un) Tj ET
+BT /F1 10 Tf 64 414 Td (modèle phare sont particulièrement gênantes.) Tj ET
+BT /F1 8 Tf 64 40 Td (Scénario fictif pour la simulation · Confluence « Produit véhicules » · page 2/3) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 1211 >>
+stream
+BT /F2 12 Tf 64 751 Td (8. Contraintes) Tj ET
+BT /F1 10 Tf 68 735 Td (•) Tj ET
+BT /F1 10 Tf 78 735 Td (L'estimation doit être disponible dès la validation de la fiche technique, sans aucune) Tj ET
+BT /F1 10 Tf 78 721 Td (mesure sur route.) Tj ET
+BT /F1 10 Tf 68 705 Td (•) Tj ET
+BT /F1 10 Tf 78 705 Td (Elle doit rester compréhensible par les ingénieurs qui la relisent.) Tj ET
+BT /F2 12 Tf 64 678 Td (9. Hors périmètre) Tj ET
+BT /F1 10 Tf 68 662 Td (•) Tj ET
+BT /F1 10 Tf 78 662 Td (L'homologation officielle : elle reste mesurée sur route.) Tj ET
+BT /F1 10 Tf 68 646 Td (•) Tj ET
+BT /F1 10 Tf 78 646 Td (Expliquer les causes de la consommation.) Tj ET
+BT /F2 12 Tf 64 619 Td (10. Risques identifiés) Tj ET
+BT /F1 10 Tf 68 603 Td (•) Tj ET
+BT /F1 10 Tf 78 603 Td (Les voitures récentes diffèrent des anciennes : le modèle peut dériver.) Tj ET
+BT /F1 10 Tf 68 587 Td (•) Tj ET
+BT /F1 10 Tf 78 587 Td (Les données s'arrêtent en 1982.) Tj ET
+BT /F2 12 Tf 64 560 Td (11. Contacts) Tj ET
+BT /F1 10 Tf 64 542 Td (PO Produit véhicules \(rédaction\) · Responsable des essais \(calendrier des essais\).) Tj ET
+BT /F1 8 Tf 64 40 Td (Scénario fictif pour la simulation · Confluence « Produit véhicules » · page 3/3) Tj ET
+endstream
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000133 00000 n 
+0000000230 00000 n 
+0000000332 00000 n 
+0000000468 00000 n 
+0000002658 00000 n 
+0000002794 00000 n 
+0000005037 00000 n 
+0000005174 00000 n 
+trailer
+<< /Size 11 /Root 1 0 R >>
+startxref
+6438
+%%EOF
