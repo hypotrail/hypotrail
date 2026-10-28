@@ -646,3 +646,15 @@ batch.
 to show it; the look is counted and said); (2) amend ADR 0004 for one page instead of tabs
 (decision 13, accepted, not implemented; R32 and R33 are covered by it); (3) keep What if?, with
 its warning.
+
+## Sixth session (one-page panel demo, `aa35da3`) — for the next batch
+
+- **R34. "To handle" flags the deliverables of a brand-new study.** At step 1 of a fresh study
+  the panel shows "À traiter (1) · Rapport et notebook pas encore générés · Ils ne
+  correspondent plus à l'étude" with Regenerate. Two defects: nothing has to be handled yet
+  (the deliverables are produced later in the journey, the chat never asked for them), and the
+  body says "no longer match the study" when they were never generated
+  (`lib/models/page.js` ~250, `copy*/page.js` `deliverablesBodyUnknown`). To fix: never list
+  deliverables that were never rendered in To handle (keep them in the Deliverables drawer as
+  "not generated yet"); list them only when a rendered deliverable is stale or failed, with the
+  right sentence per status. Noted only, not fixed.
