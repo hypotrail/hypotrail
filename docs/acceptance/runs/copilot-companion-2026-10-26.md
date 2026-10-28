@@ -984,3 +984,13 @@ its warning.
   runs the exploration, both fits and their diagnostics in one go up to the variants; the
   junior never sees the exploration on its own before the models — pause after the
   exploration so its charts (R45) are read first. Noted only, not fixed.
+- **R62. The target layout of Now, confirmed by the owner (2026-10-28).** The variants step
+  shows the right pattern: "Pour répondre, regardez" with the evidence drawn (observed vs
+  predicted out of fold for the linear model, framed "preuve de développement · hors pli, a
+  servi à choisir"). Make it the fixed structure of every step's Now: (1) at the top, a short
+  visual explanation (R61); (2) the question and the engine's options; (3) "Pour répondre,
+  regardez": the step's evidence as charts with frame and reading, recurring at every step.
+  To check on that chart: most points sit above the "prédiction parfaite" diagonal, which
+  suggests the two axes do not share the same scale or range; an observed-vs-predicted chart
+  must use equal scales on both axes (square plot, same min and max) so the diagonal is the
+  true y = x. Noted only, not fixed.
