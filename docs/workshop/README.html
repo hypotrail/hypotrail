@@ -112,7 +112,7 @@ footer{color:var(--faint);font-size:13px;margin-top:40px;border-top:1px solid va
         <div class="card">
           <div class="lbl">Il vous faut</div>
           <ul>
-            <li>un compte GitHub avec accès en lecture au dépôt <code>chadlis/hypotrail</code> (dépôt privé : l'organisateur vous invite) ;</li>
+            <li>un compte GitHub (le dépôt <a href="https://github.com/hypotrail/hypotrail">hypotrail/hypotrail</a> est public) ;</li>
             <li><b>GitHub Copilot</b> (licence de l'entreprise ou individuelle), avec le chat et le <b>mode Agent</b> ;</li>
             <li>VS Code 1.109 ou plus récent, pour le sélecteur de réponses de l'agent. Le VS Code de Codespaces est toujours à jour.</li>
           </ul>
@@ -128,7 +128,7 @@ footer{color:var(--faint);font-size:13px;margin-top:40px;border-top:1px solid va
           <p>Sur la page du dépôt : <b>Fork</b>, puis <b>Create fork</b>, sous votre compte personnel. Gardez « Copy the <code>main</code> branch only » coché.</p>
           <p>Le fork est votre propre copie : vos études n'y touchent pas le dépôt d'origine, et le codespace est rattaché à votre compte.</p>
           <p class="lbl" style="margin-top:10px">Bon à savoir</p>
-          <p>Le codespace d'un fork personnel utilise <b>le quota gratuit de votre compte</b> : 120 heures-cœur par mois, soit 30 heures sur une machine à 4 cœurs, largement assez pour l'atelier. Si le bouton <i>Fork</i> est grisé, demandez à l'organisateur : le fork d'un dépôt privé doit être autorisé.</p>
+          <p>Le codespace d'un fork personnel utilise <b>le quota gratuit de votre compte</b> : 120 heures-cœur par mois, soit 30 heures sur une machine à 4 cœurs, largement assez pour l'atelier.</p>
         </div>
 
         <h3>2. Créer le codespace (avant l'atelier)</h3>
@@ -171,6 +171,7 @@ footer{color:var(--faint);font-size:13px;margin-top:40px;border-top:1px solid va
         <h3>2. Cloner et installer l'environnement</h3>
         <p>Clonez votre fork (ou le dépôt) dans un chemin <b>sans espaces</b> :</p>
 <pre><code>git clone https://github.com/&lt;votre-compte&gt;/hypotrail.git ~/hypotrail
+# ou, sans fork : git clone https://github.com/hypotrail/hypotrail.git ~/hypotrail
 cd ~/hypotrail
 uv sync --project framework --group azureml</code></pre>
         <div class="card">
