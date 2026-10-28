@@ -13,7 +13,7 @@
  "payload": {
   "schema": "hypotrail.data/1",
   "ok": true,
-  "study": "/studies/auto mpg-onepage",
+  "study": "/studies/auto mpg",
   "revision": 35,
   "observation_unit": {
    "value": "A vehicle model for a model year",

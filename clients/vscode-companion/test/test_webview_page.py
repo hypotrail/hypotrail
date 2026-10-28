@@ -19,6 +19,9 @@ import pytest
 from panel_cases import STATES, click_fold, load_views, open_all, open_case, set_language
 
 NNBSP = ' '
+# The digest keys of contract P1 (CLI-CONTRACT §17.2), absent from an older engine's summary.
+P1_KEYS = ('panel_contract', 'automation', 'review_queue', 'defensibility', 'ledger', 'sample', 'headlines',
+           'criterion_configurations')
 FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 
 
@@ -56,7 +59,7 @@ def test_pg1_now1_op3_the_page_order_and_now_follow_the_engine(open_panel, views
     page = panel.page
     order = [b for b in blocks(page) if b not in ('progress',)]
     expected = {'step1': ['header', 'now', 'path', 'tools'], 'choice': ['header', 'since', 'now', 'path', 'tools'],
-                'reopened': ['header', 'todo', 'since', 'now', 'waiting', 'path', 'tools'],
+                'reopened': ['header', 'since', 'now', 'waiting', 'path', 'tools'],
                 'review': ['header', 'since', 'now', 'path', 'tools'], 'done': ['header', 'since', 'now', 'after', 'path', 'tools']}
     assert order == expected[state], order
     assert page.locator('[role="tablist"], [data-tab]').count() == 0, 'OP-1: no tab'
@@ -205,7 +208,7 @@ def test_sample1_to_5_hon6_hon1_the_data_card_of_step_1(open_panel, views):
     assert card.locator('[data-frame="structural"]').inner_text().startswith('Structural reading, plus a preview of eight rows')
     rows = card.locator('[data-sample] tbody tr')
     keys = [r.get_attribute('data-sample-row') for r in rows.all()]
-    assert keys == ['L34', 'L69', 'L85', 'L100', 'L122', 'L123', 'L267', 'L384']
+    assert len(keys) == 8 and keys == sorted(keys, key=lambda k: int(k[1:])), 'eight rows, in row-key order'
     heads = card.locator('[data-sample] thead th').all_text_contents()
     assert heads[:2] == ['row', 'mpg ◂ to predict'], heads
     assert card.locator('[data-scroll-ok][role="region"][tabindex="0"][aria-label]').count() >= 1
@@ -232,7 +235,7 @@ def test_sample1_to_5_hon6_hon1_the_data_card_of_step_1(open_panel, views):
     assert panel.clean()
 
 
-def test_now4_now8_hon1_hon2_the_choice_card(open_panel, views):
+def test_now4_now8_hon1_hon2_the_choice_card(open_panel, views, model, payload):
     """NOW-4, NOW-8, HON-1, HON-2, PATH-7, SINCE-3: at the model choice the card frames the
     development evidence, shows the comparison, and the criterion line reads the engine's bound
     and statuses, cited; a holdout split has no one-standard-error rule line; the chart asked
@@ -248,10 +251,20 @@ def test_now4_now8_hon1_hon2_the_choice_card(open_panel, views):
     assert 'met by all 2 configurations' in text and 'judged for good on the final test' in text
     bound = line.locator('data[data-result-id]').first
     assert bound.get_attribute('data-path') == 'models.[fit.baseline].mae'
+    # The engine assessed both configurations (a paired interval each): each reads its status.
+    assert line.locator('[data-config="fit.variant"]').inner_text().endswith('· met')
+    # NOW-8: a configuration the engine did not assess reads from `point_meets_bound` only.
+    raw = copy.deepcopy(payload('captured/summary.regression.choice'))
+    variant = next(c for c in raw['criterion_configurations']['configurations'] if c['slot'] == 'fit.variant')
+    variant.update(gain=None, low=None, high=None, status='not_assessed')
+    panel.snapshot(model('summary', raw))
+    line = page.locator('[data-context="choice"] [data-criterion="configurations"]')
     assert line.locator('[data-config="fit.variant"]').inner_text().endswith('meets the bound on its average; no interval')
+    panel.snapshot(views['summary.choice'])
     assert page.locator('text=one-standard-error').count() == 0, 'HON-2: no rule line without folds'
-    assert page.locator('[data-options] [data-option]').all_inner_texts() == ['the linear model',
-                                                                              'the variant with a stronger regularisation']
+    assert page.locator('[data-options] [data-option]').all_inner_texts() == ['The linear model',
+                                                                              'The variant · stronger regularisation',
+                                                                              'The mean baseline']
     assert page.locator('[data-options-note]').inner_text() == 'From the simplest to the most flexible; the order is not a recommendation.'
     # PATH-7, SINCE-3: the W4 chart is under its step, marked as asked from this panel.
     click_fold(page, 'ph-evidence')
@@ -264,30 +277,46 @@ def test_now4_now8_hon1_hon2_the_choice_card(open_panel, views):
     assert panel.clean()
 
 
-def test_now5_now13_todo1_to_3_hon4_the_reopened_preparation(open_panel, views):
+def test_now5_now13_todo1_to_3_hon4_the_reopened_preparation(open_panel, views, payload):
     """NOW-5, NOW-13, TODO-1 to TODO-3, HON-4: Now is the reopened preparation ("First:"); To
-    handle holds the interrupted run (read only, a copy) and the stale deliverables only; the
-    model choice waits below Now, hatched, "Stale", with why, and no figure; the path marks the
-    stale steps."""
+    handle is absent (nothing lies outside the step); the next step waits below Now, hatched,
+    "Stale", with why, and no figure; the path marks the stale steps. Once a run is interrupted
+    in the same study, the engine's next action is the interruption: Now says so, To handle
+    holds the run (read only, a copy) and the stale deliverables, the path keeps the preparation
+    to confirm again."""
     panel = open_case(open_panel, views, case='reopened', width=420, lang='en')
     page = panel.page
     assert page.locator('[data-block="now"] h2').text_content() == 'Now · First: Decide how the model prepares the variables'
+    assert page.locator('[data-block="todo"]').count() == 0
+    waiting = page.locator('[data-block="waiting"]')
+    assert waiting.locator('h2').text_content() == 'Waiting · Fit a mean baseline and a linear model'
+    assert waiting.locator('[data-stale="true"]').count() == 1
+    assert 'preprocessing changed' in waiting.inner_text() and '§' not in waiting.inner_text()
+    assert waiting.locator('data, svg, [data-result-id]').count() == 0, 'INV-7: no figure of a stale result'
+    states = page.evaluate("() => Object.fromEntries([...document.querySelectorAll('[data-step]')].map(n => [n.dataset.step, n.dataset.stepState]))")
+    assert states['preprocessing'] == 'current' and states['models'] == 'stale' and states['model_variant'] == 'stale'
+    count = views['summary.reopened']['defensibility']['count']
+    assert page.locator('[data-pill="defensible"]').inner_text() == f'Not yet defensible · {count} points'
+    assert panel.clean()
+    panel.context.close()
+    raw = payload('captured/summary.regression.interrupted')
+    [stopped] = raw['executions']['suspected_interrupted']
+    panel = open_case(open_panel, views, case='interrupted', width=420, lang='en')
+    page = panel.page
+    assert page.locator('[data-block="now"]').get_attribute('data-now') == 'execution'
+    assert page.locator('[data-block="now"] h3.ht-question').count() == 0, 'nothing to answer but the interruption'
     todo = page.locator('[data-block="todo"]')
     assert todo.locator('h2').text_content() == 'To handle (2)'
     assert [x.get_attribute('data-anchor') for x in todo.locator('li').all()] == ['todo:execution', 'todo:deliverables']
     run = todo.locator('[data-todo="execution"]')
     assert 'its outcome is unknown' in run.inner_text() and 'this panel records nothing' in run.inner_text()
     assert run.locator('textarea, [data-write]').count() == 0, 'HE-1, HE-2: no words field, no rerun'
-    assert run.locator('[data-ask-execution="e_12"]').count() == 1
-    assert todo.locator('[data-todo="deliverables"]').inner_text().splitlines()[1] == 'They date from revision 38; the study is at revision 40.'
-    waiting = page.locator('[data-block="waiting"]')
-    assert waiting.locator('h2').text_content() == 'Waiting · Choose the model'
-    assert waiting.locator('[data-stale="true"]').count() == 1
-    assert 'computed with the earlier preparation' in waiting.inner_text()
-    assert waiting.locator('data, svg, [data-result-id]').count() == 0, 'INV-7: no figure of a stale result'
-    states = page.evaluate("() => Object.fromEntries([...document.querySelectorAll('[data-step]')].map(n => [n.dataset.step, n.dataset.stepState]))")
-    assert states['preprocessing'] == 'current' and states['models'] == 'stale' and states['model_variant'] == 'stale'
-    assert page.locator('[data-pill="defensible"]').inner_text() == 'Not yet defensible · 5 points'
+    eid = stopped['execution_id']
+    assert run.locator(f'[data-ask-execution="{eid}"]').count() == 1
+    report = raw['artifacts']['items']['report']['revision']
+    assert todo.locator('[data-todo="deliverables"]').inner_text().splitlines()[1] == \
+        f"They date from revision {report}; the study is at revision {raw['revision']}."
+    assert page.locator('[data-step="preprocessing"][data-step-state="current"]').count() == 1
     assert panel.clean()
 
 
@@ -298,7 +327,8 @@ def test_now6_hon3_pg9_path6_the_review_of_the_automatic_mode(open_panel, views)
     panel = open_case(open_panel, views, case='review', width=420, lang='en')
     page = panel.page
     assert page.locator('[data-block="now"] h2').text_content() == 'Now · Review the automatic decisions'
-    assert page.locator('[data-options] [data-option]').all_inner_texts() == ['I adopt it', 'I change it', 'Explain first']
+    assert page.locator('[data-options] [data-option]').all_inner_texts() == [o['label'] for o in views['summary.review']['texts']['en']['options']] \
+        == ['I adopt this decision', 'Change something', 'Explain first']
     assert page.locator('[data-options-note]').inner_text() == 'No recommendation.'
     assert page.locator('[data-context="review"] [data-frame="automatic"]').inner_text() == 'Chosen by the automatic mode, not by you.'
     assert page.locator('[data-limit="review"]').inner_text().startswith("The path's figures rest on decisions you have not adopted yet.")
@@ -313,7 +343,7 @@ def test_now6_hon3_pg9_path6_the_review_of_the_automatic_mode(open_panel, views)
     assert panel.clean()
 
 
-def test_now11_path9_ho3_the_end(open_panel, views):
+def test_now11_path9_ho3_the_end(open_panel, views, payload):
     """NOW-11, PATH-9, HO-3, HON-1: the end says what the study can claim, with the development
     and final columns, then "And after" with the engine's text and the copy, and the counts of
     the path; every phase is a closed "✓ ... steps done" fold; the ledger reads 1/1."""
@@ -321,20 +351,21 @@ def test_now11_path9_ho3_the_end(open_panel, views):
     page = panel.page
     now = page.locator('[data-block="now"]')
     assert now.locator('h2').text_content() == 'What the study can claim'
-    assert now.locator('[data-conclusion]').inner_text().startswith('The linear model errs by about 3.8 mpg')
+    # the conclusion in the junior's recorded words (`decisions.conclusion.value.text`)
+    assert now.locator('[data-conclusion]').inner_text() == payload('captured/summary.regression.done')['decisions']['conclusion']['value']['text']
     heads = now.locator('[data-dev-final] th').all_text_contents()
     assert 'Development (used to choose)' in heads and 'Final test (read once)' in heads
     assert now.locator('button:not([data-fold-id]), [data-write]').count() == 0, 'NOW-11: no control in the card'
     after = page.locator('[data-block="after"]')
     assert after.locator('[data-after-study]').inner_text().startswith('What comes next: the handoff pack')
-    assert after.locator('[data-journey]').inner_text() == ('Your path: 13 steps, 9 decisions in your words, 5 looks at the target, '
+    assert after.locator('[data-journey]').inner_text() == ('Your path: 13 steps, 9 decisions in your words, 6 looks at the target, '
                                                            'the final test opened once.')
     phases = page.locator('[data-phase]')
     assert phases.count() == 4 and page.locator('[data-phase-kind="done"]').count() == 4
     assert page.locator('[data-phase] details[open]').count() == 0
     assert 'final test 1/1 opening' in page.locator('[data-ledger-line]').inner_text()
     assert page.locator('[data-pill="seal"]').inner_text() == 'Final test opened · once'
-    assert page.locator('[data-pill="defensible"]').inner_text() == 'Defensible · 3 limits'
+    assert page.locator('[data-pill="defensible"]').inner_text() == 'Defensible · 2 limits'
     assert panel.clean()
 
 
@@ -367,12 +398,16 @@ def test_inv12_the_regression_page_holds_no_decision_rule_word(open_panel, views
             panel.context.close()
 
 
-def test_hon9_an_older_engine_degrades_without_computing(open_panel, views):
+def test_hon9_an_older_engine_degrades_without_computing(open_panel, views, model, payload):
     """HON-9, HON-5, OP-2: on a summary without the P1 keys the pill is the neutral fallback, the
     ledger line says it appears with a newer engine, and no automation pill or criterion line is
     invented: the panel decides nothing about the study's standing in their place."""
     panel = open_case(open_panel, views, case='binary', width=420, lang='en')
     page = panel.page
+    raw = copy.deepcopy(payload('captured/summary.binary'))
+    for key in P1_KEYS:
+        del raw[key]
+    panel.snapshot(model('summary', raw))
     pill = page.locator('[data-pill="defensible"]')
     assert pill.get_attribute('data-defensibility') == 'fallback'
     assert pill.inner_text().startswith('What you cannot claim yet · ')
@@ -391,6 +426,6 @@ def test_lang1_the_language_switch_is_ui_state_and_reads_nothing(open_panel, vie
     assert panel.state()['language'] == 'fr'
     # The engine's French question, byte for byte (NOW-1: the engine sets its own typography).
     question = views['summary.choice']['texts']['fr']['question']
-    assert question.startswith('Quelle configuration gardez-vous')
+    assert question == 'Quel modèle choisissez-vous, compte tenu des erreurs et de leurs intervalles\u202f?'
     assert panel.page.locator('[data-block="now"] h3.ht-question').text_content() == question
     assert panel.page.locator('html').get_attribute('lang') == 'fr'

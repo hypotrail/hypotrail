@@ -61,7 +61,11 @@ def test_pg4_pg5_pg6_pg14_focus3_the_pills_and_the_defensibility_popover(open_pa
     items = views['summary.reopened']['defensibility']['items']
     assert [li.get_attribute('data-item') for li in pop.locator('li').all()] == [i['id'] for i in items]
     assert pop.locator('h3').inner_text().lower() == 'what keeps the study from being defended'
-    assert pop.locator('[data-severity]').first.inner_text() == 'blocking'
+    # each item's severity is the engine's, in words; the reopened decision is blocking
+    shown = {li.get_attribute('data-item'): li.locator('[data-severity]').get_attribute('data-severity')
+             for li in pop.locator('li').all()}
+    assert shown == {i['id']: i['severity'] for i in items}
+    assert pop.locator('[data-item="unconfirmed_decisions"] [data-severity]').inner_text() == 'blocking'
     page.keyboard.press('Escape')
     assert page.locator('[data-popover]').count() == 0
     assert page.evaluate("() => document.activeElement.getAttribute('data-pill')") == 'defensible'
@@ -71,7 +75,7 @@ def test_pg4_pg5_pg6_pg14_focus3_the_pills_and_the_defensibility_popover(open_pa
     pill.click()
     page.locator('[data-more]').click()
     assert page.locator('[data-popover="def"]').count() == 0 and page.locator('[data-popover="more"]').count() == 1
-    for state, text in (('step1', 'Defensible at the end · 3 points'), ('done', 'Defensible · 3 limits')):
+    for state, text in (('step1', 'Defensible at the end · 4 points'), ('done', 'Defensible · 2 limits')):
         p = open_case(open_panel, views, case=state, width=420, lang='en', deliver=False)
         assert p.page.locator('[data-pill="defensible"]').inner_text() == text
         p.context.close()
@@ -92,7 +96,7 @@ def test_pg3_the_more_menu_holds_the_language_theme_refresh_switch_and_guide(ope
     assert menu.locator('[role="radiogroup"]').count() == 2
     assert menu.locator('[data-language-toggle] [role="radio"]').all_inner_texts() == ['English', 'Français']
     assert menu.locator('[data-refresh]').inner_text().startswith('Refresh · read ')
-    assert menu.locator('[data-refresh]').inner_text().endswith('revision 38')
+    assert menu.locator('[data-refresh]').inner_text().endswith(f"revision {views['summary.choice']['revision']}")
     assert menu.locator('[data-switch-study]').inner_text() == 'Change study: auto mpg ▾'
     assert menu.locator('[data-stage-line]').inner_text() == 'Regression · experimental panel, stage v1'
     before = len(panel.posted())
@@ -169,7 +173,8 @@ def test_pg11_a_load_error_replaces_the_content_below_the_sticky_region(open_pan
     assert page.locator('[data-load-error][role="alert"]').count() == 1
     assert page.locator('[data-block="todo"], [data-block="now"], [data-block="path"], [data-block="tools"]').count() == 0
     assert page.locator('[data-study-name]').inner_text() == 'auto mpg'
-    assert page.locator('[data-last-read]').inner_text() == 'Last read at revision 40; the study could not be read now.'
+    revision = views['summary.reopened']['revision']
+    assert page.locator('[data-last-read]').inner_text() == f'Last read at revision {revision}; the study could not be read now.'
     before = len(panel.posted())
     page.locator('[data-retry]').click()
     assert panel.posted()[before:] == [{'v': 2, 'type': 'refresh'}]

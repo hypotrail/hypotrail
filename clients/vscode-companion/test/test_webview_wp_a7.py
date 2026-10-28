@@ -474,6 +474,8 @@ def test_ov9_the_regression_criterion_reads_as_a_share(open_panel, views, model,
     raw = copy.deepcopy(payload('captured/summary.regression'))
     raw['criterion'].update({'status': 'uncertain', 'gain': 0.123, 'low': -0.02, 'high': 0.25, 'minimum': 0.1,
                              'result_id': 'a' * 64})
+    # NOW-8: without `criterion_configurations` the line falls back to `criterion` (OV-9).
+    raw['criterion_configurations'] = None
     summary = model('summary', raw)
     panel = open_tab(open_panel, views, 'regression', 'overview', summary=summary, stage='v2')
     row = panel.page.locator('[data-block="now"] [data-criterion="single"]')

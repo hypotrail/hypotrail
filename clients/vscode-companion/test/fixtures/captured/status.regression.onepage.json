@@ -13,14 +13,14 @@
  "payload": {
   "schema": "hypotrail.status/1",
   "ok": true,
-  "study": "/studies/auto mpg-onepage",
+  "study": "/studies/auto mpg",
   "revision": 35,
   "since": null,
   "changed": null,
   "changes_since": null,
   "view": {
    "schema": "hypotrail.view/1",
-   "study": "/studies/auto mpg-onepage",
+   "study": "/studies/auto mpg",
    "revision": 35,
    "updated": "2026-10-27T23:50:37.507514+00:00",
    "case": {
@@ -6171,9 +6171,9 @@
        "/hypotrail/framework",
        "marimo",
        "run",
-       "/studies/auto mpg-onepage/notebooks/study_generated.py"
+       "/studies/auto mpg/notebooks/study_generated.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo run /studies/auto mpg-onepage/notebooks/study_generated.py"
+      "shell": "uv run --project /hypotrail/framework marimo run /studies/auto mpg/notebooks/study_generated.py"
      },
      "editable": {
       "mode": "edit",
@@ -6185,9 +6185,9 @@
        "/hypotrail/framework",
        "marimo",
        "edit",
-       "/studies/auto mpg-onepage/notebooks/study_editable.py"
+       "/studies/auto mpg/notebooks/study_editable.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo edit /studies/auto mpg-onepage/notebooks/study_editable.py"
+      "shell": "uv run --project /hypotrail/framework marimo edit /studies/auto mpg/notebooks/study_editable.py"
      },
      "workbench": {
       "mode": "edit",
@@ -6199,9 +6199,9 @@
        "/hypotrail/framework",
        "marimo",
        "edit",
-       "/studies/auto mpg-onepage/notebooks/workbench.py"
+       "/studies/auto mpg/notebooks/workbench.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo edit /studies/auto mpg-onepage/notebooks/workbench.py"
+      "shell": "uv run --project /hypotrail/framework marimo edit /studies/auto mpg/notebooks/workbench.py"
      }
     }
    },

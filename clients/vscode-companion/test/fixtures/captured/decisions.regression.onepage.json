@@ -13,7 +13,7 @@
  "payload": {
   "schema": "hypotrail.decisions/1",
   "ok": true,
-  "study": "/studies/auto mpg-onepage",
+  "study": "/studies/auto mpg",
   "revision": 35,
   "task": "regression",
   "decisions": [

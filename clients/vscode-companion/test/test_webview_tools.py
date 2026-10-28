@@ -85,7 +85,8 @@ def test_tool6_ov7_ov8_the_deliverables_drawer(open_panel, views, payload):
     marimo = {'kernel': '/py', 'notebook': 'marimo run notebooks/study_generated.py',
               'editable': 'marimo edit notebooks/study_editable.py', 'workbench': 'marimo edit notebooks/workbench.py'}
     for stage in ('v0', 'v1'):
-        panel = open_case(open_panel, views, case='reopened', width=420, lang='en', stage=stage, deliver=False)
+        # the interrupted capture: its deliverables are stale, so To handle offers them too
+        panel = open_case(open_panel, views, case='interrupted', width=420, lang='en', stage=stage, deliver=False)
         panel.init(stage=stage, task='regression', panelContract=2, marimo=marimo)
         d = drawer(panel.page, 'deliverables')
         assert [x.get_attribute('data-artifact') for x in d.locator('[data-artifact]').all()] == ['report', 'notebook', 'editable', 'workbench']
@@ -114,7 +115,7 @@ def test_ho1_sr1_v3_export_and_session_report(open_panel, views, payload, model)
     d = drawer(panel.page, 'deliverables')
     before = len(panel.posted())
     d.locator('[data-write="export"]').click()
-    assert panel.posted()[before:] == [{'v': 2, 'type': 'export_handoff', 'revision': 52}]
+    assert panel.posted()[before:] == [{'v': 2, 'type': 'export_handoff', 'revision': views['summary.done']['revision']}]
     assert 'session_report' not in loads(panel)
     click_fold(panel.page, 'session-report')
     assert 'session_report' in loads(panel)

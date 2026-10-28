@@ -15,7 +15,7 @@
  "payload": {
   "schema": "hypotrail.summary/1",
   "ok": true,
-  "study": "/studies/auto mpg-onepage",
+  "study": "/studies/auto mpg",
   "revision": 35,
   "since": null,
   "changed": null,
@@ -555,7 +555,7 @@
       "/hypotrail/framework",
       "marimo",
       "run",
-      "/studies/auto mpg-onepage/notebooks/study_generated.py"
+      "/studies/auto mpg/notebooks/study_generated.py"
      ]
     },
     "editable": {
@@ -568,7 +568,7 @@
       "/hypotrail/framework",
       "marimo",
       "edit",
-      "/studies/auto mpg-onepage/notebooks/study_editable.py"
+      "/studies/auto mpg/notebooks/study_editable.py"
      ]
     },
     "workbench": {
@@ -581,7 +581,7 @@
       "/hypotrail/framework",
       "marimo",
       "edit",
-      "/studies/auto mpg-onepage/notebooks/workbench.py"
+      "/studies/auto mpg/notebooks/workbench.py"
      ]
     }
    }

@@ -47,7 +47,10 @@ BANK = REPO / 'use-cases' / 'bank-marketing'
 AUTO = REPO / 'use-cases' / 'auto-mpg'
 SHOPPERS = REPO / 'use-cases' / 'online-shoppers'
 # The path the captured payloads show instead of the temporary study directory.
-STUDY_PLACEHOLDER = {'binary': '/studies/bank marketing "demo"', 'regression': '/studies/auto mpg',
+STUDY_PLACEHOLDER = {# E-8: the one-page Auto MPG studies (listed before ``regression``, their prefix).
+                     'regression-onepage': '/studies/auto mpg', 'regression-reopened': '/studies/auto mpg',
+                     'regression-automatic': '/studies/auto mpg automatic',
+                     'binary': '/studies/bank marketing "demo"', 'regression': '/studies/auto mpg',
                      # L3 (owner session 2026-10-26): a French Auto MPG study.
                      'french': '/studies/auto mpg fr'}
 OUT = HERE / 'captured'

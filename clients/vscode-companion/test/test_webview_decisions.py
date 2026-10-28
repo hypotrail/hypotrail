@@ -423,6 +423,12 @@ def choice_summary(model, payload, options=CHOICES, step='conclusion'):
     raw['next_action'] = {'kind': 'propose', 'step': step, 'decision': step,
                           'message': f'Propose the {step}.', 'audience': 'agent',
                           'junior_message': 'Choose in the chat.', 'choice_options': options}
+    # An engine before P1 (HON-9): no texts of Now (CLI-CONTRACT §17.2.3) next to the choice;
+    # the captured ones belong to the payload's own next action.
+    for table in (raw.get('texts') or {}).values():
+        for key in ('question', 'options', 'options_note', 'junior_digest', 'headlines', 'data_contingent',
+                    'sample_note'):
+            (table or {}).pop(key, None)
     return model('summary', raw)
 
 

@@ -15,7 +15,7 @@
  "payload": {
   "schema": "hypotrail.summary/1",
   "ok": true,
-  "study": "/studies/auto mpg-onepage",
+  "study": "/studies/auto mpg",
   "revision": 45,
   "since": null,
   "changed": null,
@@ -117,13 +117,13 @@
    "junior_digest": "Every step of the plan is done. Before relying on the conclusion, read the limits the report lists. The success criterion is met on the holdout (final test).",
    "after_study": {
     "handoff": {
-     "command": "hypotrail export handoff --study /studies/auto mpg-onepage --expected-revision 45"
+     "command": "hypotrail export handoff --study /studies/auto mpg --expected-revision 45"
     },
     "azureml": {
      "supported": true,
      "reason_id": null,
      "reason": null,
-     "plan_command": "hypotrail export azureml --study /studies/auto mpg-onepage --expected-revision 45 --plan",
+     "plan_command": "hypotrail export azureml --study /studies/auto mpg --expected-revision 45 --plan",
      "model": {
       "task": "regression",
       "family": "linear",
@@ -584,7 +584,7 @@
       "/hypotrail/framework",
       "marimo",
       "run",
-      "/studies/auto mpg-onepage/notebooks/study_generated.py"
+      "/studies/auto mpg/notebooks/study_generated.py"
      ]
     },
     "editable": {
@@ -597,7 +597,7 @@
       "/hypotrail/framework",
       "marimo",
       "edit",
-      "/studies/auto mpg-onepage/notebooks/study_editable.py"
+      "/studies/auto mpg/notebooks/study_editable.py"
      ]
     },
     "workbench": {
@@ -610,7 +610,7 @@
       "/hypotrail/framework",
       "marimo",
       "edit",
-      "/studies/auto mpg-onepage/notebooks/workbench.py"
+      "/studies/auto mpg/notebooks/workbench.py"
      ]
     }
    }

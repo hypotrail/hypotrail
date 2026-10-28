@@ -104,5 +104,7 @@ def test_an_english_panel_on_a_french_study_shows_the_engine_texts_in_english(op
     assert english in shown and french not in shown
     set_language(page, 'fr')
     goto(panel)
+    # (the French spaces compared as spaces: the engine sets them in its French texts, the
+    # panel in its own copy, CLI-CONTRACT §17.2.3)
     shown = ' '.join(page.locator('#main').inner_text().split()).replace('\u202f', ' ')
-    assert french in shown and english not in shown
+    assert french.replace('\u202f', ' ') in shown and english not in shown

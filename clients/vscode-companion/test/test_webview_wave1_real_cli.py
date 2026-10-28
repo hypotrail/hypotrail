@@ -110,8 +110,10 @@ def test_w1_choice_card_and_after_study_on_a_real_study(tmp_path, monkeypatch, o
         panel = _page(open_panel, m)
         now = panel.page.locator('[data-block="now"]')
         assert now.get_attribute('data-now-step') == decision, decision
-        # The places the engine named exist on the page (CLI-CONTRACT §17.1.1, data-anchor).
+        # The places the engine named exist on the page (CLI-CONTRACT §17.1.1, data-anchor):
+        # a figure in a folded step is reached as a deep link reaches it (NAV-1).
         for anchor in (action['panel']['shown']['anchor'], shown['anchor']):
+            panel.send({'type': 'navigate', 'anchor': anchor})
             assert panel.page.locator(f'[data-anchor="{anchor}"]').count() >= 1, anchor
         assert now.locator('[data-options] [data-option]').all_inner_texts() == [o['label'] for o in options]
         assert now.locator('textarea, input, select, [data-write]').count() == 0
