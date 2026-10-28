@@ -2,7 +2,7 @@
 
 Cette page s'adresse aux participants de l'atelier « Découvrir le développement ML assisté par agents ». **L'installation se fait avant l'atelier**, de préférence au plus tard trois jours avant : le jour J, on n'a plus qu'à créer son étude.
 
-Version mise en page : [README.html](README.html) (même contenu, à ouvrir dans un navigateur).
+Dépôt : [https://github.com/hypotrail/hypotrail](https://github.com/hypotrail/hypotrail). Version mise en page : [README.html](README.html) (même contenu, à ouvrir dans un navigateur).
 
 Il y a deux façons de travailler :
 
@@ -21,7 +21,7 @@ Un seul poste qui fonctionne par binôme suffit.
 
 ### 1. Forker le dépôt
 
-Sur la page du dépôt, cliquez sur **Fork** puis **Create fork**, sous votre compte personnel. Gardez « Copy the `main` branch only » coché.
+Sur la page du dépôt, [https://github.com/hypotrail/hypotrail](https://github.com/hypotrail/hypotrail), cliquez sur **Fork** puis **Create fork** (lien direct : [https://github.com/hypotrail/hypotrail/fork](https://github.com/hypotrail/hypotrail/fork)), sous votre compte personnel. Gardez « Copy the `main` branch only » coché.
 
 Le fork vous donne votre propre copie : vos études et vos essais n'y touchent pas le dépôt d'origine, et le codespace est rattaché à votre compte.
 
@@ -37,9 +37,9 @@ Sur la page de **votre fork**, cliquez sur **Code**, puis **Codespaces** et **�
 
 Cliquez ensuite sur *Create codespace*.
 
-La première création prend **4 à 6 minutes**. Elle installe l'environnement du moteur et le panneau d'étude, et le terminal « Configuring codespace » doit se terminer sans erreur. Le jour J, il suffit de rouvrir ce codespace depuis github.com/codespaces.
+La première création prend **4 à 6 minutes**. Elle installe l'environnement du moteur et le panneau d'étude, et le terminal « Configuring codespace » doit se terminer sans erreur. Le jour J, il suffit de rouvrir ce codespace depuis [github.com/codespaces](https://github.com/codespaces).
 
-Pour l'atelier, passez le délai d'inactivité à 60 minutes : sur github.com, *Settings > Codespaces > Default idle timeout*.
+Pour l'atelier, passez le délai d'inactivité à 60 minutes : [github.com/settings/codespaces](https://github.com/settings/codespaces), *Default idle timeout*.
 
 ### 3. Vérifier (avant l'atelier)
 
