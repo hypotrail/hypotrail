@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # Creates a fresh Auto MPG study for one workshop pair and prints what to do next.
 #
-#   scripts/workshop/new-mpg-study.sh [NAME] [--lang fr|en] [--automation MODE] [--open]
+#   scripts/workshop/new-mpg-study.sh [NAME] [--lang fr|en] [--automation MODE] [--from-pdf [FILE]] [--open]
 #   scripts/workshop/new-mpg-study.sh --azureml-plan NAME
 #
 #   NAME            letters, digits, dot, dash, underscore (default: mpg-<date>-<time>)
 #   --lang          the study language (default fr)
 #   --automation    until_final_test or full_demo: the automatic mode, for the organiser's
 #                   demo (needs an engine with `init --automation`)
+#   --from-pdf      start from the product owner's PDF (R68): `init --brief-pdf` copies it into
+#                   the study and imports it, so the brief stays pending until the junior adopts
+#                   the agent's draft (default use-cases/auto-mpg/po/fiche-cas-usage-mpg.pdf)
 #   --open          reopen this VS Code window on the study folder when done (code -r)
 #   --azureml-plan  show the Azure ML export plan of an existing study: files, statuses and
 #                   missing fields; it writes nothing and runs no Azure job
@@ -26,7 +29,7 @@ ROOT="${HYPOTRAIL_WORKSHOP_DIR:-$REPO/studies}"
 PY="$REPO/framework/.venv/bin/python"
 HYP=(uv run --quiet --project "$REPO/framework" hypotrail)
 
-name="" lang="fr" automation="" open=0 plan=""
+name="" lang="fr" automation="" open=0 plan="" pdf=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --lang) lang="${2:-}"; shift 2 ;;
@@ -36,7 +39,11 @@ while [ $# -gt 0 ]; do
     --open) open=1; shift ;;
     --azureml-plan) plan="${2:-}"; shift 2 ;;
     --azureml-plan=*) plan="${1#*=}"; shift ;;
-    -h|--help) sed -n '2,23p' "$0"; exit 0 ;;
+    --from-pdf)
+      if [ $# -gt 1 ] && [[ "$2" == *.pdf ]]; then pdf="$2"; shift 2
+      else pdf="$CASE/po/fiche-cas-usage-mpg.pdf"; shift; fi ;;
+    --from-pdf=*) pdf="${1#*=}"; shift ;;
+    -h|--help) sed -n '2,26p' "$0"; exit 0 ;;
     -*) echo "unknown option: $1 (see --help)" >&2; exit 2 ;;
     *) [ -z "$name" ] || { echo "one study name only" >&2; exit 2; }; name="$1"; shift ;;
   esac
@@ -82,6 +89,11 @@ if [ -n "$automation" ]; then
   init_args+=(--automation "$automation")
 fi
 
+if [ -n "$pdf" ]; then
+  [ -f "$pdf" ] || fail "no PDF at $pdf"
+  init_args+=(--brief-pdf "$(cd "$(dirname "$pdf")" && pwd)/$(basename "$pdf")")
+fi
+
 mkdir -p "$ROOT"
 "${HYP[@]}" "${init_args[@]}"
 
@@ -116,6 +128,15 @@ if [ -n "${VSCODE_IPC_HOOK_CLI:-}" ] && command -v code >/dev/null 2>&1; then
     || panel_note="panel: not installed, see docs/workshop/CODESPACES.md (Dépannage)"
 fi
 
+first_fr="On commence" first_en="On commence"
+if [ -n "$pdf" ]; then
+  first_fr="Prépare l'étude à partir de la fiche du PO
+     (la fiche du PO, $(basename "$pdf"), est déjà importée dans l'étude, dossier brief/ ;
+     l'étape 1 du panneau l'attend jusqu'à ce que vous adoptiez la fiche dans le chat)"
+  first_en="Prépare l'étude à partir de la fiche du PO
+     (the PO's brief, $(basename "$pdf"), is already imported into the study, folder brief/;
+     step 1 of the panel waits for it until you adopt the brief in the chat)"
+fi
 shell_hyp="uv run --project $REPO/framework hypotrail"
 if [ "$lang" = fr ]; then
   cat <<EOF
@@ -131,7 +152,7 @@ Ensuite, dans l'ordre :
   2. Palette (Ctrl+Shift+P) : « Hypotrail: open the study panel »
   3. Chat Copilot (Ctrl+Alt+I) : choisir l'agent « Hypotrail » dans la liste des agents ;
      dans « Configure Tools », vérifier que vscode/askQuestions est coché.
-  4. Écrire : On commence
+  4. Écrire : $first_fr
      (autoriser les commandes « uv run ... hypotrail » que l'agent lance dans le terminal)
 
 Rapport HTML : $study/reports/study.html (dès le premier rendu) ; notebooks Marimo :
@@ -154,7 +175,7 @@ Next, in order:
   2. Command palette (Ctrl+Shift+P): "Hypotrail: open the study panel"
   3. Copilot chat (Ctrl+Alt+I): pick the "Hypotrail" agent in the agent list; in
      "Configure Tools", check that vscode/askQuestions is enabled.
-  4. Type: On commence
+  4. Type: $first_en
      (allow the "uv run ... hypotrail" commands the agent runs in the terminal)
 
 HTML report: $study/reports/study.html (from the first render); Marimo notebooks:

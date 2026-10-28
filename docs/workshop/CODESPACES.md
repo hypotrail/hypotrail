@@ -77,6 +77,14 @@ uv run --project /workspaces/hypotrail/framework hypotrail automation run --prog
   --request-id demo-1 --expected-revision 1 --study /workspaces/hypotrail/studies/demo-orga
 ```
 
+Partir de la fiche du PO (PDF, R68) : `--from-pdf [FICHIER]` (par défaut `use-cases/auto-mpg/po/fiche-cas-usage-mpg.pdf`) crée l'étude avec `init --brief-pdf`, qui copie le PDF dans `studies/<nom>/brief/` et l'importe. L'étape 1 du panneau n'affiche pas la fiche du cas d'usage par défaut : elle annonce la fiche du PO importée, jusqu'à ce que le junior adopte dans le chat la fiche rédigée par l'agent (chaque champ avec ses pages, marquée « tirée du PDF »).
+
+```sh
+scripts/workshop/new-mpg-study.sh demo-pdf --from-pdf --open
+```
+
+Puis, dans le chat avec l'agent Hypotrail : « Prépare l'étude à partir de la fiche du PO ». Sans le script : `uv run --project framework hypotrail init --case use-cases/auto-mpg --study DOSSIER --lang fr --brief-pdf use-cases/auto-mpg/po/fiche-cas-usage-mpg.pdf`.
+
 Fin d'atelier, plan d'export Azure ML (n'écrit rien, ne lance aucun job Azure ; utile une fois un modèle choisi) :
 
 ```sh
