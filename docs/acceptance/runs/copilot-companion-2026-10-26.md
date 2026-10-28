@@ -735,3 +735,10 @@ its warning.
   log", "max ≤ 3 × q99 : pas de plafond", "aucune catégorie sous 30 lignes : pas de
   regroupement"), the transformed columns first and highlighted. A "no change" is a decision
   backed by the same figures as a change. Extends R39/R40. Noted only, not fixed.
+- **R42. Prefer a chart whenever one is possible (owner principle, 2026-10-28).** Visuals have a
+  strong impact on understanding: by default, every number or comparison the panel or the
+  report shows comes as a chart when one can be drawn (a single value next to its reference as
+  a bar or a dot on a scale, an interval as a range, a count as a bar, a before/after as two
+  marks), with the number written on it; text-only presentation is the exception, kept for
+  what has no meaningful visual. Applies with R40/R41 to the review of every step's display.
+  Noted only, not fixed.
