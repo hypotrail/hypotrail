@@ -915,3 +915,18 @@ its warning.
   development rows, used for training and validation by folds); the panel's sample shows
   model-year values without the century and acceleration with mixed decimals (13 / 16.9),
   fine as raw data but the column header could say "valeurs brutes". Noted only, not fixed.
+- **R55. A done step in the path must replay what Now showed (owner remark, 2026-10-28; R50
+  not met for step 1).** Once the junior moves to the prediction moment, the "Données" row
+  of the path only shows its headline and "Demander à l'agent": the data card, the eight-row
+  sample, the column dictionary, the duplicates/groups and the "?" rows are gone. Rule: when a
+  step stops being current, its path detail keeps everything Now showed for it (cards,
+  sample, figures, guided readings), read only, with the decision taken added on top; going
+  back up the path replays the study. Applies to every step. Noted only, not fixed.
+- **R56. Full step names in the path (owner remark, 2026-10-28).** The path shows the short
+  labels "Moment", "Variables", "Critère"…; use the full names: "Moment de la prédiction",
+  "Variables disponibles", "Découpage", "Critère de succès", "Contrôle de qualité",
+  "Préparation", "Exploration", "Modèles", "Variantes", "Choix du modèle", "Test final",
+  "Conclusion" (the short ones stay only where space is tight, e.g. the progress bar's
+  tooltip). Also at the moment step: "Pas de graphique pour ce point" — a small timeline
+  diagram would help (when each column is known relative to the prediction moment and the
+  target's measurement), in the R53 spirit. Noted only, not fixed.
