@@ -54,6 +54,7 @@
       prediction_time: 'le moment de la prédiction',
       feature_availability: 'les variables disponibles',
       split: 'le découpage',
+      error_metric: "la mesure de l'erreur",
       success_criterion: 'le critère de succès',
       preprocessing: 'la préparation des données',
       model_variant: 'la variante à comparer',
