@@ -157,20 +157,35 @@ FIGURE_LABELS = {
            'variants': 'les variantes', 'diagnostics': 'les diagnostics',
            'final_test': 'le résultat du test final'},
 }
-# The line the agent starts a message with (CLAUDE.md rule 6), by place.
+# The line the agent starts a message with (CLAUDE.md rule 6), by place. Owner decision of
+# 2026-10-28 (R35): a block quote with a fixed marker and a bold label, so it stands out
+# from the message, ``> 🧭 **Panel** · <place>``; the place is the line's ``label``.
+LINE_MARK = {'en': '> 🧭 **Panel** · ', 'fr': '> 🧭 **Panneau** · '}
 LINES = {
-    'en': {'now': 'In the panel: Now, {content}.', 'todo': 'In the panel: To handle, {kind}.',
-           'path': 'In the panel: the path, its ledger line.',
-           'path_step': 'In the panel: the path, {step}.',
-           'path_figure': 'In the panel: the path, {step} → {figure}.',
-           'tools': 'In the panel: Tools → {drawer}.'},
-    'fr': {'now': 'Dans le panneau : Maintenant, {content}.',
-           'todo': 'Dans le panneau : À traiter, {kind}.',
-           'path': 'Dans le panneau : le parcours, sa ligne de registre.',
-           'path_step': 'Dans le panneau : le parcours, {step}.',
-           'path_figure': 'Dans le panneau : le parcours, {step} → {figure}.',
-           'tools': 'Dans le panneau : Outils → {drawer}.'},
+    'en': {'now': LINE_MARK['en'] + 'Now, {content}',
+           'todo': LINE_MARK['en'] + 'To handle, {kind}',
+           'path': LINE_MARK['en'] + 'the path, its ledger line',
+           'path_step': LINE_MARK['en'] + 'the path, {step}',
+           'path_figure': LINE_MARK['en'] + 'the path, {step} → {figure}',
+           'tools': LINE_MARK['en'] + 'Tools → {drawer}'},
+    'fr': {'now': LINE_MARK['fr'] + 'Maintenant, {content}',
+           'todo': LINE_MARK['fr'] + 'À traiter, {kind}',
+           'path': LINE_MARK['fr'] + 'le parcours, sa ligne de registre',
+           'path_step': LINE_MARK['fr'] + 'le parcours, {step}',
+           'path_figure': LINE_MARK['fr'] + 'le parcours, {step} → {figure}',
+           'tools': LINE_MARK['fr'] + 'Outils → {drawer}'},
 }
+# R35 (owner decision 2026-10-28): Now always shows the current step at the top of the one
+# page, so a place at ``now`` (in ``where`` or ``shown``) has no line (``line`` null), except
+# Now's end-of-study block (content ``done``) and at the first message of a working session,
+# which recalls that the panel exists. A session starts with ``init``, or when no revision of
+# the study was committed during the :data:`SESSION_GAP_MINUTES` before the command began
+# (the gap that separates two sessions in the "since your last session" digest,
+# ``view.SESSION_GAP_MINUTES``). At a session start a read's ``shown`` (null otherwise) is
+# the place of ``where``, so ``shown.line`` is always the one line the agent writes.
+SESSION_GAP_MINUTES = 20
+NOW_LINE_CONTENTS = ('done',)
+_STARTED: list = []
 
 # The commands that only read: they produce nothing new, so ``shown`` is null, except at
 # step 0 (the data card) and at a choice the chat asks (R16), where the next action itself
@@ -397,9 +412,11 @@ def line_of(anchor: str, content: str | None = None, lang: str = 'en') -> str:
 
 
 def label_of(line: str) -> str:
-    """The part of a line after its first colon, without the final period."""
-    text = line.split(':', 1)[1].strip()
-    return text[:-1] if text.endswith('.') else text
+    """The place a line names: the part after its marker (:data:`LINE_MARK`)."""
+    for mark in LINE_MARK.values():
+        if line.startswith(mark):
+            return line[len(mark):]
+    return line
 
 
 def place(anchor: str | None, content: str | None = None, lang: str = 'en') -> dict | None:
@@ -566,9 +583,68 @@ def panel(action: Mapping | None, study_dir, lang: str = 'en',
     stage_id = stage(study_dir, env, settings)
     if plan is None:
         plan = _plan_of(study_dir)
+    here = at_stage(*where_anchor(action), stage_id)
+    made = at_stage(*shown_anchor(produced, action, plan), stage_id)
+    where_place, shown_place = place(*here, lang), place(*made, lang)
+    if made[0] is None or _quiet(*here) or _quiet(*made):
+        if session_start(study_dir, produced):
+            # R35: the first message of a session recalls the panel, a read included.
+            if shown_place is None:
+                shown_place = dict(where_place)
+        else:
+            for found, (anchor, content) in ((where_place, here), (shown_place, made)):
+                if found is not None and _quiet(anchor, content):
+                    found['line'] = None
     return {'version': PANEL_CONTRACT, 'stage': stage_id, 'title': TITLES[lang],
-            'where': where(action, stage_id, lang),
-            'shown': shown(produced, action, stage_id, lang, plan)}
+            'where': where_place, 'shown': shown_place}
+
+
+def _quiet(anchor: str | None, content: str | None) -> bool:
+    """R35: a place at Now needs no line (Now shows the current step at the top), except
+    its end-of-study block."""
+    return anchor == 'now' and content not in NOW_LINE_CONTENTS
+
+
+def command_started(now=None) -> None:
+    """Record when the command began (``cli.run``): a session starts when no revision was
+    committed during the :data:`SESSION_GAP_MINUTES` before it (:func:`session_start`)."""
+    import datetime as dt
+    _STARTED[:] = [now or dt.datetime.now(dt.timezone.utc)]
+
+
+def started_after_gap(times: Iterable[str], started, minutes: int = SESSION_GAP_MINUTES
+                      ) -> bool:
+    """True when no commit time of ``times`` (ISO 8601, as ``revisions.jsonl`` records them)
+    falls in the ``minutes`` before ``started``; a time after ``started`` (this command's
+    own commits) is not counted. Pure."""
+    import datetime as dt
+    for text in times:
+        try:
+            when = dt.datetime.fromisoformat(str(text))
+        except (TypeError, ValueError):
+            continue
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=dt.timezone.utc)
+        if when < started and (started - when).total_seconds() <= minutes * 60:
+            return False
+    return True
+
+
+def session_start(study_dir, produced: Mapping | None = None) -> bool:
+    """R35: whether this command opens a working session: ``init``, or no revision committed
+    during the :data:`SESSION_GAP_MINUTES` before the command began. Reads the commit times
+    of ``revisions.jsonl`` and the clock (the panel line only, never a view or a
+    deliverable)."""
+    if (produced or {}).get('command') == 'init':
+        return True
+    import datetime as dt
+    started = _STARTED[0] if _STARTED else dt.datetime.now(dt.timezone.utc)
+    try:
+        from . import read
+        records = read.open(Path(study_dir)).revisions(0)
+    except Exception:                    # noqa: BLE001 - no history: a session of its own
+        return True
+    return started_after_gap((r.get('time') for r in records[-50:]), started)
 
 
 def _plan_of(study_dir) -> list[dict]:

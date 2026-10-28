@@ -486,7 +486,10 @@ def test_the_panel_rule(task):
     template's own tab-by-step mapping is gone (the behaviour moved to the engine, tested
     in ``test_companion_env.py`` and ``test_journey_walkthrough.py``). Third session (R21):
     the line comes first, the message's first line and, with Copilot, the picker question's
-    first line, never its last."""
+    first line, never its last. R35 (owner decision 2026-10-28; the assertion "no line when
+    `shown` is null" is rewritten): the engine leaves the line out while Now shows the step
+    (``line`` null) and gives it at a session's first message, so the agent starts with the
+    line only when it is present."""
     text = Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task))
     rule6 = _rule(text, 6)
     for phrase in ('It is open when `next_action.panel` is present or the junior has already '
@@ -494,7 +497,7 @@ def test_the_panel_rule(task):
                    'start a message that shows or changes something with '
                    '`next_action.panel.shown.line` of the last command it reports, verbatim, '
                    'as its first line',
-                   'no line when `shown` is null',
+                   'only when that line is present',
                    # Contract P1 (ADR 0004 decision 13): places of the one page, never a tab.
                    'The line names a place of the one page, not a tab; it only adds to the '
                    'chat',
@@ -520,7 +523,7 @@ def test_the_panel_rule(task):
         assert 'end a message that shows' not in flat and 'last line' not in flat
     skill = (af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text()
     order = skill.split('## One pause, one message', 1)[1].split('\n## ', 1)[0]
-    assert '\n1. **The panel line**, first, when the panel is open (CLAUDE.md rule 6).' in order
+    assert '\n1. **The panel line**, first, when the engine gives one (CLAUDE.md rule 6).' in order
     assert order.index('**The panel line**') < order.index('**Where we are**')
 
 
@@ -765,8 +768,12 @@ def test_copilot_ends_every_pause_with_the_picker(tmp_path, task):
 def test_the_r2_fix_leaves_the_claude_code_copy_unchanged(task):
     """R2 is Copilot only: the slots it adds are empty for Claude Code, so the Claude Code
     copy keeps its pause procedure word for word (text before the choice tool, "explain
-    first" answered in the chat, the text fallback without a tool)."""
-    for key in ('TEXT_FALLBACK', 'PAUSE_CARRIER', 'PANEL_LINE_PLACE', 'PICKER_RULE'):
+    first" answered in the chat, the text fallback without a tool). R37 (owner answers of
+    2026-10-28; ``PICKER_RULE`` taken out of the empty slots, checked in
+    :func:`test_claude_code_ends_every_closed_question_with_its_picker`): the Claude Code copy
+    closes every closed question with ``AskUserQuestion`` too, so the word "picker" now
+    appears in it, in that rule only."""
+    for key in ('TEXT_FALLBACK', 'PAUSE_CARRIER', 'PANEL_LINE_PLACE'):
         assert af.FLAVOUR_TEXTS[af.CLAUDE][key] == '', key
         assert af.FLAVOUR_TEXTS[af.COPILOT][key].strip(), key
     values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
@@ -783,8 +790,33 @@ def test_the_r2_fix_leaves_the_claude_code_copy_unchanged(task):
                    'with `next_action.panel.shown.line` of the last command it reports',
                    'Before runs, visibly state what was decided'):
         assert phrase in flat, phrase
-    assert 'picker' not in claude and 'Copilot this message' not in skill
+    picker_free = claude.replace(af.FLAVOUR_TEXTS[af.CLAUDE]['PICKER_RULE'], '')
+    assert 'picker' not in picker_free and 'Copilot this message' not in skill
     assert ('count them before sending. No\nheading, no recap of earlier steps' in skill)
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_claude_code_ends_every_closed_question_with_its_picker(task):
+    """R36, R37 (owner answers of 2026-10-28): the Claude Code copy closes every closed
+    question with ``AskUserQuestion``, transitions included ("On continue" / "Expliquer
+    d'abord"), with the engine's options and labels verbatim, as Copilot's L1 rule; an open
+    question needs no picker; a free choice is picked, then proposed. Rule 3, where the
+    transitions are, carries it."""
+    values = {'HYPOTRAIL': 'h', 'STUDY': 's', 'GLOSSARY': 'g'}
+    claude = Flat(af.render((af.SOURCE / 'CLAUDE.md.in').read_text(), flavour=af.CLAUDE,
+                            values=values, source='CLAUDE.md.in', task=task))
+    rule3 = _rule(claude, 3)
+    for phrase in ('**Closed questions** (Claude Code). A turn ending with a closed question '
+                   'ends with `AskUserQuestion`, transitions included ("On continue" / '
+                   '"Expliquer d\'abord")',
+                   'options `next_action.pause.options` labelled by `pause.option_labels`, '
+                   'verbatim', 'recommended only when `pause.recommended_option` names one',
+                   'never a typed "On continue ?"', 'An open question needs no picker',
+                   'a pick is no confirmation (never `--channel choice`)'):
+        assert phrase in rule3, phrase
+    from mlkit.study import guidance
+    assert guidance.OPTION_LABELS['continue'][1] == 'On continue'
+    assert guidance.OPTION_LABELS['explain'][1] == "Expliquer d'abord"
 
 
 # --- Owner session 2026-10-26, second batch: L1 (R3, R2b, R2c) and L4 (R9, R10) -----------
@@ -926,6 +958,41 @@ CLAUDE_CODE_DIGESTS = {
     'binary': '18719e74569e7be56cb9b6b985ae5598fc45c5960dd668a747a9ff3fed9483e5',
     'regression': 'b4a890b652378d935ad16664ff2232cd1431014062730159a8489d4567d018a2'}
 CLAUDE_CODE_INTENDED_CHANGES = {
+    # Owner batch of 2026-10-28. Listed first: R35 and the skill's panel-line item restore
+    # the text that the R21 entries below then read.
+    # R35: the engine gives the line only when it adds something (not while Now shows the
+    # step, except at a session's first message).
+    'R35: the panel line only when present (rule 6)': (
+        '   reading; only when that line is present.\n',
+        '   reading; no line when `shown` is null.\n'),
+    'R35: the panel line only when present (skill pause order)': (
+        '1. **The panel line**, first, when the engine gives one (CLAUDE.md rule 6).\n',
+        '1. **The panel line**, first, when the panel is open (CLAUDE.md rule 6).\n'),
+    # R36, R37: Claude Code closes every closed question with ``AskUserQuestion`` (rule 3).
+    'R37: Claude Code closes every closed question with its picker (rule 3)': (
+        af.FLAVOUR_TEXTS[af.CLAUDE]['PICKER_RULE'], ''),
+    # R36: the plan recap is the engine's (``next_action.plan_recap``), never a fixed list
+    # whose order differs from the study's plan.
+    'R36: the plan recap from the engine (skill)': (
+        "Say which moment you are in, and show the plan in the first conversation and when it\n"
+        "changes: `next_action.plan_recap`, verbatim, the study's own steps in their order. "
+        "Never\nlist or order the steps from memory: the order depends on the study.\n",
+        {task: 'Say which moment you are in, and show the plan (`plan` in the summary, step '
+               'titles, not\nids) in the first conversation and when it changes:\n\n'
+               '1. **Frame the change**: the data card, prediction moment, feature '
+               'availability, split,\n   success criterion.\n2. **Prepare evidence**: '
+               'exploration of the development set, then the preprocessing.\n'
+               f'3. **Work and compare**: {models}, diagnostics, variants, evaluation.\n'
+               f'4. **Conclude and hand over**: {last}, final test opening, conclusion.\n'
+         for task, models, last in (('binary', 'baseline, logistic model', 'decision rule'),
+                                    ('regression', 'mean baseline, linear model',
+                                     'model choice'))}),
+    # R36: k is named with the cross-validation (rule 3).
+    'R36: name k with the cross-validation (rule 3)': (
+        '   2. the split, as **k-fold cross-validation**, naming k (**out-of-fold predictions**,\n'
+        '      **fold spread**: read',
+        '   2. the split, as **k-fold cross-validation** (**out-of-fold predictions**, **fold\n'
+        '      spread**: read'),
     # Contract P1 (ADR 0004 decision 13, CLI-CONTRACT §17.1): the panel is one page, so the
     # line names a place of it, never a tab (six more words: the D18 caps still hold).
     'P1: rule 6 names a place of the one page': (

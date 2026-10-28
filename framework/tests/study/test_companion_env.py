@@ -144,10 +144,10 @@ def test_where_each_next_action_is_shown(action, anchor, content):
         shown_content = ('question' if content == 'data_card' and stage_id in ('v0', 'v1')
                          else content)
         if anchor == 'now':
-            assert found['line'] == f'In the panel: Now, {ce.CONTENT_LABELS["en"][shown_content]}.'
+            assert found['line'] == f'> 🧭 **Panel** · Now, {ce.CONTENT_LABELS["en"][shown_content]}'
             assert found['label'] == f'Now, {ce.CONTENT_LABELS["en"][shown_content]}'
         else:
-            assert found['line'] == 'In the panel: To handle, the interrupted run.'
+            assert found['line'] == '> 🧭 **Panel** · To handle, the interrupted run'
 
 
 CHOICE = {'kind': 'propose', 'decision': 'conclusion', 'step': 'conclusion',
@@ -223,8 +223,8 @@ def test_shown_names_what_each_command_produced(produced, action, expected):
         return
     assert list(found) == list(ce.SHOWN_KEYS) and found['anchor'] == expected[0]
     assert ce.ANCHOR_RE.fullmatch(found['anchor'])
-    assert found['line'].startswith('Dans le panneau : ') and found['line'].endswith('.')
-    assert found['label'] == found['line'][len('Dans le panneau : '):-1]
+    assert found['line'].startswith('> 🧭 **Panneau** · ')
+    assert found['label'] == found['line'][len('> 🧭 **Panneau** · '):]
 
 
 # (anchor, content) asked -> what each stage shows (§17.1.3, stage fallback).
@@ -253,41 +253,42 @@ def test_the_stage_fallback_never_names_an_absent_place(asked, by_stage):
 
 
 LINES = {
-    ('now', 'data_card'): ('In the panel: Now, the data card.',
-                           'Dans le panneau : Maintenant, la fiche des données.'),
-    ('path', None): ('In the panel: the path, its ledger line.',
-                     'Dans le panneau : le parcours, sa ligne de registre.'),
-    ('path:split', None): ('In the panel: the path, Split.', 'Dans le panneau : le parcours, '
-                                                              'Découpage.'),
+    ('now', 'data_card'): ('> 🧭 **Panel** · Now, the data card',
+                           '> 🧭 **Panneau** · Maintenant, la fiche des données'),
+    ('path', None): ('> 🧭 **Panel** · the path, its ledger line',
+                     '> 🧭 **Panneau** · le parcours, sa ligne de registre'),
+    ('path:split', None): ('> 🧭 **Panel** · the path, Split',
+                           '> 🧭 **Panneau** · le parcours, Découpage'),
     ('path:train_eda/eda.rate_by:job', None): (
-        'In the panel: the path, Explore → Outcome rate by group · job.',
-        'Dans le panneau : le parcours, Exploration → Taux de résultat par groupe · job.'),
+        '> 🧭 **Panel** · the path, Explore → Outcome rate by group · job',
+        '> 🧭 **Panneau** · le parcours, Exploration → Taux de résultat par groupe · job'),
     ('path:final_test/final_test.evaluation', None): (
-        'In the panel: the path, Final test → the final test result.',
-        'Dans le panneau : le parcours, Test final → le résultat du test final.'),
+        '> 🧭 **Panel** · the path, Final test → the final test result',
+        '> 🧭 **Panneau** · le parcours, Test final → le résultat du test final'),
     ('path:model_variant/fit.variant:2', None): (
-        'In the panel: the path, Variants → the variants.',
-        'Dans le panneau : le parcours, Variantes → les variantes.'),
+        '> 🧭 **Panel** · the path, Variants → the variants',
+        '> 🧭 **Panneau** · le parcours, Variantes → les variantes'),
     ('now', 'figure:policy.evaluation'): (
-        'In the panel: Now, the model comparison.',
-        'Dans le panneau : Maintenant, la comparaison des modèles.'),
-    ('todo:execution', None): ('In the panel: To handle, the interrupted run.',
-                               "Dans le panneau : À traiter, l'exécution interrompue."),
-    ('tools:whatif', None): ('In the panel: Tools → What if? (without deciding).',
-                             'Dans le panneau : Outils → Et si ? (sans décider).'),
-    ('tools:deliverables', None): ('In the panel: Tools → Deliverables.',
-                                   'Dans le panneau : Outils → Livrables.'),
+        '> 🧭 **Panel** · Now, the model comparison',
+        '> 🧭 **Panneau** · Maintenant, la comparaison des modèles'),
+    ('todo:execution', None): ('> 🧭 **Panel** · To handle, the interrupted run',
+                               "> 🧭 **Panneau** · À traiter, l'exécution interrompue"),
+    ('tools:whatif', None): ('> 🧭 **Panel** · Tools → What if? (without deciding)',
+                             '> 🧭 **Panneau** · Outils → Et si ? (sans décider)'),
+    ('tools:deliverables', None): ('> 🧭 **Panel** · Tools → Deliverables',
+                                   '> 🧭 **Panneau** · Outils → Livrables'),
 }
 
 
 @pytest.mark.parametrize('asked, lines', list(LINES.items()))
 def test_the_lines_in_both_languages(asked, lines):
-    """§17.1.4: the line and its label (after the colon, without the final period), in the
-    study language; an unknown language reads as English."""
+    """§17.1.4 (R35 form): the line, a block quote with the marker and the bold label, and its
+    label (the place after the marker), in the study language; an unknown language reads as
+    English."""
     for lang, line in zip(('en', 'fr'), lines):
         found = ce.place(*asked, lang)
         assert found == {'anchor': asked[0], 'line': line,
-                         'label': line.split(':', 1)[1].strip()[:-1]}
+                         'label': line[len(ce.LINE_MARK[lang]):]}
     assert ce.place(*asked, 'de')['line'] == lines[0]
 
 
@@ -314,8 +315,9 @@ def test_the_panel_payload_version_2(tmp_path):
                      env={ce.ENV_VAR: '1', ce.STAGE_ENV: 'v3'}, plan=PLAN)
     assert list(found) == list(ce.PANEL_KEYS) and found['version'] == ce.PANEL_CONTRACT == 2
     assert found['stage'] == 'v3' and found['title'] == 'Étude Hypotrail'
+    # No study history at ``tmp_path``: a session of its own, so Now keeps its line (R35).
     assert found['where'] == {'anchor': 'now', 'label': 'Maintenant, la fiche des données',
-                              'line': 'Dans le panneau : Maintenant, la fiche des données.'}
+                              'line': '> 🧭 **Panneau** · Maintenant, la fiche des données'}
     assert found['shown'] == found['where']          # a read at step 0: the data card
     assert 'tabs' not in json.dumps(found)
     other = ce.panel({}, tmp_path, 'de', env={ce.ENV_VAR: '1'}, plan=PLAN)
@@ -373,23 +375,27 @@ def test_every_surface_names_its_place_when_on(tmp_path, synthetic_case_dir, mon
     """Through the commands: ``init`` and the step-0 reads name the data card in Now; a
     proposal the question in Now; a confirmation its step in the path; a chart of a step that
     is not the current one its figure in the path; a read after step 0 nothing; ``panel`` is
-    the last key of every surface."""
+    the last key of every surface. R35 (rewritten for the owner decision of 2026-10-28): a
+    place at Now has no line within a session (``init`` opens one, so it has its line); a
+    place elsewhere keeps it."""
     monkeypatch.setenv(ce.ENV_VAR, '1')
     monkeypatch.setenv(ce.STAGE_ENV, 'v3')
     flow = Flow(tmp_path / 'study', synthetic_case_dir)
     init = flow.call('init', '--case', synthetic_case_dir, '--study', flow.study, '--lang', 'fr')
     assert init['next_action']['panel']['shown']['line'] == \
-        'Dans le panneau : Maintenant, la fiche des données.'
+        '> 🧭 **Panneau** · Maintenant, la fiche des données'
     for surface, action in _outputs(flow).items():
         assert action['panel']['where']['anchor'] == 'now', surface
         assert action['panel']['shown']['anchor'] == 'now', surface        # the data card
+        assert action['panel']['shown']['line'] is None, surface           # same session
+        assert action['panel']['where']['line'] is None, surface
         assert list(action)[-1] == 'panel', surface
     out = flow.call('decide', 'propose', 'prediction_time', '--value', 'before the call',
                     '--restatement', 'Vous prédisez avant l’appel.', '--rationale', 'r',
                     '--request-id', flow.rid(), '--expected-revision', flow.rev(),
                     '--study', flow.study)
-    assert out['next_action']['panel']['shown']['line'] == \
-        'Dans le panneau : Maintenant, la question qui vous attend.'
+    assert out['next_action']['panel']['shown'] == {
+        'anchor': 'now', 'label': 'Maintenant, la question qui vous attend', 'line': None}
     for surface, action in _outputs(flow).items():                        # reads: nothing new
         assert action['panel']['shown'] is None, surface
     confirm = flow.call('decide', 'confirm', out['result']['proposal_id'], '--user-words',
@@ -398,7 +404,25 @@ def test_every_surface_names_its_place_when_on(tmp_path, synthetic_case_dir, mon
                         '--study', flow.study)
     assert confirm['next_action']['panel']['shown'] == {
         'anchor': 'path:prediction_time', 'label': 'le parcours, Moment',
-        'line': 'Dans le panneau : le parcours, Moment.'}
+        'line': '> 🧭 **Panneau** · le parcours, Moment'}
+    # A session's first message (no commit in the 20 minutes before the command began): the
+    # line of Now comes back, and a read names the place of ``where``.
+    import datetime as dt
+    later = dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=ce.SESSION_GAP_MINUTES + 1)
+    action = {'kind': 'propose', 'decision': 'feature_availability'}
+    try:
+        ce.command_started(later)
+        assert ce.session_start(flow.study)
+        back = ce.panel(action, flow.study, 'fr', produced={'command': 'status'})
+        assert back['where']['line'] == '> 🧭 **Panneau** · Maintenant, la question qui vous attend'
+        assert back['shown'] == back['where']
+        ce.command_started()
+        assert not ce.session_start(flow.study)
+        assert ce.panel(action, flow.study, 'fr', produced={'command': 'status'})['shown'] is None
+    finally:
+        ce.command_started()
+    assert ce.started_after_gap([], later) and not ce.started_after_gap(
+        [(later - dt.timedelta(minutes=5)).isoformat()], later)
     run = flow.call('run', 'eda.quality', '--request-id', flow.rid(), '--expected-revision',
                     flow.rev(), '--study', flow.study)
     assert run['next_action']['panel']['shown']['anchor'] == 'path:structural_eda/eda.quality'

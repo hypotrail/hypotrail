@@ -482,6 +482,8 @@ def run(argv: Sequence[str] | None = None) -> cmd.Outcome:
     is recorded there, without content, after it is final.
     """
     argv = list(sys.argv[1:] if argv is None else argv)
+    from . import companion_env
+    companion_env.command_started()      # R35: the panel line of a session's first message
     outcome = _run(argv)
     from . import sessionlog
 

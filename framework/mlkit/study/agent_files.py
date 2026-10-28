@@ -81,11 +81,22 @@ CHOICE_TOOLS = {CLAUDE: 'Claude Code: `AskUserQuestion`',
 # then proposed (``PICKER_RULE``), and short progress lines are allowed before and between
 # tool calls (``RUN_NOTICE``). The Claude Code copy keeps its texts (D1b); the rendered
 # Copilot copy stays within ``test_the_rendered_copilot_copy_stays_bounded`` (D18).
+# Owner answers of 2026-10-28 (R36, R37): the Claude Code copy also closes every closed
+# question with its picker, ``AskUserQuestion``, transitions included, with the engine's
+# options and labels (this lifts D1b for this one rule).
 FLAVOUR_TEXTS: dict[str, dict[str, str]] = {
     CLAUDE: {
         'RUN_NOTICE': 'Before runs, visibly state what was decided, what you will compute '
                       'and why, expected delays, and whether the final test stays sealed.',
-        'PICKER_RULE': '',
+        'PICKER_RULE': '\n\n   **Closed questions** (Claude Code). A turn ending with a closed '
+                       'question ends with `AskUserQuestion`, transitions included ("On '
+                       'continue" / "Expliquer d\'abord"): options `next_action.pause.options` '
+                       'labelled by `pause.option_labels`, verbatim, recommended only when '
+                       '`pause.recommended_option` names one; never a typed "On continue ?". '
+                       'An open question needs no picker. When `pause.kind` is `choice`, offer '
+                       '`next_action.choice_options`, none recommended: a pick is no '
+                       'confirmation (never `--channel choice`); propose it, then ask the '
+                       'adoption question. A reply typed instead is the answer.',
         'BLOCK_PLACE': 'in the chat message itself',
         'CHOICE_STEPS': 'send that message first, then offer one single-choice question '
                         'repeating the decision title and one-line restatement before the '

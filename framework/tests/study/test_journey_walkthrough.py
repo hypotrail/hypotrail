@@ -162,12 +162,19 @@ def test_j_panel_every_write_names_its_place_and_every_read_none(tmp_path, monke
     monkeypatch.setenv(ce.STAGE_ENV, 'v3')
     f, task, init = journey_flow(tmp_path, case, lang)
     assert init['next_action']['panel']['shown']['anchor'] == 'now'          # the data card
-    prefix = 'Dans le panneau : ' if lang == 'fr' else 'In the panel: '
+    prefix = ce.LINE_MARK[lang]
     seen, choices, captures = [], [], []
 
     def place_ok(found):
+        # R35 (owner decision 2026-10-28; rewritten from "every place has its line"): within
+        # the session the walkthrough runs in, a place at Now has no line, except the
+        # end-of-study block; every other place has its line, the marker then its label.
         assert list(found) == list(ce.SHOWN_KEYS) and ce.ANCHOR_RE.fullmatch(found['anchor'])
-        assert found['line'].startswith(prefix) and found['label'] == found['line'][len(prefix):-1]
+        if found['anchor'] == 'now' and not found['label'].endswith(
+                ce.CONTENT_LABELS[lang]['done']):
+            assert found['line'] is None, found
+        else:
+            assert found['line'] == prefix + found['label'], found
 
     def on_write(label, payload):
         plan = _plan(f)                                 # the plan as the write left it

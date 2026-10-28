@@ -15,20 +15,9 @@ only the junior can take. The rules of `CLAUDE.md` always apply.
 
 ## The plan in four moments
 
-Say which moment you are in, and show the plan (`plan` in the summary, step titles, not
-ids) in the first conversation and when it changes:
-
-1. **Frame the change**: the data card, prediction moment, feature availability, split,
-   success criterion.
-<!-- hypotrail:task binary -->
-2. **Prepare evidence**: exploration of the development set, then the preprocessing.
-3. **Work and compare**: baseline, logistic model, diagnostics, variants, evaluation.
-4. **Conclude and hand over**: decision rule, final test opening, conclusion.
-<!-- hypotrail:task regression -->
-2. **Prepare evidence**: exploration of the development set, then the preprocessing.
-3. **Work and compare**: mean baseline, linear model, diagnostics, variants, evaluation.
-4. **Conclude and hand over**: model choice, final test opening, conclusion.
-<!-- hypotrail:end -->
+Say which moment you are in, and show the plan in the first conversation and when it
+changes: `next_action.plan_recap`, verbatim, the study's own steps in their order. Never
+list or order the steps from memory: the order depends on the study.
 
 ## One pause, one message
 
@@ -36,7 +25,7 @@ A pause message has at most 150 words; aim for 120 and count them before sending
 heading, no recap of earlier steps, no list of options the engine did not give. In this
 order:
 
-1. **The panel line**, first, when the panel is open (CLAUDE.md rule 6).
+1. **The panel line**, first, when the engine gives one (CLAUDE.md rule 6).
 2. **Where we are**: the step title and what was just confirmed, in one line; what you
    propose next is never written as done.
 3. **The explanation**: `next_action.junior_digest`, cut to two or three sentences, never

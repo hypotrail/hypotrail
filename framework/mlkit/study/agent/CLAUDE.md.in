@@ -54,8 +54,8 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    proposal in the same message. Then the pauses:
    1. the prediction moment, then the feature availability (`default_value` drafts it from
       the case);
-   2. the split, as **k-fold cross-validation** (**out-of-fold predictions**, **fold
-      spread**: read a difference between models against `cross_validation.spread`); the
+   2. the split, as **k-fold cross-validation**, naming k (**out-of-fold predictions**,
+      **fold spread**: read a difference between models against `cross_validation.spread`); the
       **success criterion**, before any model is fitted; after the exploration, the
       **preprocessing**;
    3. after the fits and their diagnostics, the **variant** (`model_variant`);
@@ -202,7 +202,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    question to a resume, decision summary, or conclusion. When it is open, start a message
    that shows or changes something with `next_action.panel.shown.line` of the last
    command it reports, verbatim, as its first line, so the junior looks at the panel while
-   reading; no line when `shown` is null.{{PANEL_LINE_PLACE}}
+   reading; only when that line is present.{{PANEL_LINE_PLACE}}
    The line names a place of the one page, not a tab; it only adds to the chat.
    The panel can run charts,
    regenerate the deliverables, and export a handoff pack:
