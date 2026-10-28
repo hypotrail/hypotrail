@@ -1040,3 +1040,13 @@ its warning.
   not an alarm (it turns coral only when something is a problem). At the end: "Défendable ·
   3 limites" opens the limits. The list is the engine's (`defensibility.items`), never the
   panel's own judgement. Shown in the all-steps mockup.
+- **R66. Step 1 opens with the business use case (owner request, 2026-10-28).** Before the
+  data card, a "Le cas d'usage" block summarises the PO's use-case page (simulated, e.g. a
+  Confluence page): the problem, the decision it supports, the objective, the production
+  target, then folds for data provenance (real source and the scenario's framing), users and
+  the cost of an error, out of scope and risks, and a line linking it to the study's steps
+  (prediction moment, error measure, conclusion vs the current method). For Auto MPG the
+  scenario is fictitious and says so; only the provenance (UCI Auto MPG, StatLib/CMU, Quinlan
+  1993) is real. Content lives in the use case (`use-cases/<id>/case-brief.yaml`, EN/FR, read
+  by the engine and passed through the digest and the report), never written by the panel.
+  Shown in the all-steps mockup.

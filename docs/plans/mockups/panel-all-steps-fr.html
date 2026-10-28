@@ -30,6 +30,13 @@ body.light .card,body.light .ev{border:1px solid var(--cline)}
 .defpop{margin:6px 0 2px;border:1px solid var(--line2);border-left:3px solid var(--now);border-radius:4px;padding:8px 10px;font-size:.84rem;color:var(--soft);background:var(--board)}
 .defpop b{color:var(--ink)} .defpop .dh{margin-top:6px;color:var(--ink);font-weight:600} .defpop ul{list-style:none;margin:3px 0 0} .defpop li{margin:2px 0} .defpop li.ok{color:var(--ok)} .defpop .dn{margin-top:6px;font-size:.78rem;color:var(--faint)}
 button.pill{cursor:pointer;font:inherit;font-size:.76rem}
+.briefcard{border:1px solid var(--line2);border-radius:4px;padding:10px 12px;font-size:.88rem}
+.bsrc{font-size:.76rem;color:var(--faint);margin-bottom:6px} .bsrc b{color:var(--warn);font-weight:600}
+dl.bkey{display:grid;grid-template-columns:minmax(0,1fr);gap:2px 0;margin:0 0 6px}
+dl.bkey dt{font:600 .7rem var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--now);margin-top:6px}
+dl.bkey dd{margin:0;color:var(--ink)}
+.blink{margin-top:8px;font-size:.84rem;color:var(--soft);border-top:1px solid var(--line);padding-top:6px}
+.blink b{color:var(--ink)}
 #themeToggle{position:fixed;top:10px;right:12px;z-index:50;background:var(--board2);color:var(--ink);border:1.5px solid var(--line2);border-radius:4px;padding:5px 11px;font:500 13px var(--sans);cursor:pointer;box-shadow:0 6px 16px -8px rgba(0,0,0,.5)}
 #themeToggle:hover{border-color:var(--now);color:var(--now)}
 
@@ -865,9 +872,21 @@ function evBlock(st,e,i,pre){
    ${e.others?fold(id+'-o',`Autres graphiques (${e.others.length})`,e.others.join(' · ')):''}</div>`;
 }
 function budget(st){if(!st.budget)return '';const[u,m]=st.budget;return `<div class="budget"><span class="bb" aria-hidden="true">${Array.from({length:m},(_,i)=>`<i class="${i<u?'u':''}"></i>`).join('')}</span><span>Budget de variantes : <b style="color:var(--ink)">${u} sur ${m} utilisés</b></span></div>`}
+function brief(){return `<section class="blk brief" data-block="brief"><div class="bk"><span class="n">0</span>Le cas d'usage</div>
+  <div class="briefcard"><p class="bsrc">Fiche du cas d'usage · Confluence, espace « Produit véhicules » · rédigée par le PO · <b>scénario fictif pour la simulation</b> (seule la provenance des données est réelle)</p>
+  <dl class="bkey">
+   <dt>Le problème</dt><dd>L'équipe Conception doit annoncer la consommation d'un nouveau modèle dès que sa fiche technique est validée, environ six mois avant les essais sur route. Aujourd'hui, un ingénieur l'estime à la main en comparant avec un modèle proche.</dd>
+   <dt>La décision aidée</dt><dd>Quels prototypes envoyer d'abord aux essais de consommation (une vingtaine d'essais par an), et quel chiffre provisoire afficher dans les premières fiches produit.</dd>
+   <dt>L'objectif</dt><dd>Estimer la consommation à partir de la fiche technique seule, nettement mieux que l'estimation manuelle, avec une fourchette.</dd>
+   <dt>En production</dt><dd>Un service de prédiction appelé par l'outil de conception à chaque nouvelle fiche ; l'estimation et sa fourchette sont relues par un ingénieur avant tout usage ; le modèle est réentraîné chaque année avec les nouveaux essais.</dd>
+  </dl>
+  ${fold('b-data','D\'où viennent les données','<p><b>Réel :</b> le jeu « Auto MPG » du UCI Machine Learning Repository (issu de StatLib, Carnegie Mellon ; utilisé par Quinlan en 1993) : 398 modèles de voitures vendus aux États-Unis de 1970 à 1982, une ligne par modèle et par année.</p><p><b>Dans le scénario :</b> il sert d\'historique en attendant l\'extraction de l\'entrepôt interne des essais. Les données sont publiques et déjà très explorées : aucune ligne n\'est vraiment « jamais vue ».</p>','more')}
+  ${fold('b-users','Qui l\'utilise, et ce que coûte une erreur','<p><b>Utilisateurs :</b> les ingénieurs de conception et le chef de produit.</p><p><b>Coût d\'une erreur :</b> annoncer une consommation trop basse expose à une correction publique ; une estimation trop haute peut faire écarter à tort un prototype des essais. Le PO note que les grosses erreurs sur un modèle phare sont particulièrement gênantes : un point à discuter au choix de la mesure de l\'erreur.</p>','more')}
+  ${fold('b-scope','Hors périmètre et risques','<p><b>Hors périmètre :</b> l\'homologation officielle (elle reste mesurée sur route) ; expliquer les causes de la consommation.</p><p><b>Risques :</b> les voitures récentes diffèrent des anciennes (le modèle peut dériver) ; les données s\'arrêtent en 1982.</p>','more')}
+  <p class="blink">Ce que ça change pour l'étude : le <b>moment de la prédiction</b> sera la validation de la fiche technique (étape 2), la <b>mesure de l'erreur</b> devra refléter ce coût (étape 5), et la conclusion dira si l'estimation fait mieux que la méthode actuelle.</p></div></section>`}
 function live(st){
   const qs=st.qs||st.ev.map(e=>e.h);const one=qs.length===1;
-  return `<section class="blk" data-block="picture"><div class="bk"><span class="n">1</span>L'étape en une image</div>
+  return `${S===1?brief():''}<section class="blk" data-block="picture"><div class="bk"><span class="n">1</span>L'étape en une image</div>
    <div class="idea">${PIC[st.pic]()}<div><p>${st.cap}</p>${fold('more'+S,'En savoir plus',st.more,'more')}</div></div></section>
   <section class="blk" data-block="establish"><div class="bk"><span class="n">2</span>Ce que l'étape doit établir</div>
    <p class="feeds">${st.prepares}</p>
