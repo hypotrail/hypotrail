@@ -748,3 +748,14 @@ its warning.
   must also cover these transitions, as Copilot's L1 does (R3): options "On continue" and
   "Expliquer d'abord" (from the engine's `option_labels`), so the junior never has to type to
   move on. Noted only, not fixed.
+- **R43. "Le graphique tourne dans le chat" is the wrong wording (owner remark, 2026-10-28).**
+  The running card of Now says "En calcul · … · Le graphique tourne dans le chat ; rien à
+  répondre maintenant." Nothing runs "in the chat" and it is not always a chart: the agent
+  runs a computation through the CLI and the result appears in the panel. Say instead "Calcul
+  en cours, lancé depuis le chat. Le résultat s'affichera ici ; rien à répondre maintenant."
+  (EN "Computing, started from the chat. The result will appear here; nothing to answer
+  yet."), naming what is computed when the engine says so (e.g. "résumé de la cible"). Also on
+  the same screen: the limit line speaks of "prédictions hors pli … pour comparer les modèles"
+  at the exploration step, before any model exists; the limit line must fit the current step
+  (here: "Ces graphiques lisent la cible des lignes de développement : chaque regard est
+  compté."). Noted only, not fixed.
