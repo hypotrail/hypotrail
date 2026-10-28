@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/auto mpg",
    "revision": 38,
-   "updated": "2026-10-28T03:56:14.542726+00:00",
+   "updated": "2026-10-28T08:41:29.054481+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
@@ -294,6 +294,10 @@
     "recommended": null,
     "question": "Do you adopt this decision?",
     "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change.",
+    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Choice (11 of 13).",
+    "evidence": [
+     "evaluate.regression"
+    ],
     "pause": {
      "schema": "hypotrail.pause/1",
      "kind": "decision",
@@ -348,7 +352,7 @@
      "restatement": "Adopt the linear model.",
      "rationale": "Lower error on later years.",
      "revision": 38,
-     "created": "2026-10-28T03:56:14.542687+00:00",
+     "created": "2026-10-28T08:41:29.054444+00:00",
      "labels": null,
      "label": "Adopt the linear model.",
      "origin": {
@@ -372,7 +376,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-28T03:55:54.672455+00:00",
+      "time": "2026-10-28T08:41:07.035821+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -411,7 +415,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-28T03:55:55.874917+00:00",
+      "time": "2026-10-28T08:41:08.128187+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -452,7 +456,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-28T03:55:57.311814+00:00",
+      "time": "2026-10-28T08:41:09.596896+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -485,7 +489,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-28T03:55:58.911981+00:00",
+      "time": "2026-10-28T08:41:11.152609+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -523,7 +527,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-28T03:56:00.474084+00:00",
+      "time": "2026-10-28T08:41:12.835797+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -556,7 +560,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 33,
-      "time": "2026-10-28T03:56:11.616756+00:00",
+      "time": "2026-10-28T08:41:25.460077+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -960,7 +964,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_284db43c31758f9aef75cd0b",
-     "exposure_id": "x_4a1dec5f773e431989c9868fa07ef3c4",
+     "exposure_id": "x_c2ad1d94ea014d549d681b3d59631f8b",
      "started_revision": 26,
      "integrity": "ok"
     },
@@ -1110,7 +1114,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_622dd0c704d6af123eea761a",
-     "exposure_id": "x_32e7745788f04bfcab03fd7c7d664a62",
+     "exposure_id": "x_f16effacc46c4553acc3ea5584b53063",
      "started_revision": 24,
      "integrity": "ok"
     },
@@ -1348,7 +1352,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_5f95a7d242e4ea751ed82afb",
-     "exposure_id": "x_d2c78dfa52c04a4893acfdf035468c13",
+     "exposure_id": "x_8907b2a8e5ee4d5c9959b90f5a363514",
      "started_revision": 22,
      "integrity": "ok"
     },
@@ -2592,7 +2596,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_808e66ec55e19cf01a72e71c",
-     "exposure_id": "x_99bd9f5de8564681b8020a0d837f08e7",
+     "exposure_id": "x_fb7771ea7cc44e52980db128563e00d2",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -2718,7 +2722,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_75c47b1ef767a30eb39cdb4d",
-     "exposure_id": "x_52d9980c1b08493681736382b40d8c48",
+     "exposure_id": "x_bebcd1f7b1a248cdb0b6e11d4b4ebedc",
      "started_revision": 20,
      "integrity": "ok"
     },
@@ -2788,7 +2792,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_305370681065d9971a93f227",
-     "exposure_id": "x_8b3dc2868e29414a98d0e0c612945512",
+     "exposure_id": "x_37b2d0afdc6b4c5da372bb20091ca3df",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -2854,7 +2858,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_f37508d21e9ebda7c2ebce28",
-     "exposure_id": "x_d28d611eb5c34a90a34cea75b4c138bd",
+     "exposure_id": "x_f6c10ac23af84fba8c742ffa1a4415b0",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -3204,7 +3208,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_952532c3c79c0a600a6ca16b",
-     "exposure_id": "x_61858eba932d4b3ea3ae1bfda08cbcc1",
+     "exposure_id": "x_e83b49a9c8254dd6a9d61716998c9281",
      "started_revision": 36,
      "integrity": "ok"
     },
@@ -3284,7 +3288,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_aa1477c41bc44c975f9888ce",
-     "exposure_id": "x_88f4b8a2c6564000b4bced2733ae15d8",
+     "exposure_id": "x_7a6a4f2ec2774a36930c782d6f7d339b",
      "started_revision": 28,
      "integrity": "ok"
     },
@@ -3429,7 +3433,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_2033db067e905124ef78ea82",
-     "exposure_id": "x_8e1d5ee7a2cf40418d1fe2c35d6e087a",
+     "exposure_id": "x_47c44609b2554d82b2056062bc2bc790",
      "started_revision": 30,
      "integrity": "ok"
     },
@@ -3584,7 +3588,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_9ef87905207eafeced71da38",
-     "exposure_id": "x_86fb002b37384d54aff3b3870003b17c",
+     "exposure_id": "x_33ddf07a141d49988388dd7f8fc224b1",
      "started_revision": 34,
      "integrity": "ok"
     },
@@ -3677,7 +3681,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ea1ff066194e9ce5fbc1533b",
-     "exposure_id": "x_270b1faee20342e6b3f2fff0e312a1c4",
+     "exposure_id": "x_2f4fba9b182d4f509b938a8e60067950",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -3768,7 +3772,7 @@
       "last_ok_revision": 38,
       "path": "reports/study.html",
       "revision": 38,
-      "sha256": "2f369cdbda9601cfceddbdbe433d8bf6aa8269e84860af596c9fd2ec70548ede",
+      "sha256": "e3eba4531eb5da00838b73229af5ac092c1b8c8ffa7f2433ce5dba5019aedea1",
       "status": "ok",
       "template_version": 4,
       "user_edits_preserved": [],

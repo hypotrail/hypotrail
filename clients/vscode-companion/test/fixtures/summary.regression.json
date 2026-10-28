@@ -87,6 +87,8 @@
    "recommended": null,
    "question": "Do you adopt this decision?",
    "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Choice (11 of 13).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "decision",
@@ -143,7 +145,8 @@
     "origin": {
      "channel": "webview"
     },
-    "data_contingent": false
+    "data_contingent": false,
+    "evidence": []
    }
   ],
   "decisions": {
@@ -698,7 +701,10 @@
     "junior_digest": null,
     "headlines": {},
     "data_contingent": {},
-    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before.",
+    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Choice (11 of 13).",
+    "step_limit": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error.",
+    "criterion_words": "validation error at least 10% below the reference (predict the mean)"
    },
    "fr": null
   },
@@ -748,6 +754,11 @@
    "configurations": {
     "tried": 2,
     "reference": true
+   },
+   "variants": {
+    "used": 1,
+    "max": 3,
+    "remaining": 2
    }
   },
   "sample": {
@@ -765,6 +776,20 @@
    "recorded": true
   },
   "headlines": {},
-  "criterion_configurations": null
+  "criterion_configurations": null,
+  "data_structure": {
+   "duplicates": {
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": [
+    {
+     "column": "car_name",
+     "groups": 254,
+     "rows_in_repeated_groups": 107
+    }
+   ]
+  },
+  "quality_verdicts": null
  }
 }

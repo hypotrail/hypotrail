@@ -14,7 +14,7 @@
   "schema": "hypotrail.evidence/1",
   "ok": true,
   "study": "/studies/auto mpg cv",
-  "revision": 45,
+  "revision": 71,
   "task": "regression",
   "results": [
    {
@@ -30,8 +30,20 @@
     "params": {},
     "upstream": {},
     "downstream": [
+     "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
      "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
      "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
+     "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+     "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+     "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+     "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+     "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+     "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+     "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+     "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+     "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+     "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+     "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
      "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
      "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
      "62f774885fc62eaccdd876e9c57560540b145f768a6c6b0988466d100fa6344e",
@@ -40,10 +52,10 @@
      "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
      "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520"
     ],
-    "created": "2026-10-28T06:12:34.966272+00:00",
+    "created": "2026-10-28T08:43:27.946877+00:00",
     "started_revision": 10,
     "execution_id": "e_45e56db55964c2ea7d665907",
-    "exposure_id": "x_b1a2a87b8f7f4bd78940fbdd52dc4762",
+    "exposure_id": "x_2b9471f7e09041fe899fdb42a5ef837d",
     "values": {
      "method": "temporal_folds",
      "folds": 5,
@@ -170,10 +182,10 @@
     },
     "upstream": {},
     "downstream": [],
-    "created": "2026-10-28T06:12:36.230047+00:00",
+    "created": "2026-10-28T08:43:29.357013+00:00",
     "started_revision": 12,
     "execution_id": "e_ce9ad9e64710577437be7e6c",
-    "exposure_id": "x_2bf5ba2d1d8f4e6bab12b7ef62bdd951",
+    "exposure_id": "x_380f68b02edb41b8a2f6aebe9f4e49ee",
     "values": {
      "partition": "development",
      "n_rows": 318,
@@ -1394,6 +1406,185 @@
     }
    },
    {
+    "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+    "activity": "eda.distribution",
+    "slot": "eda.distribution:horsepower",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 318,
+    "params": {
+     "column": "horsepower"
+    },
+    "upstream": {
+     "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+    },
+    "downstream": [],
+    "created": "2026-10-28T08:43:30.682534+00:00",
+    "started_revision": 14,
+    "execution_id": "e_0eee3a0bb608847ca1ac05a7",
+    "exposure_id": "x_57ad4703cf484ebfb43e186f3ee0199f",
+    "values": {
+     "partition": "train",
+     "column": "horsepower",
+     "role": "feature",
+     "type": "numeric",
+     "kind": "numeric",
+     "n_rows": 318,
+     "n_missing": 0,
+     "special_values": [
+      {
+       "value": "?",
+       "meaning": "Missing value.",
+       "n_rows": 6,
+       "share": 0.018867924528301886
+      }
+     ],
+     "numeric": {
+      "n": 312,
+      "min": 46.0,
+      "q25": 76.75,
+      "median": 95.0,
+      "q75": 125.0,
+      "max": 230.0,
+      "mean": 104.53525641025641,
+      "sd": 37.5492650533052,
+      "n_bins": 10,
+      "bin_width": 18.4,
+      "bins": [
+       {
+        "low": 46.0,
+        "high": 64.4,
+        "n_rows": 19,
+        "share": 0.059748427672955975,
+        "closed": "left"
+       },
+       {
+        "low": 64.4,
+        "high": 82.8,
+        "n_rows": 76,
+        "share": 0.2389937106918239,
+        "closed": "left"
+       },
+       {
+        "low": 82.8,
+        "high": 101.19999999999999,
+        "n_rows": 96,
+        "share": 0.3018867924528302,
+        "closed": "left"
+       },
+       {
+        "low": 101.19999999999999,
+        "high": 119.6,
+        "n_rows": 38,
+        "share": 0.11949685534591195,
+        "closed": "left"
+       },
+       {
+        "low": 119.6,
+        "high": 138.0,
+        "n_rows": 15,
+        "share": 0.04716981132075472,
+        "closed": "left"
+       },
+       {
+        "low": 138.0,
+        "high": 156.39999999999998,
+        "n_rows": 37,
+        "share": 0.11635220125786164,
+        "closed": "left"
+       },
+       {
+        "low": 156.39999999999998,
+        "high": 174.79999999999998,
+        "n_rows": 10,
+        "share": 0.031446540880503145,
+        "closed": "left"
+       },
+       {
+        "low": 174.79999999999998,
+        "high": 193.2,
+        "n_rows": 13,
+        "share": 0.040880503144654086,
+        "closed": "left"
+       },
+       {
+        "low": 193.2,
+        "high": 211.6,
+        "n_rows": 3,
+        "share": 0.009433962264150943,
+        "closed": "left"
+       },
+       {
+        "low": 211.6,
+        "high": 230.0,
+        "n_rows": 5,
+        "share": 0.015723270440251572,
+        "closed": "both"
+       }
+      ],
+      "zeros": {
+       "n_rows": 0,
+       "share": 0.0
+      },
+      "skewed": false,
+      "log_bins": null
+     },
+     "groups": null,
+     "n_groups": null,
+     "max_groups": 20,
+     "other": null,
+     "min_group_rows": 30,
+     "warnings": [],
+     "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+     "question": "How are the values of horsepower distributed among the development rows?"
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Distribution on "
+      },
+      {
+       "text": "318",
+       "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+       "path": "n_rows",
+       "value": 318,
+       "format": "int"
+      },
+      {
+       "text": " development rows"
+      }
+     ]
+    },
+    "question_junior": "How are the values of horsepower distributed among the development rows?",
+    "texts": {
+     "en": {
+      "question": "How are the values of horsepower distributed among the development rows?",
+      "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {
+       "None=?": "Missing value."
+      }
+     },
+     "fr": {
+      "question": "Comment les valeurs de horsepower se répartissent-elles parmi les lignes de l'échantillon de développement ?",
+      "note": "Effectifs des lignes de l'échantillon de développement seulement. Une distribution décrit cet échantillon ; ce n'est pas un taux du résultat et elle ne dit rien des causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {
+       "None=?": null
+      }
+     }
+    }
+   },
+   {
     "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
     "activity": "eda.target_summary",
     "slot": "eda.target_summary",
@@ -1408,10 +1599,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T06:12:39.780606+00:00",
-    "started_revision": 16,
-    "execution_id": "e_2ab8c63a63b208bd8731b8b3",
-    "exposure_id": "x_859c02c5d5e24f8fb97350185ad16627",
+    "created": "2026-10-28T08:43:34.635310+00:00",
+    "started_revision": 18,
+    "execution_id": "e_9c2f7f2c69f91be9c07e4331",
+    "exposure_id": "x_3e3bd70567ee4e0eb9c4740fcc90dea6",
     "values": {
      "partition": "train",
      "target": "mpg",
@@ -1509,10 +1700,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T06:12:40.865969+00:00",
-    "started_revision": 18,
-    "execution_id": "e_9c2f7f2c69f91be9c07e4331",
-    "exposure_id": "x_02f84648d89d446e8152f7e9defa36ba",
+    "created": "2026-10-28T08:43:35.931984+00:00",
+    "started_revision": 20,
+    "execution_id": "e_c4434080afdaeb4edd1ce5b5",
+    "exposure_id": "x_641b8da74a4e45c0b28298a368476af8",
     "values": {
      "partition": "train",
      "n_rows": 318,
@@ -1578,6 +1769,2064 @@
     }
    },
    {
+    "result_id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+    "activity": "eda.mean_by",
+    "slot": "eda.mean_by:cylinders",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 318,
+    "params": {
+     "column": "cylinders"
+    },
+    "upstream": {
+     "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+    },
+    "downstream": [],
+    "created": "2026-10-28T08:43:37.198635+00:00",
+    "started_revision": 22,
+    "execution_id": "e_afbcc5b5c6d6b10afa774b86",
+    "exposure_id": "x_bc6416a05a8248868d62ab0dc7b35b71",
+    "values": {
+     "partition": "train",
+     "column": "cylinders",
+     "target": "mpg",
+     "unit": "mpg",
+     "n_rows": 318,
+     "overall_mean": 23.52578616352201,
+     "binned": false,
+     "binning": null,
+     "groups": [
+      {
+       "value": "3",
+       "n_rows": 3,
+       "mean": 19.5,
+       "sd": 1.8027756377319946,
+       "small_count": true,
+       "interval": {
+        "low": 15.021657052485201,
+        "high": 23.978342947514797,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 15.433333333333332,
+        "high": 31.53333333333333
+       }
+      },
+      {
+       "value": "4",
+       "n_rows": 165,
+       "mean": 29.12969696969697,
+       "sd": 5.777808938267595,
+       "small_count": false,
+       "interval": {
+        "low": 28.2415477321143,
+        "high": 30.01784620727964,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 22.455151515151513,
+        "high": 24.387878787878787
+       }
+      },
+      {
+       "value": "5",
+       "n_rows": 3,
+       "mean": 27.366666666666664,
+       "sd": 8.22820353013544,
+       "small_count": true,
+       "interval": {
+        "low": 6.926675977500022,
+        "high": 47.80665735583331,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.833333333333332,
+        "high": 33.8
+       }
+      },
+      {
+       "value": "6",
+       "n_rows": 67,
+       "mean": 19.964179104477612,
+       "sd": 4.116732357194099,
+       "small_count": false,
+       "interval": {
+        "low": 18.960029182562494,
+        "high": 20.96832902639273,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.85373134328358,
+        "high": 24.74179104477612
+       }
+      },
+      {
+       "value": "8",
+       "n_rows": 80,
+       "mean": 14.9575,
+       "sd": 2.7897540838040307,
+       "small_count": false,
+       "interval": {
+        "low": 14.336670640330118,
+        "high": 15.578329359669882,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 22.5625,
+        "high": 25.03625
+       }
+      }
+     ],
+     "min_group_rows": 30,
+     "warnings": [
+      "cylinders = 3: only 3 development rows; its mean is too noisy to read on its own.",
+      "cylinders = 5: only 3 development rows; its mean is too noisy to read on its own."
+     ],
+     "n_groups": 5,
+     "max_groups": 20,
+     "other": null,
+     "note": "Mean target by group on development rows: associations, not effects of the variable.",
+     "question": "Does the mean target differ across the groups of cylinders by more than chance alone draws?",
+     "null_band": {
+      "chart": {
+       "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+       "observed": 14.17219696969697,
+       "null_min": 0.45962121212120977,
+       "null_max": 2.64669776119403,
+       "outside": true
+      },
+      "shuffles": 19,
+      "seed": 20261019,
+      "note": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "5",
+       "result_id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+       "path": "n_groups",
+       "value": 5,
+       "format": "int"
+      },
+      {
+       "text": " groups on "
+      },
+      {
+       "text": "318",
+       "result_id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+       "path": "n_rows",
+       "value": 318,
+       "format": "int"
+      },
+      {
+       "text": " development rows"
+      }
+     ]
+    },
+    "question_junior": "Does the mean target differ across the groups of cylinders by more than chance alone draws?",
+    "texts": {
+     "en": {
+      "question": "Does the mean target differ across the groups of cylinders by more than chance alone draws?",
+      "note": "Mean target by group on development rows: associations, not effects of the variable.",
+      "warnings": [
+       "cylinders = 3: only 3 development rows; its mean is too noisy to read on its own.",
+       "cylinders = 5: only 3 development rows; its mean is too noisy to read on its own."
+      ],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks.",
+      "meanings": {}
+     },
+     "fr": {
+      "question": "La moyenne de la cible diffère-t-elle entre les groupes de cylinders plus que le hasard seul ne le produit ?",
+      "note": "Moyenne de la cible par groupe sur les lignes de l'échantillon de développement : des associations, pas des effets de la variable.",
+      "warnings": [
+       "cylinders = 3 : seulement 3 lignes de l'échantillon de développement ; sa moyenne est trop bruitée pour être lue seule.",
+       "cylinders = 5 : seulement 3 lignes de l'échantillon de développement ; sa moyenne est trop bruitée pour être lue seule."
+      ],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": "La bande est l'étendue du même chiffre après avoir mélangé la cible entre les lignes de l'échantillon de développement 19 fois (graine fixe) : ce que le hasard seul produit. Un motif à l'intérieur ne se distingue pas du hasard ; un motif au-dessus de chaque mélange arrive par hasard environ une fois sur 20 regards.",
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+    "activity": "eda.mean_by",
+    "slot": "eda.mean_by:displacement",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 318,
+    "params": {
+     "column": "displacement"
+    },
+    "upstream": {
+     "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+    },
+    "downstream": [],
+    "created": "2026-10-28T08:43:38.662184+00:00",
+    "started_revision": 24,
+    "execution_id": "e_061502fb4d6e55bbb43de53a",
+    "exposure_id": "x_dcbd5f69906747579ff3d0c0215356cd",
+    "values": {
+     "partition": "train",
+     "column": "displacement",
+     "target": "mpg",
+     "unit": "mpg",
+     "n_rows": 318,
+     "overall_mean": 23.52578616352201,
+     "binned": true,
+     "binning": "5 development quantile bins",
+     "groups": [
+      {
+       "value": "68 to 98 cubic inches (assumed)",
+       "n_rows": 74,
+       "mean": 31.7972972972973,
+       "sd": 6.259042181811146,
+       "small_count": false,
+       "interval": {
+        "low": 30.347194831750624,
+        "high": 33.247399762843976,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 22.37162162162162,
+        "high": 24.5972972972973
+       }
+      },
+      {
+       "value": "100 to 121 cubic inches (assumed)",
+       "n_rows": 53,
+       "mean": 27.535849056603777,
+       "sd": 5.1080289115659205,
+       "small_count": false,
+       "interval": {
+        "low": 26.127901916870496,
+        "high": 28.943796196337058,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 22.25094339622642,
+        "high": 24.80754716981132
+       }
+      },
+      {
+       "value": "122 to 200 cubic inches (assumed)",
+       "n_rows": 67,
+       "mean": 24.577611940298503,
+       "sd": 4.163361873480642,
+       "small_count": false,
+       "interval": {
+        "low": 23.562088185674476,
+        "high": 25.59313569492253,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.65223880597015,
+        "high": 24.555223880597012
+       }
+      },
+      {
+       "value": "225 to 304 cubic inches (assumed)",
+       "n_rows": 64,
+       "mean": 17.890625,
+       "sd": 3.498286145011719,
+       "small_count": false,
+       "interval": {
+        "low": 17.016779120885563,
+        "high": 18.764470879114437,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 22.390625,
+        "high": 24.3875
+       }
+      },
+      {
+       "value": "305 to 455 cubic inches (assumed)",
+       "n_rows": 60,
+       "mean": 14.618333333333332,
+       "sd": 2.7119629307667736,
+       "small_count": false,
+       "interval": {
+        "low": 13.917759020855977,
+        "high": 15.318907645810688,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.883333333333333,
+        "high": 25.413333333333334
+       }
+      }
+     ],
+     "min_group_rows": 30,
+     "warnings": [],
+     "n_groups": 5,
+     "max_groups": 20,
+     "other": null,
+     "note": "Mean target by group on development rows: associations, not effects of the variable.",
+     "question": "Does the mean target differ across the groups of displacement by more than chance alone draws?",
+     "null_band": {
+      "chart": {
+       "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+       "observed": 17.178963963963966,
+       "null_min": 0.7744791666666657,
+       "null_max": 3.2027611940298506,
+       "outside": true
+      },
+      "shuffles": 19,
+      "seed": 20261019,
+      "note": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "5",
+       "result_id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+       "path": "n_groups",
+       "value": 5,
+       "format": "int"
+      },
+      {
+       "text": " groups on "
+      },
+      {
+       "text": "318",
+       "result_id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+       "path": "n_rows",
+       "value": 318,
+       "format": "int"
+      },
+      {
+       "text": " development rows"
+      }
+     ]
+    },
+    "question_junior": "Does the mean target differ across the groups of displacement by more than chance alone draws?",
+    "texts": {
+     "en": {
+      "question": "Does the mean target differ across the groups of displacement by more than chance alone draws?",
+      "note": "Mean target by group on development rows: associations, not effects of the variable.",
+      "warnings": [],
+      "binning": "5 development quantile bins",
+      "signal_questions": {},
+      "null_band": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks.",
+      "meanings": {}
+     },
+     "fr": {
+      "question": "La moyenne de la cible diffère-t-elle entre les groupes de displacement plus que le hasard seul ne le produit ?",
+      "note": "Moyenne de la cible par groupe sur les lignes de l'échantillon de développement : des associations, pas des effets de la variable.",
+      "warnings": [],
+      "binning": "5 classes de quantiles de l'échantillon de développement",
+      "signal_questions": {},
+      "null_band": "La bande est l'étendue du même chiffre après avoir mélangé la cible entre les lignes de l'échantillon de développement 19 fois (graine fixe) : ce que le hasard seul produit. Un motif à l'intérieur ne se distingue pas du hasard ; un motif au-dessus de chaque mélange arrive par hasard environ une fois sur 20 regards.",
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+    "activity": "eda.mean_by",
+    "slot": "eda.mean_by:horsepower",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 318,
+    "params": {
+     "column": "horsepower"
+    },
+    "upstream": {
+     "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+    },
+    "downstream": [],
+    "created": "2026-10-28T08:43:40.068752+00:00",
+    "started_revision": 26,
+    "execution_id": "e_8b6b767c3df161e7401893c1",
+    "exposure_id": "x_28283a1e53b247888c1a52b8fa34c24f",
+    "values": {
+     "partition": "train",
+     "column": "horsepower",
+     "target": "mpg",
+     "unit": "mpg",
+     "n_rows": 318,
+     "overall_mean": 23.52578616352201,
+     "binned": true,
+     "binning": "5 development quantile bins",
+     "groups": [
+      {
+       "value": "46 to 74 horsepower (assumed)",
+       "n_rows": 63,
+       "mean": 32.85238095238095,
+       "sd": 5.821424754741335,
+       "small_count": false,
+       "interval": {
+        "low": 31.38627411351375,
+        "high": 34.318487791248145,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.388888888888886,
+        "high": 25.382539682539683
+       }
+      },
+      {
+       "value": "75 to 88 horsepower (assumed)",
+       "n_rows": 66,
+       "mean": 27.1030303030303,
+       "sd": 5.155220496574163,
+       "small_count": false,
+       "interval": {
+        "low": 25.83571892819085,
+        "high": 28.370341677869753,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.028787878787877,
+        "high": 24.937878787878788
+       }
+      },
+      {
+       "value": "89 to 100 horsepower (assumed)",
+       "n_rows": 62,
+       "mean": 22.641935483870967,
+       "sd": 4.5602900535841595,
+       "small_count": false,
+       "interval": {
+        "low": 21.48383865548684,
+        "high": 23.800032312255095,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 22.36935483870968,
+        "high": 24.698387096774194
+       }
+      },
+      {
+       "value": "103 to 140 horsepower (assumed)",
+       "n_rows": 60,
+       "mean": 19.801666666666666,
+       "sd": 4.182428605433453,
+       "small_count": false,
+       "interval": {
+        "low": 18.72123079068339,
+        "high": 20.882102542649942,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.923333333333336,
+        "high": 25.43
+       }
+      },
+      {
+       "value": "142 to 230 horsepower (assumed)",
+       "n_rows": 61,
+       "mean": 14.144262295081967,
+       "sd": 1.8857822948018095,
+       "small_count": false,
+       "interval": {
+        "low": 13.66129102353331,
+        "high": 14.627233566630624,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 22.48360655737705,
+        "high": 25.045901639344265
+       }
+      },
+      {
+       "value": "? (special value)",
+       "n_rows": 6,
+       "mean": 28.0,
+       "sd": 7.886951248739908,
+       "small_count": true,
+       "interval": {
+        "low": 19.723152269450203,
+        "high": 36.2768477305498,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 19.116666666666667,
+        "high": 30.283333333333335
+       }
+      }
+     ],
+     "min_group_rows": 30,
+     "warnings": [
+      "horsepower = ? (special value): only 6 development rows; its mean is too noisy to read on its own."
+     ],
+     "n_groups": 6,
+     "max_groups": 20,
+     "other": null,
+     "note": "Mean target by group on development rows: associations, not effects of the variable.",
+     "question": "Does the mean target differ across the groups of horsepower by more than chance alone draws?",
+     "null_band": {
+      "chart": {
+       "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+       "observed": 18.708118657298982,
+       "null_min": 1.1031818181818132,
+       "null_max": 4.241212121212122,
+       "outside": true
+      },
+      "shuffles": 19,
+      "seed": 20261019,
+      "note": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "6",
+       "result_id": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+       "path": "n_groups",
+       "value": 6,
+       "format": "int"
+      },
+      {
+       "text": " groups on "
+      },
+      {
+       "text": "318",
+       "result_id": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+       "path": "n_rows",
+       "value": 318,
+       "format": "int"
+      },
+      {
+       "text": " development rows"
+      }
+     ]
+    },
+    "question_junior": "Does the mean target differ across the groups of horsepower by more than chance alone draws?",
+    "texts": {
+     "en": {
+      "question": "Does the mean target differ across the groups of horsepower by more than chance alone draws?",
+      "note": "Mean target by group on development rows: associations, not effects of the variable.",
+      "warnings": [
+       "horsepower = ? (special value): only 6 development rows; its mean is too noisy to read on its own."
+      ],
+      "binning": "5 development quantile bins",
+      "signal_questions": {},
+      "null_band": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks.",
+      "meanings": {}
+     },
+     "fr": {
+      "question": "La moyenne de la cible diffère-t-elle entre les groupes de horsepower plus que le hasard seul ne le produit ?",
+      "note": "Moyenne de la cible par groupe sur les lignes de l'échantillon de développement : des associations, pas des effets de la variable.",
+      "warnings": [
+       "horsepower = ? (special value) : seulement 6 lignes de l'échantillon de développement ; sa moyenne est trop bruitée pour être lue seule."
+      ],
+      "binning": "5 classes de quantiles de l'échantillon de développement",
+      "signal_questions": {},
+      "null_band": "La bande est l'étendue du même chiffre après avoir mélangé la cible entre les lignes de l'échantillon de développement 19 fois (graine fixe) : ce que le hasard seul produit. Un motif à l'intérieur ne se distingue pas du hasard ; un motif au-dessus de chaque mélange arrive par hasard environ une fois sur 20 regards.",
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+    "activity": "eda.mean_by",
+    "slot": "eda.mean_by:weight",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 318,
+    "params": {
+     "column": "weight"
+    },
+    "upstream": {
+     "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+    },
+    "downstream": [],
+    "created": "2026-10-28T08:43:41.399300+00:00",
+    "started_revision": 28,
+    "execution_id": "e_a633b01aa452bb85d7c21822",
+    "exposure_id": "x_d99e7ca166fd4af38b74042153a5593b",
+    "values": {
+     "partition": "train",
+     "column": "weight",
+     "target": "mpg",
+     "unit": "mpg",
+     "n_rows": 318,
+     "overall_mean": 23.52578616352201,
+     "binned": true,
+     "binning": "5 development quantile bins",
+     "groups": [
+      {
+       "value": "1613 to 2164 pounds (assumed)",
+       "n_rows": 64,
+       "mean": 33.1765625,
+       "sd": 5.787664555924502,
+       "small_count": false,
+       "interval": {
+        "low": 31.730846908923223,
+        "high": 34.62227809107678,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.703125,
+        "high": 24.732812499999998
+       }
+      },
+      {
+       "value": "2171 to 2582 pounds (assumed)",
+       "n_rows": 63,
+       "mean": 26.976190476190474,
+       "sd": 4.525223725915134,
+       "small_count": false,
+       "interval": {
+        "low": 25.836527639087794,
+        "high": 28.115853313293155,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.293650793650794,
+        "high": 24.644444444444442
+       }
+      },
+      {
+       "value": "2585 to 3086 pounds (assumed)",
+       "n_rows": 64,
+       "mean": 24.2140625,
+       "sd": 4.637831567319516,
+       "small_count": false,
+       "interval": {
+        "low": 23.05556664370536,
+        "high": 25.37255835629464,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.9375,
+        "high": 24.815625
+       }
+      },
+      {
+       "value": "3121 to 3755 pounds (assumed)",
+       "n_rows": 63,
+       "mean": 18.917460317460318,
+       "sd": 3.691819189756117,
+       "small_count": false,
+       "interval": {
+        "low": 17.987687694778174,
+        "high": 19.84723294014246,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.56031746031746,
+        "high": 24.647619047619045
+       }
+      },
+      {
+       "value": "3781 to 5140 pounds (assumed)",
+       "n_rows": 64,
+       "mean": 14.3265625,
+       "sd": 2.0800825828767717,
+       "small_count": false,
+       "interval": {
+        "low": 13.80697333035576,
+        "high": 14.84615166964424,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 22.1859375,
+        "high": 25.1828125
+       }
+      }
+     ],
+     "min_group_rows": 30,
+     "warnings": [],
+     "n_groups": 5,
+     "max_groups": 20,
+     "other": null,
+     "note": "Mean target by group on development rows: associations, not effects of the variable.",
+     "question": "Does the mean target differ across the groups of weight by more than chance alone draws?",
+     "null_band": {
+      "chart": {
+       "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+       "observed": 18.85,
+       "null_min": 0.7513144841269828,
+       "null_max": 3.480307539682542,
+       "outside": true
+      },
+      "shuffles": 19,
+      "seed": 20261019,
+      "note": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "5",
+       "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+       "path": "n_groups",
+       "value": 5,
+       "format": "int"
+      },
+      {
+       "text": " groups on "
+      },
+      {
+       "text": "318",
+       "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+       "path": "n_rows",
+       "value": 318,
+       "format": "int"
+      },
+      {
+       "text": " development rows"
+      }
+     ]
+    },
+    "question_junior": "Does the mean target differ across the groups of weight by more than chance alone draws?",
+    "texts": {
+     "en": {
+      "question": "Does the mean target differ across the groups of weight by more than chance alone draws?",
+      "note": "Mean target by group on development rows: associations, not effects of the variable.",
+      "warnings": [],
+      "binning": "5 development quantile bins",
+      "signal_questions": {},
+      "null_band": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks.",
+      "meanings": {}
+     },
+     "fr": {
+      "question": "La moyenne de la cible diffère-t-elle entre les groupes de weight plus que le hasard seul ne le produit ?",
+      "note": "Moyenne de la cible par groupe sur les lignes de l'échantillon de développement : des associations, pas des effets de la variable.",
+      "warnings": [],
+      "binning": "5 classes de quantiles de l'échantillon de développement",
+      "signal_questions": {},
+      "null_band": "La bande est l'étendue du même chiffre après avoir mélangé la cible entre les lignes de l'échantillon de développement 19 fois (graine fixe) : ce que le hasard seul produit. Un motif à l'intérieur ne se distingue pas du hasard ; un motif au-dessus de chaque mélange arrive par hasard environ une fois sur 20 regards.",
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+    "activity": "eda.mean_by",
+    "slot": "eda.mean_by:acceleration",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 318,
+    "params": {
+     "column": "acceleration"
+    },
+    "upstream": {
+     "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+    },
+    "downstream": [],
+    "created": "2026-10-28T08:43:42.785165+00:00",
+    "started_revision": 30,
+    "execution_id": "e_88662ab87ecb5884e6688116",
+    "exposure_id": "x_1ce8a1cba31f457e93152091ffebfd86",
+    "values": {
+     "partition": "train",
+     "column": "acceleration",
+     "target": "mpg",
+     "unit": "mpg",
+     "n_rows": 318,
+     "overall_mean": 23.52578616352201,
+     "binned": true,
+     "binning": "5 development quantile bins",
+     "groups": [
+      {
+       "value": "8.5 to 13.5 seconds (assumed)",
+       "n_rows": 72,
+       "mean": 17.422222222222224,
+       "sd": 5.5266886966719735,
+       "small_count": false,
+       "interval": {
+        "low": 16.123514048992632,
+        "high": 18.720930395451816,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.980555555555554,
+        "high": 24.679166666666667
+       }
+      },
+      {
+       "value": "13.6 to 14.9 seconds (assumed)",
+       "n_rows": 59,
+       "mean": 24.030508474576273,
+       "sd": 7.667087165218931,
+       "small_count": false,
+       "interval": {
+        "low": 22.032454677023622,
+        "high": 26.028562272128923,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 22.79491525423729,
+        "high": 25.35423728813559
+       }
+      },
+      {
+       "value": "15 to 16 seconds (assumed)",
+       "n_rows": 61,
+       "mean": 23.65737704918033,
+       "sd": 6.562963228511784,
+       "small_count": false,
+       "interval": {
+        "low": 21.97652411915824,
+        "high": 25.33822997920242,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 22.02622950819672,
+        "high": 24.76065573770492
+       }
+      },
+      {
+       "value": "16.2 to 18 seconds (assumed)",
+       "n_rows": 66,
+       "mean": 26.948484848484846,
+       "sd": 7.42996516037473,
+       "small_count": false,
+       "interval": {
+        "low": 25.121971439667306,
+        "high": 28.774998257302386,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.172727272727276,
+        "high": 24.839393939393936
+       }
+      },
+      {
+       "value": "18.1 to 24.8 seconds (assumed)",
+       "n_rows": 60,
+       "mean": 26.455,
+       "sd": 7.822878767013448,
+       "small_count": false,
+       "interval": {
+        "low": 24.43413612622846,
+        "high": 28.475863873771537,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.835,
+        "high": 24.598333333333336
+       }
+      }
+     ],
+     "min_group_rows": 30,
+     "warnings": [],
+     "n_groups": 5,
+     "max_groups": 20,
+     "other": null,
+     "note": "Mean target by group on development rows: associations, not effects of the variable.",
+     "question": "Does the mean target differ across the groups of acceleration by more than chance alone draws?",
+     "null_band": {
+      "chart": {
+       "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+       "observed": 9.526262626262621,
+       "null_min": 0.9611280911364304,
+       "null_max": 3.5064393939393916,
+       "outside": true
+      },
+      "shuffles": 19,
+      "seed": 20261019,
+      "note": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "5",
+       "result_id": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+       "path": "n_groups",
+       "value": 5,
+       "format": "int"
+      },
+      {
+       "text": " groups on "
+      },
+      {
+       "text": "318",
+       "result_id": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+       "path": "n_rows",
+       "value": 318,
+       "format": "int"
+      },
+      {
+       "text": " development rows"
+      }
+     ]
+    },
+    "question_junior": "Does the mean target differ across the groups of acceleration by more than chance alone draws?",
+    "texts": {
+     "en": {
+      "question": "Does the mean target differ across the groups of acceleration by more than chance alone draws?",
+      "note": "Mean target by group on development rows: associations, not effects of the variable.",
+      "warnings": [],
+      "binning": "5 development quantile bins",
+      "signal_questions": {},
+      "null_band": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks.",
+      "meanings": {}
+     },
+     "fr": {
+      "question": "La moyenne de la cible diffère-t-elle entre les groupes de acceleration plus que le hasard seul ne le produit ?",
+      "note": "Moyenne de la cible par groupe sur les lignes de l'échantillon de développement : des associations, pas des effets de la variable.",
+      "warnings": [],
+      "binning": "5 classes de quantiles de l'échantillon de développement",
+      "signal_questions": {},
+      "null_band": "La bande est l'étendue du même chiffre après avoir mélangé la cible entre les lignes de l'échantillon de développement 19 fois (graine fixe) : ce que le hasard seul produit. Un motif à l'intérieur ne se distingue pas du hasard ; un motif au-dessus de chaque mélange arrive par hasard environ une fois sur 20 regards.",
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+    "activity": "eda.mean_by",
+    "slot": "eda.mean_by:origin",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 318,
+    "params": {
+     "column": "origin"
+    },
+    "upstream": {
+     "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+    },
+    "downstream": [],
+    "created": "2026-10-28T08:43:44.088965+00:00",
+    "started_revision": 32,
+    "execution_id": "e_947162f1b37ea74e53f6086a",
+    "exposure_id": "x_3f7349e6895d44fdace1f5995560d400",
+    "values": {
+     "partition": "train",
+     "column": "origin",
+     "target": "mpg",
+     "unit": "mpg",
+     "n_rows": 318,
+     "overall_mean": 23.52578616352201,
+     "binned": false,
+     "binning": null,
+     "groups": [
+      {
+       "value": "1",
+       "n_rows": 197,
+       "mean": 19.984263959390862,
+       "sd": 6.189087342577385,
+       "small_count": false,
+       "interval": {
+        "low": 19.11463997457913,
+        "high": 20.853887944202594,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 22.885279187817257,
+        "high": 24.252284263959396
+       }
+      },
+      {
+       "value": "2",
+       "n_rows": 58,
+       "mean": 27.55,
+       "sd": 6.703972375691527,
+       "small_count": false,
+       "interval": {
+        "low": 25.787280321281248,
+        "high": 29.312719678718754,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.47241379310345,
+        "high": 25.401724137931037
+       }
+      },
+      {
+       "value": "3",
+       "n_rows": 63,
+       "mean": 30.895238095238096,
+       "sd": 6.281910243975479,
+       "small_count": false,
+       "interval": {
+        "low": 29.31315948770457,
+        "high": 32.47731670277162,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 21.495238095238097,
+        "high": 25.384126984126983
+       }
+      }
+     ],
+     "min_group_rows": 30,
+     "warnings": [],
+     "n_groups": 3,
+     "max_groups": 20,
+     "other": null,
+     "note": "Mean target by group on development rows: associations, not effects of the variable.",
+     "question": "Does the mean target differ across the groups of origin by more than chance alone draws?",
+     "null_band": {
+      "chart": {
+       "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+       "observed": 10.910974135847233,
+       "null_min": 0.6610184513737813,
+       "null_max": 3.0961412151067336,
+       "outside": true
+      },
+      "shuffles": 19,
+      "seed": 20261019,
+      "note": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "3",
+       "result_id": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+       "path": "n_groups",
+       "value": 3,
+       "format": "int"
+      },
+      {
+       "text": " groups on "
+      },
+      {
+       "text": "318",
+       "result_id": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+       "path": "n_rows",
+       "value": 318,
+       "format": "int"
+      },
+      {
+       "text": " development rows"
+      }
+     ]
+    },
+    "question_junior": "Does the mean target differ across the groups of origin by more than chance alone draws?",
+    "texts": {
+     "en": {
+      "question": "Does the mean target differ across the groups of origin by more than chance alone draws?",
+      "note": "Mean target by group on development rows: associations, not effects of the variable.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks.",
+      "meanings": {}
+     },
+     "fr": {
+      "question": "La moyenne de la cible diffère-t-elle entre les groupes de origin plus que le hasard seul ne le produit ?",
+      "note": "Moyenne de la cible par groupe sur les lignes de l'échantillon de développement : des associations, pas des effets de la variable.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": "La bande est l'étendue du même chiffre après avoir mélangé la cible entre les lignes de l'échantillon de développement 19 fois (graine fixe) : ce que le hasard seul produit. Un motif à l'intérieur ne se distingue pas du hasard ; un motif au-dessus de chaque mélange arrive par hasard environ une fois sur 20 regards.",
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
+    "activity": "eda.correlation",
+    "slot": "eda.correlation",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "development",
+    "n_rows": 318,
+    "params": {
+     "partition": "development"
+    },
+    "upstream": {},
+    "downstream": [],
+    "created": "2026-10-28T08:43:45.460060+00:00",
+    "started_revision": 34,
+    "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
+    "exposure_id": "x_5370ec3b5be2409295d80ef5e328f648",
+    "values": {
+     "partition": "development",
+     "n_rows": 318,
+     "target_read": false,
+     "columns": [
+      {
+       "name": "cylinders",
+       "kind": "numeric"
+      },
+      {
+       "name": "displacement",
+       "kind": "numeric"
+      },
+      {
+       "name": "horsepower",
+       "kind": "numeric"
+      },
+      {
+       "name": "weight",
+       "kind": "numeric"
+      },
+      {
+       "name": "acceleration",
+       "kind": "numeric"
+      },
+      {
+       "name": "origin",
+       "kind": "categorical"
+      }
+     ],
+     "order": [
+      "acceleration",
+      "origin",
+      "horsepower",
+      "cylinders",
+      "displacement",
+      "weight"
+     ],
+     "pairs": [
+      {
+       "a": "cylinders",
+       "b": "displacement",
+       "measure": "spearman",
+       "value": 0.9086802777103509,
+       "n_rows": 318,
+       "flag": true
+      },
+      {
+       "a": "cylinders",
+       "b": "horsepower",
+       "measure": "spearman",
+       "value": 0.8142861976119781,
+       "n_rows": 312,
+       "flag": true
+      },
+      {
+       "a": "cylinders",
+       "b": "weight",
+       "measure": "spearman",
+       "value": 0.868971031546768,
+       "n_rows": 318,
+       "flag": true
+      },
+      {
+       "a": "cylinders",
+       "b": "acceleration",
+       "measure": "spearman",
+       "value": -0.46458897637803565,
+       "n_rows": 318,
+       "flag": false
+      },
+      {
+       "a": "cylinders",
+       "b": "origin",
+       "measure": "eta",
+       "value": 0.6140708761612704,
+       "n_rows": 318,
+       "flag": false
+      },
+      {
+       "a": "displacement",
+       "b": "horsepower",
+       "measure": "spearman",
+       "value": 0.8742037139905126,
+       "n_rows": 312,
+       "flag": true
+      },
+      {
+       "a": "displacement",
+       "b": "weight",
+       "measure": "spearman",
+       "value": 0.9438875606480072,
+       "n_rows": 318,
+       "flag": true
+      },
+      {
+       "a": "displacement",
+       "b": "acceleration",
+       "measure": "spearman",
+       "value": -0.4929933302304839,
+       "n_rows": 318,
+       "flag": false
+      },
+      {
+       "a": "displacement",
+       "b": "origin",
+       "measure": "eta",
+       "value": 0.7151187974715895,
+       "n_rows": 318,
+       "flag": false
+      },
+      {
+       "a": "horsepower",
+       "b": "weight",
+       "measure": "spearman",
+       "value": 0.8716545457386615,
+       "n_rows": 312,
+       "flag": true
+      },
+      {
+       "a": "horsepower",
+       "b": "acceleration",
+       "measure": "spearman",
+       "value": -0.6594310544138169,
+       "n_rows": 312,
+       "flag": false
+      },
+      {
+       "a": "horsepower",
+       "b": "origin",
+       "measure": "eta",
+       "value": 0.5333404338589786,
+       "n_rows": 312,
+       "flag": false
+      },
+      {
+       "a": "weight",
+       "b": "acceleration",
+       "measure": "spearman",
+       "value": -0.3895488084700121,
+       "n_rows": 318,
+       "flag": false
+      },
+      {
+       "a": "weight",
+       "b": "origin",
+       "measure": "eta",
+       "value": 0.6333068195198771,
+       "n_rows": 318,
+       "flag": false
+      },
+      {
+       "a": "acceleration",
+       "b": "origin",
+       "measure": "eta",
+       "value": 0.22310102369572654,
+       "n_rows": 318,
+       "flag": false
+      }
+     ],
+     "flagged": [
+      {
+       "a": "displacement",
+       "b": "weight",
+       "measure": "spearman",
+       "value": 0.9438875606480072
+      },
+      {
+       "a": "cylinders",
+       "b": "displacement",
+       "measure": "spearman",
+       "value": 0.9086802777103509
+      },
+      {
+       "a": "displacement",
+       "b": "horsepower",
+       "measure": "spearman",
+       "value": 0.8742037139905126
+      },
+      {
+       "a": "horsepower",
+       "b": "weight",
+       "measure": "spearman",
+       "value": 0.8716545457386615
+      },
+      {
+       "a": "cylinders",
+       "b": "weight",
+       "measure": "spearman",
+       "value": 0.868971031546768
+      },
+      {
+       "a": "cylinders",
+       "b": "horsepower",
+       "measure": "spearman",
+       "value": 0.8142861976119781
+      }
+     ],
+     "n_flagged": 6,
+     "level": 0.8,
+     "measures": {
+      "spearman": "Spearman's rank correlation (two numeric features, signed)",
+      "cramers_v": "Cramér's V, bias-corrected (two categorical features, unsigned)",
+      "eta": "Correlation ratio of the ranks across the categories (a numeric and a categorical feature, unsigned)"
+     },
+     "question": "Do any two predictors carry nearly the same information in the development rows, so that a model would split its weight between them?",
+     "note": "Structural reading of the development rows: the target is not read, so this is not a look at the outcome. An association between two predictors is not an effect on the outcome; a flagged pair only asks whether both are needed."
+    },
+    "headline": null,
+    "question_junior": "Do any two predictors carry nearly the same information in the development rows, so that a model would split its weight between them?",
+    "texts": {
+     "en": {
+      "question": "Do any two predictors carry nearly the same information in the development rows, so that a model would split its weight between them?",
+      "note": "Structural reading of the development rows: the target is not read, so this is not a look at the outcome. An association between two predictors is not an effect on the outcome; a flagged pair only asks whether both are needed.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Deux prédicteurs portent-ils presque la même information dans les lignes de l'échantillon de développement, au point qu'un modèle partagerait son poids entre eux ?",
+      "note": "Lecture structurelle des lignes de l'échantillon de développement : la cible n'est pas lue, ce n'est donc pas un regard sur le résultat. Une association entre deux prédicteurs n'est pas un effet sur le résultat ; une paire signalée demande seulement si les deux sont nécessaires.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+    "activity": "eda.distribution",
+    "slot": "eda.distribution:cylinders",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 318,
+    "params": {
+     "column": "cylinders"
+    },
+    "upstream": {
+     "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+    },
+    "downstream": [],
+    "created": "2026-10-28T08:43:46.913909+00:00",
+    "started_revision": 36,
+    "execution_id": "e_0b8fc9580cdd4e33bc5c14db",
+    "exposure_id": "x_9959f7d5ba9e44d88764beed90cbab13",
+    "values": {
+     "partition": "train",
+     "column": "cylinders",
+     "role": "feature",
+     "type": "integer",
+     "kind": "discrete",
+     "n_rows": 318,
+     "n_missing": 0,
+     "special_values": [],
+     "numeric": null,
+     "groups": [
+      {
+       "value": 3,
+       "n_rows": 3,
+       "share": 0.009433962264150943,
+       "small_count": true
+      },
+      {
+       "value": 4,
+       "n_rows": 165,
+       "share": 0.5188679245283019,
+       "small_count": false
+      },
+      {
+       "value": 5,
+       "n_rows": 3,
+       "share": 0.009433962264150943,
+       "small_count": true
+      },
+      {
+       "value": 6,
+       "n_rows": 67,
+       "share": 0.21069182389937108,
+       "small_count": false
+      },
+      {
+       "value": 8,
+       "n_rows": 80,
+       "share": 0.25157232704402516,
+       "small_count": false
+      }
+     ],
+     "n_groups": 5,
+     "max_groups": 20,
+     "other": null,
+     "min_group_rows": 30,
+     "warnings": [],
+     "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+     "question": "How are the values of cylinders distributed among the development rows?"
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Distribution on "
+      },
+      {
+       "text": "318",
+       "result_id": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+       "path": "n_rows",
+       "value": 318,
+       "format": "int"
+      },
+      {
+       "text": " development rows"
+      }
+     ]
+    },
+    "question_junior": "How are the values of cylinders distributed among the development rows?",
+    "texts": {
+     "en": {
+      "question": "How are the values of cylinders distributed among the development rows?",
+      "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Comment les valeurs de cylinders se répartissent-elles parmi les lignes de l'échantillon de développement ?",
+      "note": "Effectifs des lignes de l'échantillon de développement seulement. Une distribution décrit cet échantillon ; ce n'est pas un taux du résultat et elle ne dit rien des causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+    "activity": "eda.distribution",
+    "slot": "eda.distribution:displacement",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 318,
+    "params": {
+     "column": "displacement"
+    },
+    "upstream": {
+     "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+    },
+    "downstream": [],
+    "created": "2026-10-28T08:43:48.297796+00:00",
+    "started_revision": 38,
+    "execution_id": "e_6f568a7e009178d11fe5261f",
+    "exposure_id": "x_3c75fcf4b8ef44d89a6a45f538fd0cea",
+    "values": {
+     "partition": "train",
+     "column": "displacement",
+     "role": "feature",
+     "type": "numeric",
+     "kind": "numeric",
+     "n_rows": 318,
+     "n_missing": 0,
+     "special_values": [],
+     "numeric": {
+      "n": 318,
+      "min": 68.0,
+      "q25": 105.0,
+      "median": 146.0,
+      "q75": 260.0,
+      "max": 455.0,
+      "mean": 192.24056603773585,
+      "sd": 103.06114149126725,
+      "n_bins": 10,
+      "bin_width": 38.7,
+      "bins": [
+       {
+        "low": 68.0,
+        "high": 106.7,
+        "n_rows": 81,
+        "share": 0.25471698113207547,
+        "closed": "left"
+       },
+       {
+        "low": 106.7,
+        "high": 145.4,
+        "n_rows": 77,
+        "share": 0.24213836477987422,
+        "closed": "left"
+       },
+       {
+        "low": 145.4,
+        "high": 184.10000000000002,
+        "n_rows": 27,
+        "share": 0.08490566037735849,
+        "closed": "left"
+       },
+       {
+        "low": 184.10000000000002,
+        "high": 222.8,
+        "n_rows": 9,
+        "share": 0.02830188679245283,
+        "closed": "left"
+       },
+       {
+        "low": 222.8,
+        "high": 261.5,
+        "n_rows": 45,
+        "share": 0.14150943396226415,
+        "closed": "left"
+       },
+       {
+        "low": 261.5,
+        "high": 300.20000000000005,
+        "n_rows": 3,
+        "share": 0.009433962264150943,
+        "closed": "left"
+       },
+       {
+        "low": 300.20000000000005,
+        "high": 338.90000000000003,
+        "n_rows": 32,
+        "share": 0.10062893081761007,
+        "closed": "left"
+       },
+       {
+        "low": 338.90000000000003,
+        "high": 377.6,
+        "n_rows": 24,
+        "share": 0.07547169811320754,
+        "closed": "left"
+       },
+       {
+        "low": 377.6,
+        "high": 416.3,
+        "n_rows": 14,
+        "share": 0.0440251572327044,
+        "closed": "left"
+       },
+       {
+        "low": 416.3,
+        "high": 455.0,
+        "n_rows": 6,
+        "share": 0.018867924528301886,
+        "closed": "both"
+       }
+      ],
+      "zeros": {
+       "n_rows": 0,
+       "share": 0.0
+      },
+      "skewed": false,
+      "log_bins": null
+     },
+     "groups": null,
+     "n_groups": null,
+     "max_groups": 20,
+     "other": null,
+     "min_group_rows": 30,
+     "warnings": [],
+     "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+     "question": "How are the values of displacement distributed among the development rows?"
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Distribution on "
+      },
+      {
+       "text": "318",
+       "result_id": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+       "path": "n_rows",
+       "value": 318,
+       "format": "int"
+      },
+      {
+       "text": " development rows"
+      }
+     ]
+    },
+    "question_junior": "How are the values of displacement distributed among the development rows?",
+    "texts": {
+     "en": {
+      "question": "How are the values of displacement distributed among the development rows?",
+      "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Comment les valeurs de displacement se répartissent-elles parmi les lignes de l'échantillon de développement ?",
+      "note": "Effectifs des lignes de l'échantillon de développement seulement. Une distribution décrit cet échantillon ; ce n'est pas un taux du résultat et elle ne dit rien des causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+    "activity": "eda.distribution",
+    "slot": "eda.distribution:weight",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 318,
+    "params": {
+     "column": "weight"
+    },
+    "upstream": {
+     "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+    },
+    "downstream": [],
+    "created": "2026-10-28T08:43:49.646978+00:00",
+    "started_revision": 40,
+    "execution_id": "e_c747f3646963f5be94a54bdb",
+    "exposure_id": "x_3a8a0d5acdeb47c7a8d8ea0d28e3ba6d",
+    "values": {
+     "partition": "train",
+     "column": "weight",
+     "role": "feature",
+     "type": "numeric",
+     "kind": "numeric",
+     "n_rows": 318,
+     "n_missing": 0,
+     "special_values": [],
+     "numeric": {
+      "n": 318,
+      "min": 1613.0,
+      "q25": 2254.25,
+      "median": 2781.5,
+      "q75": 3573.0,
+      "max": 5140.0,
+      "mean": 2970.98427672956,
+      "sd": 839.1829151333358,
+      "n_bins": 10,
+      "bin_width": 352.7,
+      "bins": [
+       {
+        "low": 1613.0,
+        "high": 1965.7,
+        "n_rows": 23,
+        "share": 0.07232704402515723,
+        "closed": "left"
+       },
+       {
+        "low": 1965.7,
+        "high": 2318.4,
+        "n_rows": 71,
+        "share": 0.22327044025157233,
+        "closed": "left"
+       },
+       {
+        "low": 2318.4,
+        "high": 2671.1,
+        "n_rows": 53,
+        "share": 0.16666666666666666,
+        "closed": "left"
+       },
+       {
+        "low": 2671.1,
+        "high": 3023.8,
+        "n_rows": 41,
+        "share": 0.1289308176100629,
+        "closed": "left"
+       },
+       {
+        "low": 3023.8,
+        "high": 3376.5,
+        "n_rows": 28,
+        "share": 0.0880503144654088,
+        "closed": "left"
+       },
+       {
+        "low": 3376.5,
+        "high": 3729.2,
+        "n_rows": 35,
+        "share": 0.11006289308176101,
+        "closed": "left"
+       },
+       {
+        "low": 3729.2,
+        "high": 4081.9,
+        "n_rows": 22,
+        "share": 0.06918238993710692,
+        "closed": "left"
+       },
+       {
+        "low": 4081.9,
+        "high": 4434.6,
+        "n_rows": 25,
+        "share": 0.07861635220125786,
+        "closed": "left"
+       },
+       {
+        "low": 4434.6,
+        "high": 4787.299999999999,
+        "n_rows": 15,
+        "share": 0.04716981132075472,
+        "closed": "left"
+       },
+       {
+        "low": 4787.299999999999,
+        "high": 5140.0,
+        "n_rows": 5,
+        "share": 0.015723270440251572,
+        "closed": "both"
+       }
+      ],
+      "zeros": {
+       "n_rows": 0,
+       "share": 0.0
+      },
+      "skewed": false,
+      "log_bins": null
+     },
+     "groups": null,
+     "n_groups": null,
+     "max_groups": 20,
+     "other": null,
+     "min_group_rows": 30,
+     "warnings": [],
+     "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+     "question": "How are the values of weight distributed among the development rows?"
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Distribution on "
+      },
+      {
+       "text": "318",
+       "result_id": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+       "path": "n_rows",
+       "value": 318,
+       "format": "int"
+      },
+      {
+       "text": " development rows"
+      }
+     ]
+    },
+    "question_junior": "How are the values of weight distributed among the development rows?",
+    "texts": {
+     "en": {
+      "question": "How are the values of weight distributed among the development rows?",
+      "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Comment les valeurs de weight se répartissent-elles parmi les lignes de l'échantillon de développement ?",
+      "note": "Effectifs des lignes de l'échantillon de développement seulement. Une distribution décrit cet échantillon ; ce n'est pas un taux du résultat et elle ne dit rien des causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+    "activity": "eda.distribution",
+    "slot": "eda.distribution:acceleration",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 318,
+    "params": {
+     "column": "acceleration"
+    },
+    "upstream": {
+     "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+    },
+    "downstream": [],
+    "created": "2026-10-28T08:43:50.858869+00:00",
+    "started_revision": 42,
+    "execution_id": "e_f09116e554021da514197565",
+    "exposure_id": "x_23022e74a3bb48a7b8a9cd30cbe7a7bc",
+    "values": {
+     "partition": "train",
+     "column": "acceleration",
+     "role": "feature",
+     "type": "numeric",
+     "kind": "numeric",
+     "n_rows": 318,
+     "n_missing": 0,
+     "special_values": [],
+     "numeric": {
+      "n": 318,
+      "min": 8.5,
+      "q25": 14.0,
+      "median": 15.5,
+      "q75": 17.375,
+      "max": 24.8,
+      "mean": 15.636163522012577,
+      "sd": 2.7483256270602308,
+      "n_bins": 10,
+      "bin_width": 1.6300000000000001,
+      "bins": [
+       {
+        "low": 8.5,
+        "high": 10.13,
+        "n_rows": 7,
+        "share": 0.0220125786163522,
+        "closed": "left"
+       },
+       {
+        "low": 10.13,
+        "high": 11.76,
+        "n_rows": 18,
+        "share": 0.05660377358490566,
+        "closed": "left"
+       },
+       {
+        "low": 11.76,
+        "high": 13.39,
+        "n_rows": 32,
+        "share": 0.10062893081761007,
+        "closed": "left"
+       },
+       {
+        "low": 13.39,
+        "high": 15.02,
+        "n_rows": 86,
+        "share": 0.27044025157232704,
+        "closed": "left"
+       },
+       {
+        "low": 15.02,
+        "high": 16.65,
+        "n_rows": 68,
+        "share": 0.2138364779874214,
+        "closed": "left"
+       },
+       {
+        "low": 16.65,
+        "high": 18.28,
+        "n_rows": 53,
+        "share": 0.16666666666666666,
+        "closed": "left"
+       },
+       {
+        "low": 18.28,
+        "high": 19.91,
+        "n_rows": 36,
+        "share": 0.11320754716981132,
+        "closed": "left"
+       },
+       {
+        "low": 19.91,
+        "high": 21.54,
+        "n_rows": 11,
+        "share": 0.03459119496855346,
+        "closed": "left"
+       },
+       {
+        "low": 21.54,
+        "high": 23.17,
+        "n_rows": 4,
+        "share": 0.012578616352201259,
+        "closed": "left"
+       },
+       {
+        "low": 23.17,
+        "high": 24.8,
+        "n_rows": 3,
+        "share": 0.009433962264150943,
+        "closed": "both"
+       }
+      ],
+      "zeros": {
+       "n_rows": 0,
+       "share": 0.0
+      },
+      "skewed": false,
+      "log_bins": null
+     },
+     "groups": null,
+     "n_groups": null,
+     "max_groups": 20,
+     "other": null,
+     "min_group_rows": 30,
+     "warnings": [],
+     "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+     "question": "How are the values of acceleration distributed among the development rows?"
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Distribution on "
+      },
+      {
+       "text": "318",
+       "result_id": "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+       "path": "n_rows",
+       "value": 318,
+       "format": "int"
+      },
+      {
+       "text": " development rows"
+      }
+     ]
+    },
+    "question_junior": "How are the values of acceleration distributed among the development rows?",
+    "texts": {
+     "en": {
+      "question": "How are the values of acceleration distributed among the development rows?",
+      "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Comment les valeurs de acceleration se répartissent-elles parmi les lignes de l'échantillon de développement ?",
+      "note": "Effectifs des lignes de l'échantillon de développement seulement. Une distribution décrit cet échantillon ; ce n'est pas un taux du résultat et elle ne dit rien des causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
+   },
+   {
+    "result_id": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
+    "activity": "eda.distribution",
+    "slot": "eda.distribution:origin",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 318,
+    "params": {
+     "column": "origin"
+    },
+    "upstream": {
+     "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+    },
+    "downstream": [],
+    "created": "2026-10-28T08:43:52.380712+00:00",
+    "started_revision": 44,
+    "execution_id": "e_ed89c3d6b5ceb43c540c9096",
+    "exposure_id": "x_4e3c82f2227e4e39b5726fee443b5cc2",
+    "values": {
+     "partition": "train",
+     "column": "origin",
+     "role": "feature",
+     "type": "category",
+     "kind": "categorical",
+     "n_rows": 318,
+     "n_missing": 0,
+     "special_values": [],
+     "numeric": null,
+     "groups": [
+      {
+       "value": "1",
+       "n_rows": 197,
+       "share": 0.6194968553459119,
+       "small_count": false
+      },
+      {
+       "value": "3",
+       "n_rows": 63,
+       "share": 0.19811320754716982,
+       "small_count": false
+      },
+      {
+       "value": "2",
+       "n_rows": 58,
+       "share": 0.18238993710691823,
+       "small_count": false
+      }
+     ],
+     "n_groups": 3,
+     "max_groups": 20,
+     "other": null,
+     "min_group_rows": 30,
+     "warnings": [],
+     "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+     "question": "How are the values of origin distributed among the development rows?"
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Distribution on "
+      },
+      {
+       "text": "318",
+       "result_id": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
+       "path": "n_rows",
+       "value": 318,
+       "format": "int"
+      },
+      {
+       "text": " development rows"
+      }
+     ]
+    },
+    "question_junior": "How are the values of origin distributed among the development rows?",
+    "texts": {
+     "en": {
+      "question": "How are the values of origin distributed among the development rows?",
+      "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     },
+     "fr": {
+      "question": "Comment les valeurs de origin se répartissent-elles parmi les lignes de l'échantillon de développement ?",
+      "note": "Effectifs des lignes de l'échantillon de développement seulement. Une distribution décrit cet échantillon ; ce n'est pas un taux du résultat et elle ne dit rien des causes.",
+      "warnings": [],
+      "binning": null,
+      "signal_questions": {},
+      "null_band": null,
+      "meanings": {}
+     }
+    }
+   },
+   {
     "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
     "activity": "fit.baseline",
     "slot": "fit.baseline",
@@ -1596,10 +3845,10 @@
     "downstream": [
      "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d"
     ],
-    "created": "2026-10-28T06:12:41.983860+00:00",
-    "started_revision": 20,
-    "execution_id": "e_c4434080afdaeb4edd1ce5b5",
-    "exposure_id": "x_b2e0bf710c7c439ba93d60b0d1511136",
+    "created": "2026-10-28T08:43:53.944790+00:00",
+    "started_revision": 46,
+    "execution_id": "e_f02c465bbc8626047ce0b4cc",
+    "exposure_id": "x_ccb2542605a24cde9f47c3f257e67944",
     "values": {
      "model": "train_mean",
      "target": "mpg",
@@ -1741,12 +3990,12 @@
      "62f774885fc62eaccdd876e9c57560540b145f768a6c6b0988466d100fa6344e",
      "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
      "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
-     "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974"
+     "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe"
     ],
-    "created": "2026-10-28T06:12:43.344394+00:00",
-    "started_revision": 22,
-    "execution_id": "e_afbcc5b5c6d6b10afa774b86",
-    "exposure_id": "x_7243a497bb4a4af9ba1825a34a99f8ef",
+    "created": "2026-10-28T08:43:55.424116+00:00",
+    "started_revision": 48,
+    "execution_id": "e_5904912825f5be2c5a9088d0",
+    "exposure_id": "x_1b0b93df908d4940865ee3c321a1d54e",
     "values": {
      "model": "linear",
      "target": "mpg",
@@ -1952,10 +4201,10 @@
      "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
      "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520"
     ],
-    "created": "2026-10-28T06:12:51.633785+00:00",
-    "started_revision": 28,
-    "execution_id": "e_a633b01aa452bb85d7c21822",
-    "exposure_id": "x_b5701368984c4ad08994c17f66afa146",
+    "created": "2026-10-28T08:44:04.229854+00:00",
+    "started_revision": 54,
+    "execution_id": "e_c7acc1c7811ed60617bfe6ae",
+    "exposure_id": "x_33c599b05e1840a4b479c558de2e8f0e",
     "values": {
      "model": "ridge",
      "target": "mpg",
@@ -2317,10 +4566,10 @@
      "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
      "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520"
     ],
-    "created": "2026-10-28T06:13:02.658199+00:00",
-    "started_revision": 30,
-    "execution_id": "e_88662ab87ecb5884e6688116",
-    "exposure_id": "x_f59001f9c3cc4d469fc06b337bf7db06",
+    "created": "2026-10-28T08:44:16.123076+00:00",
+    "started_revision": 56,
+    "execution_id": "e_60f840ebe562aefdfb0411ae",
+    "exposure_id": "x_f1ef3b0f6c38462dacc30b950db0abdd",
     "values": {
      "model": "ebm",
      "family": "ebm",
@@ -3416,12 +5665,12 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [
-     "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974"
+     "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe"
     ],
-    "created": "2026-10-28T06:13:04.017179+00:00",
-    "started_revision": 32,
-    "execution_id": "e_947162f1b37ea74e53f6086a",
-    "exposure_id": "x_5daeebd845844150a85f42b8034d1480",
+    "created": "2026-10-28T08:44:17.609015+00:00",
+    "started_revision": 58,
+    "execution_id": "e_2c515241b96823b32e92d4c1",
+    "exposure_id": "x_db41784baf684f8e89ba5afa06a0385d",
     "values": {
      "n": 318,
      "target": "mpg",
@@ -3993,10 +6242,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T06:13:05.494922+00:00",
-    "started_revision": 34,
-    "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
-    "exposure_id": "x_ba9304dd014a46d2a3dbf0623a450175",
+    "created": "2026-10-28T08:44:19.318044+00:00",
+    "started_revision": 60,
+    "execution_id": "e_8f8894cfd0d89135d5c3402c",
+    "exposure_id": "x_f8764c79364a482c9177fc18c92e620a",
     "values": {
      "question": "Where are the predictions off, by how much, and does the error grow with the prediction or differ across groups?",
      "evidence": "development",
@@ -10117,7 +12366,7 @@
     "texts": null
    },
    {
-    "result_id": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
+    "result_id": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
     "activity": "predictor.capture",
     "slot": "predictor.capture",
     "promoted": true,
@@ -10136,9 +12385,9 @@
       "seed": 0,
       "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
      },
-     "packager": null,
+     "packager": "mlflow_pyfunc",
      "parity_rows": 50,
-     "profile": "base",
+     "profile": "workshop",
      "role": "final_development_refit",
      "runtime": {
       "api_version": "1.0",
@@ -10156,17 +12405,17 @@
      "fit.linear": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439"
     },
     "downstream": [
-     "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09"
+     "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48"
     ],
-    "created": "2026-10-28T06:13:10.193612+00:00",
-    "started_revision": 38,
-    "execution_id": "e_c747f3646963f5be94a54bdb",
-    "exposure_id": "x_6f4b765fa76b4e0e8cb16cc9c58269b1",
+    "created": "2026-10-28T08:44:25.259896+00:00",
+    "started_revision": 64,
+    "execution_id": "e_bf95f2dfd64b8f0afb7e4a7a",
+    "exposure_id": "x_b02766484fa84af2b3252c39123a9705",
     "values": {
-     "predictor_id": "34ce73377aef940f20e494889ce921f43d1d423429320b0780e78005a9efd326",
-     "bundle": "predictors/34ce73377aef940f20e494889ce921f43d1d423429320b0780e78005a9efd326",
+     "predictor_id": "a3cad912071bfbf055d400c93a7adde9ae55d6a5cc8a813154b1da47283527b8",
+     "bundle": "predictors/a3cad912071bfbf055d400c93a7adde9ae55d6a5cc8a813154b1da47283527b8+mlflow_pyfunc",
      "reused": false,
-     "profile": "base",
+     "profile": "workshop",
      "model": "fit.linear",
      "family": "linear",
      "task": "regression",
@@ -10182,7 +12431,7 @@
       "acceleration",
       "origin"
      ],
-     "recipe_sha256": "0f8ac8aafd52024e4b0d0623c9efa9c8189ffc88448711d50a14fcff8ed72a24",
+     "recipe_sha256": "d6906e1ccdbf5a166ea97c78702edecc8272607eb3e38f79f0a0c05ff4801248",
      "data_contract_sha256": "49cb2be6e9d56559e8c1e4906322ed17357b2be462d92cac12e984a62afb69b7",
      "training_scope": {
       "role": "final_development_refit",
@@ -10256,13 +12505,18 @@
       "reason": null,
       "extensions": {}
      },
-     "packages": [],
+     "packages": [
+      {
+       "format": "mlflow_pyfunc",
+       "artifact_id": "f5caf3788014e58c6ae61636f1fdbea3134aec4c5dce2de99922f92cb1dc974d"
+      }
+     ],
      "runtime": {
       "distribution": "hypotrail-runtime",
       "version": "1.0.0",
       "api_version": "1.0"
      },
-     "computation_id": "a20b4245dd20a319aab47de96c1ff6c018e824f738efadcd4b19b30161d35be2",
+     "computation_id": "920388b55981c539327516ac3af46ad3e4a4d12ed00bcb9bf3ee5fbcb256e958",
      "limitations": [
       "Trusted local serialisation (pickle): the bundle digest proves integrity, not safety; load it only from a source you control.",
       "Parity rows are development rows (features only): they check reproduction, not generalisation.",
@@ -10275,7 +12529,7 @@
     "texts": null
    },
    {
-    "result_id": "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09",
+    "result_id": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
     "activity": "final_test.evaluation",
     "slot": "final_test.evaluation",
     "promoted": true,
@@ -10299,13 +12553,13 @@
      "task": "regression"
     },
     "upstream": {
-     "predictor.capture": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974"
+     "predictor.capture": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe"
     },
     "downstream": [],
-    "created": "2026-10-28T06:13:13.233374+00:00",
-    "started_revision": 42,
-    "execution_id": "e_c145eefc5cae71d5a6fc2250",
-    "exposure_id": "x_e5a48cf988b6456386d7f6abf7a25d38",
+    "created": "2026-10-28T08:44:29.006294+00:00",
+    "started_revision": 68,
+    "execution_id": "e_d17cf79ff99b50941d8f5e6e",
+    "exposure_id": "x_7fd0c4d314ed427fb9a586e8fbb96099",
     "values": {
      "model": "fit.linear",
      "rule": null,
@@ -10423,8 +12677,8 @@
      },
      "note": "Measured once on the sealed final-test rows, with the configuration chosen on the development rows refitted on all of them: this is the study's independent evidence. Any later change is made after the final test.",
      "predictor": {
-      "predictor_id": "34ce73377aef940f20e494889ce921f43d1d423429320b0780e78005a9efd326",
-      "capture": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
+      "predictor_id": "a3cad912071bfbf055d400c93a7adde9ae55d6a5cc8a813154b1da47283527b8",
+      "capture": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
       "evaluated": "reloaded_capture",
       "parity_before_opening": "ok",
       "note": "The final-test rows were scored by the captured predictor, reloaded and checked on its parity rows before they were read; no model was refitted."
@@ -10473,10 +12727,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T06:12:44.529909+00:00",
-    "started_revision": 24,
-    "execution_id": "e_061502fb4d6e55bbb43de53a",
-    "exposure_id": "x_d5aa5d543d514e778070ca3af4170163",
+    "created": "2026-10-28T08:43:56.810773+00:00",
+    "started_revision": 50,
+    "execution_id": "e_8519f7987822bead348d47d9",
+    "exposure_id": "x_bfbea6cdd88f48b69ca7622cec64a50c",
     "values": null,
     "headline": null,
     "question_junior": null,
@@ -10565,6 +12819,12 @@
      "status": "current"
     },
     {
+     "id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+     "kind": "result",
+     "label": "eda.distribution:horsepower",
+     "status": "current"
+    },
+    {
      "id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
      "kind": "result",
      "label": "eda.target_summary",
@@ -10574,6 +12834,78 @@
      "id": "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
      "kind": "result",
      "label": "eda.special_values",
+     "status": "current"
+    },
+    {
+     "id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+     "kind": "result",
+     "label": "eda.mean_by:cylinders",
+     "status": "current"
+    },
+    {
+     "id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+     "kind": "result",
+     "label": "eda.mean_by:displacement",
+     "status": "current"
+    },
+    {
+     "id": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+     "kind": "result",
+     "label": "eda.mean_by:horsepower",
+     "status": "current"
+    },
+    {
+     "id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+     "kind": "result",
+     "label": "eda.mean_by:weight",
+     "status": "current"
+    },
+    {
+     "id": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+     "kind": "result",
+     "label": "eda.mean_by:acceleration",
+     "status": "current"
+    },
+    {
+     "id": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+     "kind": "result",
+     "label": "eda.mean_by:origin",
+     "status": "current"
+    },
+    {
+     "id": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
+     "kind": "result",
+     "label": "eda.correlation",
+     "status": "current"
+    },
+    {
+     "id": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+     "kind": "result",
+     "label": "eda.distribution:cylinders",
+     "status": "current"
+    },
+    {
+     "id": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+     "kind": "result",
+     "label": "eda.distribution:displacement",
+     "status": "current"
+    },
+    {
+     "id": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+     "kind": "result",
+     "label": "eda.distribution:weight",
+     "status": "current"
+    },
+    {
+     "id": "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+     "kind": "result",
+     "label": "eda.distribution:acceleration",
+     "status": "current"
+    },
+    {
+     "id": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
+     "kind": "result",
+     "label": "eda.distribution:origin",
      "status": "current"
     },
     {
@@ -10613,13 +12945,13 @@
      "status": "current"
     },
     {
-     "id": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
+     "id": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
      "kind": "result",
      "label": "predictor.capture",
      "status": "current"
     },
     {
-     "id": "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09",
+     "id": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
      "kind": "result",
      "label": "final_test.evaluation",
      "status": "current"
@@ -10661,6 +12993,16 @@
     },
     {
      "from": "dataset",
+     "to": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+     "role": "rows"
+    },
+    {
+     "from": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "to": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
      "to": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
      "role": "rows"
     },
@@ -10677,6 +13019,121 @@
     {
      "from": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
      "to": "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+     "role": "rows"
+    },
+    {
+     "from": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "to": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+     "role": "rows"
+    },
+    {
+     "from": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "to": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+     "role": "rows"
+    },
+    {
+     "from": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "to": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+     "role": "rows"
+    },
+    {
+     "from": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "to": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+     "role": "rows"
+    },
+    {
+     "from": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "to": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+     "role": "rows"
+    },
+    {
+     "from": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "to": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
+     "role": "rows"
+    },
+    {
+     "from": "dataset",
+     "to": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+     "role": "rows"
+    },
+    {
+     "from": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "to": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+     "role": "rows"
+    },
+    {
+     "from": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "to": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+     "role": "rows"
+    },
+    {
+     "from": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "to": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+     "role": "rows"
+    },
+    {
+     "from": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "to": "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
+     "role": "rows"
+    },
+    {
+     "from": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "to": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
      "role": "split"
     },
     {
@@ -10801,27 +13258,27 @@
     },
     {
      "from": "dataset",
-     "to": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
+     "to": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
      "role": "rows"
     },
     {
      "from": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
-     "to": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
+     "to": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
      "role": "evaluate.regression"
     },
     {
      "from": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
-     "to": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
+     "to": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
      "role": "fit.linear"
     },
     {
      "from": "dataset",
-     "to": "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09",
+     "to": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
      "role": "rows"
     },
     {
-     "from": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
-     "to": "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09",
+     "from": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
+     "to": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
      "role": "predictor.capture"
     },
     {
@@ -10865,6 +13322,16 @@
      "role": "consumed"
     },
     {
+     "from": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
      "from": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
      "to": "artifact:report",
      "role": "consumed"
@@ -10881,6 +13348,126 @@
     },
     {
      "from": "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
      "to": "artifact:notebook",
      "role": "consumed"
     },
@@ -10945,22 +13532,22 @@
      "role": "consumed"
     },
     {
-     "from": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
+     "from": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
+     "from": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09",
+     "from": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09",
+     "from": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
      "to": "artifact:notebook",
      "role": "consumed"
     }
@@ -10968,7 +13555,7 @@
   },
   "exposure": {
    "summary": {
-    "records": 21,
+    "records": 34,
     "rows_exposed": 398,
     "by_purpose": {
      "cross_validated_fit": 318,
@@ -11012,9 +13599,9 @@
    },
    "records": [
     {
-     "exposure_id": "x_77ff6e1858ac4cc488ad064586c76f7d",
+     "exposure_id": "x_40c51e7c792a47289340530b1d813293",
      "revision": 1,
-     "time": "2026-10-28T06:12:27.218242+00:00",
+     "time": "2026-10-28T08:43:21.796690+00:00",
      "activity": "init.structure",
      "result_id": null,
      "execution_id": null,
@@ -11034,9 +13621,9 @@
      ]
     },
     {
-     "exposure_id": "x_ddb3e577b3504bff81e936427268e70c",
+     "exposure_id": "x_66494b4d4bf946fd854e37b5d501ad18",
      "revision": 1,
-     "time": "2026-10-28T06:12:27.221580+00:00",
+     "time": "2026-10-28T08:43:21.798758+00:00",
      "activity": "data.sample",
      "result_id": null,
      "execution_id": null,
@@ -11056,9 +13643,9 @@
      ]
     },
     {
-     "exposure_id": "x_d2d6b03e394243c3a886bbc834c1d512",
+     "exposure_id": "x_03c6edfb145b49b583355916cecef9bc",
      "revision": 1,
-     "time": "2026-10-28T06:12:27.222989+00:00",
+     "time": "2026-10-28T08:43:21.799255+00:00",
      "activity": "init.final_test",
      "result_id": null,
      "execution_id": null,
@@ -11078,9 +13665,9 @@
      ]
     },
     {
-     "exposure_id": "x_b1a2a87b8f7f4bd78940fbdd52dc4762",
+     "exposure_id": "x_2b9471f7e09041fe899fdb42a5ef837d",
      "revision": 10,
-     "time": "2026-10-28T06:12:34.970267+00:00",
+     "time": "2026-10-28T08:43:27.949767+00:00",
      "activity": "split",
      "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
      "execution_id": "e_45e56db55964c2ea7d665907",
@@ -11093,9 +13680,9 @@
      ]
     },
     {
-     "exposure_id": "x_2bf5ba2d1d8f4e6bab12b7ef62bdd951",
+     "exposure_id": "x_380f68b02edb41b8a2f6aebe9f4e49ee",
      "revision": 12,
-     "time": "2026-10-28T06:12:36.233841+00:00",
+     "time": "2026-10-28T08:43:29.360674+00:00",
      "activity": "eda.quality",
      "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
      "execution_id": "e_ce9ad9e64710577437be7e6c",
@@ -11114,12 +13701,26 @@
      ]
     },
     {
-     "exposure_id": "x_859c02c5d5e24f8fb97350185ad16627",
-     "revision": 16,
-     "time": "2026-10-28T06:12:39.782771+00:00",
+     "exposure_id": "x_57ad4703cf484ebfb43e186f3ee0199f",
+     "revision": 14,
+     "time": "2026-10-28T08:43:30.685306+00:00",
+     "activity": "eda.distribution",
+     "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+     "execution_id": "e_0eee3a0bb608847ca1ac05a7",
+     "purpose": "train_eda",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "horsepower"
+     ]
+    },
+    {
+     "exposure_id": "x_3e3bd70567ee4e0eb9c4740fcc90dea6",
+     "revision": 18,
+     "time": "2026-10-28T08:43:34.638260+00:00",
      "activity": "eda.target_summary",
      "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
-     "execution_id": "e_2ab8c63a63b208bd8731b8b3",
+     "execution_id": "e_9c2f7f2c69f91be9c07e4331",
      "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
@@ -11128,12 +13729,12 @@
      ]
     },
     {
-     "exposure_id": "x_02f84648d89d446e8152f7e9defa36ba",
-     "revision": 18,
-     "time": "2026-10-28T06:12:40.867972+00:00",
+     "exposure_id": "x_641b8da74a4e45c0b28298a368476af8",
+     "revision": 20,
+     "time": "2026-10-28T08:43:35.935246+00:00",
      "activity": "eda.special_values",
      "result_id": "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
-     "execution_id": "e_9c2f7f2c69f91be9c07e4331",
+     "execution_id": "e_c4434080afdaeb4edd1ce5b5",
      "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
@@ -11143,80 +13744,259 @@
      ]
     },
     {
-     "exposure_id": "x_af49e3521c1d4c0f857358172ddef6a1",
-     "revision": 20,
-     "time": "2026-10-28T06:12:41.986060+00:00",
-     "activity": "fit.baseline",
-     "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
-     "execution_id": "e_c4434080afdaeb4edd1ce5b5",
-     "purpose": "cross_validated_fit",
-     "partition": "development",
-     "n_rows": 318,
-     "columns": [
-      "mpg"
-     ]
-    },
-    {
-     "exposure_id": "x_b2e0bf710c7c439ba93d60b0d1511136",
-     "revision": 20,
-     "time": "2026-10-28T06:12:41.986705+00:00",
-     "activity": "fit.baseline",
-     "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
-     "execution_id": "e_c4434080afdaeb4edd1ce5b5",
-     "purpose": "out_of_fold_evaluation",
-     "partition": "development",
-     "n_rows": 318,
-     "columns": [
-      "mpg"
-     ]
-    },
-    {
-     "exposure_id": "x_18b8c6cdbb17439babf5a9cdee00cb65",
+     "exposure_id": "x_bc6416a05a8248868d62ab0dc7b35b71",
      "revision": 22,
-     "time": "2026-10-28T06:12:43.347415+00:00",
-     "activity": "fit.linear",
-     "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+     "time": "2026-10-28T08:43:37.201611+00:00",
+     "activity": "eda.mean_by",
+     "result_id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
      "execution_id": "e_afbcc5b5c6d6b10afa774b86",
-     "purpose": "cross_validated_fit",
+     "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
      "columns": [
-      "cylinders",
-      "displacement",
-      "horsepower",
-      "weight",
-      "acceleration",
-      "origin",
-      "mpg"
+      "mpg",
+      "cylinders"
      ]
     },
     {
-     "exposure_id": "x_7243a497bb4a4af9ba1825a34a99f8ef",
-     "revision": 22,
-     "time": "2026-10-28T06:12:43.348337+00:00",
-     "activity": "fit.linear",
-     "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
-     "execution_id": "e_afbcc5b5c6d6b10afa774b86",
-     "purpose": "out_of_fold_evaluation",
-     "partition": "development",
-     "n_rows": 318,
-     "columns": [
-      "cylinders",
-      "displacement",
-      "horsepower",
-      "weight",
-      "acceleration",
-      "origin",
-      "mpg"
-     ]
-    },
-    {
-     "exposure_id": "x_d5aa5d543d514e778070ca3af4170163",
+     "exposure_id": "x_dcbd5f69906747579ff3d0c0215356cd",
      "revision": 24,
-     "time": "2026-10-28T06:12:44.535717+00:00",
+     "time": "2026-10-28T08:43:38.665065+00:00",
+     "activity": "eda.mean_by",
+     "result_id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+     "execution_id": "e_061502fb4d6e55bbb43de53a",
+     "purpose": "train_eda",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "mpg",
+      "displacement"
+     ]
+    },
+    {
+     "exposure_id": "x_28283a1e53b247888c1a52b8fa34c24f",
+     "revision": 26,
+     "time": "2026-10-28T08:43:40.072372+00:00",
+     "activity": "eda.mean_by",
+     "result_id": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+     "execution_id": "e_8b6b767c3df161e7401893c1",
+     "purpose": "train_eda",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "mpg",
+      "horsepower"
+     ]
+    },
+    {
+     "exposure_id": "x_d99e7ca166fd4af38b74042153a5593b",
+     "revision": 28,
+     "time": "2026-10-28T08:43:41.401938+00:00",
+     "activity": "eda.mean_by",
+     "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+     "execution_id": "e_a633b01aa452bb85d7c21822",
+     "purpose": "train_eda",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "mpg",
+      "weight"
+     ]
+    },
+    {
+     "exposure_id": "x_1ce8a1cba31f457e93152091ffebfd86",
+     "revision": 30,
+     "time": "2026-10-28T08:43:42.788636+00:00",
+     "activity": "eda.mean_by",
+     "result_id": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+     "execution_id": "e_88662ab87ecb5884e6688116",
+     "purpose": "train_eda",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "mpg",
+      "acceleration"
+     ]
+    },
+    {
+     "exposure_id": "x_3f7349e6895d44fdace1f5995560d400",
+     "revision": 32,
+     "time": "2026-10-28T08:43:44.091640+00:00",
+     "activity": "eda.mean_by",
+     "result_id": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+     "execution_id": "e_947162f1b37ea74e53f6086a",
+     "purpose": "train_eda",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "mpg",
+      "origin"
+     ]
+    },
+    {
+     "exposure_id": "x_5370ec3b5be2409295d80ef5e328f648",
+     "revision": 34,
+     "time": "2026-10-28T08:43:45.463658+00:00",
+     "activity": "eda.correlation",
+     "result_id": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
+     "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
+     "purpose": "structural_inspection",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "origin"
+     ]
+    },
+    {
+     "exposure_id": "x_9959f7d5ba9e44d88764beed90cbab13",
+     "revision": 36,
+     "time": "2026-10-28T08:43:46.918885+00:00",
+     "activity": "eda.distribution",
+     "result_id": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+     "execution_id": "e_0b8fc9580cdd4e33bc5c14db",
+     "purpose": "train_eda",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "cylinders"
+     ]
+    },
+    {
+     "exposure_id": "x_3c75fcf4b8ef44d89a6a45f538fd0cea",
+     "revision": 38,
+     "time": "2026-10-28T08:43:48.302234+00:00",
+     "activity": "eda.distribution",
+     "result_id": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+     "execution_id": "e_6f568a7e009178d11fe5261f",
+     "purpose": "train_eda",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "displacement"
+     ]
+    },
+    {
+     "exposure_id": "x_3a8a0d5acdeb47c7a8d8ea0d28e3ba6d",
+     "revision": 40,
+     "time": "2026-10-28T08:43:49.649927+00:00",
+     "activity": "eda.distribution",
+     "result_id": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+     "execution_id": "e_c747f3646963f5be94a54bdb",
+     "purpose": "train_eda",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "weight"
+     ]
+    },
+    {
+     "exposure_id": "x_23022e74a3bb48a7b8a9cd30cbe7a7bc",
+     "revision": 42,
+     "time": "2026-10-28T08:43:50.862477+00:00",
+     "activity": "eda.distribution",
+     "result_id": "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+     "execution_id": "e_f09116e554021da514197565",
+     "purpose": "train_eda",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "acceleration"
+     ]
+    },
+    {
+     "exposure_id": "x_4e3c82f2227e4e39b5726fee443b5cc2",
+     "revision": 44,
+     "time": "2026-10-28T08:43:52.384185+00:00",
+     "activity": "eda.distribution",
+     "result_id": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
+     "execution_id": "e_ed89c3d6b5ceb43c540c9096",
+     "purpose": "train_eda",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "origin"
+     ]
+    },
+    {
+     "exposure_id": "x_79deb328886e4e52b5e17a86199e513b",
+     "revision": 46,
+     "time": "2026-10-28T08:43:53.947434+00:00",
+     "activity": "fit.baseline",
+     "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
+     "execution_id": "e_f02c465bbc8626047ce0b4cc",
+     "purpose": "cross_validated_fit",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_ccb2542605a24cde9f47c3f257e67944",
+     "revision": 46,
+     "time": "2026-10-28T08:43:53.948465+00:00",
+     "activity": "fit.baseline",
+     "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
+     "execution_id": "e_f02c465bbc8626047ce0b4cc",
+     "purpose": "out_of_fold_evaluation",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_a2c89fc7486c4dc8a39234176bd349d3",
+     "revision": 48,
+     "time": "2026-10-28T08:43:55.427369+00:00",
+     "activity": "fit.linear",
+     "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+     "execution_id": "e_5904912825f5be2c5a9088d0",
+     "purpose": "cross_validated_fit",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_1b0b93df908d4940865ee3c321a1d54e",
+     "revision": 48,
+     "time": "2026-10-28T08:43:55.428525+00:00",
+     "activity": "fit.linear",
+     "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+     "execution_id": "e_5904912825f5be2c5a9088d0",
+     "purpose": "out_of_fold_evaluation",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_bfbea6cdd88f48b69ca7622cec64a50c",
+     "revision": 50,
+     "time": "2026-10-28T08:43:56.815226+00:00",
      "activity": "diag.regression",
      "result_id": "62f774885fc62eaccdd876e9c57560540b145f768a6c6b0988466d100fa6344e",
-     "execution_id": "e_061502fb4d6e55bbb43de53a",
+     "execution_id": "e_8519f7987822bead348d47d9",
      "purpose": "development_diagnostics",
      "partition": "development",
      "n_rows": 318,
@@ -11231,12 +14011,12 @@
      ]
     },
     {
-     "exposure_id": "x_0f14e28974d04d1499173f15f8e036bd",
-     "revision": 28,
-     "time": "2026-10-28T06:12:51.637328+00:00",
+     "exposure_id": "x_3afcfe6c8fca4300a2f3d291a10a6677",
+     "revision": 54,
+     "time": "2026-10-28T08:44:04.233821+00:00",
      "activity": "fit.variant",
      "result_id": "d6a53e63450ea32206f5f7aad01e1e4dfdcdaffd43b83a36447dee6ec64e4856",
-     "execution_id": "e_a633b01aa452bb85d7c21822",
+     "execution_id": "e_c7acc1c7811ed60617bfe6ae",
      "purpose": "cross_validated_fit",
      "partition": "development",
      "n_rows": 318,
@@ -11251,12 +14031,12 @@
      ]
     },
     {
-     "exposure_id": "x_b5701368984c4ad08994c17f66afa146",
-     "revision": 28,
-     "time": "2026-10-28T06:12:51.638438+00:00",
+     "exposure_id": "x_33c599b05e1840a4b479c558de2e8f0e",
+     "revision": 54,
+     "time": "2026-10-28T08:44:04.235047+00:00",
      "activity": "fit.variant",
      "result_id": "d6a53e63450ea32206f5f7aad01e1e4dfdcdaffd43b83a36447dee6ec64e4856",
-     "execution_id": "e_a633b01aa452bb85d7c21822",
+     "execution_id": "e_c7acc1c7811ed60617bfe6ae",
      "purpose": "out_of_fold_evaluation",
      "partition": "development",
      "n_rows": 318,
@@ -11271,12 +14051,12 @@
      ]
     },
     {
-     "exposure_id": "x_61088f1649fd4f769178a230cb68ffab",
-     "revision": 30,
-     "time": "2026-10-28T06:13:02.662120+00:00",
+     "exposure_id": "x_00ce903295c946a09f261b799ce0e930",
+     "revision": 56,
+     "time": "2026-10-28T08:44:16.127192+00:00",
      "activity": "fit.variant",
      "result_id": "1c5d4f6559fc7252490f9fcfba04d981d066f897dd672fad39515d41bf5e84ff",
-     "execution_id": "e_88662ab87ecb5884e6688116",
+     "execution_id": "e_60f840ebe562aefdfb0411ae",
      "purpose": "cross_validated_fit",
      "partition": "development",
      "n_rows": 318,
@@ -11291,12 +14071,12 @@
      ]
     },
     {
-     "exposure_id": "x_f59001f9c3cc4d469fc06b337bf7db06",
-     "revision": 30,
-     "time": "2026-10-28T06:13:02.663204+00:00",
+     "exposure_id": "x_f1ef3b0f6c38462dacc30b950db0abdd",
+     "revision": 56,
+     "time": "2026-10-28T08:44:16.128358+00:00",
      "activity": "fit.variant",
      "result_id": "1c5d4f6559fc7252490f9fcfba04d981d066f897dd672fad39515d41bf5e84ff",
-     "execution_id": "e_88662ab87ecb5884e6688116",
+     "execution_id": "e_60f840ebe562aefdfb0411ae",
      "purpose": "out_of_fold_evaluation",
      "partition": "development",
      "n_rows": 318,
@@ -11311,12 +14091,12 @@
      ]
     },
     {
-     "exposure_id": "x_5daeebd845844150a85f42b8034d1480",
-     "revision": 32,
-     "time": "2026-10-28T06:13:04.021897+00:00",
+     "exposure_id": "x_db41784baf684f8e89ba5afa06a0385d",
+     "revision": 58,
+     "time": "2026-10-28T08:44:17.612197+00:00",
      "activity": "evaluate.regression",
      "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
-     "execution_id": "e_947162f1b37ea74e53f6086a",
+     "execution_id": "e_2c515241b96823b32e92d4c1",
      "purpose": "out_of_fold_evaluation",
      "partition": "development",
      "n_rows": 318,
@@ -11326,12 +14106,12 @@
      ]
     },
     {
-     "exposure_id": "x_ba9304dd014a46d2a3dbf0623a450175",
-     "revision": 34,
-     "time": "2026-10-28T06:13:05.502074+00:00",
+     "exposure_id": "x_f8764c79364a482c9177fc18c92e620a",
+     "revision": 60,
+     "time": "2026-10-28T08:44:19.325338+00:00",
      "activity": "diag.regression",
      "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
-     "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
+     "execution_id": "e_8f8894cfd0d89135d5c3402c",
      "purpose": "development_diagnostics",
      "partition": "development",
      "n_rows": 318,
@@ -11346,12 +14126,12 @@
      ]
     },
     {
-     "exposure_id": "x_6f4b765fa76b4e0e8cb16cc9c58269b1",
-     "revision": 38,
-     "time": "2026-10-28T06:13:10.196975+00:00",
+     "exposure_id": "x_b02766484fa84af2b3252c39123a9705",
+     "revision": 64,
+     "time": "2026-10-28T08:44:25.264311+00:00",
      "activity": "predictor.capture",
-     "result_id": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
-     "execution_id": "e_c747f3646963f5be94a54bdb",
+     "result_id": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
+     "execution_id": "e_bf95f2dfd64b8f0afb7e4a7a",
      "purpose": "train_fit",
      "partition": "development",
      "n_rows": 318,
@@ -11366,12 +14146,12 @@
      ]
     },
     {
-     "exposure_id": "x_82b3e467d0024aa3b1c3b6fa18ae2ba3",
-     "revision": 42,
-     "time": "2026-10-28T06:13:13.236216+00:00",
+     "exposure_id": "x_6ffd4723ccdc44c7a1570535bb51b5b5",
+     "revision": 68,
+     "time": "2026-10-28T08:44:29.009368+00:00",
      "activity": "final_test.evaluation",
-     "result_id": "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09",
-     "execution_id": "e_c145eefc5cae71d5a6fc2250",
+     "result_id": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
+     "execution_id": "e_d17cf79ff99b50941d8f5e6e",
      "purpose": "train_fit",
      "partition": "development",
      "n_rows": 318,
@@ -11386,12 +14166,12 @@
      ]
     },
     {
-     "exposure_id": "x_e5a48cf988b6456386d7f6abf7a25d38",
-     "revision": 42,
-     "time": "2026-10-28T06:13:13.237956+00:00",
+     "exposure_id": "x_7fd0c4d314ed427fb9a586e8fbb96099",
+     "revision": 68,
+     "time": "2026-10-28T08:44:29.010180+00:00",
      "activity": "final_test.evaluation",
-     "result_id": "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09",
-     "execution_id": "e_c145eefc5cae71d5a6fc2250",
+     "result_id": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
+     "execution_id": "e_d17cf79ff99b50941d8f5e6e",
      "purpose": "final_evaluation",
      "partition": "final_test",
      "n_rows": 80,
@@ -11411,27 +14191,30 @@
      "purpose": "structural_inspection",
      "partition": "development",
      "rows": 318,
-     "records": 3,
+     "records": 4,
      "activities": [
       "init.structure",
       "split",
-      "eda.quality"
+      "eda.quality",
+      "eda.correlation"
      ],
      "first_revision": 1,
-     "last_revision": 12,
+     "last_revision": 34,
      "note": null
     },
     {
      "purpose": "train_eda",
      "partition": "development",
      "rows": 318,
-     "records": 2,
+     "records": 14,
      "activities": [
+      "eda.distribution",
       "eda.target_summary",
-      "eda.special_values"
+      "eda.special_values",
+      "eda.mean_by"
      ],
-     "first_revision": 16,
-     "last_revision": 18,
+     "first_revision": 14,
+     "last_revision": 44,
      "note": null
     },
     {
@@ -11443,8 +14226,8 @@
       "predictor.capture",
       "final_test.evaluation"
      ],
-     "first_revision": 38,
-     "last_revision": 42,
+     "first_revision": 64,
+     "last_revision": 68,
      "note": null
     },
     {
@@ -11469,8 +14252,8 @@
       "fit.linear",
       "fit.variant"
      ],
-     "first_revision": 20,
-     "last_revision": 30,
+     "first_revision": 46,
+     "last_revision": 56,
      "note": null
     },
     {
@@ -11484,8 +14267,8 @@
       "fit.variant",
       "evaluate.regression"
      ],
-     "first_revision": 20,
-     "last_revision": 32,
+     "first_revision": 46,
+     "last_revision": 58,
      "note": null
     },
     {
@@ -11496,8 +14279,8 @@
      "activities": [
       "final_test.evaluation"
      ],
-     "first_revision": 42,
-     "last_revision": 42,
+     "first_revision": 68,
+     "last_revision": 68,
      "note": null
     },
     {
@@ -11508,8 +14291,8 @@
      "activities": [
       "diag.regression"
      ],
-     "first_revision": 24,
-     "last_revision": 34,
+     "first_revision": 50,
+     "last_revision": 60,
      "note": null
     },
     {
@@ -11558,6 +14341,19 @@
      "eda.quality",
      "eda.target_summary",
      "eda.special_values",
+     "eda.correlation",
+     "eda.distribution:acceleration",
+     "eda.distribution:cylinders",
+     "eda.distribution:displacement",
+     "eda.distribution:horsepower",
+     "eda.distribution:origin",
+     "eda.distribution:weight",
+     "eda.mean_by:acceleration",
+     "eda.mean_by:cylinders",
+     "eda.mean_by:displacement",
+     "eda.mean_by:horsepower",
+     "eda.mean_by:origin",
+     "eda.mean_by:weight",
      "fit.baseline"
     ],
     "refit": [
@@ -11593,6 +14389,19 @@
      "eda.quality",
      "eda.target_summary",
      "eda.special_values",
+     "eda.correlation",
+     "eda.distribution:acceleration",
+     "eda.distribution:cylinders",
+     "eda.distribution:displacement",
+     "eda.distribution:horsepower",
+     "eda.distribution:origin",
+     "eda.distribution:weight",
+     "eda.mean_by:acceleration",
+     "eda.mean_by:cylinders",
+     "eda.mean_by:displacement",
+     "eda.mean_by:horsepower",
+     "eda.mean_by:origin",
+     "eda.mean_by:weight",
      "fit.baseline"
     ],
     "refit": [
@@ -11619,6 +14428,19 @@
      "eda.quality",
      "eda.target_summary",
      "eda.special_values",
+     "eda.correlation",
+     "eda.distribution:acceleration",
+     "eda.distribution:cylinders",
+     "eda.distribution:displacement",
+     "eda.distribution:horsepower",
+     "eda.distribution:origin",
+     "eda.distribution:weight",
+     "eda.mean_by:acceleration",
+     "eda.mean_by:cylinders",
+     "eda.mean_by:displacement",
+     "eda.mean_by:horsepower",
+     "eda.mean_by:origin",
+     "eda.mean_by:weight",
      "fit.baseline",
      "fit.linear",
      "fit.variant",
@@ -11644,6 +14466,19 @@
      "eda.quality",
      "eda.target_summary",
      "eda.special_values",
+     "eda.correlation",
+     "eda.distribution:acceleration",
+     "eda.distribution:cylinders",
+     "eda.distribution:displacement",
+     "eda.distribution:horsepower",
+     "eda.distribution:origin",
+     "eda.distribution:weight",
+     "eda.mean_by:acceleration",
+     "eda.mean_by:cylinders",
+     "eda.mean_by:displacement",
+     "eda.mean_by:horsepower",
+     "eda.mean_by:origin",
+     "eda.mean_by:weight",
      "fit.baseline",
      "fit.linear",
      "fit.variant",
@@ -11677,6 +14512,19 @@
      "eda.quality",
      "eda.target_summary",
      "eda.special_values",
+     "eda.correlation",
+     "eda.distribution:acceleration",
+     "eda.distribution:cylinders",
+     "eda.distribution:displacement",
+     "eda.distribution:horsepower",
+     "eda.distribution:origin",
+     "eda.distribution:weight",
+     "eda.mean_by:acceleration",
+     "eda.mean_by:cylinders",
+     "eda.mean_by:displacement",
+     "eda.mean_by:horsepower",
+     "eda.mean_by:origin",
+     "eda.mean_by:weight",
      "fit.baseline",
      "fit.linear",
      "fit.variant",
@@ -11713,6 +14561,19 @@
      "eda.quality",
      "eda.target_summary",
      "eda.special_values",
+     "eda.correlation",
+     "eda.distribution:acceleration",
+     "eda.distribution:cylinders",
+     "eda.distribution:displacement",
+     "eda.distribution:horsepower",
+     "eda.distribution:origin",
+     "eda.distribution:weight",
+     "eda.mean_by:acceleration",
+     "eda.mean_by:cylinders",
+     "eda.mean_by:displacement",
+     "eda.mean_by:horsepower",
+     "eda.mean_by:origin",
+     "eda.mean_by:weight",
      "fit.baseline"
     ],
     "refit": [
@@ -11739,6 +14600,19 @@
      "eda.quality",
      "eda.target_summary",
      "eda.special_values",
+     "eda.correlation",
+     "eda.distribution:acceleration",
+     "eda.distribution:cylinders",
+     "eda.distribution:displacement",
+     "eda.distribution:horsepower",
+     "eda.distribution:origin",
+     "eda.distribution:weight",
+     "eda.mean_by:acceleration",
+     "eda.mean_by:cylinders",
+     "eda.mean_by:displacement",
+     "eda.mean_by:horsepower",
+     "eda.mean_by:origin",
+     "eda.mean_by:weight",
      "fit.baseline",
      "fit.linear",
      "fit.variant",
@@ -11773,6 +14647,19 @@
      "eda.quality",
      "eda.target_summary",
      "eda.special_values",
+     "eda.correlation",
+     "eda.distribution:acceleration",
+     "eda.distribution:cylinders",
+     "eda.distribution:displacement",
+     "eda.distribution:horsepower",
+     "eda.distribution:origin",
+     "eda.distribution:weight",
+     "eda.mean_by:acceleration",
+     "eda.mean_by:cylinders",
+     "eda.mean_by:displacement",
+     "eda.mean_by:horsepower",
+     "eda.mean_by:origin",
+     "eda.mean_by:weight",
      "fit.baseline",
      "fit.linear",
      "fit.variant:2"
@@ -11815,36 +14702,36 @@
        "name": "cylinders",
        "role": "feature",
        "type": "integer",
-       "slot": null,
-       "result_id": null
+       "slot": "eda.mean_by:cylinders",
+       "result_id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb"
       },
       {
        "name": "displacement",
        "role": "feature",
        "type": "numeric",
-       "slot": null,
-       "result_id": null
+       "slot": "eda.mean_by:displacement",
+       "result_id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8"
       },
       {
        "name": "horsepower",
        "role": "feature",
        "type": "numeric",
-       "slot": null,
-       "result_id": null
+       "slot": "eda.mean_by:horsepower",
+       "result_id": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712"
       },
       {
        "name": "weight",
        "role": "feature",
        "type": "numeric",
-       "slot": null,
-       "result_id": null
+       "slot": "eda.mean_by:weight",
+       "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e"
       },
       {
        "name": "acceleration",
        "role": "feature",
        "type": "numeric",
-       "slot": null,
-       "result_id": null
+       "slot": "eda.mean_by:acceleration",
+       "result_id": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6"
       },
       {
        "name": "model_year",
@@ -11857,8 +14744,8 @@
        "name": "origin",
        "role": "feature",
        "type": "category",
-       "slot": null,
-       "result_id": null
+       "slot": "eda.mean_by:origin",
+       "result_id": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2"
       }
      ],
      "runnable": true,
@@ -11880,36 +14767,36 @@
        "name": "cylinders",
        "role": "feature",
        "type": "integer",
-       "slot": null,
-       "result_id": null
+       "slot": "eda.distribution:cylinders",
+       "result_id": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213"
       },
       {
        "name": "displacement",
        "role": "feature",
        "type": "numeric",
-       "slot": null,
-       "result_id": null
+       "slot": "eda.distribution:displacement",
+       "result_id": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c"
       },
       {
        "name": "horsepower",
        "role": "feature",
        "type": "numeric",
-       "slot": null,
-       "result_id": null
+       "slot": "eda.distribution:horsepower",
+       "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3"
       },
       {
        "name": "weight",
        "role": "feature",
        "type": "numeric",
-       "slot": null,
-       "result_id": null
+       "slot": "eda.distribution:weight",
+       "result_id": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7"
       },
       {
        "name": "acceleration",
        "role": "feature",
        "type": "numeric",
-       "slot": null,
-       "result_id": null
+       "slot": "eda.distribution:acceleration",
+       "result_id": "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc"
       },
       {
        "name": "model_year",
@@ -11922,8 +14809,8 @@
        "name": "origin",
        "role": "feature",
        "type": "category",
-       "slot": null,
-       "result_id": null
+       "slot": "eda.distribution:origin",
+       "result_id": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041"
       }
      ],
      "runnable": true,

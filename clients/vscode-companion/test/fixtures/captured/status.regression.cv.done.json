@@ -14,15 +14,15 @@
   "schema": "hypotrail.status/1",
   "ok": true,
   "study": "/studies/auto mpg cv",
-  "revision": 45,
+  "revision": 71,
   "since": null,
   "changed": null,
   "changes_since": null,
   "view": {
    "schema": "hypotrail.view/1",
    "study": "/studies/auto mpg cv",
-   "revision": 45,
-   "updated": "2026-10-28T06:13:15.734110+00:00",
+   "revision": 71,
+   "updated": "2026-10-28T08:44:32.215966+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
@@ -289,15 +289,19 @@
     "recommended": null,
     "question": null,
     "junior_digest": "Every step of the plan is done. Before relying on the conclusion, read the limits the report lists. The success criterion is met on the holdout (final test).",
+    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Every step of the plan is done.",
+    "evidence": [
+     "final_test.evaluation"
+    ],
     "after_study": {
      "handoff": {
-      "command": "hypotrail export handoff --study /studies/auto mpg cv --expected-revision 45"
+      "command": "hypotrail export handoff --study '/studies/auto mpg cv' --expected-revision 71"
      },
      "azureml": {
       "supported": true,
       "reason_id": null,
       "reason": null,
-      "plan_command": "hypotrail export azureml --study /studies/auto mpg cv --expected-revision 45 --plan",
+      "plan_command": "hypotrail export azureml --study '/studies/auto mpg cv' --expected-revision 71 --plan",
       "model": {
        "task": "regression",
        "family": "linear",
@@ -312,7 +316,7 @@
      "schema": "hypotrail.pause/1",
      "kind": "complete",
      "language": "en",
-     "revision": 45,
+     "revision": 71,
      "position": {
       "step_id": null,
       "completed": 13,
@@ -364,7 +368,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-28T06:12:28.957588+00:00",
+      "time": "2026-10-28T08:43:22.429024+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -403,7 +407,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-28T06:12:30.199660+00:00",
+      "time": "2026-10-28T08:43:23.692005+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -444,7 +448,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-28T06:12:31.653082+00:00",
+      "time": "2026-10-28T08:43:25.242877+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -477,7 +481,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-28T06:12:33.142339+00:00",
+      "time": "2026-10-28T08:43:26.776205+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -510,7 +514,7 @@
      },
      "proposal_id": "p_5",
      "depends_on": [],
-     "revision": 15,
+     "revision": 17,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the preprocessing exactly as you stated it",
@@ -518,8 +522,8 @@
       "actor": "user",
       "restatement": "You keep the drafted preparation: each change rests on the quality check.",
       "proposal_id": "p_5",
-      "revision": 15,
-      "time": "2026-10-28T06:12:38.814347+00:00",
+      "revision": 17,
+      "time": "2026-10-28T08:43:33.438644+00:00",
       "authenticated": false,
       "basis": "endorsed",
       "delegation_scope": null,
@@ -552,7 +556,7 @@
      },
      "proposal_id": "p_6",
      "depends_on": [],
-     "revision": 27,
+     "revision": 53,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the model_variant exactly as you stated it",
@@ -560,8 +564,8 @@
       "actor": "user",
       "restatement": "You compare a tuned ridge and an EBM with the linear model.",
       "proposal_id": "p_6",
-      "revision": 27,
-      "time": "2026-10-28T06:12:47.522820+00:00",
+      "revision": 53,
+      "time": "2026-10-28T08:44:00.105108+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -588,7 +592,7 @@
       "preprocessing",
       "model_variant"
      ],
-     "revision": 37,
+     "revision": 63,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I keep the linear model, because its error is the lowest and it is the simplest",
@@ -596,8 +600,8 @@
       "actor": "user",
       "restatement": "You decide the model_choice as stated.",
       "proposal_id": "p_7",
-      "revision": 37,
-      "time": "2026-10-28T06:13:08.279961+00:00",
+      "revision": 63,
+      "time": "2026-10-28T08:44:22.835970+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -629,7 +633,7 @@
       "model_variant",
       "model_choice"
      ],
-     "revision": 41,
+     "revision": 67,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
@@ -637,8 +641,8 @@
       "actor": "user",
       "restatement": "You open the sealed final test once, for the chosen model.",
       "proposal_id": "p_8",
-      "revision": 41,
-      "time": "2026-10-28T06:13:12.937394+00:00",
+      "revision": 67,
+      "time": "2026-10-28T08:44:28.774650+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -671,7 +675,7 @@
       "model_choice",
       "final_test"
      ],
-     "revision": 45,
+     "revision": 71,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the conclusion exactly as you stated it, because it fits our situation",
@@ -679,8 +683,8 @@
       "actor": "user",
       "restatement": "You decide the conclusion as stated.",
       "proposal_id": "p_9",
-      "revision": 45,
-      "time": "2026-10-28T06:13:15.734039+00:00",
+      "revision": 71,
+      "time": "2026-10-28T08:44:32.215901+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -6909,9 +6913,2018 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
+     "execution_id": "e_8f8894cfd0d89135d5c3402c",
+     "exposure_id": "x_f8764c79364a482c9177fc18c92e620a",
+     "started_revision": 60,
+     "integrity": "ok"
+    },
+    "eda.correlation": {
+     "slot": "eda.correlation",
+     "result_id": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
+     "activity": "eda.correlation",
+     "current": true,
+     "stale_reason": null,
+     "partition": "development",
+     "n_rows": 318,
+     "values": {
+      "partition": "development",
+      "n_rows": 318,
+      "target_read": false,
+      "columns": [
+       {
+        "name": "cylinders",
+        "kind": "numeric"
+       },
+       {
+        "name": "displacement",
+        "kind": "numeric"
+       },
+       {
+        "name": "horsepower",
+        "kind": "numeric"
+       },
+       {
+        "name": "weight",
+        "kind": "numeric"
+       },
+       {
+        "name": "acceleration",
+        "kind": "numeric"
+       },
+       {
+        "name": "origin",
+        "kind": "categorical"
+       }
+      ],
+      "order": [
+       "acceleration",
+       "origin",
+       "horsepower",
+       "cylinders",
+       "displacement",
+       "weight"
+      ],
+      "pairs": [
+       {
+        "a": "cylinders",
+        "b": "displacement",
+        "measure": "spearman",
+        "value": 0.9086802777103509,
+        "n_rows": 318,
+        "flag": true
+       },
+       {
+        "a": "cylinders",
+        "b": "horsepower",
+        "measure": "spearman",
+        "value": 0.8142861976119781,
+        "n_rows": 312,
+        "flag": true
+       },
+       {
+        "a": "cylinders",
+        "b": "weight",
+        "measure": "spearman",
+        "value": 0.868971031546768,
+        "n_rows": 318,
+        "flag": true
+       },
+       {
+        "a": "cylinders",
+        "b": "acceleration",
+        "measure": "spearman",
+        "value": -0.46458897637803565,
+        "n_rows": 318,
+        "flag": false
+       },
+       {
+        "a": "cylinders",
+        "b": "origin",
+        "measure": "eta",
+        "value": 0.6140708761612704,
+        "n_rows": 318,
+        "flag": false
+       },
+       {
+        "a": "displacement",
+        "b": "horsepower",
+        "measure": "spearman",
+        "value": 0.8742037139905126,
+        "n_rows": 312,
+        "flag": true
+       },
+       {
+        "a": "displacement",
+        "b": "weight",
+        "measure": "spearman",
+        "value": 0.9438875606480072,
+        "n_rows": 318,
+        "flag": true
+       },
+       {
+        "a": "displacement",
+        "b": "acceleration",
+        "measure": "spearman",
+        "value": -0.4929933302304839,
+        "n_rows": 318,
+        "flag": false
+       },
+       {
+        "a": "displacement",
+        "b": "origin",
+        "measure": "eta",
+        "value": 0.7151187974715895,
+        "n_rows": 318,
+        "flag": false
+       },
+       {
+        "a": "horsepower",
+        "b": "weight",
+        "measure": "spearman",
+        "value": 0.8716545457386615,
+        "n_rows": 312,
+        "flag": true
+       },
+       {
+        "a": "horsepower",
+        "b": "acceleration",
+        "measure": "spearman",
+        "value": -0.6594310544138169,
+        "n_rows": 312,
+        "flag": false
+       },
+       {
+        "a": "horsepower",
+        "b": "origin",
+        "measure": "eta",
+        "value": 0.5333404338589786,
+        "n_rows": 312,
+        "flag": false
+       },
+       {
+        "a": "weight",
+        "b": "acceleration",
+        "measure": "spearman",
+        "value": -0.3895488084700121,
+        "n_rows": 318,
+        "flag": false
+       },
+       {
+        "a": "weight",
+        "b": "origin",
+        "measure": "eta",
+        "value": 0.6333068195198771,
+        "n_rows": 318,
+        "flag": false
+       },
+       {
+        "a": "acceleration",
+        "b": "origin",
+        "measure": "eta",
+        "value": 0.22310102369572654,
+        "n_rows": 318,
+        "flag": false
+       }
+      ],
+      "flagged": [
+       {
+        "a": "displacement",
+        "b": "weight",
+        "measure": "spearman",
+        "value": 0.9438875606480072
+       },
+       {
+        "a": "cylinders",
+        "b": "displacement",
+        "measure": "spearman",
+        "value": 0.9086802777103509
+       },
+       {
+        "a": "displacement",
+        "b": "horsepower",
+        "measure": "spearman",
+        "value": 0.8742037139905126
+       },
+       {
+        "a": "horsepower",
+        "b": "weight",
+        "measure": "spearman",
+        "value": 0.8716545457386615
+       },
+       {
+        "a": "cylinders",
+        "b": "weight",
+        "measure": "spearman",
+        "value": 0.868971031546768
+       },
+       {
+        "a": "cylinders",
+        "b": "horsepower",
+        "measure": "spearman",
+        "value": 0.8142861976119781
+       }
+      ],
+      "n_flagged": 6,
+      "level": 0.8,
+      "measures": {
+       "spearman": "Spearman's rank correlation (two numeric features, signed)",
+       "cramers_v": "Cramér's V, bias-corrected (two categorical features, unsigned)",
+       "eta": "Correlation ratio of the ranks across the categories (a numeric and a categorical feature, unsigned)"
+      },
+      "question": "Do any two predictors carry nearly the same information in the development rows, so that a model would split its weight between them?",
+      "note": "Structural reading of the development rows: the target is not read, so this is not a look at the outcome. An association between two predictors is not an effect on the outcome; a flagged pair only asks whether both are needed."
+     },
+     "blobs": {},
+     "params": {
+      "partition": "development"
+     },
+     "inputs": {
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+      "columns": [
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight",
+       "acceleration",
+       "origin"
+      ],
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "special_values": [
+       {
+        "column": "horsepower",
+        "value": "?"
+       }
+      ]
+     },
+     "code_fingerprint": "20c8b342e459e088007aabd9aaf73715a20343fbd82cf4f1bbe94e5a0d67dbb7",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
      "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
-     "exposure_id": "x_ba9304dd014a46d2a3dbf0623a450175",
+     "exposure_id": "x_5370ec3b5be2409295d80ef5e328f648",
      "started_revision": 34,
+     "integrity": "ok"
+    },
+    "eda.distribution:acceleration": {
+     "slot": "eda.distribution:acceleration",
+     "result_id": "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+     "activity": "eda.distribution",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 318,
+     "values": {
+      "partition": "train",
+      "column": "acceleration",
+      "role": "feature",
+      "type": "numeric",
+      "kind": "numeric",
+      "n_rows": 318,
+      "n_missing": 0,
+      "special_values": [],
+      "numeric": {
+       "n": 318,
+       "min": 8.5,
+       "q25": 14.0,
+       "median": 15.5,
+       "q75": 17.375,
+       "max": 24.8,
+       "mean": 15.636163522012577,
+       "sd": 2.7483256270602308,
+       "n_bins": 10,
+       "bin_width": 1.6300000000000001,
+       "bins": [
+        {
+         "low": 8.5,
+         "high": 10.13,
+         "n_rows": 7,
+         "share": 0.0220125786163522,
+         "closed": "left"
+        },
+        {
+         "low": 10.13,
+         "high": 11.76,
+         "n_rows": 18,
+         "share": 0.05660377358490566,
+         "closed": "left"
+        },
+        {
+         "low": 11.76,
+         "high": 13.39,
+         "n_rows": 32,
+         "share": 0.10062893081761007,
+         "closed": "left"
+        },
+        {
+         "low": 13.39,
+         "high": 15.02,
+         "n_rows": 86,
+         "share": 0.27044025157232704,
+         "closed": "left"
+        },
+        {
+         "low": 15.02,
+         "high": 16.65,
+         "n_rows": 68,
+         "share": 0.2138364779874214,
+         "closed": "left"
+        },
+        {
+         "low": 16.65,
+         "high": 18.28,
+         "n_rows": 53,
+         "share": 0.16666666666666666,
+         "closed": "left"
+        },
+        {
+         "low": 18.28,
+         "high": 19.91,
+         "n_rows": 36,
+         "share": 0.11320754716981132,
+         "closed": "left"
+        },
+        {
+         "low": 19.91,
+         "high": 21.54,
+         "n_rows": 11,
+         "share": 0.03459119496855346,
+         "closed": "left"
+        },
+        {
+         "low": 21.54,
+         "high": 23.17,
+         "n_rows": 4,
+         "share": 0.012578616352201259,
+         "closed": "left"
+        },
+        {
+         "low": 23.17,
+         "high": 24.8,
+         "n_rows": 3,
+         "share": 0.009433962264150943,
+         "closed": "both"
+        }
+       ],
+       "zeros": {
+        "n_rows": 0,
+        "share": 0.0
+       },
+       "skewed": false,
+       "log_bins": null
+      },
+      "groups": null,
+      "n_groups": null,
+      "max_groups": 20,
+      "other": null,
+      "min_group_rows": 30,
+      "warnings": [],
+      "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "question": "How are the values of acceleration distributed among the development rows?"
+     },
+     "blobs": {},
+     "params": {
+      "column": "acceleration"
+     },
+     "inputs": {
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+      },
+      "special_values": []
+     },
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_f09116e554021da514197565",
+     "exposure_id": "x_23022e74a3bb48a7b8a9cd30cbe7a7bc",
+     "started_revision": 42,
+     "integrity": "ok"
+    },
+    "eda.distribution:cylinders": {
+     "slot": "eda.distribution:cylinders",
+     "result_id": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+     "activity": "eda.distribution",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 318,
+     "values": {
+      "partition": "train",
+      "column": "cylinders",
+      "role": "feature",
+      "type": "integer",
+      "kind": "discrete",
+      "n_rows": 318,
+      "n_missing": 0,
+      "special_values": [],
+      "numeric": null,
+      "groups": [
+       {
+        "value": 3,
+        "n_rows": 3,
+        "share": 0.009433962264150943,
+        "small_count": true
+       },
+       {
+        "value": 4,
+        "n_rows": 165,
+        "share": 0.5188679245283019,
+        "small_count": false
+       },
+       {
+        "value": 5,
+        "n_rows": 3,
+        "share": 0.009433962264150943,
+        "small_count": true
+       },
+       {
+        "value": 6,
+        "n_rows": 67,
+        "share": 0.21069182389937108,
+        "small_count": false
+       },
+       {
+        "value": 8,
+        "n_rows": 80,
+        "share": 0.25157232704402516,
+        "small_count": false
+       }
+      ],
+      "n_groups": 5,
+      "max_groups": 20,
+      "other": null,
+      "min_group_rows": 30,
+      "warnings": [],
+      "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "question": "How are the values of cylinders distributed among the development rows?"
+     },
+     "blobs": {},
+     "params": {
+      "column": "cylinders"
+     },
+     "inputs": {
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+      },
+      "special_values": []
+     },
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_0b8fc9580cdd4e33bc5c14db",
+     "exposure_id": "x_9959f7d5ba9e44d88764beed90cbab13",
+     "started_revision": 36,
+     "integrity": "ok"
+    },
+    "eda.distribution:displacement": {
+     "slot": "eda.distribution:displacement",
+     "result_id": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+     "activity": "eda.distribution",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 318,
+     "values": {
+      "partition": "train",
+      "column": "displacement",
+      "role": "feature",
+      "type": "numeric",
+      "kind": "numeric",
+      "n_rows": 318,
+      "n_missing": 0,
+      "special_values": [],
+      "numeric": {
+       "n": 318,
+       "min": 68.0,
+       "q25": 105.0,
+       "median": 146.0,
+       "q75": 260.0,
+       "max": 455.0,
+       "mean": 192.24056603773585,
+       "sd": 103.06114149126725,
+       "n_bins": 10,
+       "bin_width": 38.7,
+       "bins": [
+        {
+         "low": 68.0,
+         "high": 106.7,
+         "n_rows": 81,
+         "share": 0.25471698113207547,
+         "closed": "left"
+        },
+        {
+         "low": 106.7,
+         "high": 145.4,
+         "n_rows": 77,
+         "share": 0.24213836477987422,
+         "closed": "left"
+        },
+        {
+         "low": 145.4,
+         "high": 184.10000000000002,
+         "n_rows": 27,
+         "share": 0.08490566037735849,
+         "closed": "left"
+        },
+        {
+         "low": 184.10000000000002,
+         "high": 222.8,
+         "n_rows": 9,
+         "share": 0.02830188679245283,
+         "closed": "left"
+        },
+        {
+         "low": 222.8,
+         "high": 261.5,
+         "n_rows": 45,
+         "share": 0.14150943396226415,
+         "closed": "left"
+        },
+        {
+         "low": 261.5,
+         "high": 300.20000000000005,
+         "n_rows": 3,
+         "share": 0.009433962264150943,
+         "closed": "left"
+        },
+        {
+         "low": 300.20000000000005,
+         "high": 338.90000000000003,
+         "n_rows": 32,
+         "share": 0.10062893081761007,
+         "closed": "left"
+        },
+        {
+         "low": 338.90000000000003,
+         "high": 377.6,
+         "n_rows": 24,
+         "share": 0.07547169811320754,
+         "closed": "left"
+        },
+        {
+         "low": 377.6,
+         "high": 416.3,
+         "n_rows": 14,
+         "share": 0.0440251572327044,
+         "closed": "left"
+        },
+        {
+         "low": 416.3,
+         "high": 455.0,
+         "n_rows": 6,
+         "share": 0.018867924528301886,
+         "closed": "both"
+        }
+       ],
+       "zeros": {
+        "n_rows": 0,
+        "share": 0.0
+       },
+       "skewed": false,
+       "log_bins": null
+      },
+      "groups": null,
+      "n_groups": null,
+      "max_groups": 20,
+      "other": null,
+      "min_group_rows": 30,
+      "warnings": [],
+      "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "question": "How are the values of displacement distributed among the development rows?"
+     },
+     "blobs": {},
+     "params": {
+      "column": "displacement"
+     },
+     "inputs": {
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+      },
+      "special_values": []
+     },
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_6f568a7e009178d11fe5261f",
+     "exposure_id": "x_3c75fcf4b8ef44d89a6a45f538fd0cea",
+     "started_revision": 38,
+     "integrity": "ok"
+    },
+    "eda.distribution:horsepower": {
+     "slot": "eda.distribution:horsepower",
+     "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+     "activity": "eda.distribution",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 318,
+     "values": {
+      "partition": "train",
+      "column": "horsepower",
+      "role": "feature",
+      "type": "numeric",
+      "kind": "numeric",
+      "n_rows": 318,
+      "n_missing": 0,
+      "special_values": [
+       {
+        "value": "?",
+        "meaning": "Missing value.",
+        "n_rows": 6,
+        "share": 0.018867924528301886
+       }
+      ],
+      "numeric": {
+       "n": 312,
+       "min": 46.0,
+       "q25": 76.75,
+       "median": 95.0,
+       "q75": 125.0,
+       "max": 230.0,
+       "mean": 104.53525641025641,
+       "sd": 37.5492650533052,
+       "n_bins": 10,
+       "bin_width": 18.4,
+       "bins": [
+        {
+         "low": 46.0,
+         "high": 64.4,
+         "n_rows": 19,
+         "share": 0.059748427672955975,
+         "closed": "left"
+        },
+        {
+         "low": 64.4,
+         "high": 82.8,
+         "n_rows": 76,
+         "share": 0.2389937106918239,
+         "closed": "left"
+        },
+        {
+         "low": 82.8,
+         "high": 101.19999999999999,
+         "n_rows": 96,
+         "share": 0.3018867924528302,
+         "closed": "left"
+        },
+        {
+         "low": 101.19999999999999,
+         "high": 119.6,
+         "n_rows": 38,
+         "share": 0.11949685534591195,
+         "closed": "left"
+        },
+        {
+         "low": 119.6,
+         "high": 138.0,
+         "n_rows": 15,
+         "share": 0.04716981132075472,
+         "closed": "left"
+        },
+        {
+         "low": 138.0,
+         "high": 156.39999999999998,
+         "n_rows": 37,
+         "share": 0.11635220125786164,
+         "closed": "left"
+        },
+        {
+         "low": 156.39999999999998,
+         "high": 174.79999999999998,
+         "n_rows": 10,
+         "share": 0.031446540880503145,
+         "closed": "left"
+        },
+        {
+         "low": 174.79999999999998,
+         "high": 193.2,
+         "n_rows": 13,
+         "share": 0.040880503144654086,
+         "closed": "left"
+        },
+        {
+         "low": 193.2,
+         "high": 211.6,
+         "n_rows": 3,
+         "share": 0.009433962264150943,
+         "closed": "left"
+        },
+        {
+         "low": 211.6,
+         "high": 230.0,
+         "n_rows": 5,
+         "share": 0.015723270440251572,
+         "closed": "both"
+        }
+       ],
+       "zeros": {
+        "n_rows": 0,
+        "share": 0.0
+       },
+       "skewed": false,
+       "log_bins": null
+      },
+      "groups": null,
+      "n_groups": null,
+      "max_groups": 20,
+      "other": null,
+      "min_group_rows": 30,
+      "warnings": [],
+      "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "question": "How are the values of horsepower distributed among the development rows?"
+     },
+     "blobs": {},
+     "params": {
+      "column": "horsepower"
+     },
+     "inputs": {
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+      },
+      "special_values": [
+       {
+        "column": "horsepower",
+        "value": "?"
+       }
+      ]
+     },
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_0eee3a0bb608847ca1ac05a7",
+     "exposure_id": "x_57ad4703cf484ebfb43e186f3ee0199f",
+     "started_revision": 14,
+     "integrity": "ok"
+    },
+    "eda.distribution:origin": {
+     "slot": "eda.distribution:origin",
+     "result_id": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
+     "activity": "eda.distribution",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 318,
+     "values": {
+      "partition": "train",
+      "column": "origin",
+      "role": "feature",
+      "type": "category",
+      "kind": "categorical",
+      "n_rows": 318,
+      "n_missing": 0,
+      "special_values": [],
+      "numeric": null,
+      "groups": [
+       {
+        "value": "1",
+        "n_rows": 197,
+        "share": 0.6194968553459119,
+        "small_count": false
+       },
+       {
+        "value": "3",
+        "n_rows": 63,
+        "share": 0.19811320754716982,
+        "small_count": false
+       },
+       {
+        "value": "2",
+        "n_rows": 58,
+        "share": 0.18238993710691823,
+        "small_count": false
+       }
+      ],
+      "n_groups": 3,
+      "max_groups": 20,
+      "other": null,
+      "min_group_rows": 30,
+      "warnings": [],
+      "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "question": "How are the values of origin distributed among the development rows?"
+     },
+     "blobs": {},
+     "params": {
+      "column": "origin"
+     },
+     "inputs": {
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+      },
+      "special_values": []
+     },
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_ed89c3d6b5ceb43c540c9096",
+     "exposure_id": "x_4e3c82f2227e4e39b5726fee443b5cc2",
+     "started_revision": 44,
+     "integrity": "ok"
+    },
+    "eda.distribution:weight": {
+     "slot": "eda.distribution:weight",
+     "result_id": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+     "activity": "eda.distribution",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 318,
+     "values": {
+      "partition": "train",
+      "column": "weight",
+      "role": "feature",
+      "type": "numeric",
+      "kind": "numeric",
+      "n_rows": 318,
+      "n_missing": 0,
+      "special_values": [],
+      "numeric": {
+       "n": 318,
+       "min": 1613.0,
+       "q25": 2254.25,
+       "median": 2781.5,
+       "q75": 3573.0,
+       "max": 5140.0,
+       "mean": 2970.98427672956,
+       "sd": 839.1829151333358,
+       "n_bins": 10,
+       "bin_width": 352.7,
+       "bins": [
+        {
+         "low": 1613.0,
+         "high": 1965.7,
+         "n_rows": 23,
+         "share": 0.07232704402515723,
+         "closed": "left"
+        },
+        {
+         "low": 1965.7,
+         "high": 2318.4,
+         "n_rows": 71,
+         "share": 0.22327044025157233,
+         "closed": "left"
+        },
+        {
+         "low": 2318.4,
+         "high": 2671.1,
+         "n_rows": 53,
+         "share": 0.16666666666666666,
+         "closed": "left"
+        },
+        {
+         "low": 2671.1,
+         "high": 3023.8,
+         "n_rows": 41,
+         "share": 0.1289308176100629,
+         "closed": "left"
+        },
+        {
+         "low": 3023.8,
+         "high": 3376.5,
+         "n_rows": 28,
+         "share": 0.0880503144654088,
+         "closed": "left"
+        },
+        {
+         "low": 3376.5,
+         "high": 3729.2,
+         "n_rows": 35,
+         "share": 0.11006289308176101,
+         "closed": "left"
+        },
+        {
+         "low": 3729.2,
+         "high": 4081.9,
+         "n_rows": 22,
+         "share": 0.06918238993710692,
+         "closed": "left"
+        },
+        {
+         "low": 4081.9,
+         "high": 4434.6,
+         "n_rows": 25,
+         "share": 0.07861635220125786,
+         "closed": "left"
+        },
+        {
+         "low": 4434.6,
+         "high": 4787.299999999999,
+         "n_rows": 15,
+         "share": 0.04716981132075472,
+         "closed": "left"
+        },
+        {
+         "low": 4787.299999999999,
+         "high": 5140.0,
+         "n_rows": 5,
+         "share": 0.015723270440251572,
+         "closed": "both"
+        }
+       ],
+       "zeros": {
+        "n_rows": 0,
+        "share": 0.0
+       },
+       "skewed": false,
+       "log_bins": null
+      },
+      "groups": null,
+      "n_groups": null,
+      "max_groups": 20,
+      "other": null,
+      "min_group_rows": 30,
+      "warnings": [],
+      "note": "Counts of development rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "question": "How are the values of weight distributed among the development rows?"
+     },
+     "blobs": {},
+     "params": {
+      "column": "weight"
+     },
+     "inputs": {
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+      },
+      "special_values": []
+     },
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_c747f3646963f5be94a54bdb",
+     "exposure_id": "x_3a8a0d5acdeb47c7a8d8ea0d28e3ba6d",
+     "started_revision": 40,
+     "integrity": "ok"
+    },
+    "eda.mean_by:acceleration": {
+     "slot": "eda.mean_by:acceleration",
+     "result_id": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+     "activity": "eda.mean_by",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 318,
+     "values": {
+      "partition": "train",
+      "column": "acceleration",
+      "target": "mpg",
+      "unit": "mpg",
+      "n_rows": 318,
+      "overall_mean": 23.52578616352201,
+      "binned": true,
+      "binning": "5 development quantile bins",
+      "groups": [
+       {
+        "value": "8.5 to 13.5 seconds (assumed)",
+        "n_rows": 72,
+        "mean": 17.422222222222224,
+        "sd": 5.5266886966719735,
+        "small_count": false,
+        "interval": {
+         "low": 16.123514048992632,
+         "high": 18.720930395451816,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.980555555555554,
+         "high": 24.679166666666667
+        }
+       },
+       {
+        "value": "13.6 to 14.9 seconds (assumed)",
+        "n_rows": 59,
+        "mean": 24.030508474576273,
+        "sd": 7.667087165218931,
+        "small_count": false,
+        "interval": {
+         "low": 22.032454677023622,
+         "high": 26.028562272128923,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 22.79491525423729,
+         "high": 25.35423728813559
+        }
+       },
+       {
+        "value": "15 to 16 seconds (assumed)",
+        "n_rows": 61,
+        "mean": 23.65737704918033,
+        "sd": 6.562963228511784,
+        "small_count": false,
+        "interval": {
+         "low": 21.97652411915824,
+         "high": 25.33822997920242,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 22.02622950819672,
+         "high": 24.76065573770492
+        }
+       },
+       {
+        "value": "16.2 to 18 seconds (assumed)",
+        "n_rows": 66,
+        "mean": 26.948484848484846,
+        "sd": 7.42996516037473,
+        "small_count": false,
+        "interval": {
+         "low": 25.121971439667306,
+         "high": 28.774998257302386,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.172727272727276,
+         "high": 24.839393939393936
+        }
+       },
+       {
+        "value": "18.1 to 24.8 seconds (assumed)",
+        "n_rows": 60,
+        "mean": 26.455,
+        "sd": 7.822878767013448,
+        "small_count": false,
+        "interval": {
+         "low": 24.43413612622846,
+         "high": 28.475863873771537,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.835,
+         "high": 24.598333333333336
+        }
+       }
+      ],
+      "min_group_rows": 30,
+      "warnings": [],
+      "n_groups": 5,
+      "max_groups": 20,
+      "other": null,
+      "note": "Mean target by group on development rows: associations, not effects of the variable.",
+      "question": "Does the mean target differ across the groups of acceleration by more than chance alone draws?",
+      "null_band": {
+       "chart": {
+        "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+        "observed": 9.526262626262621,
+        "null_min": 0.9611280911364304,
+        "null_max": 3.5064393939393916,
+        "outside": true
+       },
+       "shuffles": 19,
+       "seed": 20261019,
+       "note": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+      }
+     },
+     "blobs": {},
+     "params": {
+      "column": "acceleration"
+     },
+     "inputs": {
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+      },
+      "special_values": [],
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      }
+     },
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_88662ab87ecb5884e6688116",
+     "exposure_id": "x_1ce8a1cba31f457e93152091ffebfd86",
+     "started_revision": 30,
+     "integrity": "ok"
+    },
+    "eda.mean_by:cylinders": {
+     "slot": "eda.mean_by:cylinders",
+     "result_id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+     "activity": "eda.mean_by",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 318,
+     "values": {
+      "partition": "train",
+      "column": "cylinders",
+      "target": "mpg",
+      "unit": "mpg",
+      "n_rows": 318,
+      "overall_mean": 23.52578616352201,
+      "binned": false,
+      "binning": null,
+      "groups": [
+       {
+        "value": "3",
+        "n_rows": 3,
+        "mean": 19.5,
+        "sd": 1.8027756377319946,
+        "small_count": true,
+        "interval": {
+         "low": 15.021657052485201,
+         "high": 23.978342947514797,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 15.433333333333332,
+         "high": 31.53333333333333
+        }
+       },
+       {
+        "value": "4",
+        "n_rows": 165,
+        "mean": 29.12969696969697,
+        "sd": 5.777808938267595,
+        "small_count": false,
+        "interval": {
+         "low": 28.2415477321143,
+         "high": 30.01784620727964,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 22.455151515151513,
+         "high": 24.387878787878787
+        }
+       },
+       {
+        "value": "5",
+        "n_rows": 3,
+        "mean": 27.366666666666664,
+        "sd": 8.22820353013544,
+        "small_count": true,
+        "interval": {
+         "low": 6.926675977500022,
+         "high": 47.80665735583331,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 17.833333333333332,
+         "high": 33.8
+        }
+       },
+       {
+        "value": "6",
+        "n_rows": 67,
+        "mean": 19.964179104477612,
+        "sd": 4.116732357194099,
+        "small_count": false,
+        "interval": {
+         "low": 18.960029182562494,
+         "high": 20.96832902639273,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.85373134328358,
+         "high": 24.74179104477612
+        }
+       },
+       {
+        "value": "8",
+        "n_rows": 80,
+        "mean": 14.9575,
+        "sd": 2.7897540838040307,
+        "small_count": false,
+        "interval": {
+         "low": 14.336670640330118,
+         "high": 15.578329359669882,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 22.5625,
+         "high": 25.03625
+        }
+       }
+      ],
+      "min_group_rows": 30,
+      "warnings": [
+       "cylinders = 3: only 3 development rows; its mean is too noisy to read on its own.",
+       "cylinders = 5: only 3 development rows; its mean is too noisy to read on its own."
+      ],
+      "n_groups": 5,
+      "max_groups": 20,
+      "other": null,
+      "note": "Mean target by group on development rows: associations, not effects of the variable.",
+      "question": "Does the mean target differ across the groups of cylinders by more than chance alone draws?",
+      "null_band": {
+       "chart": {
+        "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+        "observed": 14.17219696969697,
+        "null_min": 0.45962121212120977,
+        "null_max": 2.64669776119403,
+        "outside": true
+       },
+       "shuffles": 19,
+       "seed": 20261019,
+       "note": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+      }
+     },
+     "blobs": {},
+     "params": {
+      "column": "cylinders"
+     },
+     "inputs": {
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+      },
+      "special_values": [],
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      }
+     },
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_afbcc5b5c6d6b10afa774b86",
+     "exposure_id": "x_bc6416a05a8248868d62ab0dc7b35b71",
+     "started_revision": 22,
+     "integrity": "ok"
+    },
+    "eda.mean_by:displacement": {
+     "slot": "eda.mean_by:displacement",
+     "result_id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+     "activity": "eda.mean_by",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 318,
+     "values": {
+      "partition": "train",
+      "column": "displacement",
+      "target": "mpg",
+      "unit": "mpg",
+      "n_rows": 318,
+      "overall_mean": 23.52578616352201,
+      "binned": true,
+      "binning": "5 development quantile bins",
+      "groups": [
+       {
+        "value": "68 to 98 cubic inches (assumed)",
+        "n_rows": 74,
+        "mean": 31.7972972972973,
+        "sd": 6.259042181811146,
+        "small_count": false,
+        "interval": {
+         "low": 30.347194831750624,
+         "high": 33.247399762843976,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 22.37162162162162,
+         "high": 24.5972972972973
+        }
+       },
+       {
+        "value": "100 to 121 cubic inches (assumed)",
+        "n_rows": 53,
+        "mean": 27.535849056603777,
+        "sd": 5.1080289115659205,
+        "small_count": false,
+        "interval": {
+         "low": 26.127901916870496,
+         "high": 28.943796196337058,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 22.25094339622642,
+         "high": 24.80754716981132
+        }
+       },
+       {
+        "value": "122 to 200 cubic inches (assumed)",
+        "n_rows": 67,
+        "mean": 24.577611940298503,
+        "sd": 4.163361873480642,
+        "small_count": false,
+        "interval": {
+         "low": 23.562088185674476,
+         "high": 25.59313569492253,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.65223880597015,
+         "high": 24.555223880597012
+        }
+       },
+       {
+        "value": "225 to 304 cubic inches (assumed)",
+        "n_rows": 64,
+        "mean": 17.890625,
+        "sd": 3.498286145011719,
+        "small_count": false,
+        "interval": {
+         "low": 17.016779120885563,
+         "high": 18.764470879114437,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 22.390625,
+         "high": 24.3875
+        }
+       },
+       {
+        "value": "305 to 455 cubic inches (assumed)",
+        "n_rows": 60,
+        "mean": 14.618333333333332,
+        "sd": 2.7119629307667736,
+        "small_count": false,
+        "interval": {
+         "low": 13.917759020855977,
+         "high": 15.318907645810688,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.883333333333333,
+         "high": 25.413333333333334
+        }
+       }
+      ],
+      "min_group_rows": 30,
+      "warnings": [],
+      "n_groups": 5,
+      "max_groups": 20,
+      "other": null,
+      "note": "Mean target by group on development rows: associations, not effects of the variable.",
+      "question": "Does the mean target differ across the groups of displacement by more than chance alone draws?",
+      "null_band": {
+       "chart": {
+        "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+        "observed": 17.178963963963966,
+        "null_min": 0.7744791666666657,
+        "null_max": 3.2027611940298506,
+        "outside": true
+       },
+       "shuffles": 19,
+       "seed": 20261019,
+       "note": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+      }
+     },
+     "blobs": {},
+     "params": {
+      "column": "displacement"
+     },
+     "inputs": {
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+      },
+      "special_values": [],
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      }
+     },
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_061502fb4d6e55bbb43de53a",
+     "exposure_id": "x_dcbd5f69906747579ff3d0c0215356cd",
+     "started_revision": 24,
+     "integrity": "ok"
+    },
+    "eda.mean_by:horsepower": {
+     "slot": "eda.mean_by:horsepower",
+     "result_id": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+     "activity": "eda.mean_by",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 318,
+     "values": {
+      "partition": "train",
+      "column": "horsepower",
+      "target": "mpg",
+      "unit": "mpg",
+      "n_rows": 318,
+      "overall_mean": 23.52578616352201,
+      "binned": true,
+      "binning": "5 development quantile bins",
+      "groups": [
+       {
+        "value": "46 to 74 horsepower (assumed)",
+        "n_rows": 63,
+        "mean": 32.85238095238095,
+        "sd": 5.821424754741335,
+        "small_count": false,
+        "interval": {
+         "low": 31.38627411351375,
+         "high": 34.318487791248145,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.388888888888886,
+         "high": 25.382539682539683
+        }
+       },
+       {
+        "value": "75 to 88 horsepower (assumed)",
+        "n_rows": 66,
+        "mean": 27.1030303030303,
+        "sd": 5.155220496574163,
+        "small_count": false,
+        "interval": {
+         "low": 25.83571892819085,
+         "high": 28.370341677869753,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.028787878787877,
+         "high": 24.937878787878788
+        }
+       },
+       {
+        "value": "89 to 100 horsepower (assumed)",
+        "n_rows": 62,
+        "mean": 22.641935483870967,
+        "sd": 4.5602900535841595,
+        "small_count": false,
+        "interval": {
+         "low": 21.48383865548684,
+         "high": 23.800032312255095,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 22.36935483870968,
+         "high": 24.698387096774194
+        }
+       },
+       {
+        "value": "103 to 140 horsepower (assumed)",
+        "n_rows": 60,
+        "mean": 19.801666666666666,
+        "sd": 4.182428605433453,
+        "small_count": false,
+        "interval": {
+         "low": 18.72123079068339,
+         "high": 20.882102542649942,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.923333333333336,
+         "high": 25.43
+        }
+       },
+       {
+        "value": "142 to 230 horsepower (assumed)",
+        "n_rows": 61,
+        "mean": 14.144262295081967,
+        "sd": 1.8857822948018095,
+        "small_count": false,
+        "interval": {
+         "low": 13.66129102353331,
+         "high": 14.627233566630624,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 22.48360655737705,
+         "high": 25.045901639344265
+        }
+       },
+       {
+        "value": "? (special value)",
+        "n_rows": 6,
+        "mean": 28.0,
+        "sd": 7.886951248739908,
+        "small_count": true,
+        "interval": {
+         "low": 19.723152269450203,
+         "high": 36.2768477305498,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 19.116666666666667,
+         "high": 30.283333333333335
+        }
+       }
+      ],
+      "min_group_rows": 30,
+      "warnings": [
+       "horsepower = ? (special value): only 6 development rows; its mean is too noisy to read on its own."
+      ],
+      "n_groups": 6,
+      "max_groups": 20,
+      "other": null,
+      "note": "Mean target by group on development rows: associations, not effects of the variable.",
+      "question": "Does the mean target differ across the groups of horsepower by more than chance alone draws?",
+      "null_band": {
+       "chart": {
+        "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+        "observed": 18.708118657298982,
+        "null_min": 1.1031818181818132,
+        "null_max": 4.241212121212122,
+        "outside": true
+       },
+       "shuffles": 19,
+       "seed": 20261019,
+       "note": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+      }
+     },
+     "blobs": {},
+     "params": {
+      "column": "horsepower"
+     },
+     "inputs": {
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+      },
+      "special_values": [
+       {
+        "column": "horsepower",
+        "value": "?"
+       }
+      ],
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      }
+     },
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_8b6b767c3df161e7401893c1",
+     "exposure_id": "x_28283a1e53b247888c1a52b8fa34c24f",
+     "started_revision": 26,
+     "integrity": "ok"
+    },
+    "eda.mean_by:origin": {
+     "slot": "eda.mean_by:origin",
+     "result_id": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+     "activity": "eda.mean_by",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 318,
+     "values": {
+      "partition": "train",
+      "column": "origin",
+      "target": "mpg",
+      "unit": "mpg",
+      "n_rows": 318,
+      "overall_mean": 23.52578616352201,
+      "binned": false,
+      "binning": null,
+      "groups": [
+       {
+        "value": "1",
+        "n_rows": 197,
+        "mean": 19.984263959390862,
+        "sd": 6.189087342577385,
+        "small_count": false,
+        "interval": {
+         "low": 19.11463997457913,
+         "high": 20.853887944202594,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 22.885279187817257,
+         "high": 24.252284263959396
+        }
+       },
+       {
+        "value": "2",
+        "n_rows": 58,
+        "mean": 27.55,
+        "sd": 6.703972375691527,
+        "small_count": false,
+        "interval": {
+         "low": 25.787280321281248,
+         "high": 29.312719678718754,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.47241379310345,
+         "high": 25.401724137931037
+        }
+       },
+       {
+        "value": "3",
+        "n_rows": 63,
+        "mean": 30.895238095238096,
+        "sd": 6.281910243975479,
+        "small_count": false,
+        "interval": {
+         "low": 29.31315948770457,
+         "high": 32.47731670277162,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.495238095238097,
+         "high": 25.384126984126983
+        }
+       }
+      ],
+      "min_group_rows": 30,
+      "warnings": [],
+      "n_groups": 3,
+      "max_groups": 20,
+      "other": null,
+      "note": "Mean target by group on development rows: associations, not effects of the variable.",
+      "question": "Does the mean target differ across the groups of origin by more than chance alone draws?",
+      "null_band": {
+       "chart": {
+        "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+        "observed": 10.910974135847233,
+        "null_min": 0.6610184513737813,
+        "null_max": 3.0961412151067336,
+        "outside": true
+       },
+       "shuffles": 19,
+       "seed": 20261019,
+       "note": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+      }
+     },
+     "blobs": {},
+     "params": {
+      "column": "origin"
+     },
+     "inputs": {
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+      },
+      "special_values": [],
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      }
+     },
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_947162f1b37ea74e53f6086a",
+     "exposure_id": "x_3f7349e6895d44fdace1f5995560d400",
+     "started_revision": 32,
+     "integrity": "ok"
+    },
+    "eda.mean_by:weight": {
+     "slot": "eda.mean_by:weight",
+     "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+     "activity": "eda.mean_by",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 318,
+     "values": {
+      "partition": "train",
+      "column": "weight",
+      "target": "mpg",
+      "unit": "mpg",
+      "n_rows": 318,
+      "overall_mean": 23.52578616352201,
+      "binned": true,
+      "binning": "5 development quantile bins",
+      "groups": [
+       {
+        "value": "1613 to 2164 pounds (assumed)",
+        "n_rows": 64,
+        "mean": 33.1765625,
+        "sd": 5.787664555924502,
+        "small_count": false,
+        "interval": {
+         "low": 31.730846908923223,
+         "high": 34.62227809107678,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.703125,
+         "high": 24.732812499999998
+        }
+       },
+       {
+        "value": "2171 to 2582 pounds (assumed)",
+        "n_rows": 63,
+        "mean": 26.976190476190474,
+        "sd": 4.525223725915134,
+        "small_count": false,
+        "interval": {
+         "low": 25.836527639087794,
+         "high": 28.115853313293155,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.293650793650794,
+         "high": 24.644444444444442
+        }
+       },
+       {
+        "value": "2585 to 3086 pounds (assumed)",
+        "n_rows": 64,
+        "mean": 24.2140625,
+        "sd": 4.637831567319516,
+        "small_count": false,
+        "interval": {
+         "low": 23.05556664370536,
+         "high": 25.37255835629464,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.9375,
+         "high": 24.815625
+        }
+       },
+       {
+        "value": "3121 to 3755 pounds (assumed)",
+        "n_rows": 63,
+        "mean": 18.917460317460318,
+        "sd": 3.691819189756117,
+        "small_count": false,
+        "interval": {
+         "low": 17.987687694778174,
+         "high": 19.84723294014246,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 21.56031746031746,
+         "high": 24.647619047619045
+        }
+       },
+       {
+        "value": "3781 to 5140 pounds (assumed)",
+        "n_rows": 64,
+        "mean": 14.3265625,
+        "sd": 2.0800825828767717,
+        "small_count": false,
+        "interval": {
+         "low": 13.80697333035576,
+         "high": 14.84615166964424,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 22.1859375,
+         "high": 25.1828125
+        }
+       }
+      ],
+      "min_group_rows": 30,
+      "warnings": [],
+      "n_groups": 5,
+      "max_groups": 20,
+      "other": null,
+      "note": "Mean target by group on development rows: associations, not effects of the variable.",
+      "question": "Does the mean target differ across the groups of weight by more than chance alone draws?",
+      "null_band": {
+       "chart": {
+        "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+        "observed": 18.85,
+        "null_min": 0.7513144841269828,
+        "null_max": 3.480307539682542,
+        "outside": true
+       },
+       "shuffles": 19,
+       "seed": 20261019,
+       "note": "The band is the range of the same figure after shuffling the target among the development rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+      }
+     },
+     "blobs": {},
+     "params": {
+      "column": "weight"
+     },
+     "inputs": {
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+      },
+      "special_values": [],
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      }
+     },
+     "code_fingerprint": "6e0d7b52b507a907064605c320c8691be5021ec0019cd008e4b6b06633c50ebd",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_a633b01aa452bb85d7c21822",
+     "exposure_id": "x_d99e7ca166fd4af38b74042153a5593b",
+     "started_revision": 28,
      "integrity": "ok"
     },
     "eda.quality": {
@@ -8154,7 +10167,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ce9ad9e64710577437be7e6c",
-     "exposure_id": "x_2bf5ba2d1d8f4e6bab12b7ef62bdd951",
+     "exposure_id": "x_380f68b02edb41b8a2f6aebe9f4e49ee",
      "started_revision": 12,
      "integrity": "ok"
     },
@@ -8223,9 +10236,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_9c2f7f2c69f91be9c07e4331",
-     "exposure_id": "x_02f84648d89d446e8152f7e9defa36ba",
-     "started_revision": 18,
+     "execution_id": "e_c4434080afdaeb4edd1ce5b5",
+     "exposure_id": "x_641b8da74a4e45c0b28298a368476af8",
+     "started_revision": 20,
      "integrity": "ok"
     },
     "eda.target_summary": {
@@ -8289,9 +10302,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_2ab8c63a63b208bd8731b8b3",
-     "exposure_id": "x_859c02c5d5e24f8fb97350185ad16627",
-     "started_revision": 16,
+     "execution_id": "e_9c2f7f2c69f91be9c07e4331",
+     "exposure_id": "x_3e3bd70567ee4e0eb9c4740fcc90dea6",
+     "started_revision": 18,
      "integrity": "ok"
     },
     "evaluate.regression": {
@@ -8865,14 +10878,14 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_947162f1b37ea74e53f6086a",
-     "exposure_id": "x_5daeebd845844150a85f42b8034d1480",
-     "started_revision": 32,
+     "execution_id": "e_2c515241b96823b32e92d4c1",
+     "exposure_id": "x_db41784baf684f8e89ba5afa06a0385d",
+     "started_revision": 58,
      "integrity": "ok"
     },
     "final_test.evaluation": {
      "slot": "final_test.evaluation",
-     "result_id": "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09",
+     "result_id": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
      "activity": "final_test.evaluation",
      "current": true,
      "stale_reason": null,
@@ -8995,8 +11008,8 @@
       },
       "note": "Measured once on the sealed final-test rows, with the configuration chosen on the development rows refitted on all of them: this is the study's independent evidence. Any later change is made after the final test.",
       "predictor": {
-       "predictor_id": "34ce73377aef940f20e494889ce921f43d1d423429320b0780e78005a9efd326",
-       "capture": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
+       "predictor_id": "a3cad912071bfbf055d400c93a7adde9ae55d6a5cc8a813154b1da47283527b8",
+       "capture": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
        "evaluated": "reloaded_capture",
        "parity_before_opening": "ok",
        "note": "The final-test rows were scored by the captured predictor, reloaded and checked on its parity rows before they were read; no model was refitted."
@@ -9068,14 +11081,16 @@
        ]
       },
       "predictor": {
-       "bundle": "predictors/34ce73377aef940f20e494889ce921f43d1d423429320b0780e78005a9efd326",
-       "packages": [],
-       "predictor_id": "34ce73377aef940f20e494889ce921f43d1d423429320b0780e78005a9efd326",
-       "profile": "base",
-       "result_id": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974"
+       "bundle": "predictors/a3cad912071bfbf055d400c93a7adde9ae55d6a5cc8a813154b1da47283527b8+mlflow_pyfunc",
+       "packages": [
+        "mlflow_pyfunc"
+       ],
+       "predictor_id": "a3cad912071bfbf055d400c93a7adde9ae55d6a5cc8a813154b1da47283527b8",
+       "profile": "workshop",
+       "result_id": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe"
       },
       "results": {
-       "predictor.capture": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974"
+       "predictor.capture": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe"
       },
       "target": {
        "column": "mpg",
@@ -9095,9 +11110,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_c145eefc5cae71d5a6fc2250",
-     "exposure_id": "x_e5a48cf988b6456386d7f6abf7a25d38",
-     "started_revision": 42,
+     "execution_id": "e_d17cf79ff99b50941d8f5e6e",
+     "exposure_id": "x_7fd0c4d314ed427fb9a586e8fbb96099",
+     "started_revision": 68,
      "integrity": "ok"
     },
     "fit.baseline": {
@@ -9233,9 +11248,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_c4434080afdaeb4edd1ce5b5",
-     "exposure_id": "x_b2e0bf710c7c439ba93d60b0d1511136",
-     "started_revision": 20,
+     "execution_id": "e_f02c465bbc8626047ce0b4cc",
+     "exposure_id": "x_ccb2542605a24cde9f47c3f257e67944",
+     "started_revision": 46,
      "integrity": "ok"
     },
     "fit.linear": {
@@ -9446,9 +11461,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_afbcc5b5c6d6b10afa774b86",
-     "exposure_id": "x_7243a497bb4a4af9ba1825a34a99f8ef",
-     "started_revision": 22,
+     "execution_id": "e_5904912825f5be2c5a9088d0",
+     "exposure_id": "x_1b0b93df908d4940865ee3c321a1d54e",
+     "started_revision": 48,
      "integrity": "ok"
     },
     "fit.variant": {
@@ -9855,9 +11870,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_a633b01aa452bb85d7c21822",
-     "exposure_id": "x_b5701368984c4ad08994c17f66afa146",
-     "started_revision": 28,
+     "execution_id": "e_c7acc1c7811ed60617bfe6ae",
+     "exposure_id": "x_33c599b05e1840a4b479c558de2e8f0e",
+     "started_revision": 54,
      "integrity": "ok"
     },
     "fit.variant:2": {
@@ -11017,24 +13032,24 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_88662ab87ecb5884e6688116",
-     "exposure_id": "x_f59001f9c3cc4d469fc06b337bf7db06",
-     "started_revision": 30,
+     "execution_id": "e_60f840ebe562aefdfb0411ae",
+     "exposure_id": "x_f1ef3b0f6c38462dacc30b950db0abdd",
+     "started_revision": 56,
      "integrity": "ok"
     },
     "predictor.capture": {
      "slot": "predictor.capture",
-     "result_id": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
+     "result_id": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
      "activity": "predictor.capture",
      "current": true,
      "stale_reason": null,
      "partition": "development",
      "n_rows": 318,
      "values": {
-      "predictor_id": "34ce73377aef940f20e494889ce921f43d1d423429320b0780e78005a9efd326",
-      "bundle": "predictors/34ce73377aef940f20e494889ce921f43d1d423429320b0780e78005a9efd326",
+      "predictor_id": "a3cad912071bfbf055d400c93a7adde9ae55d6a5cc8a813154b1da47283527b8",
+      "bundle": "predictors/a3cad912071bfbf055d400c93a7adde9ae55d6a5cc8a813154b1da47283527b8+mlflow_pyfunc",
       "reused": false,
-      "profile": "base",
+      "profile": "workshop",
       "model": "fit.linear",
       "family": "linear",
       "task": "regression",
@@ -11050,7 +13065,7 @@
        "acceleration",
        "origin"
       ],
-      "recipe_sha256": "0f8ac8aafd52024e4b0d0623c9efa9c8189ffc88448711d50a14fcff8ed72a24",
+      "recipe_sha256": "d6906e1ccdbf5a166ea97c78702edecc8272607eb3e38f79f0a0c05ff4801248",
       "data_contract_sha256": "49cb2be6e9d56559e8c1e4906322ed17357b2be462d92cac12e984a62afb69b7",
       "training_scope": {
        "role": "final_development_refit",
@@ -11124,13 +13139,18 @@
        "reason": null,
        "extensions": {}
       },
-      "packages": [],
+      "packages": [
+       {
+        "format": "mlflow_pyfunc",
+        "artifact_id": "f5caf3788014e58c6ae61636f1fdbea3134aec4c5dce2de99922f92cb1dc974d"
+       }
+      ],
       "runtime": {
        "distribution": "hypotrail-runtime",
        "version": "1.0.0",
        "api_version": "1.0"
       },
-      "computation_id": "a20b4245dd20a319aab47de96c1ff6c018e824f738efadcd4b19b30161d35be2",
+      "computation_id": "920388b55981c539327516ac3af46ad3e4a4d12ed00bcb9bf3ee5fbcb256e958",
       "limitations": [
        "Trusted local serialisation (pickle): the bundle digest proves integrity, not safety; load it only from a source you control.",
        "Parity rows are development rows (features only): they check reproduction, not generalisation.",
@@ -11149,9 +13169,9 @@
        "seed": 0,
        "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
       },
-      "packager": null,
+      "packager": "mlflow_pyfunc",
       "parity_rows": 50,
-      "profile": "base",
+      "profile": "workshop",
       "role": "final_development_refit",
       "runtime": {
        "api_version": "1.0",
@@ -11208,7 +13228,7 @@
        "evidence_ids": [
         "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d"
        ],
-       "revision": 37
+       "revision": 63
       },
       "target": {
        "column": "mpg",
@@ -11228,9 +13248,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_c747f3646963f5be94a54bdb",
-     "exposure_id": "x_6f4b765fa76b4e0e8cb16cc9c58269b1",
-     "started_revision": 38,
+     "execution_id": "e_bf95f2dfd64b8f0afb7e4a7a",
+     "exposure_id": "x_b02766484fa84af2b3252c39123a9705",
+     "started_revision": 64,
      "integrity": "ok"
     },
     "split": {
@@ -11364,7 +13384,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_45e56db55964c2ea7d665907",
-     "exposure_id": "x_b1a2a87b8f7f4bd78940fbdd52dc4762",
+     "exposure_id": "x_2b9471f7e09041fe899fdb42a5ef837d",
      "started_revision": 10,
      "integrity": "ok"
     }
@@ -11372,7 +13392,7 @@
    "stale": {
     "62f774885fc62eaccdd876e9c57560540b145f768a6c6b0988466d100fa6344e": {
      "reason": "model_variant confirmed for the first time",
-     "since": 27
+     "since": 53
     }
    },
    "invalidations": [
@@ -11403,7 +13423,7 @@
      "previous": null,
      "reason": "model_variant confirmed for the first time",
      "reconfirm_required": [],
-     "revision": 27,
+     "revision": 53,
      "row": null,
      "stale_results": [
       "62f774885fc62eaccdd876e9c57560540b145f768a6c6b0988466d100fa6344e"
@@ -11429,10 +13449,10 @@
       "error": null,
       "generated": false,
       "kind": "marimo_notebook",
-      "last_ok_revision": 45,
+      "last_ok_revision": 71,
       "path": "notebooks/study_editable.py",
-      "revision": 45,
-      "sha256": "203fd219560c20ee95b2af0e9bfdebf1e73b4b2a66076f4c13acec6b6231e19e",
+      "revision": 71,
+      "sha256": "941b3d329827525dbbf64776741c7c768bacc9684f3b30f6094a51a006a39af2",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -11445,27 +13465,40 @@
      "notebook": {
       "candidate": null,
       "consumed": [
+       "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
        "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+       "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
        "1c5d4f6559fc7252490f9fcfba04d981d066f897dd672fad39515d41bf5e84ff",
+       "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
        "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
-       "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09",
+       "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+       "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
+       "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+       "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
        "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
-       "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
+       "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+       "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+       "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+       "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+       "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
        "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
        "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
+       "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
        "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
        "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
+       "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
        "d6a53e63450ea32206f5f7aad01e1e4dfdcdaffd43b83a36447dee6ec64e4856",
-       "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+       "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+       "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe"
       ],
-      "edit_check_sha256": "82ffcb014c86c656787bb7e56bc41301e65cbf4ae6674e46b697b370b270e723",
+      "edit_check_sha256": "3b38431ae11cdf3073964d162b4ca2601ffe245021455e086cb31154def93c03",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
-      "last_ok_revision": 45,
+      "last_ok_revision": 71,
       "path": "notebooks/study_generated.py",
-      "revision": 45,
-      "sha256": "6d0b4eab06b268f8f48edb496466202652bdcf6ab1ae402f98a7d24e0a82e7ae",
+      "revision": 71,
+      "sha256": "7f382d7d06c84d1691a9ec19bdabc9002e4fbcf091650f56cfb3181b2ac2233b",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -11478,26 +13511,39 @@
      "report": {
       "candidate": null,
       "consumed": [
+       "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
        "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+       "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
        "1c5d4f6559fc7252490f9fcfba04d981d066f897dd672fad39515d41bf5e84ff",
+       "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
        "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
-       "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09",
+       "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+       "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
+       "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+       "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
        "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
-       "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
+       "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+       "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+       "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+       "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+       "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
        "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
        "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
+       "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
        "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
        "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
+       "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
        "d6a53e63450ea32206f5f7aad01e1e4dfdcdaffd43b83a36447dee6ec64e4856",
-       "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
+       "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+       "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe"
       ],
       "error": null,
       "generated": true,
       "kind": "html",
-      "last_ok_revision": 45,
+      "last_ok_revision": 71,
       "path": "reports/study.html",
-      "revision": 45,
-      "sha256": "696f0db496caa827ccc42d388d42f2b8ac7f0df3a8ac8b093c774665873f21c8",
+      "revision": 71,
+      "sha256": "9e7c8d881c00ab8cd65c42c18d98d044e4eac8b6a2a844cbf2fdfb152e231f2b",
       "status": "ok",
       "template_version": 4,
       "user_edits_preserved": [],
@@ -11530,7 +13576,7 @@
     }
    },
    "exposure": {
-    "records": 21,
+    "records": 34,
     "rows_exposed": 398,
     "by_purpose": {
      "cross_validated_fit": 318,
@@ -11650,19 +13696,19 @@
     "development_rows": 318,
     "schema_check": "pass",
     "opening": {
-     "revision": 42,
+     "revision": 68,
      "model": "fit.linear",
      "rule": null,
-     "result_id": "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09",
+     "result_id": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
      "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
-     "time": "2026-10-28T06:13:13.051764+00:00"
+     "time": "2026-10-28T08:44:28.865116+00:00"
     },
     "post_final_test": false,
     "changed_after": [],
     "excluded_prior_exposed": 0
    },
    "deliverables": {
-    "interpreter": "/home/user/hypotrail/framework/.venv/bin/python",
+    "interpreter": "/hypotrail/framework/.venv/bin/python",
     "launch": {
      "notebook": {
       "mode": "run",
@@ -11676,7 +13722,7 @@
        "run",
        "/studies/auto mpg cv/notebooks/study_generated.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo run /studies/auto mpg cv/notebooks/study_generated.py"
+      "shell": "uv run --project /hypotrail/framework marimo run '/studies/auto mpg cv/notebooks/study_generated.py'"
      },
      "editable": {
       "mode": "edit",
@@ -11690,7 +13736,7 @@
        "edit",
        "/studies/auto mpg cv/notebooks/study_editable.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo edit /studies/auto mpg cv/notebooks/study_editable.py"
+      "shell": "uv run --project /hypotrail/framework marimo edit '/studies/auto mpg cv/notebooks/study_editable.py'"
      },
      "workbench": {
       "mode": "edit",
@@ -11704,7 +13750,7 @@
        "edit",
        "/studies/auto mpg cv/notebooks/workbench.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo edit /studies/auto mpg cv/notebooks/workbench.py"
+      "shell": "uv run --project /hypotrail/framework marimo edit '/studies/auto mpg cv/notebooks/workbench.py'"
      }
     }
    },
@@ -11744,21 +13790,28 @@
      "decision_rule": null,
      "decision_status": null,
      "basis": null,
-     "result_id": "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09"
+     "result_id": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48"
     },
     "judged_on": "final_test",
     "judged_status": "met"
    },
    "eda_looks": {
-    "target_looks": 4,
+    "target_looks": 10,
     "results": [
      "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
      "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
+     "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+     "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+     "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+     "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+     "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+     "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
      "62f774885fc62eaccdd876e9c57560540b145f768a6c6b0988466d100fa6344e",
      "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520"
     ],
     "by_activity": {
      "diag.regression": 2,
+     "eda.mean_by": 6,
      "eda.special_values": 1,
      "eda.target_summary": 1
     },
@@ -12274,19 +14327,32 @@
    "claim_eligibility": null,
    "presentation": {
     "schema": "hypotrail.presentation/1",
-    "revision": 45,
+    "revision": 71,
     "result_ids": {
      "diag.regression": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+     "eda.correlation": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
+     "eda.distribution:acceleration": "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+     "eda.distribution:cylinders": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+     "eda.distribution:displacement": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+     "eda.distribution:horsepower": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+     "eda.distribution:origin": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
+     "eda.distribution:weight": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+     "eda.mean_by:acceleration": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+     "eda.mean_by:cylinders": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+     "eda.mean_by:displacement": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+     "eda.mean_by:horsepower": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+     "eda.mean_by:origin": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+     "eda.mean_by:weight": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
      "eda.quality": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
      "eda.special_values": "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
      "eda.target_summary": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
      "evaluate.regression": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
-     "final_test.evaluation": "5085237b28b21c3f3daf20422284894f0778d2f9c3e774d522a19f830786ca09",
+     "final_test.evaluation": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
      "fit.baseline": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
      "fit.linear": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
      "fit.variant": "d6a53e63450ea32206f5f7aad01e1e4dfdcdaffd43b83a36447dee6ec64e4856",
      "fit.variant:2": "1c5d4f6559fc7252490f9fcfba04d981d066f897dd672fad39515d41bf5e84ff",
-     "predictor.capture": "6f0d281e97937b075210196728ff64a9cb3a13d237d907d5bdb1adfc0a62b974",
+     "predictor.capture": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "eligibility": null,
@@ -12311,7 +14377,7 @@
      "schema": "hypotrail.pause/1",
      "kind": "complete",
      "language": "en",
-     "revision": 45,
+     "revision": 71,
      "position": {
       "step_id": null,
       "completed": 13,

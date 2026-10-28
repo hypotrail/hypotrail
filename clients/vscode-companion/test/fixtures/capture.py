@@ -533,8 +533,10 @@ def one_page(cap: Capture) -> None:
     assert summary['next_action']['decision'] == 'preprocessing', summary['next_action']
     # The same study after a chart run was killed after its reservation: the interruption
     # comes first in the engine's next action (CLI-CONTRACT §8, F1), the preparation stays
-    # to confirm again in the path.
-    _killed_run(reopened, held.rev(), column='horsepower')
+    # to confirm again in the path. The chart is one the plan does not draw itself (the time
+    # column is not a kept feature, R40/R45), so the run is not answered by a current result
+    # and does reach its reservation.
+    _killed_run(reopened, held.rev(), column='model_year')
     summary = _summary(cap, 'summary.regression.interrupted', reopened,
                        'The reopened Auto MPG study after a chart run was interrupted: the interruption is the next '
                        'action; the preparation stays to confirm again.')

@@ -36,8 +36,17 @@
     "definition": "records identical on every column, the target included",
     "line": "No two development rows are identical.",
     "audience": "junior",
-    "junior_text": "No two development rows are identical."
-   }
+    "junior_text": "No two development rows are identical.",
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": [
+    {
+     "column": "car_name",
+     "groups": 254,
+     "rows_in_repeated_groups": 107
+    }
+   ]
   },
   "target": {
    "column": "mpg",
@@ -380,122 +389,122 @@
    "order": "seeded sample",
    "items": [
     {
-     "row_key": "L5",
+     "row_key": "L64",
      "values": {
-      "mpg": 17,
+      "mpg": 14,
       "cylinders": 8,
-      "displacement": 302,
-      "horsepower": 140,
-      "weight": 3449,
-      "acceleration": 10.5,
-      "model_year": 70,
+      "displacement": 400,
+      "horsepower": 175,
+      "weight": 4385,
+      "acceleration": 12,
+      "model_year": 72,
       "origin": 1,
-      "car_name": "ford torino"
+      "car_name": "pontiac catalina"
      }
     },
     {
-     "row_key": "L11",
+     "row_key": "L81",
      "values": {
-      "mpg": 15,
-      "cylinders": 8,
-      "displacement": 383,
-      "horsepower": 170,
-      "weight": 3563,
-      "acceleration": 10,
-      "model_year": 70,
-      "origin": 1,
-      "car_name": "dodge challenger se"
-     }
-    },
-    {
-     "row_key": "L49",
-     "values": {
-      "mpg": 18,
-      "cylinders": 6,
-      "displacement": 250,
-      "horsepower": 88,
-      "weight": 3139,
-      "acceleration": 14.5,
-      "model_year": 71,
-      "origin": 1,
-      "car_name": "ford mustang"
-     }
-    },
-    {
-     "row_key": "L54",
-     "values": {
-      "mpg": 31,
+      "mpg": 22,
       "cylinders": 4,
-      "displacement": 71,
-      "horsepower": 65,
-      "weight": 1773,
-      "acceleration": 19,
-      "model_year": 71,
-      "origin": 3,
-      "car_name": "toyota corolla 1200"
-     }
-    },
-    {
-     "row_key": "L173",
-     "values": {
-      "mpg": 25,
-      "cylinders": 4,
-      "displacement": 90,
-      "horsepower": 71,
-      "weight": 2223,
-      "acceleration": 16.5,
-      "model_year": 75,
-      "origin": 2,
-      "car_name": "volkswagen dasher"
-     }
-    },
-    {
-     "row_key": "L202",
-     "values": {
-      "mpg": 18.5,
-      "cylinders": 6,
-      "displacement": 250,
-      "horsepower": 110,
-      "weight": 3645,
-      "acceleration": 16.2,
-      "model_year": 76,
-      "origin": 1,
-      "car_name": "pontiac ventura sj"
-     }
-    },
-    {
-     "row_key": "L247",
-     "values": {
-      "mpg": 32.8,
-      "cylinders": 4,
-      "displacement": 78,
-      "horsepower": 52,
-      "weight": 1985,
-      "acceleration": 19.4,
-      "model_year": 78,
-      "origin": 3,
-      "car_name": "mazda glc deluxe"
-     }
-    },
-    {
-     "row_key": "L306",
-     "values": {
-      "mpg": 28.4,
-      "cylinders": 4,
-      "displacement": 151,
-      "horsepower": 90,
-      "weight": 2670,
+      "displacement": 122,
+      "horsepower": 86,
+      "weight": 2395,
       "acceleration": 16,
-      "model_year": 79,
+      "model_year": 72,
       "origin": 1,
-      "car_name": "buick skylark limited"
+      "car_name": "ford pinto (sw)"
+     }
+    },
+    {
+     "row_key": "L82",
+     "values": {
+      "mpg": 28,
+      "cylinders": 4,
+      "displacement": 97,
+      "horsepower": 92,
+      "weight": 2288,
+      "acceleration": 17,
+      "model_year": 72,
+      "origin": 3,
+      "car_name": "datsun 510 (sw)"
+     }
+    },
+    {
+     "row_key": "L96",
+     "values": {
+      "mpg": 12,
+      "cylinders": 8,
+      "displacement": 455,
+      "horsepower": 225,
+      "weight": 4951,
+      "acceleration": 11,
+      "model_year": 73,
+      "origin": 1,
+      "car_name": "buick electra 225 custom"
+     }
+    },
+    {
+     "row_key": "L166",
+     "values": {
+      "mpg": 20,
+      "cylinders": 8,
+      "displacement": 262,
+      "horsepower": 110,
+      "weight": 3221,
+      "acceleration": 13.5,
+      "model_year": 75,
+      "origin": 1,
+      "car_name": "chevrolet monza 2+2"
+     }
+    },
+    {
+     "row_key": "L171",
+     "values": {
+      "mpg": 23,
+      "cylinders": 4,
+      "displacement": 140,
+      "horsepower": 78,
+      "weight": 2592,
+      "acceleration": 18.5,
+      "model_year": 75,
+      "origin": 1,
+      "car_name": "pontiac astro"
+     }
+    },
+    {
+     "row_key": "L236",
+     "values": {
+      "mpg": 26,
+      "cylinders": 4,
+      "displacement": 97,
+      "horsepower": 75,
+      "weight": 2265,
+      "acceleration": 18.2,
+      "model_year": 77,
+      "origin": 3,
+      "car_name": "toyota corolla liftback"
+     }
+    },
+    {
+     "row_key": "L243",
+     "values": {
+      "mpg": 21.5,
+      "cylinders": 4,
+      "displacement": 121,
+      "horsepower": 110,
+      "weight": 2600,
+      "acceleration": 12.8,
+      "model_year": 77,
+      "origin": 2,
+      "car_name": "bmw 320i"
      }
     }
    ],
-   "seed": "0d41920df95fcf87",
+   "seed": "c4382e7b283d370b",
    "target_shown": true,
    "exposure": {
-    "exposure_id": "x_47f777fe8a41462281eceefc36647713",
+    "exposure_id": "x_2cfae1531489499c898b40ae56caf15e",
     "purpose": "development_target_sample",
     "recorded": true,
     "withheld": null

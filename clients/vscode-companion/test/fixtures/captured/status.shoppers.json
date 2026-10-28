@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/tmp/capture/shoppers",
    "revision": 1,
-   "updated": "2026-10-28T03:55:53.846430+00:00",
+   "updated": "2026-10-28T08:41:06.264089+00:00",
    "case": {
     "id": "uci-online-shoppers-v1",
     "path": "/hypotrail/use-cases/online-shoppers/case.yaml",
@@ -328,6 +328,8 @@
     "recommended": null,
     "question": "Shall we look at the data card together?",
     "junior_digest": "Step 0, discover the data. The development set is the rows the study may explore and use to choose: 9,864 rows. The holdout (final test), 2,466 rows, stays sealed and is opened once at the end. The target is Revenue (positive: True). The data card shows what one row describes, the columns grouped with their meaning, and eight development rows drawn at random, target included: a look at the target, counted in the exposure ledger. Nothing is decided at this step.",
+    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Data (1 of 14).",
+    "evidence": [],
     "pause": {
      "schema": "hypotrail.pause/1",
      "kind": "action",

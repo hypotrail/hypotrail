@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-cv",
    "revision": 43,
-   "updated": "2026-10-28T03:54:47.881258+00:00",
+   "updated": "2026-10-28T08:39:51.083166+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -314,6 +314,8 @@
     "recommended": null,
     "question": null,
     "junior_digest": "Next: the data quality check, run without asking you. Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
+    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Quality (6 of 14).",
+    "evidence": [],
     "pause": {
      "schema": "hypotrail.pause/1",
      "kind": "action",
@@ -375,7 +377,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-28T03:53:56.911949+00:00",
+      "time": "2026-10-28T08:39:00.437243+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -424,7 +426,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-28T03:53:59.654334+00:00",
+      "time": "2026-10-28T08:39:02.175444+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -475,7 +477,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-28T03:54:03.386410+00:00",
+      "time": "2026-10-28T08:39:04.255531+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -508,7 +510,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-28T03:54:06.312292+00:00",
+      "time": "2026-10-28T08:39:06.715408+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -546,7 +548,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-28T03:54:09.212741+00:00",
+      "time": "2026-10-28T08:39:09.018662+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -579,7 +581,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 21,
-      "time": "2026-10-28T03:54:17.310006+00:00",
+      "time": "2026-10-28T08:39:17.872436+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -616,7 +618,7 @@
       "restatement": "You decide the model_choice as stated.",
       "proposal_id": "p_7",
       "revision": 27,
-      "time": "2026-10-28T03:54:26.602332+00:00",
+      "time": "2026-10-28T08:39:27.907906+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -653,7 +655,7 @@
       "restatement": "You decide the policy as stated.",
       "proposal_id": "p_10",
       "revision": 41,
-      "time": "2026-10-28T03:54:46.213403+00:00",
+      "time": "2026-10-28T08:39:49.273597+00:00",
       "authenticated": false,
       "basis": "endorsed",
       "delegation_scope": null,
@@ -695,7 +697,7 @@
       "restatement": "You open the sealed final test once, for the chosen configuration.",
       "proposal_id": "p_9",
       "revision": 33,
-      "time": "2026-10-28T03:54:33.721033+00:00",
+      "time": "2026-10-28T08:39:35.487044+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -3444,7 +3446,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8519f7987822bead348d47d9",
-     "exposure_id": "x_8d864b86b3434a1a9399d42bb4de6388",
+     "exposure_id": "x_f33a5763fb8b4d038e0229d0104f365d",
      "started_revision": 42,
      "integrity": "ok"
     },
@@ -4325,7 +4327,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_f09116e554021da514197565",
-     "exposure_id": "x_8b12361319ce4e059c6d7004e8bea0dc",
+     "exposure_id": "x_012ba18e3abc4a0583084c3d24bcd5e1",
      "started_revision": 36,
      "integrity": "ok"
     },
@@ -4384,7 +4386,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_2ab8c63a63b208bd8731b8b3",
-     "exposure_id": "x_21e19386711e4f6aae201d2b32a2f2de",
+     "exposure_id": "x_bf20e06b04cc413085a7c6c7104c9949",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -4662,7 +4664,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_bbd92c0dbf7a62be9ca5ed0d",
-     "exposure_id": "x_0b14e9468a414af8bf6694c4236f2c52",
+     "exposure_id": "x_b7f290d03b5946ccac3d2e2a27f7d2dd",
      "started_revision": 34,
      "integrity": "ok"
     },
@@ -4797,7 +4799,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_9c2f7f2c69f91be9c07e4331",
-     "exposure_id": "x_12cf7eec0f844bf9bebceb533fd43cbc",
+     "exposure_id": "x_52ecd6f3997d40868e99a5e3d0ea44ca",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -5067,7 +5069,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_c4434080afdaeb4edd1ce5b5",
-     "exposure_id": "x_8fb8953fa17a4aeda1873fc62581a9b3",
+     "exposure_id": "x_22205958f2b047ec95abac23d9a9bcc2",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -5349,7 +5351,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8b6b767c3df161e7401893c1",
-     "exposure_id": "x_55948f9b41164682a4559f23faf34d3e",
+     "exposure_id": "x_d1f69011601142169a64f0ccfb9b2428",
      "started_revision": 22,
      "integrity": "ok"
     },
@@ -6341,7 +6343,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ed89c3d6b5ceb43c540c9096",
-     "exposure_id": "x_d22afb58c0704a0a8bade9473c3493e7",
+     "exposure_id": "x_3e5e6eb2342e40d9b8700794e4342a59",
      "started_revision": 38,
      "integrity": "ok"
     },
@@ -6446,7 +6448,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_0eee3a0bb608847ca1ac05a7",
-     "exposure_id": "x_18502ad06a8247a0b8a14e8bca7fc20b",
+     "exposure_id": "x_9d258ac2f2114552bfb63a3da397ff45",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -6504,7 +6506,7 @@
        "reason_given": true,
        "restatement": "You decide the policy as stated.",
        "revision": 29,
-       "time": "2026-10-28T03:54:29.003711+00:00",
+       "time": "2026-10-28T08:39:30.600928+00:00",
        "user_words": "Yes, I adopt calling the top tenth, because the team can make that many calls"
       },
       "proposal_id": "p_8",
@@ -6600,7 +6602,7 @@
       "last_ok_revision": 43,
       "path": "reports/study.html",
       "revision": 43,
-      "sha256": "2bf76ea79cb6ded1683117f5831fa904666c28125a64f3302ca1a0a2fb93f56b",
+      "sha256": "ed66709bdd7e95de2519475378f73815638a7d69c7be064c385ab51624d99807",
       "status": "ok",
       "template_version": 4,
       "user_edits_preserved": [],
@@ -6794,7 +6796,7 @@
      "rule": "share:0.1",
      "result_id": "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94",
      "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
-     "time": "2026-10-28T03:54:33.769746+00:00"
+     "time": "2026-10-28T08:39:35.537456+00:00"
     },
     "post_final_test": true,
     "changed_after": [

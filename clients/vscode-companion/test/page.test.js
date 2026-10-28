@@ -213,10 +213,10 @@ test('TODO-1 (review fix 4): To handle reads every limit of `defensibility.items
 test('PATH-1, PATH-7, SINCE-3: the ledger counts, the channel of each result, and the end\'s journey are the engine\'s', () => {
   const choice = page('captured/summary.regression.choice');
   assert.deepEqual(choice.path.ledger.targetLooks, payload('captured/summary.regression.choice').ledger.target_looks);
-  assert.deepEqual(choice.path.ledger.targetLooks, { eda: 5, sample: 1, total: 6 });
+  assert.deepEqual(choice.path.ledger.targetLooks, { eda: 10, sample: 1, total: 11 });
   const explore = steps(choice).find(x => x.id === 'train_eda');
   assert.equal(explore.results.find(r => r.slot === 'eda.mean_by:model_year').channel, 'webview');
   const done = page('captured/summary.regression.done');
-  assert.deepEqual(done.journey, { steps: 13, ownWords: 9, looks: 6, openings: 1 });
+  assert.deepEqual(done.journey, { steps: 13, ownWords: 9, looks: 11, openings: 1 });
   assert.equal(done.path.ledger.finalTest.openings, 1);
 });

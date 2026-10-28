@@ -2617,7 +2617,7 @@
    "started_revision": 31,
    "invalidation": null,
    "exposure_ids": [
-    "x_74b568cd95a842b088227a749c546e15"
+    "x_b93d0b5f82a140d5867f98c67ac1da0a"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2669,6 +2669,8 @@
    "recommended": null,
    "question": "Do you adopt this decision?",
    "junior_digest": "Proposal on the opening of the final test: \"You open the sealed final test once, for the chosen configuration.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Final test (13 of 14).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "decision",

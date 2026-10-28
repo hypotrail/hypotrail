@@ -14,7 +14,7 @@
   "schema": "hypotrail.data/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 35,
+  "revision": 57,
   "observation_unit": {
    "value": "A vehicle model for a model year",
    "status": "scenario_assumption",
@@ -36,8 +36,17 @@
     "definition": "records identical on every column, the target included",
     "line": "No two development rows are identical.",
     "audience": "junior",
-    "junior_text": "No two development rows are identical."
-   }
+    "junior_text": "No two development rows are identical.",
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": [
+    {
+     "column": "car_name",
+     "groups": 254,
+     "rows_in_repeated_groups": 107
+    }
+   ]
   },
   "target": {
    "column": "mpg",
@@ -380,122 +389,122 @@
    "order": "seeded sample",
    "items": [
     {
-     "row_key": "L32",
+     "row_key": "L31",
      "values": {
-      "mpg": 25,
+      "mpg": 28,
       "cylinders": 4,
-      "displacement": 113,
-      "horsepower": 95,
-      "weight": 2228,
-      "acceleration": 14,
+      "displacement": 140,
+      "horsepower": 90,
+      "weight": 2264,
+      "acceleration": 15.5,
       "model_year": 71,
-      "origin": 3,
-      "car_name": "toyota corona"
+      "origin": 1,
+      "car_name": "chevrolet vega 2300"
      }
     },
     {
-     "row_key": "L92",
+     "row_key": "L67",
      "values": {
-      "mpg": 13,
+      "mpg": 17,
       "cylinders": 8,
-      "displacement": 400,
+      "displacement": 304,
       "horsepower": 150,
-      "weight": 4464,
-      "acceleration": 12,
-      "model_year": 73,
+      "weight": 3672,
+      "acceleration": 11.5,
+      "model_year": 72,
       "origin": 1,
-      "car_name": "chevrolet caprice classic"
+      "car_name": "amc ambassador sst"
      }
     },
     {
-     "row_key": "L137",
-     "values": {
-      "mpg": 16,
-      "cylinders": 8,
-      "displacement": 302,
-      "horsepower": 140,
-      "weight": 4141,
-      "acceleration": 14,
-      "model_year": 74,
-      "origin": 1,
-      "car_name": "ford gran torino"
-     }
-    },
-    {
-     "row_key": "L164",
-     "values": {
-      "mpg": 18,
-      "cylinders": 6,
-      "displacement": 225,
-      "horsepower": 95,
-      "weight": 3785,
-      "acceleration": 19,
-      "model_year": 75,
-      "origin": 1,
-      "car_name": "plymouth fury"
-     }
-    },
-    {
-     "row_key": "L186",
+     "row_key": "L80",
      "values": {
       "mpg": 26,
       "cylinders": 4,
-      "displacement": 98,
-      "horsepower": 79,
-      "weight": 2255,
-      "acceleration": 17.7,
-      "model_year": 76,
-      "origin": 1,
-      "car_name": "dodge colt"
+      "displacement": 96,
+      "horsepower": 69,
+      "weight": 2189,
+      "acceleration": 18,
+      "model_year": 72,
+      "origin": 2,
+      "car_name": "renault 12 (sw)"
      }
     },
     {
-     "row_key": "L200",
+     "row_key": "L86",
      "values": {
-      "mpg": 20,
+      "mpg": 13,
+      "cylinders": 8,
+      "displacement": 350,
+      "horsepower": 175,
+      "weight": 4100,
+      "acceleration": 13,
+      "model_year": 73,
+      "origin": 1,
+      "car_name": "buick century 350"
+     }
+    },
+    {
+     "row_key": "L105",
+     "values": {
+      "mpg": 12,
+      "cylinders": 8,
+      "displacement": 400,
+      "horsepower": 167,
+      "weight": 4906,
+      "acceleration": 12.5,
+      "model_year": 73,
+      "origin": 1,
+      "car_name": "ford country"
+     }
+    },
+    {
+     "row_key": "L106",
+     "values": {
+      "mpg": 13,
+      "cylinders": 8,
+      "displacement": 360,
+      "horsepower": 170,
+      "weight": 4654,
+      "acceleration": 13,
+      "model_year": 73,
+      "origin": 1,
+      "car_name": "plymouth custom suburb"
+     }
+    },
+    {
+     "row_key": "L258",
+     "values": {
+      "mpg": 19.4,
       "cylinders": 6,
-      "displacement": 225,
-      "horsepower": 100,
-      "weight": 3651,
-      "acceleration": 17.7,
-      "model_year": 76,
+      "displacement": 232,
+      "horsepower": 90,
+      "weight": 3210,
+      "acceleration": 17.2,
+      "model_year": 78,
       "origin": 1,
-      "car_name": "dodge aspen se"
+      "car_name": "amc concord"
      }
     },
     {
-     "row_key": "L283",
+     "row_key": "L339",
      "values": {
-      "mpg": 22.3,
+      "mpg": 27.2,
       "cylinders": 4,
-      "displacement": 140,
-      "horsepower": 88,
-      "weight": 2890,
-      "acceleration": 17.3,
-      "model_year": 79,
+      "displacement": 135,
+      "horsepower": 84,
+      "weight": 2490,
+      "acceleration": 15.7,
+      "model_year": 81,
       "origin": 1,
-      "car_name": "ford fairmont 4"
-     }
-    },
-    {
-     "row_key": "L381",
-     "values": {
-      "mpg": 36,
-      "cylinders": 4,
-      "displacement": 120,
-      "horsepower": 88,
-      "weight": 2160,
-      "acceleration": 14.5,
-      "model_year": 82,
-      "origin": 3,
-      "car_name": "nissan stanza xe"
+      "car_name": "plymouth reliant"
      }
     }
    ],
-   "seed": "8c2cf25bc46912b1",
+   "seed": "1f6ad757c511e8b1",
    "target_shown": true,
    "exposure": {
-    "exposure_id": "x_0acc83e21f8d446fa225a2c939889560",
+    "exposure_id": "x_54cdd7c365aa4cc087df4fa17f038584",
     "purpose": "development_target_sample",
     "recorded": true,
     "withheld": null

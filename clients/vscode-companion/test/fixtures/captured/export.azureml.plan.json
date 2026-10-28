@@ -8,7 +8,7 @@
    "export",
    "azureml",
    "--expected-revision",
-   "45",
+   "71",
    "--plan",
    "--json"
   ],
@@ -18,9 +18,9 @@
   "schema": "hypotrail.azureml_export/1",
   "ok": true,
   "plan": true,
-  "study_revision": 45,
-  "snapshot_id": "9e82df38517cc170bccbc9501f6e9768a8df7ea4fc051a281415ca68cdd7d6db",
-  "export_id": "49546e836f3832d14fbfa8589e3d91c4b037ea35f65c6d1e61eec2aeca099d79",
+  "study_revision": 71,
+  "snapshot_id": "762974ed03d6a24027ed58834b22480516f6ed717c106f7b6f659dda9b95385d",
+  "export_id": "f8dbc189c779a97e72a267d36d01741745714f6446435042c6024f461ec79518",
   "out": null,
   "template": {
    "id": "team-azureml-v1",
@@ -91,31 +91,31 @@
    {
     "path": "README.md",
     "kind": "rendered",
-    "sha256": "614ea306a85de91127eff44ad1f1bcba205f7cbcbf19e9a8c08b0a8ade958f35",
+    "sha256": "3d75af341deac7f1d3d96ac425fcbdbebd3e61846bed6581ee2dfc1dcda88c0f",
     "bytes": 9627
    },
    {
     "path": "aml/components/data_preparation.yml",
     "kind": "rendered",
-    "sha256": "a7c0c27794b9cd61b1869b43b85ec437f78a78e5d1a3ad0eb379f9af974be324",
+    "sha256": "a599b98013188c618c1c0eeb188d8b6ddc7d3d26f5c7ec5d23c87a7b8834cb04",
     "bytes": 616
    },
    {
     "path": "aml/components/data_splitting.yml",
     "kind": "rendered",
-    "sha256": "7eef1daa4e141b02786f5ffe56c6855dd72fb4b0acab52888f582245b47a5959",
+    "sha256": "dcc8363221a1ba39ba9859d526ff2f33d2ff671124e4551832ff87e76c0ae6d2",
     "bytes": 700
    },
    {
     "path": "aml/components/evaluation.yml",
     "kind": "rendered",
-    "sha256": "a284b2ffd7caa1b099bc32c5d73935675133862fe865fba46d056e7f3994e35f",
+    "sha256": "8b525193853663d89094506b874ff5c54c4ae6419bc9c2a72019d3b76da3e9ce",
     "bytes": 660
    },
    {
     "path": "aml/components/training.yml",
     "kind": "rendered",
-    "sha256": "17a4e5d3dc61b220d9f995ae20226e3a7ef63d617c07069fd70a11ff0e7ac723",
+    "sha256": "782f485cc6eedebeb13bc178e75ebe07f8e19c0c647820630ae5be35e8409c38",
     "bytes": 661
    },
    {
@@ -127,19 +127,19 @@
    {
     "path": "aml/pipelines/training/data.yml",
     "kind": "rendered",
-    "sha256": "cfe90ef33f3f16e8619a45c8308c6b0105678b1258e75dd78810252405515c28",
+    "sha256": "b13359b3896f55561098734cfcfabb35e18a879b475160d3f76549d40c3b5244",
     "bytes": 605
    },
    {
     "path": "aml/pipelines/training/pipeline-job.yml",
     "kind": "rendered",
-    "sha256": "67a9454b5450690973fcb5d1cc892fe81d83f2f609efb308587ceecb53cfbfe3",
+    "sha256": "ac8537412b995c1439f10c49f30891d862e36b3c5d23f89bf18b3d69237ce898",
     "bytes": 771
    },
    {
     "path": "aml/pipelines/training/pipeline.yml",
     "kind": "rendered",
-    "sha256": "e8a7acf2c2cf3f49c52a86a7daa2a6eec042cfbcc1e1f4d745f4d3a9110028cf",
+    "sha256": "f0fbe95d68dcc483f73163bbc71b9f200b95d677e122e871e563bd3352a5e7d0",
     "bytes": 1734
    },
    {
@@ -187,8 +187,8 @@
    {
     "path": "data/hypotrail/SHA256SUMS",
     "kind": "generated",
-    "sha256": "35df49de3443d0d71738b3fff5d71cce553045b587561a8623c51c6cc179dc84",
-    "bytes": 1856
+    "sha256": "00853bc931f5f6c0d2cb072dfcfc48b399925b6b13f0de0fd4d6a1c954695435",
+    "bytes": 4249
    },
    {
     "path": "data/hypotrail/contracts/data-contract.json",
@@ -199,8 +199,8 @@
    {
     "path": "data/hypotrail/contracts/deployment-snapshot.json",
     "kind": "generated",
-    "sha256": "8e0cf82a8b45432aeeb363a0c683ab460100400b13f3fea6c700bda1f4bfdeec",
-    "bytes": 5766
+    "sha256": "54e043b58cb54f1b79cfd211e8a6277cd1ed296595f86b27ca43fe5963809ac8",
+    "bytes": 7815
    },
    {
     "path": "data/hypotrail/contracts/development-plan.json",
@@ -211,31 +211,31 @@
    {
     "path": "data/hypotrail/contracts/export-manifest.json",
     "kind": "generated",
-    "sha256": "efb0359d7e198732a27d8c7bc0c3f8ac64057e784ffad49f7b9f8fa34399d6ae",
-    "bytes": 20490
+    "sha256": "8c836257a8e779efbfd88f77fe469b481c74fded10a1767918bd56505419f19a",
+    "bytes": 24578
    },
    {
     "path": "data/hypotrail/contracts/model-recipe.json",
     "kind": "generated",
-    "sha256": "4f614bf0bdabd1f87ac17326df295784889949432a4161d56633f233336cd7d5",
+    "sha256": "3b6d7f3b56ca9ca31a1503cb9e0b92b3c22a7dcd064cc210d706fa04f7eaa91c",
     "bytes": 2304
    },
    {
     "path": "data/hypotrail/contracts/readiness.json",
     "kind": "generated",
-    "sha256": "99d6e56f551c4a913599f18cec0ee14c61b7368bc3afbd6d2ef3bce504875181",
+    "sha256": "281df33aa6fab0c73783cee4905a6666e66c477f977ac3e13eff35549c37e70e",
     "bytes": 871
    },
    {
     "path": "data/hypotrail/contracts/scientific-projection.json",
     "kind": "generated",
-    "sha256": "dceb5df44c7c92a11e11669ee4065144882a7112847dbad85767e15635e128db",
+    "sha256": "09c835e98f30a41794891ba1d0f8dbdf7b564ac0c5a0b7bfdcb16beef6fc2ea4",
     "bytes": 2729
    },
    {
     "path": "data/hypotrail/models/evaluated/computation_context.json",
     "kind": "copied",
-    "sha256": "6d0690689ff94b2a57f5ee879a4a48abbd25fe3b102574a920266d422feb1ff0",
+    "sha256": "b32c1c790246b063906bf2b0fedfdb47be25b58624c79a14af5c385e4424d354",
     "bytes": 1052
    },
    {
@@ -253,8 +253,110 @@
    {
     "path": "data/hypotrail/models/evaluated/evidence/binding-1.json",
     "kind": "copied",
-    "sha256": "43a47a89d304466610643471e055862619d251fd817f043b9e1ad98d4b3650dc",
+    "sha256": "6ef5f483164541a2eb05446e20fe3b53153a9050e4fd45b9bbc214a1aa65dd0a",
     "bytes": 415
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc.descriptor.json",
+    "kind": "copied",
+    "sha256": "30fa6e142628815b4c1fd3d969f4b7e1c3e3e71fe7d7a4bf1c68bdd9a27b6052",
+    "bytes": 3839
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/MLmodel",
+    "kind": "copied",
+    "sha256": "200b3c5eec78fd634a5c5fccdcf3298bf3d0bd80d840c88dd44f9526428211d1",
+    "bytes": 1077
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/artifacts/native_bundle/computation_context.json",
+    "kind": "copied",
+    "sha256": "b32c1c790246b063906bf2b0fedfdb47be25b58624c79a14af5c385e4424d354",
+    "bytes": 1052
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/artifacts/native_bundle/data_contract.json",
+    "kind": "copied",
+    "sha256": "07c0ca8977d3ca8c57976eff8847d658ffbc452d8ae7f1f672f9f4f04861530a",
+    "bytes": 1889
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/artifacts/native_bundle/environment/requirements.lock",
+    "kind": "copied",
+    "sha256": "2fe6657d33c36b9c88dfc60b207bc6972d503e0036467b9191dfca9ac18196bb",
+    "bytes": 387
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/artifacts/native_bundle/parity/expected_outputs.json",
+    "kind": "copied",
+    "sha256": "c23c370df72dca51015b46b46ee6a4af83d7b008a785ccf525883e47b889c5fe",
+    "bytes": 1040
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/artifacts/native_bundle/parity/features.json",
+    "kind": "copied",
+    "sha256": "59d5a21dbbaa629e521db5bf28b36553dfe830016713bf25e5adcd86acfc4856",
+    "bytes": 1780
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/artifacts/native_bundle/payload/model.pkl",
+    "kind": "copied",
+    "sha256": "b429e09648759c97be2846021f8f3ee14435c01d7cd71b9102ad939d12bd595c",
+    "bytes": 3800
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/artifacts/native_bundle/predictor.json",
+    "kind": "copied",
+    "sha256": "9c06723fb531d43aa5e2b49ef91b1f2de8985db9bbc4b922e0bec4def713ec9c",
+    "bytes": 2721
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/artifacts/native_bundle/predictor_bundle.json",
+    "kind": "copied",
+    "sha256": "32a91e4f9c2a169abba400b32dc65a14c98cc63b289f390befdcd150b700343b",
+    "bytes": 1969
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/artifacts/native_bundle/recipe.json",
+    "kind": "copied",
+    "sha256": "9d7702615f43c3de71f0e1b609e2bfeddadbf5cd7a43c6c898b6dbe05dd60e29",
+    "bytes": 1537
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/artifacts/native_bundle/runtime/hypotrail_runtime-1.0.0-py3-none-any.whl",
+    "kind": "copied",
+    "sha256": "22f6a4c0b8c69152fd1e3cbb523805500d29b7e153506c634dc8221bd759f625",
+    "bytes": 64886
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/conda.yaml",
+    "kind": "copied",
+    "sha256": "2d1a46033ee1c3d1df4c4965186888be6855a9dba6f7d5fad94edecc99b275c6",
+    "bytes": 267
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/hypotrail-package.json",
+    "kind": "copied",
+    "sha256": "30fa6e142628815b4c1fd3d969f4b7e1c3e3e71fe7d7a4bf1c68bdd9a27b6052",
+    "bytes": 3839
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/hypotrail_pyfunc.py",
+    "kind": "copied",
+    "sha256": "71364438d31966d1eb299b7f32f91de9ac3d25dba48299f04fc62d059763debc",
+    "bytes": 5306
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/python_env.yaml",
+    "kind": "copied",
+    "sha256": "2bbb76ab1fd0255c388c0bee599ec8ab2a574a42d45d885f5a48d69cb0c5c9c7",
+    "bytes": 99
+   },
+   {
+    "path": "data/hypotrail/models/evaluated/packages/mlflow_pyfunc/requirements.txt",
+    "kind": "copied",
+    "sha256": "fd83676b8db75b8945acf0c073d3b7f37ff34892d3a622535b0088835c702dc7",
+    "bytes": 158
    },
    {
     "path": "data/hypotrail/models/evaluated/parity/expected_outputs.json",
@@ -277,19 +379,19 @@
    {
     "path": "data/hypotrail/models/evaluated/predictor.json",
     "kind": "copied",
-    "sha256": "a63f902d1c4450daef43477c2d2ebbf6bfe27d9486deeae090139b430c817026",
+    "sha256": "9c06723fb531d43aa5e2b49ef91b1f2de8985db9bbc4b922e0bec4def713ec9c",
     "bytes": 2721
    },
    {
     "path": "data/hypotrail/models/evaluated/predictor_bundle.json",
     "kind": "copied",
-    "sha256": "00e311c6359d420203c1a2bd9ddf4d5e5e1469da8fa6dc0a3bb206c121f61da4",
-    "bytes": 1990
+    "sha256": "abd183deddfb5f6776268da20a9d72c7b9aec12355cf8a39a7ea742b6b69d847",
+    "bytes": 5139
    },
    {
     "path": "data/hypotrail/models/evaluated/recipe.json",
     "kind": "copied",
-    "sha256": "ea0c75ae652926059804f9494eca6e0f95df8e7b649720e3d0b63369616eb647",
+    "sha256": "9d7702615f43c3de71f0e1b609e2bfeddadbf5cd7a43c6c898b6dbe05dd60e29",
     "bytes": 1537
    },
    {
@@ -313,13 +415,13 @@
    {
     "path": "docs/pages/architecture.md",
     "kind": "rendered",
-    "sha256": "f7ea7bbdd3a4c5e966d637794e6598b412db2b3ebc11c6653f9cde4b246a6abf",
+    "sha256": "ec8c068f48c18ec5f6b049a6822eb95fe6281277e30fa6d9c0a89491d2b9310e",
     "bytes": 962
    },
    {
     "path": "docs/pages/code.md",
     "kind": "rendered",
-    "sha256": "9a23ab34ba6ff86f41b34f6e84e3420ca5d044d677ac33a244d669dd9b7b56a7",
+    "sha256": "886745fd514f892bde2b0c631be7b303e4ad43625b87da8b37f2047b67d0335a",
     "bytes": 894
    },
    {
@@ -331,13 +433,13 @@
    {
     "path": "docs/pages/deployment.md",
     "kind": "rendered",
-    "sha256": "0cce9786166497a79a4c15f88e139267b79f316547c4bcd599b408a89f1f0ac4",
+    "sha256": "e4bc54436792baa37d4ace7d192ae22c34f069d8e030baf4d6e9957d2099e42b",
     "bytes": 3179
    },
    {
     "path": "docs/pages/references.md",
     "kind": "rendered",
-    "sha256": "82360462b48b2cddf1f7fe0dbc5a435ba361e3703f3a5ce69e8ccc45cc3694cb",
+    "sha256": "0542a064d4c3ba751fe884632aceec4d8bc9ff952e8290360352e01d764bc6bf",
     "bytes": 597
    },
    {
@@ -349,13 +451,13 @@
    {
     "path": "notebooks/01_first_draft.ipynb",
     "kind": "generated",
-    "sha256": "f12faf7383270329384fb03e76aef0cf6b6d41f4b9c0244528040fa557163183",
+    "sha256": "9059fc94d36832e32785f1a14a1083011b91a4283afc6f9ba14748d29364934a",
     "bytes": 2487
    },
    {
     "path": "pyproject.toml",
     "kind": "rendered",
-    "sha256": "06144363d71617daca8f612b03648258a1559d829b555530aa289cdb294e5d8d",
+    "sha256": "27d10f5b59db226d7a49160eec91241e5e587bfb01c3fa47fcaf4356e59f5dc7",
     "bytes": 4323
    },
    {
@@ -421,13 +523,13 @@
    {
     "path": "src/conf/hypotrail/contracts/model-recipe.json",
     "kind": "generated",
-    "sha256": "4f614bf0bdabd1f87ac17326df295784889949432a4161d56633f233336cd7d5",
+    "sha256": "3b6d7f3b56ca9ca31a1503cb9e0b92b3c22a7dcd064cc210d706fa04f7eaa91c",
     "bytes": 2304
    },
    {
     "path": "src/conf/hypotrail/replay.yaml",
     "kind": "rendered",
-    "sha256": "fb0d5c7d71dd0e32937aa0c54b9a2e4fdc5f608742bfebca3e9cf174c75dce4e",
+    "sha256": "5b3723bda258eeb447155780bdfb027bda91d360b4e0def1b93d5dd2f2b26564",
     "bytes": 890
    },
    {
@@ -588,7 +690,7 @@
    }
   ],
   "configuration_status": "draft",
-  "artifact_status": "captured",
+  "artifact_status": "packaged",
   "checks": [
    {
     "id": "family_supported",
@@ -615,9 +717,8 @@
     "status": "passed"
    },
    {
-    "id": "mlflow_package_present",
-    "status": "missing",
-    "detail": "The bundle has no MLflow package; the native predictor is transported, no MLflow model is announced."
+    "id": "mlflow_package_verified",
+    "status": "passed"
    },
    {
     "id": "layout_conforms",
@@ -642,7 +743,6 @@
    "identity.mode"
   ],
   "warnings": [
-   "mlflow_package_missing",
    "draft_not_ready_to_submit"
   ],
   "next_commands": [

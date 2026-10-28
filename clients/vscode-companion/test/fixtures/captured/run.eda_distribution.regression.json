@@ -142,7 +142,7 @@
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_32e7745788f04bfcab03fd7c7d664a62"
+    "x_f16effacc46c4553acc3ea5584b53063"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -185,15 +185,20 @@
   },
   "next_action": {
    "kind": "run",
-   "step": "models",
-   "activity": "fit.baseline",
-   "message": "Which predictions do the training mean and a linear model give for the validation rows?",
-   "audience": "junior",
-   "junior_message": "Which predictions do the training mean and a linear model give for the validation rows?",
+   "step": "train_eda",
+   "activity": "eda.mean_by",
+   "message": "Run eda.mean_by --column cylinders: the exploration step runs the case catalogue's charts before the models. It reads the target: a look, counted.",
+   "audience": "agent",
+   "junior_message": "The exploration continues with a target mean by group (cylinders). It reads the target of the development rows: one more look, counted.",
+   "options": {
+    "column": "cylinders"
+   },
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: the baseline model, run without asking you. It answers this question: Which predictions do the training mean and a linear model give for the validation rows?",
+   "junior_digest": "Next: a target mean by group (cylinders), run without asking you. The exploration continues with a target mean by group (cylinders). It reads the target of the development rows: one more look, counted.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Explore (8 of 13).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",
@@ -230,7 +235,7 @@
      "continue": "Let's continue",
      "explain": "Explain first"
     },
-    "question": "Which predictions do the training mean and a linear model give for the validation rows?",
+    "question": "The exploration continues with a target mean by group (cylinders). It reads the target of the development rows: one more look, counted.",
     "evidence_refs": [],
     "detail_topics": [
      "metric",

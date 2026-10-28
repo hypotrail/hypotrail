@@ -79,6 +79,8 @@
    "recommended": null,
    "question": null,
    "junior_digest": "Next: an analysis, run without asking you. Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Rule (12 of 14).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",

@@ -116,6 +116,8 @@
    "recommended": null,
    "question": "Shall we look at the data card together?",
    "junior_digest": "Step 0, discover the data. The development set is the rows the study may explore and use to choose: 318 rows. The holdout (final test), 80 rows, stays sealed and is opened once at the end. The target is mpg (mpg). The data card shows what one row describes, the columns grouped with their meaning, and eight development rows drawn at random, target included: a look at the target, counted in the exposure ledger. Nothing is decided at this step.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Data (1 of 13).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",
@@ -166,12 +168,12 @@
     "where": {
      "anchor": "now",
      "label": "Now, the data card",
-     "line": "In the panel: Now, the data card."
+     "line": null
     },
     "shown": {
      "anchor": "now",
      "label": "Now, the data card",
-     "line": "In the panel: Now, the data card."
+     "line": null
     }
    }
   },
@@ -522,7 +524,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-28T03:56:36.600224+00:00",
+   "boundary_time": "2026-10-28T08:41:53.441567+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -545,7 +547,7 @@
    "channel_actions": []
   },
   "task": "regression",
-  "currency": "cc80869414067d50",
+  "currency": "382b115381bc999b",
   "texts": {
    "en": {
     "plan": {
@@ -610,7 +612,10 @@
     "junior_digest": "Step 0, discover the data. The development set is the rows the study may explore and use to choose: 318 rows. The holdout (final test), 80 rows, stays sealed and is opened once at the end. The target is mpg (mpg). The data card shows what one row describes, the columns grouped with their meaning, and eight development rows drawn at random, target included: a look at the target, counted in the exposure ledger. Nothing is decided at this step.",
     "headlines": {},
     "data_contingent": {},
-    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before.",
+    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Data (1 of 13).",
+    "step_limit": "Nothing is measured yet: these decisions fix the protocol before any model is fitted.",
+    "criterion_words": null
    },
    "fr": {
     "plan": {
@@ -675,7 +680,10 @@
     "junior_digest": "Étape 0, découvrir les données. L'échantillon de développement est l'ensemble des lignes que l'étude peut explorer et utiliser pour choisir : 318 lignes. L'échantillon de test final (holdout), 80 lignes, reste scellé et ne sera ouvert qu'une fois, à la fin. La cible est mpg (mpg). La fiche des données montre ce que décrit une ligne, les colonnes regroupées avec leur sens, et huit lignes de développement tirées au hasard, cible comprise : un regard sur la cible, compté au registre d'exposition. Rien n'est décidé à cette étape.",
     "headlines": {},
     "data_contingent": {},
-    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant."
+    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant.",
+    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment, Variables, Découpage, Critère) ; Préparer les preuves (Qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Choix) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Données (1 sur 13).",
+    "step_limit": "Rien n'est encore mesuré : ces décisions fixent le protocole avant tout modèle.",
+    "criterion_words": null
    }
   },
   "panel_contract": 2,
@@ -728,23 +736,42 @@
    "configurations": {
     "tried": 0,
     "reference": false
+   },
+   "variants": {
+    "used": 0,
+    "max": 3,
+    "remaining": 3
    }
   },
   "sample": {
-   "seed": "8c2cf25bc46912b1",
+   "seed": "1f6ad757c511e8b1",
    "row_keys": [
-    "L32",
-    "L92",
-    "L137",
-    "L164",
-    "L186",
-    "L200",
-    "L283",
-    "L381"
+    "L31",
+    "L67",
+    "L80",
+    "L86",
+    "L105",
+    "L106",
+    "L258",
+    "L339"
    ],
    "recorded": true
   },
   "headlines": {},
-  "criterion_configurations": null
+  "criterion_configurations": null,
+  "data_structure": {
+   "duplicates": {
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": [
+    {
+     "column": "car_name",
+     "groups": 254,
+     "rows_in_repeated_groups": 107
+    }
+   ]
+  },
+  "quality_verdicts": null
  }
 }

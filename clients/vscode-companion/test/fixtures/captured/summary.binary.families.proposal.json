@@ -122,6 +122,10 @@
    "recommended": null,
    "question": "Do you adopt this decision?",
    "junior_digest": "Proposal on the variant to compare: \"You compare three variants of the candidate, each with its question.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Variants (10 of 14).",
+   "evidence": [
+    "diag.binary"
+   ],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "decision",
@@ -196,7 +200,10 @@
     "origin": {
      "channel": "chat"
     },
-    "data_contingent": false
+    "data_contingent": false,
+    "evidence": [
+     "diag.binary"
+    ]
    }
   ],
   "decisions": {
@@ -692,7 +699,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-28T03:54:58.149690+00:00",
+   "boundary_time": "2026-10-28T08:40:03.225326+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -701,7 +708,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-28T03:54:58.269407+00:00",
+     "time": "2026-10-28T08:40:03.367798+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -724,7 +731,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-28T03:54:58.938951+00:00",
+     "time": "2026-10-28T08:40:04.093006+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -754,7 +761,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-28T03:54:59.674836+00:00",
+     "time": "2026-10-28T08:40:05.053253+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -777,7 +784,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-28T03:55:00.434847+00:00",
+     "time": "2026-10-28T08:40:06.119142+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -807,7 +814,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-28T03:55:01.401135+00:00",
+     "time": "2026-10-28T08:40:07.484225+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -830,7 +837,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-28T03:55:02.531220+00:00",
+     "time": "2026-10-28T08:40:08.741750+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -860,7 +867,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-28T03:55:03.583174+00:00",
+     "time": "2026-10-28T08:40:09.953680+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -883,7 +890,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-28T03:55:04.520251+00:00",
+     "time": "2026-10-28T08:40:11.057332+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -913,7 +920,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-28T03:55:05.670862+00:00",
+     "time": "2026-10-28T08:40:12.323308+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -936,7 +943,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-28T03:55:06.745487+00:00",
+     "time": "2026-10-28T08:40:13.700314+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -966,7 +973,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-28T03:55:07.931513+00:00",
+     "time": "2026-10-28T08:40:15.105127+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -989,7 +996,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-28T03:55:09.244365+00:00",
+     "time": "2026-10-28T08:40:16.548693+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1012,7 +1019,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-28T03:55:10.541428+00:00",
+     "time": "2026-10-28T08:40:18.077326+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1035,7 +1042,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-28T03:55:12.213346+00:00",
+     "time": "2026-10-28T08:40:20.042658+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1058,7 +1065,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-28T03:55:13.626479+00:00",
+     "time": "2026-10-28T08:40:21.983649+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1081,7 +1088,7 @@
     },
     {
      "revision": 22,
-     "time": "2026-10-28T03:55:14.945086+00:00",
+     "time": "2026-10-28T08:40:23.541883+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1119,7 +1126,7 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "e10ee2934b48bc52",
+  "currency": "f20500146c8cd1dd",
   "texts": {
    "en": {
     "plan": {
@@ -1212,7 +1219,10 @@
      "preprocessing": "Default preparation: nothing added, grouped, capped, or transformed."
     },
     "data_contingent": {},
-    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before.",
+    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Variants (10 of 14).",
+    "step_limit": "Out-of-fold predictions on the development rows are used to compare the models, the variant and the rule, so they are development evidence, not independent evidence of future performance. Only the sealed final test, opened once, is.",
+    "criterion_words": "precision gain over the baseline of at least 5 points"
    },
    "fr": {
     "plan": {
@@ -1305,7 +1315,10 @@
      "preprocessing": "Préparation par défaut : rien d'ajouté, de regroupé, de plafonné ni de transformé."
     },
     "data_contingent": {},
-    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant."
+    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant.",
+    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment, Variables, Découpage, Critère) ; Préparer les preuves (Qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Règle) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Variantes (10 sur 14).",
+    "step_limit": "Les prédictions hors pli de l'échantillon de développement servent à comparer les modèles, la variante et la règle : ce sont des résultats de développement, pas une preuve indépendante de la performance future. Seul l'échantillon de test final scellé, ouvert une fois, l'est.",
+    "criterion_words": "gain de précision sur le modèle de référence d'au moins 5 points"
    }
   },
   "panel_contract": 2,
@@ -1362,19 +1375,24 @@
    "configurations": {
     "tried": 1,
     "reference": true
+   },
+   "variants": {
+    "used": 0,
+    "max": 3,
+    "remaining": 3
    }
   },
   "sample": {
-   "seed": "056c11934123d49f",
+   "seed": "5993bca26cdd13a2",
    "row_keys": [
-    "L286",
-    "L2005",
-    "L2012",
-    "L2295",
-    "L2547",
-    "L3309",
-    "L3485",
-    "L4003"
+    "L896",
+    "L940",
+    "L998",
+    "L999",
+    "L1384",
+    "L2752",
+    "L3587",
+    "L3592"
    ],
    "recorded": true
   },
@@ -1405,6 +1423,14 @@
     "results": []
    }
   },
-  "criterion_configurations": null
+  "criterion_configurations": null,
+  "data_structure": {
+   "duplicates": {
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": []
+  },
+  "quality_verdicts": null
  }
 }

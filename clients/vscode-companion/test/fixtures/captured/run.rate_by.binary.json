@@ -269,7 +269,7 @@
    "started_revision": 22,
    "invalidation": null,
    "exposure_ids": [
-    "x_308bc546eee545e69e4e44114b3d7d12"
+    "x_d7c0f335579d46cd8e8d0237f9a4d1f0"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -312,15 +312,20 @@
   },
   "next_action": {
    "kind": "run",
-   "step": "models",
-   "activity": "fit.baseline",
-   "message": "How much does a simple model improve on a constant baseline on validation?",
-   "audience": "junior",
-   "junior_message": "How much does a simple model improve on a constant baseline on validation?",
+   "step": "train_eda",
+   "activity": "eda.rate_by",
+   "message": "Run eda.rate_by --column age: the exploration step runs the case catalogue's charts before the models. It reads the target: a look, counted.",
+   "audience": "agent",
+   "junior_message": "The exploration continues with an outcome rate by group (age). It reads the target of the development rows: one more look, counted.",
+   "options": {
+    "column": "age"
+   },
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: the baseline model, run without asking you. It answers this question: How much does a simple model improve on a constant baseline on validation?",
+   "junior_digest": "Next: an outcome rate by group (age), run without asking you. The exploration continues with an outcome rate by group (age). It reads the target of the development rows: one more look, counted.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Explore (8 of 14).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",
@@ -357,7 +362,7 @@
      "continue": "Let's continue",
      "explain": "Explain first"
     },
-    "question": "How much does a simple model improve on a constant baseline on validation?",
+    "question": "The exploration continues with an outcome rate by group (age). It reads the target of the development rows: one more look, counted.",
     "evidence_refs": [],
     "detail_topics": [
      "metric",

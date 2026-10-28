@@ -16,7 +16,7 @@
   "schema": "hypotrail.summary/1",
   "ok": true,
   "study": "/studies/auto mpg cv",
-  "revision": 14,
+  "revision": 16,
   "since": null,
   "changed": null,
   "goal": {
@@ -117,11 +117,15 @@
    "recommended": null,
    "question": "Do you adopt this decision?",
    "junior_digest": "Proposal on the preparation of the variables: \"You keep the drafted preparation: each change rests on the quality check.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Preparation (7 of 13).",
+   "evidence": [
+    "eda.quality"
+   ],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "decision",
     "language": "en",
-    "revision": 14,
+    "revision": 16,
     "position": {
      "step_id": "preprocessing",
      "completed": 6,
@@ -169,7 +173,7 @@
     "where": {
      "anchor": "now",
      "label": "Now, the question waiting for you",
-     "line": "In the panel: Now, the question waiting for you."
+     "line": null
     },
     "shown": null
    }
@@ -192,11 +196,15 @@
      "target_looks_before": 0
     },
     "restatement": "You keep the drafted preparation: each change rests on the quality check.",
-    "revision": 14,
+    "revision": 16,
     "origin": {
      "channel": "chat"
     },
-    "data_contingent": false
+    "data_contingent": false,
+    "evidence": [
+     "eda.quality",
+     "eda.distribution:horsepower"
+    ]
    }
   ],
   "decisions": {
@@ -333,6 +341,14 @@
    }
   },
   "results": {
+   "eda.distribution:horsepower": {
+    "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "structural_eda",
+    "channel": "chat"
+   },
    "eda.quality": {
     "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
     "current": true,
@@ -355,24 +371,24 @@
    "items": {
     "editable": {
      "status": "ok",
-     "revision": 14,
-     "last_ok_revision": 14,
+     "revision": 16,
+     "last_ok_revision": 16,
      "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence.",
      "audience": "agent",
      "junior_message": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence."
     },
     "notebook": {
      "status": "ok",
-     "revision": 14,
-     "last_ok_revision": 14,
+     "revision": 16,
+     "last_ok_revision": 16,
      "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
      "audience": "agent",
      "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
-     "revision": 14,
-     "last_ok_revision": 14,
+     "revision": 16,
+     "last_ok_revision": 16,
      "message": "The report (reports/study.html) is up to date.",
      "audience": "agent",
      "junior_message": "The report is up to date."
@@ -613,16 +629,16 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-28T06:12:27.211300+00:00",
+   "boundary_time": "2026-10-28T08:43:21.791667+00:00",
    "gap_minutes": null
   },
   "digest": {
    "since": 1,
-   "until": 14,
+   "until": 16,
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-28T06:12:27.551787+00:00",
+     "time": "2026-10-28T08:43:21.907957+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -645,7 +661,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-28T06:12:28.957752+00:00",
+     "time": "2026-10-28T08:43:22.429101+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -675,7 +691,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-28T06:12:29.574697+00:00",
+     "time": "2026-10-28T08:43:23.104126+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -698,7 +714,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-28T06:12:30.199743+00:00",
+     "time": "2026-10-28T08:43:23.692088+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -728,7 +744,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-28T06:12:30.913945+00:00",
+     "time": "2026-10-28T08:43:24.550339+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -751,7 +767,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-28T06:12:31.653141+00:00",
+     "time": "2026-10-28T08:43:25.242978+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -781,7 +797,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-28T06:12:32.396345+00:00",
+     "time": "2026-10-28T08:43:26.113374+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -804,7 +820,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-28T06:12:33.142468+00:00",
+     "time": "2026-10-28T08:43:26.776261+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -834,7 +850,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-28T06:12:34.991700+00:00",
+     "time": "2026-10-28T08:43:27.971814+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -857,7 +873,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-28T06:12:36.263760+00:00",
+     "time": "2026-10-28T08:43:29.380165+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -879,8 +895,31 @@
      "junior_text": null
     },
     {
-     "revision": 14,
-     "time": "2026-10-28T06:12:37.502861+00:00",
+     "revision": 15,
+     "time": "2026-10-28T08:43:30.706598+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.distribution",
+     "slot": "eda.distribution:horsepower",
+     "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+     "execution_id": "e_0eee3a0bb608847ca1ac05a7",
+     "rules": null,
+     "column": "horsepower",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The distribution of horsepower was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 16,
+     "time": "2026-10-28T08:43:32.169610+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -909,16 +948,16 @@
     "withdrawn": 0,
     "holds_recorded": 0,
     "holds_resolved": 0,
-    "results_added": 2,
+    "results_added": 3,
     "results_replaced": 0,
-    "runs_started": 2,
+    "runs_started": 3,
     "runs_failed": 0,
     "invalidations": 0
    },
    "channel_actions": []
   },
   "task": "regression",
-  "currency": "d829a430aa9d860a",
+  "currency": "66d7fc68830b95a3",
   "texts": {
    "en": {
     "plan": {
@@ -978,7 +1017,8 @@
      "9": "You confirmed the success criterion.",
      "11": "The split was computed.",
      "13": "The data quality check was computed.",
-     "14": "The preparation of the variables was proposed."
+     "15": "The distribution of horsepower was computed.",
+     "16": "The preparation of the variables was proposed."
     },
     "goal": {
      "intended_use": "Exercise: estimate a future model fuel efficiency from technical characteristics",
@@ -1005,7 +1045,10 @@
      "structural_eda": "318 development rows checked, 0 duplicated."
     },
     "data_contingent": {},
-    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before.",
+    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Preparation (7 of 13).",
+    "step_limit": "The preparation is decided from target-free checks, before any look at the target.",
+    "criterion_words": "out-of-fold error at least 10% below the reference (predict the mean)"
    },
    "fr": {
     "plan": {
@@ -1049,7 +1092,7 @@
     },
     "recap": [
      "Objectif : « Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques » ; la prédiction est faite « when the technical characteristics of a new model are fixed, before its fuel efficiency is measured ».",
-     "Décidé : le moment de la prédiction ; la disponibilité des variables (toutes les variables gardées) ; le découpage des données (validation croisée à 5 plis, plis dans l'ordre du temps) ; le critère de succès (erreur hors pli au moins 10 % sous celle de la moyenne de référence).",
+     "Décidé : le moment de la prédiction ; la disponibilité des variables (toutes les variables gardées) ; le découpage des données (validation croisée à 5 plis, plis dans l'ordre du temps) ; le critère de succès (erreur hors pli au moins 10 % sous celle de la référence (prédire la moyenne)).",
      "Maintenant : Décider comment le modèle prépare les variables, en attente de votre réponse ; le rapport et le notebook sont à jour.",
      "Ensuite : si vous adoptez la préparation des variables : « You keep the drafted preparation: each change rests on the quality check. »",
      "Limite : Ces variables sont utilisées alors que leur disponibilité au moment de la prédiction est incertaine : acceleration. Vérifiez qu'elles sont connues à ce moment-là."
@@ -1065,7 +1108,8 @@
      "9": "Vous avez confirmé le critère de succès.",
      "11": "Résultat calculé : le découpage.",
      "13": "Résultat calculé : le contrôle de qualité des données.",
-     "14": "Une proposition a été faite pour la préparation des variables."
+     "15": "Résultat calculé : la distribution d'une colonne de horsepower.",
+     "16": "Une proposition a été faite pour la préparation des variables."
     },
     "goal": {
      "intended_use": "Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques",
@@ -1092,7 +1136,10 @@
      "structural_eda": "318 lignes de développement vérifiées, 0 en double."
     },
     "data_contingent": {},
-    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant."
+    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant.",
+    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment, Variables, Découpage, Critère) ; Préparer les preuves (Qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Choix) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Préparation (7 sur 13).",
+    "step_limit": "La préparation est décidée à partir de contrôles sans la cible, avant tout regard sur la cible.",
+    "criterion_words": "erreur hors pli au moins 10 % sous celle de la référence (prédire la moyenne)"
    }
   },
   "panel_contract": 2,
@@ -1149,19 +1196,24 @@
    "configurations": {
     "tried": 0,
     "reference": false
+   },
+   "variants": {
+    "used": 0,
+    "max": 3,
+    "remaining": 3
    }
   },
   "sample": {
-   "seed": "d8e360b435655276",
+   "seed": "083993247f2126e5",
    "row_keys": [
-    "L34",
-    "L57",
-    "L117",
-    "L121",
-    "L261",
-    "L318",
-    "L355",
-    "L357"
+    "L25",
+    "L35",
+    "L50",
+    "L74",
+    "L114",
+    "L157",
+    "L237",
+    "L370"
    ],
    "recorded": true
   },
@@ -1194,6 +1246,274 @@
     ]
    }
   },
-  "criterion_configurations": null
+  "criterion_configurations": null,
+  "data_structure": {
+   "duplicates": {
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": [
+    {
+     "column": "car_name",
+     "groups": 254,
+     "rows_in_repeated_groups": 107
+    }
+   ]
+  },
+  "quality_verdicts": {
+   "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
+   "columns": [
+    {
+     "column": "horsepower",
+     "kept": true,
+     "changed": true,
+     "parameters": [
+      "log_transform"
+     ],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.018867924528301886,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.2.n_missing",
+       "words": "6 missing of 318 (1.9%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 1.0522043350803072,
+       "threshold": 1.0,
+       "exceeds": true,
+       "path": "ranges.2.skewness",
+       "words": "skewness 1.05 ≥ 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 230,
+       "threshold": 658.3499999999998,
+       "exceeds": false,
+       "path": "ranges.2.max",
+       "words": "max 230 ≤ 3 × q99 (658.35)"
+      }
+     ],
+     "text": "horsepower: 6 missing of 318 (1.9%) < 5%, skewness 1.05 ≥ 1, max 230 ≤ 3 × q99 (658.35): drafted: a signed log."
+    },
+    {
+     "column": "cylinders",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.0.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.5592211132140309,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.0.skewness",
+       "words": "skewness 0.56 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 8,
+       "threshold": 24.0,
+       "exceeds": false,
+       "path": "ranges.0.max",
+       "words": "max 8 ≤ 3 × q99 (24)"
+      }
+     ],
+     "text": "cylinders: 0 missing of 318 (0%) < 5%, skewness 0.56 < 1, max 8 ≤ 3 × q99 (24): no change."
+    },
+    {
+     "column": "displacement",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.1.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.7525518764501847,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.1.skewness",
+       "words": "skewness 0.75 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 455,
+       "threshold": 1314.3899999999994,
+       "exceeds": false,
+       "path": "ranges.1.max",
+       "words": "max 455 ≤ 3 × q99 (1314.39)"
+      }
+     ],
+     "text": "displacement: 0 missing of 318 (0%) < 5%, skewness 0.75 < 1, max 455 ≤ 3 × q99 (1314.39): no change."
+    },
+    {
+     "column": "weight",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.3.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.5545371594372033,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.3.skewness",
+       "words": "skewness 0.55 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 5140,
+       "threshold": 14830.05,
+       "exceeds": false,
+       "path": "ranges.3.max",
+       "words": "max 5140 ≤ 3 × q99 (14830.05)"
+      }
+     ],
+     "text": "weight: 0 missing of 318 (0%) < 5%, skewness 0.55 < 1, max 5140 ≤ 3 × q99 (14830.05): no change."
+    },
+    {
+     "column": "acceleration",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.4.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.24350896763584787,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.4.skewness",
+       "words": "skewness 0.24 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 24.8,
+       "threshold": 66.44699999999997,
+       "exceeds": false,
+       "path": "ranges.4.max",
+       "words": "max 24.8 ≤ 3 × q99 (66.45)"
+      }
+     ],
+     "text": "acceleration: 0 missing of 318 (0%) < 5%, skewness 0.24 < 1, max 24.8 ≤ 3 × q99 (66.45): no change."
+    },
+    {
+     "column": "origin",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.6.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 0,
+       "threshold": 30,
+       "exceeds": false,
+       "path": "cardinality.0.rare",
+       "words": "no category under 30 rows"
+      }
+     ],
+     "text": "origin: 0 missing of 318 (0%) < 5%, no category under 30 rows: no change."
+    },
+    {
+     "column": "model_year",
+     "kept": false,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.5.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": -0.019726195913936255,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.5.skewness",
+       "words": "skewness -0.02 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 82,
+       "threshold": 246.0,
+       "exceeds": false,
+       "path": "ranges.5.max",
+       "words": "max 82 ≤ 3 × q99 (246)"
+      }
+     ],
+     "text": "model_year: 0 missing of 318 (0%) < 5%, skewness -0.02 < 1, max 82 ≤ 3 × q99 (246): no change."
+    },
+    {
+     "column": "car_name",
+     "kept": false,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.7.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 254,
+       "threshold": 30,
+       "exceeds": true,
+       "path": "cardinality.1.rare",
+       "words": "254 categories under 30 rows"
+      }
+     ],
+     "text": "car_name: 0 missing of 318 (0%) < 5%, 254 categories under 30 rows: no change."
+    }
+   ]
+  }
  }
 }

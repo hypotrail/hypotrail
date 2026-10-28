@@ -14,7 +14,7 @@
   "schema": "hypotrail.decisions/1",
   "ok": true,
   "study": "/studies/auto mpg cv",
-  "revision": 35,
+  "revision": 61,
   "task": "regression",
   "decisions": [
    {
@@ -33,7 +33,7 @@
      "restatement": "You decide the prediction_time as stated.",
      "proposal_id": "p_1",
      "revision": 3,
-     "time": "2026-10-28T06:12:28.957588+00:00",
+     "time": "2026-10-28T08:43:22.429024+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -72,7 +72,7 @@
      "restatement": "You decide the feature_availability as stated.",
      "proposal_id": "p_2",
      "revision": 5,
-     "time": "2026-10-28T06:12:30.199660+00:00",
+     "time": "2026-10-28T08:43:23.692005+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -106,7 +106,7 @@
      "restatement": "You decide the split as stated.",
      "proposal_id": "p_3",
      "revision": 7,
-     "time": "2026-10-28T06:12:31.653082+00:00",
+     "time": "2026-10-28T08:43:25.242877+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -139,7 +139,7 @@
      "restatement": "You decide the success_criterion as stated.",
      "proposal_id": "p_4",
      "revision": 9,
-     "time": "2026-10-28T06:12:33.142339+00:00",
+     "time": "2026-10-28T08:43:26.776205+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -180,8 +180,8 @@
      "actor": "user",
      "restatement": "You keep the drafted preparation: each change rests on the quality check.",
      "proposal_id": "p_5",
-     "revision": 15,
-     "time": "2026-10-28T06:12:38.814347+00:00",
+     "revision": 17,
+     "time": "2026-10-28T08:43:33.438644+00:00",
      "authenticated": false,
      "basis": "endorsed",
      "delegation_scope": null,
@@ -222,8 +222,8 @@
      "actor": "user",
      "restatement": "You compare a tuned ridge and an EBM with the linear model.",
      "proposal_id": "p_6",
-     "revision": 27,
-     "time": "2026-10-28T06:12:47.522820+00:00",
+     "revision": 53,
+     "time": "2026-10-28T08:44:00.105108+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -306,7 +306,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 2,
-    "created": "2026-10-28T06:12:27.551700+00:00",
+    "created": "2026-10-28T08:43:21.907925+00:00",
     "closed_revision": 3,
     "closed_reason": "confirmed",
     "origin": {
@@ -328,7 +328,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 4,
-    "created": "2026-10-28T06:12:29.574583+00:00",
+    "created": "2026-10-28T08:43:23.104075+00:00",
     "closed_revision": 5,
     "closed_reason": "confirmed",
     "origin": {
@@ -347,7 +347,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 6,
-    "created": "2026-10-28T06:12:30.913911+00:00",
+    "created": "2026-10-28T08:43:24.550310+00:00",
     "closed_revision": 7,
     "closed_reason": "confirmed",
     "origin": {
@@ -365,7 +365,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 8,
-    "created": "2026-10-28T06:12:32.396316+00:00",
+    "created": "2026-10-28T08:43:26.113344+00:00",
     "closed_revision": 9,
     "closed_reason": "confirmed",
     "origin": {
@@ -391,9 +391,9 @@
     "restatement": "You keep the drafted preparation: each change rests on the quality check.",
     "rationale": "The quality check motivates it.",
     "status": "confirmed",
-    "revision": 14,
-    "created": "2026-10-28T06:12:37.502806+00:00",
-    "closed_revision": 15,
+    "revision": 16,
+    "created": "2026-10-28T08:43:32.169563+00:00",
+    "closed_revision": 17,
     "closed_reason": "confirmed",
     "origin": {
      "channel": "chat"
@@ -418,9 +418,9 @@
     "restatement": "You compare a tuned ridge and an EBM with the linear model.",
     "rationale": "The diagnostics show a curve for horsepower and weight.",
     "status": "confirmed",
-    "revision": 26,
-    "created": "2026-10-28T06:12:45.750760+00:00",
-    "closed_revision": 27,
+    "revision": 52,
+    "created": "2026-10-28T08:43:58.221176+00:00",
+    "closed_revision": 53,
     "closed_reason": "confirmed",
     "origin": {
      "channel": "chat"
@@ -430,7 +430,7 @@
   "history": [
    {
     "revision": 3,
-    "time": "2026-10-28T06:12:28.957752+00:00",
+    "time": "2026-10-28T08:43:22.429101+00:00",
     "decision_id": "prediction_time",
     "proposal_id": "p_1",
     "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
@@ -444,7 +444,7 @@
    },
    {
     "revision": 5,
-    "time": "2026-10-28T06:12:30.199743+00:00",
+    "time": "2026-10-28T08:43:23.692088+00:00",
     "decision_id": "feature_availability",
     "proposal_id": "p_2",
     "value": {
@@ -465,7 +465,7 @@
    },
    {
     "revision": 7,
-    "time": "2026-10-28T06:12:31.653141+00:00",
+    "time": "2026-10-28T08:43:25.242978+00:00",
     "decision_id": "split",
     "proposal_id": "p_3",
     "value": {
@@ -483,7 +483,7 @@
    },
    {
     "revision": 9,
-    "time": "2026-10-28T06:12:33.142468+00:00",
+    "time": "2026-10-28T08:43:26.776261+00:00",
     "decision_id": "success_criterion",
     "proposal_id": "p_4",
     "value": {
@@ -499,8 +499,8 @@
     "superseded_at": null
    },
    {
-    "revision": 15,
-    "time": "2026-10-28T06:12:38.814475+00:00",
+    "revision": 17,
+    "time": "2026-10-28T08:43:33.438718+00:00",
     "decision_id": "preprocessing",
     "proposal_id": "p_5",
     "value": {
@@ -525,8 +525,8 @@
     "superseded_at": null
    },
    {
-    "revision": 27,
-    "time": "2026-10-28T06:12:47.525453+00:00",
+    "revision": 53,
+    "time": "2026-10-28T08:44:00.112268+00:00",
     "decision_id": "model_variant",
     "proposal_id": "p_6",
     "value": {

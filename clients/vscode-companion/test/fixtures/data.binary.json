@@ -36,8 +36,11 @@
     "definition": "records identical on every column, the target included",
     "line": "No two development rows are identical.",
     "audience": "junior",
-    "junior_text": "No two development rows are identical."
-   }
+    "junior_text": "No two development rows are identical.",
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": []
   },
   "target": {
    "column": "y",

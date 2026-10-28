@@ -16,7 +16,7 @@
   "schema": "hypotrail.summary/1",
   "ok": true,
   "study": "/studies/auto mpg automatic",
-  "revision": 38,
+  "revision": 60,
   "since": null,
   "changed": null,
   "goal": {
@@ -118,11 +118,13 @@
    "recommended": null,
    "question": "Do you confirm the prediction moment again?",
    "junior_digest": "The decision on the prediction moment was made by the automatic mode, without your words. Review it: adopt it in your own words, or say what you change.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Moment (2 of 13).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "decision",
     "language": "en",
-    "revision": 38,
+    "revision": 60,
     "position": {
      "step_id": "prediction_time",
      "completed": 11,
@@ -171,7 +173,7 @@
     "where": {
      "anchor": "now",
      "label": "Now, the decision to review",
-     "line": "In the panel: Now, the decision to review."
+     "line": null
     },
     "shown": null
    }
@@ -331,6 +333,94 @@
     "step": "model_choice",
     "channel": "cli"
    },
+   "eda.correlation": {
+    "result_id": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "structural_eda",
+    "channel": "cli"
+   },
+   "eda.distribution:cylinders": {
+    "result_id": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "structural_eda",
+    "channel": "cli"
+   },
+   "eda.distribution:displacement": {
+    "result_id": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "structural_eda",
+    "channel": "cli"
+   },
+   "eda.distribution:horsepower": {
+    "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "structural_eda",
+    "channel": "cli"
+   },
+   "eda.distribution:origin": {
+    "result_id": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "structural_eda",
+    "channel": "cli"
+   },
+   "eda.distribution:weight": {
+    "result_id": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "structural_eda",
+    "channel": "cli"
+   },
+   "eda.mean_by:cylinders": {
+    "result_id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "train_eda",
+    "channel": "cli"
+   },
+   "eda.mean_by:displacement": {
+    "result_id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "train_eda",
+    "channel": "cli"
+   },
+   "eda.mean_by:horsepower": {
+    "result_id": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "train_eda",
+    "channel": "cli"
+   },
+   "eda.mean_by:origin": {
+    "result_id": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "train_eda",
+    "channel": "cli"
+   },
+   "eda.mean_by:weight": {
+    "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "train_eda",
+    "channel": "cli"
+   },
    "eda.quality": {
     "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
     "current": true,
@@ -409,32 +499,32 @@
    "items": {
     "editable": {
      "status": "ok",
-     "revision": 38,
-     "last_ok_revision": 38,
+     "revision": 60,
+     "last_ok_revision": 60,
      "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence.",
      "audience": "agent",
      "junior_message": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence."
     },
     "notebook": {
      "status": "ok",
-     "revision": 38,
-     "last_ok_revision": 38,
+     "revision": 60,
+     "last_ok_revision": 60,
      "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
      "audience": "agent",
      "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
-     "revision": 38,
-     "last_ok_revision": 38,
+     "revision": 60,
+     "last_ok_revision": 60,
      "message": "The report (reports/study.html) is up to date.",
      "audience": "agent",
      "junior_message": "The report is up to date."
     },
     "workbench": {
      "status": "ok",
-     "revision": 38,
-     "last_ok_revision": 38,
+     "revision": 60,
+     "last_ok_revision": 60,
      "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study.",
      "audience": "agent",
      "junior_message": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
@@ -522,10 +612,15 @@
    "judged_status": "met"
   },
   "eda_looks": {
-   "target_looks": 4,
+   "target_looks": 9,
    "results": [
     "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
     "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
+    "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+    "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+    "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+    "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+    "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
     "93c662e715fc7f3775128f80034540a8784a9a69c2f89952ece7a17ad221b1d0",
     "03610ae378272d51c2c6e2358a7f44f84c1b6ddb2081c0571832cd1df83b1029"
    ]
@@ -677,16 +772,16 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-28T03:57:12.083049+00:00",
+   "boundary_time": "2026-10-28T08:42:52.848373+00:00",
    "gap_minutes": null
   },
   "digest": {
    "since": 1,
-   "until": 38,
+   "until": 60,
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-28T03:57:12.285712+00:00",
+     "time": "2026-10-28T08:42:53.095905+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -709,7 +804,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-28T03:57:12.361781+00:00",
+     "time": "2026-10-28T08:42:53.205441+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -739,7 +834,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-28T03:57:12.455755+00:00",
+     "time": "2026-10-28T08:42:53.363156+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -762,7 +857,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-28T03:57:12.564698+00:00",
+     "time": "2026-10-28T08:42:53.480469+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -792,7 +887,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-28T03:57:12.700115+00:00",
+     "time": "2026-10-28T08:42:53.629310+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -815,7 +910,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-28T03:57:12.840791+00:00",
+     "time": "2026-10-28T08:42:53.761885+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -845,7 +940,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-28T03:57:13.128140+00:00",
+     "time": "2026-10-28T08:42:54.032833+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -868,7 +963,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-28T03:57:13.409564+00:00",
+     "time": "2026-10-28T08:42:54.395507+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -891,7 +986,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-28T03:57:13.551060+00:00",
+     "time": "2026-10-28T08:42:54.527606+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -921,7 +1016,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-28T03:57:13.822588+00:00",
+     "time": "2026-10-28T08:42:54.805186+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -943,8 +1038,31 @@
      "junior_text": null
     },
     {
-     "revision": 14,
-     "time": "2026-10-28T03:57:14.225625+00:00",
+     "revision": 15,
+     "time": "2026-10-28T08:42:55.320583+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.distribution",
+     "slot": "eda.distribution:horsepower",
+     "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+     "execution_id": "e_0b05de889f053ce833adf260",
+     "rules": null,
+     "column": "horsepower",
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The distribution of horsepower was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 16,
+     "time": "2026-10-28T08:42:55.864562+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -966,8 +1084,8 @@
      "junior_text": null
     },
     {
-     "revision": 15,
-     "time": "2026-10-28T03:57:14.406161+00:00",
+     "revision": 17,
+     "time": "2026-10-28T08:42:56.041055+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -996,8 +1114,8 @@
      "junior_text": "The automatic mode recorded the preparation of the variables; it waits for your review."
     },
     {
-     "revision": 17,
-     "time": "2026-10-28T03:57:14.639948+00:00",
+     "revision": 19,
+     "time": "2026-10-28T08:42:56.321541+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1006,7 +1124,7 @@
      "activity": "eda.target_summary",
      "slot": "eda.target_summary",
      "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
-     "execution_id": "e_ea2e3bb6a6ccc7967a46fb1e",
+     "execution_id": "e_174a44f4fab59c54ebf55c04",
      "rules": null,
      "column": null,
      "channel": "cli",
@@ -1019,8 +1137,8 @@
      "junior_text": null
     },
     {
-     "revision": 19,
-     "time": "2026-10-28T03:57:15.032006+00:00",
+     "revision": 21,
+     "time": "2026-10-28T08:42:56.770566+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1029,7 +1147,7 @@
      "activity": "eda.special_values",
      "slot": "eda.special_values",
      "result_id": "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
-     "execution_id": "e_174a44f4fab59c54ebf55c04",
+     "execution_id": "e_c632559fccd186cbace624c3",
      "rules": null,
      "column": null,
      "channel": "cli",
@@ -1042,8 +1160,238 @@
      "junior_text": null
     },
     {
-     "revision": 21,
-     "time": "2026-10-28T03:57:15.450518+00:00",
+     "revision": 23,
+     "time": "2026-10-28T08:42:57.253195+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.mean_by",
+     "slot": "eda.mean_by:cylinders",
+     "result_id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+     "execution_id": "e_fed5f592e4bd5403021c55ac",
+     "rules": null,
+     "column": "cylinders",
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The target mean by group of cylinders was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 25,
+     "time": "2026-10-28T08:42:57.790722+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.mean_by",
+     "slot": "eda.mean_by:displacement",
+     "result_id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+     "execution_id": "e_7c2acba655e3d6409833fccc",
+     "rules": null,
+     "column": "displacement",
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The target mean by group of displacement was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 27,
+     "time": "2026-10-28T08:42:58.280295+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.mean_by",
+     "slot": "eda.mean_by:horsepower",
+     "result_id": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+     "execution_id": "e_a1a188c7747e32ea70d6f4c9",
+     "rules": null,
+     "column": "horsepower",
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The target mean by group of horsepower was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 29,
+     "time": "2026-10-28T08:42:58.750825+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.mean_by",
+     "slot": "eda.mean_by:weight",
+     "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+     "execution_id": "e_0c09e8b0aaec878455557cd3",
+     "rules": null,
+     "column": "weight",
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The target mean by group of weight was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 31,
+     "time": "2026-10-28T08:42:59.268580+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.mean_by",
+     "slot": "eda.mean_by:origin",
+     "result_id": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+     "execution_id": "e_fbaaa3583704acd44a2e8c99",
+     "rules": null,
+     "column": "origin",
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The target mean by group of origin was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 33,
+     "time": "2026-10-28T08:42:59.833824+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.correlation",
+     "slot": "eda.correlation",
+     "result_id": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
+     "execution_id": "e_3b64bd9e30397d04d0040ad6",
+     "rules": null,
+     "column": null,
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The activity eda.correlation was computed.",
+     "audience": "agent",
+     "junior_text": "An analysis was computed."
+    },
+    {
+     "revision": 35,
+     "time": "2026-10-28T08:43:00.310976+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.distribution",
+     "slot": "eda.distribution:cylinders",
+     "result_id": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+     "execution_id": "e_70a83ee7076041b21d99d955",
+     "rules": null,
+     "column": "cylinders",
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The distribution of cylinders was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 37,
+     "time": "2026-10-28T08:43:00.755109+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.distribution",
+     "slot": "eda.distribution:displacement",
+     "result_id": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+     "execution_id": "e_4583d3d1f39a48a782e80ace",
+     "rules": null,
+     "column": "displacement",
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The distribution of displacement was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 39,
+     "time": "2026-10-28T08:43:01.215162+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.distribution",
+     "slot": "eda.distribution:weight",
+     "result_id": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+     "execution_id": "e_72be60d65fd1ecc172c8bb54",
+     "rules": null,
+     "column": "weight",
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The distribution of weight was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 41,
+     "time": "2026-10-28T08:43:01.702856+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.distribution",
+     "slot": "eda.distribution:origin",
+     "result_id": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
+     "execution_id": "e_7722c822d1a49fc0fb075547",
+     "rules": null,
+     "column": "origin",
+     "channel": "cli",
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The distribution of origin was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 43,
+     "time": "2026-10-28T08:43:02.158882+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1052,7 +1400,7 @@
      "activity": "fit.baseline",
      "slot": "fit.baseline",
      "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
-     "execution_id": "e_c632559fccd186cbace624c3",
+     "execution_id": "e_834748fe2ddb2a9565dfd456",
      "rules": null,
      "column": null,
      "channel": "cli",
@@ -1065,8 +1413,8 @@
      "junior_text": null
     },
     {
-     "revision": 23,
-     "time": "2026-10-28T03:57:16.013095+00:00",
+     "revision": 45,
+     "time": "2026-10-28T08:43:02.843371+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1075,7 +1423,7 @@
      "activity": "fit.linear",
      "slot": "fit.linear",
      "result_id": "b62902a5464b894df3949fdc100ff961e87e9606218a016fda5656abb9e7e189",
-     "execution_id": "e_fed5f592e4bd5403021c55ac",
+     "execution_id": "e_af0121bf996c1c6d6de222d9",
      "rules": null,
      "column": null,
      "channel": "cli",
@@ -1088,8 +1436,8 @@
      "junior_text": null
     },
     {
-     "revision": 25,
-     "time": "2026-10-28T03:57:16.567943+00:00",
+     "revision": 47,
+     "time": "2026-10-28T08:43:03.334329+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1098,7 +1446,7 @@
      "activity": "diag.regression",
      "slot": "diag.regression",
      "result_id": "93c662e715fc7f3775128f80034540a8784a9a69c2f89952ece7a17ad221b1d0",
-     "execution_id": "e_7c2acba655e3d6409833fccc",
+     "execution_id": "e_e55139c0ae3532dd5ae62824",
      "rules": null,
      "column": null,
      "channel": "cli",
@@ -1111,8 +1459,8 @@
      "junior_text": "The development diagnostics was computed."
     },
     {
-     "revision": 26,
-     "time": "2026-10-28T03:57:16.928004+00:00",
+     "revision": 48,
+     "time": "2026-10-28T08:43:03.763137+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1134,8 +1482,8 @@
      "junior_text": null
     },
     {
-     "revision": 27,
-     "time": "2026-10-28T03:57:17.107291+00:00",
+     "revision": 49,
+     "time": "2026-10-28T08:43:03.961652+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1169,8 +1517,8 @@
      "junior_text": "The automatic mode recorded model variant; it waits for your review."
     },
     {
-     "revision": 29,
-     "time": "2026-10-28T03:57:20.041116+00:00",
+     "revision": 51,
+     "time": "2026-10-28T08:43:06.896756+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1179,7 +1527,7 @@
      "activity": "fit.variant",
      "slot": "fit.variant",
      "result_id": "5b1f87bb6a194afa9adb724d96f057e77f50cfff840baf9987ad48432176938f",
-     "execution_id": "e_0c09e8b0aaec878455557cd3",
+     "execution_id": "e_b5b2bd3ea7025a8f23838409",
      "rules": null,
      "column": null,
      "channel": "cli",
@@ -1192,8 +1540,8 @@
      "junior_text": "The variant model was computed."
     },
     {
-     "revision": 31,
-     "time": "2026-10-28T03:57:30.964936+00:00",
+     "revision": 53,
+     "time": "2026-10-28T08:43:17.880300+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1202,7 +1550,7 @@
      "activity": "fit.variant",
      "slot": "fit.variant:2",
      "result_id": "ebac1cf29da030a307b259d306b19d978dbbe7938eeb37cab7347e9ab2a820dc",
-     "execution_id": "e_fbaaa3583704acd44a2e8c99",
+     "execution_id": "e_39da59e6122e1850d2737075",
      "rules": null,
      "column": null,
      "channel": "cli",
@@ -1215,8 +1563,8 @@
      "junior_text": "The variant model of 2 was computed."
     },
     {
-     "revision": 33,
-     "time": "2026-10-28T03:57:31.490112+00:00",
+     "revision": 55,
+     "time": "2026-10-28T08:43:18.651628+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1225,7 +1573,7 @@
      "activity": "evaluate.regression",
      "slot": "evaluate.regression",
      "result_id": "4096c39947dd4d43e201bd27592fb081b8bd5530c967721d6c50a29452e1621b",
-     "execution_id": "e_3b64bd9e30397d04d0040ad6",
+     "execution_id": "e_6d23f1c2f337af4b6e869aa4",
      "rules": null,
      "column": null,
      "channel": "cli",
@@ -1238,8 +1586,8 @@
      "junior_text": null
     },
     {
-     "revision": 35,
-     "time": "2026-10-28T03:57:32.038072+00:00",
+     "revision": 57,
+     "time": "2026-10-28T08:43:19.192946+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1248,7 +1596,7 @@
      "activity": "diag.regression",
      "slot": "diag.regression",
      "result_id": "03610ae378272d51c2c6e2358a7f44f84c1b6ddb2081c0571832cd1df83b1029",
-     "execution_id": "e_70a83ee7076041b21d99d955",
+     "execution_id": "e_66a4c4040c448458d2779ff9",
      "rules": null,
      "column": null,
      "channel": "cli",
@@ -1261,8 +1609,8 @@
      "junior_text": "The development diagnostics was replaced. Models unchanged, nothing refitted."
     },
     {
-     "revision": 36,
-     "time": "2026-10-28T03:57:32.343951+00:00",
+     "revision": 58,
+     "time": "2026-10-28T08:43:19.552488+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1284,8 +1632,8 @@
      "junior_text": "The model choice was proposed: the linear model."
     },
     {
-     "revision": 37,
-     "time": "2026-10-28T03:57:32.507640+00:00",
+     "revision": 59,
+     "time": "2026-10-28T08:43:19.720656+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_choice",
@@ -1319,8 +1667,8 @@
      "junior_text": "The automatic mode recorded the model choice; it waits for your review."
     },
     {
-     "revision": 38,
-     "time": "2026-10-28T03:57:32.664109+00:00",
+     "revision": 60,
+     "time": "2026-10-28T08:43:19.894049+00:00",
      "action": "study.end_automation",
      "kind": "other",
      "decision_id": null,
@@ -1349,9 +1697,9 @@
     "withdrawn": 0,
     "holds_recorded": 0,
     "holds_resolved": 0,
-    "results_added": 10,
+    "results_added": 21,
     "results_replaced": 1,
-    "runs_started": 11,
+    "runs_started": 22,
     "runs_failed": 0,
     "invalidations": 1
    },
@@ -1361,82 +1709,159 @@
      "channel": "cli",
      "revision": 8,
      "activity": "split",
-     "time": "2026-10-28T03:57:13.022745+00:00"
+     "time": "2026-10-28T08:42:53.962791+00:00"
     },
     {
      "action": "run",
      "channel": "cli",
      "revision": 12,
      "activity": "eda.quality",
-     "time": "2026-10-28T03:57:13.738493+00:00"
+     "time": "2026-10-28T08:42:54.715247+00:00"
     },
     {
      "action": "run",
      "channel": "cli",
-     "revision": 16,
-     "activity": "eda.target_summary",
-     "time": "2026-10-28T03:57:14.577313+00:00"
+     "revision": 14,
+     "activity": "eda.distribution",
+     "time": "2026-10-28T08:42:55.248301+00:00"
     },
     {
      "action": "run",
      "channel": "cli",
      "revision": 18,
-     "activity": "eda.special_values",
-     "time": "2026-10-28T03:57:14.966377+00:00"
+     "activity": "eda.target_summary",
+     "time": "2026-10-28T08:42:56.249686+00:00"
     },
     {
      "action": "run",
      "channel": "cli",
      "revision": 20,
-     "activity": "fit.baseline",
-     "time": "2026-10-28T03:57:15.374226+00:00"
+     "activity": "eda.special_values",
+     "time": "2026-10-28T08:42:56.691583+00:00"
     },
     {
      "action": "run",
      "channel": "cli",
      "revision": 22,
-     "activity": "fit.linear",
-     "time": "2026-10-28T03:57:15.771605+00:00"
+     "activity": "eda.mean_by",
+     "time": "2026-10-28T08:42:57.166260+00:00"
     },
     {
      "action": "run",
      "channel": "cli",
      "revision": 24,
-     "activity": "diag.regression",
-     "time": "2026-10-28T03:57:16.462638+00:00"
+     "activity": "eda.mean_by",
+     "time": "2026-10-28T08:42:57.711362+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 26,
+     "activity": "eda.mean_by",
+     "time": "2026-10-28T08:42:58.169917+00:00"
     },
     {
      "action": "run",
      "channel": "cli",
      "revision": 28,
-     "activity": "fit.variant",
-     "time": "2026-10-28T03:57:17.292319+00:00"
+     "activity": "eda.mean_by",
+     "time": "2026-10-28T08:42:58.646688+00:00"
     },
     {
      "action": "run",
      "channel": "cli",
      "revision": 30,
-     "activity": "fit.variant",
-     "time": "2026-10-28T03:57:20.399738+00:00"
+     "activity": "eda.mean_by",
+     "time": "2026-10-28T08:42:59.191278+00:00"
     },
     {
      "action": "run",
      "channel": "cli",
      "revision": 32,
-     "activity": "evaluate.regression",
-     "time": "2026-10-28T03:57:31.320190+00:00"
+     "activity": "eda.correlation",
+     "time": "2026-10-28T08:42:59.686218+00:00"
     },
     {
      "action": "run",
      "channel": "cli",
      "revision": 34,
+     "activity": "eda.distribution",
+     "time": "2026-10-28T08:43:00.242154+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 36,
+     "activity": "eda.distribution",
+     "time": "2026-10-28T08:43:00.676165+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 38,
+     "activity": "eda.distribution",
+     "time": "2026-10-28T08:43:01.139649+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 40,
+     "activity": "eda.distribution",
+     "time": "2026-10-28T08:43:01.629775+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 42,
+     "activity": "fit.baseline",
+     "time": "2026-10-28T08:43:02.088969+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 44,
+     "activity": "fit.linear",
+     "time": "2026-10-28T08:43:02.571120+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 46,
      "activity": "diag.regression",
-     "time": "2026-10-28T03:57:31.850934+00:00"
+     "time": "2026-10-28T08:43:03.226802+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 50,
+     "activity": "fit.variant",
+     "time": "2026-10-28T08:43:04.167049+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 52,
+     "activity": "fit.variant",
+     "time": "2026-10-28T08:43:07.294589+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 54,
+     "activity": "evaluate.regression",
+     "time": "2026-10-28T08:43:18.495240+00:00"
+    },
+    {
+     "action": "run",
+     "channel": "cli",
+     "revision": 56,
+     "activity": "diag.regression",
+     "time": "2026-10-28T08:43:19.026921+00:00"
     }
    ]
   },
   "task": "regression",
-  "currency": "8354e73b222131d6",
+  "currency": "746f55f31e71ea47",
   "texts": {
    "en": {
     "plan": {
@@ -1497,22 +1922,33 @@
      "10": "The success criterion was proposed.",
      "11": "The automatic mode recorded the success criterion; it waits for your review.",
      "13": "The data quality check was computed.",
-     "14": "The preparation of the variables was proposed.",
-     "15": "The automatic mode recorded the preparation of the variables; it waits for your review.",
-     "17": "The target summary was computed.",
-     "19": "The special-value check was computed.",
-     "21": "The mean baseline was computed.",
-     "23": "The linear model was computed.",
-     "25": "The development diagnostics was computed.",
-     "26": "Model variant was proposed.",
-     "27": "The automatic mode recorded model variant; it waits for your review.",
-     "29": "The variant model was computed.",
-     "31": "The variant model of 2 was computed.",
-     "33": "The model evaluation was computed.",
-     "35": "The development diagnostics was replaced. Models unchanged, nothing refitted.",
-     "36": "The model choice was proposed: the linear model.",
-     "37": "The automatic mode recorded the model choice; it waits for your review.",
-     "38": "The study changed."
+     "15": "The distribution of horsepower was computed.",
+     "16": "The preparation of the variables was proposed.",
+     "17": "The automatic mode recorded the preparation of the variables; it waits for your review.",
+     "19": "The target summary was computed.",
+     "21": "The special-value check was computed.",
+     "23": "The target mean by group of cylinders was computed.",
+     "25": "The target mean by group of displacement was computed.",
+     "27": "The target mean by group of horsepower was computed.",
+     "29": "The target mean by group of weight was computed.",
+     "31": "The target mean by group of origin was computed.",
+     "33": "An analysis was computed.",
+     "35": "The distribution of cylinders was computed.",
+     "37": "The distribution of displacement was computed.",
+     "39": "The distribution of weight was computed.",
+     "41": "The distribution of origin was computed.",
+     "43": "The mean baseline was computed.",
+     "45": "The linear model was computed.",
+     "47": "The development diagnostics was computed.",
+     "48": "Model variant was proposed.",
+     "49": "The automatic mode recorded model variant; it waits for your review.",
+     "51": "The variant model was computed.",
+     "53": "The variant model of 2 was computed.",
+     "55": "The model evaluation was computed.",
+     "57": "The development diagnostics was replaced. Models unchanged, nothing refitted.",
+     "58": "The model choice was proposed: the linear model.",
+     "59": "The automatic mode recorded the model choice; it waits for your review.",
+     "60": "The study changed."
     },
     "goal": {
      "intended_use": "Exercise: estimate a future model fuel efficiency from technical characteristics",
@@ -1541,7 +1977,10 @@
      "model_choice": "The linear model; mean absolute error 3.69 mpg against 7.16 mpg for the baseline."
     },
     "data_contingent": {},
-    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before.",
+    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Moment (2 of 13).",
+    "step_limit": "Nothing is measured yet: these decisions fix the protocol before any model is fitted.",
+    "criterion_words": "out-of-fold error at least 10% below the reference (predict the mean)"
    },
    "fr": {
     "plan": {
@@ -1586,7 +2025,7 @@
     },
     "recap": [
      "Objectif : « Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques » ; la prédiction est faite « When technical characteristics are fixed, before measuring fuel efficiency ».",
-     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : acceleration) ; le découpage des données (validation croisée à 5 plis, plis dans l'ordre du temps) ; le critère de succès (erreur hors pli au moins 10 % sous celle de la moyenne de référence) ; la préparation des variables (modifiée) ; la variante à comparer (pénalité choisie par validation croisée imbriquée et une Explainable Boosting Machine (EBM)) ; le choix du modèle : le modèle linéaire (MAE hors pli 3,69 mpg).",
+     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : acceleration) ; le découpage des données (validation croisée à 5 plis, plis dans l'ordre du temps) ; le critère de succès (erreur hors pli au moins 10 % sous celle de la référence (prédire la moyenne)) ; la préparation des variables (modifiée) ; la variante à comparer (pénalité choisie par validation croisée imbriquée et une Explainable Boosting Machine (EBM)) ; le choix du modèle : le modèle linéaire (MAE hors pli 3,69 mpg).",
      "Maintenant : Définir le moment de la prédiction, en attente de votre nouvelle confirmation ; le rapport et le notebook sont à jour.",
      "Ensuite : La décision sur le moment de la prédiction a été prise par le mode automatique, sans vos mots. Relisez-la : adoptez-la avec vos propres mots, ou dites ce que vous changez.",
      "Limite : Étude automatique : à relire, pas encore défendable. Le mode automatique a pris ces décisions sans vos mots ; adoptez ou changez chacune avec vos propres mots : le moment de la prédiction, la disponibilité des variables, le découpage des données, le critère de succès, la préparation des variables, la variante à comparer et le choix du modèle."
@@ -1602,22 +2041,33 @@
      "10": "Une proposition a été faite pour le critère de succès.",
      "11": "Le mode automatique a enregistré le critère de succès ; cela attend votre relecture.",
      "13": "Résultat calculé : le contrôle de qualité des données.",
-     "14": "Une proposition a été faite pour la préparation des variables.",
-     "15": "Le mode automatique a enregistré la préparation des variables ; cela attend votre relecture.",
-     "17": "Résultat calculé : le résumé de la cible.",
-     "19": "Résultat calculé : la vérification des valeurs spéciales.",
-     "21": "Résultat calculé : le modèle de référence.",
-     "23": "Résultat calculé : le modèle linéaire.",
-     "25": "Résultat calculé : les diagnostics de développement.",
-     "26": "Une proposition a été faite pour la variante à comparer.",
-     "27": "Le mode automatique a enregistré la variante à comparer ; cela attend votre relecture.",
-     "29": "Résultat calculé : le modèle variante.",
-     "31": "Résultat calculé : le modèle variante de 2.",
-     "33": "Résultat calculé : la comparaison des modèles.",
-     "35": "Résultat remplacé : les diagnostics de développement. Modèles inchangés, rien n'est réajusté.",
-     "36": "Une proposition a été faite pour le choix du modèle : le modèle linéaire.",
-     "37": "Le mode automatique a enregistré le choix du modèle ; cela attend votre relecture.",
-     "38": "L'étude a changé."
+     "15": "Résultat calculé : la distribution d'une colonne de horsepower.",
+     "16": "Une proposition a été faite pour la préparation des variables.",
+     "17": "Le mode automatique a enregistré la préparation des variables ; cela attend votre relecture.",
+     "19": "Résultat calculé : le résumé de la cible.",
+     "21": "Résultat calculé : la vérification des valeurs spéciales.",
+     "23": "Résultat calculé : une moyenne de la cible par groupe de cylinders.",
+     "25": "Résultat calculé : une moyenne de la cible par groupe de displacement.",
+     "27": "Résultat calculé : une moyenne de la cible par groupe de horsepower.",
+     "29": "Résultat calculé : une moyenne de la cible par groupe de weight.",
+     "31": "Résultat calculé : une moyenne de la cible par groupe de origin.",
+     "33": "Résultat calculé : une analyse.",
+     "35": "Résultat calculé : la distribution d'une colonne de cylinders.",
+     "37": "Résultat calculé : la distribution d'une colonne de displacement.",
+     "39": "Résultat calculé : la distribution d'une colonne de weight.",
+     "41": "Résultat calculé : la distribution d'une colonne de origin.",
+     "43": "Résultat calculé : le modèle de référence.",
+     "45": "Résultat calculé : le modèle linéaire.",
+     "47": "Résultat calculé : les diagnostics de développement.",
+     "48": "Une proposition a été faite pour la variante à comparer.",
+     "49": "Le mode automatique a enregistré la variante à comparer ; cela attend votre relecture.",
+     "51": "Résultat calculé : le modèle variante.",
+     "53": "Résultat calculé : le modèle variante de 2.",
+     "55": "Résultat calculé : la comparaison des modèles.",
+     "57": "Résultat remplacé : les diagnostics de développement. Modèles inchangés, rien n'est réajusté.",
+     "58": "Une proposition a été faite pour le choix du modèle : le modèle linéaire.",
+     "59": "Le mode automatique a enregistré le choix du modèle ; cela attend votre relecture.",
+     "60": "L'étude a changé."
     },
     "goal": {
      "intended_use": "Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques",
@@ -1646,7 +2096,10 @@
      "model_choice": "Le modèle linéaire ; erreur absolue moyenne 3,69 mpg contre 7,16 mpg pour le modèle de référence."
     },
     "data_contingent": {},
-    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant."
+    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant.",
+    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment, Variables, Découpage, Critère) ; Préparer les preuves (Qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Choix) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Moment (2 sur 13).",
+    "step_limit": "Rien n'est encore mesuré : ces décisions fixent le protocole avant tout modèle.",
+    "criterion_words": "erreur hors pli au moins 10 % sous celle de la référence (prédire la moyenne)"
    }
   },
   "panel_contract": 2,
@@ -1655,7 +2108,7 @@
    "active": false,
    "started_revision": 1,
    "ended": {
-    "revision": 38,
+    "revision": 60,
     "reason": "reached_end"
    }
   },
@@ -1720,7 +2173,7 @@
       "target_looks_before": 0
      },
      "proposal_id": "p_5",
-     "revision": 15
+     "revision": 17
     },
     {
      "decision_id": "model_variant",
@@ -1739,14 +2192,14 @@
       ]
      },
      "proposal_id": "p_6",
-     "revision": 27
+     "revision": 49
     },
     {
      "decision_id": "model_choice",
      "status": "confirmed",
      "value": "fit.linear",
      "proposal_id": "p_7",
-     "revision": 37
+     "revision": 59
     }
    ],
    "done": 0,
@@ -1800,26 +2253,31 @@
     "max": 1
    },
    "target_looks": {
-    "eda": 4,
+    "eda": 9,
     "sample": 1,
-    "total": 5
+    "total": 10
    },
    "configurations": {
     "tried": 3,
     "reference": true
+   },
+   "variants": {
+    "used": 2,
+    "max": 3,
+    "remaining": 1
    }
   },
   "sample": {
-   "seed": "66544cad6eb0ebdc",
+   "seed": "7e229595934d726e",
    "row_keys": [
-    "L94",
-    "L129",
-    "L164",
-    "L275",
-    "L338",
-    "L364",
-    "L374",
-    "L383"
+    "L50",
+    "L52",
+    "L56",
+    "L175",
+    "L192",
+    "L344",
+    "L367",
+    "L375"
    ],
    "recorded": true
   },
@@ -1937,6 +2395,274 @@
     }
    ],
    "final_test": null
+  },
+  "data_structure": {
+   "duplicates": {
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": [
+    {
+     "column": "car_name",
+     "groups": 254,
+     "rows_in_repeated_groups": 107
+    }
+   ]
+  },
+  "quality_verdicts": {
+   "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
+   "columns": [
+    {
+     "column": "horsepower",
+     "kept": true,
+     "changed": true,
+     "parameters": [
+      "log_transform"
+     ],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.018867924528301886,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.2.n_missing",
+       "words": "6 missing of 318 (1.9%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 1.0522043350803072,
+       "threshold": 1.0,
+       "exceeds": true,
+       "path": "ranges.2.skewness",
+       "words": "skewness 1.05 ≥ 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 230,
+       "threshold": 658.3499999999998,
+       "exceeds": false,
+       "path": "ranges.2.max",
+       "words": "max 230 ≤ 3 × q99 (658.35)"
+      }
+     ],
+     "text": "horsepower: 6 missing of 318 (1.9%) < 5%, skewness 1.05 ≥ 1, max 230 ≤ 3 × q99 (658.35): drafted: a signed log."
+    },
+    {
+     "column": "cylinders",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.0.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.5592211132140309,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.0.skewness",
+       "words": "skewness 0.56 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 8,
+       "threshold": 24.0,
+       "exceeds": false,
+       "path": "ranges.0.max",
+       "words": "max 8 ≤ 3 × q99 (24)"
+      }
+     ],
+     "text": "cylinders: 0 missing of 318 (0%) < 5%, skewness 0.56 < 1, max 8 ≤ 3 × q99 (24): no change."
+    },
+    {
+     "column": "displacement",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.1.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.7525518764501847,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.1.skewness",
+       "words": "skewness 0.75 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 455,
+       "threshold": 1314.3899999999994,
+       "exceeds": false,
+       "path": "ranges.1.max",
+       "words": "max 455 ≤ 3 × q99 (1314.39)"
+      }
+     ],
+     "text": "displacement: 0 missing of 318 (0%) < 5%, skewness 0.75 < 1, max 455 ≤ 3 × q99 (1314.39): no change."
+    },
+    {
+     "column": "weight",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.3.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.5545371594372033,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.3.skewness",
+       "words": "skewness 0.55 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 5140,
+       "threshold": 14830.05,
+       "exceeds": false,
+       "path": "ranges.3.max",
+       "words": "max 5140 ≤ 3 × q99 (14830.05)"
+      }
+     ],
+     "text": "weight: 0 missing of 318 (0%) < 5%, skewness 0.55 < 1, max 5140 ≤ 3 × q99 (14830.05): no change."
+    },
+    {
+     "column": "origin",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.6.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 0,
+       "threshold": 30,
+       "exceeds": false,
+       "path": "cardinality.0.rare",
+       "words": "no category under 30 rows"
+      }
+     ],
+     "text": "origin: 0 missing of 318 (0%) < 5%, no category under 30 rows: no change."
+    },
+    {
+     "column": "acceleration",
+     "kept": false,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.4.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.24350896763584787,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.4.skewness",
+       "words": "skewness 0.24 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 24.8,
+       "threshold": 66.44699999999997,
+       "exceeds": false,
+       "path": "ranges.4.max",
+       "words": "max 24.8 ≤ 3 × q99 (66.45)"
+      }
+     ],
+     "text": "acceleration: 0 missing of 318 (0%) < 5%, skewness 0.24 < 1, max 24.8 ≤ 3 × q99 (66.45): no change."
+    },
+    {
+     "column": "model_year",
+     "kept": false,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.5.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": -0.019726195913936255,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.5.skewness",
+       "words": "skewness -0.02 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 82,
+       "threshold": 246.0,
+       "exceeds": false,
+       "path": "ranges.5.max",
+       "words": "max 82 ≤ 3 × q99 (246)"
+      }
+     ],
+     "text": "model_year: 0 missing of 318 (0%) < 5%, skewness -0.02 < 1, max 82 ≤ 3 × q99 (246): no change."
+    },
+    {
+     "column": "car_name",
+     "kept": false,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.7.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 254,
+       "threshold": 30,
+       "exceeds": true,
+       "path": "cardinality.1.rare",
+       "words": "254 categories under 30 rows"
+      }
+     ],
+     "text": "car_name: 0 missing of 318 (0%) < 5%, 254 categories under 30 rows: no change."
+    }
+   ]
   }
  }
 }

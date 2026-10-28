@@ -122,6 +122,11 @@
    "recommended": null,
    "question": "Do you adopt this decision?",
    "junior_digest": "Proposal on the decision policy: \"Call the 100 clients with the highest scores.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Rule (12 of 14).",
+   "evidence": [
+    "policy.evaluation",
+    "diag.binary"
+   ],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "decision",
@@ -178,7 +183,11 @@
     "origin": {
      "channel": "chat"
     },
-    "data_contingent": true
+    "data_contingent": true,
+    "evidence": [
+     "policy.evaluation",
+     "diag.binary"
+    ]
    }
   ],
   "decisions": {
@@ -746,7 +755,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-28T03:52:46.136484+00:00",
+   "boundary_time": "2026-10-28T08:37:55.989296+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -755,7 +764,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-28T03:52:46.339260+00:00",
+     "time": "2026-10-28T08:37:56.191829+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -778,7 +787,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-28T03:52:47.910112+00:00",
+     "time": "2026-10-28T08:37:57.833203+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -808,7 +817,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-28T03:52:48.564560+00:00",
+     "time": "2026-10-28T08:37:58.619614+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -831,7 +840,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-28T03:52:49.316867+00:00",
+     "time": "2026-10-28T08:37:59.375141+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -861,7 +870,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-28T03:52:50.324068+00:00",
+     "time": "2026-10-28T08:38:00.488014+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -884,7 +893,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-28T03:52:51.311800+00:00",
+     "time": "2026-10-28T08:38:01.475940+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -914,7 +923,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-28T03:52:52.455268+00:00",
+     "time": "2026-10-28T08:38:02.681000+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -937,7 +946,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-28T03:52:53.464939+00:00",
+     "time": "2026-10-28T08:38:03.686103+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -967,7 +976,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-28T03:52:54.594232+00:00",
+     "time": "2026-10-28T08:38:04.932344+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -990,7 +999,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-28T03:52:55.731610+00:00",
+     "time": "2026-10-28T08:38:06.114842+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -1020,7 +1029,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-28T03:52:57.695403+00:00",
+     "time": "2026-10-28T08:38:08.243765+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1043,7 +1052,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-28T03:52:59.005020+00:00",
+     "time": "2026-10-28T08:38:09.598206+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1066,7 +1075,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-28T03:53:00.278473+00:00",
+     "time": "2026-10-28T08:38:11.007419+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1089,7 +1098,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-28T03:53:01.554338+00:00",
+     "time": "2026-10-28T08:38:12.651151+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1112,7 +1121,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-28T03:53:03.961605+00:00",
+     "time": "2026-10-28T08:38:15.311267+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1135,7 +1144,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-28T03:53:05.364415+00:00",
+     "time": "2026-10-28T08:38:16.832111+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1158,7 +1167,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-28T03:53:06.702768+00:00",
+     "time": "2026-10-28T08:38:18.432558+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1181,7 +1190,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-28T03:53:08.162648+00:00",
+     "time": "2026-10-28T08:38:20.058246+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1204,7 +1213,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-28T03:53:09.685040+00:00",
+     "time": "2026-10-28T08:38:21.682206+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1227,7 +1236,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-28T03:53:11.486310+00:00",
+     "time": "2026-10-28T08:38:23.700433+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1250,7 +1259,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-28T03:53:13.124841+00:00",
+     "time": "2026-10-28T08:38:25.445766+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1273,7 +1282,7 @@
     },
     {
      "revision": 35,
-     "time": "2026-10-28T03:53:14.613324+00:00",
+     "time": "2026-10-28T08:38:27.037765+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1296,7 +1305,7 @@
     },
     {
      "revision": 36,
-     "time": "2026-10-28T03:53:15.962497+00:00",
+     "time": "2026-10-28T08:38:28.476833+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1319,7 +1328,7 @@
     },
     {
      "revision": 37,
-     "time": "2026-10-28T03:53:17.134083+00:00",
+     "time": "2026-10-28T08:38:29.874840+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1352,7 +1361,7 @@
     },
     {
      "revision": 39,
-     "time": "2026-10-28T03:53:18.684235+00:00",
+     "time": "2026-10-28T08:38:32.018502+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1375,7 +1384,7 @@
     },
     {
      "revision": 41,
-     "time": "2026-10-28T03:53:19.928623+00:00",
+     "time": "2026-10-28T08:38:33.532307+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1400,7 +1409,7 @@
     },
     {
      "revision": 42,
-     "time": "2026-10-28T03:53:21.095101+00:00",
+     "time": "2026-10-28T08:38:34.815729+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1423,7 +1432,7 @@
     },
     {
      "revision": 43,
-     "time": "2026-10-28T03:53:22.193765+00:00",
+     "time": "2026-10-28T08:38:35.995646+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_choice",
@@ -1457,7 +1466,7 @@
     },
     {
      "revision": 44,
-     "time": "2026-10-28T03:53:23.330433+00:00",
+     "time": "2026-10-28T08:38:37.420835+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
@@ -1480,7 +1489,7 @@
     },
     {
      "revision": 45,
-     "time": "2026-10-28T03:53:24.890240+00:00",
+     "time": "2026-10-28T08:38:38.595668+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "policy",
@@ -1514,7 +1523,7 @@
     },
     {
      "revision": 47,
-     "time": "2026-10-28T03:53:27.600932+00:00",
+     "time": "2026-10-28T08:38:40.410921+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1537,7 +1546,7 @@
     },
     {
      "revision": 49,
-     "time": "2026-10-28T03:53:31.232205+00:00",
+     "time": "2026-10-28T08:38:43.222866+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1562,7 +1571,7 @@
     },
     {
      "revision": 50,
-     "time": "2026-10-28T03:53:33.932194+00:00",
+     "time": "2026-10-28T08:38:45.237927+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
@@ -1600,7 +1609,7 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "352246a1f10ff503",
+  "currency": "fb80ce9467fcc4c7",
   "texts": {
    "en": {
     "plan": {
@@ -1717,7 +1726,10 @@
     "data_contingent": {
      "p_9": "This rule is proposed after you saw how the earlier one did on the validation rows: a change guided by those figures makes them slightly optimistic. It is recorded, not refused."
     },
-    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before.",
+    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Rule (12 of 14).",
+    "step_limit": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance.",
+    "criterion_words": "precision gain over the baseline of at least 5 points"
    },
    "fr": {
     "plan": {
@@ -1834,7 +1846,10 @@
     "data_contingent": {
      "p_9": "Cette règle est proposée après que vous avez vu les résultats de la précédente sur les lignes de validation : un changement guidé par ces chiffres les rend un peu optimistes. Il est enregistré, pas refusé."
     },
-    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant."
+    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant.",
+    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment, Variables, Découpage, Critère) ; Préparer les preuves (Qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Règle) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Règle (12 sur 14).",
+    "step_limit": "Le jeu de validation sert à comparer les modèles et à choisir la règle et son seuil ou sa capacité : ses résultats ne sont donc pas une preuve indépendante de la performance future.",
+    "criterion_words": "gain de précision sur le modèle de référence d'au moins 5 points"
    }
   },
   "panel_contract": 2,
@@ -1891,19 +1906,24 @@
    "configurations": {
     "tried": 2,
     "reference": true
+   },
+   "variants": {
+    "used": 1,
+    "max": 3,
+    "remaining": 2
    }
   },
   "sample": {
-   "seed": "566eee38564bd39d",
+   "seed": "f40f0350056b03a5",
    "row_keys": [
-    "L450",
-    "L1000",
-    "L1367",
-    "L1719",
-    "L3163",
-    "L3779",
-    "L4046",
-    "L4414"
+    "L1737",
+    "L1784",
+    "L2708",
+    "L3389",
+    "L3698",
+    "L4023",
+    "L4225",
+    "L4248"
    ],
    "recorded": true
   },
@@ -1963,6 +1983,479 @@
     "results": []
    }
   },
-  "criterion_configurations": null
+  "criterion_configurations": null,
+  "data_structure": {
+   "duplicates": {
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": []
+  },
+  "quality_verdicts": {
+   "result_id": "bd0f5021d267175fb88d9d3d0b17c384c889601aa46e5faade5832b41d98b200",
+   "columns": [
+    {
+     "column": "balance",
+     "kept": true,
+     "changed": true,
+     "parameters": [
+      "caps"
+     ],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.5.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 6.994888925868318,
+       "threshold": 1.0,
+       "exceeds": true,
+       "path": "ranges.1.skewness",
+       "words": "skewness 6.99 ≥ 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 71188,
+       "threshold": 42582.24000000007,
+       "exceeds": true,
+       "path": "ranges.1.max",
+       "words": "max 71188 > 3 × q99 (42582.24)"
+      }
+     ],
+     "text": "balance: 0 missing of 3617 (0%) < 5%, skewness 6.99 ≥ 1, max 71188 > 3 × q99 (42582.24): drafted: caps at the training quantiles."
+    },
+    {
+     "column": "previous",
+     "kept": true,
+     "changed": true,
+     "parameters": [
+      "caps",
+      "log_transform"
+     ],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.14.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 5.7518645749411865,
+       "threshold": 1.0,
+       "exceeds": true,
+       "path": "ranges.6.skewness",
+       "words": "skewness 5.75 ≥ 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 25,
+       "threshold": 24.0,
+       "exceeds": true,
+       "path": "ranges.6.max",
+       "words": "max 25 > 3 × q99 (24)"
+      }
+     ],
+     "text": "previous: 0 missing of 3617 (0%) < 5%, skewness 5.75 ≥ 1, max 25 > 3 × q99 (24): drafted: caps at the training quantiles, a signed log."
+    },
+    {
+     "column": "age",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.0.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.7104648240995637,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.0.skewness",
+       "words": "skewness 0.71 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 87,
+       "threshold": 216.0,
+       "exceeds": false,
+       "path": "ranges.0.max",
+       "words": "max 87 ≤ 3 × q99 (216)"
+      }
+     ],
+     "text": "age: 0 missing of 3617 (0%) < 5%, skewness 0.71 < 1, max 87 ≤ 3 × q99 (216): no change."
+    },
+    {
+     "column": "job",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.1.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 0,
+       "threshold": 30,
+       "exceeds": false,
+       "path": "cardinality.0.rare",
+       "words": "no category under 30 rows"
+      }
+     ],
+     "text": "job: 0 missing of 3617 (0%) < 5%, no category under 30 rows: no change."
+    },
+    {
+     "column": "marital",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.2.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 0,
+       "threshold": 30,
+       "exceeds": false,
+       "path": "cardinality.1.rare",
+       "words": "no category under 30 rows"
+      }
+     ],
+     "text": "marital: 0 missing of 3617 (0%) < 5%, no category under 30 rows: no change."
+    },
+    {
+     "column": "education",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.3.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 0,
+       "threshold": 30,
+       "exceeds": false,
+       "path": "cardinality.2.rare",
+       "words": "no category under 30 rows"
+      }
+     ],
+     "text": "education: 0 missing of 3617 (0%) < 5%, no category under 30 rows: no change."
+    },
+    {
+     "column": "default",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.4.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 0,
+       "threshold": 30,
+       "exceeds": false,
+       "path": "cardinality.3.rare",
+       "words": "no category under 30 rows"
+      }
+     ],
+     "text": "default: 0 missing of 3617 (0%) < 5%, no category under 30 rows: no change."
+    },
+    {
+     "column": "housing",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.6.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 0,
+       "threshold": 30,
+       "exceeds": false,
+       "path": "cardinality.4.rare",
+       "words": "no category under 30 rows"
+      }
+     ],
+     "text": "housing: 0 missing of 3617 (0%) < 5%, no category under 30 rows: no change."
+    },
+    {
+     "column": "loan",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.7.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 0,
+       "threshold": 30,
+       "exceeds": false,
+       "path": "cardinality.5.rare",
+       "words": "no category under 30 rows"
+      }
+     ],
+     "text": "loan: 0 missing of 3617 (0%) < 5%, no category under 30 rows: no change."
+    },
+    {
+     "column": "contact",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.8.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 0,
+       "threshold": 30,
+       "exceeds": false,
+       "path": "cardinality.6.rare",
+       "words": "no category under 30 rows"
+      }
+     ],
+     "text": "contact: 0 missing of 3617 (0%) < 5%, no category under 30 rows: no change."
+    },
+    {
+     "column": "pdays",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.13.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.6989773663477385,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.5.skewness",
+       "words": "skewness 0.7 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 871,
+       "threshold": 1428.9000000000005,
+       "exceeds": false,
+       "path": "ranges.5.max",
+       "words": "max 871 ≤ 3 × q99 (1428.9)"
+      }
+     ],
+     "text": "pdays: 0 missing of 3617 (0%) < 5%, skewness 0.7 < 1, max 871 ≤ 3 × q99 (1428.9): no change."
+    },
+    {
+     "column": "poutcome",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.15.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 0,
+       "threshold": 30,
+       "exceeds": false,
+       "path": "cardinality.8.rare",
+       "words": "no category under 30 rows"
+      }
+     ],
+     "text": "poutcome: 0 missing of 3617 (0%) < 5%, no category under 30 rows: no change."
+    },
+    {
+     "column": "day",
+     "kept": false,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.9.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.07594344973210176,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.2.skewness",
+       "words": "skewness 0.08 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 31,
+       "threshold": 93.0,
+       "exceeds": false,
+       "path": "ranges.2.max",
+       "words": "max 31 ≤ 3 × q99 (93)"
+      }
+     ],
+     "text": "day: 0 missing of 3617 (0%) < 5%, skewness 0.08 < 1, max 31 ≤ 3 × q99 (93): no change."
+    },
+    {
+     "column": "month",
+     "kept": false,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.10.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 1,
+       "threshold": 30,
+       "exceeds": true,
+       "path": "cardinality.7.rare",
+       "words": "1 categories under 30 rows"
+      }
+     ],
+     "text": "month: 0 missing of 3617 (0%) < 5%, 1 categories under 30 rows: no change."
+    },
+    {
+     "column": "duration",
+     "kept": false,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.11.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 2.7719386035576674,
+       "threshold": 1.0,
+       "exceeds": true,
+       "path": "ranges.3.skewness",
+       "words": "skewness 2.77 ≥ 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 3025,
+       "threshold": 3763.4400000000096,
+       "exceeds": false,
+       "path": "ranges.3.max",
+       "words": "max 3025 ≤ 3 × q99 (3763.44)"
+      }
+     ],
+     "text": "duration: 0 missing of 3617 (0%) < 5%, skewness 2.77 ≥ 1, max 3025 ≤ 3 × q99 (3763.44): no change."
+    },
+    {
+     "column": "campaign",
+     "kept": false,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.12.n_missing",
+       "words": "0 missing of 3617 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 4.545635235815573,
+       "threshold": 1.0,
+       "exceeds": true,
+       "path": "ranges.4.skewness",
+       "words": "skewness 4.55 ≥ 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 50,
+       "threshold": 48.0,
+       "exceeds": true,
+       "path": "ranges.4.max",
+       "words": "max 50 > 3 × q99 (48)"
+      }
+     ],
+     "text": "campaign: 0 missing of 3617 (0%) < 5%, skewness 4.55 ≥ 1, max 50 > 3 × q99 (48): no change."
+    }
+   ]
+  }
  }
 }

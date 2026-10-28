@@ -2589,8 +2589,8 @@
    "started_revision": 46,
    "invalidation": null,
    "exposure_ids": [
-    "x_344a93929ae142ee95e1e14a5cc162fe",
-    "x_84d1d0ec1bb0471998b9ebec2b51008e"
+    "x_2d5cbeb487d5418f8b898b64ccba44dd",
+    "x_b62c83248da24ec9b8dc3670937b8489"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2645,6 +2645,8 @@
    "recommended": null,
    "question": null,
    "junior_digest": "Next: the captured model, run without asking you. Before the final test is opened, the engine captures the chosen model: it fits it once on every development row, reloads it and checks that it gives the same predictions, so that the Azure ML export carries the evaluated model. No final-test row is read.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Final test (13 of 14).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",

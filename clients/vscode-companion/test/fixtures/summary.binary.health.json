@@ -94,7 +94,8 @@
     "origin": {
      "channel": "chat"
     },
-    "data_contingent": false
+    "data_contingent": false,
+    "evidence": []
    }
   ],
   "decisions": {
@@ -772,7 +773,10 @@
     "junior_digest": null,
     "headlines": {},
     "data_contingent": {},
-    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before.",
+    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Conclusion (14 of 14).",
+    "step_limit": "The final test measures the chosen configuration once, on rows no choice used: it is the study's independent evidence. It does not establish the performance on later periods or other data, nor a causal effect.",
+    "criterion_words": "precision gain over the baseline of at least 5 points"
    },
    "fr": null
   },
@@ -830,6 +834,11 @@
    "configurations": {
     "tried": 2,
     "reference": true
+   },
+   "variants": {
+    "used": 1,
+    "max": 3,
+    "remaining": 2
    }
   },
   "sample": {
@@ -847,6 +856,14 @@
    "recorded": true
   },
   "headlines": {},
-  "criterion_configurations": null
+  "criterion_configurations": null,
+  "data_structure": {
+   "duplicates": {
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": []
+  },
+  "quality_verdicts": null
  }
 }

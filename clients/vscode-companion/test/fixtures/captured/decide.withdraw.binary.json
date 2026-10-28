@@ -80,6 +80,8 @@
    "recommended": null,
    "question": null,
    "junior_digest": "Next: the captured model, run without asking you. Before the final test is opened, the engine captures the chosen model: it fits it once on every development row, reloads it and checks that it gives the same predictions, so that the Azure ML export carries the evaluated model. No final-test row is read.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Final test (13 of 14).",
+   "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "action",

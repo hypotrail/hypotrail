@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/auto mpg fr",
    "revision": 32,
-   "updated": "2026-10-28T03:56:35.106496+00:00",
+   "updated": "2026-10-28T08:41:51.820047+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
@@ -294,6 +294,10 @@
     "recommended": null,
     "question": "Adoptez-vous cette décision ?",
     "junior_digest": "Proposition sur le choix du modèle : « Adopter le modèle linéaire. » Si elle vous convient, dites que vous l'adoptez ; sinon dites ce que vous changez.",
+    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment, Variables, Découpage, Critère) ; Préparer les preuves (Qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Choix) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Choix (11 sur 13).",
+    "evidence": [
+     "evaluate.regression"
+    ],
     "pause": {
      "schema": "hypotrail.pause/1",
      "kind": "decision",
@@ -348,7 +352,7 @@
      "restatement": "Adopt the linear model.",
      "rationale": "Erreur plus faible sur les années récentes.",
      "revision": 32,
-     "created": "2026-10-28T03:56:35.106449+00:00",
+     "created": "2026-10-28T08:41:51.820005+00:00",
      "labels": {
       "fr": "Adopter le modèle linéaire."
      },
@@ -374,7 +378,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-28T03:56:18.246616+00:00",
+      "time": "2026-10-28T08:41:33.070920+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -413,7 +417,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-28T03:56:19.299130+00:00",
+      "time": "2026-10-28T08:41:34.288165+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -454,7 +458,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-28T03:56:20.691008+00:00",
+      "time": "2026-10-28T08:41:35.844194+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -487,7 +491,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-28T03:56:22.182616+00:00",
+      "time": "2026-10-28T08:41:37.581037+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -525,7 +529,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-28T03:56:23.818213+00:00",
+      "time": "2026-10-28T08:41:39.310886+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -558,7 +562,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 27,
-      "time": "2026-10-28T03:56:32.183635+00:00",
+      "time": "2026-10-28T08:41:48.570280+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -940,7 +944,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_a2a3d5fe7f8806c9c98f6929",
-     "exposure_id": "x_9df7950d03214815b18f7b7178417f53",
+     "exposure_id": "x_a29b3cae80464dfc8a821f10855282a1",
      "started_revision": 20,
      "integrity": "ok"
     },
@@ -2184,7 +2188,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_b5c9bc6dc2acb308345f4b5b",
-     "exposure_id": "x_78ceeb89597a402da9b9554dc02bfece",
+     "exposure_id": "x_bbfdaf7b4645453d9e1506fc96bc5bb0",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -2254,7 +2258,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_a6285653c29e349d0b0beb2b",
-     "exposure_id": "x_ff8b0f78407443a4bd250e2b74ab42ed",
+     "exposure_id": "x_9e06a8e1ddf94e6b92b02564b8b32bb9",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -2320,7 +2324,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_92aaf17d67568d5f7880d18a",
-     "exposure_id": "x_2ae03916b98c4b5e8770ec549150d612",
+     "exposure_id": "x_4db89272e05f460288ef8e1674ed0c63",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -2670,7 +2674,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_13402e84eaabec613a733a22",
-     "exposure_id": "x_bb79dd6e448c4c06bae4f500dfa3d453",
+     "exposure_id": "x_646c7884c0b24b8d839e756243258823",
      "started_revision": 30,
      "integrity": "ok"
     },
@@ -2750,7 +2754,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_218811c490cacf105137f8c6",
-     "exposure_id": "x_d742d7ac0f6a43458b2cc0d5c0eec5ae",
+     "exposure_id": "x_ee4bdb880ac8424c816bf158d57afc30",
      "started_revision": 22,
      "integrity": "ok"
     },
@@ -2895,7 +2899,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_aff36faf73c7439f15bd6f24",
-     "exposure_id": "x_b53e630ee78046959d5b60f045ba3ea1",
+     "exposure_id": "x_081f162501e6446eb25b5bc78d686d9e",
      "started_revision": 24,
      "integrity": "ok"
     },
@@ -3050,7 +3054,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_0fce83ab7847d276df6d9250",
-     "exposure_id": "x_8ff8ec7c73e54999aef29e26e120c20f",
+     "exposure_id": "x_286aa26425e74685b26a819219a1a30e",
      "started_revision": 28,
      "integrity": "ok"
     },
@@ -3143,7 +3147,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_839104bf9d2cae503476be39",
-     "exposure_id": "x_29675b82066b4202a6072217ea56a6f6",
+     "exposure_id": "x_c73be721515349a6a16249285a4a499a",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -3228,7 +3232,7 @@
       "last_ok_revision": 32,
       "path": "reports/study.html",
       "revision": 32,
-      "sha256": "5e4043366ad60ec50dadc8a1d77ddefb9e0416d9d90f6472b9fa6e3953483db4",
+      "sha256": "820d2b993929db8c9e8a2bbf8e39924eef6617fabe9b0f465fb66b36635bf1fa",
       "status": "ok",
       "template_version": 4,
       "user_edits_preserved": [],

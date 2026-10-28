@@ -14,7 +14,7 @@
   "schema": "hypotrail.data/1",
   "ok": true,
   "study": "/studies/auto mpg cv",
-  "revision": 35,
+  "revision": 61,
   "observation_unit": {
    "value": "A vehicle model for a model year",
    "status": "scenario_assumption",
@@ -36,8 +36,17 @@
     "definition": "records identical on every column, the target included",
     "line": "No two development rows are identical.",
     "audience": "junior",
-    "junior_text": "No two development rows are identical."
-   }
+    "junior_text": "No two development rows are identical.",
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": [
+    {
+     "column": "car_name",
+     "groups": 254,
+     "rows_in_repeated_groups": 107
+    }
+   ]
   },
   "target": {
    "column": "mpg",
@@ -380,122 +389,122 @@
    "order": "seeded sample",
    "items": [
     {
-     "row_key": "L34",
+     "row_key": "L25",
      "values": {
-      "mpg": 19,
+      "mpg": 21,
       "cylinders": 6,
-      "displacement": 232,
-      "horsepower": 100,
-      "weight": 2634,
-      "acceleration": 13,
-      "model_year": 71,
+      "displacement": 199,
+      "horsepower": 90,
+      "weight": 2648,
+      "acceleration": 15,
+      "model_year": 70,
       "origin": 1,
       "car_name": "amc gremlin"
      }
     },
     {
-     "row_key": "L57",
+     "row_key": "L35",
      "values": {
-      "mpg": 26,
-      "cylinders": 4,
-      "displacement": 91,
-      "horsepower": 70,
-      "weight": 1955,
-      "acceleration": 20.5,
+      "mpg": 16,
+      "cylinders": 6,
+      "displacement": 225,
+      "horsepower": 105,
+      "weight": 3439,
+      "acceleration": 15.5,
       "model_year": 71,
       "origin": 1,
-      "car_name": "plymouth cricket"
+      "car_name": "plymouth satellite custom"
      }
     },
     {
-     "row_key": "L117",
+     "row_key": "L50",
+     "values": {
+      "mpg": 23,
+      "cylinders": 4,
+      "displacement": 122,
+      "horsepower": 86,
+      "weight": 2220,
+      "acceleration": 14,
+      "model_year": 71,
+      "origin": 1,
+      "car_name": "mercury capri 2000"
+     }
+    },
+    {
+     "row_key": "L74",
+     "values": {
+      "mpg": 13,
+      "cylinders": 8,
+      "displacement": 307,
+      "horsepower": 130,
+      "weight": 4098,
+      "acceleration": 14,
+      "model_year": 72,
+      "origin": 1,
+      "car_name": "chevrolet chevelle concours (sw)"
+     }
+    },
+    {
+     "row_key": "L114",
+     "values": {
+      "mpg": 21,
+      "cylinders": 6,
+      "displacement": 155,
+      "horsepower": 107,
+      "weight": 2472,
+      "acceleration": 14,
+      "model_year": 73,
+      "origin": 1,
+      "car_name": "mercury capri v6"
+     }
+    },
+    {
+     "row_key": "L157",
      "values": {
       "mpg": 16,
       "cylinders": 8,
       "displacement": 400,
-      "horsepower": 230,
-      "weight": 4278,
-      "acceleration": 9.5,
-      "model_year": 73,
+      "horsepower": 170,
+      "weight": 4668,
+      "acceleration": 11.5,
+      "model_year": 75,
       "origin": 1,
-      "car_name": "pontiac grand prix"
+      "car_name": "pontiac catalina"
      }
     },
     {
-     "row_key": "L121",
+     "row_key": "L237",
      "values": {
-      "mpg": 19,
+      "mpg": 25.5,
       "cylinders": 4,
-      "displacement": 121,
-      "horsepower": 112,
-      "weight": 2868,
-      "acceleration": 15.5,
-      "model_year": 73,
-      "origin": 2,
-      "car_name": "volvo 144ea"
-     }
-    },
-    {
-     "row_key": "L261",
-     "values": {
-      "mpg": 18.6,
-      "cylinders": 6,
-      "displacement": 225,
-      "horsepower": 110,
-      "weight": 3620,
-      "acceleration": 18.7,
-      "model_year": 78,
+      "displacement": 140,
+      "horsepower": 89,
+      "weight": 2755,
+      "acceleration": 15.8,
+      "model_year": 77,
       "origin": 1,
-      "car_name": "dodge aspen"
+      "car_name": "ford mustang ii 2+2"
      }
     },
     {
-     "row_key": "L318",
+     "row_key": "L370",
      "values": {
-      "mpg": 34.3,
+      "mpg": 34,
       "cylinders": 4,
-      "displacement": 97,
-      "horsepower": 78,
-      "weight": 2188,
-      "acceleration": 15.8,
-      "model_year": 80,
-      "origin": 2,
-      "car_name": "audi 4000"
-     }
-    },
-    {
-     "row_key": "L355",
-     "values": {
-      "mpg": 34.5,
-      "cylinders": 4,
-      "displacement": 100,
-      "horsepower": null,
-      "weight": 2320,
-      "acceleration": 15.8,
-      "model_year": 81,
-      "origin": 2,
-      "car_name": "renault 18i"
-     }
-    },
-    {
-     "row_key": "L357",
-     "values": {
-      "mpg": 32.4,
-      "cylinders": 4,
-      "displacement": 108,
-      "horsepower": 75,
-      "weight": 2350,
-      "acceleration": 16.8,
-      "model_year": 81,
-      "origin": 3,
-      "car_name": "toyota corolla"
+      "displacement": 112,
+      "horsepower": 88,
+      "weight": 2395,
+      "acceleration": 18,
+      "model_year": 82,
+      "origin": 1,
+      "car_name": "chevrolet cavalier 2-door"
      }
     }
    ],
-   "seed": "d8e360b435655276",
+   "seed": "083993247f2126e5",
    "target_shown": true,
    "exposure": {
-    "exposure_id": "x_ddb3e577b3504bff81e936427268e70c",
+    "exposure_id": "x_66494b4d4bf946fd854e37b5d501ad18",
     "purpose": "development_target_sample",
     "recorded": true,
     "withheld": null

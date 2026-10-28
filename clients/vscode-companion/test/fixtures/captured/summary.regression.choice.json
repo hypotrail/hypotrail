@@ -16,7 +16,7 @@
   "schema": "hypotrail.summary/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 35,
+  "revision": 57,
   "since": null,
   "changed": null,
   "goal": {
@@ -117,6 +117,11 @@
    "recommended": null,
    "question": "Which model do you choose, given the errors and their intervals?",
    "junior_digest": "Model choice: keep the mean baseline or adopt the linear model, read on the mean absolute error (MAE) and its paired interval. The success criterion is met on the development set.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Choice (11 of 13).",
+   "evidence": [
+    "evaluate.regression",
+    "diag.regression"
+   ],
    "choice_options": [
     {
      "id": "fit.linear",
@@ -138,7 +143,7 @@
     "schema": "hypotrail.pause/1",
     "kind": "choice",
     "language": "en",
-    "revision": 35,
+    "revision": 57,
     "position": {
      "step_id": "model_choice",
      "completed": 10,
@@ -187,12 +192,12 @@
     "where": {
      "anchor": "now",
      "label": "Now, the options to choose from",
-     "line": "In the panel: Now, the options to choose from."
+     "line": null
     },
     "shown": {
      "anchor": "now",
      "label": "Now, the options to choose from",
-     "line": "In the panel: Now, the options to choose from."
+     "line": null
     }
    }
   },
@@ -338,6 +343,78 @@
     "step": "model_choice",
     "channel": "chat"
    },
+   "eda.correlation": {
+    "result_id": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "structural_eda",
+    "channel": "chat"
+   },
+   "eda.distribution:cylinders": {
+    "result_id": "abaa0ff1b69f9ef16029e575977967dda3d33b720f3600b5145dc4d25ff89d66",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "structural_eda",
+    "channel": "chat"
+   },
+   "eda.distribution:displacement": {
+    "result_id": "8269de3c39b61fcb6d0ba8921ff6ed7e96c81b46c8c313dae12a781d99fb89b2",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "structural_eda",
+    "channel": "chat"
+   },
+   "eda.distribution:horsepower": {
+    "result_id": "0bb6517c6fa11b311b2a7f187869255fc97f97e74187326c39e2afba67352308",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "structural_eda",
+    "channel": "chat"
+   },
+   "eda.distribution:origin": {
+    "result_id": "56cc994eab94aea0b1f650fe229922c75e95395ccfc0133625c60d0ea5d4d3c6",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "structural_eda",
+    "channel": "chat"
+   },
+   "eda.distribution:weight": {
+    "result_id": "bedade14ed77dd17cb9d696a4706af59a70071a5da92bfea69c2230a50d194fc",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "structural_eda",
+    "channel": "chat"
+   },
+   "eda.mean_by:cylinders": {
+    "result_id": "c4482186eeb1f3c7a61df53def6cb81437edf14b7dbc5481f98084defc9526a8",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "train_eda",
+    "channel": "chat"
+   },
+   "eda.mean_by:displacement": {
+    "result_id": "b51c0551969026c7adb31bd44303a5b404c9f060acde45332e3d2f02c9d80bdb",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "train_eda",
+    "channel": "chat"
+   },
+   "eda.mean_by:horsepower": {
+    "result_id": "2f1edbf1345c892f0f9f052d940d202752d0c63dbfcb8ca0ebf743449ec318aa",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "train_eda",
+    "channel": "chat"
+   },
    "eda.mean_by:model_year": {
     "result_id": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
     "current": true,
@@ -345,6 +422,22 @@
     "integrity": "ok",
     "step": "train_eda",
     "channel": "webview"
+   },
+   "eda.mean_by:origin": {
+    "result_id": "f38db57bfbce3a9737dc3cdb7ab38c80f8217253ecb583d73fe62cdc3ad51d99",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "train_eda",
+    "channel": "chat"
+   },
+   "eda.mean_by:weight": {
+    "result_id": "14b2379e03941123f73a919b135349c28cc3676d84ea126312500f0cd5aae323",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "step": "train_eda",
+    "channel": "chat"
    },
    "eda.quality": {
     "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
@@ -416,24 +509,24 @@
    "items": {
     "editable": {
      "status": "ok",
-     "revision": 35,
-     "last_ok_revision": 35,
+     "revision": 57,
+     "last_ok_revision": 57,
      "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence.",
      "audience": "agent",
      "junior_message": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence."
     },
     "notebook": {
      "status": "ok",
-     "revision": 35,
-     "last_ok_revision": 35,
+     "revision": 57,
+     "last_ok_revision": 57,
      "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
      "audience": "agent",
      "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
-     "revision": 35,
-     "last_ok_revision": 35,
+     "revision": 57,
+     "last_ok_revision": 57,
      "message": "The report (reports/study.html) is up to date.",
      "audience": "agent",
      "junior_message": "The report is up to date."
@@ -528,10 +621,15 @@
    "judged_status": "met"
   },
   "eda_looks": {
-   "target_looks": 5,
+   "target_looks": 10,
    "results": [
     "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
     "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+    "c4482186eeb1f3c7a61df53def6cb81437edf14b7dbc5481f98084defc9526a8",
+    "b51c0551969026c7adb31bd44303a5b404c9f060acde45332e3d2f02c9d80bdb",
+    "2f1edbf1345c892f0f9f052d940d202752d0c63dbfcb8ca0ebf743449ec318aa",
+    "14b2379e03941123f73a919b135349c28cc3676d84ea126312500f0cd5aae323",
+    "f38db57bfbce3a9737dc3cdb7ab38c80f8217253ecb583d73fe62cdc3ad51d99",
     "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f",
     "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
     "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77"
@@ -683,16 +781,16 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-28T03:56:36.600224+00:00",
+   "boundary_time": "2026-10-28T08:41:53.441567+00:00",
    "gap_minutes": null
   },
   "digest": {
    "since": 1,
-   "until": 35,
+   "until": 57,
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-28T03:56:37.187290+00:00",
+     "time": "2026-10-28T08:41:54.122742+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -715,7 +813,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-28T03:56:37.685876+00:00",
+     "time": "2026-10-28T08:41:54.636993+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -745,7 +843,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-28T03:56:38.180025+00:00",
+     "time": "2026-10-28T08:41:55.236098+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -768,7 +866,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-28T03:56:38.704344+00:00",
+     "time": "2026-10-28T08:41:56.036053+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -798,7 +896,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-28T03:56:39.393981+00:00",
+     "time": "2026-10-28T08:41:56.769204+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -821,7 +919,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-28T03:56:40.139120+00:00",
+     "time": "2026-10-28T08:41:57.530484+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -851,7 +949,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-28T03:56:40.893878+00:00",
+     "time": "2026-10-28T08:41:58.423158+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -874,7 +972,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-28T03:56:41.548881+00:00",
+     "time": "2026-10-28T08:41:59.115234+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -904,7 +1002,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-28T03:56:42.309873+00:00",
+     "time": "2026-10-28T08:41:59.942316+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -927,7 +1025,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-28T03:56:43.071425+00:00",
+     "time": "2026-10-28T08:42:00.695247+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -957,7 +1055,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-28T03:56:44.056077+00:00",
+     "time": "2026-10-28T08:42:01.734907+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -980,7 +1078,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-28T03:56:44.991230+00:00",
+     "time": "2026-10-28T08:42:02.888205+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1003,7 +1101,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-28T03:56:46.096300+00:00",
+     "time": "2026-10-28T08:42:04.068154+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1026,7 +1124,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-28T03:56:47.135319+00:00",
+     "time": "2026-10-28T08:42:05.196336+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1049,7 +1147,260 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-28T03:56:48.164561+00:00",
+     "time": "2026-10-28T08:42:06.399420+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.mean_by",
+     "slot": "eda.mean_by:cylinders",
+     "result_id": "c4482186eeb1f3c7a61df53def6cb81437edf14b7dbc5481f98084defc9526a8",
+     "execution_id": "e_47e14a8659b67b6ecc88b5f7",
+     "rules": null,
+     "column": "cylinders",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The target mean by group of cylinders was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 23,
+     "time": "2026-10-28T08:42:07.512182+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.mean_by",
+     "slot": "eda.mean_by:displacement",
+     "result_id": "b51c0551969026c7adb31bd44303a5b404c9f060acde45332e3d2f02c9d80bdb",
+     "execution_id": "e_d8c0a36ea30eea85e955656e",
+     "rules": null,
+     "column": "displacement",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The target mean by group of displacement was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 25,
+     "time": "2026-10-28T08:42:08.853481+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.mean_by",
+     "slot": "eda.mean_by:horsepower",
+     "result_id": "2f1edbf1345c892f0f9f052d940d202752d0c63dbfcb8ca0ebf743449ec318aa",
+     "execution_id": "e_742cb865548c9b2f674c0f23",
+     "rules": null,
+     "column": "horsepower",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The target mean by group of horsepower was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 27,
+     "time": "2026-10-28T08:42:10.123183+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.mean_by",
+     "slot": "eda.mean_by:weight",
+     "result_id": "14b2379e03941123f73a919b135349c28cc3676d84ea126312500f0cd5aae323",
+     "execution_id": "e_9b5a307c93714d054dab44ec",
+     "rules": null,
+     "column": "weight",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The target mean by group of weight was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 29,
+     "time": "2026-10-28T08:42:11.297721+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.mean_by",
+     "slot": "eda.mean_by:origin",
+     "result_id": "f38db57bfbce3a9737dc3cdb7ab38c80f8217253ecb583d73fe62cdc3ad51d99",
+     "execution_id": "e_acd92bfdf1765b950c8316a8",
+     "rules": null,
+     "column": "origin",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The target mean by group of origin was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 31,
+     "time": "2026-10-28T08:42:12.562829+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.correlation",
+     "slot": "eda.correlation",
+     "result_id": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
+     "execution_id": "e_8142a37e0a93ddb744855aa8",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The activity eda.correlation was computed.",
+     "audience": "agent",
+     "junior_text": "An analysis was computed."
+    },
+    {
+     "revision": 33,
+     "time": "2026-10-28T08:42:13.945494+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.distribution",
+     "slot": "eda.distribution:cylinders",
+     "result_id": "abaa0ff1b69f9ef16029e575977967dda3d33b720f3600b5145dc4d25ff89d66",
+     "execution_id": "e_2e0d6c177d108bbe4bb3bf56",
+     "rules": null,
+     "column": "cylinders",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The distribution of cylinders was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 35,
+     "time": "2026-10-28T08:42:15.329245+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.distribution",
+     "slot": "eda.distribution:displacement",
+     "result_id": "8269de3c39b61fcb6d0ba8921ff6ed7e96c81b46c8c313dae12a781d99fb89b2",
+     "execution_id": "e_3d00c3aea34475b6aac5c90f",
+     "rules": null,
+     "column": "displacement",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The distribution of displacement was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 37,
+     "time": "2026-10-28T08:42:16.715028+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.distribution",
+     "slot": "eda.distribution:horsepower",
+     "result_id": "0bb6517c6fa11b311b2a7f187869255fc97f97e74187326c39e2afba67352308",
+     "execution_id": "e_4ba73dbb8f60ee57805069ab",
+     "rules": null,
+     "column": "horsepower",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The distribution of horsepower was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 39,
+     "time": "2026-10-28T08:42:17.954469+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.distribution",
+     "slot": "eda.distribution:weight",
+     "result_id": "bedade14ed77dd17cb9d696a4706af59a70071a5da92bfea69c2230a50d194fc",
+     "execution_id": "e_45be80197b00c439ae8b996d",
+     "rules": null,
+     "column": "weight",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The distribution of weight was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 41,
+     "time": "2026-10-28T08:42:19.287495+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.distribution",
+     "slot": "eda.distribution:origin",
+     "result_id": "56cc994eab94aea0b1f650fe229922c75e95395ccfc0133625c60d0ea5d4d3c6",
+     "execution_id": "e_3cce5a55affa8b851abebc12",
+     "rules": null,
+     "column": "origin",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The distribution of origin was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 43,
+     "time": "2026-10-28T08:42:20.807215+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1058,7 +1409,7 @@
      "activity": "fit.baseline",
      "slot": "fit.baseline",
      "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
-     "execution_id": "e_47e14a8659b67b6ecc88b5f7",
+     "execution_id": "e_7e66b22d4e31fa7c48a2de13",
      "rules": null,
      "column": null,
      "channel": null,
@@ -1071,8 +1422,8 @@
      "junior_text": null
     },
     {
-     "revision": 23,
-     "time": "2026-10-28T03:56:49.243284+00:00",
+     "revision": 45,
+     "time": "2026-10-28T08:42:22.300707+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1081,7 +1432,7 @@
      "activity": "fit.linear",
      "slot": "fit.linear",
      "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
-     "execution_id": "e_d8c0a36ea30eea85e955656e",
+     "execution_id": "e_62f4c37fe186a371147175df",
      "rules": null,
      "column": null,
      "channel": null,
@@ -1094,8 +1445,8 @@
      "junior_text": null
     },
     {
-     "revision": 25,
-     "time": "2026-10-28T03:56:50.261284+00:00",
+     "revision": 47,
+     "time": "2026-10-28T08:42:23.580645+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1104,7 +1455,7 @@
      "activity": "diag.regression",
      "slot": "diag.regression",
      "result_id": "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f",
-     "execution_id": "e_742cb865548c9b2f674c0f23",
+     "execution_id": "e_9562864c0fd20d384a545966",
      "rules": null,
      "column": null,
      "channel": null,
@@ -1117,8 +1468,8 @@
      "junior_text": "The development diagnostics was computed."
     },
     {
-     "revision": 26,
-     "time": "2026-10-28T03:56:51.422987+00:00",
+     "revision": 48,
+     "time": "2026-10-28T08:42:25.070266+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1140,8 +1491,8 @@
      "junior_text": null
     },
     {
-     "revision": 27,
-     "time": "2026-10-28T03:56:52.269640+00:00",
+     "revision": 49,
+     "time": "2026-10-28T08:42:26.137546+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1175,8 +1526,8 @@
      "junior_text": "You confirmed model variant."
     },
     {
-     "revision": 29,
-     "time": "2026-10-28T03:56:53.307045+00:00",
+     "revision": 51,
+     "time": "2026-10-28T08:42:27.209837+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1185,7 +1536,7 @@
      "activity": "fit.variant",
      "slot": "fit.variant",
      "result_id": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
-     "execution_id": "e_8142a37e0a93ddb744855aa8",
+     "execution_id": "e_db93ae0d219ba5ba4fff324c",
      "rules": null,
      "column": null,
      "channel": null,
@@ -1198,8 +1549,8 @@
      "junior_text": "The variant model was computed."
     },
     {
-     "revision": 31,
-     "time": "2026-10-28T03:56:54.488901+00:00",
+     "revision": 53,
+     "time": "2026-10-28T08:42:28.738473+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1208,7 +1559,7 @@
      "activity": "evaluate.regression",
      "slot": "evaluate.regression",
      "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
-     "execution_id": "e_2e0d6c177d108bbe4bb3bf56",
+     "execution_id": "e_d224f0bc270d92fcb447a017",
      "rules": null,
      "column": null,
      "channel": null,
@@ -1221,8 +1572,8 @@
      "junior_text": null
     },
     {
-     "revision": 33,
-     "time": "2026-10-28T03:56:55.701730+00:00",
+     "revision": 55,
+     "time": "2026-10-28T08:42:30.318814+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1231,7 +1582,7 @@
      "activity": "diag.regression",
      "slot": "diag.regression",
      "result_id": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
-     "execution_id": "e_3d00c3aea34475b6aac5c90f",
+     "execution_id": "e_682b0aeeca4e660d1e6ba6f2",
      "rules": null,
      "column": null,
      "channel": null,
@@ -1244,8 +1595,8 @@
      "junior_text": "The development diagnostics was replaced. Models unchanged, nothing refitted."
     },
     {
-     "revision": 35,
-     "time": "2026-10-28T03:56:56.819824+00:00",
+     "revision": 57,
+     "time": "2026-10-28T08:42:31.758492+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1274,9 +1625,9 @@
     "withdrawn": 0,
     "holds_recorded": 0,
     "holds_resolved": 0,
-    "results_added": 10,
+    "results_added": 21,
     "results_replaced": 1,
-    "runs_started": 11,
+    "runs_started": 22,
     "runs_failed": 0,
     "invalidations": 1
    },
@@ -1284,14 +1635,14 @@
     {
      "action": "run",
      "channel": "webview",
-     "revision": 34,
+     "revision": 56,
      "activity": "eda.mean_by",
-     "time": "2026-10-28T03:56:56.742494+00:00"
+     "time": "2026-10-28T08:42:31.650285+00:00"
     }
    ]
   },
   "task": "regression",
-  "currency": "7b39d49010f6a9a2",
+  "currency": "c7bd043b09ec5574",
   "texts": {
    "en": {
     "plan": {
@@ -1359,15 +1710,26 @@
      "15": "The data quality check was computed.",
      "17": "The target summary was computed.",
      "19": "The special-value check was computed.",
-     "21": "The mean baseline was computed.",
-     "23": "The linear model was computed.",
-     "25": "The development diagnostics was computed.",
-     "26": "Model variant was proposed.",
-     "27": "You confirmed model variant.",
-     "29": "The variant model was computed.",
-     "31": "The model evaluation was computed.",
-     "33": "The development diagnostics was replaced. Models unchanged, nothing refitted.",
-     "35": "The target mean by group of model_year was computed. You ran it from the study panel."
+     "21": "The target mean by group of cylinders was computed.",
+     "23": "The target mean by group of displacement was computed.",
+     "25": "The target mean by group of horsepower was computed.",
+     "27": "The target mean by group of weight was computed.",
+     "29": "The target mean by group of origin was computed.",
+     "31": "An analysis was computed.",
+     "33": "The distribution of cylinders was computed.",
+     "35": "The distribution of displacement was computed.",
+     "37": "The distribution of horsepower was computed.",
+     "39": "The distribution of weight was computed.",
+     "41": "The distribution of origin was computed.",
+     "43": "The mean baseline was computed.",
+     "45": "The linear model was computed.",
+     "47": "The development diagnostics was computed.",
+     "48": "Model variant was proposed.",
+     "49": "You confirmed model variant.",
+     "51": "The variant model was computed.",
+     "53": "The model evaluation was computed.",
+     "55": "The development diagnostics was replaced. Models unchanged, nothing refitted.",
+     "57": "The target mean by group of model_year was computed. You ran it from the study panel."
     },
     "goal": {
      "intended_use": "Exercise: estimate a future model fuel efficiency from technical characteristics",
@@ -1395,7 +1757,10 @@
      "model_variant": "Compare the model with a variant: stronger regularisation."
     },
     "data_contingent": {},
-    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
+    "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before.",
+    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Choice (11 of 13).",
+    "step_limit": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error.",
+    "criterion_words": "validation error at least 10% below the reference (predict the mean)"
    },
    "fr": {
     "plan": {
@@ -1443,7 +1808,7 @@
     },
     "recap": [
      "Objectif : « Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques » ; la prédiction est faite « when the technical characteristics of a new model are fixed, before its fuel efficiency is measured ».",
-     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : acceleration) ; le découpage des données (selon model_year, jeu de validation à partir de 79) ; le critère de succès (erreur de validation au moins 10 % sous celle de la moyenne de référence) ; la préparation des variables (par défaut, rien ne change) ; la variante à comparer (une régularisation plus forte).",
+     "Décidé : le moment de la prédiction ; la disponibilité des variables (exclues : acceleration) ; le découpage des données (selon model_year, jeu de validation à partir de 79) ; le critère de succès (erreur de validation au moins 10 % sous celle de la référence (prédire la moyenne)) ; la préparation des variables (par défaut, rien ne change) ; la variante à comparer (une régularisation plus forte).",
      "Maintenant : Choisir le modèle (MAE de validation : la moyenne de référence 10,27 mpg; le modèle linéaire 6,48 mpg; la variante 6,51 mpg) ; le rapport et le notebook sont à jour.",
      "Ensuite : Le modèle linéaire réduit-il assez l'erreur de validation de la moyenne de référence, dans l'unité de la cible, pour être adopté, compte tenu des intervalles appariés et des résidus ?",
      "Limite : Le jeu de validation sert à comparer les modèles et à en choisir un : ses erreurs ne sont donc pas une preuve indépendante de l'erreur future."
@@ -1463,15 +1828,26 @@
      "15": "Résultat calculé : le contrôle de qualité des données.",
      "17": "Résultat calculé : le résumé de la cible.",
      "19": "Résultat calculé : la vérification des valeurs spéciales.",
-     "21": "Résultat calculé : le modèle de référence.",
-     "23": "Résultat calculé : le modèle linéaire.",
-     "25": "Résultat calculé : les diagnostics de développement.",
-     "26": "Une proposition a été faite pour la variante à comparer.",
-     "27": "Vous avez confirmé la variante à comparer.",
-     "29": "Résultat calculé : le modèle variante.",
-     "31": "Résultat calculé : la comparaison des modèles.",
-     "33": "Résultat remplacé : les diagnostics de développement. Modèles inchangés, rien n'est réajusté.",
-     "35": "Résultat calculé : une moyenne de la cible par groupe de model_year. Lancé depuis le panneau d'étude."
+     "21": "Résultat calculé : une moyenne de la cible par groupe de cylinders.",
+     "23": "Résultat calculé : une moyenne de la cible par groupe de displacement.",
+     "25": "Résultat calculé : une moyenne de la cible par groupe de horsepower.",
+     "27": "Résultat calculé : une moyenne de la cible par groupe de weight.",
+     "29": "Résultat calculé : une moyenne de la cible par groupe de origin.",
+     "31": "Résultat calculé : une analyse.",
+     "33": "Résultat calculé : la distribution d'une colonne de cylinders.",
+     "35": "Résultat calculé : la distribution d'une colonne de displacement.",
+     "37": "Résultat calculé : la distribution d'une colonne de horsepower.",
+     "39": "Résultat calculé : la distribution d'une colonne de weight.",
+     "41": "Résultat calculé : la distribution d'une colonne de origin.",
+     "43": "Résultat calculé : le modèle de référence.",
+     "45": "Résultat calculé : le modèle linéaire.",
+     "47": "Résultat calculé : les diagnostics de développement.",
+     "48": "Une proposition a été faite pour la variante à comparer.",
+     "49": "Vous avez confirmé la variante à comparer.",
+     "51": "Résultat calculé : le modèle variante.",
+     "53": "Résultat calculé : la comparaison des modèles.",
+     "55": "Résultat remplacé : les diagnostics de développement. Modèles inchangés, rien n'est réajusté.",
+     "57": "Résultat calculé : une moyenne de la cible par groupe de model_year. Lancé depuis le panneau d'étude."
     },
     "goal": {
      "intended_use": "Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques",
@@ -1499,7 +1875,10 @@
      "model_variant": "Comparer le modèle avec une variante : une régularisation plus forte."
     },
     "data_contingent": {},
-    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant."
+    "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant.",
+    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment, Variables, Découpage, Critère) ; Préparer les preuves (Qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Choix) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Choix (11 sur 13).",
+    "step_limit": "Le jeu de validation sert à comparer les modèles et à en choisir un : ses erreurs ne sont donc pas une preuve indépendante de l'erreur future.",
+    "criterion_words": "erreur de validation au moins 10 % sous celle de la référence (prédire la moyenne)"
    }
   },
   "panel_contract": 2,
@@ -1549,26 +1928,31 @@
     "max": 1
    },
    "target_looks": {
-    "eda": 5,
+    "eda": 10,
     "sample": 1,
-    "total": 6
+    "total": 11
    },
    "configurations": {
     "tried": 2,
     "reference": true
+   },
+   "variants": {
+    "used": 1,
+    "max": 3,
+    "remaining": 2
    }
   },
   "sample": {
-   "seed": "8c2cf25bc46912b1",
+   "seed": "1f6ad757c511e8b1",
    "row_keys": [
-    "L32",
-    "L92",
-    "L137",
-    "L164",
-    "L186",
-    "L200",
-    "L283",
-    "L381"
+    "L31",
+    "L67",
+    "L80",
+    "L86",
+    "L105",
+    "L106",
+    "L258",
+    "L339"
    ],
    "recorded": true
   },
@@ -1667,6 +2051,274 @@
     }
    ],
    "final_test": null
+  },
+  "data_structure": {
+   "duplicates": {
+    "rows": 0,
+    "identical_feature_rows": 0
+   },
+   "groups": [
+    {
+     "column": "car_name",
+     "groups": 254,
+     "rows_in_repeated_groups": 107
+    }
+   ]
+  },
+  "quality_verdicts": {
+   "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
+   "columns": [
+    {
+     "column": "horsepower",
+     "kept": true,
+     "changed": true,
+     "parameters": [
+      "log_transform"
+     ],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.018867924528301886,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.2.n_missing",
+       "words": "6 missing of 318 (1.9%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 1.0522043350803072,
+       "threshold": 1.0,
+       "exceeds": true,
+       "path": "ranges.2.skewness",
+       "words": "skewness 1.05 ≥ 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 230,
+       "threshold": 658.3499999999998,
+       "exceeds": false,
+       "path": "ranges.2.max",
+       "words": "max 230 ≤ 3 × q99 (658.35)"
+      }
+     ],
+     "text": "horsepower: 6 missing of 318 (1.9%) < 5%, skewness 1.05 ≥ 1, max 230 ≤ 3 × q99 (658.35): drafted: a signed log."
+    },
+    {
+     "column": "cylinders",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.0.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.5592211132140309,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.0.skewness",
+       "words": "skewness 0.56 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 8,
+       "threshold": 24.0,
+       "exceeds": false,
+       "path": "ranges.0.max",
+       "words": "max 8 ≤ 3 × q99 (24)"
+      }
+     ],
+     "text": "cylinders: 0 missing of 318 (0%) < 5%, skewness 0.56 < 1, max 8 ≤ 3 × q99 (24): no change."
+    },
+    {
+     "column": "displacement",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.1.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.7525518764501847,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.1.skewness",
+       "words": "skewness 0.75 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 455,
+       "threshold": 1314.3899999999994,
+       "exceeds": false,
+       "path": "ranges.1.max",
+       "words": "max 455 ≤ 3 × q99 (1314.39)"
+      }
+     ],
+     "text": "displacement: 0 missing of 318 (0%) < 5%, skewness 0.75 < 1, max 455 ≤ 3 × q99 (1314.39): no change."
+    },
+    {
+     "column": "weight",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.3.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.5545371594372033,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.3.skewness",
+       "words": "skewness 0.55 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 5140,
+       "threshold": 14830.05,
+       "exceeds": false,
+       "path": "ranges.3.max",
+       "words": "max 5140 ≤ 3 × q99 (14830.05)"
+      }
+     ],
+     "text": "weight: 0 missing of 318 (0%) < 5%, skewness 0.55 < 1, max 5140 ≤ 3 × q99 (14830.05): no change."
+    },
+    {
+     "column": "origin",
+     "kept": true,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.6.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 0,
+       "threshold": 30,
+       "exceeds": false,
+       "path": "cardinality.0.rare",
+       "words": "no category under 30 rows"
+      }
+     ],
+     "text": "origin: 0 missing of 318 (0%) < 5%, no category under 30 rows: no change."
+    },
+    {
+     "column": "acceleration",
+     "kept": false,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.4.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": 0.24350896763584787,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.4.skewness",
+       "words": "skewness 0.24 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 24.8,
+       "threshold": 66.44699999999997,
+       "exceeds": false,
+       "path": "ranges.4.max",
+       "words": "max 24.8 ≤ 3 × q99 (66.45)"
+      }
+     ],
+     "text": "acceleration: 0 missing of 318 (0%) < 5%, skewness 0.24 < 1, max 24.8 ≤ 3 × q99 (66.45): no change."
+    },
+    {
+     "column": "model_year",
+     "kept": false,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.5.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "signed_log",
+       "value": -0.019726195913936255,
+       "threshold": 1.0,
+       "exceeds": false,
+       "path": "ranges.5.skewness",
+       "words": "skewness -0.02 < 1"
+      },
+      {
+       "rule": "cap_extreme_tail",
+       "value": 82,
+       "threshold": 246.0,
+       "exceeds": false,
+       "path": "ranges.5.max",
+       "words": "max 82 ≤ 3 × q99 (246)"
+      }
+     ],
+     "text": "model_year: 0 missing of 318 (0%) < 5%, skewness -0.02 < 1, max 82 ≤ 3 × q99 (246): no change."
+    },
+    {
+     "column": "car_name",
+     "kept": false,
+     "changed": false,
+     "parameters": [],
+     "checks": [
+      {
+       "rule": "missing_indicator",
+       "value": 0.0,
+       "threshold": 0.05,
+       "exceeds": false,
+       "path": "missing.7.n_missing",
+       "words": "0 missing of 318 (0%) < 5%"
+      },
+      {
+       "rule": "rare_categories",
+       "value": 254,
+       "threshold": 30,
+       "exceeds": true,
+       "path": "cardinality.1.rare",
+       "words": "254 categories under 30 rows"
+      }
+     ],
+     "text": "car_name: 0 missing of 318 (0%) < 5%, 254 categories under 30 rows: no change."
+    }
+   ]
   }
  }
 }

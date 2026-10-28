@@ -2694,8 +2694,8 @@
    "started_revision": 39,
    "invalidation": null,
    "exposure_ids": [
-    "x_a5f91e4b68674bf1b9fdb0bd27d0fd08",
-    "x_7b5b17fe62dc493194bf163b22819f42"
+    "x_55fcfa40916f4ca78419cc3eba370401",
+    "x_163e0acfc16142a29ca9c3842c7f3d8b"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2747,6 +2747,11 @@
    "recommended": null,
    "question": "Do you adopt this decision?",
    "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Choice (11 of 13).",
+   "evidence": [
+    "evaluate.regression",
+    "diag.regression"
+   ],
    "pause": {
     "schema": "hypotrail.pause/1",
     "kind": "decision",

@@ -328,8 +328,9 @@ def test_now4_now8_hon1_hon2_the_choice_card(open_panel, views, model, payload):
     assert card.locator('[data-comparison]').count() == 1
     line = card.locator('[data-criterion="configurations"]')
     text = line.inner_text()
-    # R45 (lot P): the reference of a regression is "the reference (predict the mean)".
-    assert 'Your criterion, adopt only if the validation error is at least 10% below the reference (predict the mean) (9.24 mpg or better)' in text, text
+    # R45 (lot P): the reference of a regression is "the reference (predict the mean)"; R48: the
+    # words are the engine's (texts.en.criterion_words), fit to the development frame.
+    assert 'Your criterion, validation error at least 10% below the reference (predict the mean) (9.24 mpg or better)' in text, text
     assert 'met by all 2 configurations' in text and 'judged for good on the final test' in text
     bound = line.locator('data[data-result-id]').first
     assert bound.get_attribute('data-path') == 'models.[fit.baseline].mae'
@@ -474,7 +475,7 @@ def test_now11_path9_ho3_the_end(open_panel, views, payload):
     assert now.locator('button:not([data-fold-id]), [data-write]').count() == 0, 'NOW-11: no control in the card'
     after = page.locator('[data-block="after"]')
     assert after.locator('[data-after-study]').inner_text().startswith('What comes next: the handoff pack')
-    assert after.locator('[data-journey]').inner_text() == ('Your path: 13 steps, 9 decisions in your words, 6 looks at the target, '
+    assert after.locator('[data-journey]').inner_text() == ('Your path: 13 steps, 9 decisions in your words, 11 looks at the target, '
                                                            'the final test opened once.')
     phases = page.locator('[data-phase]')
     assert phases.count() == 4 and page.locator('[data-phase-kind="done"]').count() == 4
