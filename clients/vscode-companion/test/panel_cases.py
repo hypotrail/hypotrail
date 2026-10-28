@@ -168,6 +168,9 @@ def click_fold(page, fold_id):
     """Press a fold's summary as the junior does, and wait for its lazy body: the `toggle`
     event, which re-renders the page with the body, is dispatched after the click."""
     page.locator(f'details[data-fold-id="{fold_id}"] > summary').first.click()
+    # The `toggle` event is a queued task, also when a fold closes: let it run (it records the
+    # fold in setState) before the test sends the next message.
+    page.evaluate('() => new Promise(r => setTimeout(r, 0))')
     page.wait_for_function("""id => { const d = document.querySelector(`details[data-fold-id="${id}"]`);
       return d && (!d.open || d.getAttribute('data-lazy') !== 'true' || d.children.length > 1); }""", arg=fold_id)
 
