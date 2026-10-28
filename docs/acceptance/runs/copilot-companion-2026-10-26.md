@@ -1089,3 +1089,12 @@ its warning.
   brief first). No other decision is taken from the PDF: target, moment and availability stay
   the study's own steps, where the agent may cite the brief. Ships with a sample PO PDF for
   Auto MPG (fictitious scenario of R66/R67). To implement right after the current engine work.
+- **R69. Make the data visible from the study folder (owner remark, 2026-10-28).** A junior who
+  opens only the study folder cannot find the data: the study reads the use case's file
+  (`use-cases/auto-mpg/data/auto-mpg.data`, referenced by `case.yaml`, hashed in `.hypotrail/`)
+  and copies nothing. To do: `init` writes a short README in the study explaining where the
+  data are (the case's file and its path), what each folder holds (`.hypotrail/` state,
+  `brief/` the PO's PDF and its extracted text, `notebooks/`, `reports/`), and how to look at
+  the data (panel step 1, `hypotrail data`, the notebooks); and adds a read-only symbolic link
+  `data/` → the case's data folder (never a copy; the hash check stays on the case's file;
+  on systems without symlinks, the README alone). Noted only, not fixed.
