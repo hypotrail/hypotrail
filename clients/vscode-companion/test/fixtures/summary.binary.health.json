@@ -228,6 +228,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "train_eda",
     "channel": "chat"
    },
    "eda.special_values": {
@@ -235,6 +236,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "train_eda",
     "channel": "chat"
    },
    "eda.target_rate": {
@@ -242,6 +244,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "train_eda",
     "channel": "chat"
    },
    "fit.baseline": {
@@ -249,6 +252,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "models",
     "channel": "chat"
    },
    "fit.logistic": {
@@ -256,6 +260,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "models",
     "channel": "chat"
    },
    "policy.evaluation": {
@@ -263,6 +268,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "policy",
     "channel": "chat"
    },
    "split": {
@@ -270,6 +276,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "split",
     "channel": "chat"
    },
    "fit.variant": {
@@ -277,6 +284,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "models",
     "channel": "chat"
    }
   },

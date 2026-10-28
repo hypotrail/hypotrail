@@ -14,7 +14,9 @@ function protocolFactory() {
   const VERSION = 2;
   const STAGES = ['v0', 'v1', 'v2', 'v3'];
   // ADR 0004 d13 (CLI-CONTRACT §17.1.1): the places of the one page are named by anchors.
-  const ANCHOR = '^(now|todo:(execution|deliverables|checks|sources|integrity)|path|path:[a-z_]+(/[A-Za-z0-9_.:-]+)?|tools:(data|whatif|notions|deliverables|how))$';
+  // One grammar with the engine (`companion_env.ANCHOR_RE`) and the page model: a slot is any
+  // run of characters but a control character; `tools:how` is the panel's own fold.
+  const ANCHOR = '^(now|todo:(execution|deliverables|checks|sources|integrity)|path|path:[a-z][a-z0-9_]*(/[^\\u0000-\\u001f\\u007f]+)?|tools:(data|whatif|notions|deliverables|how))$';
   // WP-A7: `data`, the data card of the Data & EDA tab (`hypotrail data`). WP-B5:
   // `scenario`, the teaching scenario's defaults (`status --json`, view.scenario_defaults).
   // v0.3 (WP-K): `trials`, the trial budget and the model-family shortlist of the same read

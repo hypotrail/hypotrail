@@ -554,6 +554,11 @@ def one_page(cap: Capture) -> None:
     done = _summary(cap, 'summary.regression.done', study,
                     'Auto MPG at the end: the final test opened once, the conclusion adopted.')
     assert done['next_action']['kind'] == 'done', done['next_action']
+    # The panel's other reads at the end (HON-1: the development and final-test columns cite the
+    # final evaluation the done summary names, so they are read at the same state).
+    note = 'The one-page Auto MPG study at the end (the reads behind the done state).'
+    for name, argv in (('evidence', ['evidence']), ('decisions', ['decisions']), ('status', ['status'])):
+        cap.read(f'{name}.regression.onepage.done', 'regression', study, *argv, '--json', note=note)
     # The review of an automatic study: every decision waits for the junior's own words.
     auto = cap.root / 'regression-automatic'
     code, out = run('init', '--case', AUTO, '--automation', 'until_final_test', '--study', auto)

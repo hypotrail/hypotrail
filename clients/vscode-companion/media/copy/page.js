@@ -155,6 +155,7 @@
       target: target => `${target} ◂ to predict`,
       look: (n, target) => `these ${n} values of ${target} are seen now, and the study's ledger records it. The draw is fixed: the panel, the report and the notebook show the same rows; drawing others would be one more look.`,
       notShown: 'The target values of these rows are shown once the study records the look; the chat\'s next step records it.',
+      notShownAfterSplit: 'The target values of these rows are not shown: this study\'s split was confirmed before it recorded a look at them, and showing them now would be a look after the split.',
       lookLabel: 'A look at the target, counted:',
       rowKey: 'row',
     },
@@ -208,7 +209,9 @@
     next: (title, why) => [`Next: ${title}.`, why ? ` ${why}` : ''],
     criterion: {
       line: (words, bound, verdict) => [`Your criterion, ${words} (`, bound, ` or better): `, verdict, ', in development. It is judged for good on the final test.'],
-      lineFinal: (words, bound, verdict) => [`Your criterion, ${words} (`, bound, ' or better): ', verdict, ', on the final test.'],
+      // Judged on the final test: the bound from the final test's own baseline, the model's value there.
+      lineFinal: (words, bound, verdict, model, value) => [`Your criterion, ${words}, judged on the final test (`, bound,
+        ' or better, from the final test\'s baseline): ', verdict, ...(value ? [`; ${model} reaches `, value] : []), '.'],
       allMet: n => `met by all ${n} configurations`,
       someMet: (k, n) => `met by ${k} of ${n} configurations on their average`,
       noneMet: 'met by none of the configurations',

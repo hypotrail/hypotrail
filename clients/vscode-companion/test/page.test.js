@@ -139,7 +139,7 @@ test('PG-13: every anchor the engine names for a payload (CLI-CONTRACT §17.1.2,
       assert.ok(pm.anchors.includes(anchor), `${name} ${stage}: ${anchor}`);
       // `shown` of a promoted run of another step: the figure of that result (§17.1.3).
       for (const slot of Object.keys(s.results)) {
-        const step = P.stepOf(slot, s.plan.map(p => p.id));
+        const step = P.stepOfResult(s, slot);
         if (step) assert.ok(pm.anchors.includes(fallback(`path:${step}/${slot}`, stage)), `${name} ${stage}: ${slot}`);
       }
       assert.ok(s.plan.every(p => pm.anchors.includes(`path:${p.id}`)), `${name} ${stage}: every step line`);
@@ -147,19 +147,67 @@ test('PG-13: every anchor the engine names for a payload (CLI-CONTRACT §17.1.2,
   }
 });
 
-test('§17.1.1, §4.3, NAV-2: a result is filed under its step; a link to it resolves to that figure', () => {
-  const plan = summary('captured/summary.regression.choice').plan.map(p => p.id);
+test('§17.1.1, §4.3, NAV-2: a result is filed under the engine\'s step; a link to it resolves to that figure', () => {
+  const s = summary('captured/summary.regression.choice');
   const want = { split: 'split', 'eda.quality': 'structural_eda', 'eda.correlation': 'structural_eda', 'eda.distribution:weight': 'structural_eda',
     'eda.mean_by:model_year': 'train_eda', 'eda.target_summary': 'train_eda', 'fit.baseline': 'models', 'fit.linear': 'models',
-    'fit.variant': 'model_variant', 'evaluate.regression': 'model_choice', 'final_test.evaluation': 'final_test' };
-  for (const [slot, step] of Object.entries(want)) assert.equal(P.stepOf(slot, plan), step, slot);
-  const s = summary('captured/summary.regression.choice');
+    'fit.variant': 'model_variant', 'evaluate.regression': 'model_choice' };
+  for (const [slot, step] of Object.entries(want)) {
+    if (!(slot in s.results)) continue;
+    assert.equal(s.results[slot].step, step, `${slot}: the engine's step (results.<slot>.step)`);
+    assert.equal(P.stepOfResult(s, slot), step, slot);
+  }
+  assert.ok(Object.values(s.results).every(r => r.step !== undefined), 'the engine sends every result\'s step');
   assert.equal(P.anchorOfResult(s, s.results['eda.mean_by:model_year'].resultId), 'path:train_eda/eda.mean_by:model_year');
   // NAV-2: a stale result resolves the same way; its step line lists it without figures.
   const r = summary('captured/summary.regression.reopened');
   assert.equal(r.results['fit.variant'].current, false);
   assert.equal(P.anchorOfResult(r, r.results['fit.variant'].resultId), 'path:model_variant/fit.variant');
   assert.equal(P.anchorOfResult(s, 'f'.repeat(64)), 'path', 'unknown: the path\'s head');
+});
+
+test('§17.1.1 (review fix 1): the panel never overrides the engine\'s step; a W4 target distribution lands under Exploration and its chat anchor is on the page', () => {
+  const s = summary('captured/summary.regression.choice');
+  const rid = 'a'.repeat(64);
+  // The engine files a W4 distribution of the target (`mpg`) under the exploration (it read the
+  // target); the panel's own fallback table would have said the quality step.
+  const w4 = { ...s, results: { ...s.results, 'eda.distribution:mpg': { resultId: rid, current: true, staleReason: null,
+    integrity: 'ok', channel: 'webview', step: 'train_eda' } } };
+  assert.equal(P.stepOf('eda.distribution:mpg', s.plan.map(p => p.id)), 'structural_eda', 'the fallback alone cannot tell');
+  assert.equal(P.stepOfResult(w4, 'eda.distribution:mpg'), 'train_eda');
+  for (const stage of ['v2', 'v3']) {
+    const pm = P.toPageModel(w4, { stage, lang: 'en' });
+    const explore = steps(pm).find(x => x.id === 'train_eda');
+    assert.ok(explore.results.some(r => r.slot === 'eda.distribution:mpg' && r.channel === 'webview'), stage);
+    assert.ok(!steps(pm).find(x => x.id === 'structural_eda').results.some(r => r.slot === 'eda.distribution:mpg'), stage);
+    // The chat's `shown.anchor` of that run (companion_env: the engine's step) is a place of the page.
+    assert.ok(pm.anchors.includes('path:train_eda/eda.distribution:mpg'), stage);
+  }
+  assert.equal(P.anchorOfResult(w4, rid), 'path:train_eda/eda.distribution:mpg');
+  // A null step: the engine files the result nowhere (a capture); the page files it nowhere either.
+  const none = { ...s, results: { ...s.results, 'predictor.capture': { resultId: 'b'.repeat(64), current: true, staleReason: null,
+    integrity: 'ok', channel: 'chat', step: null } } };
+  assert.equal(P.stepOfResult(none, 'predictor.capture'), null);
+  assert.equal(P.anchorOfResult(none, 'b'.repeat(64)), 'path');
+  // An older engine (no `step` key): the fallback table, and only then.
+  const older = { ...s, results: Object.fromEntries(Object.entries(s.results).map(([k, v]) => {
+    const { step, ...rest } = v; return [k, rest]; })) };
+  assert.equal(P.stepOfResult(older, 'eda.mean_by:model_year'), 'train_eda');
+});
+
+test('TODO-1 (review fix 4): To handle reads every limit of `defensibility.items`, not only the five of `top`', () => {
+  const s = summary('captured/summary.regression.choice');
+  const filler = ['a1', 'a2', 'a3', 'a4', 'a5'].map(id => ({ id, text: id, juniorText: id }));
+  const far = { ...s, notYetDefensible: { top: filler, more: ['sources_changed', 'result_integrity'] },
+    defensibility: { kind: 'warn', count: 7, items: [...filler.map(i => ({ id: i.id, severity: 'caveat' })),
+      { id: 'sources_changed', severity: 'blocking' }, { id: 'result_integrity', severity: 'blocking' }] } };
+  const kinds = P.toPageModel(far, { stage: 'v0', lang: 'en' }).todo.map(t => t.kind);
+  assert.ok(kinds.includes('sources') && kinds.includes('integrity'), kinds.join());
+  const pm = P.toPageModel(far, { stage: 'v0', lang: 'en' });
+  assert.ok(pm.anchors.includes('todo:sources') && pm.anchors.includes('todo:integrity'));
+  // An older engine without `defensibility`: `top` then `more`.
+  const older = { ...far, defensibility: null };
+  assert.ok(P.toPageModel(older, { stage: 'v0', lang: 'en' }).todo.some(t => t.kind === 'sources'));
 });
 
 test('PATH-1, PATH-7, SINCE-3: the ledger counts, the channel of each result, and the end\'s journey are the engine\'s', () => {

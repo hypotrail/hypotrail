@@ -352,6 +352,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "policy",
     "channel": "chat"
    },
    "eda.target_rate": {
@@ -359,6 +360,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "train_eda",
     "channel": "chat"
    },
    "fit.baseline": {
@@ -366,6 +368,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "models",
     "channel": "chat"
    },
    "fit.logistic": {
@@ -373,6 +376,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "models",
     "channel": "chat"
    },
    "fit.variant": {
@@ -380,6 +384,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "model_variant",
     "channel": "chat"
    },
    "fit.variant:2": {
@@ -387,6 +392,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "model_variant",
     "channel": "chat"
    },
    "fit.variant:3": {
@@ -394,6 +400,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "model_variant",
     "channel": "chat"
    },
    "policy.evaluation": {
@@ -401,6 +408,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "policy",
     "channel": "chat"
    },
    "split": {
@@ -408,6 +416,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "split",
     "channel": "chat"
    }
   },
@@ -685,7 +694,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-27T23:41:08.581803+00:00",
+   "boundary_time": "2026-10-28T03:54:58.149690+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -694,7 +703,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-27T23:41:08.777358+00:00",
+     "time": "2026-10-28T03:54:58.269407+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -717,7 +726,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-27T23:41:09.745738+00:00",
+     "time": "2026-10-28T03:54:58.938951+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -747,7 +756,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-27T23:41:10.748280+00:00",
+     "time": "2026-10-28T03:54:59.674836+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -770,7 +779,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-27T23:41:11.913709+00:00",
+     "time": "2026-10-28T03:55:00.434847+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -800,7 +809,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-27T23:41:13.341931+00:00",
+     "time": "2026-10-28T03:55:01.401135+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -823,7 +832,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-27T23:41:14.867958+00:00",
+     "time": "2026-10-28T03:55:02.531220+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -853,7 +862,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-27T23:41:16.493189+00:00",
+     "time": "2026-10-28T03:55:03.583174+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -876,7 +885,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-27T23:41:17.955951+00:00",
+     "time": "2026-10-28T03:55:04.520251+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -906,7 +915,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-27T23:41:19.624408+00:00",
+     "time": "2026-10-28T03:55:05.670862+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -929,7 +938,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-27T23:41:21.191056+00:00",
+     "time": "2026-10-28T03:55:06.745487+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -959,7 +968,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-27T23:41:23.038496+00:00",
+     "time": "2026-10-28T03:55:07.931513+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -982,7 +991,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-27T23:41:24.937742+00:00",
+     "time": "2026-10-28T03:55:09.244365+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1005,7 +1014,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-27T23:41:26.805471+00:00",
+     "time": "2026-10-28T03:55:10.541428+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1028,7 +1037,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-27T23:41:30.095635+00:00",
+     "time": "2026-10-28T03:55:12.213346+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1051,7 +1060,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-27T23:41:32.078048+00:00",
+     "time": "2026-10-28T03:55:13.626479+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1074,7 +1083,7 @@
     },
     {
      "revision": 22,
-     "time": "2026-10-27T23:41:33.827833+00:00",
+     "time": "2026-10-28T03:55:14.945086+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1097,7 +1106,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-27T23:41:36.728012+00:00",
+     "time": "2026-10-28T03:55:17.012451+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1132,7 +1141,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-27T23:41:40.095688+00:00",
+     "time": "2026-10-28T03:55:18.703288+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1155,7 +1164,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-27T23:42:00.898634+00:00",
+     "time": "2026-10-28T03:55:31.568949+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1178,7 +1187,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-27T23:42:15.170460+00:00",
+     "time": "2026-10-28T03:55:40.965240+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1201,7 +1210,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-27T23:42:30.703960+00:00",
+     "time": "2026-10-28T03:55:49.334018+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1227,7 +1236,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-27T23:42:33.308167+00:00",
+     "time": "2026-10-28T03:55:50.954495+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1265,7 +1274,7 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "3fa20131f5930727",
+  "currency": "02bd0895a61e05d9",
   "texts": {
    "en": {
     "plan": {
@@ -1352,12 +1361,12 @@
     "options_note": null,
     "junior_digest": "Next: the data quality check, run without asking you. Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
     "headlines": {
-     "prediction_time": "Moment: “before the first contact of the campaign, from the client file”.",
-     "feature_availability": "Variables: keep age, balance, contact, default, education, housing, job, loan, marital, pdays, poutcome and previous; exclude campaign (known only after the prediction moment), day (known only after the prediction moment), duration (known only after the prediction moment) and month (known only after the prediction moment).",
-     "split": "Split: cross-validation on the development rows: 5 folds, stratified on the outcome (seed 20261017); every row is predicted once by a model that did not see it.",
-     "success_criterion": "Criterion: adopt only if the precision beats the baseline by at least 5 percentage points at the adopted rule.",
-     "preprocessing": "Preparation: default preparation: nothing added, grouped, capped, or transformed.",
-     "model_variant": "Variants: compare the model with: stronger regularisation, an Explainable Boosting Machine and histogram gradient boosting."
+     "prediction_time": "“before the first contact of the campaign, from the client file”.",
+     "feature_availability": "Keep age, balance, contact, default, education, housing, job, loan, marital, pdays, poutcome and previous; exclude campaign (known only after the prediction moment), day (known only after the prediction moment), duration (known only after the prediction moment) and month (known only after the prediction moment).",
+     "split": "Cross-validation on the development rows: 5 folds, stratified on the outcome (seed 20261017); every row is predicted once by a model that did not see it.",
+     "success_criterion": "Adopt only if the precision beats the baseline by at least 5 percentage points at the adopted rule.",
+     "preprocessing": "Default preparation: nothing added, grouped, capped, or transformed.",
+     "model_variant": "Compare the model with: stronger regularisation, an Explainable Boosting Machine and histogram gradient boosting."
     },
     "data_contingent": {},
     "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
@@ -1447,12 +1456,12 @@
     "options_note": null,
     "junior_digest": "Ensuite : le contrôle de qualité des données, lancé sans vous demander. Quelles colonnes ont des cellules manquantes, des catégories rares ou des valeurs hors de leur plage possible ? Ce contrôle lit les lignes de l'échantillon de développement sans la cible : la préparation décidée d'après lui vient avant tout regard sur la cible.",
     "headlines": {
-     "prediction_time": "Moment : « before the first contact of the campaign, from the client file ».",
-     "feature_availability": "Variables : garder age, balance, contact, default, education, housing, job, loan, marital, pdays, poutcome et previous ; exclure campaign (connue seulement après le moment de la prédiction), day (connue seulement après le moment de la prédiction), duration (connue seulement après le moment de la prédiction) et month (connue seulement après le moment de la prédiction).",
-     "split": "Découpage : validation croisée sur les lignes de développement : 5 plis, stratifiés sur le résultat (graine 20261017) ; chaque ligne est prédite une fois par un modèle qui ne l'a pas vue.",
-     "success_criterion": "Critère : n'adopter que si la précision dépasse celle du modèle de référence d'au moins 5 points de pourcentage à la règle adoptée.",
-     "preprocessing": "Préparation : préparation par défaut : rien d'ajouté, de regroupé, de plafonné ni de transformé.",
-     "model_variant": "Variantes : comparer le modèle avec : régularisation plus forte, une Explainable Boosting Machine (EBM) et le gradient boosting par histogrammes."
+     "prediction_time": "« before the first contact of the campaign, from the client file ».",
+     "feature_availability": "Garder age, balance, contact, default, education, housing, job, loan, marital, pdays, poutcome et previous ; exclure campaign (connue seulement après le moment de la prédiction), day (connue seulement après le moment de la prédiction), duration (connue seulement après le moment de la prédiction) et month (connue seulement après le moment de la prédiction).",
+     "split": "Validation croisée sur les lignes de développement : 5 plis, stratifiés sur le résultat (graine 20261017) ; chaque ligne est prédite une fois par un modèle qui ne l'a pas vue.",
+     "success_criterion": "N'adopter que si la précision dépasse celle du modèle de référence d'au moins 5 points de pourcentage à la règle adoptée.",
+     "preprocessing": "Préparation par défaut : rien d'ajouté, de regroupé, de plafonné ni de transformé.",
+     "model_variant": "Comparer le modèle avec : régularisation plus forte, une Explainable Boosting Machine (EBM) et le gradient boosting par histogrammes."
     },
     "data_contingent": {},
     "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant."
@@ -1519,16 +1528,16 @@
    }
   },
   "sample": {
-   "seed": "02a40beb37ff0b97",
+   "seed": "056c11934123d49f",
    "row_keys": [
-    "L443",
-    "L1102",
-    "L1331",
-    "L2074",
-    "L2504",
-    "L2923",
-    "L2995",
-    "L3645"
+    "L286",
+    "L2005",
+    "L2012",
+    "L2295",
+    "L2547",
+    "L3309",
+    "L3485",
+    "L4003"
    ],
    "recorded": true
   },

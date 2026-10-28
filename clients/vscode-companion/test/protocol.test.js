@@ -82,12 +82,16 @@ test('extension -> webview: every type validates, an extra field or a wrong type
   // ADR 0004 d13: the tabbed form of `navigate` is dropped; every anchor of the grammar passes.
   assert.equal(protocol.validateOutgoing({ v: 2, type: 'navigate', tab: 'evidence', kind: 'result', id: RID }), null);
   for (const anchor of ['now', 'todo:execution', 'todo:checks', 'path', 'path:train_eda', 'path:train_eda/eda.rate_by:job',
-    'path:model_variant/fit.variant:2', 'tools:data', 'tools:whatif', 'tools:notions', 'tools:deliverables']) {
+    'path:model_variant/fit.variant:2', 'tools:data', 'tools:whatif', 'tools:notions', 'tools:deliverables', 'tools:how',
+    // any column the engine can emit (one grammar with `companion_env.ANCHOR_RE`): accents, spaces, parentheses
+    'path:structural_eda/eda.distribution:Durée (min)', 'path:train_eda/eda.rate_by:Visitor Type']) {
     assert.ok(protocol.validateOutgoing({ v: 2, type: 'navigate', anchor }), anchor);
   }
-  for (const anchor of ['', 'later', 'todo:nothing', 'path:Train', 'tools:charts', 'path:split/a b']) {
+  for (const anchor of ['', 'later', 'todo:nothing', 'path:Train', 'tools:charts', 'path:split/', 'path:split/a\nb', 'path:split/a\u0007']) {
     assert.equal(protocol.validateOutgoing({ v: 2, type: 'navigate', anchor }), null, anchor);
   }
+  // One grammar: the protocol's and the page model's are the same string.
+  assert.equal(new RegExp(protocol.ANCHOR).source, require('../lib/models/page').ANCHOR_RE.source);
 });
 
 test('field rules: questions, rules, load, learn_set', () => {

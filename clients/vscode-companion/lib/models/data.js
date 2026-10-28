@@ -95,7 +95,9 @@ function toDataModel(payload) {
       seed: strOrNull(rows.seed),
       targetShown: typeof rows.target_shown === 'boolean' ? rows.target_shown : null,
       exposure: rows.exposure && typeof rows.exposure === 'object'
-        ? { exposureId: strOrNull(rows.exposure.exposure_id), purpose: strOrNull(rows.exposure.purpose), recorded: rows.exposure.recorded === true }
+        ? { exposureId: strOrNull(rows.exposure.exposure_id), purpose: strOrNull(rows.exposure.purpose), recorded: rows.exposure.recorded === true,
+          // Why the target stays hidden for good (`split_confirmed`: the split came before any record), else null.
+          withheld: strOrNull(rows.exposure.withheld) }
         : null,
     },
     note: (() => { const n = obj(p.note); return n.audience === 'agent' ? null : strOrNull(n.junior_text || n.text); })(),

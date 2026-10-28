@@ -77,6 +77,29 @@ def test_the_panel_contract_version_is_the_engines():
     assert f'const PANEL_CONTRACT = {ce.PANEL_CONTRACT};' in flag
 
 
+def test_one_anchor_grammar_for_the_engine_and_the_panel():
+    """CLI-CONTRACT §17.1.1: the panel's grammar (``lib/protocol.js`` ``ANCHOR``, which
+    ``lib/models/page.js`` repeats) is the engine's ``companion_env.ANCHOR_RE``: the same
+    anchors pass and fail, a column with accents, spaces or parentheses included."""
+    import re
+    text = (HERE.parent / 'lib' / 'protocol.js').read_text(encoding='utf-8')
+    raw = re.search(r"const ANCHOR = '([^']+)';", text).group(1).replace('\\\\', '\\')
+    panel = re.compile(raw.replace('\\u0000', '\\x00').replace('\\u001f', '\\x1f')
+                       .replace('\\u007f', '\\x7f'))
+    page = (HERE.parent / 'lib' / 'models' / 'page.js').read_text(encoding='utf-8')
+    assert re.search(r"const ANCHOR_RE = new RegExp\('([^']+)'\);", page).group(1) == \
+        re.search(r"const ANCHOR = '([^']+)';", text).group(1)
+    good = ['now', 'todo:sources', 'path', 'path:split', 'path:train_eda/eda.rate_by:job',
+            'path:structural_eda/eda.distribution:Durée (min)', 'path:train_eda/eda.mean_by:Visitor Type',
+            'tools:deliverables', 'tools:how']
+    bad = ['', 'Now', 'path:', 'path:Split', 'path:split/', 'path:split/a\nb', 'tools:learn',
+           'todo:other']
+    for anchor in good:
+        assert ce.ANCHOR_RE.fullmatch(anchor) and panel.fullmatch(anchor), anchor
+    for anchor in bad:
+        assert not ce.ANCHOR_RE.fullmatch(anchor) and not panel.fullmatch(anchor), anchor
+
+
 def test_the_engine_stub_refusal_matches_the_fixture():
     from mlkit.study import errors
     refusal = errors.not_implemented('evidence').to_dict()

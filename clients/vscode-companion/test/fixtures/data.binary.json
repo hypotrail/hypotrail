@@ -846,7 +846,8 @@
    "exposure": {
     "exposure_id": "x_c2a4b08462ee43849479e0b318f23edd",
     "purpose": "development_target_sample",
-    "recorded": true
+    "recorded": true,
+    "withheld": null
    }
   },
   "note": {

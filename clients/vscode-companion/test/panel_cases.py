@@ -109,6 +109,11 @@ def load_views(model, payload) -> dict:
     for view, name in [('evidence', 'evidence'), ('eda', 'evidence'), ('whatif', 'evidence'), ('decisions', 'decisions'),
                        ('explain', 'explain'), ('trials', 'status'), ('data', 'data')]:
         out[f'{view}.p1'] = model(view, f'captured/{name}.regression.onepage')
+        # The end reads the same study at the end (HON-1: the final column cites the final
+        # evaluation the done summary names); its data card and notions are those of the choice.
+        done = f'captured/{name}.regression.onepage.done' if name in ('evidence', 'decisions', 'status') \
+            else f'captured/{name}.regression.onepage'
+        out[f'{view}.p1done'] = model(view, done)
     out['raw.evidence.binary'] = payload('captured/evidence.binary')
     out['raw.summary.binary'] = payload('captured/summary.binary')
     return out
@@ -133,7 +138,7 @@ def open_case(open_panel, views, case='binary', theme='light-modern', width=900,
     if before:
         before(panel.page)
     summary = views[f'summary.{case}']
-    reads = 'p1' if case in STATES or case == 'interrupted' else case
+    reads = 'p1done' if case == 'done' else 'p1' if case in STATES or case == 'interrupted' else case
     panel.init(stage=stage, task=summary['task'], reviewer=reviewer, learningLayer=learning, panelContract=2)
     panel.snapshot(summary)
     if lang:

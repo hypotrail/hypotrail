@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/auto mpg",
    "revision": 35,
-   "updated": "2026-10-27T23:50:37.507514+00:00",
+   "updated": "2026-10-28T03:56:56.819824+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
@@ -373,7 +373,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-27T23:50:06.572107+00:00",
+      "time": "2026-10-28T03:56:37.685814+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -412,7 +412,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-27T23:50:08.227805+00:00",
+      "time": "2026-10-28T03:56:38.704273+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -453,7 +453,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-27T23:50:10.404162+00:00",
+      "time": "2026-10-28T03:56:40.139058+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -486,7 +486,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-27T23:50:12.531628+00:00",
+      "time": "2026-10-28T03:56:41.548823+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -524,7 +524,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-27T23:50:14.951565+00:00",
+      "time": "2026-10-28T03:56:43.071325+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -557,7 +557,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 27,
-      "time": "2026-10-27T23:50:31.067427+00:00",
+      "time": "2026-10-28T03:56:52.267661+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -3421,11 +3421,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_3d00c3aea34475b6aac5c90f",
-     "exposure_id": "x_e09a7c172e104ead8a5e2582e3078970",
+     "exposure_id": "x_6331f4b8bb5241f3b4b61028fe38f930",
      "started_revision": 32,
      "integrity": "ok"
     },
@@ -3659,11 +3659,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_652a57bfe02cfb4ce76a3a62",
-     "exposure_id": "x_b0072f8dccb64ce289d69ff4518fab7a",
+     "exposure_id": "x_28c9d956fde843deb5613f77bfc08f2d",
      "started_revision": 34,
      "integrity": "ok"
     },
@@ -4903,11 +4903,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_f2a9d4ff734c5609ecaf8062",
-     "exposure_id": "x_dcd5938fe04d478bae0eb22f9586f3ae",
+     "exposure_id": "x_6a46014b728f4b798a26b5c961adedb7",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -4973,11 +4973,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_ef6d58ebcc377e92b00e1641",
-     "exposure_id": "x_a23bec3f87304178b30f28aa87c2a866",
+     "exposure_id": "x_1f041596de6240b6a42585675a0eb316",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -5039,11 +5039,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_01e009ee66e5659fa376f9c8",
-     "exposure_id": "x_03bf1dd34e4f4066b8d4cc703c28f9f9",
+     "exposure_id": "x_bbb68c6387004486909e32cd9e3fc71b",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -5389,11 +5389,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_2e0d6c177d108bbe4bb3bf56",
-     "exposure_id": "x_391b128250ec4dea8a3aa8a3a170e753",
+     "exposure_id": "x_2d7a54d42c8c4485b500b8393f8a8272",
      "started_revision": 30,
      "integrity": "ok"
     },
@@ -5469,11 +5469,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_47e14a8659b67b6ecc88b5f7",
-     "exposure_id": "x_54054886d22142dd9ec216fd462f7249",
+     "exposure_id": "x_b9fbe142e5604fdf98e3094842d4fd60",
      "started_revision": 20,
      "integrity": "ok"
     },
@@ -5614,11 +5614,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_d8c0a36ea30eea85e955656e",
-     "exposure_id": "x_e638089d6b5942bcad108dd9410ecce3",
+     "exposure_id": "x_8a5fb1d13e844472a3de8d40cedeb6f1",
      "started_revision": 22,
      "integrity": "ok"
     },
@@ -5769,11 +5769,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_8142a37e0a93ddb744855aa8",
-     "exposure_id": "x_141ad7f345bf43799235fcff2e83bed0",
+     "exposure_id": "x_4fecc01703b947bea8a375da1e59b672",
      "started_revision": 28,
      "integrity": "ok"
     },
@@ -5862,11 +5862,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_911198e0a8508fa9f4a6fa78",
-     "exposure_id": "x_5af5287d2e1a4a0892abf98092943305",
+     "exposure_id": "x_82e227e7aa93411f9cc8e2f6770b6d91",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -5995,7 +5995,7 @@
       "last_ok_revision": 35,
       "path": "reports/study.html",
       "revision": 35,
-      "sha256": "2ab3aad2aad0c40eb786dfc6ca085abbf3c939fd5a1d4970cf6b464318e968dd",
+      "sha256": "5b20dbe2179bf5e7d693dc87d9003cf68259ff21a65a59527834d534d47cc107",
       "status": "ok",
       "template_version": 4,
       "user_edits_preserved": [],
@@ -6173,7 +6173,7 @@
        "run",
        "/studies/auto mpg/notebooks/study_generated.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo run /studies/auto mpg/notebooks/study_generated.py"
+      "shell": "uv run --project /hypotrail/framework marimo run '/studies/auto mpg/notebooks/study_generated.py'"
      },
      "editable": {
       "mode": "edit",
@@ -6187,7 +6187,7 @@
        "edit",
        "/studies/auto mpg/notebooks/study_editable.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo edit /studies/auto mpg/notebooks/study_editable.py"
+      "shell": "uv run --project /hypotrail/framework marimo edit '/studies/auto mpg/notebooks/study_editable.py'"
      },
      "workbench": {
       "mode": "edit",
@@ -6201,7 +6201,7 @@
        "edit",
        "/studies/auto mpg/notebooks/workbench.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo edit /studies/auto mpg/notebooks/workbench.py"
+      "shell": "uv run --project /hypotrail/framework marimo edit '/studies/auto mpg/notebooks/workbench.py'"
      }
     }
    },

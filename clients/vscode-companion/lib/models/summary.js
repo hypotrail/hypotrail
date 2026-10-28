@@ -277,10 +277,24 @@ function criterionConfigurationsOf(raw) {
       pointMeetsBound: c.point_meets_bound === true, gain: num(c.gain), low: num(c.low), high: num(c.high),
       status: CONFIG_STATUSES.includes(c.status) ? c.status : 'not_assessed',
       judgedOn: c.judged_on === 'final_test' ? 'final_test' : 'development' })),
+    // The configuration judged on the opened final test, every figure the final test's (its
+    // bound from the final test's own baseline); null before the opening or from an older engine.
+    finalTest: finalConfigurationOf(raw.final_test),
   };
 }
 
-/** `results` of the summary: one entry per slot, with the digest's `channel` (P1.8) when sent. */
+function finalConfigurationOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || typeof raw.slot !== 'string') return null;
+  const b = obj(raw.bound);
+  return {
+    slot: raw.slot, value: num(raw.value), resultId: strOrNull(raw.result_id), path: str(raw.path),
+    pointMeetsBound: raw.point_meets_bound === true, gain: num(raw.gain), low: num(raw.low), high: num(raw.high),
+    status: CONFIG_STATUSES.includes(raw.status) ? raw.status : 'not_assessed',
+    bound: { value: num(b.value), reference: num(b.reference), minimum: num(b.minimum), resultId: strOrNull(b.result_id), path: str(b.path) },
+  };
+}
+
+/** `results` of the summary: one entry per slot, with the digest's `step` and `channel` (P1.8) when sent. */
 function resultsOf(raw) {
   const out = {};
   for (const [slot, r] of Object.entries(obj(raw))) {
@@ -291,7 +305,10 @@ function resultsOf(raw) {
     const raw = r.stale_reason && typeof r.stale_reason === 'object' ? r.stale_reason.reason : r.stale_reason;
     const why = typeof raw === 'string' ? raw.replace(/\s*\(§[^)]*\)/g, '').trim() || null : null;
     out[slot] = { resultId: str(r.result_id), current: r.current === true, staleReason: strOrNull(why),
-      integrity: strOrNull(r.integrity), channel: RESULT_CHANNELS.includes(r.channel) ? r.channel : null };
+      integrity: strOrNull(r.integrity), channel: RESULT_CHANNELS.includes(r.channel) ? r.channel : null,
+      // Contract P1 (§17.1.1, §17.2.5): the step the engine files the result under, null when
+      // it files it nowhere; absent (undefined) from an engine before the key (HON-9).
+      ...('step' in r ? { step: strOrNull(r.step) } : {}) };
   }
   return out;
 }

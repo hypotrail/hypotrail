@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-cv",
    "revision": 43,
-   "updated": "2026-10-27T23:40:53.519079+00:00",
+   "updated": "2026-10-28T03:54:47.881258+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -375,7 +375,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-27T23:39:35.413633+00:00",
+      "time": "2026-10-28T03:53:56.911949+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -424,7 +424,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-27T23:39:37.530197+00:00",
+      "time": "2026-10-28T03:53:59.654334+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -475,7 +475,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-27T23:39:40.640195+00:00",
+      "time": "2026-10-28T03:54:03.386410+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -508,7 +508,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-27T23:39:43.562011+00:00",
+      "time": "2026-10-28T03:54:06.312292+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -546,7 +546,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-27T23:39:47.200477+00:00",
+      "time": "2026-10-28T03:54:09.212741+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -579,7 +579,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 21,
-      "time": "2026-10-27T23:40:00.539151+00:00",
+      "time": "2026-10-28T03:54:17.310006+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -616,7 +616,7 @@
       "restatement": "You decide the model_choice as stated.",
       "proposal_id": "p_7",
       "revision": 27,
-      "time": "2026-10-27T23:40:17.984452+00:00",
+      "time": "2026-10-28T03:54:26.602332+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -653,7 +653,7 @@
       "restatement": "You decide the policy as stated.",
       "proposal_id": "p_10",
       "revision": 41,
-      "time": "2026-10-27T23:40:50.852721+00:00",
+      "time": "2026-10-28T03:54:46.213403+00:00",
       "authenticated": false,
       "basis": "endorsed",
       "delegation_scope": null,
@@ -695,7 +695,7 @@
       "restatement": "You open the sealed final test once, for the chosen configuration.",
       "proposal_id": "p_9",
       "revision": 33,
-      "time": "2026-10-27T23:40:28.379133+00:00",
+      "time": "2026-10-28T03:54:33.721033+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -3440,11 +3440,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_8519f7987822bead348d47d9",
-     "exposure_id": "x_e97f9d2ffd894062a3f9e50bd5d2092b",
+     "exposure_id": "x_8d864b86b3434a1a9399d42bb4de6388",
      "started_revision": 42,
      "integrity": "ok"
     },
@@ -4321,11 +4321,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_f09116e554021da514197565",
-     "exposure_id": "x_5fa04932ab1a4c3f89f7cfd86b5dcd77",
+     "exposure_id": "x_8b12361319ce4e059c6d7004e8bea0dc",
      "started_revision": 36,
      "integrity": "ok"
     },
@@ -4380,11 +4380,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_2ab8c63a63b208bd8731b8b3",
-     "exposure_id": "x_f9c682d0e3e74df09d475d148ace16c1",
+     "exposure_id": "x_21e19386711e4f6aae201d2b32a2f2de",
      "started_revision": 14,
      "integrity": "ok"
     },
@@ -4658,11 +4658,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_bbd92c0dbf7a62be9ca5ed0d",
-     "exposure_id": "x_2e3b8d435f5f43f58bc9247b6a036368",
+     "exposure_id": "x_0b14e9468a414af8bf6694c4236f2c52",
      "started_revision": 34,
      "integrity": "ok"
     },
@@ -4793,11 +4793,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_9c2f7f2c69f91be9c07e4331",
-     "exposure_id": "x_acc1913a6a434cc5a890be284f39ae4f",
+     "exposure_id": "x_12cf7eec0f844bf9bebceb533fd43cbc",
      "started_revision": 16,
      "integrity": "ok"
     },
@@ -5063,11 +5063,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_c4434080afdaeb4edd1ce5b5",
-     "exposure_id": "x_3b28c27255b641db92dbee8197f93787",
+     "exposure_id": "x_8fb8953fa17a4aeda1873fc62581a9b3",
      "started_revision": 18,
      "integrity": "ok"
     },
@@ -5345,11 +5345,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_8b6b767c3df161e7401893c1",
-     "exposure_id": "x_ccdcc99502c842738985c5ec26c29f8e",
+     "exposure_id": "x_55948f9b41164682a4559f23faf34d3e",
      "started_revision": 22,
      "integrity": "ok"
     },
@@ -6337,11 +6337,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_ed89c3d6b5ceb43c540c9096",
-     "exposure_id": "x_412e7f6d0db1407781c3db0ea606f0ac",
+     "exposure_id": "x_d22afb58c0704a0a8bade9473c3493e7",
      "started_revision": 38,
      "integrity": "ok"
     },
@@ -6442,11 +6442,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v165-x86_64-with-glibc2.39",
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
      "execution_id": "e_0eee3a0bb608847ca1ac05a7",
-     "exposure_id": "x_c909386f0ef4407292802454810c3118",
+     "exposure_id": "x_18502ad06a8247a0b8a14e8bca7fc20b",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -6504,7 +6504,7 @@
        "reason_given": true,
        "restatement": "You decide the policy as stated.",
        "revision": 29,
-       "time": "2026-10-27T23:40:21.501868+00:00",
+       "time": "2026-10-28T03:54:29.003711+00:00",
        "user_words": "Yes, I adopt calling the top tenth, because the team can make that many calls"
       },
       "proposal_id": "p_8",
@@ -6600,7 +6600,7 @@
       "last_ok_revision": 43,
       "path": "reports/study.html",
       "revision": 43,
-      "sha256": "0cc4dab3e21ff2deea0b505c18e652ad3567cabbd09925738d152aa5f2336289",
+      "sha256": "2bf76ea79cb6ded1683117f5831fa904666c28125a64f3302ca1a0a2fb93f56b",
       "status": "ok",
       "template_version": 4,
       "user_edits_preserved": [],
@@ -6794,7 +6794,7 @@
      "rule": "share:0.1",
      "result_id": "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94",
      "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
-     "time": "2026-10-27T23:40:28.452144+00:00"
+     "time": "2026-10-28T03:54:33.769746+00:00"
     },
     "post_final_test": true,
     "changed_after": [

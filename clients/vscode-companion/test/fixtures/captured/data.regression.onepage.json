@@ -380,73 +380,59 @@
    "order": "seeded sample",
    "items": [
     {
-     "row_key": "L1",
+     "row_key": "L32",
      "values": {
-      "mpg": 18,
-      "cylinders": 8,
-      "displacement": 307,
-      "horsepower": 130,
-      "weight": 3504,
-      "acceleration": 12,
-      "model_year": 70,
-      "origin": 1,
-      "car_name": "chevrolet chevelle malibu"
-     }
-    },
-    {
-     "row_key": "L78",
-     "values": {
-      "mpg": 22,
+      "mpg": 25,
       "cylinders": 4,
-      "displacement": 121,
-      "horsepower": 76,
-      "weight": 2511,
-      "acceleration": 18,
-      "model_year": 72,
-      "origin": 2,
-      "car_name": "volkswagen 411 (sw)"
+      "displacement": 113,
+      "horsepower": 95,
+      "weight": 2228,
+      "acceleration": 14,
+      "model_year": 71,
+      "origin": 3,
+      "car_name": "toyota corona"
      }
     },
     {
-     "row_key": "L91",
+     "row_key": "L92",
      "values": {
-      "mpg": 12,
+      "mpg": 13,
       "cylinders": 8,
-      "displacement": 429,
-      "horsepower": 198,
-      "weight": 4952,
-      "acceleration": 11.5,
+      "displacement": 400,
+      "horsepower": 150,
+      "weight": 4464,
+      "acceleration": 12,
       "model_year": 73,
       "origin": 1,
-      "car_name": "mercury marquis brougham"
+      "car_name": "chevrolet caprice classic"
      }
     },
     {
-     "row_key": "L159",
+     "row_key": "L137",
      "values": {
       "mpg": 16,
       "cylinders": 8,
-      "displacement": 318,
-      "horsepower": 150,
-      "weight": 4498,
-      "acceleration": 14.5,
-      "model_year": 75,
+      "displacement": 302,
+      "horsepower": 140,
+      "weight": 4141,
+      "acceleration": 14,
+      "model_year": 74,
       "origin": 1,
-      "car_name": "plymouth grand fury"
+      "car_name": "ford gran torino"
      }
     },
     {
-     "row_key": "L161",
+     "row_key": "L164",
      "values": {
-      "mpg": 17,
+      "mpg": 18,
       "cylinders": 6,
-      "displacement": 231,
-      "horsepower": 110,
-      "weight": 3907,
-      "acceleration": 21,
+      "displacement": 225,
+      "horsepower": 95,
+      "weight": 3785,
+      "acceleration": 19,
       "model_year": 75,
       "origin": 1,
-      "car_name": "buick century"
+      "car_name": "plymouth fury"
      }
     },
     {
@@ -464,40 +450,55 @@
      }
     },
     {
-     "row_key": "L304",
+     "row_key": "L200",
      "values": {
-      "mpg": 31.8,
-      "cylinders": 4,
-      "displacement": 85,
-      "horsepower": 65,
-      "weight": 2020,
-      "acceleration": 19.2,
-      "model_year": 79,
-      "origin": 3,
-      "car_name": "datsun 210"
+      "mpg": 20,
+      "cylinders": 6,
+      "displacement": 225,
+      "horsepower": 100,
+      "weight": 3651,
+      "acceleration": 17.7,
+      "model_year": 76,
+      "origin": 1,
+      "car_name": "dodge aspen se"
      }
     },
     {
-     "row_key": "L330",
+     "row_key": "L283",
      "values": {
-      "mpg": 44.6,
+      "mpg": 22.3,
       "cylinders": 4,
-      "displacement": 91,
-      "horsepower": 67,
-      "weight": 1850,
-      "acceleration": 13.8,
-      "model_year": 80,
+      "displacement": 140,
+      "horsepower": 88,
+      "weight": 2890,
+      "acceleration": 17.3,
+      "model_year": 79,
+      "origin": 1,
+      "car_name": "ford fairmont 4"
+     }
+    },
+    {
+     "row_key": "L381",
+     "values": {
+      "mpg": 36,
+      "cylinders": 4,
+      "displacement": 120,
+      "horsepower": 88,
+      "weight": 2160,
+      "acceleration": 14.5,
+      "model_year": 82,
       "origin": 3,
-      "car_name": "honda civic 1500 gl"
+      "car_name": "nissan stanza xe"
      }
     }
    ],
-   "seed": "cd8b0cae8beb242f",
+   "seed": "8c2cf25bc46912b1",
    "target_shown": true,
    "exposure": {
-    "exposure_id": "x_40356a6cddd3412080f52e5bedd1cc5e",
+    "exposure_id": "x_0acc83e21f8d446fa225a2c939889560",
     "purpose": "development_target_sample",
-    "recorded": true
+    "recorded": true,
+    "withheld": null
    }
   },
   "note": {

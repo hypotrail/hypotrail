@@ -522,7 +522,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-27T23:50:03.602073+00:00",
+   "boundary_time": "2026-10-28T03:56:36.600224+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -545,7 +545,7 @@
    "channel_actions": []
   },
   "task": "regression",
-  "currency": "28a1e224de65bffa",
+  "currency": "cc80869414067d50",
   "texts": {
    "en": {
     "plan": {
@@ -731,16 +731,16 @@
    }
   },
   "sample": {
-   "seed": "cd8b0cae8beb242f",
+   "seed": "8c2cf25bc46912b1",
    "row_keys": [
-    "L1",
-    "L78",
-    "L91",
-    "L159",
-    "L161",
+    "L32",
+    "L92",
+    "L137",
+    "L164",
     "L186",
-    "L304",
-    "L330"
+    "L200",
+    "L283",
+    "L381"
    ],
    "recorded": true
   },

@@ -284,7 +284,8 @@
     "metric",
     "unit",
     "bound",
-    "configurations"
+    "configurations",
+    "final_test"
    ]
   },
   "hypotrail.decisions/1": {

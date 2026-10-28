@@ -39,10 +39,10 @@
      "d0780377137168ff4ab6c6681c7bbc0dc6ba2b006d034904610516f547fd7be7",
      "8fd250acc49855af7e866400aa78722cd7e3741cbd5b70df7cec6f34226fd73d"
     ],
-    "created": "2026-10-27T23:41:22.995785+00:00",
+    "created": "2026-10-28T03:55:07.900285+00:00",
     "started_revision": 12,
     "execution_id": "e_bb85e451e092b31aedb250d1",
-    "exposure_id": "x_2979591a24704b90abb2f0455db9c32c",
+    "exposure_id": "x_e99b4303114b492fb8c441a40a3458f0",
     "values": {
      "method": "kfold_stratified",
      "folds": 5,
@@ -141,10 +141,10 @@
      "split": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b"
     },
     "downstream": [],
-    "created": "2026-10-27T23:41:24.893484+00:00",
+    "created": "2026-10-28T03:55:09.212233+00:00",
     "started_revision": 14,
     "execution_id": "e_a8274014a4c678f4a2a235d2",
-    "exposure_id": "x_724d931b9d434890a7a5e459431c87aa",
+    "exposure_id": "x_6dcb080ef6c44055af37b9ae176b35c2",
     "values": {
      "partition": "train",
      "target": "y",
@@ -229,10 +229,10 @@
     "downstream": [
      "fdb67a66193db75a0efb9fd4caabb4cb87bec82a7bf137a1828c78261171062f"
     ],
-    "created": "2026-10-27T23:41:26.754859+00:00",
+    "created": "2026-10-28T03:55:10.504652+00:00",
     "started_revision": 16,
     "execution_id": "e_eff39ccb2204a33ff345cb41",
-    "exposure_id": "x_cd4e9f00bd3e491d9cba36f598dd3b0b",
+    "exposure_id": "x_4e59b684c3b545b48051aac5a64092da",
     "values": {
      "model": "constant_prior",
      "train_rate": 0.11528891346419685,
@@ -374,10 +374,10 @@
      "fdb67a66193db75a0efb9fd4caabb4cb87bec82a7bf137a1828c78261171062f",
      "8fd250acc49855af7e866400aa78722cd7e3741cbd5b70df7cec6f34226fd73d"
     ],
-    "created": "2026-10-27T23:41:30.044631+00:00",
+    "created": "2026-10-28T03:55:12.176353+00:00",
     "started_revision": 18,
     "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
-    "exposure_id": "x_035e8aea1f194e609011b0fe5a71f9ff",
+    "exposure_id": "x_b427663487a3447c8c9bbd68ec384489",
     "values": {
      "model": "logistic",
      "features": [
@@ -606,10 +606,10 @@
      "fdb67a66193db75a0efb9fd4caabb4cb87bec82a7bf137a1828c78261171062f",
      "8fd250acc49855af7e866400aa78722cd7e3741cbd5b70df7cec6f34226fd73d"
     ],
-    "created": "2026-10-27T23:41:40.042844+00:00",
+    "created": "2026-10-28T03:55:18.668932+00:00",
     "started_revision": 24,
     "execution_id": "e_60b0cfe62d69e0ed78f7ce7e",
-    "exposure_id": "x_7511ffaa02954418822b20ba6c93f591",
+    "exposure_id": "x_b97419661b534e5db76d2f6775b8f6ce",
     "values": {
      "model": "logistic",
      "features": [
@@ -835,10 +835,10 @@
      "fdb67a66193db75a0efb9fd4caabb4cb87bec82a7bf137a1828c78261171062f",
      "8fd250acc49855af7e866400aa78722cd7e3741cbd5b70df7cec6f34226fd73d"
     ],
-    "created": "2026-10-27T23:42:00.847927+00:00",
+    "created": "2026-10-28T03:55:31.526978+00:00",
     "started_revision": 26,
     "execution_id": "e_46ed3fd080ad3849123b1718",
-    "exposure_id": "x_3e2dd53f09a04435841515e68e145c8f",
+    "exposure_id": "x_63016f8f519a4d5ea0a72e8b5194136b",
     "values": {
      "model": "ebm",
      "family": "ebm",
@@ -2078,10 +2078,10 @@
      "fdb67a66193db75a0efb9fd4caabb4cb87bec82a7bf137a1828c78261171062f",
      "8fd250acc49855af7e866400aa78722cd7e3741cbd5b70df7cec6f34226fd73d"
     ],
-    "created": "2026-10-27T23:42:15.114468+00:00",
+    "created": "2026-10-28T03:55:40.927809+00:00",
     "started_revision": 28,
     "execution_id": "e_5c3f9f2dbbc0a17a1254423f",
-    "exposure_id": "x_0cbd14584b514451b044d7fcabb1ec55",
+    "exposure_id": "x_81886edaf3a9498ea89756cc1bb37dd9",
     "values": {
      "model": "hgb",
      "family": "hgb",
@@ -2512,10 +2512,10 @@
      "fit.variant:3": "d0780377137168ff4ab6c6681c7bbc0dc6ba2b006d034904610516f547fd7be7"
     },
     "downstream": [],
-    "created": "2026-10-27T23:42:30.653717+00:00",
+    "created": "2026-10-28T03:55:49.298312+00:00",
     "started_revision": 30,
     "execution_id": "e_b98236d8cafd383b17becb1c",
-    "exposure_id": "x_a952ce18019d4a1c81a5a480fe94e71c",
+    "exposure_id": "x_f6ead5cca3d5430dbc1b2a039fce1b2e",
     "values": {
      "rules": {
       "share:0.1": {
@@ -4192,10 +4192,10 @@
      "split": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b"
     },
     "downstream": [],
-    "created": "2026-10-27T23:42:33.226880+00:00",
+    "created": "2026-10-28T03:55:50.902148+00:00",
     "started_revision": 32,
     "execution_id": "e_b8734faf726d77e6af0ae94a",
-    "exposure_id": "x_2170916aba5c4df6b0d7463a1db19f5d",
+    "exposure_id": "x_c10c6bfec2f042989231a3f8285d83fd",
     "values": {
      "question": "Where does the model err at the rule, and can its score be read as a probability?",
      "evidence": "development",
@@ -9766,10 +9766,10 @@
      "split": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b"
     },
     "downstream": [],
-    "created": "2026-10-27T23:41:32.007330+00:00",
+    "created": "2026-10-28T03:55:13.594667+00:00",
     "started_revision": 20,
     "execution_id": "e_e3011a6950ece5ea44c0419c",
-    "exposure_id": "x_14f6b7331cb34a07a85aebd10352b923",
+    "exposure_id": "x_d2056b0f2c1b4c10ae049711b6b2f3b6",
     "values": null,
     "headline": null,
     "question_junior": null,
@@ -10202,9 +10202,9 @@
    },
    "records": [
     {
-     "exposure_id": "x_ca2922da613d4c0b9a97d90e214a33bd",
+     "exposure_id": "x_af0e175768054dd8b64b1551f3509daa",
      "revision": 1,
-     "time": "2026-10-27T23:41:08.587728+00:00",
+     "time": "2026-10-28T03:54:58.154485+00:00",
      "activity": "init.structure",
      "result_id": null,
      "execution_id": null,
@@ -10232,9 +10232,9 @@
      ]
     },
     {
-     "exposure_id": "x_93498fc5938d43b2b10a9bce5a11107b",
+     "exposure_id": "x_cabf0d42aeba4c10b1d77630697abe76",
      "revision": 1,
-     "time": "2026-10-27T23:41:08.594649+00:00",
+     "time": "2026-10-28T03:54:58.158914+00:00",
      "activity": "data.sample",
      "result_id": null,
      "execution_id": null,
@@ -10262,9 +10262,9 @@
      ]
     },
     {
-     "exposure_id": "x_ab7e535b18ec41a09141d4c441b44685",
+     "exposure_id": "x_0f49a3466816433fa99f43493bf6c2ce",
      "revision": 1,
-     "time": "2026-10-27T23:41:08.595778+00:00",
+     "time": "2026-10-28T03:54:58.159761+00:00",
      "activity": "init.final_test",
      "result_id": null,
      "execution_id": null,
@@ -10292,9 +10292,9 @@
      ]
     },
     {
-     "exposure_id": "x_2979591a24704b90abb2f0455db9c32c",
+     "exposure_id": "x_e99b4303114b492fb8c441a40a3458f0",
      "revision": 12,
-     "time": "2026-10-27T23:41:23.000085+00:00",
+     "time": "2026-10-28T03:55:07.903876+00:00",
      "activity": "split",
      "result_id": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
      "execution_id": "e_bb85e451e092b31aedb250d1",
@@ -10306,9 +10306,9 @@
      ]
     },
     {
-     "exposure_id": "x_724d931b9d434890a7a5e459431c87aa",
+     "exposure_id": "x_6dcb080ef6c44055af37b9ae176b35c2",
      "revision": 14,
-     "time": "2026-10-27T23:41:24.897829+00:00",
+     "time": "2026-10-28T03:55:09.215726+00:00",
      "activity": "eda.target_rate",
      "result_id": "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
      "execution_id": "e_a8274014a4c678f4a2a235d2",
@@ -10320,9 +10320,9 @@
      ]
     },
     {
-     "exposure_id": "x_6adf79ac9aab403890a74a2141315c00",
+     "exposure_id": "x_e0975df6cb214b26bf679aa4ab359a03",
      "revision": 16,
-     "time": "2026-10-27T23:41:26.759418+00:00",
+     "time": "2026-10-28T03:55:10.508193+00:00",
      "activity": "fit.baseline",
      "result_id": "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
      "execution_id": "e_eff39ccb2204a33ff345cb41",
@@ -10334,9 +10334,9 @@
      ]
     },
     {
-     "exposure_id": "x_cd4e9f00bd3e491d9cba36f598dd3b0b",
+     "exposure_id": "x_4e59b684c3b545b48051aac5a64092da",
      "revision": 16,
-     "time": "2026-10-27T23:41:26.762399+00:00",
+     "time": "2026-10-28T03:55:10.510357+00:00",
      "activity": "fit.baseline",
      "result_id": "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
      "execution_id": "e_eff39ccb2204a33ff345cb41",
@@ -10348,9 +10348,9 @@
      ]
     },
     {
-     "exposure_id": "x_a4e0b77b48bf432abda176a37f0b99f7",
+     "exposure_id": "x_54abffc867a44dd7a42f6be026aa5181",
      "revision": 18,
-     "time": "2026-10-27T23:41:30.048946+00:00",
+     "time": "2026-10-28T03:55:12.180574+00:00",
      "activity": "fit.logistic",
      "result_id": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
@@ -10374,9 +10374,9 @@
      ]
     },
     {
-     "exposure_id": "x_035e8aea1f194e609011b0fe5a71f9ff",
+     "exposure_id": "x_b427663487a3447c8c9bbd68ec384489",
      "revision": 18,
-     "time": "2026-10-27T23:41:30.051682+00:00",
+     "time": "2026-10-28T03:55:12.183059+00:00",
      "activity": "fit.logistic",
      "result_id": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
@@ -10400,9 +10400,9 @@
      ]
     },
     {
-     "exposure_id": "x_14f6b7331cb34a07a85aebd10352b923",
+     "exposure_id": "x_d2056b0f2c1b4c10ae049711b6b2f3b6",
      "revision": 20,
-     "time": "2026-10-27T23:41:32.016226+00:00",
+     "time": "2026-10-28T03:55:13.599090+00:00",
      "activity": "diag.binary",
      "result_id": "e06ba880cdfc83b1fb98ba7e067115bc9300ddc8322ddb39bf003a23e4e9039c",
      "execution_id": "e_e3011a6950ece5ea44c0419c",
@@ -10426,9 +10426,9 @@
      ]
     },
     {
-     "exposure_id": "x_de0a9b7d3a334a849ccbd7744fbdc84d",
+     "exposure_id": "x_b89ffb94a0c3481fbe2e2ce144e40915",
      "revision": 24,
-     "time": "2026-10-27T23:41:40.047759+00:00",
+     "time": "2026-10-28T03:55:18.672542+00:00",
      "activity": "fit.variant",
      "result_id": "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d",
      "execution_id": "e_60b0cfe62d69e0ed78f7ce7e",
@@ -10452,9 +10452,9 @@
      ]
     },
     {
-     "exposure_id": "x_7511ffaa02954418822b20ba6c93f591",
+     "exposure_id": "x_b97419661b534e5db76d2f6775b8f6ce",
      "revision": 24,
-     "time": "2026-10-27T23:41:40.050748+00:00",
+     "time": "2026-10-28T03:55:18.674692+00:00",
      "activity": "fit.variant",
      "result_id": "8f8a0bb03c14466dbe19e193b75269fb8decf28cbd85ecd448432bd39057930d",
      "execution_id": "e_60b0cfe62d69e0ed78f7ce7e",
@@ -10478,9 +10478,9 @@
      ]
     },
     {
-     "exposure_id": "x_3b87e982a1e84c6092389ca654dafe95",
+     "exposure_id": "x_b3b6c9b31d454149a6da20e070422335",
      "revision": 26,
-     "time": "2026-10-27T23:42:00.853758+00:00",
+     "time": "2026-10-28T03:55:31.532891+00:00",
      "activity": "fit.variant",
      "result_id": "fa17fbc1dba5d3067b18244e7c01fa600f96c4ff522de4f709d679c7baac2167",
      "execution_id": "e_46ed3fd080ad3849123b1718",
@@ -10504,9 +10504,9 @@
      ]
     },
     {
-     "exposure_id": "x_3e2dd53f09a04435841515e68e145c8f",
+     "exposure_id": "x_63016f8f519a4d5ea0a72e8b5194136b",
      "revision": 26,
-     "time": "2026-10-27T23:42:00.856799+00:00",
+     "time": "2026-10-28T03:55:31.535604+00:00",
      "activity": "fit.variant",
      "result_id": "fa17fbc1dba5d3067b18244e7c01fa600f96c4ff522de4f709d679c7baac2167",
      "execution_id": "e_46ed3fd080ad3849123b1718",
@@ -10530,9 +10530,9 @@
      ]
     },
     {
-     "exposure_id": "x_c269e8eff8d64effa3ea510734ec7f14",
+     "exposure_id": "x_1df923459f564eba892147c7c5a3b737",
      "revision": 28,
-     "time": "2026-10-27T23:42:15.119723+00:00",
+     "time": "2026-10-28T03:55:40.932642+00:00",
      "activity": "fit.variant",
      "result_id": "d0780377137168ff4ab6c6681c7bbc0dc6ba2b006d034904610516f547fd7be7",
      "execution_id": "e_5c3f9f2dbbc0a17a1254423f",
@@ -10556,9 +10556,9 @@
      ]
     },
     {
-     "exposure_id": "x_0cbd14584b514451b044d7fcabb1ec55",
+     "exposure_id": "x_81886edaf3a9498ea89756cc1bb37dd9",
      "revision": 28,
-     "time": "2026-10-27T23:42:15.122878+00:00",
+     "time": "2026-10-28T03:55:40.934994+00:00",
      "activity": "fit.variant",
      "result_id": "d0780377137168ff4ab6c6681c7bbc0dc6ba2b006d034904610516f547fd7be7",
      "execution_id": "e_5c3f9f2dbbc0a17a1254423f",
@@ -10582,9 +10582,9 @@
      ]
     },
     {
-     "exposure_id": "x_a952ce18019d4a1c81a5a480fe94e71c",
+     "exposure_id": "x_f6ead5cca3d5430dbc1b2a039fce1b2e",
      "revision": 30,
-     "time": "2026-10-27T23:42:30.661417+00:00",
+     "time": "2026-10-28T03:55:49.303739+00:00",
      "activity": "policy.evaluation",
      "result_id": "fdb67a66193db75a0efb9fd4caabb4cb87bec82a7bf137a1828c78261171062f",
      "execution_id": "e_b98236d8cafd383b17becb1c",
@@ -10596,9 +10596,9 @@
      ]
     },
     {
-     "exposure_id": "x_2170916aba5c4df6b0d7463a1db19f5d",
+     "exposure_id": "x_c10c6bfec2f042989231a3f8285d83fd",
      "revision": 32,
-     "time": "2026-10-27T23:42:33.247700+00:00",
+     "time": "2026-10-28T03:55:50.911094+00:00",
      "activity": "diag.binary",
      "result_id": "8fd250acc49855af7e866400aa78722cd7e3741cbd5b70df7cec6f34226fd73d",
      "execution_id": "e_b8734faf726d77e6af0ae94a",

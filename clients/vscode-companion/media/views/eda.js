@@ -114,10 +114,9 @@
       onclick: () => { ctx.setFold(`src-${card.slot}`, true); ctx.navigate({ anchor: anchorOf(ctx, card.slot) }); } });
   }
 
-  /** The path anchor of a result slot (CLI-CONTRACT §17.1.1), from the page model's table. */
+  /** The path anchor of a result slot (CLI-CONTRACT §17.1.1): the step the engine files it under. */
   function anchorOf(ctx, slot) {
-    const plan = ((ctx.snapshot && ctx.snapshot.plan) || []).map(p => p.id);
-    const step = HT.pageModel ? HT.pageModel.stepOf(slot, plan) : null;
+    const step = HT.pageModel ? HT.pageModel.stepOfResult(ctx.snapshot, slot) : null;
     return step ? `path:${step}/${slot}` : 'path';
   }
 
@@ -313,6 +312,8 @@
     const target = d.target.column;
     const seeded = rows.seed !== null && rows.seed !== undefined;
     const shown = seeded ? rows.targetShown !== false : true;
+    // The engine's reason the target stays hidden for good (§17.3: the split came first).
+    const withheld = !shown && rows.exposure && rows.exposure.withheld === 'split_confirmed';
     const order = [target, ...cols.filter(x => x !== target)].filter(x => cols.includes(x));
     const visible = shown ? order : order.filter(x => x !== target);
     const n = rows.items.length;
@@ -332,9 +333,9 @@
     return el('div', { className: 'ht-sample-box', 'data-sample-box': true }, [
       el('p', { className: 'ht-sample-cap', 'data-sample-caption': true, text: caption }),
       el('div', { className: 'ht-scrollx', 'data-scroll-ok': true, tabindex: '0', role: 'region', 'aria-label': P.sample.region }, [table]),
-      seeded ? el('p', { className: 'ht-frame', 'data-sample-look': shown ? 'counted' : 'not_shown' }, shown
+      seeded ? el('p', { className: 'ht-frame', 'data-sample-look': shown ? 'counted' : withheld ? 'withheld' : 'not_shown' }, shown
         ? [el('b', { text: P.sample.lookLabel }), ' ', P.sample.look(count(ctx, n), target)]
-        : [P.sample.notShown]) : null,
+        : [withheld ? P.sample.notShownAfterSplit : P.sample.notShown]) : null,
     ]);
   }
 

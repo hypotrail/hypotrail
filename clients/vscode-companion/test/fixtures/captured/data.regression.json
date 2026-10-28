@@ -380,124 +380,125 @@
    "order": "seeded sample",
    "items": [
     {
-     "row_key": "L128",
+     "row_key": "L5",
      "values": {
-      "mpg": 19,
-      "cylinders": 6,
-      "displacement": 232,
-      "horsepower": 100,
-      "weight": 2901,
-      "acceleration": 16,
-      "model_year": 74,
+      "mpg": 17,
+      "cylinders": 8,
+      "displacement": 302,
+      "horsepower": 140,
+      "weight": 3449,
+      "acceleration": 10.5,
+      "model_year": 70,
       "origin": 1,
-      "car_name": "amc hornet"
+      "car_name": "ford torino"
      }
     },
     {
-     "row_key": "L181",
+     "row_key": "L11",
+     "values": {
+      "mpg": 15,
+      "cylinders": 8,
+      "displacement": 383,
+      "horsepower": 170,
+      "weight": 3563,
+      "acceleration": 10,
+      "model_year": 70,
+      "origin": 1,
+      "car_name": "dodge challenger se"
+     }
+    },
+    {
+     "row_key": "L49",
+     "values": {
+      "mpg": 18,
+      "cylinders": 6,
+      "displacement": 250,
+      "horsepower": 88,
+      "weight": 3139,
+      "acceleration": 14.5,
+      "model_year": 71,
+      "origin": 1,
+      "car_name": "ford mustang"
+     }
+    },
+    {
+     "row_key": "L54",
+     "values": {
+      "mpg": 31,
+      "cylinders": 4,
+      "displacement": 71,
+      "horsepower": 65,
+      "weight": 1773,
+      "acceleration": 19,
+      "model_year": 71,
+      "origin": 3,
+      "car_name": "toyota corolla 1200"
+     }
+    },
+    {
+     "row_key": "L173",
      "values": {
       "mpg": 25,
       "cylinders": 4,
-      "displacement": 121,
-      "horsepower": 115,
-      "weight": 2671,
-      "acceleration": 13.5,
+      "displacement": 90,
+      "horsepower": 71,
+      "weight": 2223,
+      "acceleration": 16.5,
       "model_year": 75,
       "origin": 2,
-      "car_name": "saab 99le"
+      "car_name": "volkswagen dasher"
      }
     },
     {
-     "row_key": "L203",
+     "row_key": "L202",
      "values": {
-      "mpg": 17.5,
-      "cylinders": 6,
-      "displacement": 258,
-      "horsepower": 95,
-      "weight": 3193,
-      "acceleration": 17.8,
-      "model_year": 76,
-      "origin": 1,
-      "car_name": "amc pacer d/l"
-     }
-    },
-    {
-     "row_key": "L226",
-     "values": {
-      "mpg": 17.5,
+      "mpg": 18.5,
       "cylinders": 6,
       "displacement": 250,
       "horsepower": 110,
-      "weight": 3520,
-      "acceleration": 16.4,
-      "model_year": 77,
+      "weight": 3645,
+      "acceleration": 16.2,
+      "model_year": 76,
       "origin": 1,
-      "car_name": "chevrolet concours"
+      "car_name": "pontiac ventura sj"
      }
     },
     {
-     "row_key": "L232",
+     "row_key": "L247",
      "values": {
-      "mpg": 15.5,
-      "cylinders": 8,
-      "displacement": 400,
-      "horsepower": 190,
-      "weight": 4325,
-      "acceleration": 12.2,
-      "model_year": 77,
-      "origin": 1,
-      "car_name": "chrysler cordoba"
-     }
-    },
-    {
-     "row_key": "L258",
-     "values": {
-      "mpg": 19.4,
-      "cylinders": 6,
-      "displacement": 232,
-      "horsepower": 90,
-      "weight": 3210,
-      "acceleration": 17.2,
-      "model_year": 78,
-      "origin": 1,
-      "car_name": "amc concord"
-     }
-    },
-    {
-     "row_key": "L271",
-     "values": {
-      "mpg": 21.1,
+      "mpg": 32.8,
       "cylinders": 4,
-      "displacement": 134,
-      "horsepower": 95,
-      "weight": 2515,
-      "acceleration": 14.8,
+      "displacement": 78,
+      "horsepower": 52,
+      "weight": 1985,
+      "acceleration": 19.4,
       "model_year": 78,
       "origin": 3,
-      "car_name": "toyota celica gt liftback"
+      "car_name": "mazda glc deluxe"
      }
     },
     {
-     "row_key": "L375",
+     "row_key": "L306",
      "values": {
-      "mpg": 23,
+      "mpg": 28.4,
       "cylinders": 4,
       "displacement": 151,
-      "horsepower": null,
-      "weight": 3035,
-      "acceleration": 20.5,
-      "model_year": 82,
+      "horsepower": 90,
+      "weight": 2670,
+      "acceleration": 16,
+      "model_year": 79,
       "origin": 1,
-      "car_name": "amc concord dl"
+      "car_name": "buick skylark limited"
      }
     }
    ],
-   "seed": "bf788f1b245ca3dd",
+   "seed": "0d41920df95fcf87",
    "target_shown": true,
    "exposure": {
-    "exposure_id": "x_fef01ce6665040d98a111cc1f160354e",
+    "exposure_id": "x_47f777fe8a41462281eceefc36647713",
     "purpose": "development_target_sample",
-    "recorded": true
+    "recorded": true,
+    "withheld": null
    }
   },
   "note": {

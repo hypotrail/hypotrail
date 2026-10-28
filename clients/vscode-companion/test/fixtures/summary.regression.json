@@ -255,6 +255,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "train_eda",
     "channel": "chat"
    },
    "eda.special_values": {
@@ -262,6 +263,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "train_eda",
     "channel": "chat"
    },
    "eda.target_summary": {
@@ -269,6 +271,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "train_eda",
     "channel": "chat"
    },
    "evaluate.regression": {
@@ -276,6 +279,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "model_choice",
     "channel": "chat"
    },
    "fit.baseline": {
@@ -283,6 +287,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "models",
     "channel": "chat"
    },
    "fit.linear": {
@@ -290,6 +295,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "models",
     "channel": "chat"
    },
    "split": {
@@ -297,6 +303,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "split",
     "channel": "chat"
    },
    "fit.variant": {
@@ -304,6 +311,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "models",
     "channel": "chat"
    }
   },

@@ -124,6 +124,8 @@ def test_todo5_changed_sources_and_integrity_show_the_engine_junior_text(open_pa
                      'result_integrity': 'Un résultat enregistré ne correspond plus à ce qui a été calculé.'}}
     raw['not_yet_defensible']['top'] += [{'id': rid, 'text': text, 'audience': 'junior', 'junior_text': None}
                                          for rid, text in engine.items()]
+    # as the engine lists them: every limit in `defensibility.items` too (P1 §17.2.2)
+    raw['defensibility']['items'] += [{'id': rid, 'severity': 'blocking'} for rid in engine]
     for lang in ('en', 'fr'):
         raw['texts'][lang].setdefault('limits', {}).update(junior[lang])
     for lang in ('en', 'fr'):
@@ -177,6 +179,79 @@ def test_nar3_charts_steps_and_pills_at_320_px(open_panel, views):
     wide = open_case(open_panel, views, case='choice', theme='light-modern', width=420, lang='en')
     rows = wide.page.evaluate(NARROW)['steps']
     assert any(value_top < name_bottom - 1 for name_bottom, value_top in rows), 'one line at 420 px'
+
+
+# Every word of the first column of the development / final-test table, as rendered lines: a
+# word laid out on more than one line was broken inside it ("modè/le").
+BROKEN_WORDS = """() => {
+  const out = [];
+  for (const cell of document.querySelectorAll('table[data-dev-final] tr > :first-child')) {
+    const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      for (const m of n.data.matchAll(/\\S+/g)) {
+        const r = document.createRange();
+        r.setStart(n, m.index); r.setEnd(n, m.index + m[0].length);
+        const tops = new Set([...r.getClientRects()].filter(x => x.width).map(x => Math.round(x.top)));
+        if (tops.size > 1) out.push(m[0]);
+      }
+    }
+  }
+  return out;
+}"""
+
+
+def test_nar3_the_dev_final_table_never_breaks_a_word_at_320_px(open_panel, views):
+    """NAR-3, HON-1 (review fix 8): at 320 px the first column of the development / final-test
+    table at the end breaks between words only ("modèle linéaire", never "modè/le/linéai/re");
+    the table scrolls sideways in its region instead."""
+    for lang in ('fr', 'en'):
+        panel = open_case(open_panel, views, case='done', theme='light-modern', width=320, lang=lang)
+        open_all(panel, views, panel.case_reads)
+        page = panel.page
+        assert page.locator('table[data-dev-final] tbody tr').count() == 2
+        assert page.evaluate(BROKEN_WORDS) == [], lang
+        assert panel.clean()
+        panel.context.close()
+
+
+def test_path_rows_do_not_repeat_the_step_name(open_panel, views, payload):
+    """PATH-3 (review fix 6): a step line prints the step's short name, then the engine's
+    headline, which holds no step name (no "Découpage  Découpage : …")."""
+    for lang in ('fr', 'en'):
+        panel = open_case(open_panel, views, case='done', width=600, lang=lang)
+        open_all(panel, views, panel.case_reads)
+        rows = panel.page.evaluate("""() => [...document.querySelectorAll('.ht-path [data-step]')].map(li => {
+          const t = li.querySelector('.ht-t'); const v = li.querySelector('.ht-v');
+          return [li.getAttribute('data-step'), t ? t.textContent.trim() : '', v ? v.textContent.trim() : ''];
+        })""")
+        headlines = payload('captured/summary.regression.done')['texts'][lang]['headlines']
+        assert rows and any(step in headlines for step, _, _ in rows)
+        for step, name, value in rows:
+            assert name and not value.startswith(name + ' :') and not value.startswith(name + ':') \
+                and not value.startswith(name + '\u202f:'), (lang, step, name, value)
+            if step in headlines:
+                assert value == headlines[step], (lang, step, value)
+        panel.context.close()
+
+
+def test_a_w4_target_distribution_is_under_exploration_and_its_anchor_resolves(open_panel, views):
+    """§17.1.1 (review fix 1): a chart of the target requested from the panel (W4) is filed
+    where the engine files it (`results.<slot>.step`: the exploration, it read the target), and
+    the chat's anchor for it (`shown.anchor`, the engine's step) is a place of the page."""
+    summary = copy.deepcopy(views['summary.choice'])
+    rid = 'c' * 64
+    summary['results']['eda.distribution:mpg'] = {'resultId': rid, 'current': True, 'staleReason': None,
+                                                  'integrity': 'ok', 'channel': 'webview', 'step': 'train_eda'}
+    panel = open_case(open_panel, views, case='choice', width=600, lang='en')
+    panel.snapshot(summary)
+    page = panel.page
+    anchor = 'path:train_eda/eda.distribution:mpg'
+    # the chat's line names that anchor; the panel goes there as a deep link does (NAV-1)
+    panel.send({'type': 'navigate', 'anchor': anchor})
+    page.wait_for_function("""a => !!document.querySelector(`[data-anchor="${CSS.escape(a)}"]`)""", arg=anchor)
+    assert page.locator('[data-step="train_eda"]').locator(f'[data-anchor="{anchor}"]').count() == 1
+    assert page.locator('[data-anchor="path:structural_eda/eda.distribution:mpg"]').count() == 0
+    assert panel.clean()
 
 
 def test_now12_the_question_is_in_the_first_viewport_at_every_width(open_panel, views):
@@ -355,6 +430,35 @@ def test_now11_path9_ho3_the_end(open_panel, views, payload):
     assert now.locator('[data-conclusion]').inner_text() == payload('captured/summary.regression.done')['decisions']['conclusion']['value']['text']
     heads = now.locator('[data-dev-final] th').all_text_contents()
     assert 'Development (used to choose)' in heads and 'Final test (read once)' in heads
+    # HON-1: the final column cites the final evaluation the done summary names (the reads are
+    # those of the end), each cell a registered value at its path; the development column
+    # cites a development result, never the final one.
+    from mlkit.study import cite
+    done = payload('captured/summary.regression.done')
+    final_rid = done['results']['final_test.evaluation']['result_id']
+    evidence = payload('captured/evidence.regression.onepage.done')
+    final_values = next(r for r in evidence['results'] if r['result_id'] == final_rid)['values']
+    rows = now.locator('[data-dev-final] tbody tr')
+    assert rows.count() == 2, 'the chosen model and the reference'
+    for i in range(rows.count()):
+        final_cell = rows.nth(i).locator('td').nth(2).locator('data[data-result-id]')
+        assert final_cell.count() == 1, f'row {i}: the final column is filled'
+        assert final_cell.get_attribute('data-result-id') == final_rid
+        path = final_cell.get_attribute('data-path')
+        assert float(final_cell.get_attribute('data-value')) == cite.resolve(final_values, cite.parse_path(path)), path
+        dev_cell = rows.nth(i).locator('td').nth(1).locator('data[data-result-id]')
+        assert dev_cell.count() == 1 and dev_cell.get_attribute('data-result-id') != final_rid
+    # NOW-8 at the end: the criterion judged on the final test cites the final test's own bound
+    # and value (criterion_configurations.final_test), never the development bound.
+    crit = done['criterion_configurations']
+    line = now.locator('[data-criterion="final"]')
+    cited = line.locator('data[data-result-id]')
+    assert {cited.nth(i).get_attribute('data-result-id') for i in range(cited.count())} == {final_rid}
+    assert [float(cited.nth(i).get_attribute('data-value')) for i in range(cited.count())] == \
+        [crit['final_test']['bound']['value'], crit['final_test']['value']]
+    assert crit['final_test']['bound']['value'] != crit['bound']['value']
+    assert f"{crit['bound']['value']:.2f}" not in line.inner_text(), 'no development bound at the end'
+    assert line.get_attribute('data-config-status') == crit['final_test']['status']
     assert now.locator('button:not([data-fold-id]), [data-write]').count() == 0, 'NOW-11: no control in the card'
     after = page.locator('[data-block="after"]')
     assert after.locator('[data-after-study]').inner_text().startswith('What comes next: the handoff pack')
@@ -376,7 +480,7 @@ def test_pg12_a_later_stage_is_absent_not_disabled(open_panel, views, stage):
     later = {'v0': ['v1', 'v2', 'v3'], 'v1': ['v2', 'v3'], 'v2': ['v3'], 'v3': []}[stage]
     for state in STATES:
         panel = open_case(open_panel, views, case=state, width=420, lang='en', stage=stage)
-        open_all(panel, views, 'p1')
+        open_all(panel, views, panel.case_reads)
         for s in later:
             assert panel.page.locator(f'[data-stage="{s}"]').count() == 0, (state, stage, s)
         if stage == 'v0':
@@ -391,7 +495,7 @@ def test_inv12_the_regression_page_holds_no_decision_rule_word(open_panel, views
     for state in STATES:
         for lang in ('en', 'fr'):
             panel = open_case(open_panel, views, case=state, width=900, lang=lang)
-            open_all(panel, views, 'p1')
+            open_all(panel, views, panel.case_reads)
             text = panel.page.locator('#app').text_content()
             hit = FORBIDDEN.search(text)
             assert not hit, (state, lang, text[max(0, hit.start() - 60):hit.end() + 60])

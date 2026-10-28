@@ -147,6 +147,7 @@
       target: target => `${target} ◂ à prédire`,
       look: (n, target) => `ces ${n} valeurs de ${target} sont vues dès maintenant, et le registre de l'étude le note. Le tirage est fixé : le panneau, le rapport et le notebook montrent les mêmes lignes ; en tirer d'autres serait un regard de plus.`,
       notShown: "Les valeurs de la cible de ces lignes s'affichent une fois le regard enregistré par l'étude ; la prochaine étape du chat l'enregistre.",
+      notShownAfterSplit: "Les valeurs de la cible de ces lignes ne sont pas montrées : le découpage de cette étude a été confirmé avant qu'elle n'enregistre un regard sur elles, et les montrer maintenant serait un regard après le découpage.",
       lookLabel: 'Un regard sur la cible, compté :',
       rowKey: 'ligne',
     },
@@ -199,7 +200,9 @@
     next: (title, why) => [`Ensuite : ${title}.`, why ? ` ${why}` : ''],
     criterion: {
       line: (words, bound, verdict) => [`Votre critère, ${words} (`, bound, ' ou mieux) : ', verdict, ', en développement. Il sera jugé pour de bon sur le test final.'],
-      lineFinal: (words, bound, verdict) => [`Votre critère, ${words} (`, bound, ' ou mieux) : ', verdict, ', sur le test final.'],
+      // Jugé sur le test final : le seuil d'après le modèle de référence du test final, la valeur du modèle.
+      lineFinal: (words, bound, verdict, model, value) => [`Votre critère, ${words}, jugé sur le test final (`, bound,
+        ' ou mieux, d\'après le modèle de référence du test final) : ', verdict, ...(value ? [` ; ${model} obtient `, value] : []), '.'],
       allMet: n => `atteint par les ${n} configurations`,
       someMet: (k, n) => `atteint par ${k} des ${n} configurations, sur leur moyenne`,
       noneMet: "atteint par aucune configuration",

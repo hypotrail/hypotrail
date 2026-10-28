@@ -54,7 +54,7 @@ test('DataModel: keys, development rows, groups in order, the engine\'s rows wit
   assert.match(s.rows.seed, /^[0-9a-f]{16}$/);
   assert.equal(s.rows.seed, raw.rows.seed);
   assert.equal(s.rows.targetShown, true);
-  assert.deepEqual(s.rows.exposure, { exposureId: raw.rows.exposure.exposure_id, purpose: 'development_target_sample', recorded: true });
+  assert.deepEqual(s.rows.exposure, { exposureId: raw.rows.exposure.exposure_id, purpose: 'development_target_sample', recorded: true, withheld: null });
   assert.equal(s.specialRows.nRows, 6);
   assert.ok(!s.specialRows.columns.includes('mpg'));
   // An older engine (no `special_rows`): no special rows.

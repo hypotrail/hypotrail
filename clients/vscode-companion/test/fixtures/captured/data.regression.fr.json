@@ -380,124 +380,125 @@
    "order": "seeded sample",
    "items": [
     {
-     "row_key": "L32",
+     "row_key": "L22",
      "values": {
-      "mpg": 25,
+      "mpg": 24,
       "cylinders": 4,
-      "displacement": 113,
-      "horsepower": 95,
-      "weight": 2228,
-      "acceleration": 14,
-      "model_year": 71,
-      "origin": 3,
-      "car_name": "toyota corona"
+      "displacement": 107,
+      "horsepower": 90,
+      "weight": 2430,
+      "acceleration": 14.5,
+      "model_year": 70,
+      "origin": 2,
+      "car_name": "audi 100 ls"
      }
     },
     {
-     "row_key": "L48",
+     "row_key": "L44",
      "values": {
-      "mpg": 19,
-      "cylinders": 6,
-      "displacement": 250,
-      "horsepower": 100,
-      "weight": 3282,
-      "acceleration": 15,
+      "mpg": 13,
+      "cylinders": 8,
+      "displacement": 400,
+      "horsepower": 170,
+      "weight": 4746,
+      "acceleration": 12,
       "model_year": 71,
       "origin": 1,
-      "car_name": "pontiac firebird"
+      "car_name": "ford country squire (sw)"
      }
     },
     {
-     "row_key": "L60",
+     "row_key": "L50",
      "values": {
       "mpg": 23,
       "cylinders": 4,
-      "displacement": 97,
-      "horsepower": 54,
-      "weight": 2254,
-      "acceleration": 23.5,
-      "model_year": 72,
-      "origin": 2,
-      "car_name": "volkswagen type 3"
+      "displacement": 122,
+      "horsepower": 86,
+      "weight": 2220,
+      "acceleration": 14,
+      "model_year": 71,
+      "origin": 1,
+      "car_name": "mercury capri 2000"
      }
     },
     {
-     "row_key": "L269",
+     "row_key": "L148",
+     "values": {
+      "mpg": 24,
+      "cylinders": 4,
+      "displacement": 90,
+      "horsepower": 75,
+      "weight": 2108,
+      "acceleration": 15.5,
+      "model_year": 74,
+      "origin": 2,
+      "car_name": "fiat 128"
+     }
+    },
+    {
+     "row_key": "L169",
+     "values": {
+      "mpg": 23,
+      "cylinders": 4,
+      "displacement": 140,
+      "horsepower": 83,
+      "weight": 2639,
+      "acceleration": 17,
+      "model_year": 75,
+      "origin": 1,
+      "car_name": "ford pinto"
+     }
+    },
+    {
+     "row_key": "L339",
      "values": {
       "mpg": 27.2,
       "cylinders": 4,
-      "displacement": 119,
-      "horsepower": 97,
-      "weight": 2300,
-      "acceleration": 14.7,
-      "model_year": 78,
-      "origin": 3,
-      "car_name": "datsun 510"
-     }
-    },
-    {
-     "row_key": "L298",
-     "values": {
-      "mpg": 25.4,
-      "cylinders": 5,
-      "displacement": 183,
-      "horsepower": 77,
-      "weight": 3530,
-      "acceleration": 20.1,
-      "model_year": 79,
-      "origin": 2,
-      "car_name": "mercedes benz 300d"
-     }
-    },
-    {
-     "row_key": "L331",
-     "values": {
-      "mpg": 40.9,
-      "cylinders": 4,
-      "displacement": 85,
-      "horsepower": null,
-      "weight": 1835,
-      "acceleration": 17.3,
-      "model_year": 80,
-      "origin": 2,
-      "car_name": "renault lecar deluxe"
-     }
-    },
-    {
-     "row_key": "L344",
-     "values": {
-      "mpg": 39.1,
-      "cylinders": 4,
-      "displacement": 79,
-      "horsepower": 58,
-      "weight": 1755,
-      "acceleration": 16.9,
+      "displacement": 135,
+      "horsepower": 84,
+      "weight": 2490,
+      "acceleration": 15.7,
       "model_year": 81,
-      "origin": 3,
-      "car_name": "toyota starlet"
+      "origin": 1,
+      "car_name": "plymouth reliant"
      }
     },
     {
-     "row_key": "L369",
+     "row_key": "L384",
+     "values": {
+      "mpg": 38,
+      "cylinders": 4,
+      "displacement": 91,
+      "horsepower": 67,
+      "weight": 1965,
+      "acceleration": 15,
+      "model_year": 82,
+      "origin": 3,
+      "car_name": "honda civic"
+     }
+    },
+    {
+     "row_key": "L394",
      "values": {
       "mpg": 27,
       "cylinders": 4,
-      "displacement": 112,
-      "horsepower": 88,
-      "weight": 2640,
-      "acceleration": 18.6,
+      "displacement": 140,
+      "horsepower": 86,
+      "weight": 2790,
+      "acceleration": 15.6,
       "model_year": 82,
       "origin": 1,
-      "car_name": "chevrolet cavalier wagon"
+      "car_name": "ford mustang gl"
      }
     }
    ],
-   "seed": "afa9563160c86cf1",
+   "seed": "a8f912e05025533e",
    "target_shown": true,
    "exposure": {
-    "exposure_id": "x_103af86b818949a4949d2759390dcc7e",
+    "exposure_id": "x_cc86b11c9aeb48a7a2402ec96f80c7ff",
     "purpose": "development_target_sample",
-    "recorded": true
+    "recorded": true,
+    "withheld": null
    }
   },
   "note": {

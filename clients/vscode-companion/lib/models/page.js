@@ -25,19 +25,19 @@
   const LANGS = ['en', 'fr'];
   const DRAWERS = ['data', 'whatif', 'notions', 'deliverables'];
   const TODO_KINDS = ['execution', 'sources', 'integrity', 'deliverables', 'checks'];
-  // The step of a result (CLI-CONTRACT §17.1.1, `companion_env.step_of`): the plan step whose
-  // activities list the activity (state.STEPS, REGRESSION_STEPS and the B1/L5 steps), else an
-  // EDA chart that reads no target under `structural_eda`, any other under `train_eda`, a fit
-  // or a diagnostic under `models`. The digest names no step per result, so the panel keeps
-  // this table in step with the engine's (the integrator's `results.<slot>.step` would replace it).
-  const STEP_OF_ACTIVITY = {
+  // The step of a result is the engine's: `results.<slot>.step` of the digest (CLI-CONTRACT
+  // §17.1.1, §17.2.5; `companion_env.step_of`, which knows whether a chart read the target).
+  // FALLBACK ONLY, for an engine before that key (HON-9) and for the title of an interrupted
+  // run (which has no result yet): this approximate table of the engine's plan activities. It
+  // cannot tell a target's distribution from a feature's, so it never overrides the engine.
+  const FALLBACK_STEP_OF_ACTIVITY = {
     split: 'split', 'eda.quality': 'structural_eda', 'eda.target_rate': 'train_eda', 'eda.target_summary': 'train_eda',
     'eda.special_values': 'train_eda', 'fit.baseline': 'models', 'fit.logistic': 'models', 'fit.linear': 'models',
     'fit.variant': 'model_variant', 'policy.evaluation': 'policy', 'evaluate.regression': 'model_choice',
     'final_test.evaluation': 'final_test', 'diag.final_test': 'final_test',
   };
-  // EDA charts that read no target (a feature's distribution, the predictor correlation).
-  const STRUCTURAL_EDA = ['eda.distribution', 'eda.correlation'];
+  // Fallback only: EDA charts that read no target in an older engine's digest.
+  const FALLBACK_STRUCTURAL_EDA = ['eda.distribution', 'eda.correlation'];
   // The results whose figures a step's comparison shows (its Now card, its Waiting card).
   const FIGURE_ACTIVITIES = {
     model_choice: ['evaluate.regression', 'fit.baseline', 'fit.linear', 'fit.variant'],
@@ -54,19 +54,35 @@
   const atLeast = (stage, wanted) => rank(stage) >= rank(wanted);
   const activityOf = slot => String(slot || '').split(':')[0];
 
-  /** The plan step a result slot is filed under (§17.1.1), or null when the plan has none. */
+  /**
+   * FALLBACK ONLY (an engine before `results.<slot>.step`, or an interrupted run's activity):
+   * the approximate plan step of a slot or an activity, or null when the plan has none.
+   */
   function stepOf(slot, planIds) {
     const activity = activityOf(slot);
     const has = id => planIds.includes(id);
-    const direct = STEP_OF_ACTIVITY[activity];
+    const direct = FALLBACK_STEP_OF_ACTIVITY[activity];
     if (direct && has(direct)) return direct;
     if (activity.startsWith('eda.')) {
-      if (STRUCTURAL_EDA.includes(activity) && has('structural_eda')) return 'structural_eda';
+      if (FALLBACK_STRUCTURAL_EDA.includes(activity) && has('structural_eda')) return 'structural_eda';
       if (has('train_eda')) return 'train_eda';
     }
     if ((activity.startsWith('fit.') || activity.startsWith('diag.')) && has('models')) return 'models';
     if (activity === 'evaluate.regression' && has('models')) return 'models';
     return null;
+  }
+
+  /**
+   * The plan step a result of the summary is filed under (§17.1.1): the engine's
+   * `results.<slot>.step` (null when the engine files it nowhere, or under a step this plan
+   * lacks); the fallback `stepOf` only when the engine sent no `step` (an older engine).
+   */
+  function stepOfResult(summary, slot) {
+    const s = summary || {};
+    const planIds = arr(s.plan).map(p => p.id);
+    const r = obj(obj(s.results)[slot]);
+    if (r.step !== undefined) return typeof r.step === 'string' && planIds.includes(r.step) ? r.step : null;
+    return stepOf(slot, planIds);
   }
 
   /**
@@ -121,7 +137,7 @@
   function resultsByStep(s, planIds) {
     const out = {};
     for (const [slot, r] of Object.entries(obj(s.results))) {
-      const step = stepOf(slot, planIds);
+      const step = stepOfResult(s, slot);
       if (!step) continue;
       (out[step] = out[step] || []).push({ slot, step, resultId: r.resultId, current: r.current === true && r.integrity !== 'failed'
         && (r.integrity === null || r.integrity === 'ok'), staleReason: r.staleReason || null, channel: r.channel || null,
@@ -222,11 +238,15 @@
     const runs = [...arr(ex.interrupted).map(e => ({ ...e, state: 'interrupted' })), ...arr(ex.suspected).map(e => ({ ...e, state: 'suspected' })),
       ...arr(ex.late).map(e => ({ ...e, state: 'late' }))];
     if (runs.length) items.push({ kind: 'execution', anchor: 'todo:execution', runs });
-    const top = arr(obj(s.notYetDefensible).top);
-    const sources = top.find(i => i.id === 'sources_changed');
-    if (sources) items.push({ kind: 'sources', anchor: 'todo:sources', limit: sources });
-    const integrity = top.find(i => i.id === 'result_integrity');
-    if (integrity) items.push({ kind: 'integrity', anchor: 'todo:integrity', limit: integrity });
+    // Every limit the engine lists, not only the five of `not_yet_defensible.top`: the ids of
+    // `defensibility.items` (P1 §17.2.2), else (an older engine) `top` then `more`. The text,
+    // when the limit is among `top`, comes with it.
+    const nyd = obj(s.notYetDefensible);
+    const top = arr(nyd.top);
+    const ids = s.defensibility ? arr(s.defensibility.items).map(i => i.id) : [...top.map(i => i.id), ...arr(nyd.more)];
+    const limit = id => top.find(i => i.id === id) || { id };
+    if (ids.includes('sources_changed')) items.push({ kind: 'sources', anchor: 'todo:sources', limit: limit('sources_changed') });
+    if (ids.includes('result_integrity')) items.push({ kind: 'integrity', anchor: 'todo:integrity', limit: limit('result_integrity') });
     const generated = arr(s.artifacts).filter(a => (a.name === 'report' || a.name === 'notebook') && a.status !== 'ok');
     const notRendered = s.artifactsStatus === 'not_rendered';
     if (generated.length || notRendered) {
@@ -464,10 +484,9 @@
   /** The anchor of a result id (§4.3): `path:<step>/<slot>` from the summary, else `path`. */
   function anchorOfResult(summary, resultId) {
     const s = summary || {};
-    const planIds = arr(s.plan).map(p => p.id);
     for (const [slot, r] of Object.entries(obj(s.results))) {
       if (r && r.resultId === resultId) {
-        const step = stepOf(slot, planIds);
+        const step = stepOfResult(s, slot);
         return step ? `path:${step}/${slot}` : 'path';
       }
     }
@@ -475,9 +494,15 @@
     return 'path';
   }
 
-  /** The anchor grammar of CLI-CONTRACT §17.1.1 (`companion_env.ANCHOR_RE`). */
-  const ANCHOR_RE = /^(now|todo:(execution|deliverables|checks|sources|integrity)|path|path:[a-z_]+(\/[A-Za-z0-9_.:-]+)?|tools:(data|whatif|notions|deliverables))$/;
+  /**
+   * The anchor grammar of CLI-CONTRACT §17.1.1, the same as the engine's
+   * (`companion_env.ANCHOR_RE`) and the protocol's (`lib/protocol.js` `ANCHOR`): a slot is any
+   * run of characters but a control character (a column with accents, spaces or parentheses);
+   * `tools:how` is the panel's own fold, which the engine never names.
+   */
+  const ANCHOR_RE = new RegExp('^(now|todo:(execution|deliverables|checks|sources|integrity)|path|path:[a-z][a-z0-9_]*(/[^\\u0000-\\u001f\\u007f]+)?|tools:(data|whatif|notions|deliverables|how))$');
 
-  return { toPageModel, stepOf, currentStepId, anchorOfResult, textOf, ANCHOR_RE, DRAWERS, TODO_KINDS, STEP_OF_ACTIVITY,
+  return { toPageModel, stepOf, stepOfResult, currentStepId, anchorOfResult, textOf, ANCHOR_RE, DRAWERS, TODO_KINDS,
+    FALLBACK_STEP_OF_ACTIVITY,
     FIGURE_ACTIVITIES, STAGES };
 });

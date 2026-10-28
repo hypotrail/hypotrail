@@ -250,6 +250,7 @@
     if (findings.length) items.push({ kind: 'checks', anchor: 'todo:checks', findings });
     if (!items.length) return null;
     const planIds = arr(ctx.snapshot.plan);
+    // An interrupted run has no result, so no engine step: the page model's fallback names it.
     const stepTitle = activity => {
       const step = HT.pageModel.stepOf(activity, planIds.map(p => p.id));
       const row = planIds.find(p => p.id === step);
@@ -362,13 +363,18 @@
     if (now.criterion === 'configurations' && cc && cc.bound && cc.bound.value !== null) {
       const regression = snap.task === 'regression' || cc.metric === 'mae_reduction';
       const fmt = x => (regression ? `${ctx.format.number(x, 'f2')}${cc.unit ? ` ${cc.unit}` : ''}` : ctx.format.number(x, 'pct1'));
-      const bound = ctx.components.cited(fmt(cc.bound.value), { resultId: cc.bound.resultId, path: cc.bound.path, value: cc.bound.value });
+      const cite = (x, b) => ctx.components.cited(fmt(x), { resultId: b.resultId, path: b.path, value: x });
+      const bound = cite(cc.bound.value, cc.bound);
       const configs = cc.configurations.filter(x => x.slot !== 'fit.baseline');
-      const final = configs.find(x => x.judgedOn === 'final_test');
       let verdict;
-      if (now.kind === 'done' && final) {
-        verdict = el('b', { text: c.status[final.status] || final.status });
-        return el('p', { className: 'ht-crit', 'data-criterion': 'final' }, parts(c.lineFinal(words, bound, verdict)));
+      // At the end, judged on the final test: every figure is the final test's (its bound from
+      // the final test's baseline, its value), never the development bound (P1 §17.2.4).
+      const ft = cc.finalTest;
+      if (now.kind === 'done' && ft && ft.bound.value !== null) {
+        verdict = el('b', { text: c.status[ft.status] || ft.status });
+        const value = ft.value !== null ? cite(ft.value, ft) : null;
+        return el('p', { className: 'ht-crit', 'data-criterion': 'final', 'data-config': ft.slot, 'data-config-status': ft.status },
+          parts(c.lineFinal(words, cite(ft.bound.value, ft.bound), verdict, J().modelName(ft.slot, snap.task), value)));
       }
       const meets = configs.filter(x => (x.status === 'not_assessed' ? x.pointMeetsBound : x.status === 'met'));
       const text = meets.length === configs.length ? c.allMet(num(ctx, configs.length))

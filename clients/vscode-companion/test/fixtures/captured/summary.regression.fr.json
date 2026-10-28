@@ -316,6 +316,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "train_eda",
     "channel": "chat"
    },
    "eda.quality": {
@@ -323,6 +324,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "structural_eda",
     "channel": "chat"
    },
    "eda.special_values": {
@@ -330,6 +332,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "train_eda",
     "channel": "chat"
    },
    "eda.target_summary": {
@@ -337,6 +340,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "train_eda",
     "channel": "chat"
    },
    "evaluate.regression": {
@@ -344,6 +348,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "model_choice",
     "channel": "chat"
    },
    "fit.baseline": {
@@ -351,6 +356,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "models",
     "channel": "chat"
    },
    "fit.linear": {
@@ -358,6 +364,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "models",
     "channel": "chat"
    },
    "fit.variant": {
@@ -365,6 +372,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "model_variant",
     "channel": "chat"
    },
    "split": {
@@ -372,6 +380,7 @@
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
+    "step": "split",
     "channel": "chat"
    }
   },
@@ -644,7 +653,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-27T23:43:10.394761+00:00",
+   "boundary_time": "2026-10-28T03:56:17.612554+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -653,7 +662,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-27T23:43:10.559229+00:00",
+     "time": "2026-10-28T03:56:17.741029+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -676,7 +685,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-27T23:43:11.228406+00:00",
+     "time": "2026-10-28T03:56:18.246671+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -706,7 +715,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-27T23:43:12.052855+00:00",
+     "time": "2026-10-28T03:56:18.748196+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -729,7 +738,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-27T23:43:12.813069+00:00",
+     "time": "2026-10-28T03:56:19.299195+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -759,7 +768,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-27T23:43:13.797506+00:00",
+     "time": "2026-10-28T03:56:19.955065+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -782,7 +791,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-27T23:43:14.803576+00:00",
+     "time": "2026-10-28T03:56:20.691067+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -812,7 +821,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-27T23:43:15.811121+00:00",
+     "time": "2026-10-28T03:56:21.432938+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -835,7 +844,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-27T23:43:16.726430+00:00",
+     "time": "2026-10-28T03:56:22.182683+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -865,7 +874,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-27T23:43:17.813163+00:00",
+     "time": "2026-10-28T03:56:23.009259+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -888,7 +897,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-27T23:43:18.909615+00:00",
+     "time": "2026-10-28T03:56:23.818290+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -918,7 +927,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-27T23:43:20.114528+00:00",
+     "time": "2026-10-28T03:56:24.663090+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -941,7 +950,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-27T23:43:21.633408+00:00",
+     "time": "2026-10-28T03:56:25.624134+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -964,7 +973,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-27T23:43:23.081049+00:00",
+     "time": "2026-10-28T03:56:26.476068+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -987,7 +996,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-27T23:43:24.455801+00:00",
+     "time": "2026-10-28T03:56:27.487644+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1010,7 +1019,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-27T23:43:25.776813+00:00",
+     "time": "2026-10-28T03:56:28.420630+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1033,7 +1042,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-27T23:43:27.019557+00:00",
+     "time": "2026-10-28T03:56:29.456227+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1056,7 +1065,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-27T23:43:28.347147+00:00",
+     "time": "2026-10-28T03:56:30.385517+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1079,7 +1088,7 @@
     },
     {
      "revision": 26,
-     "time": "2026-10-27T23:43:29.562267+00:00",
+     "time": "2026-10-28T03:56:31.340898+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1102,7 +1111,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-27T23:43:30.755376+00:00",
+     "time": "2026-10-28T03:56:32.183707+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1135,7 +1144,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-27T23:43:32.036916+00:00",
+     "time": "2026-10-28T03:56:33.181171+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1158,7 +1167,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-27T23:43:33.561898+00:00",
+     "time": "2026-10-28T03:56:34.286149+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1181,7 +1190,7 @@
     },
     {
      "revision": 32,
-     "time": "2026-10-27T23:43:34.806403+00:00",
+     "time": "2026-10-28T03:56:35.106496+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1219,7 +1228,7 @@
    "channel_actions": []
   },
   "task": "regression",
-  "currency": "e49b3ae414c80ce6",
+  "currency": "a82c6195a55a60d6",
   "texts": {
    "en": {
     "plan": {
@@ -1309,14 +1318,14 @@
     "options_note": null,
     "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change.",
     "headlines": {
-     "prediction_time": "Moment: “quand les caractéristiques techniques sont fixées”.",
-     "feature_availability": "Variables: keep cylinders, displacement, horsepower, origin and weight; exclude acceleration (its timing is uncertain).",
-     "split": "Split: rows with model_year at 79 or later are validation rows; earlier rows train the models.",
-     "success_criterion": "Criterion: adopt only if the model's mean absolute error is at least 10% below the mean baseline's.",
-     "structural_eda": "Quality: 318 development rows checked, 0 duplicated.",
-     "preprocessing": "Preparation: default preparation: nothing added, grouped, capped, or transformed.",
-     "train_eda": "Explore: mean target 20.57 mpg on the explored rows.",
-     "model_variant": "Variants: compare the model with a variant: stronger regularisation."
+     "prediction_time": "“quand les caractéristiques techniques sont fixées”.",
+     "feature_availability": "Keep cylinders, displacement, horsepower, origin and weight; exclude acceleration (its timing is uncertain).",
+     "split": "Rows with model_year at 79 or later are validation rows; earlier rows train the models.",
+     "success_criterion": "Adopt only if the model's mean absolute error is at least 10% below the mean baseline's.",
+     "structural_eda": "318 development rows checked, 0 duplicated.",
+     "preprocessing": "Default preparation: nothing added, grouped, capped, or transformed.",
+     "train_eda": "Mean target 20.57 mpg on the explored rows.",
+     "model_variant": "Compare the model with a variant: stronger regularisation."
     },
     "data_contingent": {},
     "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before."
@@ -1409,14 +1418,14 @@
     "options_note": null,
     "junior_digest": "Proposition sur le choix du modèle : « Adopter le modèle linéaire. » Si elle vous convient, dites que vous l'adoptez ; sinon dites ce que vous changez.",
     "headlines": {
-     "prediction_time": "Moment : « quand les caractéristiques techniques sont fixées ».",
-     "feature_availability": "Variables : garder cylinders, displacement, horsepower, origin et weight ; exclure acceleration (moment incertain).",
-     "split": "Découpage : les lignes dont model_year vaut 79 ou plus sont les lignes de validation ; les lignes antérieures entraînent les modèles.",
-     "success_criterion": "Critère : n'adopter que si l'erreur absolue moyenne du modèle est inférieure d'au moins 10 % à celle de la moyenne de référence.",
-     "structural_eda": "Qualité : 318 lignes de développement vérifiées, 0 en double.",
-     "preprocessing": "Préparation : préparation par défaut : rien d'ajouté, de regroupé, de plafonné ni de transformé.",
-     "train_eda": "Exploration : cible moyenne 20,57 mpg sur les lignes explorées.",
-     "model_variant": "Variantes : comparer le modèle avec une variante : une régularisation plus forte."
+     "prediction_time": "« quand les caractéristiques techniques sont fixées ».",
+     "feature_availability": "Garder cylinders, displacement, horsepower, origin et weight ; exclure acceleration (moment incertain).",
+     "split": "Les lignes dont model_year vaut 79 ou plus sont les lignes de validation ; les lignes antérieures entraînent les modèles.",
+     "success_criterion": "N'adopter que si l'erreur absolue moyenne du modèle est inférieure d'au moins 10 % à celle de la moyenne de référence.",
+     "structural_eda": "318 lignes de développement vérifiées, 0 en double.",
+     "preprocessing": "Préparation par défaut : rien d'ajouté, de regroupé, de plafonné ni de transformé.",
+     "train_eda": "Cible moyenne 20,57 mpg sur les lignes explorées.",
+     "model_variant": "Comparer le modèle avec une variante : une régularisation plus forte."
     },
     "data_contingent": {},
     "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant."
@@ -1475,16 +1484,16 @@
    }
   },
   "sample": {
-   "seed": "afa9563160c86cf1",
+   "seed": "a8f912e05025533e",
    "row_keys": [
-    "L32",
-    "L48",
-    "L60",
-    "L269",
-    "L298",
-    "L331",
-    "L344",
-    "L369"
+    "L22",
+    "L44",
+    "L50",
+    "L148",
+    "L169",
+    "L339",
+    "L384",
+    "L394"
    ],
    "recorded": true
   },
@@ -1581,7 +1590,8 @@
      "status": "not_assessed",
      "judged_on": "development"
     }
-   ]
+   ],
+   "final_test": null
   }
  }
 }
