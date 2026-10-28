@@ -88,6 +88,8 @@ EXTENSIONS = {
     'understanding': 'mlkit.study.cmd_understanding',
     # Owner session 2026-10-26 (L9, R20): the automatic mode chosen at init (run, stop).
     'automation': 'mlkit.study.cmd_automation',
+    # R68 (minimal version, 2026-10-28): the product owner's PDF and the study's own brief.
+    'brief': 'mlkit.study.cmd_brief',
 }
 # One line per extension command for ``hypotrail --help`` (v0.2a, WP-A1): the help lists
 # every command without importing the extension modules.
@@ -104,6 +106,7 @@ EXTENSION_HELP = {
     'data': 'read-only data card: row unit, sizes, grouped columns, eight sample rows',
     'understanding': 'opt-in understanding and handover review (off by default; ADR 0008)',
     'automation': 'run the automatic mode chosen at init, or stop it in the junior\'s words',
+    'brief': "import the product owner's PDF, or record the study's brief in the junior's words",
 }
 REFUSALS = (CommandRefused, StudyError, CaseError)
 
@@ -398,6 +401,13 @@ def _text(payload: dict) -> str:
             lines.append(f'changes since revision {payload["since"]}: '
                          f'{len(payload["changes_since"])}')
         lines.append('not yet defensible: ' + ', '.join(x['id'] for x in v['not_yet_defensible']))
+        # R68: the product owner's PDF and the study's own brief.
+        brief = v.get('brief') or {}
+        source, confirmed = brief.get('source'), brief.get('confirmed')
+        lines.append('brief: ' + (f'PDF {source["pdf"]} imported ({source["pages"]} pages)'
+                                  if source else 'no PDF imported') + '; '
+                     + (f'brief confirmed at revision {confirmed["revision"]}' if confirmed
+                        else 'no brief confirmed in this study'))
         return '\n'.join(lines)
     if schema == cmd.SCHEMAS['plan']:
         return '\n'.join(f'{"> " if s["current"] else "  "}{s["id"]}: {s["status"]} - '
@@ -496,7 +506,7 @@ def _run(argv: list) -> cmd.Outcome:
     # A command with a verb is named with it (`decide confirm`, `export handoff`), as its
     # own payloads name it (WP-I).
     command = ' '.join(argv[:2]) if name in ('decide', 'export', 'mode', 'understanding',
-                                             'automation') \
+                                             'automation', 'brief') \
         else name
     try:
         extension = name if name in EXTENSIONS else None

@@ -717,7 +717,12 @@ TOP_OPTIONAL_KEYS = ('task', 'notes', 'partition', 'mode', 'language', 'mode_his
                      'exploration_order',
                      # Owner session 2026-10-26 (L9, R20): the automatic mode chosen at
                      # ``init --automation`` (AUTOMATION_KEYS); absent otherwise.
-                     'automation')
+                     'automation',
+                     # R68 (minimal version, 2026-10-28): the product owner's PDF imported by
+                     # ``brief import`` and the brief confirmed by ``brief set``
+                     # (``{source, confirmed}``, ``case_brief.SOURCE_RECORD_KEYS`` and
+                     # ``CONFIRMED_KEYS``); absent until the first import.
+                     'brief')
 DECISION_KEYS = ('status', 'value', 'proposal_id', 'confirmation', 'depends_on', 'revision',
                  'reason')
 PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale', 'revision',

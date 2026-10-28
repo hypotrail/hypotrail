@@ -407,8 +407,10 @@ def _brief(c: Context) -> str:
         case = load_case(path, verify_data=False)
     except Exception:                    # noqa: BLE001 - no readable case: no brief
         return ''
-    brief = case_brief.load(Path(path).parent,
-                            case.target_unit if case.task == 'regression' else None)
+    # R68: the study's own brief, confirmed from the product owner's PDF, comes first.
+    own = (c.view.get('brief') or {}).get('confirmed')
+    brief = case_brief.validate(own['document']) if own else case_brief.load(
+        Path(path).parent, case.target_unit if case.task == 'regression' else None)
     texts_ = case_brief.texts(brief, c.lang)
     if not texts_:
         return ''
