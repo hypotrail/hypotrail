@@ -21,6 +21,15 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{overflow-x:hidden}
 body{background:var(--board);color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+/* Thème clair (bouton « Mode sombre ») : mêmes rôles, encres assombries pour rester AA. */
+body.light{--board:#F1F3F1; --board2:#E4E8E4; --chalk:#1E2A36; --chalk2:#3E4A57; --dust:transparent;
+  --ink:#1E2A36; --soft:#3E4A57; --faint:#56626E; --line:rgba(30,42,54,.13); --line2:rgba(30,42,54,.45);
+  --now:#7A5208; --ok:#1F6B3D; --seal:#5B3AAE; --warn:#A12C24; --card:#FFFFFF; --csoft:#F1EFE9;
+  --gridmm:rgba(38,72,124,.035); color-scheme:light}
+body.light .card,body.light .ev{border:1px solid var(--cline)}
+#themeToggle{position:fixed;top:10px;right:12px;z-index:50;background:var(--board2);color:var(--ink);border:1.5px solid var(--line2);border-radius:4px;padding:5px 11px;font:500 13px var(--sans);cursor:pointer;box-shadow:0 6px 16px -8px rgba(0,0,0,.5)}
+#themeToggle:hover{border-color:var(--now);color:var(--now)}
+
 button{font:inherit;cursor:pointer;color:inherit}
 :focus-visible{outline:2px solid var(--now);outline-offset:2px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -227,6 +236,8 @@ details.p>div{padding:0 0 10px 14px;font-size:.86rem;color:var(--soft)}
 </style>
 </head>
 <body>
+<button id="themeToggle" type="button" aria-pressed="true" title="Basculer entre le mode sombre et le mode clair">Mode sombre : on</button>
+
 <div class="page">
   <div class="eyebrow">Maquette · panel d'étude · les 14 étapes d'une régression · 2026-10-28</div>
   <h1>Les 14 étapes d'Auto MPG, une par une</h1>
@@ -999,6 +1010,12 @@ document.addEventListener('input',e=>{const r=e.target;if(r.id!=='tlr')return;SL
   r.setAttribute('aria-valuetext',`après « ${MS[SL].l.join(' ')} »`);});
 render(false);
 })();
+</script>
+<script>
+(function(){const b=document.getElementById('themeToggle');let dark=true;
+try{if(localStorage.getItem('ht-mock-theme')==='light')dark=false}catch(e){}
+function apply(){document.body.classList.toggle('light',!dark);b.setAttribute('aria-pressed',String(dark));b.textContent='Mode sombre : '+(dark?'on':'off')}
+b.addEventListener('click',()=>{dark=!dark;apply();try{localStorage.setItem('ht-mock-theme',dark?'dark':'light')}catch(e){}});apply();})();
 </script>
 </body>
 </html>
