@@ -59,6 +59,10 @@
       demo: ' · demonstration',
     },
     defensible: {
+      meaning: 'Defensible means the study can stand behind its conclusion before a reviewer: every decision taken in your words, the model chosen by you, the final test opened once, the conclusion written, and no stale number.',
+      notAlarm: 'Not an alarm: the list of what the study must gather by the end. It turns coral only when something is wrong (a decision to confirm again, a stale number, an automatic decision to review).',
+      doneWord: 'done: ',
+      todoWord: 'to do: ',
       pending: n => `Defensible at the end · ${n} points`,
       warn: n => `Not yet defensible · ${n} points`,
       limits: n => `Defensible · ${n} limits`,

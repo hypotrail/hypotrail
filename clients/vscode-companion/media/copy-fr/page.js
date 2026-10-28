@@ -54,6 +54,10 @@
       demo: ' · démonstration',
     },
     defensible: {
+      meaning: "Défendable veut dire que l'étude peut soutenir sa conclusion devant un relecteur : chaque décision prise avec vos mots, le modèle choisi par vous, le test final ouvert une seule fois, la conclusion écrite, et aucun chiffre périmé.",
+      notAlarm: "Ce n'est pas une alerte : c'est la liste de ce que l'étude devra réunir d'ici la fin. Elle passe en corail seulement si quelque chose pose problème (décision à reconfirmer, chiffre périmé, décision automatique à relire).",
+      doneWord: 'fait : ',
+      todoWord: 'à faire : ',
       pending: n => `Défendable à la fin · ${n} points`,
       warn: n => `Pas encore défendable · ${n} points`,
       limits: n => `Défendable · ${n} limites`,
