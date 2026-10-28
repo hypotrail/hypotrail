@@ -1025,3 +1025,10 @@ its warning.
   placeholders only; a lint test refuses digits in content files); pictures and folds in a
   content file; the panel only lays out. Steps without charts keep block 1 or "pas de graphique
   pour ce point"; a single chart drops the numbering. Noted only, not fixed.
+- **R64 (owner precision, 2026-10-28).** One cited sentence under each chart is too thin.
+  Under every chart, three labelled parts: "Ce qu'on voit" (the facts, cited numbers), "Ce
+  qu'on en conclut" (what it means for the step's decision, without recommending an option),
+  "Ce qu'on ne peut pas conclure" (the limit of this chart); about 80 words in all. The
+  "Attention" fold keeps only reading traps (how a chart can mislead), not limits. The
+  conclusions are engine or content-file texts bound to registered values, never written by
+  the panel. Mockup updated.
