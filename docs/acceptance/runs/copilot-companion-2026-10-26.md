@@ -770,3 +770,21 @@ its warning.
   résultats" paragraph is long and alarming for a normal, honest step; keep the marking but say
   it calmly in one line ("Essai choisi après avoir vu les diagnostics : noté comme dépendant
   des données.") with a fold for the why. Noted only, not fixed.
+- **R45. The study shows almost no data charts until the model choice (owner remark,
+  2026-10-28; cause found).** Through framing, quality, preparation, exploration, models and
+  variants the junior saw decisions and words, no chart or feature analysis; the first figures
+  appeared at the model choice (dispersion table, MAE per model). Causes: (1) the panel's Now
+  carries a figure only for a choice or a model-choice/policy proposal
+  (`lib/models/page.js` ~327 `figure`); every other step shows the proposal card only, and the
+  step's figures sit folded in the path's detail; (2) the plan's exploration runs only
+  `eda.target_summary` and `eda.special_values`; per-feature distributions, the predictor
+  correlation matrix, the target-by-feature plots and the quality check's per-column view are
+  run only on request (W4 or the chat), so most studies never draw them. To fix with R40–R42:
+  every step's Now shows its figures (quality: per-column view; preparation: the distributions
+  behind each draft and "no change" verdicts; exploration: the target summary plus mpg against
+  each kept feature and the predictor correlation matrix, run by the plan; models: observed vs
+  predicted and residuals; variants: the diagnostics behind the proposal; choice: as now), each
+  with its reading; the plan runs the exploration charts the case catalogue lists, counted as
+  looks. Also on the choice screen: the dispersion table is text-heavy (R42: draw the per-fold
+  values as dots per model); "variante" does not say which (ridge or EBM; two were proposed);
+  "moyenne d'entraînement" should be "référence (prédire la moyenne)". Noted only, not fixed.
