@@ -788,3 +788,15 @@ its warning.
   looks. Also on the choice screen: the dispersion table is text-heavy (R42: draw the per-fold
   values as dots per model); "variante" does not say which (ridge or EBM; two were proposed);
   "moyenne d'entraînement" should be "référence (prédire la moyenne)". Noted only, not fixed.
+- **R46. The metric is never chosen nor explained (owner remark, 2026-10-28).** At the success
+  criterion the chat proposes "MAE au moins 10 % sous la moyenne de référence" and the junior
+  confirms it, but the metric itself was never put to them: for regression the engine fixes
+  MAE (`criterion.py` ~374 `selection.metric: 'mae'`, `objective.py`, `regression.METRICS`
+  computes MAE and RMSE). To fix: the criterion step introduces the metric as a decision (term
+  first, then a contextual example): MAE (average error in mpg, every error weighs the same) vs
+  RMSE (penalises large errors more: choose it if a big miss is much worse than several small
+  ones), optionally a relative error; the draft says why MAE is proposed by default for this
+  case, and the junior confirms or changes it before the threshold. The chosen metric then
+  drives the criterion, the one-standard-error rule and the comparison figures. Engine work:
+  the regression criterion and selection must accept RMSE (today MAE only). Noted only, not
+  fixed.
