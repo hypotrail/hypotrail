@@ -759,3 +759,14 @@ its warning.
   at the exploration step, before any model exists; the limit line must fit the current step
   (here: "Ces graphiques lisent la cible des lignes de développement : chaque regard est
   compté."). Noted only, not fixed.
+- **R44. The variants proposal shows no evidence either (owner remark, 2026-10-28; instance of
+  R40).** The proposal "ridge réglée + EBM qui suit la forme de horsepower et weight" rests on
+  the linear model's diagnostics ("forme non linéaire pour horsepower et weight", "sous-prédit
+  légèrement, biais 0,24 mpg, MAE 3,69"), but Now shows no chart. Show in "Pour répondre,
+  regardez": residuals against horsepower and weight (with a smoother) or observed vs
+  predicted, out of fold, framed as development evidence, with the reading "the residuals bend:
+  the linear model misses a curve" and the bias as a mark on the chart; plus the trial budget
+  as a small bar (0 of 3 used). Also in the same card: the red "Changement dépendant des
+  résultats" paragraph is long and alarming for a normal, honest step; keep the marking but say
+  it calmly in one line ("Essai choisi après avoir vu les diagnostics : noté comme dépendant
+  des données.") with a fold for the why. Noted only, not fixed.
