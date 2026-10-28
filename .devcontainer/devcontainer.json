@@ -1,0 +1,64 @@
+// Hypotrail workshop codespace (Auto MPG study, Copilot chat, study panel at stage v3).
+// Organiser guide (French): docs/workshop/CODESPACES.md.
+//
+// Lifecycle:
+// - updateContentCommand runs .devcontainer/post-create.sh: installs uv, syncs the engine
+//   environment (framework/.venv, groups dev and azureml) and packages the study panel as a
+//   VSIX. It runs during a prebuild too, so a prebuilt codespace starts ready.
+// - postAttachCommand installs that VSIX into the codespace's VS Code server once a client
+//   is attached (the server does not exist during a prebuild). scripts/workshop/new-mpg-study.sh
+//   checks it again from the integrated terminal.
+{
+  "name": "Hypotrail workshop (Auto MPG)",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.13-bookworm",
+  "features": {
+    // Node runs @vscode/vsce (pinned in scripts/workshop/install-panel.sh) to package the panel.
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" }
+  },
+  "hostRequirements": {
+    // The Auto MPG fits (398 rows, cross-validation, EBM) are light; 4 cores keep the
+    // Explainable Boosting Machine and the Marimo kernels responsive.
+    "cpus": 4,
+    "memory": "8gb",
+    "storage": "32gb"
+  },
+  "containerEnv": {
+    // The study panel's feature flag and stage (clients/vscode-companion/lib/flag.js). The
+    // study's .vscode/settings.json written by new-mpg-study.sh sets the same values.
+    "HYPOTRAIL_COMPANION": "1",
+    "HYPOTRAIL_COMPANION_STAGE": "v3",
+    // The uv cache and /workspaces are different mounts: copy instead of hardlinking.
+    "UV_LINK_MODE": "copy"
+  },
+  "updateContentCommand": "bash .devcontainer/post-create.sh",
+  "postAttachCommand": "bash scripts/workshop/install-panel.sh --quiet || true",
+  "forwardPorts": [2718, 2719, 2720, 2721],
+  "portsAttributes": {
+    // Marimo starts on 2718 and takes the next free port for each further notebook
+    // (generated notebook: marimo run; editable copy and workbench: marimo edit). Marimo
+    // prints its URL with the access token: open that link from the terminal.
+    "2718": { "label": "Marimo notebook 1", "onAutoForward": "notify" },
+    "2719": { "label": "Marimo notebook 2", "onAutoForward": "notify" },
+    "2720": { "label": "Marimo notebook 3", "onAutoForward": "notify" },
+    "2721": { "label": "Marimo notebook 4", "onAutoForward": "notify" }
+  },
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["docs/workshop/CODESPACES.md"]
+    },
+    "vscode": {
+      "extensions": [
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "ms-python.python"
+      ],
+      "settings": {
+        "hypotrail.companion.enabled": true,
+        "hypotrail.companion.stage": "v3",
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/framework/.venv/bin/python",
+        "chat.agent.enabled": true,
+        "files.exclude": { "**/__marimo__": true }
+      }
+    }
+  }
+}
