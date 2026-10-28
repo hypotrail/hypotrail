@@ -297,6 +297,9 @@ def test_the_regression_criterion_recommends_ten_percent_less_error(tmp_path):
     flow.decide('feature_availability', fk.availability(case_dir))
     flow.decide('split', flow.view()['next_action']['default_value'])
     flow.run('split')
+    # R60 (lot 2026-10-28): a new regression study chooses its error measure first.
+    assert flow.view()['next_action']['recommended']['value'] == {'metric': 'mae'}
+    flow.decide('error_metric', {'metric': 'mae'})
     rec = flow.view()['next_action']['recommended']
     assert rec['value'] == {'metric': 'mae_reduction', 'min_share': 0.1}
     assert '10% less error' in rec['why'] and 'convention' in rec['why']

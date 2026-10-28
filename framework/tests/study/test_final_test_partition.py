@@ -272,6 +272,8 @@ def test_no_final_test_row_reaches_any_activity_or_result(tmp_path, monkeypatch,
     else:
         walk.decide('split', {'method': 'random' if regression else 'stratified_random',
                               'validation_fraction': 0.3, 'seed': 7})
+    if regression:            # R60 (lot 2026-10-28): the error measure, before the criterion
+        walk.decide('error_metric', {'metric': 'mae'})
     # WP-A4: the success criterion and the default preprocessing, before any model.
     walk.decide('success_criterion', fk.criterion(case.task))
     walk.decide('preprocessing', {'missing': 'none', 'rare_category_min_rows': 0, 'caps': {},
