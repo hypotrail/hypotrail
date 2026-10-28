@@ -1075,3 +1075,17 @@ its warning.
   (5) the panel shows the brief with "drafted from the PDF, page n" marks and what remains to
   confirm. A sample PO PDF for Auto MPG (fictitious scenario of R66/R67) ships for the
   workshop. Noted, to implement after the current lot.
+- **R68 (owner decision, 2026-10-28): the minimal version for the workshop.** Journey: the
+  pair drops the PO's PDF in the study and says « Prépare l'étude à partir de la fiche du PO ».
+  (1) `hypotrail brief import --pdf <file> --expected-revision <rev>` extracts the text page by
+  page (`pypdf`, a small pure-Python dependency) into the study (`brief/source.json`, with the
+  PDF's hash), writes nothing else. (2) The agent drafts the brief from that text (same fields
+  as R66, each citing its page; gaps listed as open questions, never invented), shows a short
+  summary and asks one closed question (picker: « J'adopte la fiche » / « Corriger quelque
+  chose » / « Expliquer d'abord »). (3) On adoption, `hypotrail brief set --file <draft.yaml>
+  --user-words "..." --expected-revision <rev>` validates the fields and the page citations
+  against the extracted text and records the brief in the study with the junior's words; it
+  then replaces the use case's own brief for this study (panel and report read the study's
+  brief first). No other decision is taken from the PDF: target, moment and availability stay
+  the study's own steps, where the agent may cite the brief. Ships with a sample PO PDF for
+  Auto MPG (fictitious scenario of R66/R67). To implement right after the current engine work.
