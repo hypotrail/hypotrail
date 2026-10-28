@@ -23,7 +23,46 @@ from . import state as st
 SUMMARY_AUTOMATION_KEYS = ('variant', 'active', 'started_revision', 'ended')
 AUTOMATION_ENDED_KEYS = ('revision', 'reason')
 SUMMARY_REVIEW_KEYS = ('items', 'done', 'total')
-SUMMARY_DEFENSIBILITY_KEYS = ('kind', 'count', 'items')
+SUMMARY_DEFENSIBILITY_KEYS = ('kind', 'count', 'items',
+                              # Lot 2026-10-28 (R65, CLI-CONTRACT §18): what the study must
+                              # gather by the end, each with whether it is done.
+                              'checklist')
+CHECKLIST_KEYS = ('id', 'done')
+CHECKLIST_IDS = ('framing_in_your_words', 'model_chosen_by_you', 'final_test_opened_once',
+                 'conclusion_written', 'no_stale_figure')
+DEFENSIBILITY_NOTE_KEYS = ('meaning', 'checklist', 'not_alarm', 'limits_lead')
+DEFENSIBILITY_NOTE = {
+    'en': {'meaning': 'Defensible means the study can support its conclusion before a '
+                      'reviewer: every decision taken in your words, the model chosen by you, '
+                      'the final test opened once, the conclusion written, and no stale '
+                      'figure.',
+           'checklist': {'framing_in_your_words': 'The framing decisions, taken in your words',
+                         'model_chosen_by_you': 'The model, chosen by you',
+                         'final_test_opened_once': 'The final test, opened once',
+                         'conclusion_written': 'The conclusion, written',
+                         'no_stale_figure': 'No stale figure'},
+           'not_alarm': 'This is not an alarm: it is the list of what the study must gather by '
+                        'the end. It turns to a warning only when something is wrong (a '
+                        'decision to confirm again, a stale figure, an automatic decision to '
+                        'review).',
+           'limits_lead': 'The study is defensible, with these limits:'},
+    'fr': {'meaning': "Défendable veut dire que l'étude peut soutenir sa conclusion devant un "
+                      'relecteur : chaque décision prise avec vos mots, le modèle choisi par '
+                      'vous, le test final ouvert une seule fois, la conclusion écrite, et '
+                      'aucun chiffre périmé.',
+           'checklist': {'framing_in_your_words': 'Les décisions de cadrage, prises avec vos mots',
+                         'model_chosen_by_you': 'Le modèle, choisi par vous',
+                         'final_test_opened_once': 'Le test final, ouvert une fois',
+                         'conclusion_written': 'La conclusion, écrite',
+                         'no_stale_figure': 'Aucun chiffre périmé'},
+           'not_alarm': "Ce n'est pas une alerte : c'est la liste de ce que l'étude devra réunir "
+                        "d'ici la fin. Elle passe en alerte seulement si quelque chose pose "
+                        'problème (décision à reconfirmer, chiffre périmé, décision automatique '
+                        'à relire).',
+           'limits_lead': "L'étude est défendable, avec ces limites :"},
+}
+FRAMING_DECISIONS = ('prediction_time', 'feature_availability', 'split', st.ERROR_METRIC,
+                     st.SUCCESS_CRITERION, st.PREPROCESSING)
 DEFENSIBILITY_ITEM_KEYS = ('id', 'severity')
 DEFENSIBILITY_KINDS = ('warn', 'limits', 'pending')
 SUMMARY_LEDGER_KEYS = ('final_test', 'target_looks', 'configurations', 'variants')
@@ -127,7 +166,41 @@ def defensibility(built: Mapping, summary_out: Mapping) -> dict:
         kind = 'pending'
     count = (severities.count(audience.CAVEAT) if kind == 'limits'
              else sum(s != audience.CONTEXT for s in severities))
-    return {'kind': kind, 'count': count, 'items': items}
+    return {'kind': kind, 'count': count, 'items': items, 'checklist': checklist(built)}
+
+
+def _own_words(decision: Mapping | None) -> bool:
+    if not isinstance(decision, Mapping) or decision.get('status') != 'confirmed':
+        return False
+    return st.basis_class(decision.get('basis')) == 'own_words'
+
+
+def checklist(built: Mapping) -> list[dict]:
+    """R65: what a defensible study gathers, each ``{id, done}``, from the view: the framing
+    decisions and the model choice confirmed in the junior's words, the final test opened
+    once, the conclusion confirmed in their words, and no stale result."""
+    decisions = built.get('decisions') or {}
+    framing = [decisions[d] for d in FRAMING_DECISIONS if d in decisions]
+    choice = decisions.get(st.CHOICE_DECISION.get(built.get('task'), 'model_choice'))
+    final = built.get('final_test') or {}
+    opening = final.get('opening') if isinstance(final.get('opening'), Mapping) else None
+    # A stale result counts when a junior surface cites it (``stale_results.junior``).
+    stale = any(x.get('id') == 'stale_results' and x.get('junior')
+                for x in built.get('not_yet_defensible') or [])
+    done = {'framing_in_your_words': bool(framing) and all(_own_words(d) for d in framing),
+            'model_chosen_by_you': _own_words(choice),
+            'final_test_opened_once': final.get('status') == 'opened' and opening is not None,
+            'conclusion_written': _own_words(decisions.get('conclusion')),
+            'no_stale_figure': not stale}
+    return [{'id': i, 'done': done[i]} for i in CHECKLIST_IDS]
+
+
+def defensibility_note(built: Mapping, summary_out: Mapping, lang: str) -> dict:
+    """``texts.<lang>.defensibility_note`` (R65): what "defensible" means, the checklist's
+    texts by id, why the pill is not an alarm, and the lead of the limits at the end."""
+    words = DEFENSIBILITY_NOTE['fr' if lang == 'fr' else 'en']
+    return {'meaning': words['meaning'], 'checklist': dict(words['checklist']),
+            'not_alarm': words['not_alarm'], 'limits_lead': words['limits_lead']}
 
 
 # --- the ledger line and the sample (§17.2.2, §17.3) ------------------------------------------
@@ -693,7 +766,17 @@ def additions(study, built: Mapping, summary_out: Mapping) -> dict:
             # Owner batch of 2026-10-28 (CLI-CONTRACT §17.6): the duplicates and groups known
             # before the split (R38), and every column's quality verdict (R40, R41).
             'data_structure': cmd_data.structure_of(study),
-            'quality_verdicts': verdicts}
+            'quality_verdicts': verdicts,
+            # Lot 2026-10-28 (CLI-CONTRACT §18): the use-case brief (R66) and the case's
+            # display names (EN-18); null without the case file.
+            **case_files(state)}
+
+
+def case_files(state: Mapping) -> dict:
+    """``case_brief`` and ``case_display`` of the digest (null without their file)."""
+    from . import case_brief as cb, case_display as cd
+    _, display = cd.of_state(state)
+    return {'case_brief': cb.digest(cb.of_state(state)), 'case_display': cd.digest(display)}
 
 
 def proposal_evidence(built: Mapping, proposal: Mapping) -> list[str]:

@@ -136,6 +136,24 @@ STEP_LABELS = {
            'model_variant': 'Variantes', 'policy': 'Règle', 'model_choice': 'Choix',
            'final_test': 'Test final', 'conclusion': 'Conclusion'},
 }
+# Lot 2026-10-28 (EN-14, R56): the full step names, for the path, the plan recap and the
+# heading of Now; the short labels above stay for the progress bar's tooltip.
+STEP_NAMES = {
+    'en': {'discover_data': 'Data', 'prediction_time': 'Prediction moment',
+           'feature_availability': 'Available variables', 'split': 'Split',
+           'error_metric': 'Error measure', 'success_criterion': 'Success criterion',
+           'structural_eda': 'Quality check', 'preprocessing': 'Preparation',
+           'train_eda': 'Exploration', 'models': 'Models', 'model_variant': 'Variants',
+           'model_choice': 'Model choice', 'policy': 'Rule', 'final_test': 'Final test',
+           'conclusion': 'Conclusion'},
+    'fr': {'discover_data': 'Données', 'prediction_time': 'Moment de la prédiction',
+           'feature_availability': 'Variables disponibles', 'split': 'Découpage',
+           'error_metric': "Mesure de l'erreur", 'success_criterion': 'Critère de succès',
+           'structural_eda': 'Contrôle de qualité', 'preprocessing': 'Préparation',
+           'train_eda': 'Exploration', 'models': 'Modèles', 'model_variant': 'Variantes',
+           'model_choice': 'Choix du modèle', 'policy': 'Règle', 'final_test': 'Test final',
+           'conclusion': 'Conclusion'},
+}
 # An EDA figure is named by its card's name (the first part of the eyebrow of the panel's
 # chart, media/copy*/eda.js ``eyebrows``), then its column for a per-column chart.
 EDA_CARD_LABELS = {
@@ -385,6 +403,12 @@ def figure_label(slot: str, lang: str = 'en') -> str:
 def step_label(step_id: str, lang: str = 'en') -> str:
     lang = _lang(lang)
     return STEP_LABELS[lang].get(step_id, str(step_id).replace('_', ' '))
+
+
+def step_name(step_id: str, lang: str = 'en') -> str:
+    """A step's full name (EN-14), else its short label."""
+    lang = _lang(lang)
+    return STEP_NAMES[lang].get(step_id) or step_label(step_id, lang)
 
 
 def content_label(content: str, lang: str = 'en') -> str:

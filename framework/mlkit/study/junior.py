@@ -1475,13 +1475,13 @@ def plan_recap(view: Mapping, state: Mapping, action: Mapping | None, lang: str)
         steps = [s for s in m.get('steps') or [] if s in ids]
         if not steps:
             continue
-        names = words['join'].join(ce.step_label(s, lang) for s in steps)
+        names = words['join'].join(ce.step_name(s, lang) for s in steps)
         parts.append(f'{m["title"]} ({names})' if m.get('title') else names)
     text = words['lead'] + words['moments'].join(parts) + '.'
     current = ce.current_step(action, plan)
     if (action or {}).get('kind') == 'done' or current not in ids:
         return f'{text} {words["done"]}' if (action or {}).get('kind') == 'done' else text
-    return f'{text} ' + words['current'].format(step=ce.step_label(current, lang),
+    return f'{text} ' + words['current'].format(step=ce.step_name(current, lang),
                                                 n=ids.index(current) + 1, total=len(ids))
 
 

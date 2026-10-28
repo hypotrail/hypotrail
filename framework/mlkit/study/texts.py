@@ -38,7 +38,9 @@ CONTENT_FILES = ('glossary', 'steps', 'steps_fr', 'activities', 'report', 'repor
                  'concepts',
                  # Owner decision 2026-10-27 (R25 to R30): the lesson-style report, every
                  # text in English and French side by side.
-                 'lesson')
+                 'lesson',
+                 # Lot 2026-10-28 (EN-2): the step cards' questions and readings.
+                 'step_cards')
 BINARY, REGRESSION = 'binary', 'regression'
 _TASK = contextvars.ContextVar('hypotrail_texts_task', default=BINARY)
 # B6c (M3): the evaluation scheme of the study. Under cross-validation every development

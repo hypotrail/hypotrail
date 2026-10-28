@@ -2098,7 +2098,10 @@ DIGEST_SUMMARY_KEYS = ('moments', 'pauses', 'last_session', 'digest', 'task', 'c
                        'ledger', 'sample', 'headlines', 'criterion_configurations',
                        # Owner batch of 2026-10-28 (CLI-CONTRACT §17.6): the structure known
                        # before the split (R38) and every column's quality verdict (R41).
-                       'data_structure', 'quality_verdicts')
+                       'data_structure', 'quality_verdicts',
+                       # Lot 2026-10-28 (CLI-CONTRACT §18): the use-case brief's flag and
+                       # business numbers (R66) and the case's display names (EN-18).
+                       'case_brief', 'case_display')
 # ``texts.<language>``: where each junior text of the summary is, by its id (L3, D4b).
 LANGUAGE_TEXT_KEYS = ('plan', 'moments', 'next_action', 'choice_options', 'limits',
                       'artifacts', 'recap', 'digest', 'goal', 'proposals',
@@ -2110,7 +2113,10 @@ LANGUAGE_TEXT_KEYS = ('plan', 'moments', 'next_action', 'choice_options', 'limit
                       # Owner batch of 2026-10-28 (§17.6): the plan in its order (R36), the
                       # limit of the current step (R43, R48), the criterion in words on the
                       # frame it is judged on (R48).
-                      'plan_recap', 'step_limit', 'criterion_words')
+                      'plan_recap', 'step_limit', 'criterion_words',
+                      # Lot 2026-10-28 (CLI-CONTRACT §18): the step cards (EN-19), the
+                      # use-case brief's texts (R66) and the defensibility note (R65).
+                      'step_cards', 'case_brief', 'defensibility_note')
 # The engine's own texts of ``texts.fr``, set in French typography (a narrow no-break space
 # before ; : ? ! », after «); the others are the junior's or the agent's words, as written.
 FRENCH_TYPOGRAPHY_KEYS = tuple(k for k in LANGUAGE_TEXT_KEYS if k not in ('goal', 'proposals'))
@@ -2643,14 +2649,34 @@ def language_texts(study: read.Study, built: dict, summary_out: dict, *, since: 
     extra = {'contingency': contingency, 'has_sample': has_sample}
     tables = {lang: _texts_of(built, summary_out, lang, **extra),
               other: _texts_of(twin_built, twin_summary, other, **extra)}
+    # Lot 2026-10-28 (CLI-CONTRACT §18): the step cards, the brief and the defensibility
+    # note, each from the view read in its language.
+    from . import case_brief, panel_digest as pdg, step_cards
+    records = study.revisions(0)
+    brief = case_brief.of_state(state)
+    for code, s, b, summ in ((lang, study, built, summary_out),
+                             (other, twin, twin_built, twin_summary)):
+        tables[code]['step_cards'] = step_cards.build(s, b, code, records=records)
+        tables[code]['case_brief'] = case_brief.texts(brief, code)
+        tables[code]['defensibility_note'] = pdg.defensibility_note(b, summ, code)
     # The panel shows these texts verbatim: the French table carries its own typography
     # (CLI-CONTRACT §17.2.3); the junior's and the agent's words (``goal``, ``proposals``)
     # stay as they were written.
     from . import panel_digest
+    words = _decision_words_of(tables[audience.FR].get('step_cards'))
     tables[audience.FR] = {k: panel_digest.french_typography(v)
                            if k in FRENCH_TYPOGRAPHY_KEYS else v
                            for k, v in tables[audience.FR].items()}
+    for card, said in zip((tables[audience.FR].get('step_cards') or {}).get('steps') or [],
+                          words):
+        if card.get('decision') is not None:
+            # The junior's words stay as they were written.
+            card['decision']['words'] = said
     return {k: tables[k] for k in (audience.EN, audience.FR)}
+
+
+def _decision_words_of(cards: Mapping | None) -> list:
+    return [((s.get('decision') or {}).get('words')) for s in (cards or {}).get('steps') or []]
 
 
 def currency_inputs(study: read.Study, built: dict) -> dict:

@@ -1,0 +1,1003 @@
+# The step cards of a regression study (lot 2026-10-28; LOT spec §2 to §4, EN-1 to EN-8):
+# per step, the picture's caption and its "more", what the step prepares, its limit and what
+# comes next; per question, its text, its readings by variant (see, conclude, cannot), how to
+# read its chart and its reading trap. Read by mlkit.study.step_cards, which chooses each
+# variant by a rule in code and fills every {placeholder} from a registered value, a digest
+# key computed from registered results, the partition record, the case, or an engine
+# constant (each one cited). NO DIGIT in any text here (tests/study/test_content_lint.py), and
+# a "conclude" text never recommends an option (no option of the open decision, no future
+# variant, none of the verbs the lint lists). English is the source; French follows the
+# engine's typography (the digest sets the narrow spaces).
+schema: hypotrail.content.step_cards/1
+frames:
+  none:
+    en: "Nothing measured · case metadata, no value"
+    fr: "Rien de mesuré · métadonnées du cas, aucune valeur"
+  structure:
+    en: "Structure · development rows ({dev}), without the target"
+    fr: "Structure · lignes de développement ({dev}), sans la cible"
+  development:
+    en: "Development evidence · development rows ({dev}) · looks at the target, counted (looks: {looks})"
+    fr: "Preuve de développement · lignes de développement ({dev}) · regards sur la cible, comptés (regards : {looks})"
+  final:
+    en: "Final evidence · the {sealed} sealed rows, measured once"
+    fr: "Preuve finale · les {sealed} lignes scellées, mesurées une fois"
+  illustration:
+    en: "Made-up example · no data of the study, no look"
+    fr: "Exemple fictif · aucune donnée de l'étude, aucun regard"
+no_chart_pending:
+  en: Not computed yet.
+  fr: Pas encore calculé.
+verdicts:
+  over: {en: threshold exceeded, fr: seuil dépassé}
+  under: {en: under the threshold, fr: sous le seuil}
+  met: {en: met, fr: atteint}
+  not_met: {en: not met, fr: non atteint}
+business:
+  met:
+    en: "The business bar fixed with it, an error of at most {bar}, is met too: {final}."
+    fr: "La barre métier fixée avec lui, une erreur d'au plus {bar}, est atteinte aussi : {final}."
+  not_met:
+    en: "The business bar fixed with it, an error of at most {bar}, is not met: {final}."
+    fr: "La barre métier fixée avec lui, une erreur d'au plus {bar}, n'est pas atteinte : {final}."
+steps:
+  discover_data:
+    caption:
+      en: "One row = {row_unit}. The columns are grouped as the case groups them."
+      fr: "Une ligne = {row_unit}. Les colonnes sont groupées comme le cas les groupe."
+    more:
+      en: The data card shows the values as written in the file, before any preparation. A question mark or an odd code is read as it stands, then decided later.
+      fr: La fiche montre les valeurs telles qu'écrites dans le fichier, avant toute préparation. Un point d'interrogation ou un code étrange est lu tel quel, puis décidé plus tard.
+    prepares:
+      en: These answers prepare the Prediction moment step, which fixes the columns allowed.
+      fr: Ces réponses préparent l'étape Moment de la prédiction, qui fixe les colonnes permises.
+    limit:
+      en: Nothing is measured yet, no model and no performance figure. The only look at the target is the sample, counted.
+      fr: Rien n'est encore mesuré, ni modèle ni chiffre de performance. Le seul regard sur la cible est l'aperçu, compté.
+    next:
+      en: "Next: the prediction moment, which fixes the columns the models may use."
+      fr: "Ensuite : le moment de la prédiction, qui fixe les colonnes que les modèles peuvent utiliser."
+  prediction_time:
+    caption:
+      en: "To predict is to stand at a moment. Only the columns known before it may serve; the target is measured after."
+      fr: "Prédire, c'est se placer à un moment. Seules les colonnes connues avant lui peuvent servir ; la cible est mesurée après."
+    more:
+      en: A column known after the moment would be a leak, information the model would not have when it serves. The milestones are a hypothesis of the scenario.
+      fr: Une colonne connue après le moment serait une fuite, une information que le modèle n'aurait pas au moment de servir. Les jalons sont une hypothèse du scénario.
+    prepares:
+      en: This answer prepares the Available variables step, the list of allowed columns.
+      fr: Cette réponse prépare l'étape Variables disponibles, la liste des colonnes permises.
+    limit:
+      en: The moment is a hypothesis of the scenario; the data documentation does not establish it.
+      fr: Le moment est une hypothèse du scénario ; la documentation des données ne l'établit pas.
+    next:
+      en: "Next: the available variables, column by column, on the same timeline."
+      fr: "Ensuite : les variables disponibles, colonne par colonne, sur la même frise."
+  feature_availability:
+    caption:
+      en: "Three kinds of columns: those the model will read, those excluded, and those that are not variables."
+      fr: "Trois sortes de colonnes : celles que le modèle lira, celles qu'on exclut, et celles qui ne sont pas des variables."
+    more:
+      en: The target is not a variable; an identifier neither, since a name does not carry over to another row. A time column orders the split.
+      fr: La cible n'est pas une variable ; un identifiant non plus, car un nom ne se transpose pas à une autre ligne. Une colonne de temps ordonne le découpage.
+    prepares:
+      en: This answer prepares the Split and the Models, what each model may read.
+      fr: Cette réponse prépare le Découpage et les Modèles, ce que chaque modèle aura le droit de lire.
+    limit:
+      en: The availability comes from the scenario, not from a check of the data.
+      fr: La disponibilité vient du scénario, pas d'un contrôle des données.
+    next:
+      en: "Next: the split, which sets rows aside before any look at their outcomes."
+      fr: "Ensuite : le découpage, qui met des lignes de côté avant tout regard sur leurs résultats."
+  split:
+    caption:
+      en: "Set rows aside before any look: {sealed} sealed rows for the end; the {dev} others, cut into blocks, serve to compare."
+      fr: "Mettre des lignes de côté avant tout regard : {sealed} lignes scellées pour la fin ; les {dev} autres, découpées en blocs, servent à comparer."
+    more:
+      en: "Cross-validation with k folds: the development rows in k blocks; each block is predicted by a model fitted on the others. Here k = {k}."
+      fr: "Validation croisée à k plis : les lignes de développement en k blocs ; chaque bloc est prédit par un modèle entraîné sur les autres. Ici k = {k}."
+    prepares:
+      en: These answers prepare every later measure, on which rows each error is computed.
+      fr: Ces réponses préparent toutes les mesures suivantes, sur quelles lignes chaque erreur sera calculée.
+    limit:
+      en: The sealed rows are a protocol the tool and you follow, not a lock.
+      fr: Les lignes scellées sont un protocole suivi par l'outil et par vous, pas un verrou.
+    next:
+      en: "Next: the error measure, chosen before seeing any figure."
+      fr: "Ensuite : la mesure de l'erreur, choisie avant de voir le moindre chiffre."
+  error_metric:
+    caption:
+      en: "The error of one prediction is the gap between the observed and the predicted value. It remains to summarise the gaps of every row."
+      fr: "L'erreur d'une prédiction est l'écart entre l'observé et le prédit. Reste à résumer les écarts de toutes les lignes."
+    more:
+      en: The mean absolute error (MAE) is the mean of the gaps, without sign. The root mean squared error (RMSE) is the root of the mean of the squared gaps; a big gap weighs much more in it.
+      fr: L'erreur absolue moyenne (MAE) est la moyenne des écarts, sans signe. La racine de l'erreur quadratique moyenne (RMSE) est la racine de la moyenne des écarts au carré ; un gros écart y pèse beaucoup plus.
+    prepares:
+      en: This answer prepares the Success criterion, the measure it will be fixed on.
+      fr: Cette réponse prépare le Critère de succès, la mesure sur laquelle il sera fixé.
+    limit:
+      en: The measure does not say which error is acceptable; that is the next step.
+      fr: La mesure ne dit pas quelle erreur est acceptable ; c'est l'étape suivante.
+    next:
+      en: "Next: the success criterion, a bar fixed on this measure before any model."
+      fr: "Ensuite : le critère de succès, une barre fixée sur cette mesure avant tout modèle."
+  success_criterion:
+    caption:
+      en: "Fix the bar before seeing a figure: the model must err clearly less than the reference, here at least {min_share} less."
+      fr: "Fixer la barre avant de voir un chiffre : le modèle devra se tromper nettement moins que la référence, ici au moins {min_share} de moins."
+    more:
+      en: The reference (predict the mean) is the most naive model. The criterion says by how much a model must do better to count; it is judged on the final test, against the reference measured on the same rows.
+      fr: La référence (prédire la moyenne) est le modèle le plus naïf. Le critère dit de combien un modèle doit faire mieux pour compter ; il sera jugé sur le test final, contre la référence mesurée sur les mêmes lignes.
+    prepares:
+      en: This answer prepares the Final test and the Conclusion, the bar they will judge.
+      fr: Cette réponse prépare le Test final et la Conclusion, la barre qu'ils jugeront.
+    limit:
+      en: Reaching the criterion will not say the model is enough for every use; that is a business question.
+      fr: Atteindre le critère ne dira pas que le modèle suffit pour tout usage ; c'est une question métier.
+    next:
+      en: "Next: the quality check, column by column, without looking at the target."
+      fr: "Ensuite : le contrôle de qualité, colonne par colonne, sans regarder la cible."
+  structural_eda:
+    caption:
+      en: "Checks per column: empty cells, rare categories, long tails, values out of range. Each has its threshold, fixed beforehand."
+      fr: "Des contrôles par colonne : cellules vides, catégories rares, longues traînes, valeurs hors plage. Chacun a son seuil, fixé d'avance."
+    more:
+      en: The checks read the columns of the development rows, never the target. A threshold crossed triggers a preparation proposal; it changes nothing by itself.
+      fr: Les contrôles lisent les colonnes des lignes de développement, jamais la cible. Un seuil franchi déclenche une proposition de préparation ; il ne change rien tout seul.
+    prepares:
+      en: These answers prepare the Preparation, which columns to transform and why.
+      fr: Ces réponses préparent la Préparation, quelles colonnes transformer, et pourquoi.
+    limit:
+      en: A structural check; it does not read the target and says nothing of the models' error.
+      fr: Un contrôle de structure ; il ne lit pas la cible et ne dit rien de l'erreur des modèles.
+    next:
+      en: "Next: the preparation, with the reason of each change and of each status quo."
+      fr: "Ensuite : la préparation, avec la raison de chaque changement et de chaque statu quo."
+  preprocessing:
+    caption:
+      en: "A long tail can crush a straight line. The log draws the large values closer; the distribution becomes more symmetric."
+      fr: "Une longue traîne peut écraser une droite. Le log resserre les grandes valeurs ; la distribution devient plus symétrique."
+    more:
+      en: Each transformation is learnt on the training part of each fold, then applied to the part it predicts; the predicted rows never shape it.
+      fr: Chaque transformation est apprise sur la partie entraînement de chaque pli, puis appliquée à la partie prédite ; les lignes prédites ne la façonnent jamais.
+    prepares:
+      en: These answers prepare the Models, the columns as they will read them.
+      fr: Ces réponses préparent les Modèles, les colonnes telles qu'ils les liront.
+    limit:
+      en: The preparation is learnt on the development rows; the final test receives it as it is.
+      fr: La préparation est apprise sur les lignes de développement ; le test final la reçoit telle quelle.
+    next:
+      en: "Next: the exploration, the first counted look at the target."
+      fr: "Ensuite : l'exploration, le premier regard compté sur la cible."
+  train_eda:
+    caption:
+      en: "Read the target along a variable. The trend follows the overall shape, straight or curved."
+      fr: "Lire la cible selon une variable. La tendance suit la forme générale, droite ou courbe."
+    more:
+      en: The mean of the target by band of a column follows the shape without assuming a straight line. If it bends, a straight relation will not be enough.
+      fr: La moyenne de la cible par tranche d'une colonne suit la forme sans supposer une droite. Si elle se plie, une relation droite ne suffira pas.
+    prepares:
+      en: These answers prepare the Models, which shape they will have to follow.
+      fr: Ces réponses préparent les Modèles, quelle forme ils auront à suivre.
+    limit:
+      en: Development evidence; these charts choose nothing, and each look at the target is counted.
+      fr: Preuve de développement ; ces graphiques ne choisissent rien, et chaque regard sur la cible est compté.
+    next:
+      en: "Next: the models, the reference and the linear model first."
+      fr: "Ensuite : les modèles, la référence et le modèle linéaire d'abord."
+  models:
+    caption:
+      en: "Two simple models first. The reference always predicts the mean, a flat line; the linear model draws a straight line through the points."
+      fr: "Deux modèles simples d'abord. La référence prédit toujours la moyenne, une ligne plate ; le modèle linéaire trace une droite à travers les points."
+    more:
+      en: The reference is the bar any model must beat. The linear model is simple and readable; its errors show what a more flexible shape would have to correct.
+      fr: La référence est la barre que tout modèle doit battre. Le modèle linéaire est simple et lisible ; ses erreurs montrent ce qu'une forme plus souple devrait corriger.
+    prepares:
+      en: These answers prepare the Variants, what the linear model misses.
+      fr: Ces réponses préparent les Variantes, ce que le modèle linéaire rate.
+    limit:
+      en: These figures served to compare; they are optimistic, and the final test stays sealed.
+      fr: Ces chiffres ont servi à comparer ; ils sont optimistes, et le test final reste scellé.
+    next:
+      en: "Next: the variants, under the same evaluation."
+      fr: "Ensuite : les variantes, sous la même évaluation."
+  model_variant:
+    caption:
+      en: "A straight line can miss a curve. A variant tries a more flexible shape, under the same evaluation."
+      fr: "Une droite peut rater une courbe. Une variante essaie une forme plus souple, sous la même évaluation."
+    more:
+      en: Each variant answers one question and counts in a budget of trials; the more configurations compared on the same folds, the more the best one is flattered.
+      fr: Chaque variante répond à une question et compte dans un budget d'essais ; plus on compare de configurations sur les mêmes plis, plus la meilleure est flattée.
+    prepares:
+      en: These answers prepare the Model choice, the configurations it will weigh.
+      fr: Ces réponses préparent le Choix du modèle, les configurations qu'il pèsera.
+    limit:
+      en: Development evidence; every configuration compared on the same folds flatters the best one a little.
+      fr: Preuve de développement ; chaque configuration comparée sur les mêmes plis flatte un peu la meilleure.
+    next:
+      en: "Next: the model choice, with the noise from one fold to the next."
+      fr: "Ensuite : le choix du modèle, avec le bruit d'un pli à l'autre."
+  model_choice:
+    caption:
+      en: "The best mean is not the whole story: a simpler configuration within one standard error of the best does as well, within the noise."
+      fr: "La meilleure moyenne ne dit pas tout : une configuration plus simple à moins d'une erreur type de la meilleure fait aussi bien, au bruit près."
+    more:
+      en: The one-standard-error rule keeps the simplest configuration whose mean is within one standard error of the best one. It is fixed before the results.
+      fr: La règle d'une erreur type retient la configuration la plus simple dont la moyenne est à moins d'une erreur type de la meilleure. Elle est fixée avant les résultats.
+    prepares:
+      en: These answers prepare the Final test, the one configuration it will measure.
+      fr: Ces réponses préparent le Test final, la seule configuration qu'il mesurera.
+    limit:
+      en: These figures served to choose; the chosen one is flattered by the choice itself.
+      fr: Ces chiffres ont servi à choisir ; celui qui est choisi est flatté par le choix lui-même.
+    next:
+      en: "Next: the final test, opened once on the chosen configuration."
+      fr: "Ensuite : le test final, ouvert une fois sur la configuration choisie."
+  final_test:
+    caption:
+      en: "The {dev} development rows served to choose; the {sealed} sealed rows are read once."
+      fr: "Les {dev} lignes de développement ont servi à choisir ; les {sealed} lignes scellées sont lues une fois."
+    more:
+      en: Once opened, every later change is marked as made after the final test. The opening measures the chosen configuration and the reference on the same rows.
+      fr: Une fois ouvert, tout changement ultérieur est marqué comme fait après le test final. L'ouverture mesure la configuration choisie et la référence sur les mêmes lignes.
+    prepares:
+      en: This answer prepares the Conclusion, the independent evidence it rests on.
+      fr: Cette réponse prépare la Conclusion, la preuve indépendante sur laquelle elle repose.
+    limit:
+      en: One opening gives one measure with its interval, not a guarantee on later data.
+      fr: Une ouverture donne une mesure avec son intervalle, pas une garantie sur d'autres données.
+    next:
+      en: "Next: the conclusion, what the study can claim and its limits."
+      fr: "Ensuite : la conclusion, ce que l'étude peut affirmer et ses limites."
+  conclusion:
+    caption:
+      en: "Two frames: development figures, used to choose and optimistic; the final test, measured once on rows no choice used."
+      fr: "Deux cadres : les chiffres de développement, qui ont servi à choisir et sont optimistes ; le test final, mesuré une fois sur des lignes qu'aucun choix n'a utilisées."
+    more:
+      en: The conclusion is judged against the criterion fixed before any model. Keeping the reference, or not concluding, are valid results.
+      fr: La conclusion est jugée contre le critère fixé avant tout modèle. Garder la référence, ou ne pas conclure, sont des résultats valables.
+    prepares:
+      en: These answers prepare your conclusion, for which use and with which limits.
+      fr: Ces réponses préparent votre conclusion, pour quel usage et avec quelles limites.
+    limit:
+      en: The final test comes from the same period as the development rows; it establishes neither later performance nor a causal effect.
+      fr: Le test final vient de la même période que les lignes de développement ; il n'établit ni la performance future ni un effet causal.
+    next:
+      en: "Next: present the conclusion, then hand the study over."
+      fr: "Ensuite : présenter la conclusion, puis transmettre l'étude."
+questions:
+  data.row:
+    text:
+      en: What does one row describe, and what do the columns say?
+      fr: Que décrit une ligne, et que disent les colonnes ?
+    reading:
+      default:
+        see:
+          en: "{n_columns} columns describe each row; the sample shows {n_sample} development rows drawn at random, values as written in the file."
+          fr: "{n_columns} colonnes décrivent chaque ligne ; l'aperçu montre {n_sample} lignes de développement tirées au hasard, valeurs telles qu'écrites dans le fichier."
+        conclude:
+          en: Reading the columns first tells what each one describes and when it is known; the prediction moment rests on this reading.
+          fr: Lire les colonnes d'abord dit ce que chacune décrit et quand elle est connue ; le moment de la prédiction repose sur cette lecture.
+        cannot:
+          en: A handful of rows says nothing of the whole distribution, and the sample is a look at the target, counted.
+          fr: Quelques lignes ne disent rien de toute la distribution, et l'aperçu est un regard sur la cible, compté.
+    how:
+      en: One row per line of the file; the target column is marked.
+      fr: Une ligne par ligne du fichier ; la colonne cible est marquée.
+    trap:
+      en: A file is often sorted; its first rows do not look like the others. The sample is drawn at random for that reason.
+      fr: Un fichier est souvent trié ; ses premières lignes ne ressemblent pas aux autres. L'aperçu est tiré au hasard pour cette raison.
+  data.structure:
+    text:
+      en: Could a split separate a row from its twin?
+      fr: Un découpage pourrait-il séparer une ligne de sa jumelle ?
+    reading:
+      groups:
+        see:
+          en: "Distinct values of {group_column}: {n_groups}; rows sharing their value with another row: {repeated}; exact duplicates: {duplicates}."
+          fr: "Valeurs distinctes de « {group_column} » : {n_groups} ; lignes qui partagent leur valeur avec une autre : {repeated} ; doublons exacts : {duplicates}."
+        conclude:
+          en: The same entity comes back from one row to another; a split can put one row in training and its twin in validation, which would flatter the error a little.
+          fr: Une même entité revient d'une ligne à l'autre ; un découpage peut placer une ligne en entraînement et sa jumelle en validation, ce qui flatterait un peu l'erreur.
+        cannot:
+          en: A shared name does not prove a shared entity, and the count does not say by how much the error would be flattered.
+          fr: Un même nom ne prouve pas une même entité, et le compte ne dit pas de combien l'erreur serait flattée.
+      no_groups:
+        see:
+          en: "Exact duplicates: {duplicates}; rows identical on every feature: {identical}."
+          fr: "Doublons exacts : {duplicates} ; lignes identiques sur toutes les variables : {identical}."
+        conclude:
+          en: Without declared groups, each row stands for itself; a split cannot separate twins the case does not name.
+          fr: Sans groupe déclaré, chaque ligne vaut pour elle-même ; un découpage ne peut pas séparer des jumelles que le cas ne nomme pas.
+        cannot:
+          en: The count does not find rows that differ by a single column.
+          fr: Le compte ne trouve pas les lignes qui diffèrent d'une seule colonne.
+    how:
+      en: Each bar counts rows.
+      fr: Chaque barre compte des lignes.
+    trap:
+      en: No exact duplicate does not mean no repeated entity; two rows can differ by one column only.
+      fr: Aucun doublon exact ne veut pas dire aucune entité répétée ; deux lignes peuvent différer d'une seule colonne.
+  moment.when:
+    text:
+      en: At which moment is the prediction made, and what is known then?
+      fr: À quel moment la prédiction est-elle faite, et que sait-on alors ?
+    reading:
+      timeline:
+        see:
+          en: "At the proposed moment, known columns: {n_kept}; columns of the question-mark lane: {n_uncertain}. The target is measured only at the last milestone."
+          fr: "Au moment proposé, colonnes connues : {n_kept} ; colonnes de la voie « ? » : {n_uncertain}. La cible n'est mesurée qu'au dernier jalon."
+        conclude:
+          en: The moment fixes the list of allowed columns; a column known after it would be a leak, information the model would not have when it serves.
+          fr: Le moment fixe la liste des colonnes permises ; une colonne connue après lui serait une fuite, une information que le modèle n'aurait pas au moment de servir.
+        cannot:
+          en: These milestones are a hypothesis of the scenario, not a fact of the data; the timeline does not prove when each column was known.
+          fr: Ces jalons sont une hypothèse du scénario, pas un fait des données ; la frise ne prouve pas quand chaque colonne était connue.
+      no_timeline:
+        see:
+          en: "By the case's availability, known columns: {n_kept}; undocumented columns: {n_uncertain}."
+          fr: "Selon la disponibilité déclarée par le cas, colonnes connues : {n_kept} ; colonnes non documentées : {n_uncertain}."
+        conclude:
+          en: The moment fixes the list of allowed columns; a column known after it would be a leak.
+          fr: Le moment fixe la liste des colonnes permises ; une colonne connue après lui serait une fuite.
+        cannot:
+          en: The case declares the availability; nothing in the data proves it.
+          fr: Le cas déclare la disponibilité ; rien dans les données ne la prouve.
+    how:
+      en: Move the slider; the columns left of the moment are known, those right of it are not yet.
+      fr: Déplacez le curseur ; les colonnes à gauche du moment sont connues, celles à droite ne le sont pas encore.
+    trap:
+      en: The milestones are evenly spaced for reading; the distances are not durations.
+      fr: Les jalons sont régulièrement espacés pour la lecture ; les distances ne sont pas des durées.
+  variables.kept:
+    text:
+      en: Which variables are known at the moment, which are excluded, and why?
+      fr: Quelles variables sont connues au moment, lesquelles sont exclues, et pourquoi ?
+    reading:
+      default:
+        see:
+          en: "Kept columns: {n_kept}; excluded: {n_excluded}; not variables: {n_not_feature}."
+          fr: "Colonnes gardées : {n_kept} ; exclues : {n_excluded} ; pas des variables : {n_not_feature}."
+        conclude:
+          en: The models will read only the allowed columns. Excluding an uncertain column may cost a little precision; including it would rest the model on information perhaps absent at the moment.
+          fr: Les modèles ne liront que les colonnes permises. Exclure une colonne incertaine peut coûter un peu de précision ; l'inclure ferait reposer le modèle sur une information peut-être absente au moment voulu.
+        cannot:
+          en: The board does not say how much an excluded column would have helped, nor whether the kept ones are enough.
+          fr: Le tableau ne dit pas combien une colonne exclue aurait aidé, ni si les colonnes gardées suffisent.
+    how:
+      en: "Kept: the model reads it; excluded: with its reason; not a variable: the target, an identifier, the order."
+      fr: "Gardée : le modèle la lit ; exclue : avec sa raison ; pas une variable : la cible, un identifiant, l'ordre."
+    trap:
+      en: The groups come from the case; they say nothing of the importance of a column.
+      fr: Les groupes viennent du cas ; ils ne disent rien de l'importance d'une colonne.
+  split.sealed:
+    text:
+      en: Which rows are sealed, and how were they drawn?
+      fr: Quelles lignes sont scellées, et comment ont-elles été tirées ?
+    reading:
+      strata:
+        see:
+          en: "The {sealed} sealed rows were drawn at random within {bins} bands of the target; the {development} others are the development rows."
+          fr: "Les {sealed} lignes scellées ont été tirées au hasard dans {bins} tranches de la cible ; les {development} autres sont les lignes de développement."
+        conclude:
+          en: The final test covers the whole range of the target; its figure will not come from an easy corner of the data.
+          fr: Le test final couvre toute l'étendue de la cible ; son chiffre ne viendra pas d'un coin facile des données.
+        cannot:
+          en: The sealed rows come from the same period as the others and say nothing of later rows. The drawing shows no target value.
+          fr: Les lignes scellées viennent de la même période que les autres et ne disent rien des lignes d'après. Le dessin ne montre aucune valeur de la cible.
+      recorded:
+        see:
+          en: "The {sealed} sealed rows were drawn when the study was created; the {development} others are the development rows. The draw is recorded, not drawn here."
+          fr: "Les {sealed} lignes scellées ont été tirées à la création de l'étude ; les {development} autres sont les lignes de développement. Le tirage est enregistré, pas dessiné ici."
+        conclude:
+          en: No step of the study has read the sealed rows; they stay aside for the final test.
+          fr: Aucune étape de l'étude n'a lu les lignes scellées ; elles restent à part pour le test final.
+        cannot:
+          en: The record does not show the counts per band of the target.
+          fr: L'enregistrement ne montre pas les comptes par tranche de la cible.
+    how:
+      en: One column per band of the target, from the lowest to the highest; sealed rows and development rows stacked.
+      fr: Une colonne par tranche de la cible, de la plus basse à la plus haute ; lignes scellées et lignes de développement empilées.
+    trap:
+      en: The bands have no bounds shown, on purpose; showing them would already be a look at the target.
+      fr: Les tranches n'ont pas de bornes affichées, à dessein ; les montrer serait déjà un regard sur la cible.
+  split.folds:
+    text:
+      en: How will each development row be predicted?
+      fr: Comment chaque ligne de développement sera-t-elle prédite ?
+    reading:
+      illustrative:
+        see:
+          en: "The {dev} development rows in {k} blocks in the order of {order}; the {sealed} sealed rows stay aside."
+          fr: "Les {dev} lignes de développement en {k} blocs dans l'ordre de « {order} » ; les {sealed} lignes scellées restent à part."
+        conclude:
+          en: Each block is predicted by a model fitted on the other blocks; every development row is predicted once by a model that did not see it.
+          fr: Chaque bloc est prédit par un modèle entraîné sur les autres blocs ; chaque ligne de développement est prédite une fois par un modèle qui ne l'a pas vue.
+        cannot:
+          en: The blocks are drawn as equal; their exact sizes are known once the split is computed.
+          fr: Les blocs sont dessinés égaux ; leurs tailles exactes sont connues une fois le découpage calculé.
+      ordered:
+        see:
+          en: "The {dev} development rows in {k} blocks of {min_rows} to {max_rows} rows, in the order of {order}; the {sealed} sealed rows stay aside."
+          fr: "Les {dev} lignes de développement en {k} blocs de {min_rows} à {max_rows} lignes, dans l'ordre de « {order} » ; les {sealed} lignes scellées restent à part."
+        conclude:
+          en: Each block is predicted by a model fitted on the others, later periods included; the error measured says the stability from one period to another, not a forecast of the future.
+          fr: Chaque bloc est prédit par un modèle entraîné sur les autres, périodes suivantes comprises ; l'erreur mesurée dira la stabilité d'une période à l'autre, pas une prévision du futur.
+        cannot:
+          en: "{k} blocks are not {k} independent samples; the gap from one block to another is indicative. The split does not make the rows already looked at unseen."
+          fr: "{k} blocs ne sont pas {k} échantillons indépendants ; l'écart d'un bloc à l'autre est indicatif. Le découpage ne rend pas « jamais vues » les lignes déjà regardées."
+      random:
+        see:
+          en: "The {dev} development rows in {k} blocks of {min_rows} to {max_rows} rows, drawn at random; the {sealed} sealed rows stay aside."
+          fr: "Les {dev} lignes de développement en {k} blocs de {min_rows} à {max_rows} lignes, tirés au hasard ; les {sealed} lignes scellées restent à part."
+        conclude:
+          en: Each block is predicted by a model fitted on the others; every development row is predicted once by a model that did not see it.
+          fr: Chaque bloc est prédit par un modèle entraîné sur les autres ; chaque ligne de développement est prédite une fois par un modèle qui ne l'a pas vue.
+        cannot:
+          en: "{k} blocks are not {k} independent samples; the gap from one block to another is indicative."
+          fr: "{k} blocs ne sont pas {k} échantillons indépendants ; l'écart d'un bloc à l'autre est indicatif."
+    how:
+      en: One row per round; the validation block is predicted, the training blocks serve to learn. After all the rounds, each row has been predicted once.
+      fr: Une rangée par tour ; le bloc de validation est prédit, les blocs d'entraînement servent à apprendre. Au bout des tours, chaque ligne a été prédite une fois.
+    trap:
+      en: A block can cut a period in two when the counts require it.
+      fr: Un bloc peut couper une période en deux quand les comptes l'exigent.
+  metric.weigh:
+    text:
+      en: Does one big miss cost much more than several small ones?
+      fr: Un gros raté coûte-t-il beaucoup plus que plusieurs petits ?
+    reading:
+      default:
+        see:
+          en: "Five made-up errors: {e1}, {e2}, {e3}, {e4} and {e5} {unit}. Their mean is {mae}; the mean of their squares is {mean_square}, its root about {rmse}."
+          fr: "Cinq erreurs fictives : {e1}, {e2}, {e3}, {e4} et {e5} {unit}. Leur moyenne vaut {mae} ; la moyenne de leurs carrés vaut {mean_square}, sa racine environ {rmse}."
+        conclude:
+          en: "The big miss is {big} of the {sum} summed gaps, but {big_square} of the {sum_square} summed squares. The measure rests on a business question: does one big miss cost much more than several small ones?"
+          fr: "Le gros raté fait {big} sur {sum} de la somme des écarts, mais {big_square} sur {sum_square} de la somme des carrés. La mesure tient à une question métier : un gros raté coûte-t-il bien plus que plusieurs petits ?"
+        cannot:
+          en: The example is made up; it says nothing of the models' errors on these data.
+          fr: L'exemple est fictif ; il ne dit rien des erreurs des modèles sur ces données.
+    how:
+      en: Left, the gaps and their mean; right, the same gaps squared.
+      fr: À gauche, les écarts et leur moyenne ; à droite, les mêmes au carré.
+    trap:
+      en: The two panels do not share a vertical scale; compare the written values, not the heights.
+      fr: Les deux panneaux n'ont pas la même échelle verticale ; comparez les valeurs écrites, pas les hauteurs.
+  criterion.bar:
+    text:
+      en: How much smaller than the reference's error must the model's be, and what does this bar mean for the business?
+      fr: De combien l'erreur du modèle doit-elle être plus petite que celle de la référence, et que veut dire ce seuil pour le métier ?
+    reading:
+      brief:
+        see:
+          en: "If the reference erred by {reference} {unit}, a criterion of {min_share} would ask for {bound} or less. The current method errs by about {current} (PO figure); the PO aims at {target}."
+          fr: "Si la référence se trompait de {reference} {unit}, un critère de {min_share} demanderait {bound} ou moins. La méthode actuelle se trompe d'environ {current} (chiffre du PO) ; le PO vise {target}."
+        conclude:
+          en: The criterion is a statistical minimum; a model can reach it and still err more than the current method. The two bars answer different questions.
+          fr: Le critère est un minimum statistique ; un modèle peut l'atteindre et se tromper plus que la méthode actuelle. Les deux barres répondent à des questions différentes.
+        cannot:
+          en: An example; the reference's real error is known at the Models step, and the current method's comes from the PO, not from these data.
+          fr: Un exemple ; l'erreur réelle de la référence se connaît à l'étape Modèles, et celle de la méthode actuelle vient du PO, pas des données.
+      no_brief:
+        see:
+          en: "If the reference erred by {reference} {unit}, a criterion of {min_share} would ask for {bound} {unit} or less."
+          fr: "Si la référence se trompait de {reference} {unit}, un critère de {min_share} demanderait {bound} {unit} ou moins."
+        conclude:
+          en: The criterion is relative to the reference; a model that reaches it does clearly better than predicting the mean.
+          fr: Le critère est relatif à la référence ; un modèle qui l'atteint fait nettement mieux que prédire la moyenne.
+        cannot:
+          en: These figures are an example; the reference's real error is known only at the Models step.
+          fr: Ces chiffres sont un exemple ; l'erreur réelle de la référence ne sera connue qu'à l'étape Modèles.
+    how:
+      en: Each bar is a mean error; shorter is better. The minimum is the bar fixed here; the last two come from the use-case brief.
+      fr: Chaque barre est une erreur moyenne ; plus courte, c'est mieux. Le minimum est la barre fixée ici ; les deux dernières viennent de la fiche du cas d'usage.
+    trap:
+      en: A relative share depends on the reference; a share of a weak reference stays a low bar.
+      fr: Une part relative dépend de la référence ; une part d'une référence faible reste une barre basse.
+  quality.missing:
+    text:
+      en: Which columns have missing cells?
+      fr: Quelles colonnes ont des cellules manquantes ?
+    reading:
+      none:
+        see:
+          en: "No column has a missing cell in the {n_rows} development rows."
+          fr: "Aucune colonne n'a de cellule manquante dans les {n_rows} lignes de développement."
+        conclude:
+          en: The preparation has no missing cell to fill.
+          fr: La préparation n'a aucune cellule manquante à remplir.
+        cannot:
+          en: The check reads the development rows only; it says nothing of later data.
+          fr: Le contrôle ne lit que les lignes de développement ; il ne dit rien des données à venir.
+      some:
+        see:
+          en: "Columns with missing cells: {n_columns}; the most affected, {column}, misses {n_missing} of {n_rows} rows ({share})."
+          fr: "Colonnes avec des cellules manquantes : {n_columns} ; la plus touchée, « {column} », manque {n_missing} lignes sur {n_rows} ({share})."
+        conclude:
+          en: Missing cells are filled by the preparation, learnt on the rows each model is fitted on; a small share weighs little on the error.
+          fr: Les cellules manquantes sont remplies par la préparation, apprise sur les lignes où chaque modèle est ajusté ; une faible part pèse peu sur l'erreur.
+        cannot:
+          en: The chart does not say why these values are missing, nor whether they are missing at random.
+          fr: Le graphique ne dit pas pourquoi ces valeurs manquent, ni si elles manquent au hasard.
+    how:
+      en: One bar per column, the share of empty cells; the line is the threshold.
+      fr: Une barre par colonne, la part de cellules vides ; la ligne est le seuil.
+    trap:
+      en: A very short bar is still a problem if the column is read as text.
+      fr: Une barre très courte reste un problème si la colonne est lue comme du texte.
+  quality.shape:
+    text:
+      en: Which columns are skewed or have extreme tails?
+      fr: Quelles colonnes sont asymétriques ou à longue traîne ?
+    reading:
+      flagged:
+        see:
+          en: "{column} exceeds the skewness threshold, {value} for a threshold of {threshold}; other columns under their thresholds: {n_others}."
+          fr: "« {column} » dépasse le seuil d'asymétrie, {value} pour un seuil de {threshold} ; autres colonnes sous leurs seuils : {n_others}."
+        conclude:
+          en: The preparation proposal rests on these verdicts; a column over a threshold gets a transformation, the others have no recorded reason to change.
+          fr: La proposition de préparation repose sur ces verdicts ; une colonne au-dessus d'un seuil reçoit une transformation, les autres n'ont pas de motif de changement enregistré.
+        cannot:
+          en: A threshold crossed does not say that a transformation will reduce the error; only the models will measure it.
+          fr: Un seuil franchi ne dit pas qu'une transformation réduira l'erreur ; seuls les modèles le mesureront.
+      none:
+        see:
+          en: "The {n_columns} columns stay under their skewness and tail thresholds."
+          fr: "Les {n_columns} colonnes restent sous leurs seuils d'asymétrie et de traîne."
+        conclude:
+          en: No rule asks to transform a column; the preparation has no recorded reason to change one.
+          fr: Aucune règle ne demande de transformer une colonne ; la préparation n'a pas de motif enregistré d'en changer une.
+        cannot:
+          en: Under the threshold does not mean without effect; a transformation could still change the error.
+          fr: Sous le seuil ne veut pas dire sans effet ; une transformation pourrait quand même changer l'erreur.
+    how:
+      en: One line per check; the verdict compares the value with the threshold fixed before the check.
+      fr: Une ligne par contrôle ; le verdict compare la valeur au seuil fixé avant le contrôle.
+    trap:
+      en: Skewness sums up a shape in one number; two columns on either side of the threshold look more alike than their verdicts.
+      fr: L'asymétrie résume une forme en un nombre ; deux colonnes de part et d'autre du seuil se ressemblent plus que leurs verdicts.
+  prep.changed:
+    text:
+      en: Which columns get a transformation, and why?
+      fr: Quelles colonnes reçoivent une transformation, et pourquoi ?
+    reading:
+      changed:
+        see:
+          en: "{column} has a tail of high values, skewness {value} for a threshold of {threshold}; the log draws the large values closer."
+          fr: "« {column} » a une traîne de valeurs hautes, asymétrie {value} pour un seuil de {threshold} ; le log resserre les grandes valeurs."
+        conclude:
+          en: The log narrows the large values, which would otherwise weigh much on a straight line; it is learnt on the training part of each fold.
+          fr: Le log resserre les grandes valeurs, qui pèseraient sinon beaucoup sur une droite ; il est appris sur la partie entraînement de chaque pli.
+        cannot:
+          en: The histogram does not read the target; it does not say whether the log will reduce the error.
+          fr: L'histogramme ne lit pas la cible ; il ne dit pas si le log réduira l'erreur.
+      none:
+        see:
+          en: No column gets a transformation; every check stays under its threshold.
+          fr: Aucune colonne ne reçoit de transformation ; chaque contrôle reste sous son seuil.
+        conclude:
+          en: The columns enter the models as they are.
+          fr: Les colonnes entrent dans les modèles telles qu'elles sont.
+        cannot:
+          en: Under the threshold does not mean without effect on the error.
+          fr: Sous le seuil ne veut pas dire sans effet sur l'erreur.
+    how:
+      en: Left, the column as written; right, its log.
+      fr: À gauche, la colonne telle qu'écrite ; à droite, son log.
+    trap:
+      en: The right axis is in log; a step is a ratio, not a difference.
+      fr: L'axe de droite est en log ; un pas vaut un rapport, pas une différence.
+  prep.unchanged:
+    text:
+      en: Why are the other columns left as they are?
+      fr: Pourquoi les autres colonnes restent-elles telles quelles ?
+    reading:
+      default:
+        see:
+          en: "Columns left as they are: {n_unchanged}; each of their checks stays under its threshold."
+          fr: "Colonnes laissées telles quelles : {n_unchanged} ; chacun de leurs contrôles reste sous son seuil."
+        conclude:
+          en: These columns enter the models as they are; no rule asks to change them, and a change without a recorded reason would be made by eye.
+          fr: Ces colonnes entrent dans les modèles telles qu'elles sont ; aucune règle ne demande de les changer, et un changement sans motif enregistré serait fait à l'œil.
+        cannot:
+          en: Under the threshold does not mean without effect; a transformation could still change the error.
+          fr: Sous le seuil ne veut pas dire sans effet ; une transformation pourrait quand même changer l'erreur.
+    how:
+      en: One line per column left as it is, with the rule that leaves it.
+      fr: Une ligne par colonne laissée telle quelle, avec la règle qui la laisse.
+    trap:
+      en: No change is a decision like any other; it has its reason, here the threshold.
+      fr: Aucun changement est une décision comme une autre ; elle a sa raison, ici le seuil.
+  explore.target:
+    text:
+      en: How is the target distributed?
+      fr: Comment se répartit la cible ?
+    reading:
+      default:
+        see:
+          en: "{target} goes from {min} to {max} {unit}, median {median}, over {n} development rows."
+          fr: "{target} va de {min} à {max} {unit}, médiane {median}, sur {n} lignes de développement."
+        conclude:
+          en: "Half of the rows lie between {q25} and {q75} {unit}; the mean, {mean}, is what the reference predicts for every row."
+          fr: "La moitié des lignes est entre {q25} et {q75} {unit} ; la moyenne, {mean}, est ce que la référence prédit pour chaque ligne."
+        cannot:
+          en: This chart says nothing of the link between the target and the other columns, nor of rows outside the period of the data.
+          fr: Ce graphique ne dit rien du lien entre la cible et les autres colonnes, ni des lignes hors de la période des données.
+    how:
+      en: Each bar counts the rows in a band of the target; the dashed line marks the median.
+      fr: Chaque barre compte les lignes dans une tranche de la cible ; le pointillé marque la médiane.
+    trap:
+      en: The width of the bands changes the shape; a bump can appear or vanish.
+      fr: La largeur des tranches change la forme ; une bosse peut apparaître ou disparaître.
+  explore.features:
+    text:
+      en: Which variables move with the target, straight or curved?
+      fr: Quelles variables bougent avec la cible, en droite ou en courbe ?
+    reading:
+      outside:
+        see:
+          en: "Along {column}, the mean of {target} goes from {first_mean} in the lowest band to {last_mean} in the highest."
+          fr: "Selon « {column} », la moyenne de {target} va de {first_mean} dans la tranche la plus basse à {last_mean} dans la plus haute."
+        conclude:
+          en: The gap between bands is larger than what shuffling the target draws; this column carries a signal. How straight it is, the models will measure.
+          fr: L'écart entre tranches dépasse ce que tire le hasard en mélangeant la cible ; cette colonne porte un signal. À quel point il est droit, les modèles le mesureront.
+        cannot:
+          en: A link is not a cause; it describes these rows, not the effect of changing this column for one row.
+          fr: Un lien n'est pas une cause ; il décrit ces lignes, pas l'effet de changer cette colonne pour une ligne.
+      inside:
+        see:
+          en: "Along {column}, the mean of {target} goes from {first_mean} in the lowest band to {last_mean} in the highest."
+          fr: "Selon « {column} », la moyenne de {target} va de {first_mean} dans la tranche la plus basse à {last_mean} dans la plus haute."
+        conclude:
+          en: The gap between bands stays within what chance draws by shuffling the target; this chart shows no clear signal.
+          fr: L'écart entre tranches reste dans ce que tire le hasard en mélangeant la cible ; ce graphique ne montre pas de signal net.
+        cannot:
+          en: No clear signal alone does not mean no use within a model.
+          fr: Pas de signal net seul ne veut pas dire aucune utilité dans un modèle.
+    how:
+      en: One point per band of the column, the mean of the target with its interval; the grey band is what chance draws.
+      fr: Un point par tranche de la colonne, la moyenne de la cible avec son intervalle ; la bande grise est ce que tire le hasard.
+    trap:
+      en: Bands hide the spread inside each one; a smooth mean can cover very different rows.
+      fr: Les tranches cachent la dispersion en leur sein ; une moyenne lisse peut couvrir des lignes très différentes.
+  explore.redundant:
+    text:
+      en: Do some variables say the same thing?
+      fr: Certaines variables disent-elles la même chose ?
+    reading:
+      flagged:
+        see:
+          en: "{n_flagged} pairs of predictors reach {level} or more in absolute value; the strongest, {a} and {b}, reach {value}."
+          fr: "{n_flagged} paires de prédicteurs atteignent {level} ou plus en valeur absolue ; la plus forte, {a} et {b}, atteint {value}."
+        conclude:
+          en: Strongly linked predictors say nearly the same thing; a prediction can stay good, but their separate coefficients will be unstable and will not read one by one.
+          fr: Des prédicteurs très liés disent presque la même chose ; une prédiction peut rester bonne, mais leurs coefficients séparés seront instables et ne se liront pas un par un.
+        cannot:
+          en: A strong correlation does not say which one matters most, nor whether one is needed.
+          fr: Une forte corrélation ne dit pas laquelle compte le plus, ni si l'une est nécessaire.
+      none:
+        see:
+          en: "No pair of predictors reaches {level} in absolute value."
+          fr: "Aucune paire de prédicteurs n'atteint {level} en valeur absolue."
+        conclude:
+          en: The predictors carry distinct information; their coefficients can be read one by one with less risk.
+          fr: Les prédicteurs portent des informations distinctes ; leurs coefficients se lisent un par un avec moins de risque.
+        cannot:
+          en: A correlation sums up a straight trend; two columns linked along a curve can show a modest number.
+          fr: Une corrélation résume une tendance droite ; deux colonnes liées en courbe peuvent afficher un nombre modeste.
+    how:
+      en: Each cell crosses two predictors; the darker, the stronger the link.
+      fr: Chaque case croise deux prédicteurs ; plus elle est foncée, plus le lien est fort.
+    trap:
+      en: A correlation sums up a straight trend; two columns linked along a curve can show a modest number.
+      fr: Une corrélation résume une tendance droite ; deux colonnes liées en courbe peuvent afficher un nombre modeste.
+  models.beat:
+    text:
+      en: Does the linear model err less than the reference, out of fold?
+      fr: Le modèle linéaire se trompe-t-il moins que la référence, hors pli ?
+    reading:
+      beats:
+        see:
+          en: "Out of fold, the linear model errs by {linear} {unit} ({measure}), the reference by {reference}; the linear model errs less in {n_better} of {k} folds."
+          fr: "Hors pli, le modèle linéaire se trompe de {linear} {unit} ({measure}), la référence de {reference} ; le linéaire se trompe moins dans {n_better} plis sur {k}."
+        conclude:
+          en: The linear model errs less than predicting the mean, fold after fold; it learns something from the columns. The criterion is judged only on the final test.
+          fr: Le modèle linéaire se trompe moins que prédire la moyenne, pli après pli ; il apprend quelque chose des colonnes. Le critère ne sera jugé que sur le test final.
+        cannot:
+          en: These figures served to compare; they are a little optimistic. They do not say whether a more flexible shape would do better.
+          fr: Ces chiffres ont servi à comparer ; ils sont un peu optimistes. Ils ne disent pas si une forme plus souple ferait mieux.
+      mixed:
+        see:
+          en: "Out of fold, the linear model errs by {linear} {unit} ({measure}), the reference by {reference}; the linear model errs less in {n_better} of {k} folds."
+          fr: "Hors pli, le modèle linéaire se trompe de {linear} {unit} ({measure}), la référence de {reference} ; le linéaire se trompe moins dans {n_better} plis sur {k}."
+        conclude:
+          en: The linear model does not err less than the reference in every fold; what it learns from the columns is fragile.
+          fr: Le modèle linéaire ne se trompe pas moins que la référence dans chaque pli ; ce qu'il apprend des colonnes est fragile.
+        cannot:
+          en: These figures served to compare; they do not say whether another shape would do better.
+          fr: Ces chiffres ont servi à comparer ; ils ne disent pas si une autre forme ferait mieux.
+    how:
+      en: Small circles, one per fold; disc, the mean.
+      fr: Petits cercles, un par pli ; disque, la moyenne.
+    trap:
+      en: The folds are not independent; their spread understates the real uncertainty.
+      fr: Les plis ne sont pas indépendants ; leur dispersion sous-estime l'incertitude réelle.
+  models.where:
+    text:
+      en: Where does the linear model err?
+      fr: Où le modèle linéaire se trompe-t-il ?
+    reading:
+      grows:
+        see:
+          en: "Over the {n} rows predicted out of fold, the size of the error grows with the prediction: rank correlation {rho} between them."
+          fr: "Sur les {n} lignes prédites hors pli, la taille de l'erreur grandit avec la prédiction : corrélation de rang {rho} entre elles."
+        conclude:
+          en: The errors are not spread evenly along the prediction; one interval width would be wrong for every row. The Variants step examines this pattern.
+          fr: Les erreurs ne sont pas réparties également le long de la prédiction ; une même largeur d'intervalle serait fausse pour chaque ligne. L'étape Variantes examine ce motif.
+        cannot:
+          en: This cloud does not say which column causes the gap, nor whether another model would correct it.
+          fr: Ce nuage ne dit pas quelle colonne cause l'écart, ni si un autre modèle le corrigerait.
+      even:
+        see:
+          en: "Over the {n} rows predicted out of fold, the size of the error barely moves with the prediction: rank correlation {rho} between them."
+          fr: "Sur les {n} lignes prédites hors pli, la taille de l'erreur bouge peu avec la prédiction : corrélation de rang {rho} entre elles."
+        conclude:
+          en: The errors keep about the same size along the prediction range.
+          fr: Les erreurs conservent à peu près la même taille le long des prédictions.
+        cannot:
+          en: This cloud does not say which column causes the gaps, nor whether another model would correct them.
+          fr: Ce nuage ne dit pas quelle colonne cause les écarts, ni si un autre modèle les corrigerait.
+    how:
+      en: One point per row, predicted across, observed up, on the same scale; on the diagonal the prediction is perfect.
+      fr: Un point par ligne, prédit en abscisse, observé en ordonnée, sur la même échelle ; sur la diagonale la prédiction est parfaite.
+    trap:
+      en: Without the same scale on both axes, the diagonal would not be the perfect prediction and the cloud would look shifted.
+      fr: Sans la même échelle sur les deux axes, la diagonale ne serait pas la prédiction parfaite et le nuage semblerait décalé.
+  variants.shape:
+    text:
+      en: Do the linear model's errors draw a shape?
+      fr: Les erreurs du modèle linéaire dessinent-elles une forme ?
+    reading:
+      shape:
+        see:
+          en: "Along {column}, the mean residual by band goes from {low} to {high} {unit}."
+          fr: "Selon « {column} », le résidu moyen par tranche va de {low} à {high} {unit}."
+        conclude:
+          en: The errors draw a shape along this column, wider than the engine's bound of {bound} {unit}; a straight line misses part of the relation.
+          fr: Les erreurs dessinent une forme selon cette colonne, plus large que la borne du moteur de {bound} {unit} ; une droite rate une partie de la relation.
+        cannot:
+          en: A shape in the residuals says a straight line misses something, not what would fix it.
+          fr: Une forme dans les résidus dit qu'une droite rate quelque chose, pas ce qui le corrigerait.
+      flat:
+        see:
+          en: "Along {column}, the mean residual by band goes from {low} to {high} {unit}."
+          fr: "Selon « {column} », le résidu moyen par tranche va de {low} à {high} {unit}."
+        conclude:
+          en: The errors stay within the engine's bound of {bound} {unit} along this column; no clear shape.
+          fr: Les erreurs restent dans la borne du moteur de {bound} {unit} selon cette colonne ; pas de forme nette.
+        cannot:
+          en: No shape along one column does not mean none along a combination of columns.
+          fr: Pas de forme selon une colonne ne veut pas dire aucune selon une combinaison de colonnes.
+    how:
+      en: One point per band of the column, the mean residual; above zero the model predicts too low.
+      fr: Un point par tranche de la colonne, le résidu moyen ; au-dessus de zéro le modèle prédit trop bas.
+    trap:
+      en: A band with few rows can draw a shape by itself.
+      fr: Une tranche avec peu de lignes peut dessiner une forme à elle seule.
+  variants.period:
+    text:
+      en: Is the error stable from one period to the next?
+      fr: L'erreur est-elle stable d'une période à l'autre ?
+    reading:
+      drift:
+        see:
+          en: "The linear model's mean residual goes from {first_bias} {unit} in the first band of {column} to {last_bias} in the last band."
+          fr: "Le résidu moyen du modèle linéaire passe de {first_bias} {unit} dans la première tranche de « {column} » à {last_bias} dans la dernière."
+        conclude:
+          en: The model errs in a direction that changes with the periods, beyond the engine's bound of {bound} {unit}; a limit to write in the conclusion.
+          fr: Le modèle se trompe dans un sens qui change avec les périodes, au-delà de la borne du moteur de {bound} {unit} ; une limite à écrire dans la conclusion.
+        cannot:
+          en: "With {n_bands} bands, it is a signal, not a proof; nothing says how the model would behave after the last period."
+          fr: "Avec {n_bands} tranches, c'est un signal, pas une preuve ; rien ne dit comment le modèle se comporterait après la dernière période."
+      stable:
+        see:
+          en: "The linear model's mean residual goes from {first_bias} {unit} in the first band of {column} to {last_bias} in the last band."
+          fr: "Le résidu moyen du modèle linéaire passe de {first_bias} {unit} dans la première tranche de « {column} » à {last_bias} dans la dernière."
+        conclude:
+          en: The direction of the error stays within the engine's bound of {bound} {unit} from one period to the next.
+          fr: Le sens de l'erreur reste dans la borne du moteur de {bound} {unit} d'une période à l'autre.
+        cannot:
+          en: "With {n_bands} bands, stability here says nothing of the periods after the data."
+          fr: "Avec {n_bands} tranches, la stabilité ici ne dit rien des périodes d'après les données."
+    how:
+      en: One bar per period band; to the left the model over-predicts, to the right it under-predicts.
+      fr: Une barre par tranche de période ; à gauche le modèle sur-prédit, à droite il sous-prédit.
+    trap:
+      en: Bands of unequal size weigh unequally; a small band moves more by chance.
+      fr: Des tranches de tailles inégales pèsent inégalement ; une petite tranche bouge plus par hasard.
+  choice.best:
+    text:
+      en: Which configuration errs least, and is the gap larger than the noise?
+      fr: Quelle configuration se trompe le moins, et l'écart dépasse-t-il le bruit ?
+    reading:
+      beyond:
+        see:
+          en: "Lowest mean error, {best_name}: {best_mean} {unit}; the linear model: {linear_mean}."
+          fr: "Plus petite erreur moyenne, {best_name} : {best_mean} {unit} ; le modèle linéaire : {linear_mean}."
+        conclude:
+          en: The gap between the lowest and the linear model is larger than the noise from fold to fold; their paired interval excludes zero.
+          fr: L'écart entre la plus basse et le modèle linéaire dépasse le bruit d'un pli à l'autre ; leur intervalle apparié exclut zéro.
+        cannot:
+          en: "These figures served to choose; the lowest mean is flattered by the choice itself, by about {optimism} {unit}."
+          fr: "Ces chiffres ont servi à choisir ; la plus basse moyenne est flattée par le choix lui-même, d'environ {optimism} {unit}."
+      within:
+        see:
+          en: "Lowest mean error, {best_name}: {best_mean} {unit}; the linear model: {linear_mean}."
+          fr: "Plus petite erreur moyenne, {best_name} : {best_mean} {unit} ; le modèle linéaire : {linear_mean}."
+        conclude:
+          en: The gap between the lowest and the linear model stays within the noise from fold to fold; their paired interval includes zero.
+          fr: L'écart entre la plus basse et le modèle linéaire reste dans le bruit d'un pli à l'autre ; leur intervalle apparié inclut zéro.
+        cannot:
+          en: "These figures served to choose; the lowest mean is flattered by the choice itself, by about {optimism} {unit}."
+          fr: "Ces chiffres ont servi à choisir ; la plus basse moyenne est flattée par le choix lui-même, d'environ {optimism} {unit}."
+      alone:
+        see:
+          en: "Lowest mean error, {best_name}: {best_mean} {unit}; the linear model: {linear_mean}."
+          fr: "Plus petite erreur moyenne, {best_name} : {best_mean} {unit} ; le modèle linéaire : {linear_mean}."
+        conclude:
+          en: The linear model has the lowest mean error of the configurations compared.
+          fr: Le modèle linéaire a la plus petite erreur moyenne des configurations comparées.
+        cannot:
+          en: These figures served to choose; the lowest mean is flattered by the choice itself.
+          fr: Ces chiffres ont servi à choisir ; la plus basse moyenne est flattée par le choix lui-même.
+    how:
+      en: One line per configuration; small circles, the folds; disc, the mean.
+      fr: Une ligne par configuration ; petits cercles, les plis ; disque, la moyenne.
+    trap:
+      en: Means close to each other can hide folds where the order flips.
+      fr: Des moyennes proches peuvent cacher des plis où l'ordre s'inverse.
+  choice.simplest:
+    text:
+      en: Which is the simplest configuration within one standard error of the best?
+      fr: Quelle est la configuration la plus simple à moins d'une erreur type de la meilleure ?
+    reading:
+      default:
+        see:
+          en: "The one-standard-error bound is {bound} {unit}, the lowest mean plus one standard error of {se}; {n_within} configuration(s) sit under it."
+          fr: "La borne d'une erreur type vaut {bound} {unit}, la plus basse moyenne plus une erreur type de {se} ; {n_within} configuration(s) sont sous elle."
+        conclude:
+          en: The rule weighs simplicity against a gap smaller than the noise; it was fixed before any result was seen.
+          fr: La règle met en balance la simplicité et un écart plus petit que le bruit ; elle était fixée avant de voir un résultat.
+        cannot:
+          en: The rule does not say that the simplest configuration is the best for every use; that stays your decision.
+          fr: La règle ne dit pas que la configuration la plus simple est la meilleure pour tout usage ; cela reste votre décision.
+    how:
+      en: The dashed line is the bound; the configurations left of it are within the noise of the best.
+      fr: Le trait pointillé est la borne ; les configurations à sa gauche sont dans le bruit de la meilleure.
+    trap:
+      en: The standard error of a few folds is itself uncertain.
+      fr: L'erreur type de quelques plis est elle-même incertaine.
+  final.what:
+    text:
+      en: What will the opening measure, and on which rows?
+      fr: Que mesurera l'ouverture, et sur quelles lignes ?
+    reading:
+      chosen:
+        see:
+          en: "The opening measures {model_name} once on the {sealed} sealed rows, against the reference measured on the same rows."
+          fr: "L'ouverture mesure {model_name} une fois sur les {sealed} lignes scellées, contre la référence mesurée sur les mêmes lignes."
+        conclude:
+          en: No step of the study has used these rows; their figure is the study's independent evidence.
+          fr: Aucune étape de l'étude n'a utilisé ces lignes ; leur chiffre est la preuve indépendante de l'étude.
+        cannot:
+          en: "One opening on {sealed} rows gives one measure with its interval, not a guarantee on later data."
+          fr: "Une ouverture sur {sealed} lignes donne une mesure avec son intervalle, pas une garantie sur d'autres données."
+      unchosen:
+        see:
+          en: "The opening will measure the chosen configuration once on the {sealed} sealed rows, against the reference measured on the same rows."
+          fr: "L'ouverture mesurera la configuration choisie une fois sur les {sealed} lignes scellées, contre la référence mesurée sur les mêmes lignes."
+        conclude:
+          en: No step of the study has used these rows; their figure will be the study's independent evidence.
+          fr: Aucune étape de l'étude n'a utilisé ces lignes ; leur chiffre sera la preuve indépendante de l'étude.
+        cannot:
+          en: One opening gives one measure with its interval, not a guarantee on later data.
+          fr: Une ouverture donne une mesure avec son intervalle, pas une garantie sur d'autres données.
+    how:
+      en: The sealed part is highlighted; the development rows stay grey.
+      fr: La partie scellée est mise en avant ; les lignes de développement restent grises.
+    trap:
+      en: A second opening would no longer be independent evidence.
+      fr: Une deuxième ouverture ne serait plus une preuve indépendante.
+  conclusion.beat:
+    text:
+      en: Does the model beat the reference on the final test?
+      fr: Le modèle bat-il la référence sur le test final ?
+    reading:
+      beats:
+        see:
+          en: "On the final test, {model_name} errs by {final} {unit}, the reference by {final_reference}; in development it erred by {development}."
+          fr: "Sur le test final, {model_name} se trompe de {final} {unit}, la référence de {final_reference} ; en développement il se trompait de {development}."
+        conclude:
+          en: The model errs less than the reference on rows no choice used; its advantage seen in development holds on independent rows.
+          fr: Le modèle se trompe moins que la référence sur des lignes qu'aucun choix n'a utilisées ; son avantage vu en développement tient sur des lignes indépendantes.
+        cannot:
+          en: The final test comes from the same period as the development rows; it says nothing of later ones.
+          fr: Le test final vient de la même période que les lignes de développement ; il ne dit rien des suivantes.
+      loses:
+        see:
+          en: "On the final test, {model_name} errs by {final} {unit}, the reference by {final_reference}; in development it erred by {development}."
+          fr: "Sur le test final, {model_name} se trompe de {final} {unit}, la référence de {final_reference} ; en développement il se trompait de {development}."
+        conclude:
+          en: The model does not err less than the reference on the final test; its advantage in development does not hold on independent rows.
+          fr: Le modèle ne se trompe pas moins que la référence sur le test final ; son avantage en développement ne tient pas sur des lignes indépendantes.
+        cannot:
+          en: One final test does not say why the advantage vanished.
+          fr: Un test final ne dit pas pourquoi l'avantage a disparu.
+    how:
+      en: Left, the development figures; right, the final test; one scale, with intervals.
+      fr: À gauche, les chiffres de développement ; à droite, le test final ; une seule échelle, avec les intervalles.
+    trap:
+      en: The development figure was used to choose; comparing it with the final one shows the optimism, not a trend.
+      fr: Le chiffre de développement a servi à choisir ; le comparer au chiffre final montre l'optimisme, pas une tendance.
+  conclusion.criterion:
+    text:
+      en: Is your criterion met?
+      fr: Votre critère est-il atteint ?
+    reading:
+      met_low:
+        see:
+          en: "Reduction of {gain} [{low} ; {high}] of the reference's error, against a minimum of {min_share}."
+          fr: "Réduction de {gain} [{low} ; {high}] de l'erreur de la référence, pour un minimum de {min_share}."
+        conclude:
+          en: The criterion fixed before any model is met, even at the bottom of the interval.
+          fr: Le critère fixé avant tout modèle est atteint, même au bas de l'intervalle.
+        cannot:
+          en: Reaching the minimum does not say the model is enough for every use; that is a business question.
+          fr: Atteindre le minimum ne dit pas que le modèle suffit pour tout usage ; c'est une question métier.
+      met_point:
+        see:
+          en: "Reduction of {gain} [{low} ; {high}] of the reference's error, against a minimum of {min_share}."
+          fr: "Réduction de {gain} [{low} ; {high}] de l'erreur de la référence, pour un minimum de {min_share}."
+        conclude:
+          en: The criterion is met at the point estimate, but the interval reaches below the minimum.
+          fr: Le critère est atteint au point estimé, mais l'intervalle descend sous le minimum.
+        cannot:
+          en: Reaching the minimum does not say the model is enough for every use; that is a business question.
+          fr: Atteindre le minimum ne dit pas que le modèle suffit pour tout usage ; c'est une question métier.
+      not_met:
+        see:
+          en: "Reduction of {gain} [{low} ; {high}] of the reference's error, against a minimum of {min_share}."
+          fr: "Réduction de {gain} [{low} ; {high}] de l'erreur de la référence, pour un minimum de {min_share}."
+        conclude:
+          en: The criterion fixed before any model is not met on the final test.
+          fr: Le critère fixé avant tout modèle n'est pas atteint sur le test final.
+        cannot:
+          en: Missing the minimum does not say the model is useless; it says the bar fixed beforehand is not reached.
+          fr: Manquer le minimum ne dit pas que le modèle est inutile ; cela dit que la barre fixée d'avance n'est pas atteinte.
+    how:
+      en: The gauge shows the reduction and its interval against the minimum line.
+      fr: La jauge montre la réduction et son intervalle face à la ligne du minimum.
+    trap:
+      en: The interval comes from a bootstrap over the final rows; it does not cover other periods.
+      fr: L'intervalle vient d'un bootstrap sur les lignes finales ; il ne couvre pas d'autres périodes.
+  conclusion.where:
+    text:
+      en: Where does it err on the final rows?
+      fr: Où se trompe-t-il sur les lignes finales ?
+    reading:
+      default:
+        see:
+          en: "On the {n} final rows, the mean residual is {mean_residual} {unit} and the largest absolute error {max_abs}."
+          fr: "Sur les {n} lignes finales, le résidu moyen vaut {mean_residual} {unit} et la plus grande erreur absolue {max_abs}."
+        conclude:
+          en: The points sit around the diagonal on the whole range; the errors on the final rows look like those seen in development.
+          fr: Les points se placent autour de la diagonale sur toute l'étendue ; les erreurs sur les lignes finales ressemblent à celles vues en développement.
+        cannot:
+          en: "{n} rows show where the model errs on this sample, not on rows of another period."
+          fr: "{n} lignes montrent où le modèle se trompe sur cet échantillon, pas sur des lignes d'une autre période."
+    how:
+      en: One point per final row, predicted across, observed up, on the same scale.
+      fr: Un point par ligne finale, prédit en abscisse, observé en ordonnée, sur la même échelle.
+    trap:
+      en: A few points far from the diagonal can draw the eye more than the bulk of the rows.
+      fr: Quelques points loin de la diagonale peuvent attirer l'œil plus que la masse des lignes.
