@@ -87,8 +87,35 @@ def test_no_extension_same_handoff_bytes_as_before(tmp_path):
     fk.previous_generation(u.study)
     assert 'exploration_order' not in u.state()
     a, b, new, old = run_pair(u, tmp_path, 'plain')
+    # Contract P1 (CLI-CONTRACT §17.3, the one-page panel, 2026-10-27) changed the handoff on
+    # purpose, for every study: each exposure ledger entry gains `note` (the step-1 sample's
+    # note, null otherwise) and the sample's purpose is named in words. Those two changes are
+    # undone on the new export; every other byte must still equal the reference engine's.
+    assert p1_normalised(tmp_path / 'plain-new') == p1_normalised(tmp_path / 'plain-old')
+    changed = {name for name in a if a[name] != b.get(name)}
+    assert changed <= {'handoff.json', 'handoff.md', 'SHA256SUMS'}, changed
+    assert set(a) == set(b)
+    assert [f['path'] for f in new.pop('files')] == [f['path'] for f in old.pop('files')]
     assert new == old
-    assert a == b
+
+
+SAMPLE_LABEL = 'Development target sample shown at step 1'
+
+
+def _without_ledger_notes(value):
+    if isinstance(value, dict):
+        return {k: _without_ledger_notes(v) for k, v in value.items()
+                if not (k == 'note' and 'last_revision' in value)}
+    if isinstance(value, list):
+        return [_without_ledger_notes(v) for v in value]
+    return value
+
+
+def p1_normalised(out: Path) -> dict:
+    """The export's handoff files with contract P1's two additions undone (above)."""
+    data = _without_ledger_notes(json.loads((out / 'handoff.json').read_text(encoding='utf-8')))
+    text = (out / 'handoff.md').read_text(encoding='utf-8').replace(SAMPLE_LABEL, 'development_target_sample')
+    return {'handoff.json': data, 'handoff.md': text}
 
 
 def test_review_never_changes_scientific_state(tmp_path):
