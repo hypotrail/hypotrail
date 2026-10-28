@@ -204,14 +204,15 @@
     return `Open the final test once for ${modelName(v.model, task)}${r ? ` (${r.toLowerCase()})` : ''}`;
   }
 
-  // v0.2a (WP-A4): the two governance decisions in words. The share is a recorded value
-  // shown as a percentage, not a figure the panel computes from results.
   /** Lot 2026-10-28 (R60): the error measure in words ({"metric": "mae" | "rmse"}). */
   function errorMetric(raw) {
     const v = parse(raw);
     const m = v && typeof v === 'object' ? v.metric : raw;
     return { mae: 'The mean absolute error (MAE)', rmse: 'The root mean squared error (RMSE)' }[m] || null;
   }
+
+  // v0.2a (WP-A4): the two governance decisions in words. The share is a recorded value
+  // shown as a percentage, not a figure the panel computes from results.
 
   function criterion(raw) {
     const v = parse(raw);

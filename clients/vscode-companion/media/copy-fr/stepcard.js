@@ -246,8 +246,8 @@
     },
     devFinal: {
       bound: v => `borne du critère, test final : ${v}`,
-      dev: '◐ développement',
-      final: '● test final, lu une fois',
+      dev: 'développement',
+      final: 'test final, lu une fois',
       aria: 'Développement (cercle) et test final (disque) sur une échelle, avec la borne du critère sur le test final',
     },
     gauge: {

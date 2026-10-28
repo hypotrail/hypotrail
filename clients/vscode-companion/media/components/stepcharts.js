@@ -55,7 +55,7 @@
   }
   function hatch() {
     return S('defs', {}, [S('pattern', { id: 'ht-sc-hatch', width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, [
-      Rc(0, 0, 6, 6, 'hatchbg'), Ln(0, 0, 0, 6, 'now', 2)])]);
+      Rc(0, 0, 6, 6, 'hatchbg'), S('line', { x1: 0, y1: 0, x2: 0, y2: 6, className: 'sc-s-acc', 'stroke-width': 2, opacity: '0.35' })])]);
   }
 
   // --- reading helpers ------------------------------------------------------------------------
@@ -264,10 +264,16 @@
       kids.push(Ci(X(i), 120, last ? 5 : 4, last ? 'cwarn' : 'ink'));
       const words = String(m.label || m.id).split(' ');
       const half = Math.ceil(words.length / 2);
-      const a = i === 0 ? 'start' : last ? 'end' : 'middle';
-      const tx = i === 0 ? X(i) - 8 : last ? X(i) + 8 : X(i);
-      kids.push(T(tx, 136, words.slice(0, half).join(' '), { fs: 10, a, c: last ? 'cwarn' : 'ink' }));
-      kids.push(T(tx, 148, words.slice(half).join(' '), { fs: 10, a, c: last ? 'cwarn' : 'ink' }));
+      // The target's measurement is named above the line, at the end, as in the mockup.
+      if (last) {
+        kids.push(T(X(i) + 8, 96, `◎ ${words.slice(0, half).join(' ')}`, { fs: 10, a: 'end', c: 'cwarn' }));
+        kids.push(T(X(i) + 8, 108, words.slice(half).join(' '), { fs: 10, a: 'end', c: 'cwarn' }));
+        return;
+      }
+      const a = i === 0 ? 'start' : 'middle';
+      const tx = i === 0 ? X(i) - 8 : X(i);
+      kids.push(T(tx, 136, words.slice(0, half).join(' '), { fs: 10, a, c: 'ink' }));
+      kids.push(T(tx, 148, words.slice(half).join(' '), { fs: 10, a, c: 'ink' }));
     });
     // The columns stacked above the milestone where they become known (uncertain ones in the lane).
     const at = {};
@@ -488,7 +494,7 @@
     const X = v => 110 + (v / max) * 150;
     const kids = [];
     const tk = ticks(0, max, 4);
-    tk.list.forEach(t => kids.push(Ln(X(t), 8, X(t), 10 + bars.length * 27, 'grid'), T(X(t), 24 + bars.length * 27, ctx.format.number(t, 'auto'), { fs: 10.5, a: 'middle' })));
+    tk.list.forEach(t => kids.push(Ln(X(t), 8, X(t), 10 + bars.length * 27, 'grid'), T(X(t), 24 + bars.length * 27, ctx.format.number(t, Number.isInteger(t) ? 'int' : 'f1'), { fs: 10.5, a: 'middle' })));
     const tone = ['grey', 'acc', 'orange', 'leaf', 'pen'];
     bars.forEach((b, i) => {
       const y = 10 + i * 27;
@@ -521,7 +527,7 @@
       })]));
     return [el('p', { className: 'sc-cap sc-cap-b', 'data-raw-values': true },
       [el('b', { text: c.caption(n(arr(m.rows.items).length), n(m.development.rows)) }), ` · ${c.raw}`]),
-    el('div', { className: 'sc-scrollx', tabindex: '0', role: 'region', 'aria-label': c.region }, [
+    el('div', { className: 'sc-scrollx', 'data-scroll-ok': true, tabindex: '0', role: 'region', 'aria-label': c.region }, [
       el('table', { className: 'sc-mini sc-sample' }, [el('thead', {}, [head]), el('tbody', {}, rows)])]),
     note(c.scroll)];
   }
@@ -536,7 +542,7 @@
     const out = [];
     const vars = arr(m.groups).flatMap(g => g.variables);
     if (vars.length) {
-      out.push(fold(`${idBase}-dict`, c.dictionary(ctx.format.number(vars.length, 'int')), () => el('div', { className: 'sc-scrollx' }, [el('table', { className: 'sc-mini' }, [
+      out.push(fold(`${idBase}-dict`, c.dictionary(ctx.format.number(vars.length, 'int')), () => el('div', { className: 'sc-scrollx', 'data-scroll-ok': true }, [el('table', { className: 'sc-mini' }, [
         el('tr', {}, [el('th', { text: c.shown }), el('th', { text: c.inFile }), el('th', { text: c.meaning }), el('th', { className: 'sc-n', text: c.missing })]),
         ...vars.map(v => el('tr', { 'data-dictionary': v.name }, [el('td', { text: colName(ctx, v.name) }), el('td', { text: v.name }),
           el('td', { text: (l === 'fr' && v.descriptionFr) || v.description }), el('td', { className: 'sc-n', text: v.nMissing === null ? '' : ctx.format.number(v.nMissing, 'int') })]))])])));
@@ -545,7 +551,7 @@
     if (sr && sr.nRows > 0) {
       out.push(fold(`${idBase}-q`, c.questionRows(ctx.format.number(sr.nRows, 'int')), () => {
         const cols = arr(sr.columns);
-        return el('div', {}, [el('div', { className: 'sc-scrollx', tabindex: '0', role: 'region', 'aria-label': c.questionRegion }, [
+        return el('div', {}, [el('div', { className: 'sc-scrollx', 'data-scroll-ok': true, tabindex: '0', role: 'region', 'aria-label': c.questionRegion }, [
           el('table', { className: 'sc-mini sc-sample' }, [
             el('tr', {}, [el('th', { text: c.row }), ...cols.map(col => el('th', { text: colName(ctx, col) }))]),
             ...arr(sr.items).map(r => el('tr', {}, [el('td', { className: 'sc-key', text: r.rowKey }),
@@ -612,7 +618,7 @@
         ]));
       }
     }
-    return [el('div', { className: 'sc-scrollx', role: 'region', tabindex: '0', 'aria-label': c.region }, [el('table', { className: 'sc-mini', 'data-verdicts-table': which }, [
+    return [el('div', { className: 'sc-scrollx', 'data-scroll-ok': true, role: 'region', tabindex: '0', 'aria-label': c.region }, [el('table', { className: 'sc-mini', 'data-verdicts-table': which }, [
       el('tr', {}, [el('th', { text: c.column }), el('th', { text: c.check }), el('th', { className: 'sc-n', text: c.valueBound }), el('th', { text: c.verdict })]),
       ...rows])])];
   }
@@ -728,14 +734,14 @@
     const all = rows.flatMap(r => r.perFold);
     const lo = Math.floor(Math.min(...all));
     const hi = Math.ceil(Math.max(...all));
-    const X = v => 86 + ((v - lo) / (hi - lo || 1)) * 200;
+    const X = v => 12 + ((v - lo) / (hi - lo || 1)) * 276;
     const kids = [];
     ticks(lo, hi, 5).list.forEach(t => kids.push(Ln(X(t), 14, X(t), 18 + rows.length * 42, 'grid'), T(X(t), 30 + rows.length * 42, ctx.format.number(t, 'auto'), { a: 'middle' })));
     rows.forEach((r, i) => {
       const y = 38 + i * 42;
-      kids.push(T(78, y + 4, r.label, { fs: 11.5, a: 'end', c: 'ink' }));
+      kids.push(T(12, y - 20, r.label, { fs: 10.5, c: 'ink', w: 600 }));
       r.perFold.forEach(v => kids.push(Ci(X(v), y - 8, 3, 'none', { s: 'muted', sw: 1.3, mark: 'fold' })));
-      if (ok(r.mean)) kids.push(Ci(X(r.mean), y + 6, 4.5, 'ink', { mark: 'mean' }), T(X(r.mean), y + 22, ctx.format.number(r.mean, 'f2'), { fs: 10.5, a: 'middle', c: 'ink', w: 600 }));
+      if (ok(r.mean)) kids.push(Ci(X(r.mean), y + 6, 4.5, 'ink', { mark: 'mean' }), T(X(r.mean) + (X(r.mean) > 240 ? -8 : 8), y + 10, ctx.format.number(r.mean, 'f2'), { fs: 10.5, a: X(r.mean) > 240 ? 'end' : 'start', c: 'ink', w: 600 }));
     });
     const yb = 46 + rows.length * 42;
     kids.push(T(160, yb, c.axis(C().measures[metric] || metric), { a: 'middle' }),
@@ -863,18 +869,21 @@
     const lo = Math.min(...rows.map(x => x.difference.low), 0);
     const hi = Math.max(...rows.map(x => x.difference.high), 0);
     const pad = (hi - lo) * 0.15 || 0.1;
-    const X = v => 110 + ((v - (lo - pad)) / (hi - lo + 2 * pad)) * 180;
-    const kids = [T(X(lo - pad) + 2, 14, c.less, { fs: 10.5 }), T(X(hi + pad) - 2, 14, c.more, { fs: 10.5, a: 'end' })];
-    ticks(lo - pad, hi + pad, 4).list.forEach(t => kids.push(Ln(X(t), 20, X(t), 24 + rows.length * 28, t === 0 ? 'ink' : 'grid', t === 0 ? 1.5 : 1),
-      T(X(t), 38 + rows.length * 28, ctx.format.number(t, 'auto'), { a: 'middle' })));
+    const X = v => 12 + ((v - (lo - pad)) / (hi - lo + 2 * pad)) * 276;
+    const H = 40;
+    const kids = [T(X(lo - pad), 12, c.less, { fs: 10.5 }), T(X(hi + pad), 12, c.more, { fs: 10.5, a: 'end' })];
+    ticks(lo - pad, hi + pad, 4).list.forEach(t => kids.push(Ln(X(t), 18, X(t), 22 + rows.length * H, t === 0 ? 'ink' : 'grid', t === 0 ? 1.5 : 1),
+      T(X(t), 36 + rows.length * H, ctx.format.number(t, 'f1'), { a: 'middle' })));
     rows.forEach((x, i) => {
-      const y = 36 + i * 28;
+      const y = 46 + i * H;
+      // The pair's name on its own line above its interval: long names never cross the scale.
       const name = `${mname(ctx, x.slot)} − ${mname(ctx, x.difference.against)}`;
-      kids.push(T(0, y + 4, name, { fs: 10.5, c: 'ink' }), Ln(X(x.difference.low), y, X(x.difference.high), y, 'muted', 2.2),
+      kids.push(T(12, y - 14, name, { fs: 10.5, c: 'ink', w: 600 }), Ln(X(x.difference.low), y, X(x.difference.high), y, 'muted', 2.2),
         Ln(X(x.difference.low), y - 5, X(x.difference.low), y + 5, 'muted', 2), Ln(X(x.difference.high), y - 5, X(x.difference.high), y + 5, 'muted', 2),
-        Ci(X(x.difference.mean), y, 4.5, 'ink'), T(X(x.difference.mean), y - 8, ctx.format.number(x.difference.mean, 'f2'), { fs: 10, a: 'middle', c: 'ink', w: 600 }));
+        Ci(X(x.difference.mean), y, 4.5, 'ink'),
+        T(Math.min(X(x.difference.high) + 6, 288), y + 4, ctx.format.number(x.difference.mean, 'f2'), { fs: 10, a: X(x.difference.high) + 6 > 260 ? 'end' : 'start', c: 'ink', w: 600 }));
     });
-    const yb = 52 + rows.length * 28;
+    const yb = 50 + rows.length * H;
     kids.push(T(150, yb, c.axis, { fs: 10.5, a: 'middle' }));
     return [box(300, yb + 6, c.aria, kids, { 'data-paired': String(rows.length) })];
   }
@@ -888,12 +897,12 @@
     const all = rows.flatMap(x => x.per_fold);
     const lo = Math.floor(Math.min(...all));
     const hi = Math.ceil(Math.max(...all));
-    const X = v => 86 + ((v - lo) / (hi - lo || 1)) * 200;
+    const X = v => 12 + ((v - lo) / (hi - lo || 1)) * 276;
     const kids = [];
     ticks(lo, hi, 5).list.forEach(t => kids.push(Ln(X(t), 10, X(t), 16 + rows.length * 30, 'grid'), T(X(t), 28 + rows.length * 30, ctx.format.number(t, 'auto'), { a: 'middle' })));
     rows.forEach((x, i) => {
       const y = 24 + i * 30;
-      kids.push(T(78, y + 4, mname(ctx, x.slot), { fs: 11, a: 'end', c: 'ink' }));
+      kids.push(T(12, y - 9, mname(ctx, x.slot), { fs: 10, c: 'ink', w: 600 }));
       x.per_fold.forEach(v => kids.push(Ci(X(v), y, 3, 'none', { s: 'muted', sw: 1.3 })));
       if (ok(x.mean)) kids.push(Ci(X(x.mean), y, 4.5, 'ink'));
     });
@@ -913,7 +922,7 @@
     const vals = rows.map(x => x.mean).concat(bound === null ? [] : [bound]);
     const lo = Math.min(...vals) - 0.3;
     const hi = Math.max(...vals) + 0.3;
-    const X = v => 92 + ((v - lo) / (hi - lo || 1)) * 196;
+    const X = v => 130 + ((v - lo) / (hi - lo || 1)) * 158;
     const kids = [];
     if (best && bound !== null) {
       kids.push(Rc(X(best.mean), 18, X(bound) - X(best.mean), 22 + rows.length * 30, 'ochretint'),
@@ -955,13 +964,13 @@
     const vals = rows.flatMap(r => [r.f, r.fl, r.fh, r.d]).filter(ok).concat(bound === null ? [] : [bound]);
     const lo = Math.floor(Math.min(...vals));
     const hi = Math.ceil(Math.max(...vals));
-    const X = v => 86 + ((v - lo) / (hi - lo || 1)) * 200;
+    const X = v => 12 + ((v - lo) / (hi - lo || 1)) * 276;
     const kids = [];
     ticks(lo, hi, 5).list.forEach(t => kids.push(Ln(X(t), 22, X(t), 26 + rows.length * 40, 'grid'), T(X(t), 40 + rows.length * 40, ctx.format.number(t, 'auto'), { a: 'middle' })));
     if (bound !== null) kids.push(Ln(X(bound), 16, X(bound), 26 + rows.length * 40, 'leaf', 1.8), T(X(bound) - 3, 14, c.bound(ctx.format.number(bound, 'f2')), { fs: 10.5, a: 'end', c: 'leaf' }));
     rows.forEach((r, i) => {
       const y = 40 + i * 40;
-      kids.push(T(78, y + 10, mname(ctx, r.slot), { fs: 11.5, a: 'end', c: 'ink' }));
+      kids.push(T(12, y - 10, mname(ctx, r.slot), { fs: 10.5, c: 'ink', w: 600 }));
       if (r.d !== null) kids.push(Ci(X(r.d), y, 4.5, 'card', { s: 'ink', sw: 1.8, mark: 'development' }));
       if (ok(r.fl) && ok(r.fh)) kids.push(Ln(X(r.fl), y + 15, X(r.fh), y + 15, 'pen', 2));
       if (ok(r.f)) kids.push(Ci(X(r.f), y + 15, 4.5, 'pen', { mark: 'final' }));

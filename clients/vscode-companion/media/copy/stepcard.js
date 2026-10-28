@@ -254,8 +254,8 @@
     },
     devFinal: {
       bound: v => `criterion bound, final test: ${v}`,
-      dev: '◐ development',
-      final: '● final test, read once',
+      dev: 'development',
+      final: 'final test, read once',
       aria: 'Development (circle) and final test (disc) on one scale, with the criterion bound on the final test',
     },
     gauge: {
