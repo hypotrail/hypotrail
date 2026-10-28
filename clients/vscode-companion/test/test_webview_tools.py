@@ -44,7 +44,8 @@ def test_tool1_to_tool3_the_data_drawer_files_charts_in_the_path_and_runs_w4(ope
     first = links.first.get_attribute('data-goto')
     assert first.startswith('path:') and '/' in first
     links.first.click()
-    assert page.locator(f'details[data-anchor="{first}"][open]').count() == 1, 'the link opens the chart in the path'
+    # R50 (lot P): the chart is inline in its opened step; the link reaches it.
+    assert page.locator(f'[data-anchor="{first}"]').is_visible(), 'the link opens the chart in the path'
     run = d.locator('[data-write="run_eda"]').first
     assert d.locator('[data-chart-filed]').inner_text() == 'It is filed under Exploration, in the path, and counts as a look.'
     before = len(panel.posted())
@@ -63,7 +64,9 @@ def test_tool4_hon7_wi1_the_what_if_drawer_warns_first_in_every_state(open_panel
     """TOOL-4, HON-7, WI-1, §6.10: the warning is the first element of the drawer, loading or
     populated, in both languages; it names no value and offers no control; the drawer is absent
     until an evaluation is current."""
-    for lang, start in (('en', 'Replays another rule or choice'), ('fr', 'Rejoue une autre règle')):
+    # R51 (lot P): the warning is one calm line, its why in a fold just below it.
+    for lang, start in (('en', 'A preview on figures already computed: nothing is recorded.'),
+                        ('fr', "Un aperçu sur des chiffres déjà calculés\u202f: rien n'est enregistré.")):
         panel = open_case(open_panel, views, case='choice', width=420, lang=lang, deliver=False)
         d = drawer(panel.page, 'whatif')
         warning = d.locator('[data-whatif-warning]')

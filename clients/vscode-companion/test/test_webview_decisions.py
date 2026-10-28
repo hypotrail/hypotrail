@@ -117,7 +117,10 @@ def test_hon8_a_data_contingent_proposal_is_said_next_to_it(open_panel, payload,
     panel = opened(open_panel, summary(True))
     note = panel.page.locator('[data-block="now"] [data-contingent="p_5"]')
     assert note.count() == 1 and note.get_attribute('role') == 'note'
-    assert note.inner_text() == f'Result-dependent change: {words["en"]}'
+    # R44 (lot P): one calm line, the engine's words in its "why" fold, said once.
+    assert note.locator('p').first.inner_text() == 'Chosen after seeing results: noted as data-dependent.'
+    assert note.locator('details.ht-why').text_content().endswith(words['en'])
+    assert note.locator('.ht-warnline').count() == 0
     assert_clean(panel)
     for flag in (False, None):
         quiet = opened(open_panel, summary(flag))

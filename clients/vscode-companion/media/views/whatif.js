@@ -274,6 +274,10 @@
   // generically, and the model family the engine recorded for a variant, when it has one.
   function fitLabel(t, fit, families) {
     const slot = String(fit);
+    // Lot P (R45): a variant named by what it is (ridge, EBM), from the study's decision.
+    const named = slot.startsWith('fit.variant') && !(families && families[slot]) && HT.copy.junior.variantLabel
+      ? HT.copy.junior.variantLabel(slot) : null;
+    if (named) return named;
     const base = (t.fits && t.fits[slot]) || (slot.startsWith('fit.variant') && t.variantFit) || slot;
     const family = families && families[slot];
     const familyName = family && t.families && t.families[family];

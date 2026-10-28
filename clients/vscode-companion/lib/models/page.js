@@ -247,10 +247,15 @@
     const limit = id => top.find(i => i.id === id) || { id };
     if (ids.includes('sources_changed')) items.push({ kind: 'sources', anchor: 'todo:sources', limit: limit('sources_changed') });
     if (ids.includes('result_integrity')) items.push({ kind: 'integrity', anchor: 'todo:integrity', limit: limit('result_integrity') });
-    const generated = arr(s.artifacts).filter(a => (a.name === 'report' || a.name === 'notebook') && a.status !== 'ok');
-    const notRendered = s.artifactsStatus === 'not_rendered';
-    if (generated.length || notRendered) {
-      items.push({ kind: 'deliverables', anchor: 'todo:deliverables', artifacts: generated, notRendered,
+    // R34 (lot P): only a deliverable that was rendered and is now stale, or whose last render
+    // failed, is to handle; one never rendered yet is not (the journey produces it later), and
+    // the Deliverables drawer says "not generated yet". Each item keeps its own status, for
+    // the sentence that fits it.
+    const generated = arr(s.artifacts).filter(a => (a.name === 'report' || a.name === 'notebook')
+      && (a.status === 'stale' || a.status === 'failed'));
+    if (generated.length) {
+      items.push({ kind: 'deliverables', anchor: 'todo:deliverables', artifacts: generated,
+        status: generated.some(a => a.status === 'failed') ? 'failed' : 'stale',
         regenerate: atLeast(stage, 'v1') && s.regenerate === true });
     }
     return items;
@@ -288,15 +293,82 @@
     return later ? { id: later.id, title: later.title } : null;
   }
 
-  function limitOf(s, kind, lang) {
+  // R43 (lot P): the steps whose limit line is the panel's own sentence for that step, when the
+  // engine gives no limit text of its own: before any model, the recap's limit (about
+  // out-of-fold predictions) does not fit; at the final test and the conclusion, the line says
+  // what the final test does and does not establish.
+  const STEP_LIMITS = ['prediction_time', 'feature_availability', 'split', 'success_criterion', 'structural_eda',
+    'preprocessing', 'train_eda', 'final_test', 'conclusion'];
+
+  function limitOf(s, kind, lang, step) {
     if (kind === 'data_card') return { kind: 'step1' };
     if (kind === 'review') return { kind: 'review' };
+    // The engine's limit line for the current step (`texts.<lang>.limit`), when it gives one.
+    const own = textOf(s.texts, lang, 'step_limit') || textOf(s.texts, lang, 'limit');
+    if (own) return { kind: 'engine', text: own.text, lang: own.lang };
+    if (STEP_LIMITS.includes(step)) return { kind: 'step', step };
     const t = obj(obj(s.texts)[lang]);
     const lines = arr(t.recap).length ? arr(t.recap) : arr(s.recapJunior);
     const line = lines.length >= 5 ? lines[4] : null;
     if (!line) return null;
     const text = String(line).replace(/^[^:：]{1,20}\s?[:：]\s*/, '');
     return text ? { kind: 'engine', text, lang: arr(t.recap).length ? lang : (s.language || 'en') } : null;
+  }
+
+  // R40-R45 (lot P): the results a step's figures rest on, when nothing names them: the
+  // preparation rests on the quality check (and its distributions), the variants on the
+  // linear model's diagnostics, the choice on the models' comparison. The step's own results
+  // come first. Placement only (OP-2): every figure is a registered result of the summary.
+  const RESTS_ON = { preprocessing: ['structural_eda'], model_variant: ['models'], train_eda: [], models: [],
+    structural_eda: [], model_choice: ['models', 'model_variant'], policy: ['models', 'model_variant'],
+    final_test: ['model_choice'], conclusion: ['final_test'] };
+  // Activities a resting step contributes (the diagnostics behind the variants, not every fit).
+  const RESTING_ACTIVITIES = { model_variant: { models: ['diag.regression', 'diag.binary'] } };
+  // R53: the method diagrams of each step, drawn from registered values.
+  const DIAGRAMS = { split: ['partition', 'folds'], success_criterion: ['partition'], preprocessing: ['pipeline'],
+    structural_eda: ['partition'], train_eda: ['ledger'], models: ['folds'], model_variant: ['folds'], model_choice: ['one_se'],
+    policy: ['one_se'], final_test: ['partition', 'ledger'], conclusion: ['ledger'] };
+
+  function figuresOf(s, step, proposal, next, results, hasComparison) {
+    const all = Object.values(results).flat();
+    const bySlot = slot => all.find(r => r.slot === slot) || null;
+    const byId = id => all.find(r => r.resultId === id) || null;
+    const cited = [...arr(proposal && proposal.evidence), ...arr(next.evidence)].map(bySlot).filter(Boolean);
+    const motivated = arr(proposal && proposal.motivatedBy).map(byId).filter(Boolean);
+    let slots;
+    let source;
+    // At a choice, the comparison card already draws its results: they are not drawn twice.
+    const inComparison = r => hasComparison && arr(FIGURE_ACTIVITIES[step]).includes(activityOf(r.slot));
+    if (cited.length) { slots = cited.filter(r => !inComparison(r)); source = 'engine'; }
+    else {
+      source = motivated.length ? 'motivated' : 'step';
+      const own = hasComparison ? [] : arr(results[step]);
+      const resting = arr(RESTS_ON[step]).flatMap(id => {
+        const only = obj(RESTING_ACTIVITIES[step])[id];
+        return arr(results[id]).filter(r => !only || only.includes(activityOf(r.slot)));
+      });
+      slots = [...motivated, ...own, ...(hasComparison ? [] : resting)];
+    }
+    const seen = new Set();
+    slots = slots.filter(r => (seen.has(r.slot) ? false : (seen.add(r.slot), true)));
+    return { step, source, slots, diagrams: arr(DIAGRAMS[step]),
+      // R41: the columns the proposal changes, highlighted first in the per-column view.
+      changed: proposal && proposal.decisionId === 'preprocessing' ? changedColumns(proposal.value) : [],
+      indicator: proposal && proposal.decisionId === 'preprocessing' ? missingIndicator(proposal.value) : false };
+  }
+
+  const parsed = value => {
+    if (typeof value !== 'string') return obj(value);
+    try { return obj(JSON.parse(value)); } catch (_) { return {}; }
+  };
+  /** Whether a preparation value adds an indicator column of missing cells. */
+  const missingIndicator = value => parsed(value).missing === 'indicator';
+
+  /** The columns a preparation value transforms (its log, cap and grouping lists), in words of the engine. */
+  function changedColumns(value) {
+    const o = parsed(value);
+    return [...new Set([...arr(o.log_transform), ...Object.keys(obj(o.caps)), ...Object.keys(obj(o.rare_categories))]
+      .filter(x => typeof x === 'string'))];
   }
 
   function nowOf(s, opts, current, results) {
@@ -327,16 +399,21 @@
     const figure = kind === 'choice' || (kind === 'proposal' && ['model_choice', 'policy'].includes(step))
       ? { step, slots: arr(results[step]).concat(arr(results.models)).filter(r => arr(FIGURE_ACTIVITIES[step]).includes(activityOf(r.slot))) }
       : null;
+    // R39-R45, R53 (lot P): the figures behind the step, from v2, at every step but the
+    // comparison's (`figure` above): the results a proposal cites, else the results filed
+    // under the step and those it rests on; and the step's method diagrams.
+    const figures = hasFigureStage && ['proposal', 'question', 'reopened', 'review', 'run', 'choice'].includes(kind)
+      ? figuresOf(s, step, proposal, next, results, Boolean(figure)) : null;
     return {
       kind, step, title: stepRow ? stepRow.title : null, first: reopenedFirst,
       question, options: options.items, optionsLang: options.lang, optionsNote: note,
-      proposal, decision, reviewItem, contingent, effects, criterion, figure,
+      proposal, decision, reviewItem, contingent, effects, criterion, figure, figures,
       choiceOptions: arr(next.choiceOptions),
       hold: kind === 'hold' ? arr(s.holds).filter(h => h.decisionId === step) : [],
       digest: kind === 'review' ? textOf(s.texts, lang, 'junior_digest') : null,
       nextMessage: textOf(s.texts, lang, 'next_action') || (next.juniorMessage ? { text: next.juniorMessage, lang: s.language || 'en' } : null),
       activity: next.activity || null, requires: stepRow && stepRow.after ? stepRow.after : null,
-      limit: kind === 'done' || kind === 'execution' ? null : limitOf(s, kind, lang),
+      limit: kind === 'done' || kind === 'execution' ? null : limitOf(s, kind, lang, step),
       next: kind === 'done' ? null : nextStepAfter(s, step),
       afterStudy: kind === 'done' ? next.afterStudy || null : null,
       // NOW-7: the opening of the final test is answered in the chat, with no control.
@@ -400,6 +477,11 @@
     return {
       id: step.id, title: step.title, status: step.status, state, flags,
       headline: headline ? { ...headline, text: textOf(s.texts, ctx.lang, 'headlines', step.id) } : null,
+      // R38 (lot P): a done step with no engine headline and no decision value still says
+      // what it did, in the panel's words (data: the rows; models: fitted and compared).
+      fallbackHeadline: step.status === 'done' && !(headline && textOf(s.texts, ctx.lang, 'headlines', step.id))
+        && !(d && d.value),
+      diagrams: arr(DIAGRAMS[step.id]),
       decision: d ? { status: d.status, value: d.value, basis, userWords: d.userWords, reason: d.reason,
         delegationScope: d.delegationScope } : null,
       results: res,
@@ -504,5 +586,5 @@
 
   return { toPageModel, stepOf, stepOfResult, currentStepId, anchorOfResult, textOf, ANCHOR_RE, DRAWERS, TODO_KINDS,
     FALLBACK_STEP_OF_ACTIVITY,
-    FIGURE_ACTIVITIES, STAGES };
+    FIGURE_ACTIVITIES, STAGES, DIAGRAMS, RESTS_ON, STEP_LIMITS };
 });

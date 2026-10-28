@@ -63,7 +63,7 @@
     difference: (candidate, reference) => `${candidate} − ${reference}`,
     metrics: { mae: 'MAE', rmse: 'RMSE' },
     fits: { 'fit.linear': 'modèle linéaire', 'fit.logistic': 'modèle logistique', 'fit.variant': 'variante', 'fit.variant:2': 'deuxième variante', 'fit.variant:3': 'troisième variante' },
-    reference: { binary: 'référence', regression: "moyenne d'entraînement" },
+    reference: { binary: 'référence', regression: 'référence (prédire la moyenne)' },
     lineageTitle: 'Filiation',
     lineageIntro: "Ce dont dépend ce résultat, et ce qui deviendrait périmé s'il changeait.",
     lineageChoose: 'Choisissez un résultat pour voir sa filiation.',

@@ -228,7 +228,8 @@
   /** EV-13 (WP-K): the trial budget and the family shortlist, on a variant proposal (v2). */
   function trialsNote(ctx, c) {
     const entry = ctx.data('trials');
-    const m = entry && entry.model;
+    // R47 (lot P): never the budget of an earlier read; the fresh one is asked for (`want`).
+    const m = entry && ctx.fresh(entry) && entry.model;
     if (!m || (!m.budget && !m.families)) return null;
     const T = HT.copy.evidence.variants;
     const b = m.budget;
@@ -238,8 +239,12 @@
     return el('div', { className: 'ht-note dc-trials', role: 'note', 'data-trials-note': b ? `${b.used}/${b.max}` : 'shortlist' }, [
       el('div', {}, [
         el('p', { className: 'title', text: c.trialsTitle }),
-        b ? el('p', { 'data-trial-budget': `${b.used}/${b.max}`, text: T.budgetLine(ctx.format.number(b.used, 'int'),
-          ctx.format.number(b.max, 'int'), ctx.format.number(b.remaining ?? Math.max(0, b.max - b.used), 'int')) }) : null,
+        // R44 (lot P): the budget drawn as a small bar, its line written next to the bar.
+        b ? el('div', { 'data-trial-budget': `${b.used}/${b.max}` }, [HT.parts.figures && HT.parts.figures.budgetBar
+          ? HT.parts.figures.budgetBar(ctx, b, T.budgetLine(ctx.format.number(b.used, 'int'), ctx.format.number(b.max, 'int'),
+            ctx.format.number(b.remaining ?? Math.max(0, b.max - b.used), 'int')))
+          : T.budgetLine(ctx.format.number(b.used, 'int'), ctx.format.number(b.max, 'int'),
+            ctx.format.number(b.remaining ?? Math.max(0, b.max - b.used), 'int'))]) : null,
         b ? el('p', { className: 'muted', text: T.budgetWhy }) : null,
         text ? ctx.components.engineText(text, { lang: texts[lang] ? lang : 'en', tag: 'p', attrs: { 'data-shortlist-text': m.families.recommendation || '' } }) : null,
       ]),

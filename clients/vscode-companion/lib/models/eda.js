@@ -241,8 +241,41 @@ function quality(v, f) {
       .filter(c => c.rare.length),
     ranges: list(v.ranges).map((r, i) => ({ column: str(r && r.column), min: cite(v, `ranges.${i}.min`, f.min),
       max: cite(v, `ranges.${i}.max`, f.max), declared: Boolean(r && r.declared),
-      nBelow: cite(v, `ranges.${i}.n_below`, f.n_below), nAbove: cite(v, `ranges.${i}.n_above`, f.n_above) })),
+      nBelow: cite(v, `ranges.${i}.n_below`, f.n_below), nAbove: cite(v, `ranges.${i}.n_above`, f.n_above),
+      // Lot P (R41): the figures the preparation draft reads per column (its quantiles and its
+      // skewness), and the engine's verdict for the column when it sends one.
+      type: strOrNull(r && r.type), nSpecial: cite(v, `ranges.${i}.n_special`, f.n_special),
+      quantiles: quantilesOf(r && r.quantiles), skewness: cite(v, `ranges.${i}.skewness`, 'auto'),
+      verdict: verdictOf(r && r.verdict) || verdictOf(list(v.verdicts).find(x => x && x.column === str(r && r.column))) })),
+    // Lot P (R41): the engine's verdicts of the columns that have no range (a category).
+    verdicts: list(v.verdicts).filter(x => x && typeof x.column === 'string').map(x => ({ column: x.column, ...verdictOf(x) })),
   };
+}
+
+/**
+ * Lot P (R41): the quantiles of a range (`{"0.01": .., "0.5": .., "0.99": ..}`), as plain
+ * numbers: their keys hold a dot, so they have no citable path; the panel draws them (the
+ * box and the median of a strip) and writes only the cited minimum and maximum.
+ */
+function quantilesOf(raw) {
+  const q = obj(raw);
+  return { q01: num(q['0.01']), q50: num(q['0.5']), q99: num(q['0.99']) };
+}
+
+/**
+ * Lot P (R41): the engine's per-column verdict of the preparation draft, when it sends one
+ * (the engine agent's additive key; read with fallbacks, never derived here): `{changed
+ * (a transform drafted, or null), parameter, texts {en, fr}, threshold}`.
+ */
+function verdictOf(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const t = obj(raw.texts);
+  const text = x => (typeof x === 'string' && x.trim() ? x : null);
+  const texts = { en: text(t.en) || text(raw.text) || text(raw.junior_text), fr: text(t.fr) };
+  const changed = typeof raw.changed === 'boolean' ? raw.changed
+    : typeof raw.decision === 'string' ? raw.decision !== 'no_change' && raw.decision !== 'none' : null;
+  return { changed, parameter: strOrNull(raw.parameter) || strOrNull(raw.rule), texts,
+    threshold: text(raw.threshold) || (num(raw.threshold) !== null ? String(raw.threshold) : null) };
 }
 
 /** v0.3 (WP-E2, R28): the predictor-versus-predictor association matrix (no target). */

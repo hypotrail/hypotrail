@@ -1,0 +1,110 @@
+/* Lot P (R38-R53): the figures behind each step, the method diagrams, the end's table, "And
+   after" and the What if? tab. Positions and widths are CSSOM custom properties (--x, --a,
+   --b, --w, in %); no inline style attribute. */
+
+/* Now: "To answer, look at" */
+.ht-nowfigs { margin: var(--s3) 0 0; }
+.ht-nowfigs > h3.ht-k { margin: 0 0 6px; }
+.ht-figblock { background: var(--card); color: var(--cardink); border: 1px solid var(--ht-card-border, var(--cardline)); border-radius: var(--r-card);
+  padding: 8px 10px; margin: 0 0 var(--s2); min-width: 0; }
+.ht-figblock > .ht-frame { font-size: var(--t-meta); color: var(--cardmuted); margin: 0 0 6px; }
+.ht-figblock > .ht-frame strong { color: var(--cardink); font-weight: 600; }
+.ht-figtitle { font-weight: 600; margin: 0 0 6px; overflow-wrap: anywhere; }
+
+/* The quality check, one row per column (R41) */
+.ht-qgrid { display: grid; grid-template-columns: minmax(70px, max-content) minmax(90px, 1.4fr) minmax(70px, 0.8fr) minmax(36px, max-content) minmax(90px, 1.2fr);
+  gap: 4px 10px; align-items: center; font-size: var(--t-meta); }
+.ht-qrow { display: contents; }
+.ht-qhead span { color: var(--cardmuted); font-size: var(--t-cap); }
+.ht-qrow-changed > span { background: color-mix(in srgb, var(--ochre) 14%, transparent); }
+.ht-qcol code { font-family: var(--mono); overflow-wrap: anywhere; }
+.ht-strip { display: grid; gap: 1px; min-width: 0; }
+.ht-strip-trk { position: relative; height: 12px; display: block; }
+.ht-strip-line { position: absolute; left: 0; right: 0; top: 5px; border-top: 1px solid var(--ht-c-axis); }
+.ht-strip-box { position: absolute; top: 2px; height: 8px; left: calc(var(--a, 0) * 1%); width: calc((var(--b, 0) - var(--a, 0)) * 1%);
+  background: var(--ht-c-band); outline: 1px solid var(--ht-c-mark); }
+.ht-strip-med { position: absolute; top: 0; height: 12px; width: 2px; margin-left: -1px; left: calc(var(--x, 0) * 1%); background: var(--ht-c-mark); }
+.ht-strip-txt { font-size: var(--t-cap); color: var(--cardmuted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.ht-skew { display: grid; gap: 1px; }
+.ht-skew-trk { position: relative; height: 12px; display: block; border-top: 1px solid var(--ht-c-axis); margin-top: 6px; }
+.ht-skew-zero { position: absolute; top: -4px; height: 8px; border-left: 1px solid var(--ht-c-axis); left: calc(var(--x, 0) * 1%); }
+.ht-skew-bound { position: absolute; top: -7px; height: 14px; border-left: 1.5px dashed var(--ochre); left: calc(var(--x, 0) * 1%); }
+.ht-skew-dot { position: absolute; top: -5px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: var(--ht-c-mark);
+  left: calc(var(--x, 0) * 1%); }
+.ht-qmiss { font-variant-numeric: tabular-nums; }
+.ht-verdict { overflow-wrap: anywhere; }
+.ht-verdict-changed strong { color: var(--ochre-ink, var(--ochre)); }
+@media (max-width: 519px) {
+  .ht-qgrid { grid-template-columns: minmax(60px, max-content) minmax(0, 1fr) minmax(0, 1fr); }
+  .ht-qhead > span:nth-child(n+4) { display: none; }
+  .ht-qrow > .ht-qmiss { grid-column: 1; text-align: right; color: var(--cardmuted); }
+  .ht-qrow > .ht-qmiss::before { content: "∅ "; }
+  .ht-qrow > .ht-verdict { grid-column: 2 / -1; margin-bottom: 4px; }
+}
+
+/* Dots on one scale (R42) */
+.ht-dots .ht-dot { position: absolute; top: 5px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%;
+  left: calc(var(--x, 0) * 1%); background: var(--ht-c-mark); opacity: 0.55; }
+.ht-dots .ht-pt.ht-ring { background: var(--card); box-shadow: inset 0 0 0 2px var(--ht-c-mark), 0 0 0 2px var(--card); }
+.ht-dots .ht-pt.ht-ring.ht-ref { box-shadow: inset 0 0 0 2px var(--ht-c-ref), 0 0 0 2px var(--card); }
+.ht-dots .ht-row-hl > .ht-lab, .ht-dots .ht-row-hl > .ht-val { font-weight: 700; }
+.ht-axis-refs span { color: var(--ochre-ink, var(--ochre)); }
+
+/* The trial budget (R44) */
+.ht-budget { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: var(--t-meta); margin: 6px 0; }
+.ht-budget-cells { display: inline-flex; gap: 3px; }
+.ht-budget-cells i { width: 18px; height: 10px; border: 1px solid var(--ht-c-mark); border-radius: 2px; display: inline-block; }
+.ht-budget-cells i.ht-used { background: var(--ht-c-mark); }
+
+/* Method diagrams (R53) */
+.ht-partition { display: flex; width: 100%; min-height: 26px; border-radius: 4px; overflow: hidden; font-size: var(--t-cap); }
+.ht-partition > span { flex: 0 0 calc(var(--w, 50) * 1%); padding: 4px 6px; overflow-wrap: anywhere; line-height: 1.25; }
+.ht-part-dev { background: var(--ht-c-band); color: var(--cardink); }
+.ht-part-final { background: color-mix(in srgb, var(--ht-seal, var(--slate)) 30%, var(--card)); color: var(--cardink); font-weight: 600; }
+.ht-part-final.ht-part-opened { background: color-mix(in srgb, var(--ht-c-mark) 35%, var(--card)); }
+.ht-folds { display: grid; gap: 3px; }
+.ht-foldrow { display: grid; grid-template-columns: minmax(44px, max-content) minmax(80px, 1fr) minmax(0, max-content); gap: 8px; align-items: center;
+  font-size: var(--t-cap); }
+.ht-foldtrk { display: flex; height: 10px; gap: 1px; }
+.ht-foldtrk i { flex: 0 0 calc(var(--w, 20) * 1% - 1px); background: var(--ht-c-band); }
+.ht-foldtrk i.ht-fold-pred { background: var(--ht-c-mark); }
+.ht-foldtxt { color: var(--cardmuted); font-variant-numeric: tabular-nums; }
+ol.ht-pipe { list-style: none; display: flex; flex-wrap: wrap; gap: 4px; padding: 0; margin: 0; font-size: var(--t-cap); }
+li.ht-pipe-step { border: 1px solid var(--ht-c-mark); border-radius: 4px; padding: 3px 7px; min-width: 110px; flex: 1 1 110px; overflow-wrap: break-word; hyphens: auto; }
+li.ht-pipe-step + li.ht-pipe-step::before { content: "→ "; color: var(--cardmuted); }
+.ht-timeline { position: relative; height: 22px; margin: 6px 4px; }
+.ht-tl-line { position: absolute; left: 0; right: 0; top: 10px; border-top: 1px solid var(--ht-c-axis); }
+.ht-tl-mark { position: absolute; top: 5px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; left: calc(var(--x, 0) * 1%); }
+.ht-tl-look, .ht-tl-key-look { background: var(--ht-c-mark); }
+.ht-tl-opening, .ht-tl-key-opening { background: var(--ochre); border-radius: 2px; }
+.ht-legend .ht-tl-key-look, .ht-legend .ht-tl-key-opening { display: inline-block; width: 9px; height: 9px; margin-right: 4px; vertical-align: -1px; }
+.ht-diagram .ht-legend { font-size: var(--t-cap); display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0; }
+
+/* The end (R48, R52) */
+.ht-concl-part { font-size: var(--t-meta); text-transform: uppercase; letter-spacing: 0.06em; color: var(--cardmuted); margin: 10px 0 4px; }
+table.ht-devfinal { border-collapse: collapse; font-size: var(--t-meta); width: 100%; }
+table.ht-devfinal caption { text-align: left; font-weight: 600; padding: 0 0 4px; }
+table.ht-devfinal th, table.ht-devfinal td { border-top: 1px solid var(--cardline); padding: 4px 6px; text-align: left; vertical-align: top;
+  font-variant-numeric: tabular-nums; }
+table.ht-devfinal tr.ht-chosen th, table.ht-devfinal tr.ht-chosen td { background: color-mix(in srgb, var(--ochre) 12%, transparent); font-weight: 600; }
+table.ht-devfinal td.ht-faint { font-style: italic; }
+.card .ht-azure, .ht-after .ht-azure { margin: var(--s2) 0; }
+.ht-azure-facts { padding-left: 1.2em; margin: 4px 0; }
+.ht-azure-cloud { font-weight: 600; }
+ul.ht-azure-files { max-height: 220px; overflow: auto; font-size: var(--t-cap); }
+
+/* Calm lines (R44, R51) */
+.ht-calm, .ht-calmline > p { color: var(--chalk2); margin: 4px 0; }
+.card .ht-calm, .card .ht-calmline > p { color: var(--cardmuted); }
+.ht-calmline details.ht-why { margin: 0 0 4px; }
+.ht-small-links { font-size: var(--t-meta); margin: 6px 0 0; }
+.ht-small-links button { font-size: var(--t-meta); }
+details.ht-small > summary { font-size: var(--t-meta); }
+.ht-res-title { font-weight: 600; margin: 8px 0 2px; }
+
+/* The What if? tab (R51) */
+.ht-tabhead { padding: var(--s2) var(--s3); }
+.ht-tabtitle { font-size: var(--t-title); margin: 0 0 4px; }
+.ht-whatif-tab { max-width: 1100px; padding: 0 var(--s3) var(--s4); }
+table.ht-largest { border-collapse: collapse; font-size: var(--t-meta); }
+table.ht-largest th, table.ht-largest td { border-top: 1px solid var(--cardline); padding: 3px 6px; text-align: right; font-variant-numeric: tabular-nums; }

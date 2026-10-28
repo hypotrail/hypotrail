@@ -66,7 +66,7 @@
     difference: (candidate, reference) => `${candidate} − ${reference}`,
     metrics: { mae: 'MAE', rmse: 'RMSE' },
     fits: { 'fit.linear': 'linear model', 'fit.logistic': 'logistic model', 'fit.variant': 'variant', 'fit.variant:2': 'second variant', 'fit.variant:3': 'third variant' },
-    reference: { binary: 'baseline', regression: 'training mean' },
+    reference: { binary: 'baseline', regression: 'reference (predict the mean)' },
     lineageTitle: 'Lineage',
     lineageIntro: 'What this result depends on, and what would go stale if it changed.',
     lineageChoose: 'Choose a result to see its lineage.',

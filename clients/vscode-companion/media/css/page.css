@@ -179,7 +179,8 @@ ul.pg-steps > li { border-top: 1px dashed var(--line); margin: 0; }
 .ht-path .ht-t { font-weight: 600; color: var(--chalk); }
 .ht-path .ht-phase-t { font: 600 var(--t-cap)/1.5 var(--ht-font); letter-spacing: 0.07em; text-transform: uppercase; }
 .ht-path .ht-v { color: var(--chalk2); flex: 1 1 160px; min-width: 0; }
-.ht-path li:not([aria-current]) > details:not([open]) > summary .ht-v { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* R38 (lot P): a long headline wraps; it is never cut at the right edge. */
+.ht-path .ht-v { overflow-wrap: anywhere; white-space: normal; }
 .ht-later, .ht-later .ht-t { color: var(--faint); }
 .ht-later .ht-t { font-weight: 400; }
 .ht-b { font-size: var(--t-cap); white-space: nowrap; border-radius: var(--r-pill); padding: 0 7px; border: 1px solid currentColor; flex: none; line-height: 1.6; }

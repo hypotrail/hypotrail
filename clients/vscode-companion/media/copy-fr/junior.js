@@ -45,9 +45,23 @@
   const MODEL_NAMES = { 'fit.logistic': 'le modèle logistique', 'fit.linear': 'le modèle linéaire', 'fit.variant': 'la variante',
     // v0.3 (WP-F1, WP-K): the second and third variants of a list value.
     'fit.variant:2': 'la deuxième variante', 'fit.variant:3': 'la troisième variante' };
+  const VARIANT_SLOTS = ['fit.variant', 'fit.variant:2', 'fit.variant:3'];
+  function variantShort(slot) {
+    const i = VARIANT_SLOTS.indexOf(slot);
+    const list = (globalThis.Hypotrail && globalThis.Hypotrail.studyVariants) || [];
+    const v = i >= 0 ? list[i] : null;
+    if (!v || typeof v !== 'object') return null;
+    if (v.kind === 'tuned') return 'ridge';
+    if (v.kind === 'family') return { ebm: 'EBM', hgb: 'boosting' }[v.family] || null;
+    if (v.kind === 'regularisation') return v.strength === 'weak' ? 'moins pénalisée' : 'plus pénalisée';
+    if (v.kind === 'drop_group') return `sans ${str(v.group)}`;
+    return null;
+  }
+  const variantLabel = slot => (variantShort(slot) ? `variante ${variantShort(slot)}` : null);
   const modelName = (slot, task) => (slot === 'fit.baseline'
-    ? (regression(task) ? 'la référence moyenne' : 'la référence')
-    : MODEL_NAMES[slot] || `le modèle ${str(slot).replace(/^fit\./, '').replace(/_/g, ' ')}`);
+    ? (regression(task) ? 'la référence (prédire la moyenne)' : 'la référence')
+    : variantShort(slot) ? `la variante ${variantShort(slot)}`
+      : MODEL_NAMES[slot] || `le modèle ${str(slot).replace(/^fit\./, '').replace(/_/g, ' ')}`);
 
   function parse(raw) {
     if (raw && typeof raw === 'object') return raw;
@@ -133,7 +147,7 @@
     // v0.3 (WP-C, R18): the criterion names its metric (precision by default, or recall).
     if (typeof v.min_points === 'number') return `N'adopter que si ${v.metric === 'recall_gain' ? 'le rappel' : 'la précision'} bat la référence d'au moins ${v.min_points} points`;
     if (typeof v.min_share === 'number') {
-      return `N'adopter que si l'erreur de validation est inférieure d'au moins ${Math.round(100 * v.min_share)} % à la référence moyenne`;
+      return `N'adopter que si l'erreur de validation est inférieure d'au moins ${Math.round(100 * v.min_share)} % à la référence (prédire la moyenne)`;
     }
     return null;
   }
@@ -144,9 +158,9 @@
     const parts = [];
     if (v.missing && typeof v.missing === 'object') {
       const flagged = Object.keys(v.missing).filter(k => v.missing[k] === 'indicator');
-      parts.push(flagged.length ? `valeurs manquantes signalées (${flagged.join(', ')})` : 'valeurs manquantes non signalées');
+      parts.push(flagged.length ? `une colonne indicatrice des valeurs manquantes (${flagged.join(', ')})` : 'pas de colonne indicatrice des valeurs manquantes');
     } else {
-      parts.push(v.missing === 'indicator' ? 'valeurs manquantes signalées' : 'valeurs manquantes non signalées');
+      parts.push(v.missing === 'indicator' ? 'une colonne indicatrice des valeurs manquantes' : 'pas de colonne indicatrice des valeurs manquantes');
     }
     if (v.rare_category_min_rows && typeof v.rare_category_min_rows === 'object') {
       // L8 (R6) : un minimum par colonne.
@@ -426,7 +440,7 @@
   HT.copyFr = HT.copyFr || {};
   HT.copyFr.junior = {
     decidedLine, ruleShort, featureName, modes, finalTest: finalTestCopy, changedName,
-    decisionName, why, value, modelName, nextMove,
+    decisionName, why, value, modelName, variantLabel, nextMove,
     severityLabel, limitText, limitFallback, groups, digestText,
     digestFallback: "L'étude a changé.",
     deliverablesUpToDate: 'Le rapport et le notebook sont à jour.',

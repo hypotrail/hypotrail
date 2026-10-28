@@ -2,7 +2,8 @@
 // diagnostics (gain, calibration). Signature:
 //   curve(container, {title, points: [{x, y, low?, high?, label, tone?}], xDomain, yDomain,
 //                     xTicks: [{value, text}], yTicks: [{value, text}], xLabel, yLabel,
-//                     diagonal: {label} | null, marks: [{x, label, tone}], columns, rows})
+//                     diagonal: {label} | null, marks: [{x, label, tone}], columns, rows, joined = true})
+// Lot P (R44): `joined: false` draws a scatter (observed against predicted): points only.
 // Geometry only (INV-14): each point sits at the engine's value; the points are joined in
 // the order of x, with no point added between or after them. The diagonal (random
 // selection for a gain curve, perfect calibration for a calibration plot) and the axis
@@ -21,8 +22,8 @@
   const M = { left: 52, right: 26, top: 28, bottom: 44 };
 
   function curve(container, { title, points, xDomain = [0, 1], yDomain = [0, 1], xTicks = [], yTicks = [], xLabel = '',
-    yLabel = '', diagonal = null, marks = [], columns, rows, legend = [], guide = null }) {
-    const draw = W => draw1(W, { points, xDomain, yDomain, xTicks, yTicks, xLabel, yLabel, diagonal, marks });
+    yLabel = '', diagonal = null, marks = [], columns, rows, legend = [], guide = null, joined = true }) {
+    const draw = W => draw1(W, { points, xDomain, yDomain, xTicks, yTicks, xLabel, yLabel, diagonal, marks, joined });
     const host = HT.components.fluid(draw, W0);
     const svg = host.firstChild;
     // Lesson style (R30): the guided reading; a curve's conclusion is the view's (`guide`),
@@ -38,7 +39,7 @@
     return node;
   }
 
-  function draw1(W, { points, xDomain, yDomain, xTicks, yTicks, xLabel, yLabel, diagonal, marks }) {
+  function draw1(W, { points, xDomain, yDomain, xTicks, yTicks, xLabel, yLabel, diagonal, marks, joined = true }) {
     const H = Math.round(Math.max(220, Math.min(320, W * 0.7)));
     const pw = W - M.left - M.right;
     const ph = H - M.top - M.bottom;
@@ -79,7 +80,7 @@
         HT.svg('text', { x: x(m.x) + 3, y: M.top + 10 + 12 * i, class: 'ht-muted-text', text: m.label }),
       ])),
       // The engine's points, joined in x order.
-      shown.length > 1 ? HT.svg('path', { d: path, fill: 'none', stroke: 'accent', 'stroke-width': 2, 'data-curve': true }) : null,
+      joined && shown.length > 1 ? HT.svg('path', { d: path, fill: 'none', stroke: 'accent', 'stroke-width': 2, 'data-curve': true }) : null,
       ...shown.map(p => HT.svg('g', { 'data-point': p.label }, [
         ok(p.low) && ok(p.high) ? HT.svg('line', { x1: x(p.x), x2: x(p.x), y1: y(p.low), y2: y(p.high), stroke: 'accent',
           'stroke-width': 2, 'data-interval': true }) : null,

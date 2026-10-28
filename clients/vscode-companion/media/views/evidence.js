@@ -65,7 +65,9 @@
   function fitLabel(task, fit) {
     const c = C();
     if (fit === 'fit.baseline') return c.reference[task === 'regression' ? 'regression' : 'binary'];
-    return c.fits[fit] || fit;
+    // Lot P (R45): a variant named by what it is (ridge, EBM), from the study's decision.
+    const named = HT.copy.junior.variantLabel ? HT.copy.junior.variantLabel(fit) : null;
+    return named || c.fits[fit] || fit;
   }
 
   // --- results registry --------------------------------------------------------------------
@@ -489,7 +491,10 @@
           columns: [{ key: 'model', label: cols.model }, { key: 'metric', label: cols.metric }, { key: 'mean', label: cols.mean },
             { key: 'range', label: cols.range }], rows });
         table.setAttribute('data-cv-spread', String(rows.length));
-        kids.push(table, ctx.el('p', { className: 'muted', text: c.spreadWhy }));
+        // R42, R45 (lot P): the spread is drawn fold by fold in the selection card; the text
+        // table stays one fold away.
+        kids.push(ctx.el('details', { className: 'ht-details', 'data-cv-spread-fold': true }, [ctx.el('summary', { text: c.spreadTitle }), table]),
+          ctx.el('p', { className: 'muted', text: c.spreadWhy }));
       }
     } else if (model.results.some(r => r.slot === 'split' && r.current)) {
       kids.push(ctx.el('p', { 'data-cv-scheme': 'split', text: c.schemeSplit }));
@@ -635,11 +640,20 @@
     return C().measures[metric] || metric || '';
   }
 
-  /** The budget: the live one of the full view, else the one the evaluation stored. */
+  /**
+   * The budget: the live one of the full view when it was read at this snapshot's version,
+   * else the one the evaluation stored. R47 (lot P): the card used to show the full view of
+   * an earlier read (the variant proposal's "0 of 3", before any variant was confirmed) at
+   * the model choice, because it took any `trials` read without asking whether it was fresh
+   * and never asked for a new one. The engine's two sources agree (2 of 3 after two variants).
+   */
   function budgetOf(ctx, model) {
+    if (ctx.want) ctx.want('trials');
     const t = ctx.data('trials');
-    const live = t && t.model && t.model.budget;
-    return live || (model.selection && model.selection.budget) || null;
+    const live = t && ctx.fresh(t) && t.model && t.model.budget;
+    // The digest's live budget (`ledger.variants`, lot P) is read with every snapshot.
+    const digest = ctx.snapshot && ctx.snapshot.ledger && ctx.snapshot.ledger.variants;
+    return live || digest || (model.selection && model.selection.budget) || null;
   }
 
   function selectionCard(ctx, model, task) {
@@ -678,7 +692,18 @@
         tr.setAttribute('data-configuration', configs[i].slot);
         if (configs[i].slot === pick) tr.setAttribute('data-kept', 'true');
       }
-      body.push(table);
+      // R42, R45 (lot P): the per-fold values drawn as dots per configuration, the mean as a
+      // ring, the numbers written; the table of means stays one fold away.
+      const P = HT.copy.figures.perFold;
+      const dots = ctx.el('div', { 'data-selection-chart': 'per-fold' });
+      ctx.components.dotScale(dots, { title: P.title(metric),
+        rows: configs.map(cfg => ({ label: `${cap1(name(cfg))}${cfg.slot === pick ? ` · ${t.kept}` : ''}`, point: cfg.mean.value,
+          low: null, high: null, dots: cfg.perFold.map(v => v.value), dotTexts: cfg.perFold.map(v => (v.value === null ? '' : f3(v.value))),
+          highlight: cfg.slot === pick, tone: null,
+          pointText: cfg.mean.value === null ? '' : `${f3(cfg.mean.value)} ± ${f3(cfg.se.value)}`, intervalText: '' })),
+        concl: P.reading });
+      body.push(dots);
+      body.push(ctx.el('details', { className: 'ht-details', 'data-selection-means': true }, [ctx.el('summary', { text: P.numbers }), table]));
       const diffs = configs.filter(cfg => cfg.difference && cfg.difference.mean.value !== null);
       if (diffs.length) {
         const box = ctx.el('div', { 'data-selection-chart': 'difference' });

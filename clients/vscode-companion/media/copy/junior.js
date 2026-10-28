@@ -59,9 +59,25 @@
     // v0.3 (WP-F1, WP-K): the second and third variants of a list value.
     'fit.variant:2': 'the second variant', 'fit.variant:3': 'the third variant',
   };
+  // Lot P (R45): which variant a slot is, in a few words, from the study's variant decision
+  // (`Hypotrail.studyVariants`, set by the page from the summary at each render).
+  const VARIANT_SLOTS = ['fit.variant', 'fit.variant:2', 'fit.variant:3'];
+  function variantShort(slot) {
+    const i = VARIANT_SLOTS.indexOf(slot);
+    const list = (globalThis.Hypotrail && globalThis.Hypotrail.studyVariants) || [];
+    const v = i >= 0 ? list[i] : null;
+    if (!v || typeof v !== 'object') return null;
+    if (v.kind === 'tuned') return 'ridge';
+    if (v.kind === 'family') return { ebm: 'EBM', hgb: 'boosting' }[v.family] || null;
+    if (v.kind === 'regularisation') return v.strength === 'weak' ? 'less penalised' : 'more penalised';
+    if (v.kind === 'drop_group') return `without ${str(v.group)}`;
+    return null;
+  }
+  const variantLabel = slot => (variantShort(slot) ? `${variantShort(slot)} variant` : null);
   const modelName = (slot, task) => (slot === 'fit.baseline'
-    ? (regression(task) ? 'the mean baseline' : 'the baseline')
-    : MODEL_NAMES[slot] || `the ${str(slot).replace(/^fit\./, '').replace(/_/g, ' ')} model`);
+    ? (regression(task) ? 'the reference (predict the mean)' : 'the baseline')
+    : variantShort(slot) ? `the ${variantShort(slot)} variant`
+      : MODEL_NAMES[slot] || `the ${str(slot).replace(/^fit\./, '').replace(/_/g, ' ')} model`);
 
   function parse(raw) {
     if (raw && typeof raw === 'object') return raw;
@@ -196,7 +212,7 @@
       return `Adopt only if ${metric} beats the baseline by at least ${v.min_points} points`;
     }
     if (typeof v.min_share === 'number') {
-      return `Adopt only if the validation error is at least ${Math.round(100 * v.min_share)}% below the mean baseline`;
+      return `Adopt only if the validation error is at least ${Math.round(100 * v.min_share)}% below the reference (predict the mean)`;
     }
     return null;
   }
@@ -207,9 +223,9 @@
     const parts = [];
     if (v.missing && typeof v.missing === 'object') {
       const flagged = Object.keys(v.missing).filter(k => v.missing[k] === 'indicator');
-      parts.push(flagged.length ? `missing values flagged (${flagged.join(', ')})` : 'missing values not flagged');
+      parts.push(flagged.length ? `an indicator column of missing values (${flagged.join(', ')})` : 'no indicator column of missing values');
     } else {
-      parts.push(v.missing === 'indicator' ? 'missing values flagged' : 'missing values not flagged');
+      parts.push(v.missing === 'indicator' ? 'an indicator column of missing values' : 'no indicator column of missing values');
     }
     if (v.rare_category_min_rows && typeof v.rare_category_min_rows === 'object') {
       // L8 (R6): a minimum per column.
@@ -552,7 +568,7 @@
 
   HT.copy.junior = {
     decidedLine, sharePercent, ruleShort, featureName, modes, finalTest: finalTestCopy, finalTestState, changedName,
-    decisionName, why, value, availability, modelName, nextMove,
+    decisionName, why, value, availability, modelName, variantLabel, nextMove,
     SEVERITY, SEVERITY_ORDER, severityLabel, limitText, limitFallback,
     GROUP_OF_KIND, groups, GROUP_ORDER, digestText,
     digestFallback: 'The study changed.',

@@ -231,11 +231,13 @@ CONCLUSION_TEXT = ('The development evidence and the final test, opened once, ar
 def _run_pending(flow) -> dict:
     """Run the activities ``next_action`` asks for, as given, until it asks something else;
     that next action."""
-    for _ in range(10):
+    for _ in range(30):
         nxt = flow.view()['next_action']
         if nxt['kind'] != 'run':
             return nxt
-        flow.run(nxt['activity'])
+        # A run the engine asks with options (a chart of one column) gets them as given.
+        options = [f'--{k}={v}' for k, v in (nxt.get('options') or {}).items()]
+        flow.run(nxt['activity'], *options)
     raise AssertionError(nxt)
 
 

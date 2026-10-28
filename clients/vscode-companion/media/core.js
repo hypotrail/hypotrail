@@ -38,7 +38,8 @@
   const views = [];
   const diagnostics = { dropped: 0, ignored: 0 };
   const state = {
-    init: { stage: 'v0', reviewer: false, learningLayer: true, chatInsert: false, task: null, language: 'auto', panelContract: null },
+    init: { stage: 'v0', reviewer: false, learningLayer: true, chatInsert: false, task: null, language: 'auto', panelContract: null,
+      surface: 'panel' },
     snapshot: null, raw: null, snapshotLanguage: null, localizedFrom: null, data: {}, errors: {}, busy: null, outcomes: {}, lastOutcome: null,
     loadError: null, notice: null, lastRead: null, requested: {}, pendingNav: null, popover: null, copied: null,
     epoch: 0, loadEpoch: {},
@@ -736,7 +737,9 @@
         bindStudy(m.study);
         state.init = { stage: m.stage, reviewer: m.reviewer, learningLayer: m.learningLayer, chatInsert: m.chatInsert, task: m.task,
           marimo: m.marimo || null, language: m.language || 'auto',
-          panelContract: Number.isInteger(m.panelContract) ? m.panelContract : null };
+          panelContract: Number.isInteger(m.panelContract) ? m.panelContract : null,
+          // Lot P (R51): the read-only What if? editor tab draws What if? only.
+          surface: m.surface === 'whatif' ? 'whatif' : 'panel' };
         break;
       case 'snapshot': onSnapshot(m); break;
       case 'view_data':

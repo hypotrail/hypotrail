@@ -173,7 +173,36 @@ function afterStudyOf(raw) {
   const juniorText = str(raw.junior_text).trim();
   if (!juniorText) return null;
   const azure = raw.azureml && typeof raw.azureml === 'object' ? raw.azureml : {};
-  return { juniorText, exportPlanAvailable: azure.supported === true, cloudStatus: strOrNull(raw.cloud_status) };
+  const model = azure.model && typeof azure.model === 'object' ? azure.model : null;
+  // R49 (lot P): what the "And after" block shows next to the plan read: the engine's reason
+  // when the model is not supported, the family named by the support matrix. Never a command.
+  return { juniorText, exportPlanAvailable: azure.supported === true, cloudStatus: strOrNull(raw.cloud_status),
+    azureReason: strOrNull(azure.reason), azureFamily: model ? strOrNull(model.family) : null };
+}
+
+/**
+ * Lot P (R41): the digest's `quality_verdicts` `{result_id, columns: [{column, kept, changed,
+ * parameters, checks: [{rule, value, threshold, exceeds, path, words}], text}]}`, the engine's
+ * verdict per column (its words are in the study language), or null.
+ */
+function qualityVerdictsOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const num = x => (typeof x === 'number' && Number.isFinite(x) ? x : null);
+  return {
+    resultId: strOrNull(raw.result_id),
+    columns: list(raw.columns).filter(c => c && typeof c.column === 'string').map(c => ({
+      column: c.column, kept: c.kept !== false, changed: c.changed === true, parameters: list(c.parameters).map(str).filter(Boolean),
+      text: strOrNull(c.text),
+      checks: list(c.checks).filter(k => k && typeof k.rule === 'string').map(k => ({ rule: k.rule, value: num(k.value),
+        threshold: num(k.threshold), exceeds: k.exceeds === true, path: strOrNull(k.path), words: strOrNull(k.words) })),
+    })),
+  };
+}
+
+/** Lot P (R40): `evidence` as a list of slots (strings, or objects with `slot`). */
+function evidenceOf(raw) {
+  return list(raw).map(x => (typeof x === 'string' ? x : x && typeof x === 'object' ? str(x.slot) : ''))
+    .filter(x => x && x.length <= 200);
 }
 
 /**
@@ -201,6 +230,10 @@ function textsOf(raw) {
     table.options_note = text(t.options_note);
     table.junior_digest = text(t.junior_digest);
     table.sample_note = text(t.sample_note);
+    // Lot P (R43, R48): the limit line of the current step, and the criterion in words fit to
+    // where it is judged (the engine's; null from an older engine).
+    table.step_limit = text(t.step_limit);
+    table.criterion_words = text(t.criterion_words);
     out[lang] = table;
   }
   return out;
@@ -242,6 +275,9 @@ function ledgerOf(raw) {
   const conf = obj(raw.configurations);
   return {
     finalTest: ft ? { openings: int(ft.openings) || 0, max: int(ft.max) === null ? 1 : int(ft.max) } : null,
+    // Lot P (R47): the live variant budget of the digest (`ledger.variants`), null when absent.
+    variants: raw.variants && typeof raw.variants === 'object' && int(raw.variants.max) !== null && int(raw.variants.used) !== null
+      ? { max: int(raw.variants.max), used: int(raw.variants.used), remaining: int(raw.variants.remaining) } : null,
     targetLooks: { eda: int(looks.eda) || 0, sample: int(looks.sample) || 0, total: int(looks.total) || 0 },
     configurations: { tried: int(conf.tried) || 0, reference: conf.reference === true },
   };
@@ -445,6 +481,11 @@ function toSummaryModel(summary) {
       // Contract P1 (§17.2.6): the engine's mark of a result-dependent change (true, false,
       // or null: not assessed, or an older engine).
       dataContingent: typeof p.data_contingent === 'boolean' ? p.data_contingent : null,
+      // Lot P (R39, R40): the registered results a proposal cites, so Now places their figures:
+      // the engine's `evidence` (slots, or {slot}) when it sends it; else the result ids its
+      // value names in `motivated_by` (the drafted preparation). Placement only, nothing derived.
+      evidence: evidenceOf(p.evidence),
+      motivatedBy: list(p.value && typeof p.value === 'object' ? p.value.motivated_by : null).map(str).filter(x => /^[0-9a-f]{64}$/.test(x)),
       holds: holds.filter(h => h.decisionId === str(p.decision_id)).map(h => ({ noteId: h.noteId, userWords: h.userWords })),
       resolvedNotes: notes.filter(n => n.status === 'resolved' && n.decisionId === str(p.decision_id))
         .map(n => ({ noteId: n.noteId, userWords: n.userWords, resolutionWords: n.resolutionWords })),
@@ -490,7 +531,9 @@ function toSummaryModel(summary) {
       // not a change underneath (CLI-CONTRACT §3.1, §5.5). Read only.
       review: next.review === true && ['reconfirm', 'await_user_words'].includes(str(next.kind)),
       // L7 (D15): what comes after the study, at `done` (CLI-CONTRACT §3.1). Read only.
-      afterStudy: next.kind === 'done' ? afterStudyOf(next.after_study) : null },
+      afterStudy: next.kind === 'done' ? afterStudyOf(next.after_study) : null,
+      // Lot P (R40): the results a next action cites (a draft before its proposal exists).
+      evidence: evidenceOf(next.evidence) },
     artifacts,
     artifactsStatus: str(summary.artifacts && summary.artifacts.status),
     proposals,
@@ -537,6 +580,8 @@ function toSummaryModel(summary) {
     sample: sampleOf(summary.sample),
     headlines: headlinesOf(summary.headlines),
     criterionConfigurations: criterionConfigurationsOf(summary.criterion_configurations),
+    // Lot P (R41): the per-column verdicts of the quality check (digest `quality_verdicts`).
+    qualityVerdicts: qualityVerdictsOf(summary.quality_verdicts),
   };
 }
 
@@ -544,7 +589,10 @@ const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary'
   'captured/summary.binary.cv', 'captured/summary.binary.cv.opening',
   // Contract P1, the one-page states captured from the engine (PANEL-ONE-PAGE-PLAN E-8).
   'captured/summary.regression.step1', 'captured/summary.regression.choice', 'captured/summary.regression.reopened',
-  'captured/summary.regression.interrupted', 'captured/summary.regression.review', 'captured/summary.regression.done'];
+  'captured/summary.regression.interrupted', 'captured/summary.regression.review', 'captured/summary.regression.done',
+  // Lot P: the cross-validated Auto MPG study (the preparation, the variants, the choice, the end).
+  'captured/summary.regression.cv.preparation', 'captured/summary.regression.cv.variants', 'captured/summary.regression.cv.choice',
+  'captured/summary.regression.cv.done'];
 
 // v0 name, kept for the migrated tests and older callers.
 const toModel = toSummaryModel;

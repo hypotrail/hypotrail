@@ -348,6 +348,8 @@ function crossValidationOf(rawResults, task) {
     sharedGroups: groups ? { column: strOrNull(groups.column), inSeveralFolds: int(groups.groups_in_several_folds),
       rows: int(groups.rows_in_shared_groups) } : null,
     foldRows: list(v.fold_rows).map(f => ({ fold: int(f && f.fold), nRows: int(f && f.n_rows) })),
+    // Lot P (R53): the span of the order column in each time-ordered block (the CV diagram).
+    foldRanges: list(v.fold_ranges).map(f => ({ fold: int(f && f.fold), min: num(f && f.min), max: num(f && f.max) })),
     fits,
   };
 }
@@ -562,6 +564,15 @@ function regressionDiag(m, at) {
         paths: { n: at('by_feature', fi, 'groups', gi, 'n'), meanResidual: at('by_feature', fi, 'groups', gi, 'mean_residual') } })) })),
     coefficients: coefficientsOf(obj(m.coefficients), at),
     largestErrors: list(obj(m.examples).largest_errors).length,
+    // Lot P (R44, R51): observed against predicted (the engine's sample of rows, in prediction
+    // order) and the largest errors, each a registered value of the diagnostics.
+    scatter: list(obj(m.scatter).points).map(p => ({ predicted: num(p && p.prediction), observed: num(p && p.observed) }))
+      .filter(p => p.predicted !== null && p.observed !== null),
+    scatterShown: int(obj(m.scatter).n_shown), scatterRows: int(obj(m.scatter).n_rows),
+    largest: list(obj(m.examples).largest_errors).slice(0, 10).map((x, i) => ({ rowKey: str(x && x.row_key),
+      observed: num(x && x.observed), predicted: num(x && x.prediction), residual: num(x && x.residual),
+      path: at('examples', 'largest_errors', i, 'residual'),
+      values: Object.fromEntries(Object.entries(obj(x && x.values)).map(([k, v]) => [k, str(v)])) })),
   };
 }
 

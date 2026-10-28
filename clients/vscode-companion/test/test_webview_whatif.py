@@ -285,7 +285,8 @@ def _regression_with_variant(payload, family):
 @pytest.mark.parametrize('lang, family, labels, residuals', [
     ('en', 'ebm', ['linear model', 'variant model (Explainable Boosting Machine)', 'mean baseline'],
      'Residuals of the mean baseline, validation rows'),
-    ('en', None, ['linear model', 'variant model', 'mean baseline'],
+    # R45 (lot P): a variant with no recorded family is named from the study's decision.
+    ('en', None, ['linear model', 'more penalised variant', 'mean baseline'],
      'Residuals of the mean baseline, validation rows'),
     ('fr', 'hgb', ['modèle linéaire', 'modèle variante (gradient boosting par histogrammes)', 'moyenne de référence'],
      'Résidus (moyenne de référence), lignes de validation'),

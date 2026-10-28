@@ -88,8 +88,11 @@ def test_the_page_labels_equal_the_contract_tables(page_copy):
 def test_the_anchor_names_open_the_contract_lines(page_copy):
     """The place names of the panel line (§17.1.4 "In the panel: Now, …") are the copy's anchors."""
     lines = _table('Anchor')
-    for lang, start in (('en', 'In the panel: '), ('fr', 'Dans le panneau : ')):
+    for lang, starts in (('en', ('In the panel: ', '> 🧭 **Panel** · ')), ('fr', ('Dans le panneau : ', '> 🧭 **Panneau** · '))):
         names = page_copy[lang]['anchors']
+        # R35 (2026-10-28): the line became a block quote with a fixed marker; an engine before
+        # it writes "In the panel: ". Either way the place name follows the prefix.
+        start = next((s for s in starts if lines['now'][lang].strip('`').startswith(s)), starts[0])
         assert lines['now'][lang].strip('`').startswith(f'{start}{names["now"]},'), lang
         assert lines['todo:<kind>'][lang].strip('`').startswith(f'{start}{names["todo"]},'), lang
         assert lines['path'][lang].strip('`').startswith(f'{start}{names["path"]},'), lang
@@ -136,7 +139,8 @@ def test_the_engine_lines_are_the_contract_lines():
             expected = table[row][lang].strip('`').replace('{kind label}', '{kind}')
             assert ce.LINES[lang][key] == expected, (lang, row)
         ledger = ce.ANCHOR_LABELS[lang]['path_ledger']
-        assert ce.LINES[lang]['path'].endswith(f'{ledger}.'), lang
+        # R35 (2026-10-28): the line is a block quote with no final period (an older engine had one).
+        assert ce.LINES[lang]['path'].rstrip('.').endswith(ledger), lang
         assert ce.line_of('tools:whatif', None, lang) == ce.LINES[lang]['tools'].format(
             drawer=ce.DRAWER_LABELS[lang]['whatif']), lang
         assert ce.label_of(ce.line_of('now', 'data_card', lang)) == \

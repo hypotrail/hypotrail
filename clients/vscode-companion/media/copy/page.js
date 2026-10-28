@@ -107,6 +107,11 @@
     notRendered: 'Report and notebook not generated yet',
     deliverablesBody: (from, now) => `They date from revision ${from}; the study is at revision ${now}.`,
     deliverablesBodyUnknown: 'They no longer match the study.',
+    // R34 (lot P): a failed render says so; a stale one says it no longer matches.
+    deliverablesFailed: 'The last generation failed: the report and notebook may be incomplete.',
+    deliverablesFailedOne: { report: 'Report generation failed', notebook: 'Notebook generation failed' },
+    deliverablesFailedItem: 'Report and notebook generation failed',
+    notGeneratedYet: 'Not generated yet: the study produces them later in the journey.',
     regenerate: 'Regenerate',
     askInChat: 'Ask for it in the chat.',
     sources: 'The data or the case changed',
@@ -212,6 +217,12 @@
       // Judged on the final test: the bound from the final test's own baseline, the model's value there.
       lineFinal: (words, bound, verdict, model, value) => [`Your criterion, ${words}, judged on the final test (`, bound,
         ' or better, from the final test\'s baseline): ', verdict, ...(value ? [`; ${model} reaches `, value] : []), '.'],
+      // R48 (lot P): the engine's criterion words, already said of the final test.
+      lineFinalWords: (words, bound, verdict, model, value) => [`Your criterion, ${words} (`, bound, ' or better): ', verdict,
+        ...(value ? [`; ${model} reaches `, value] : []), '.'],
+      // R48 (lot P): judged on the final test, the error is the final test's.
+      lineFinalError: (share, bound, verdict, model, value) => [`Your criterion, the error on the final test at least ${share} below the reference's (`,
+        bound, ' or better): ', verdict, ...(value ? [`; ${model} reaches `, value] : []), '.'],
       allMet: n => `met by all ${n} configurations`,
       someMet: (k, n) => `met by ${k} of ${n} configurations on their average`,
       noneMet: 'met by none of the configurations',

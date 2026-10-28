@@ -25,6 +25,7 @@
   const arr = x => (Array.isArray(x) ? x : []);
   const parts = x => (HT.components.parts ? HT.components.parts(x) : x);
   const PARTS = name => (HT.parts && HT.parts[name]) || {};
+  const FIG = () => HT.copy.figures;
 
   function folderName(study) {
     const p = String(study || '').split(/[\\/]/).filter(Boolean);
@@ -271,13 +272,17 @@
         const snap = ctx.snapshot;
         const revs = arr(item.artifacts).map(a => a.revision).filter(Number.isInteger);
         const from = revs.length ? Math.min(...revs) : null;
-        const label = item.notRendered ? c.notRendered : item.artifacts.length === 1 ? c.deliverablesOne[item.artifacts[0].name] : c.deliverablesItem;
+        // R34 (lot P): only a rendered deliverable gone stale, or a failed render, is listed.
+        const failed = item.status === 'failed';
+        const label = failed ? (item.artifacts.length === 1 ? c.deliverablesFailedOne[item.artifacts[0].name] : c.deliverablesFailedItem)
+          : item.artifacts.length === 1 ? c.deliverablesOne[item.artifacts[0].name] : c.deliverablesItem;
         const o = ctx.outcome('render');
         const working = ctx.busy && ctx.busyTarget === 'render';
         lis.push(el('li', { 'data-anchor': item.anchor, 'data-todo': 'deliverables',
           title: arr(item.artifacts).map(a => str(a.juniorMessage)).filter(Boolean).join(' ') || null }, [
           el('b', { text: label }), el('br'),
-          from !== null && from < snap.revision ? c.deliverablesBody(num(ctx, from), num(ctx, snap.revision)) : c.deliverablesBodyUnknown,
+          failed ? c.deliverablesFailed
+            : from !== null && from < snap.revision ? c.deliverablesBody(num(ctx, from), num(ctx, snap.revision)) : c.deliverablesBodyUnknown,
           el('div', { className: 'ht-acts' }, [item.regenerate && !ctx.reviewer
             ? el('button', { type: 'button', className: 'ht-act', 'data-write': 'render', 'data-stage': 'v1', disabled: ctx.busy ? true : null,
               'aria-busy': working ? 'true' : null, text: working ? HT.copy.core.working : c.regenerate,
@@ -357,8 +362,10 @@
     const decision = (snap.decisions || {}).success_criterion;
     // The criterion as decided, else as the summary's criterion states it (an engine before WP-A4).
     const value = decision && decision.value ? decision.value : snap.criterion && snap.criterion.value ? snap.criterion.value : null;
-    const raw = value ? (J().value('success_criterion', value, snap.task) || str(value)) : '';
-    const words = raw ? raw.charAt(0).toLowerCase() + raw.slice(1) : '';
+    // Lot P (R48): the engine's criterion in words, fit to where it is judged, when it sends it.
+    const engineWords = HT.pageModel.textOf(snap.texts, ctx.language(), 'criterion_words');
+    const raw = engineWords ? engineWords.text : value ? (J().value('success_criterion', value, snap.task) || str(value)) : '';
+    const words = raw ? raw.charAt(0).toLowerCase() + raw.slice(1).replace(/[.]$/, '') : '';
     const cc = snap.criterionConfigurations;
     if (now.criterion === 'configurations' && cc && cc.bound && cc.bound.value !== null) {
       const regression = snap.task === 'regression' || cc.metric === 'mae_reduction';
@@ -373,8 +380,12 @@
       if (now.kind === 'done' && ft && ft.bound.value !== null) {
         verdict = el('b', { text: c.status[ft.status] || ft.status });
         const value = ft.value !== null ? cite(ft.value, ft) : null;
+        // R48 (lot P): judged on the final test, the line speaks of the final test's error.
+        const share = !engineWords && regression && ft.bound.minimum !== null && ft.bound.minimum !== undefined ? ctx.format.number(ft.bound.minimum, 'pct0') : null;
         return el('p', { className: 'ht-crit', 'data-criterion': 'final', 'data-config': ft.slot, 'data-config-status': ft.status },
-          parts(c.lineFinal(words, cite(ft.bound.value, ft.bound), verdict, J().modelName(ft.slot, snap.task), value)));
+          parts(engineWords ? c.lineFinalWords(words, cite(ft.bound.value, ft.bound), verdict, J().modelName(ft.slot, snap.task), value)
+            : share ? c.lineFinalError(share, cite(ft.bound.value, ft.bound), verdict, J().modelName(ft.slot, snap.task), value)
+            : c.lineFinal(words, cite(ft.bound.value, ft.bound), verdict, J().modelName(ft.slot, snap.task), value)));
       }
       const meets = configs.filter(x => (x.status === 'not_assessed' ? x.pointMeetsBound : x.status === 'met'));
       const text = meets.length === configs.length ? c.allMet(num(ctx, configs.length))
@@ -426,8 +437,10 @@
       el('p', { 'data-answer-in-chat': ctx.snapshot.mode || true, text: now.finalTest ? c.finalTestInChat
         : ctx.snapshot.mode === 'training' ? c.answerInChatTraining : c.answerInChat }),
       p.decisionId === 'model_variant' && PARTS('decisions').trials ? PARTS('decisions').trials(ctx) : null,
-      now.contingent ? el('p', { className: 'ht-warnline', role: 'note', 'data-contingent': p.proposalId }, [
-        el('b', { text: `${c.contingentNote}: ` }), engine(now.contingent)]) : null,
+      // R44 (lot P): the result-dependent mark said calmly in one line, the why in a fold.
+      now.contingent ? el('div', { className: 'ht-calmline', role: 'note', 'data-contingent': p.proposalId }, [
+        el('p', { text: FIG().contingent.line }),
+        el('details', { className: 'ht-why' }, [el('summary', { text: FIG().contingent.why }), el('p', {}, [engine(now.contingent)])])]) : null,
     ], { 'data-proposal-card': p.proposalId })];
   }
 
@@ -474,7 +487,10 @@
       case 'reopened': return reopenedContext(ctx, now);
       case 'hold': return [paperCard('hold', { eyebrow: c.holdCard, h3: now.title }, [
         ...now.hold.map(h => el('blockquote', { 'data-hold': h.noteId, text: h.userWords })), el('p', { text: c.holdNote })])];
-      case 'run': return [paperCard('run', { eyebrow: c.runCard, h3: now.title }, [el('p', { text: c.runBody(activityWords(ctx, now.activity || now.step)) })])];
+      // R43 (lot P): the computation is started from the chat; its result appears here.
+      case 'run': return [paperCard('run', { eyebrow: c.runCard, h3: now.title }, [
+        now.activity ? el('p', { className: 'ht-head-line', 'data-running': now.activity, text: FIG().runningWhat(activityWords(ctx, now.activity)) }) : null,
+        el('p', { 'data-running-body': true, text: FIG().running })])];
       case 'blocked': return [paperCard('blocked', { eyebrow: c.blockedCard, h3: now.requires ? now.requires.title : now.title }, [
         now.nextMessage ? el('p', {}, [engine(now.nextMessage)]) : null])];
       case 'execution': return [paperCard('execution', { eyebrow: c.executionCard, h3: now.title }, [el('p', { text: c.executionBody })])];
@@ -494,7 +510,9 @@
   function limitLine(ctx, now) {
     const c = C();
     if (!now.limit) return null;
-    const text = now.limit.kind === 'step1' ? c.limitStep1 : now.limit.kind === 'review' ? c.limitReview : null;
+    const text = now.limit.kind === 'step1' ? c.limitStep1 : now.limit.kind === 'review' ? c.limitReview
+      : now.limit.kind === 'step' ? FIG().limits[now.limit.step] || null : null;
+    if (now.limit.kind === 'step' && !text) return null;
     return el('p', { className: 'ht-limit', 'data-limit': now.limit.kind }, [text || engine({ text: now.limit.text, lang: now.limit.lang })]);
   }
 
@@ -521,13 +539,21 @@
       } catch (_) { text = str(conclusion.value); }
     }
     const caveats = arr(page.header.defensibility.items).filter(i => i.severity === 'caveat');
+    const P = FIG().conclusionParts;
+    const fig = PARTS('figures');
+    // R48 (lot P): the conclusion in three parts: what the study establishes (the adopted
+    // text), what it does not (the engine's caveats), and after (below); the numbers are in
+    // the one development-vs-final table and its dots on one scale (R52).
     const card = el('div', { className: 'card ht-ctx', 'data-context': 'done' }, [
       el('p', { className: 'ht-k', text: c.conclusion(c.basis[basis] || '') }),
-      el('h3', { 'data-conclusion': true }, [engine({ text, lang: snap.language || 'en' })]),
-      ctx.atLeast('v2') && PARTS('evidence').devFinalTable ? PARTS('evidence').devFinalTable(ctx) : null,
+      el('h3', { className: 'ht-concl-part', 'data-conclusion-part': 'establishes', text: P.establishes }),
+      el('p', { 'data-conclusion': true }, [engine({ text, lang: snap.language || 'en' })]),
+      ctx.atLeast('v2') && fig.devFinal ? fig.devFinal(ctx) : null,
       ctx.atLeast('v2') ? criterionLine(ctx, now) : null,
-      caveats.length ? ctx.fold('not-say', { summary: c.notSay, className: 'ht-f' },
-        () => el('ul', { 'data-not-say': String(caveats.length) }, caveats.map(i => el('li', { 'data-item': i.id }, [engine(limitWords(ctx, i.id))])))) : null,
+      // What it does not establish: the engine's caveats, one fold away (their texts name data columns).
+      caveats.length ? ctx.fold('not-say', { summary: [el('span', { className: 'ht-concl-part', 'data-conclusion-part': 'not', text: P.notEstablish })],
+        className: 'ht-f' }, () => el('ul', { 'data-not-say': String(caveats.length) }, caveats.map(i => el('li', { 'data-item': i.id }, [engine(limitWords(ctx, i.id))])))) : null,
+      ctx.atLeast('v2') && fig.diagram ? fig.diagram(ctx, 'ledger') : null,
     ]);
     const j = page.journey;
     const after = now.afterStudy;
@@ -539,7 +565,9 @@
         el('h2', { id: 'ht-after-h', text: c.after }),
         ...questionParts(ctx, now),
         after ? el('p', { className: 'ht-next', 'data-after-study': after.exportPlanAvailable ? 'export_plan' : 'handoff' }, [engine({ text: after.juniorText, lang: ctx.snapshot.language || 'en' })]) : null,
-        after && after.exportPlanAvailable ? el('p', { className: 'ht-faint', 'data-after-study-export': true, text: c.exportPlanInChat }) : null,
+        after && after.exportPlanAvailable && !ctx.atLeast('v3') ? el('p', { className: 'ht-faint', 'data-after-study-export': true, text: c.exportPlanInChat }) : null,
+        // R49 (lot P): the handoff export (W7) and the Azure ML plan with its export (W8), from v3.
+        ...(fig.after ? fig.after(ctx, now) : []),
         el('p', { className: 'ht-next', 'data-journey': true, text: c.journey(num(ctx, j.steps), num(ctx, j.ownWords),
           j.looks === null ? null : num(ctx, j.looks), j.openings) }),
       ]),
@@ -556,6 +584,8 @@
       el('h2', { id: 'ht-now-h', text: heading(now, c) }),
       ...questionParts(ctx, now),
       ...nowContext(ctx, now),
+      // R39-R45, R53 (lot P): the figures behind the step, inline, from v2.
+      ctx.atLeast('v2') && PARTS('figures').nowFigures ? PARTS('figures').nowFigures(ctx, now) : null,
       // NOW-7, EV-7: at the opening of the final test, its card (sealed rows, what must be
       // confirmed first, "a chat act"), from v2; it holds no control.
       now.step === 'final_test' && ctx.atLeast('v2') && PARTS('evidence').finalTest ? PARTS('evidence').finalTest(ctx) : null,
@@ -627,6 +657,16 @@
     if (line.decision && line.decision.value) {
       return J().value(line.id, line.decision.value, ctx.snapshot.task) || '';
     }
+    // R38 (lot P): a done step without a headline still says what it did (the panel's words).
+    if (line.fallbackHeadline) {
+      const h = FIG().fallbackHeadlines;
+      const ft = ctx.snapshot.finalTest;
+      const text = line.id === 'discover_data'
+        ? (ft && ft.rows !== null && ft.developmentRows !== null
+          ? h.discover_data(num(ctx, ft.rows + ft.developmentRows), num(ctx, ft.developmentRows), num(ctx, ft.rows)) : h.discover_data(null))
+        : h[line.id] || h.default;
+      return el('span', { 'data-headline-fallback': line.id, text });
+    }
     return '';
   }
 
@@ -658,13 +698,19 @@
     const isEda = /^eda\./.test(r.slot);
     const notes = [r.channel === 'webview' ? el('p', { className: 'ht-faint', 'data-from-panel': true, text: c.fromPanelLine }) : null,
       r.channel === 'cli' ? el('p', { className: 'ht-faint', 'data-computed': true, text: c.computedLine }) : null];
-    return el('li', { className: 'ht-res', 'data-result-slot': r.slot }, [ctx.fold(`fig-${r.slot}`, {
-      summary: [c.seeFigure, el('span', { className: 'ht-faint ht-slot', title: r.slot }, [' · ', isEda && eda.titleNode ? eda.titleNode(ctx, r.slot) : slotTitle(ctx, r.slot)])],
-      className: 'ht-fig', attrs: { 'data-anchor': anchor, 'data-stage': 'v2' } }, () => el('div', { className: 'ht-fig-body' }, [
-      ...notes,
-      isEda && eda.cardFor ? eda.cardFor(ctx, r.slot) : ev.slotFigure ? ev.slotFigure(ctx, line.id, r.slot) : null,
-      ctx.fold(`src-${r.slot}`, { summary: c.whereFrom, className: 'ht-f' }, () => (ev.detail ? ev.detail(ctx, r.resultId) : null)),
-    ]))]);
+    // R50 (lot P): the figure drawn inline with its frame (no "See the figure" click); "Where it
+    // comes from" stays a small fold.
+    const fig = PARTS('figures');
+    const frame = fig.frameOf ? fig.frameOf(r.slot) : null;
+    return el('li', { className: 'ht-res', 'data-result-slot': r.slot, 'data-anchor': anchor, 'data-stage': 'v2', tabindex: '-1' }, [
+      el('p', { className: 'ht-res-title', title: r.slot }, [isEda && eda.titleNode ? eda.titleNode(ctx, r.slot) : slotTitle(ctx, r.slot)]),
+      el('div', { className: 'ht-fig-body', 'data-inline-figure': r.slot }, [
+        ...notes,
+        frame && !isEda ? el('p', { className: 'ht-frame', 'data-frame': frame }, [el('strong', { text: FIG().frames[frame] })]) : null,
+        r.slot === 'eda.quality' && fig.qualityColumns ? fig.qualityColumns(ctx, r.slot, []) : null,
+        isEda && eda.cardFor ? eda.cardFor(ctx, r.slot) : ev.slotFigure ? ev.slotFigure(ctx, line.id, r.slot) : null,
+        ctx.fold(`src-${r.slot}`, { summary: c.whereFrom, className: 'ht-f ht-small' }, () => (ev.detail ? ev.detail(ctx, r.resultId) : null)),
+      ])]);
   }
 
   function stepDetail(ctx, line) {
@@ -674,8 +720,11 @@
     // EV-7: the final test's card comes first in its step's detail (figures from v2).
     if (line.id === 'final_test' && ctx.atLeast('v2') && PARTS('evidence').finalTest) kids.push(PARTS('evidence').finalTest(ctx));
     if (d && d.status !== 'open' && d.value) {
-      kids.push(el('p', {}, [el('span', { 'data-value-raw': str(d.value), title: str(d.value),
+      // R50 (lot P): the decision in words, who decided, and its basis.
+      const who = d.basis === 'automatic' ? 'automatic' : d.basis === 'delegated_default' ? 'delegated' : 'own';
+      kids.push(el('p', { 'data-step-decision': line.id }, [el('strong', { text: FIG().decision }), el('span', { 'data-value-raw': str(d.value), title: str(d.value),
         text: J().value(line.id, d.value, ctx.snapshot.task) || str(d.value) }),
+      ' · ', el('span', { className: 'ht-whodecided', 'data-decided-by': who, text: FIG().decidedBy[who] }),
       d.basis ? [' · ', el('span', { className: `ht-basis ht-basis-${d.basis}`, 'data-basis': d.basis,
         text: `${c.basis[d.basis] || d.basis}${d.basis === 'delegated_default' && d.delegationScope ? c.delegatedScope(d.delegationScope) : ''}` })] : null]));
       if (d.userWords && d.basis !== 'automatic') kids.push(el('p', {}, [c.yourWords, el('q', { 'data-user-words': line.id, text: d.userWords })]));
@@ -690,8 +739,12 @@
       for (const r of stale) kids.push(el('p', { className: 'ht-warnline', 'data-stale': 'true', text: c.staleResult(r.slot, r.staleReason) }));
     }
     if (ctx.atLeast('v2') && line.results.length) kids.push(el('ul', { className: 'ht-results' }, line.results.map(r => resultFold(ctx, line, r))));
+    // R53 (lot P): the step's method diagrams, from registered values.
+    if (ctx.atLeast('v2') && PARTS('figures').diagram) for (const id of arr(line.diagrams)) kids.push(PARTS('figures').diagram(ctx, id));
     if (ctx.atLeast('v1')) {
-      kids.push(HT.askButton(ctx, { kind: 'step', id: line.id }, line.title, { label: c.askStep, stage: 'v1', attrs: { 'data-ask-step': line.id } }));
+      // R50: "Ask the agent" as a small secondary link.
+      kids.push(el('p', { className: 'ht-small-links' }, [HT.askButton(ctx, { kind: 'step', id: line.id }, line.title,
+        { label: c.askStep, stage: 'v1', attrs: { 'data-ask-step': line.id } })]));
     }
     return el('div', { className: 'pg-detail' }, kids);
   }
@@ -760,12 +813,22 @@
     const drawers = page.tools.map(t => {
       if (t.id === 'data') return drawer(ctx, 'data', c.drawers.data, () => (PARTS('eda').drawer ? PARTS('eda').drawer(ctx, page) : null), 'v2');
       if (t.id === 'whatif') {
+        // R51 (lot P, ADR 0004 decision 14): What if? opens in its own wide, read-only editor
+        // tab; the drawer keeps the calm line, the why in a fold, and the button.
+        const W = FIG().whatif;
         return drawer(ctx, 'whatif', c.drawers.whatif, () => el('div', { className: 'ht-drawer-body' }, [
-          el('p', { className: 'ht-warnline', 'data-whatif-warning': true, text: c.whatifWarning }),
+          el('p', { className: 'ht-calm', 'data-whatif-warning': true, text: W.calm }),
+          el('details', { className: 'ht-why' }, [el('summary', { text: W.why }), el('p', { text: W.whyBody })]),
+          el('button', { type: 'button', className: 'ht-act', 'data-open-whatif': true, 'data-stage': 'v2', text: W.open,
+            onclick: () => ctx.send({ type: 'open_whatif' }) }),
+          el('p', { className: 'ht-faint', text: W.openHint }),
+          // The compact sandbox stays in the drawer; the tab is its wide, complete form.
           PARTS('whatif').body ? PARTS('whatif').body(ctx) : null]), 'v2');
       }
       if (t.id === 'notions') return drawer(ctx, 'notions', c.drawers.notions, () => (PARTS('learn').notions ? PARTS('learn').notions(ctx, page) : null), 'v3');
       return drawer(ctx, 'deliverables', c.drawers.deliverables, () => el('div', { className: 'ht-drawer-body' }, [
+        // R34 (lot P): never rendered yet is said here, not under To handle.
+        ctx.snapshot.artifactsStatus === 'not_rendered' ? el('p', { className: 'ht-faint', 'data-not-generated': true, text: c.notGeneratedYet }) : null,
         PARTS('overview').deliverables ? PARTS('overview').deliverables(ctx) : null,
         ctx.atLeast('v3') && PARTS('learn').handoff ? PARTS('learn').handoff(ctx) : null,
         ctx.atLeast('v3') && PARTS('learn').report ? PARTS('learn').report(ctx) : null,
@@ -807,6 +870,10 @@
 
   function render(snapshot, ctx) {
     const page = ctx.page;
+    // Lot P (R45): the study's variants, for their names (ridge, EBM) in every part.
+    if (PARTS('figures').setStudyVariants) PARTS('figures').setStudyVariants(snapshot);
+    // Lot P (R51): the read-only What if? editor tab draws What if? only.
+    if (ctx.init.surface === 'whatif' && PARTS('figures').whatifTab) return PARTS('figures').whatifTab(ctx);
     if (ctx.loadError()) return [header(ctx, page), errorMain(ctx), footer(ctx, null)];
     if (!snapshot || !page) return [header(ctx, null), loadingMain(), footer(ctx, null)];
     const main = el('main', { id: 'main' }, [

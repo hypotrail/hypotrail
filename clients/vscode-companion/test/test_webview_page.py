@@ -208,7 +208,9 @@ def test_nar3_the_dev_final_table_never_breaks_a_word_at_320_px(open_panel, view
         panel = open_case(open_panel, views, case='done', theme='light-modern', width=320, lang=lang)
         open_all(panel, views, panel.case_reads)
         page = panel.page
-        assert page.locator('table[data-dev-final] tbody tr').count() == 2
+        # R52 (lot P): one row per configuration (linear, the variant, the reference), then the
+        # difference with the reference and the criterion.
+        assert page.locator('table[data-dev-final] tbody tr').count() == 5
         assert page.evaluate(BROKEN_WORDS) == [], lang
         assert panel.clean()
         panel.context.close()
@@ -265,7 +267,11 @@ def test_now12_the_question_is_in_the_first_viewport_at_every_width(open_panel, 
                 target = '[data-block="now"] h2' if state == 'done' else '[data-block="now"] h3.ht-question'
                 bottom = page.locator(target).bounding_box()
                 assert bottom['y'] + bottom['height'] <= 800, (state, width, lang, bottom)
-                prose = page.locator('[data-block="now"]').inner_text()
+                # Lot P (R41): a column name set as code (a data name, as in the per-column
+                # quality view) is not prose; every other text of Now is.
+                prose = page.evaluate("""() => { const n = document.querySelector('[data-block="now"]').cloneNode(true);
+                  for (const c of n.querySelectorAll('code')) c.remove(); document.body.appendChild(n);
+                  const t = n.innerText; n.remove(); return t; }""")
                 assert not re.search(r'\b[0-9a-f]{12,64}\b|\bp_\d+\b|\b[a-z]+_[a-z0-9_]+\b', prose), (state, width, lang)
                 panel.context.close()
 
@@ -322,7 +328,8 @@ def test_now4_now8_hon1_hon2_the_choice_card(open_panel, views, model, payload):
     assert card.locator('[data-comparison]').count() == 1
     line = card.locator('[data-criterion="configurations"]')
     text = line.inner_text()
-    assert 'Your criterion, adopt only if the validation error is at least 10% below the mean baseline (9.24 mpg or better)' in text, text
+    # R45 (lot P): the reference of a regression is "the reference (predict the mean)".
+    assert 'Your criterion, adopt only if the validation error is at least 10% below the reference (predict the mean) (9.24 mpg or better)' in text, text
     assert 'met by all 2 configurations' in text and 'judged for good on the final test' in text
     bound = line.locator('data[data-result-id]').first
     assert bound.get_attribute('data-path') == 'models.[fit.baseline].mae'
@@ -345,7 +352,7 @@ def test_now4_now8_hon1_hon2_the_choice_card(open_panel, views, model, payload):
     click_fold(page, 'ph-evidence')
     click_fold(page, 'st-train_eda')
     fig = page.locator('[data-anchor="path:train_eda/eda.mean_by:model_year"]')
-    click_fold(page, 'fig-eda.mean_by:model_year')
+    # R50 (lot P): the figure is drawn inline in the opened step, no "See the figure" fold.
     panel.view_data('eda', views['eda.p1'])
     assert fig.locator('[data-from-panel]').inner_text() == 'Requested from this panel.'
     assert fig.locator('[data-eda-card="eda.mean_by:model_year"]').count() == 1
@@ -428,8 +435,9 @@ def test_now11_path9_ho3_the_end(open_panel, views, payload):
     assert now.locator('h2').text_content() == 'What the study can claim'
     # the conclusion in the junior's recorded words (`decisions.conclusion.value.text`)
     assert now.locator('[data-conclusion]').inner_text() == payload('captured/summary.regression.done')['decisions']['conclusion']['value']['text']
-    heads = now.locator('[data-dev-final] th').all_text_contents()
-    assert 'Development (used to choose)' in heads and 'Final test (read once)' in heads
+    heads = now.locator('[data-dev-final] thead th').all_text_contents()
+    # R52 (lot P): one table, the development column says how it was measured.
+    assert heads == ['Configuration', 'Development (out of fold, used to choose)', 'Final test (read once)']
     # HON-1: the final column cites the final evaluation the done summary names (the reads are
     # those of the end), each cell a registered value at its path; the development column
     # cites a development result, never the final one.
@@ -438,7 +446,11 @@ def test_now11_path9_ho3_the_end(open_panel, views, payload):
     final_rid = done['results']['final_test.evaluation']['result_id']
     evidence = payload('captured/evidence.regression.onepage.done')
     final_values = next(r for r in evidence['results'] if r['result_id'] == final_rid)['values']
-    rows = now.locator('[data-dev-final] tbody tr')
+    # R52 (lot P): every configuration has its row; the final test measured the chosen model and
+    # the reference only, so the variant's final cell says it was not measured.
+    assert now.locator('[data-dev-final] [data-not-measured="fit.variant"]').inner_text() == \
+        'not measured: the final test measures only the chosen model'
+    rows = now.locator('[data-dev-final] tbody tr:is([data-config="fit.linear"], [data-config="fit.baseline"])')
     assert rows.count() == 2, 'the chosen model and the reference'
     for i in range(rows.count()):
         final_cell = rows.nth(i).locator('td').nth(2).locator('data[data-result-id]')

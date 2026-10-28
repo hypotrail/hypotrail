@@ -178,7 +178,8 @@ def test_ev3_navigation_opens_and_focuses_the_result_in_the_path(open_panel, mod
     assert loads(panel)[-1] == {'v': 2, 'type': 'load', 'view': 'evidence', 'resultId': LOGISTIC}
     show(panel, model('evidence', 'evidence.binary.detail'), LOGISTIC)
     assert page.evaluate('document.activeElement.closest("[data-anchor]").dataset.anchor') == 'path:models/fit.logistic'
-    assert page.locator('details[data-anchor="path:models/fit.logistic"][open]').count() == 1
+    # R50 (lot P): the figure is inline in its opened step (no fold of its own).
+    assert page.locator('[data-anchor="path:models/fit.logistic"]').is_visible()
     assert page.locator(f'[data-detail="{LOGISTIC}"]').count() == 1
 
 

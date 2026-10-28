@@ -409,7 +409,9 @@ test('HO-3 (L7): the summary keeps the junior text of after_study and whether th
     cloud_status: 'not_qualified', junior_text: 'What comes next: the handoff pack.' };
   raw.next_action = { kind: 'done', message: 'Done.', audience: 'junior', junior_message: 'Done.', after_study: after };
   const m = toSummaryModel(raw);
-  assert.deepEqual(m.nextAction.afterStudy, { juniorText: 'What comes next: the handoff pack.', exportPlanAvailable: true, cloudStatus: 'not_qualified' });
+  // Lot P (R49): the engine's reason when not supported, and the family the support matrix names.
+  assert.deepEqual(m.nextAction.afterStudy, { juniorText: 'What comes next: the handoff pack.', exportPlanAvailable: true, cloudStatus: 'not_qualified',
+    azureReason: null, azureFamily: 'logistic' });
   assert.ok(!JSON.stringify(m.nextAction.afterStudy).includes('hypotrail'));
   // Not supported, absent, blank, or on another kind: no plan line, or no block at all.
   assert.equal(afterStudyOf({ ...after, azureml: { supported: false } }).exportPlanAvailable, false);
