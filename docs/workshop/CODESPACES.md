@@ -17,7 +17,7 @@ Le panneau n'est pas publié : `--extensionDevelopmentPath` n'existe pas dans Co
 
 ## 1. Prérequis
 
-- **Comptes GitHub** : un par participant, avec accès en lecture au dépôt `chadlis/hypotrail` (dépôt privé : inviter les comptes ou une équipe de l'organisation).
+- **Comptes GitHub** : un par participant ; le dépôt `hypotrail/hypotrail` est public, aucune invitation n'est nécessaire.
 - **Licences Copilot** : indispensables, le chat est le cœur de l'atelier. Copilot Business ou Enterprise attribué à chaque compte (ou Copilot individuel). Dans les politiques Copilot de l'organisation, vérifier que Copilot Chat dans l'IDE et le mode agent sont autorisés ; si les agents personnalisés (`.github/agents/*.agent.md`) n'apparaissent pas, vérifier aussi la politique des fonctionnalités en préversion de l'éditeur.
 - **Codespaces activé** pour l'organisation : *Organization settings > Codespaces > General* : autoriser les membres concernés (tous, ou une sélection), et choisir qui paie (*Billing* : l'organisation, avec une limite de dépense supérieure à 0 ; sinon chaque compte personnel paie sur son quota gratuit).
 - **Un poste par binôme** : un navigateur récent suffit (VS Code pour le Web) ; VS Code de bureau avec l'extension GitHub Codespaces fonctionne aussi.
@@ -40,7 +40,7 @@ Sans prébuild, la création d'un codespace télécharge l'image, installe uv, s
 ## 3. Ouvrir un codespace sur la branche
 
 - Interface : page du dépôt (ou du fork) > *Code > Codespaces > … > New with options* : branche `main`, région, machine **4-core**, *Create codespace*.
-- Ligne de commande : `gh codespace create -R chadlis/hypotrail -b main -m standardLinux32gb` puis `gh codespace code` (bureau) ou ouverture depuis github.com/codespaces.
+- Ligne de commande : `gh codespace create -R hypotrail/hypotrail -b main -m standardLinux32gb` puis `gh codespace code` (bureau) ou ouverture depuis github.com/codespaces.
 
 Chaque binôme a son propre codespace : les études restent dans ce codespace (`/workspaces/hypotrail/studies/`).
 

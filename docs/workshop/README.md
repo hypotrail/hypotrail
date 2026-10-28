@@ -13,7 +13,7 @@ Un seul poste qui fonctionne par binôme suffit.
 
 **Dans les deux cas, il vous faut :**
 
-- un compte GitHub avec accès en lecture au dépôt `chadlis/hypotrail` (dépôt privé : l'organisateur vous invite) ;
+- un compte GitHub (le dépôt [hypotrail/hypotrail](https://github.com/hypotrail/hypotrail) est public) ;
 - **GitHub Copilot** (licence de l'entreprise ou individuelle) avec le chat et le **mode Agent** ;
 - VS Code 1.109 ou plus récent, pour le sélecteur de réponses de l'agent. Le VS Code de Codespaces est toujours à jour.
 
@@ -25,7 +25,7 @@ Sur la page du dépôt, cliquez sur **Fork** puis **Create fork**, sous votre co
 
 Le fork vous donne votre propre copie : vos études et vos essais n'y touchent pas le dépôt d'origine, et le codespace est rattaché à votre compte.
 
-> Le codespace d'un fork personnel utilise **le quota gratuit de votre compte** : 120 heures-cœur par mois, soit 30 heures sur une machine à 4 cœurs, largement assez pour l'atelier. Si le bouton *Fork* est grisé, demandez à l'organisateur : le fork d'un dépôt privé doit être autorisé.
+> Le codespace d'un fork personnel utilise **le quota gratuit de votre compte** : 120 heures-cœur par mois, soit 30 heures sur une machine à 4 cœurs, largement assez pour l'atelier.
 
 ### 2. Créer le codespace (avant l'atelier)
 
@@ -79,6 +79,7 @@ Clonez votre fork, ou le dépôt, dans un chemin **sans espaces** :
 
 ```sh
 git clone https://github.com/<votre-compte>/hypotrail.git ~/hypotrail
+# ou, sans fork : git clone https://github.com/hypotrail/hypotrail.git ~/hypotrail
 cd ~/hypotrail
 uv sync --project framework --group azureml
 ```
