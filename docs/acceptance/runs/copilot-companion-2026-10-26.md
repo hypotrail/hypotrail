@@ -742,3 +742,9 @@ its warning.
   marks), with the number written on it; text-only presentation is the exception, kept for
   what has no meaningful visual. Applies with R40/R41 to the review of every step's display.
   Noted only, not fixed.
+- **R37 (precision, 2026-10-28).** Observed pattern in Claude Code: it shows a picker at real
+  decisions (the preparation proposal), not at transitions where the only answer is "on
+  continue" ("On continue ?" typed, after the preparation was confirmed). For R37 the picker
+  must also cover these transitions, as Copilot's L1 does (R3): options "On continue" and
+  "Expliquer d'abord" (from the engine's `option_labels`), so the junior never has to type to
+  move on. Noted only, not fixed.
