@@ -834,3 +834,13 @@ its warning.
   validation est inférieure …, jugé sur le test final", which mixes the two frames: say "l'erreur
   sur le test final" when judged there; (4) "moyenne d'entraînement" again (R45: "référence
   (prédire la moyenne)"). Noted only, not fixed.
+- **R49. At the end, the handoff and the Azure ML export from the panel (owner request,
+  2026-10-28).** When the study is done, "Et après" should offer both actions in the panel, not
+  only in the chat. The handoff pack is W7 (allowed at v3, today only in the Deliverables
+  drawer): show its button in "Et après" too. The Azure ML export is not in the panel's write
+  whitelist: (a) `export azureml --plan` writes nothing, so the panel may run it as a read and
+  show the plan (files, model, support, cloud status "not qualified"); (b) the export itself
+  (`export azureml --out <dir>`) writes files outside the study state, like W7, and would be a
+  new write W8 (stage v3, default off, `after_study.azureml.supported` only, refused for an
+  unsupported model): it needs an ADR 0004 amendment and an AGENTS.md update, by this explicit
+  owner request. No Azure job is ever run from the panel. Noted only, not fixed.
