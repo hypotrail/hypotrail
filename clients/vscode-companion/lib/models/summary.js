@@ -744,7 +744,8 @@ const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary'
   'captured/summary.regression.cv.preparation', 'captured/summary.regression.cv.variants', 'captured/summary.regression.cv.choice',
   'captured/summary.regression.cv.done',
   // Lot 2026-10-28: hand-made step-card states of Auto MPG (spec §7.2), to be recaptured.
-  'stepcards/summary.data', 'stepcards/summary.moment', 'stepcards/summary.split', 'stepcards/summary.exploration',
+  'stepcards/summary.data', 'stepcards/summary.moment', 'stepcards/summary.split', 'stepcards/summary.metric',
+  'stepcards/summary.criterion', 'stepcards/summary.exploration', 'stepcards/summary.choice', 'stepcards/summary.conclusion',
   'stepcards/summary.done'];
 
 // v0 name, kept for the migrated tests and older callers.
