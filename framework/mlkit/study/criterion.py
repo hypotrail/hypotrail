@@ -529,7 +529,7 @@ def _candidates(task: str, reference: dict | None, share: float | None, lang: st
                         'text': _t(lang, f'{pct}% less error: if the mean baseline errs by E{u} '
                                          f'on average, the model must err by at most '
                                          f'{_num(1 - f, lang, 2)} E{u}.',
-                                   f'{pct} % d\'erreur en moins : si la moyenne de référence se '
+                                   f'{pct} % d\'erreur en moins : si la référence (prédire la moyenne) se '
                                    f'trompe de E{u} en moyenne, le modèle doit se tromper d\'au '
                                    f'plus {_num(1 - f, lang, 2)} E{u}.')})
         return out

@@ -131,7 +131,7 @@ MODEL_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean basel
                'fit.variant:2': 'the second variant', 'fit.variant:3': 'the third variant'}
 VERDICT_WORDS = {'adopt_policy': 'adopt the policy', 'adopt_model': 'adopt the chosen model',
                  'keep_baseline': 'keep the baseline', 'inconclusive': 'inconclusive'}
-MODEL_WORDS_FR = {'fit.linear': 'le modèle linéaire', 'fit.baseline': 'la moyenne de référence',
+MODEL_WORDS_FR = {'fit.linear': 'le modèle linéaire', 'fit.baseline': 'la référence (prédire la moyenne)',
                   'fit.logistic': 'le modèle logistique', 'fit.variant': 'la variante',
                   # v0.3 (WP-F1)
                   'fit.variant:2': 'la deuxième variante',

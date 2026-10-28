@@ -80,6 +80,10 @@ def walk(f: fk.Flow, task: str, on_write: Callable[[str, dict], None] | None = N
         if kind == 'show_data_card':
             f.call('data', '--study', f.study)            # the data card: a read, no next action
             nxt, kind = {'kind': 'propose', 'decision': 'prediction_time'}, 'propose'
+        if kind == 'read_exploration':
+            # Lot 2026-10-28 (EN-12): the junior read the exploration's charts and answered
+            # "continue": the agent runs ``then``.
+            nxt, kind = dict(nxt['then']), 'run'
         if kind == 'run':
             args = [nxt['activity']]
             for rule in nxt.get('rules') or []:

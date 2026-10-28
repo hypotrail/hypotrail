@@ -67,7 +67,7 @@ def _steps_fr() -> dict[str, str]:
         S['models']['title']: 'Ajuster un modèle de référence et un modèle logistique',
         S['policy']['title']: 'Choisir une règle de décision',
         S['conclusion']['title']: 'Conclure avec mesure',
-        R['models']['title']: 'Ajuster une moyenne de référence et un modèle linéaire',
+        R['models']['title']: 'Ajuster une référence (prédire la moyenne) et un modèle linéaire',
         R['model_choice']['title']: 'Choisir le modèle',
         st.DISCOVER_STEP['title']: 'Découvrir les données',
         st.SUCCESS_STEP['title']: 'Fixer le critère de succès avant de voir un modèle',
@@ -116,7 +116,7 @@ def _steps_fr() -> dict[str, str]:
         R['models']['question']: "Quelles prédictions la moyenne du jeu d'entraînement et un "
                                  'modèle linéaire donnent-ils pour le jeu de validation ?',
         R['model_choice']['question']: 'Le modèle linéaire réduit-il assez l\'erreur de '
-                                       'validation de la moyenne de référence, dans l\'unité '
+                                       'validation de la référence (prédire la moyenne), dans l\'unité '
                                        'de la cible, pour être adopté, compte tenu des '
                                        'intervalles appariés et des résidus ?',
         st.DISCOVER_STEP['question']: 'Que décrit une ligne, quelles colonnes y a-t-il et que '
@@ -139,12 +139,12 @@ def _steps_fr() -> dict[str, str]:
                                      'tout ajustement de modèle.',
         st.REGRESSION_SUCCESS_STEP['question']: "L'erreur absolue moyenne (MAE) est la taille "
                                                 "moyenne de l'erreur d'une prédiction, dans "
-                                                "l'unité de la cible. La moyenne de référence "
+                                                "l'unité de la cible. La référence (prédire la moyenne) "
                                                 'prédit, pour chaque ligne du jeu de '
                                                 'validation, la moyenne de la cible sur le jeu '
                                                 "d'entraînement. De combien l'erreur de "
                                                 'validation du modèle doit-elle être plus '
-                                                'petite que celle de la moyenne de référence '
+                                                'petite que celle de la référence (prédire la moyenne) '
                                                 'pour qu\'il soit utile ? Le critère est fixé '
                                                 'maintenant, avant tout ajustement de modèle.',
         st.PREPROCESSING_STEP['question']: 'Comment le modèle doit-il traiter les valeurs '
@@ -175,7 +175,7 @@ def _steps_fr() -> dict[str, str]:
                                          'Ensuite, tout changement est fait après le test '
                                          'final.',
         cv['split']['question']: "Comment l'échantillon de développement est-il découpé en "
-                                 'plis pour la validation croisée à k plis, avant toute '
+                                 'plis pour la validation croisée, avant toute '
                                  'exploration de la cible ? Chaque pli est à son tour le pli '
                                  'de validation, prédit par un modèle ajusté sur les autres '
                                  "plis, les plis d'entraînement.",
@@ -196,7 +196,7 @@ def _steps_fr() -> dict[str, str]:
                                   'développement ?',
         rcv['success_criterion']['question']: "L'erreur absolue moyenne (MAE) est la taille "
                                               "moyenne de l'erreur d'une prédiction, dans "
-                                              "l'unité de la cible. La moyenne de référence "
+                                              "l'unité de la cible. La référence (prédire la moyenne) "
                                               "prédit, pour chaque ligne d'un pli de "
                                               'validation, la moyenne des plis '
                                               "d'entraînement. De "
@@ -211,11 +211,11 @@ def _steps_fr() -> dict[str, str]:
                                       'les moyennes par variable, les distributions, le signal '
                                       "d'une variable seule) répondent chacune à une question "
                                       "posée d'abord ; chaque regard sur la cible est compté.",
-        rcv['models']['question']: 'Quelles prédictions la moyenne de référence et un modèle '
+        rcv['models']['question']: 'Quelles prédictions la référence (prédire la moyenne) et un modèle '
                                    "linéaire donnent-ils pour chaque ligne de l'échantillon de "
                                    'développement, prédite hors pli ?',
         rcv['model_choice']['question']: 'Le modèle linéaire réduit-il assez l\'erreur hors pli '
-                                         'de la moyenne de référence, dans l\'unité de la '
+                                         'de la référence (prédire la moyenne), dans l\'unité de la '
                                          'cible, pour être adopté, compte tenu des intervalles '
                                          'appariés et des résidus ?',
         # Owner session 2026-10-26 (L5, D5): the structural-first plan.
@@ -694,10 +694,10 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
         'split': _t(
             lang, 'k-fold cross-validation uses every development row once as validation, so '
                   'the estimate rests on more rows than one validation set.',
-            'La validation croisée à k plis utilise chaque ligne de développement une fois en '
+            'La validation croisée utilise chaque ligne de développement une fois en '
             'validation : l\'estimation repose sur plus de lignes qu\'un seul jeu de '
-            'validation.') + (_t(lang, f' Here k = {value["folds"]}: {value["folds"]} folds.',
-                                 f' Ici k = {value["folds"]} : {value["folds"]} plis.')
+            'validation.') + (_t(lang, f' Here {value["folds"]} folds.',
+                                 f' Ici, {value["folds"]} plis.')
                               if isinstance(value, Mapping) and isinstance(value.get('folds'), int)
                               and not isinstance(value.get('folds'), bool) else ''),
         'preprocessing': _t(
@@ -939,12 +939,13 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
                                    'Quelles colonnes sont connues à ce moment-là, et lesquelles '
                                    'faut-il exclure ?'),
         # R36: k is stated (the folds of the drafted value) when it is known.
-        'split': (_t(lang, f'Do you evaluate with this {_k_folds(action)}-fold cross-validation '
-                           f'(k = {_k_folds(action)})?',
-                     f'Évaluez-vous avec cette validation croisée à {_k_folds(action)} plis '
-                     f'(k = {_k_folds(action)}) ?') if _k_folds(action) else
-                  _t(lang, 'Do you evaluate with this k-fold cross-validation?',
-                     'Évaluez-vous avec cette validation croisée à k plis ?')) if cv else
+        # Lot 2026-10-28 (EN-21): « validation croisée à 5 plis » once, no "k".
+        'split': (_t(lang, f'Do you evaluate with this {_k_folds(action)}-fold '
+                           'cross-validation?',
+                     f'Évaluez-vous avec cette validation croisée à {_k_folds(action)} plis ?')
+                  if _k_folds(action) else
+                  _t(lang, 'Do you evaluate with this cross-validation?',
+                     'Évaluez-vous avec cette validation croisée ?')) if cv else
         _t(lang, 'How should the rows be divided between the training set and the validation '
                  'set?',
            "Comment répartir les lignes entre le jeu d'entraînement et le jeu de validation ?"),
@@ -1074,13 +1075,13 @@ def _digest_propose(decision: str, view: Mapping, ctx: dict, lang: str,
                              f'k-fold cross-validation: the development set is divided into '
                              f'{folds} folds; each fold is in turn the validation fold, predicted '
                              f'by a model fitted on the training folds.',
-                       f'Validation croisée à k plis (k-fold cross-validation) : '
+                       f'Validation croisée à {folds} plis (k-fold cross-validation) : '
                        f"l'échantillon de développement ({_int(dev, lang)} lignes) est découpé "
                        f'en {folds} plis ; chaque pli est à son tour le pli de validation, '
                        f'prédit par un modèle ajusté sur les autres plis, les plis '
                        f"d'entraînement. Chaque ligne de développement reçoit une prédiction "
                        f'hors pli.' if isinstance(dev, int) else
-                       f'Validation croisée à k plis : l\'échantillon de développement est '
+                       f'Validation croisée à {folds} plis : l\'échantillon de développement est '
                        f'découpé en {folds} plis ; chaque pli est à son tour le pli de '
                        f"validation, prédit par un modèle ajusté sur les plis d'entraînement."),
                     _holdout_sentence(holdout, lang)]
@@ -1190,7 +1191,7 @@ def _digest_propose(decision: str, view: Mapping, ctx: dict, lang: str,
                     _criterion_status_words(view, lang) or '']
         return [_t(lang, 'Model choice: keep the mean baseline or adopt the linear model, read '
                          'on the mean absolute error (MAE) and its paired interval.',
-                   'Choix du modèle : garder la moyenne de référence ou adopter le modèle '
+                   'Choix du modèle : garder la référence (prédire la moyenne) ou adopter le modèle '
                    "linéaire, lu sur l'erreur absolue moyenne (MAE) et son intervalle "
                    'apparié.'), _criterion_status_words(view, lang) or '']
     if decision == 'final_test':
@@ -1338,7 +1339,8 @@ VERDICT_LABELS = {'adopt_policy': ('Adopt the rule', 'Adopter la règle'),
                   'keep_baseline': ('Keep the baseline', 'Garder le modèle de référence'),
                   'inconclusive': ('Do not conclude (inconclusive)',
                                    'Ne pas conclure (non concluant)')}
-REGRESSION_KEEP_LABEL = ('Keep the mean baseline', 'Garder la moyenne de référence')
+REGRESSION_KEEP_LABEL = ('Keep the reference (predict the mean)',
+                         'Garder la référence (prédire la moyenne)')
 _ORDINAL_VARIANTS = {EN: ('The first variant', 'The second variant', 'The third variant'),
                      FR: ('La première variante', 'La deuxième variante',
                           'La troisième variante')}

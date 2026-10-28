@@ -1685,7 +1685,7 @@ def read_exploration_action(then: Mapping) -> dict:
     decision set (:func:`has_error_metric`): every exploration chart is current and no model is
     fitted yet; the junior reads the charts, then ``then`` (the ``run`` of the first fit) is
     carried out. Stateless: it disappears once ``fit.baseline`` is registered."""
-    return {'kind': 'read_exploration', 'step': then.get('step') or 'train_eda',
+    return {'kind': 'read_exploration', 'step': 'train_eda',
             'then': {'kind': 'run', 'activity': then.get('activity'),
                      'command': f'hypotrail run {then.get("activity")}'},
             'message': 'The exploration charts are current and no model is fitted yet. Ask the '

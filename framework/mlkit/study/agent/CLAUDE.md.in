@@ -56,8 +56,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
       the case);
    2. the split, as **k-fold cross-validation**, naming k (**out-of-fold predictions**,
       **fold spread**: read a difference between models against `cross_validation.spread`); the
-      **success criterion**, before any model is fitted; after the exploration, the
-      **preprocessing**;
+      **error measure** (`error_metric`) and the **success criterion**, before any model is
+      fitted; after the exploration, the **preprocessing**. At `read_exploration`, ask its
+      question; on "continue", run `then.command`;
    3. after the fits and their diagnostics, the **variant** (`model_variant`);
 <!-- hypotrail:task binary -->
    4. the **model choice** (`model_choice`), then the decision rule (`policy`),

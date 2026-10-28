@@ -56,10 +56,10 @@ predictions:
     task: regression
     step: model_choice
     question: Will the linear model's error be below the mean baseline's?
-    question_fr: L'erreur du modèle linéaire sera-t-elle inférieure à celle de la moyenne de référence ?
+    question_fr: L'erreur du modèle linéaire sera-t-elle inférieure à celle de la référence (prédire la moyenne) ?
     choices:
       - {id: 'yes', label: 'Yes', label_fr: 'Oui'}
       - {id: 'no', label: 'No', label_fr: 'Non'}
       - {id: not_sure, label: Not sure, label_fr: Je ne sais pas}
     reveal: "The MAE of the evaluated rows is {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit> for the linear model and {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> for the mean baseline. The paired difference is {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} <unit>, between {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} and {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} on resamples of the evaluated rows."
-    reveal_fr: "La MAE des lignes évaluées vaut {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit> pour le modèle linéaire et {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> pour la moyenne de référence. L'écart apparié vaut {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} <unit>, entre {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} et {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} sur des rééchantillonnages des lignes évaluées."
+    reveal_fr: "La MAE des lignes évaluées vaut {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit> pour le modèle linéaire et {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> pour la référence (prédire la moyenne). L'écart apparié vaut {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} <unit>, entre {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} et {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} sur des rééchantillonnages des lignes évaluées."

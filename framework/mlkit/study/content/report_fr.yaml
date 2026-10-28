@@ -227,7 +227,7 @@ value_words:
     fit.linear: Utiliser le modèle linéaire
     fit.logistic: Utiliser le modèle logistique
     fit.variant: Utiliser la variante du modèle linéaire
-    fit.baseline: "Continuer à prédire la moyenne d'entraînement (le modèle de référence)"
+    fit.baseline: "Continuer à prédire la moyenne (la référence)"
   later_variant: 'Utiliser la {ordinal} variante'
   use_model: 'Utiliser la {model}'
   ordinals:
@@ -253,7 +253,7 @@ value_words:
     random: Tirage aléatoire
   criterion_precision_gain: "N'adopter que si la précision dépasse celle du modèle de référence d'au moins {points} points de pourcentage à la règle adoptée"
   criterion_recall_gain: "N'adopter que si le rappel dépasse celui du modèle de référence d'au moins {points} points de pourcentage à la règle adoptée"
-  criterion_mae_reduction: "N'adopter que si l'erreur absolue moyenne du modèle est inférieure d'au moins {share} à celle de la moyenne de référence"
+  criterion_mae_reduction: "N'adopter que si l'erreur absolue moyenne du modèle est inférieure d'au moins {share} à celle de la référence (prédire la moyenne)"
   missing_all: un indicateur de valeur manquante pour chaque variable qui a des cellules manquantes
   missing_some: 'des indicateurs de valeur manquante pour {columns}'
   rare: 'les catégories de moins de {k} {rows} regroupées'
@@ -406,7 +406,7 @@ regression:
     rule_none: Aucun modèle choisi.
   verdict:
     adopt_model: Adopter le modèle linéaire
-    keep_baseline: Garder la moyenne de référence
+    keep_baseline: Garder la référence (prédire la moyenne)
     inconclusive: Non concluant
   chosen_model: Modèle choisi
   proposed_model: Modèle proposé
@@ -426,7 +426,7 @@ regression:
   model_missing: Aucune comparaison actuelle de modèles.
   model_note: Les erreurs sont calculées sur les lignes de validation après un choix fait sur elles, dans l'unité de la cible. Elles sont optimistes et ne prédisent pas l'erreur sur de futures lignes.
   model_note_oof: Les erreurs sont des prédictions hors pli sur les lignes de développement, après un choix fait sur elles, dans l'unité de la cible. Ce sont des preuves de développement optimistes ; seul le test final, ouvert une fois, est indépendant.
-  model_paired_heading: Écarts appariés, modèle linéaire moins moyenne de référence (un écart négatif indique une erreur plus faible ; bootstrap apparié sur les mêmes lignes de validation)
+  model_paired_heading: Écarts appariés, modèle linéaire moins référence (prédire la moyenne) (un écart négatif indique une erreur plus faible ; bootstrap apparié sur les mêmes lignes de validation)
   residuals_heading: Résidus sur les lignes de validation (valeur observée moins prédiction)
   residuals_by_heading: Résidus par période
   model_names:
@@ -438,7 +438,7 @@ regression:
     workbench_not_tracked: Les essais dans l'établi ne changent rien et ne prouvent rien.
   cross_validation:
     model_note: Les erreurs sont des prédictions hors pli sur les lignes de développement, après un choix fait sur elles, dans l'unité de la cible. Ce sont des preuves de développement optimistes ; seul le test final, ouvert une fois, est indépendant.
-    model_paired_heading: Écarts appariés, modèle linéaire moins moyenne de référence (un écart négatif indique une erreur plus faible ; bootstrap apparié sur les mêmes prédictions hors pli)
+    model_paired_heading: Écarts appariés, modèle linéaire moins référence (prédire la moyenne) (un écart négatif indique une erreur plus faible ; bootstrap apparié sur les mêmes prédictions hors pli)
     residuals_heading: Résidus des prédictions hors pli (valeur observée moins prédiction)
     not_yet_defensible_extra:
       grouped_split_unsupported: Le résultat du découpage indique combien de valeurs de groupe les plis partagent.
