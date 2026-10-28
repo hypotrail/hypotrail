@@ -499,7 +499,7 @@ bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open</pre>
   <div class="frame sect"><div class="num">3</div><h2>En autonomie, par binôme</h2><p>Avancer avec l'agent, aussi loin que le temps le permet</p><p class="when">10h05 – 10h50 · 45 min</p></div>
   <div class="notes"><div class="n say">Les animateurs circulent ; on n'interrompt pas la salle.</div></div>
 </section>
-<section class="screen" data-title="Binômes et mission" data-part="En autonomie" data-weight="40" data-dur="40 min">
+<section class="screen" data-title="Binômes et mission" data-part="En autonomie" data-weight="45" data-dur="45 min">
   <div class="frame"><h3>Binômes mixtes, et une carte de mission</h3><div class="fx">
     <svg class="viz" viewBox="0 0 960 300" role="img" aria-label="Trois paliers de mission"><rect x="30" y="210" width="290" height="70" rx="3" style="fill:var(--mint)"/><text x="46" y="242" font-size="20" class="k" font-weight="700">Palier 1</text><text x="46" y="266" font-size="14" class="k">adopter la fiche, lire les données</text><rect x="330" y="135" width="290" height="145" rx="3" style="fill:var(--yellow)"/><text x="346" y="167" font-size="20" class="k" font-weight="700">Palier 2</text><text x="346" y="191" font-size="14" class="k">la mesure de l'erreur, et pourquoi</text><rect x="630" y="60" width="290" height="220" rx="3" style="fill:var(--violet)"/><text x="646" y="92" font-size="20" class="k" font-weight="700">Palier 3 · rapides</text><text x="646" y="116" font-size="14" class="k">Marimo, ou « qu'as-tu fait que…</text><text x="646" y="136" font-size="14" class="k">je n'ai pas vérifié ? »</text><line x1="0" y1="282" x2="960" y2="282" class="ln"/></svg>
     <div class="cols2">
@@ -509,18 +509,6 @@ bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open</pre>
     <p class="small">Pas d'obligation de finir. Bloqué plus de 3 minutes : appelez un animateur.</p>
   </div></div>
   <div class="notes"><div class="n trap">Binôme bloqué : étude de secours sans PDF, créée sur son poste (2 s).</div></div>
-</section>
-<section class="screen" data-title="Miro : aidé, gêné" data-part="En autonomie" data-weight="5" data-dur="5 min">
-  <div class="frame"><h3>Avant la pause, sur le tableau Miro « Atelier »</h3><div class="fx">
-    <div class="cols3">
-      <div class="card" style="--ac:var(--mint)"><h4>Ce qui a aidé</h4></div>
-      <div class="card" style="--ac:var(--pink)"><h4>Ce qui a gêné</h4></div>
-      <div class="card" style="--ac:var(--sky)"><h4>Ma question</h4></div>
-    </div>
-    <p class="lead">Un post-it par idée, à la couleur de votre profil : <b class="y">jaune</b> ML / DS, <b class="chalk">bleu</b> Data Engineer, <b class="chalk">vert</b> Data Analyst.</p>
-    <p class="small">Zone « Autonomie »</p>
-  </div></div>
-  <div class="notes"><div class="n say">Ce tableau n'a pas de mode privé : les post-its sont visibles tout de suite.</div></div>
 </section>
 <section class="screen" data-title="Pause" data-part="Pause" data-weight="10">
   <div class="frame sect"><div class="num">☕</div><h2>Pause</h2><p>Reprise à 11h00, par la démonstration.</p><p class="when">10h50 – 11h00 · 10 min</p></div>
@@ -546,21 +534,7 @@ bash scripts/workshop/new-mpg-study.sh demo --automation full_demo --open
 </section>
 <section class="screen" data-title="Démo : le mode automatique" data-part="Démo : jusqu'à l'export" data-demo="auto" data-weight="4">
   <div class="frame demo"><h3>Le mode automatique décide, vous relisez</h3><div class="dbody"><div id="auto"></div></div><div class="fdots" aria-hidden="true"></div></div>
-  <div class="notes"><div class="n say">→ lancement, cadrage, préparation, modèles, choix et arrêt (8 à relire), relecture, variante full_demo.</div><div class="n q">« Le mode choisit-il librement ? » → non : des règles fixes, diapo suivante.</div></div>
-</section>
-<section class="screen" data-title="Les règles du mode automatique" data-part="Démo : jusqu'à l'export" data-weight="1.5">
-  <div class="frame"><h3>Ce qui a été choisi pour vous, et selon quelles règles</h3><div class="fx">
-    <div class="steps" style="grid-template-columns:repeat(3,minmax(0,1fr))">
-      <div class="card"><b>La valeur rédigée</b> par le moteur pour cette décision (son brouillon).</div>
-      <div class="card"><b>Sinon, sa recommandation.</b></div>
-      <div class="card"><b>Sinon, une règle fixe :</b><ul><li>choix du modèle : la règle d'une erreur type ;</li><li>conclusion, <b>en full_demo seulement</b> : le critère jugé sur le test final.</li></ul></div>
-    </div>
-    <div class="cols2">
-      <div class="trap"><span class="l">Jamais</span>un choix libre de l'agent ; une valeur que le moteur refuserait n'est jamais proposée.</div>
-      <p class="quote" style="font-size:2.1cqw">Ces règles sont des choix de l'illustration : elles s'adaptent, et elles orientent le résultat.</p>
-    </div>
-  </div></div>
-  <div class="notes"><div class="n q">« Et si le moteur n'a pas de valeur ? » → le mode s'arrête et vous répondez.</div></div>
+  <div class="notes"><div class="n say">→ lancement, cadrage, préparation, modèles, choix et arrêt (8 à relire), relecture, variante full_demo.</div><div class="n q">« Le mode choisit-il librement ? » → non : la valeur rédigée par le moteur, sinon sa recommandation, sinon une règle fixe (choix du modèle : la règle d'une erreur type).</div></div>
 </section>
 <section class="screen" data-title="Le résultat" data-part="Démo : jusqu'à l'export" data-weight="2">
   <div class="frame"><h3>Le résultat, et ce qu'il reste à faire</h3><div class="fx">
@@ -582,10 +556,6 @@ hypotrail export handoff --study studies/demo --out ~/exports/mpg-handoff --expe
     </div>
   </div></div>
   <div class="notes"><div class="n say">Ouvrir le dossier aml/ dans l'explorateur, pas la sortie JSON du terminal.</div></div>
-</section>
-<section class="screen" data-title="Démo : exporter n'est pas déployer" data-part="Démo : jusqu'à l'export" data-demo="export" data-weight="3">
-  <div class="frame demo"><h3>Exporter n'est pas déployer</h3><div class="dbody"><div id="export"></div></div><div class="fdots" aria-hidden="true"></div></div>
-  <div class="notes"><div class="n say">→ étude, plan, projet, validate, parité, Azure (rien n'a tourné), candidat reconstruit.</div><div class="n trap">Dire mot pour mot : aucun job ni endpoint Azure n'a jamais tourné.</div></div>
 </section>
 <section class="screen" data-title="Usages, en perspective" data-part="Démo : jusqu'à l'export" data-weight="2">
   <div class="frame"><h3>Des usages, en perspective</h3><div class="fx">
