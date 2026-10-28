@@ -930,3 +930,14 @@ its warning.
   tooltip). Also at the moment step: "Pas de graphique pour ce point" — a small timeline
   diagram would help (when each column is known relative to the prediction moment and the
   target's measurement), in the R53 spirit. Noted only, not fixed.
+- **R57. Bring back the prediction-moment timeline with a slider (owner remark, 2026-10-28).**
+  An earlier version showed, at the prediction-moment step, a timeline chart with a slider:
+  moving the prediction moment along the timeline showed which features stay available (known
+  before the moment) and which drop out (known only after), the target's measurement marked at
+  the end. Restore it in Now at the moment step and in its path detail (R55): the case's
+  columns placed on the timeline by when they are known (from the case's availability
+  metadata), the proposed moment as a marker, a slider to move it (display only, nothing
+  recorded; the decision stays in the chat), the kept/dropped list updating live, and the
+  uncertain columns (acceleration) shown as such. The earlier implementation was not found in
+  this repository (searched the panel, the mockups and the paused companion); rebuild it from
+  this description. Noted only, not fixed.
