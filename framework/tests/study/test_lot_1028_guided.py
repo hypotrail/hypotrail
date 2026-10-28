@@ -53,6 +53,8 @@ def pre_lot(study: Path) -> Path:
     home = Path(study) / '.hypotrail'
     state = json.loads((home / 'state.json').read_text())
     state['decisions'].pop(st.ERROR_METRIC)
+    for decision_id, decision in state['decisions'].items():
+        decision['depends_on'] = list(st.B1_DEPENDS_ON_BY_TASK[st.REGRESSION][decision_id])
     state['partition'].pop('strata_counts')
     data = st.dumps(state)
     (home / 'state.json').write_bytes(data)
