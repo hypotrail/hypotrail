@@ -688,3 +688,11 @@ its warning.
   Owner question for the batch: should the Claude Code flavour also close every closed question
   with its own picker tool (`AskUserQuestion`), like Copilot? The plan-order remark of R36
   stands. Also in this message: "validation croisée à k plis temporels" leaves k unstated.
+- **R37. Owner answers (2026-10-28).** (1) Yes: the Claude Code flavour should also close every
+  closed question with a picker (`AskUserQuestion`), like Copilot's L1 (lifts D1b's "Claude
+  Code copy unchanged" for this rule). (2) The opening plan recap is wrong about the order: it
+  announces "l'exploration et la préparation" and never names the quality check, which in fact
+  comes first in the second moment (Qualité, then Préparation, then Exploration), although the
+  step-1 message already mentions the missing values. The recap must list the steps of the
+  study's actual plan, in order, from the engine's plan (not a fixed sentence). Noted only, not
+  fixed.
