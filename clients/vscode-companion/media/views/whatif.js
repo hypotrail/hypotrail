@@ -504,7 +504,7 @@
     const mid = LABEL + plot / 2;
     const x = v => mid + (Math.max(-top, Math.min(top, v || 0)) / top) * (plot / 2);
     const height = items.length * ROW + 18;
-    const chart = ctx.svg('svg', { viewBox: `0 0 ${W} ${height}`, width: '100%', class: 'ht-chart ht-centred' }, [
+    const chart = ctx.svg('svg', { viewBox: `0 0 ${W} ${height}`, width: W, height, class: 'ht-chart ht-centred' }, [
       ctx.svg('defs', {}, [ctx.svg('pattern', { id, width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, [
         ctx.svg('rect', { width: 6, height: 6, fill: 'surface' }),
         ctx.svg('line', { x1: 0, y1: 0, x2: 0, y2: 6, stroke: 'accent', 'stroke-width': 3 })])]),

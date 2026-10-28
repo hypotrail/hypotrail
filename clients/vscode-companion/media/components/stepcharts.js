@@ -51,7 +51,8 @@
   }
   const r2 = v => (typeof v === 'number' ? Math.round(v * 100) / 100 : v);
   function box(w, h, label, kids, attrs = {}) {
-    return S('svg', { viewBox: `0 0 ${w} ${h}`, role: 'img', 'aria-label': label, className: 'sc-svg', ...attrs }, kids);
+    // One unit per CSS pixel (as values-table.js): the 11 px text is never scaled up by a wide card.
+    return S('svg', { viewBox: `0 0 ${w} ${h}`, width: w, height: h, role: 'img', 'aria-label': label, className: 'sc-svg', ...attrs }, kids);
   }
   function hatch() {
     return S('defs', {}, [S('pattern', { id: 'ht-sc-hatch', width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, [

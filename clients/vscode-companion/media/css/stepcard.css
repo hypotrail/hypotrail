@@ -20,7 +20,7 @@ body.vscode-high-contrast .card, body.vscode-high-contrast-light .card { --sc-no
   border: 1px solid var(--ht-line); border-left: 3px solid var(--sc-now); border-radius: 4px; padding: 10px 12px; }
 .sc-idea.sc-idea-nopic { grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 560px) { .sc-idea { grid-template-columns: 132px minmax(0, 1fr); } }
-.sc-idea svg { width: 100%; height: auto; display: block; }
+.sc-idea svg { max-width: 100%; height: auto; display: block; }
 .sc-idea p { font-size: 0.88rem; color: var(--ht-muted); margin: 0; }
 details.sc-more > summary { list-style: none; cursor: pointer; font-size: 0.8rem; color: var(--sc-now); margin-top: 4px; }
 details.sc-more > summary::-webkit-details-marker { display: none; }
@@ -54,7 +54,7 @@ ol.sc-qs.sc-one li { grid-template-columns: minmax(0, 1fr); }
 .sc-ev .sc-lab h4 { font: 400 1rem/1.3 var(--serif); margin: 0; }
 .sc-ct, .sc-ev .sc-frame { font-size: 0.74rem; color: var(--ht-muted); margin: 2px 0 4px; }
 .sc-chart { margin: 4px 0; max-width: 100%; }
-.sc-chart svg, .sc-other svg, .sc-tl svg { display: block; width: 100%; height: auto; }
+.sc-chart svg, .sc-other svg, .sc-tl svg { display: block; max-width: 100%; height: auto; }
 .sc-svg text { font-family: var(--sans); }
 .sc-after { font-size: 0.82rem; color: var(--ht-fg); margin: 4px 0; }
 .sc-cap { font-size: 0.76rem; color: var(--ht-muted); margin: 2px 0; }
