@@ -1162,10 +1162,11 @@ CLAUDE_CODE_INTENDED_CHANGES = {
         '   regenerate the deliverables, and export a handoff pack:',
         '   regenerate the deliverables, acknowledge an interruption, and export a handoff pack:'),
     # R68 (minimal version, 2026-10-28): the product owner's PDF; the engine's ``then``
-    # (``cmd_brief.THEN_TEXT``) carries the draft, the citations and the closed question.
+    # (``cmd_brief.THEN_TEXT``) carries the draft, the citations and the closed question;
+    # once imported (``init --brief-pdf``), ``view.brief.then`` carries it.
     "R68: a PO's PDF (commands)": (
-        "**A PO's PDF:** run `h brief import --pdf FILE --expected-revision REV --study s`, "
-        'then follow its `then`.\n\n', ''),
+        "**PO's PDF:** follow `brief.then` (`status --json`), else that of `h brief "
+        "import --pdf FILE --expected-revision REV --study s`.\n\n", ''),
 }
 
 

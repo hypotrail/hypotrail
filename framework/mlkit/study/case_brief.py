@@ -129,12 +129,24 @@ def load(case_root: Path | str, target_unit: str | None = None) -> dict | None:
         return None
 
 
+def pending_pdf(state: Mapping) -> str | None:
+    """The name of the product owner's PDF imported into the study while no brief is
+    confirmed yet (R68, workshop 2026-10-28), else None. In that state the study has no
+    brief: the use case's own file is not shown in its place."""
+    record = (state.get('brief') or {}) if isinstance(state, Mapping) else {}
+    source = record.get('source')
+    return source.get('pdf') if source and not record.get('confirmed') else None
+
+
 def of_state(state: Mapping) -> dict | None:
-    """The brief of a study: its own confirmed brief (R68), else the brief of its case (read
-    now, from the case's folder), else None."""
+    """The brief of a study: its own confirmed brief (R68), else None while a PDF is
+    imported and its brief is pending (:func:`pending_pdf`), else the brief of its case
+    (read now, from the case's folder), else None."""
     own = (state.get('brief') or {}).get('confirmed') if isinstance(state, Mapping) else None
     if own:
         return validate(own['document'])      # validated at ``brief set``; the key order
+    if pending_pdf(state):
+        return None
     try:
         from .case import case_of
         case = case_of(state)
@@ -199,7 +211,7 @@ CITED_KEYS = TEXT_KEYS + ('data_provenance', 'users_and_cost_of_error',
 DRAFT_KEYS = ('citations', 'open_questions')
 OPEN_QUESTION_KEYS = ('about', 'en', 'fr')
 # ``view.brief`` (``status --json``): the imported PDF and the confirmed brief, or null.
-VIEW_KEYS = ('source', 'confirmed')
+VIEW_KEYS = ('source', 'confirmed', 'then')
 SOURCE_RECORD_KEYS = ('pdf', 'sha256', 'pages', 'path', 'revision', 'time', 'request_id')
 CONFIRMED_KEYS = ('document', 'citations', 'open_questions', 'user_words', 'source_sha256',
                   'revision', 'time', 'request_id')
@@ -280,13 +292,31 @@ def validate_draft(document: Any, pages: int, target_unit: str | None = None
 
 def view_of(state: Mapping) -> dict:
     """``view.brief``: the imported PDF (``source``) and the confirmed brief
-    (``confirmed``), each null until there is one."""
+    (``confirmed``), each null until there is one; ``then``, the next step of ``brief
+    import`` while the brief is pending (set by the view), else null."""
     record = state.get('brief') or {}
     source, confirmed = record.get('source'), record.get('confirmed')
     return {'source': {k: source.get(k) for k in SOURCE_RECORD_KEYS} if source else None,
             'confirmed': ({k: confirmed.get(k) for k in CONFIRMED_KEYS} | {
-                'document': validate(confirmed['document'])}) if confirmed else None}
+                'document': validate(confirmed['document'])}) if confirmed else None,
+            'then': None}
 
 
-__all__ = ['SCHEMA', 'FILE', 'load', 'of_state', 'validate', 'digest', 'texts',
+def texts_of_state(state: Mapping, lang: str) -> dict | None:
+    """``texts.<lang>.case_brief`` of a study: :func:`texts` of its brief; with a brief
+    confirmed from the PDF, plus ``from_pdf`` (its name) and ``citations`` ({field: [page,
+    ...]}); while the brief is pending, ``{pending: true, pdf}`` (R68, workshop 2026-10-28)."""
+    pdf = pending_pdf(state)
+    if pdf:
+        return {'pending': True, 'pdf': pdf}
+    out = texts(of_state(state), lang)
+    record = (state.get('brief') or {}) if isinstance(state, Mapping) else {}
+    if out is not None and record.get('confirmed'):
+        out['from_pdf'] = (record.get('source') or {}).get('pdf')
+        out['citations'] = {k: list(v) for k, v in
+                            (record['confirmed'].get('citations') or {}).items()}
+    return out
+
+
+__all__ = ['SCHEMA', 'FILE', 'load', 'of_state', 'pending_pdf', 'texts_of_state', 'validate', 'digest', 'texts',
            'business_bar', 'BriefError', 'validate_draft', 'view_of']

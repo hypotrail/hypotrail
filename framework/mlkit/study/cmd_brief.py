@@ -182,11 +182,11 @@ def _write_source(study: Path, pdf: Path, data: bytes, pages: list[dict]) -> Non
         shutil.copyfile(pdf, target)
 
 
-def then(study: Path, revision: int) -> dict:
-    """What the agent does after ``brief import`` (``then`` of its payload): draft, cite,
-    ask, record (R68)."""
+def then(study: Path, revision: int, lang: str | None = None) -> dict:
+    """What the agent does after ``brief import`` (``then`` of its payload, and of
+    ``view.brief`` while the brief is pending): draft, cite, ask, record (R68)."""
     import shlex
-    lang = st.language_of(read.open(study).state)
+    lang = lang or st.language_of(read.open(study).state)
     root = study.resolve()
     draft = root / DRAFT
     return {'text': THEN_TEXT, 'source': str(root / FOLDER / SOURCE_FILE), 'draft': str(draft),
@@ -194,6 +194,24 @@ def then(study: Path, revision: int) -> dict:
             'command': f'hypotrail brief set --file {shlex.quote(str(draft))} --user-words '
                        f'"<the option label, verbatim>" --expected-revision {revision} '
                        f'--study {shlex.quote(str(root))}'}
+
+
+def import_pdf(study: Path, pdf: Path, expected_revision: int,
+               request_id: str | None = None) -> cmd.Outcome:
+    """``brief import``: also run by ``init --brief-pdf`` right after the study is created."""
+    data, pages = extract(pdf)
+    sha = hashlib.sha256(data).hexdigest()
+    rid = request_id or (f'brief-import-{hashlib.sha256(data).hexdigest()[:16]}'
+                         f'-r{expected_revision}')
+    outcome = cmd.apply(study, action=ACTION_IMPORT,
+                        params={'pdf': pdf.name, 'sha256': sha, 'pages': len(pages)},
+                        request_id=rid, expected_revision=expected_revision,
+                        command='brief import', quiet=True)
+    # The state records the import; the files follow it (again on a replay).
+    _write_source(study, pdf, data, pages)
+    outcome.payload['next_action'] = cmd.refreshed_next_action(study)
+    outcome.payload['then'] = then(study, outcome.payload['revision'])
+    return outcome
 
 
 def _target_unit(state) -> str | None:
@@ -210,19 +228,7 @@ def main(args: argparse.Namespace) -> cmd.Outcome:
         if args.pdf is None or args.file is not None or args.user_words is not None:
             raise StudyError('invalid_arguments', 'brief import takes --pdf (and no --file or '
                                                   '--user-words).')
-        pdf = Path(args.pdf)
-        data, pages = extract(pdf)
-        sha = hashlib.sha256(data).hexdigest()
-        outcome = cmd.apply(study, action=ACTION_IMPORT,
-                            params={'pdf': pdf.name, 'sha256': sha, 'pages': len(pages)},
-                            request_id=_request_id(args, 'import', data),
-                            expected_revision=args.expected_revision, command='brief import',
-                            quiet=True)
-        # The state records the import; the files follow it (again on a replay).
-        _write_source(study, pdf, data, pages)
-        outcome.payload['next_action'] = cmd.refreshed_next_action(study)
-        outcome.payload['then'] = then(study, outcome.payload['revision'])
-        return outcome
+        return import_pdf(study, Path(args.pdf), args.expected_revision, args.request_id)
     if args.file is None or args.user_words is None or args.pdf is not None:
         raise StudyError('invalid_arguments', 'brief set takes --file and --user-words (and '
                                               'no --pdf).')

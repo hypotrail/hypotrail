@@ -286,7 +286,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 {{HYPOTRAIL}} render --study {{STUDY}}
 ```
 
-**A PO's PDF:** run `{{HYPOTRAIL}} brief import --pdf FILE --expected-revision REV --study {{STUDY}}`, then follow its `then`.
+**PO's PDF:** follow `brief.then` (`status --json`), else that of `{{HYPOTRAIL}} brief import --pdf FILE --expected-revision REV --study {{STUDY}}`.
 
 Decisions, proposed with the drafted `default_value` where there is one (a refusal's
 `details` give the accepted shape): `prediction_time` (text), `feature_availability`

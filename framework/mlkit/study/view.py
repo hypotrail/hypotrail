@@ -1472,6 +1472,11 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     out['case_texts'] = out.pop('case_texts')          # VIEW_KEYS order
     from . import case_brief
     out['brief'] = case_brief.view_of(state)           # R68: the last key
+    if case_brief.pending_pdf(state):
+        # Imported (``init --brief-pdf`` or ``brief import``), not adopted yet: the agent
+        # drafts from it without importing it again.
+        from .cmd_brief import then
+        out['brief']['then'] = then(study.study_dir, state['revision'], language)
     return out
 
 
@@ -2658,11 +2663,10 @@ def language_texts(study: read.Study, built: dict, summary_out: dict, *, since: 
     # note, each from the view read in its language.
     from . import case_brief, panel_digest as pdg, step_cards
     records = study.revisions(0)
-    brief = case_brief.of_state(state)
     for code, s, b, summ in ((lang, study, built, summary_out),
                              (other, twin, twin_built, twin_summary)):
         tables[code]['step_cards'] = step_cards.build(s, b, code, records=records)
-        tables[code]['case_brief'] = case_brief.texts(brief, code)
+        tables[code]['case_brief'] = case_brief.texts_of_state(state, code)
         tables[code]['defensibility_note'] = pdg.defensibility_note(b, summ, code)
     # The panel shows these texts verbatim: the French table carries its own typography
     # (CLI-CONTRACT §17.2.3); the junior's and the agent's words (``goal``, ``proposals``)

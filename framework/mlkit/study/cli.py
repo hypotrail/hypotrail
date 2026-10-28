@@ -2,6 +2,7 @@
 
     hypotrail init --case CASE --study DIR [--lang en|fr]
                    [--automation until_final_test|full_demo]                 (L9, R20)
+                   [--brief-pdf FILE]                                        (R68)
     hypotrail status --study DIR [--since REV] [--json] [--summary [--fields KEY,...]]
     hypotrail plan --study DIR
     hypotrail decide propose DECISION (--value TEXT | --value-json JSON)
@@ -60,6 +61,7 @@ import importlib
 import importlib.util
 import json
 import sys
+from pathlib import Path
 from typing import Sequence
 
 from mlkit.reliability import CommandRefused
@@ -168,6 +170,10 @@ def build_parser(extension: str | None = None, *, listing: bool = False
                         'records every decision before the final test with the engine\'s '
                         'values; full_demo also opens the final test and concludes (a '
                         'demonstration). Every automatic decision is reviewed at the end')
+    p.add_argument('--brief-pdf', default=None, metavar='FILE',
+                   help="the product owner's PDF: right after creating the study, run `brief "
+                        "import` on it (R68); the study's brief stays pending until the "
+                        "junior adopts a draft citing its pages")
     p = sub.add_parser('status', parents=[common], help='read-only view of the study')
     p.add_argument('--since', type=int, default=None, help='report revisions after REV')
     p.add_argument('--summary', action='store_true',
@@ -337,9 +343,23 @@ def _decide(args) -> cmd.Outcome:
 
 def dispatch(args) -> cmd.Outcome:
     if args.command == 'init':
-        return cmd.init(args.case, args.study, language=args.lang,
-                        reliability_profile=args.reliability_profile,
-                        automation=args.automation)
+        if args.brief_pdf is None:
+            return cmd.init(args.case, args.study, language=args.lang,
+                            reliability_profile=args.reliability_profile,
+                            automation=args.automation)
+        from . import cmd_brief
+        cmd_brief.extract(Path(args.brief_pdf))      # a refused PDF creates no study
+        out = cmd.init(args.case, args.study, language=args.lang,
+                       reliability_profile=args.reliability_profile,
+                       automation=args.automation)
+        if out.exit_code != 0:
+            return out
+        imported = cmd_brief.import_pdf(Path(args.study), Path(args.brief_pdf),
+                                        expected_revision=out.payload['revision'])
+        out.payload['revision'] = imported.payload['revision']
+        out.payload['next_action'] = imported.payload['next_action']
+        out.payload['brief'] = {k: imported.payload.get(k) for k in ('result', 'then')}
+        return out
     if args.command == 'mode':
         return cmd.apply(args.study, action=cmd.ACTION_SET_MODE,
                          params={'mode': args.mode, 'user_words': args.user_words},
@@ -425,6 +445,10 @@ def _text(payload: dict) -> str:
         lines = [f'study created at {payload["study"]} (revision {payload["revision"]}) on case '
                  f'{payload["case"]["id"]}', f'next action: {payload["next_action"]["message"]}']
         lines += [f'notice: {n["message"]}' for n in payload.get('notices') or []]
+        if payload.get('brief'):
+            r = payload['brief']['result']
+            lines.append(f'PO brief imported: {r["pdf"]} ({r["pages"]} pages, {r["source"]}); '
+                         'the brief stays pending until the junior adopts a draft')
         for name, launch in ((payload.get('deliverables') or {}).get('launch') or {}).items():
             lines.append(f'open the {name}: {launch["shell"]}')
         return '\n'.join(lines)

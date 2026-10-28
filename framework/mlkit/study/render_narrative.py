@@ -408,7 +408,19 @@ def _brief(c: Context) -> str:
     except Exception:                    # noqa: BLE001 - no readable case: no brief
         return ''
     # R68: the study's own brief, confirmed from the product owner's PDF, comes first.
-    own = (c.view.get('brief') or {}).get('confirmed')
+    record = c.view.get('brief') or {}
+    own = record.get('confirmed')
+    if not own and record.get('source'):
+        # R68 (workshop 2026-10-28): the PO's PDF is imported and its brief is not confirmed
+        # yet; the use case's own brief is not shown in its place.
+        pdf = e(record['source'].get('pdf') or '')
+        return (f'<div class="choice case card plain brief" id="brief" data-brief="pending">'
+                + (f'<p>Pas encore de fiche du cas d\u2019usage. La fiche du PO ({pdf}) est '
+                   f'importée : elle sera reprise dans le chat, page par page, puis adoptée '
+                   f'dans vos mots.</p>' if c.lang == 'fr' else
+                   f'<p>No use-case brief yet. The PO\u2019s brief ({pdf}) is imported: it '
+                   f'is drafted in the chat, page by page, then adopted in your words.</p>')
+                + '</div>')
     brief = case_brief.validate(own['document']) if own else case_brief.load(
         Path(path).parent, case.target_unit if case.task == 'regression' else None)
     texts_ = case_brief.texts(brief, c.lang)

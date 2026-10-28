@@ -59,7 +59,9 @@ def test_a_study_starts_from_the_po_pdf(tmp_path):
     assert code == 0, out
     rev = out['revision']
     code, out = hyp('status', '--study', study, cwd=tmp_path)
-    assert out['view']['brief'] == {'source': None, 'confirmed': None}
+    assert out['view']['brief'] == {'source': None, 'confirmed': None, 'then': None}
+    code, out = hyp('status', '--study', study, '--summary', '--digest', cwd=tmp_path)
+    assert out['case_brief'] is not None                     # no PDF: the use case's brief
 
     # Not a PDF, then a stale revision: refused, nothing written.
     not_pdf = tmp_path / 'notes.pdf'
@@ -88,9 +90,13 @@ def test_a_study_starts_from_the_po_pdf(tmp_path):
     code, out = hyp('status', '--study', study, cwd=tmp_path)
     brief = out['view']['brief']
     assert tuple(brief['source']) == cb.SOURCE_RECORD_KEYS and brief['confirmed'] is None
-    # The digest still reads the use case's own brief.
+    # Pending (workshop 2026-10-28): no fallback to the use case's brief, the agent's next
+    # step in the view.
+    assert tuple(brief) == cb.VIEW_KEYS and tuple(brief['then']) == cmd_brief.THEN_KEYS
     code, out = hyp('status', '--study', study, '--summary', '--digest', cwd=tmp_path)
-    assert 'aujourd\'hui l\'écart' not in out['texts']['fr']['case_brief']['problem']
+    assert out['case_brief'] is None
+    for lang in ('fr', 'en'):
+        assert out['texts'][lang]['case_brief'] == {'pending': True, 'pdf': PDF.name}
 
     words = "J'adopte la fiche"
     # A page the PDF does not have, and a field that cites nothing: refused.
@@ -125,6 +131,18 @@ def test_a_study_starts_from_the_po_pdf(tmp_path):
     problem = out['texts']['fr']['case_brief']['problem'].replace('\u00a0', ' ') \
         .replace('\u202f', ' ')                      # French spacing, written by the engine
     assert problem == PROBLEM.replace('{current_method_error}', '4,5 mpg'), problem
+    assert out['texts']['fr']['case_brief']['from_pdf'] == PDF.name
+    assert out['texts']['en']['case_brief']['citations']['objective'] == [2]
     report = (study / 'reports' / 'study.html').read_text(encoding='utf-8')
     assert 'Un service appelé par l&#x27;outil de conception.' in report \
         or "Un service appelé par l'outil de conception." in report
+
+
+def test_init_imports_the_po_pdf(tmp_path):
+    """``init --brief-pdf``: the study starts with the PDF imported and its brief pending."""
+    study = tmp_path / 'study'
+    code, out = hyp('init', '--case', AUTO, '--study', study, '--lang', 'fr',
+                    '--brief-pdf', PDF, cwd=tmp_path)
+    assert code == 0 and out['brief']['result']['pages'] == 3, out
+    code, out = hyp('status', '--study', study, cwd=tmp_path)
+    assert out['view']['brief']['source']['pdf'] == PDF.name and out['revision'] == 2
