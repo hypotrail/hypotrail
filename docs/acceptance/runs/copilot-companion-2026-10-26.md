@@ -883,3 +883,21 @@ its warning.
   empty cell. Draw the same as dots with intervals on one scale under the table (R42/R48), and
   keep the frame marks (◐ development, ● final). Applies to the panel's end state too.
   Noted only, not fixed.
+- **R53. More method diagrams, like before (owner remark, 2026-10-28).** The panel and the
+  report should show "how we did it" visually, not only results, as the earlier versions did
+  (the tabbed panel's segment and interval components, the journey rail). Candidates, each
+  drawn from registered values with a one-line reading:
+  - the partition: the 398 rows as a strip, 80 sealed for the final test (and how they were
+    drawn: quantile-stratified over 1970–82) and 318 for development;
+  - the cross-validation: the 5 time-ordered blocks, each predicted by a model trained on the
+    others (later years included), with the rows of each block;
+  - the preparation pipeline: column → imputation → log / cap / grouping → model, learnt on the
+    training part of each fold only;
+  - the nested cross-validation of the ridge penalty (inner folds choosing the penalty);
+  - the one-standard-error rule: the configurations on a scale, the best plus one SE as a band,
+    the simplest inside it picked;
+  - the exposure ledger as a timeline (when the target was looked at, when the final test was
+    opened);
+  - the journey itself (the 13 steps and the decisions taken) as the report's overview.
+  Place each in Now at its step and in the path's detail (R50), and in the report's chapter.
+  Noted only, not fixed.
