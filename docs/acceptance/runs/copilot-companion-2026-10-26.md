@@ -813,3 +813,15 @@ its warning.
   two confirmed variants. Also: the same card prints a mean ± "ET" table next to a paired
   chart whose intervals are bootstrap 95 % in the first card and ± one standard error in the
   second; say which in each title and keep one convention per screen. Noted only, not fixed.
+- **R48. The conclusion shows the final-test result in words only (owner remark, 2026-10-28;
+  instance of R40/R42/R45).** At step 13 Now holds the conclusion proposal and an "En bref"
+  paragraph of about ten lines of numbers (MAE 2,88 [2,38 ; 3,40] vs 6,64, paired −3,76, RMSE,
+  bias, 57 % [44 ; 70], development 3,69 vs 7,16, limits), but no chart. Show in "Pour
+  répondre, regardez": (1) development vs final for the model and the reference as dots with
+  intervals on one scale, the criterion's final-test bound drawn; (2) observed vs predicted on
+  the 80 final rows, with the error that grows with the prediction visible; (3) the error by
+  model year (the drift the conclusion cites); each with its frame ("preuve finale · mesurée
+  une fois") and reading. Shorten "En bref" to one sentence and let the charts carry the
+  numbers. Also: the limit line still speaks of out-of-fold development predictions at the
+  conclusion (R43: the limit must fit the step; here: what the final test does and does not
+  establish). Noted only, not fixed.
