@@ -4,6 +4,8 @@ Hypotrail is an experimental method for agent-assisted machine learning studies:
 
 **v0.2** guides a junior through a study in **Claude Code chat** (from v0.3, first on Hotel booking demand): a data card before any decision, a final test sealed at creation and opened once, cross-validation and model variants, ten decisions in a binary study (nine in a regression study) confirmed in the junior's own words (guided mode by default, training and express modes available), model diagnostics, one evolving offline HTML report, and a generated Marimo notebook whose cells recompute every figure. GitHub Copilot is the longer-term target but is not tested yet, and no human junior has used it. A study panel for VS Code exists behind a feature flag that is off by default; the old visual companion is paused.
 
+Repository: https://github.com/hypotrail/hypotrail. Workshop participants: [installation guide](docs/workshop/README.md) ([page version](docs/workshop/README.html)).
+
 Start with [the implementation entry point](docs/START-HERE.md); [the handoff](docs/handoff/IMPLEMENTATION.md) lists what works and what does not.
 
 ## Quickstart (Linux, macOS, or WSL)
