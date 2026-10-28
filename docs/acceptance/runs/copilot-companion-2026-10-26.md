@@ -961,3 +961,26 @@ its warning.
   errors. Also: the proposal still says "validation croisée à k plis, avec 5 plis" (R36's
   "k = 5" fix not applied to this text): say "validation croisée à 5 plis" once. Noted only,
   not fixed.
+- **R60. The error metric explained and chosen before the criterion (owner remark,
+  2026-10-28; extends R46).** Proposal (owner to confirm A or B; A recommended): (A) a separate
+  step "Mesure de l'erreur" just before the success criterion (14 steps), or (B) the criterion
+  step in two pickers, measure then threshold. Visual in Now, before any model and without
+  looking at the target: a fictitious example, marked as such, of five cars with errors 1, 1,
+  1, 1, 6 mpg drawn as bars; MAE = mean bar height = 2 mpg (every error weighs the same); RMSE
+  squares then averages then takes the root ≈ 2,9 mpg (the big miss weighs much more, the
+  squared bars drawn); the business question "une grosse erreur coûte-t-elle beaucoup plus que
+  plusieurs petites ?"; the unit in L/100 km. Default MAE with its reason.
+- **R61. Every step has a short visual explanation in Now (owner principle, 2026-10-28).**
+  Each step, before or beside its decision, shows a "pourquoi / comment" card that teaches with
+  a picture rather than words, using the study's values when they exist, or a fictitious
+  example marked as such: data card (what a row is), prediction moment (R57 timeline),
+  variables (R58), split (R59 folds), metric (R60), criterion (the reference's error and the
+  10 % bar drawn), quality (what each check looks for), preparation (a skewed histogram before
+  and after the log), exploration (how to read a target-by-feature chart), models (why a
+  reference and a linear model first: the mean as a flat line vs a straight line through a
+  scatter, simple and readable, the bar any later model must beat), variants (a curve the line
+  misses; what a penalty and an EBM change), choice (one-SE rule), final test (opened once),
+  conclusion. Few words, one picture, a fold for more. Also: the exploration step's message
+  runs the exploration, both fits and their diagnostics in one go up to the variants; the
+  junior never sees the exploration on its own before the models — pause after the
+  exploration so its charts (R45) are read first. Noted only, not fixed.
