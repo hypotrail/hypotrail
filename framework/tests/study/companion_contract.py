@@ -56,7 +56,9 @@ DIGEST_SUMMARY_KEYS = SUMMARY_KEYS + ('moments', 'pauses', 'last_session', 'dige
                                       'defensibility', 'ledger', 'sample', 'headlines',
                                       'criterion_configurations',
                                       # Owner batch of 2026-10-28 (§17.6, additive).
-                                      'data_structure', 'quality_verdicts')
+                                      'data_structure', 'quality_verdicts',
+                                      # Lot 2026-10-28 (§18, additive).
+                                      'case_brief', 'case_display')
 # L3: the tables of ``texts.<language>`` (``view.LANGUAGE_TEXT_KEYS``); contract P1 (§17.2.3)
 # appends the awaited question and its options, the explanation, the headlines, the
 # data-contingent marks and the sample's note.
@@ -65,18 +67,24 @@ LANGUAGE_TEXT_KEYS = ('plan', 'moments', 'next_action', 'choice_options', 'limit
                       'options', 'options_note', 'junior_digest', 'headlines',
                       'data_contingent', 'sample_note',
                       # Owner batch of 2026-10-28 (§17.6, additive).
-                      'plan_recap', 'step_limit', 'criterion_words')
+                      'plan_recap', 'step_limit', 'criterion_words',
+                      # Lot 2026-10-28 (§18, additive).
+                      'step_cards', 'case_brief', 'defensibility_note')
 # Contract P1 (CLI-CONTRACT §17.2): the keys of the digest additions, and the keys added
 # inside existing structures with ``--digest`` only.
 SUMMARY_AUTOMATION_KEYS = ('variant', 'active', 'started_revision', 'ended')
 SUMMARY_REVIEW_KEYS = ('items', 'done', 'total')
-SUMMARY_DEFENSIBILITY_KEYS = ('kind', 'count', 'items')
+SUMMARY_DEFENSIBILITY_KEYS = ('kind', 'count', 'items',
+                              # Lot 2026-10-28 (R65, §18.7, additive).
+                              'checklist')
 SUMMARY_LEDGER_KEYS = ('final_test', 'target_looks', 'configurations',
                        # Owner batch of 2026-10-28 (R47, §17.6): the live trial budget.
                        'variants')
 SUMMARY_SAMPLE_KEYS = ('seed', 'row_keys', 'recorded')
 HEADLINE_KEYS = ('decision_id', 'basis', 'results')
-SUMMARY_CRITERION_CONFIG_KEYS = ('metric', 'unit', 'bound', 'configurations', 'final_test')
+SUMMARY_CRITERION_CONFIG_KEYS = ('metric', 'unit', 'bound', 'configurations', 'final_test',
+                                 # Lot 2026-10-28 (R67, §18.6, additive).
+                                 'business')
 CRITERION_BOUND_KEYS = ('value', 'reference', 'minimum', 'result_id', 'path')
 CRITERION_CONFIGURATION_KEYS = ('slot', 'value', 'result_id', 'path', 'point_meets_bound',
                                 'gain', 'low', 'high', 'status', 'judged_on')
@@ -99,8 +107,10 @@ MOMENT_STEPS = {
     'binary': (('discover_data', 'prediction_time', 'feature_availability', 'split',
                 'success_criterion'), ('structural_eda', 'preprocessing', 'train_eda'),
                ('models', 'model_variant', 'policy'), ('final_test', 'conclusion')),
+    # Lot 2026-10-28 (EN-9): a regression study created since holds the error measure.
     'regression': (('discover_data', 'prediction_time', 'feature_availability', 'split',
-                    'success_criterion'), ('structural_eda', 'preprocessing', 'train_eda'),
+                    'error_metric', 'success_criterion'),
+                   ('structural_eda', 'preprocessing', 'train_eda'),
                    ('models', 'model_variant', 'model_choice'), ('final_test', 'conclusion')),
 }
 PAUSE_KEYS = ('pause', 'decisions', 'status', 'confirmed')

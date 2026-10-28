@@ -665,8 +665,9 @@ def options(view: Mapping, lang: str = EN, unit: str | None = None, *,
         lead = _t(lang, f'The criterion is a share of the mean baseline\'s mean absolute error, '
                         f'in {unit or "the unit of the target"}; the baseline\'s error is known '
                         f'once the models are fitted.',
-                  f'Le critère est une part de l\'erreur absolue moyenne de la moyenne de '
-                  f'référence, en {unit or "unité de la cible"} ; l\'erreur de référence est '
+                  f'Le critère est une part de l\'erreur absolue moyenne de la référence '
+                  f'(prédire la moyenne), en {unit or "unité de la cible"} ; l\'erreur de '
+                  f'référence est '
                   f'connue une fois les modèles ajustés.')
     out = {'task': task, 'action': action, 'default_metric': default,
            'metrics': [dict(m, default=m['metric'] == default) for m in metrics],

@@ -44,7 +44,8 @@ lit = rh.lit
 CHAPTERS = ('ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8', 'ch9')
 # The chapter of each step of the plan (L5's ``structural_eda`` goes with the exploration).
 STEP_CHAPTER = {'discover_data': 'ch1', 'prediction_time': 'ch2',
-                'feature_availability': 'ch2', 'split': 'ch3', 'success_criterion': 'ch3',
+                'feature_availability': 'ch2', 'split': 'ch3', 'error_metric': 'ch3',
+                'success_criterion': 'ch3',
                 'structural_eda': 'ch4', 'train_eda': 'ch4', 'preprocessing': 'ch5',
                 'models': 'ch6', 'model_variant': 'ch6', 'model_choice': 'ch6',
                 'policy': 'ch7', 'final_test': 'ch8', 'conclusion': 'ch9'}
@@ -376,6 +377,62 @@ def _scored() -> str:
 
 # --- chapters -----------------------------------------------------------------------------------
 
+BRIEF_LABELS = {
+    'en': {'title': 'The use case', 'problem': 'The problem', 'decision': 'The decision helped',
+           'objective': 'The objective', 'production': 'In production',
+           'data_provenance': 'Where the data come from',
+           'users_and_cost_of_error': 'Who uses it, and what an error costs',
+           'out_of_scope_and_risks': 'Out of scope and risks',
+           'links': 'What it changes for the study'},
+    'fr': {'title': "Le cas d'usage", 'problem': 'Le problème', 'decision': 'La décision aidée',
+           'objective': "L'objectif", 'production': 'En production',
+           'data_provenance': "D'où viennent les données",
+           'users_and_cost_of_error': "Qui l'utilise, et ce que coûte une erreur",
+           'out_of_scope_and_risks': 'Hors périmètre et risques',
+           'links': "Ce que ça change pour l'étude"},
+}
+
+
+def _brief(c: Context) -> str:
+    """R66: the use-case brief (``case-brief.yaml`` next to the case), in the edition's
+    language, or nothing without one. Its numbers come from the product owner, never from the
+    data; the brief says when the scenario is fictitious."""
+    from pathlib import Path
+    from . import case_brief
+    path = ((c.view.get('case') or {}).get('path'))
+    if not path:
+        return ''
+    from .case import load_case
+    try:
+        case = load_case(path, verify_data=False)
+    except Exception:                    # noqa: BLE001 - no readable case: no brief
+        return ''
+    brief = case_brief.load(Path(path).parent,
+                            case.target_unit if case.task == 'regression' else None)
+    texts_ = case_brief.texts(brief, c.lang)
+    if not texts_:
+        return ''
+    labels = BRIEF_LABELS['fr' if c.lang == 'fr' else 'en']
+    rows = ''.join(f'<dt>{e(labels[k])}</dt><dd>{lit("case", texts_[k])}</dd>'
+                   for k in case_brief.TEXT_KEYS)
+    folds = ''.join(
+        f'<details><summary>{e(labels[k])}</summary>'
+        + ''.join(f'<p>{lit("case", v)}</p>' for v in texts_[k].values()) + '</details>'
+        for k in ('data_provenance', 'users_and_cost_of_error', 'out_of_scope_and_risks'))
+    links = ' '.join(texts_['links'].values())
+    return (f'<div class="choice case card plain brief" id="brief" data-brief="'
+            f'{"fictitious" if brief["source"]["fictitious"] else "real"}">'
+            f'<div class="lbl">{e(labels["title"])}</div>'
+            f'<p class="cap">{lit("case", texts_["source"])}</p><dl>{rows}</dl>{folds}'
+            f'<p><b>{e(labels["links"])}</b> : {lit("case", links)}</p></div>'
+            if c.lang == 'fr' else
+            f'<div class="choice case card plain brief" id="brief" data-brief="'
+            f'{"fictitious" if brief["source"]["fictitious"] else "real"}">'
+            f'<div class="lbl">{e(labels["title"])}</div>'
+            f'<p class="cap">{lit("case", texts_["source"])}</p><dl>{rows}</dl>{folds}'
+            f'<p><b>{e(labels["links"])}</b>: {lit("case", links)}</p></div>')
+
+
 def _ch1(c: Context, steps, status) -> Parts:
     p, view, citer = Parts(), c.view, c.citer
     rows = _rows(c)
@@ -395,6 +452,8 @@ def _ch1(c: Context, steps, status) -> Parts:
                     + ''.join(objective)
                     + f'<div class="meta">{g.stamp("scenario")}<span>'
                       f'{e(g.say("ui.nothing_decided"))}</span></div></div></div>')
+    # Lot 2026-10-28 (R66): the product owner's brief of the use case opens the report.
+    p.choice = _brief(c) + (p.choice or '')
     final = view.get('final_test') or {}
     opened = final.get('status') == 'opened'
     language = c.lang

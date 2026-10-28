@@ -201,8 +201,8 @@ def _steps_fr() -> dict[str, str]:
                                               'validation, la moyenne des plis '
                                               "d'entraînement. De "
                                               "combien l'erreur hors pli du modèle doit-elle "
-                                              'être plus petite que celle de la moyenne de '
-                                              "référence pour qu'il soit utile ? Le critère est "
+                                              'être plus petite que celle de la référence (prédire '
+                                              "la moyenne) pour qu'il soit utile ? Le critère est "
                                               'fixé maintenant, avant tout ajustement de '
                                               'modèle.',
         rcv['train_eda']['question']: "Que montre l'échantillon de développement sur la "
