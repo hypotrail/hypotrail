@@ -171,7 +171,19 @@
     if (!own) return null;
     const b = all[own];
     const c = C().brief;
+    // R68 (workshop 2026-10-28): the PO's PDF is imported and no brief is adopted yet.
+    if (b.pending) {
+      return el('section', { className: 'sc-blk', 'data-block': 'brief' }, [blockHead(0, C().blocks.brief),
+        el('div', { className: 'sc-briefcard', 'data-case-brief': own, 'data-brief-pending': 'true' }, [
+          el('p', { className: 'sc-bsrc', text: c.pending(b.pdf || 'PDF') })])]);
+    }
     const txt = (t, tag = 'span') => (t ? HT.components.engineText(t, { tag, lang: own }) : null);
+    // Adopted from the PDF: the pages each field cites, next to its label.
+    const cites = b.citations || {};
+    const label = k => (cites[k] && cites[k].length ? `${c[k]} (${c.pages(cites[k])})` : c[k]);
+    // The engine's source line may already say the scenario is fictitious: not twice.
+    const srcText = b.source && b.source.text ? b.source.text : '';
+    const saysFictitious = srcText.toLowerCase().includes(c.fictitious.toLowerCase());
     const keys = ['problem', 'decision', 'objective', 'production'];
     // The PO's numbers as the brief writes them (4,5, not 4,50).
     const brief1 = v => (Number.isInteger(v) ? 'int' : 'f1');
@@ -183,12 +195,14 @@
     return el('section', { className: 'sc-blk', 'data-block': 'brief' }, [blockHead(0, C().blocks.brief),
       el('div', { className: 'sc-briefcard', 'data-case-brief': own }, [
         // The engine's source line names the brief itself; the panel's label only without it.
-        el('p', { className: 'sc-bsrc' }, [b.source && b.source.text ? txt(b.source.text) : c.source,
-          b.source && b.source.fictitious ? [' · ', el('b', { 'data-fictitious': true, text: c.fictitious })] : null]),
-        el('dl', { className: 'sc-bkey' }, keys.filter(k => b[k]).flatMap(k => [el('dt', { text: c[k] }), txt(b[k], 'dd')])),
+        el('p', { className: 'sc-bsrc', 'data-fictitious': b.source && b.source.fictitious && saysFictitious ? true : null },
+          [srcText ? txt(srcText) : c.source,
+            b.source && b.source.fictitious && !saysFictitious ? [' · ', el('b', { 'data-fictitious': true, text: c.fictitious })] : null,
+            b.fromPdf ? [' · ', el('b', { 'data-brief-from-pdf': b.fromPdf, text: c.fromPdf(b.fromPdf) })] : null]),
+        el('dl', { className: 'sc-bkey' }, keys.filter(k => b[k]).flatMap(k => [el('dt', { text: label(k) }), txt(b[k], 'dd')])),
         numbers.length ? el('p', { className: 'sc-bnum', 'data-brief-numbers': true, text: numbers.join(' · ') }) : null,
         ...['data_provenance', 'users_and_cost_of_error', 'out_of_scope_and_risks'].filter(k => b[k]).map(k =>
-          ctx.fold(`sc-brief-${k}`, { summary: c[k], className: 'sc-more' }, () => txt(b[k], 'div'))),
+          ctx.fold(`sc-brief-${k}`, { summary: label(k), className: 'sc-more' }, () => txt(b[k], 'div'))),
         links.length ? el('div', { className: 'sc-blink' }, [el('b', { text: c.links }), ...links.map(l => txt(l, 'p'))]) : null,
       ])]);
   }

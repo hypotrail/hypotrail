@@ -69,6 +69,10 @@
       links: 'What it changes for the study',
       currentError: (v, u) => `Current method: about ${v} ${u} of error`,
       targetError: (v, u) => `Aimed at: about ${v} ${u}`,
+      // R68 (workshop 2026-10-28): the PO's PDF imported, its brief not adopted yet; then adopted.
+      pending: pdf => `No use-case brief yet. The PO's brief (${pdf}) is imported: ask in the chat “Prepare the study from the PO's brief”.`,
+      fromPdf: pdf => `taken from the PDF (${pdf})`,
+      pages: ps => (ps.length > 1 ? `pp. ${ps.join(', ')}` : `p. ${ps[0]}`),
     },
     // --- block 1 pictures ------------------------------------------------------------------------------
     pictures: {

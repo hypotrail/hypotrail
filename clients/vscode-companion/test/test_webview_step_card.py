@@ -227,3 +227,32 @@ def test_step_card_screenshots(open_panel, sc_views):
             p.page.wait_for_timeout(100)
             p.page.screenshot(path=str(out / f'step{n:02d}-{state}-{theme.split("-")[0]}.png'), full_page=True)
             assert p.clean(), (state, p.errors)
+
+
+def test_r68_brief_pending_then_from_pdf(open_panel, sc_views, model):
+    """R68 (workshop 2026-10-28): with the PO's PDF imported and no brief adopted, block 0 says
+    so and names the chat phrase; once adopted, it says « tirée du PDF » and each field's pages.
+    The source line says « scénario fictif » once."""
+    import copy
+    raw = read_payload('stepcards/summary.data')
+    pending = copy.deepcopy(raw)
+    pending['case_brief'] = None
+    for lang in ('en', 'fr'):
+        pending['texts'][lang]['case_brief'] = {'pending': True, 'pdf': 'fiche-po.pdf'}
+    p = open_state(open_panel, {**sc_views, 'summary.data': model('summary', pending)}, 'data')
+    card = p.page.locator('[data-brief-pending]')
+    assert card.count() == 1
+    text = card.inner_text()
+    assert 'Pas encore de fiche du cas d' in text and 'fiche-po.pdf' in text
+    assert "Prépare l'étude à partir de la fiche du PO" in text, text
+    assert p.page.locator('[data-block="brief"] dl').count() == 0
+    adopted = copy.deepcopy(raw)
+    adopted['texts']['fr']['case_brief'].update(
+        from_pdf='fiche-po.pdf', citations={'problem': [1], 'objective': [2, 3]})
+    p = open_state(open_panel, {**sc_views, 'summary.data': model('summary', adopted)}, 'data')
+    brief = p.page.locator('[data-block="brief"]')
+    assert brief.locator('[data-brief-from-pdf]').inner_text() == 'tirée du PDF (fiche-po.pdf)'
+    keys = brief.locator('dt').all_text_contents()
+    assert 'Le problème (p. 1)' in keys and "L'objectif (p. 2, 3)" in keys, keys
+    assert brief.locator('.sc-bsrc').inner_text().count('scénario fictif pour la simulation') == 1
+    assert p.clean(), (p.errors, p.requests)

@@ -551,6 +551,8 @@ function caseBriefOf(raw, texts) {
     // The engine (CLI-CONTRACT §18.5) puts the texts in `texts.<lang>.case_brief` and the
     // numbers and the fictitious flag at the top level (`case_brief {fictitious,
     // current_method_error, target_error}`): the two are merged, the texts first.
+    // R68 (workshop 2026-10-28): the PO's PDF imported, no brief adopted yet (`{pending, pdf}`).
+    if (own && own.pending === true) { out[lang] = { pending: true, pdf: strOrNull(own.pdf) }; any = true; continue; }
     const b = own ? { ...(top || {}), ...own } : (top && plain(top[lang]) ? top[lang] : top);
     if (!b) { out[lang] = null; continue; }
     if (own && top) for (const k of ['fictitious', 'current_method_error', 'target_error']) if (own[k] === undefined && top[k] !== undefined) b[k] = top[k];
@@ -565,7 +567,11 @@ function caseBriefOf(raw, texts) {
       ? { text: inLang(src, lang), fictitious: b.fictitious === true }
       : plain(src) ? { text: inLang(src.text, lang) || inLang(src.label, lang), fictitious: src.fictitious === true || b.fictitious === true } : null;
     if (!fields.problem && !fields.objective) { out[lang] = null; continue; }
-    out[lang] = { source, ...fields, links, currentMethodError: numberOf(b.current_method_error), targetError: numberOf(b.target_error) };
+    // Adopted from the PDF: its name and the pages each field cites (`{field: [page, ...]}`).
+    const citations = plain(b.citations) ? Object.fromEntries(Object.entries(b.citations)
+      .map(([k, v]) => [k, Array.isArray(v) ? v.filter(Number.isInteger) : []]).filter(([, v]) => v.length)) : {};
+    out[lang] = { source, ...fields, links, currentMethodError: numberOf(b.current_method_error), targetError: numberOf(b.target_error),
+      fromPdf: strOrNull(b.from_pdf), citations };
     any = true;
   }
   return any ? out : null;

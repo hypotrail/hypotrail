@@ -63,6 +63,9 @@
       links: "Ce que ça change pour l'étude",
       currentError: (v, u) => `Méthode actuelle : environ ${v} ${u} d'erreur`,
       targetError: (v, u) => `Visé : environ ${v} ${u}`,
+      pending: pdf => `Pas encore de fiche du cas d'usage. La fiche du PO (${pdf}) est importée : demandez dans le chat « Prépare l'étude à partir de la fiche du PO ».`,
+      fromPdf: pdf => `tirée du PDF (${pdf})`,
+      pages: ps => (ps.length > 1 ? `p. ${ps.join(', ')}` : `p. ${ps[0]}`),
     },
     pictures: {
       oneRow: 'une ligne',

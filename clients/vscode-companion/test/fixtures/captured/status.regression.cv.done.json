@@ -15743,7 +15743,8 @@
    },
    "brief": {
     "source": null,
-    "confirmed": null
+    "confirmed": null,
+    "then": null
    }
   }
  }
