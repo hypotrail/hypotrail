@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panel, les 14 étapes</title>
+<style>
+/* Chalkboard / graph-paper charter v5 (same tokens as panel-step-structure-fr.html). */
+:root{
+  --board:#20312C; --board2:#1A2925; --chalk:#EDE8DA; --chalk2:#C9C4B6; --dust:rgba(237,232,218,.55);
+  --ink:#EDE8DA; --soft:#C9C4B6; --faint:#A3ADA6; --line:rgba(237,232,218,.14); --line2:rgba(237,232,218,.45);
+  --now:#F0D178; --ok:#B9E2C4; --seal:#C8B6F5; --warn:#F3A28F;
+  --card:#F5F1E6; --cink:#22302B; --cmuted:#4A5651; --cline:rgba(34,48,43,.16); --csoft:#ECE7D8; --cacc:#7A4E0C;
+  --pen:#1E4E9E; --leaf:#1F6B3D; --orange:#C2571A; --ochre:#D39B2A; --grey:#B9BDB4; --cseal:#6B4FB8; --cwarn:#A12C24;
+  --gridmm:rgba(38,72,124,.045);
+  --serif:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --sans:"Avenir Next",Avenir,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:hidden}
+body{background:var(--board);color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--now);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.page{max-width:1260px;margin:0 auto;padding:20px 16px 60px}
+.eyebrow{font:600 .72rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--now)}
+.page>h1{font:400 2rem/1.15 var(--serif);margin:6px 0 8px;color:var(--chalk);text-shadow:0 0 1px var(--dust)}
+.lede{color:var(--chalk2);max-width:78ch}
+.controls{position:sticky;top:0;z-index:20;background:var(--board);border-bottom:1px solid var(--line2);display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:10px 0;margin-top:16px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1.5px solid var(--line2);border-radius:4px;overflow:hidden;vertical-align:middle}
+.seg button{background:transparent;border:0;padding:6px 10px;font-size:.85rem}
+.seg button+button{border-left:1px solid var(--line2)}
+.seg button[aria-pressed="true"]{background:var(--now);color:var(--cink);font-weight:600}
+.seg.steps button{min-width:32px;padding:6px 6px}
+.ctl{font-size:.8rem;color:var(--faint);margin-right:4px}
+.stage{display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;margin-top:20px;align-items:start}
+@media (max-width:1060px){.stage{grid-template-columns:minmax(0,1fr)}}
+.stage>*{min-width:0}
+.notes h2{font:400 1.4rem var(--serif);margin-bottom:6px}
+.notes h3{font:600 .72rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--now);margin:14px 0 4px}
+.notes ul{padding-left:18px;color:var(--chalk2)} .notes li{margin:3px 0}
+.notes p{color:var(--chalk2)}
+
+/* simulated panel */
+.vsc{border:1px solid #0d1512;border-radius:6px;overflow:hidden;box-shadow:0 18px 40px -20px rgba(0,0,0,.7);width:420px;max-width:100%}
+.vsc.w600{width:600px}
+.vbar{background:#151d1a;color:#9aa59f;font:12px var(--sans);padding:6px 10px}
+.pane{background:var(--board);height:860px;overflow:auto;font-size:14px;position:relative}
+.top{position:sticky;top:0;z-index:4;background:var(--board);border-bottom:1px solid var(--line)}
+.hd{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;padding:8px 14px 2px}
+.hd .name{font:400 1.15rem/1.2 var(--serif);margin-right:auto}
+.pill{font-size:.76rem;border:1px solid currentColor;border-radius:12px;padding:0 8px;white-space:nowrap;background:transparent;line-height:1.7}
+.pill.seal{color:var(--seal)} .pill.seal.open{background:var(--seal);color:var(--board);border-color:var(--seal)}
+.pill.def{color:var(--soft)} .pill.def.ok{color:var(--ok)}
+.prog{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:4px 14px 9px}
+.prog .bars{flex:1;display:flex;gap:6px;align-items:center;min-width:120px}
+.prog .ph{display:flex;gap:2px;flex:var(--n)}
+.prog .ph i{flex:1;height:5px;border-radius:2px;background:var(--line2)}
+.prog .ph i.d{background:var(--ok)}
+.prog .ph i.c{height:10px;background:var(--now);box-shadow:0 0 0 1.5px var(--board),0 0 0 3px var(--now)}
+.prog .lbl{font-size:.8rem;color:var(--soft);white-space:nowrap} .prog .lbl b{color:var(--ink);font-weight:600}
+.in{padding:10px 14px 24px}
+h2.sec{font:600 .7rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:22px 0 6px}
+h2.sec:first-child{margin-top:4px}
+h2.sec.nowh{color:var(--now);font-size:.74rem}
+h2.sec .full{text-transform:none;letter-spacing:0;font:400 1.1rem/1.25 var(--serif);color:var(--ink);display:block;margin-top:2px}
+.todo{border:1px solid var(--warn);border-radius:4px;margin-bottom:12px}
+.todo>h2{font:600 .82rem var(--sans);color:var(--warn);padding:6px 10px;border-bottom:1px solid var(--line)}
+.todo p{padding:8px 10px;font-size:.86rem;color:var(--soft)} .todo b{color:var(--ink);font-weight:600}
+.act{display:inline-block;background:transparent;border:1px solid var(--line2);border-radius:3px;padding:2px 9px;font-size:.8rem;color:var(--ink);margin:4px 6px 0 0}
+.act:hover{border-color:var(--now);color:var(--now)}
+.act .w{font-size:.7rem;color:var(--faint);margin-left:4px}
+
+/* four blocks */
+.blk{margin-top:18px}
+.blk:first-of-type{margin-top:6px}
+.bk{display:flex;gap:8px;align-items:baseline;font:600 .7rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.bk .n{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--faint);font-size:.66rem;letter-spacing:0;flex:none}
+.idea{display:grid;grid-template-columns:132px minmax(0,1fr);gap:12px;align-items:center;background:rgba(0,0,0,.14);border:1px solid var(--line);border-radius:5px;padding:10px}
+.vsc:not(.w600) .idea{grid-template-columns:112px minmax(0,1fr)}
+.idea svg{width:100%;height:auto;display:block}
+.idea p{font-size:.88rem;color:var(--soft)} .idea p b{color:var(--ink);font-weight:600}
+.idea svg text{font-family:var(--sans)}
+details.more>summary{list-style:none;cursor:pointer;font-size:.8rem;color:var(--now);margin-top:4px}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸ "} details.more[open]>summary::before{content:"▾ "}
+details.more>div{font-size:.84rem;color:var(--soft);margin-top:4px}
+.feeds{font-size:.9rem;color:var(--soft)} .feeds b{color:var(--ink);font-weight:600}
+ol.qs{list-style:none;margin:8px 0 10px;display:grid;gap:4px}
+ol.qs li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:6px;font-size:.92rem}
+ol.qs.one li{grid-template-columns:minmax(0,1fr)}
+.qn{font:700 .72rem/18px var(--sans);color:var(--cink);background:var(--now);border-radius:3px;text-align:center;height:18px;margin-top:2px}
+.budget{display:flex;gap:8px;align-items:center;font-size:.82rem;color:var(--soft);margin:2px 0 10px}
+.budget .bb{display:flex;gap:2px} .budget .bb i{width:22px;height:8px;border-radius:2px;border:1px solid var(--line2)}
+.budget .bb i.u{background:var(--ok);border-color:var(--ok)}
+.pause{border:1px dashed var(--now);border-radius:4px;padding:7px 10px;margin:0 0 10px;font-size:.86rem;color:var(--soft)}
+.pause b{color:var(--now)}
+.ask{border-top:1px solid var(--line);padding-top:8px}
+.who{font:600 .7rem var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--now)}
+.ask h3{font:400 1.12rem/1.3 var(--serif);margin:2px 0 4px}
+.opts{font-size:.86rem;color:var(--soft)} .opts span{color:var(--faint)}
+.optnote{font-size:.8rem;color:var(--faint);margin-top:2px}
+.copy{margin-top:6px;background:transparent;border:1px solid var(--line2);border-radius:3px;padding:2px 8px;font-size:.78rem;text-align:left;max-width:100%}
+.frame{font-size:.8rem;color:var(--soft);margin-bottom:6px}
+.frame b{color:var(--ink);font-weight:600}
+.ev{background-color:var(--card);color:var(--cink);border-radius:4px;padding:10px 12px;margin-top:10px;box-shadow:0 8px 18px -12px rgba(0,0,0,.55);
+  background-image:linear-gradient(var(--gridmm) 1px,transparent 1px),linear-gradient(90deg,var(--gridmm) 1px,transparent 1px);background-size:6px 6px}
+.ev .lab{display:flex;gap:8px;align-items:baseline}
+.ev .lab .qn{flex:none;width:24px}
+.ev .lab h4{font:400 1rem/1.3 var(--serif)}
+.ev .ct{font-size:.74rem;color:var(--cmuted);margin:2px 0 4px}
+.ev .ct .ill{color:var(--cacc);font-weight:600}
+.ev .efr{font-size:.74rem;color:var(--cmuted);margin:2px 0 6px}
+.ev svg{display:block;width:100%;height:auto}
+.ev svg text{font-family:var(--sans)}
+.ev .after{font-size:.82rem;color:var(--cink);margin:4px 0}
+.readx{margin:8px 0 6px;display:grid;gap:6px;font-size:.87rem}
+.readx p{border-left:3px solid var(--cmuted);padding:2px 0 2px 9px}
+.readx .r2{border-left-color:var(--leaf)} .readx .r3{border-left-color:var(--cacc)}
+.readx .rl{display:block;font:600 .68rem var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--cmuted)}
+.readx .r2 .rl{color:var(--leaf)} .readx .r3 .rl{color:var(--cacc)}
+.readx b{font-weight:600}
+.readx .src{border:0;padding:0;color:var(--cmuted);font-size:.72rem}
+.chip{display:inline-block;font:600 .7rem var(--sans);border-radius:10px;padding:0 7px;border:1px solid currentColor;margin-left:4px;vertical-align:1px;white-space:nowrap}
+.chip.ok{color:var(--leaf)} .chip.over{color:var(--cwarn)} .chip.under{color:var(--cmuted)}
+.pending{font-size:.86rem;color:var(--cmuted);border:1px dashed var(--cline);border-radius:3px;padding:8px 10px;margin:6px 0}
+details.f{border-top:1px solid var(--cline)}
+details.f>summary{list-style:none;cursor:pointer;padding:5px 0;font-size:.82rem;color:var(--cmuted)}
+details.f>summary::-webkit-details-marker{display:none}
+details.f>summary::before{content:"▸ ";color:var(--cacc)} details.f[open]>summary::before{content:"▾ "}
+details.f>div{font-size:.85rem;padding-bottom:6px}
+details.f ol,details.f ul{padding-left:18px}
+.nochart{background:rgba(0,0,0,.14);border:1px dashed var(--line2);border-radius:4px;padding:8px 10px;font-size:.88rem;color:var(--soft)}
+.nochart b{color:var(--ink);font-weight:600}
+.limit{font-size:.86rem;color:var(--soft);display:grid;grid-template-columns:16px minmax(0,1fr);gap:6px}
+.limit::before{content:"◐";color:var(--warn)}
+.next{font-size:.86rem;color:var(--soft);margin-top:4px} .next b{color:var(--ink);font-weight:600}
+.est{display:grid;gap:8px}
+.est>div{background:rgba(0,0,0,.14);border:1px solid var(--line);border-radius:4px;padding:7px 10px;font-size:.86rem;color:var(--soft)}
+.est h5{font:600 .7rem var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ok);margin-bottom:2px}
+.est .no h5{color:var(--warn)} .est .then h5{color:var(--now)}
+.est ul{padding-left:16px}
+
+/* tables on cards */
+.mini{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:4px}
+.mini td,.mini th{border-bottom:1px solid var(--cline);padding:4px 5px;text-align:left;vertical-align:top}
+.mini th{color:var(--cmuted);font-weight:600;font-size:.76rem}
+.mini td.n,.mini th.n{text-align:right;font-variant-numeric:tabular-nums}
+.mini tr.chosen td{background:rgba(31,107,61,.10);font-weight:600}
+.mini td.nm{color:var(--cmuted);font-style:italic;font-size:.76rem;text-align:right}
+.mini tr.sep td{border-top:1.5px solid var(--cmuted)}
+.scrollx{overflow-x:auto;margin:4px 0 0;position:relative}
+.scrollx:focus-visible{outline:2px solid var(--pen)}
+.mini.sample{font-size:.76rem;white-space:nowrap}
+.mini.sample th:first-child,.mini.sample td:first-child{position:sticky;left:0;background:var(--card);z-index:1}
+.mini.sample td.key{color:var(--cmuted);font-family:var(--mono);font-size:.7rem}
+.mini.sample td.q{color:var(--cwarn);font-weight:700}
+.mini.sample .tgt{background:rgba(122,78,12,.09);font-weight:600}
+.cap{font-size:.76rem;color:var(--cmuted);margin-top:2px}
+/* timeline */
+.tl input[type=range]{width:100%;accent-color:var(--cacc);margin-top:2px}
+.tl .stops{display:flex;justify-content:space-between;font-size:.72rem;color:var(--cmuted);gap:6px}
+.tl .stops span{flex:1;text-align:center} .tl .stops span:first-child{text-align:left} .tl .stops span:last-child{text-align:right}
+.tl .lists{display:grid;gap:3px;font-size:.82rem;margin-top:6px}
+.tl .lists b{font-weight:600}
+.tl .k{color:var(--leaf)} .tl .x{color:var(--cmuted)} .tl .u{color:var(--cacc)}
+.tl .only{font-size:.76rem;color:var(--cmuted);margin-top:4px;font-style:italic}
+/* variables board */
+.vb{display:grid;gap:6px}
+.vb .g{border-top:1px solid var(--cline);padding-top:4px}
+.vb .gn{font:600 .7rem var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--cmuted)}
+.vb .cs{display:flex;flex-wrap:wrap;gap:4px 6px;margin-top:3px}
+.vchip{display:inline-flex;flex-direction:column;border:1px solid var(--cline);border-radius:4px;padding:1px 7px;font-size:.82rem;background:#fff;max-width:100%}
+.vchip.kept{border-color:var(--leaf);color:var(--leaf)}
+.vchip.excl{border-color:var(--cacc);color:var(--cacc);border-style:dashed;background:repeating-linear-gradient(135deg,rgba(122,78,12,.07) 0 5px,transparent 5px 10px)}
+.vchip.nf{color:var(--cmuted);background:var(--csoft)}
+.vchip small{font-size:.7rem;color:var(--cmuted);line-height:1.3}
+.vlegend{font-size:.74rem;color:var(--cmuted);margin-top:4px}
+
+/* path */
+.ledger{font-size:.8rem;color:var(--faint);margin:-2px 0 6px}
+.ledger b{color:var(--soft);font-weight:600}
+.path{list-style:none}
+.path .phl{font:600 .66rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:8px 0 2px}
+.path>li.st{border-top:1px solid var(--line)}
+.path summary{list-style:none;cursor:pointer;display:flex;gap:8px;align-items:baseline;padding:7px 0}
+.path summary::-webkit-details-marker{display:none}
+.path .row{display:flex;gap:8px;align-items:baseline;padding:7px 0}
+.path .mk{width:14px;text-align:center;flex:none}
+.path .mk.d{color:var(--ok)} .path .mk.c{color:var(--now)} .path .mk.l{color:var(--faint)}
+.path .tv{flex:1;min-width:0}
+.path .t{font-weight:600;display:block}
+.path .v{color:var(--soft);font-size:.84rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.path .later .t{font-weight:400;color:var(--faint)}
+.path .b{font-size:.72rem;white-space:nowrap;border-radius:10px;padding:0 7px;border:1px solid currentColor;flex:none;color:var(--now)}
+.path .chev{color:var(--faint);flex:none;width:10px}
+.path details[open]>summary .chev{transform:rotate(90deg)}
+.path details[open]>summary{border-bottom:1px dashed var(--line)}
+.path .rv{padding:8px 0 12px 22px}
+.path li.hl>details{box-shadow:inset 3px 0 0 var(--now)}
+/* review form */
+.decided{font-size:.9rem;border-left:3px solid var(--ok);padding:3px 0 3px 9px;margin-bottom:8px}
+.decided b{font-weight:600}
+.decided .who2{display:block;font-size:.76rem;color:var(--faint)}
+.recap{list-style:none;display:grid;gap:6px}
+.recap>li{background:rgba(0,0,0,.14);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:.88rem}
+.recap .rq{display:flex;gap:6px;align-items:baseline;color:var(--soft);font-size:.82rem}
+.recap .rq .qn{flex:none;width:24px}
+.recap .ra{margin-top:2px}
+.lnk{background:transparent;border:0;padding:0;color:var(--now);text-decoration:underline;text-underline-offset:2px;font-size:.8rem;margin-top:2px}
+.recap .ev{margin-top:6px}
+.rvlimit{margin-top:10px}
+/* tools */
+details.p{border-top:1px solid var(--line)}
+details.p>summary{list-style:none;cursor:pointer;padding:6px 0;font-size:.85rem;color:var(--soft);display:flex;gap:6px;align-items:baseline}
+details.p>summary::-webkit-details-marker{display:none}
+details.p>summary::before{content:"▸";color:var(--faint)} details.p[open]>summary::before{content:"▾"}
+details.p>summary .c{margin-left:auto;font-size:.78rem;color:var(--faint)}
+details.p>div{padding:0 0 10px 14px;font-size:.86rem;color:var(--soft)}
+.dl{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin:3px 0}
+.off{color:var(--faint);font-size:.8rem}
+.foot{margin-top:16px;font-size:.76rem;color:var(--faint)}
+.stub{background:rgba(0,0,0,.14);border:1px solid var(--line);border-radius:4px;padding:8px 10px}
+.stub .hint{font-size:.78rem;color:var(--faint);margin-top:4px}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="eyebrow">Maquette · panel d'étude · les 14 étapes d'une régression · 2026-10-28</div>
+  <h1>Les 14 étapes d'Auto MPG, une par une</h1>
+  <p class="lede">La structure validée (R64), appliquée à chaque étape d'une régression, avec la nouvelle étape <b>Mesure de l'erreur</b> (R60, option A). <b>Pendant l'étape</b> : les quatre blocs. <b>Relecture dans le parcours</b> : l'étape est faite, sa fiche s'ouvre dans le parcours, la décision et les réponses d'abord, chaque graphique sur place. Les chiffres viennent de ta session quand ils sont connus ; les autres sont marqués « illustratif ». Les règles de la section 8 de la spécification (revue fraîche) s'appliquent : images du bloc 1 illustratives ou structurelles, « ce qu'on en conclut » ne recommande jamais.</p>
+
+  <div class="controls" id="controls"></div>
+
+  <div class="stage">
+    <div class="vsc" id="vsc"><div class="vbar">HYPOTRAIL : ÉTUDE</div><div class="pane" id="pane"></div></div>
+    <aside class="notes" id="notes"></aside>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+// ---------------------------------------------------------------------------
+// State of the mockup (display only; nothing is recorded anywhere).
+// S: selected step 1..14; M: 'live' (during the step) or 'review' (done, opened in the path);
+// W: panel width; F13: final-test step before/after the opening; SL: timeline slider stop.
+// ---------------------------------------------------------------------------
+let S=9,M='live',W='w420',F13='after',SL=1;
+const OPEN=new Set();      // open <details> and open "Voir le graphique" toggles, by id
+let scrollToPath=false;
+
+// French number formatting with a typographic minus.
+const f=(v,d=2)=>(v<0?'−':'')+Math.abs(v).toFixed(d).replace('.',',');
+const sg=(v,d=2)=>(v>0?'+':'')+f(v,d);
+// Narrow no-break spaces before French high punctuation.
+const nb=s=>s.replace(/ ([;:?!»])/g,' $1').replace(/« /g,'« ');
+
+// ---------------------------------------------------------------------------
+// SVG helpers (charts use a 300-wide frame, text 10–12 px, colours from tokens).
+// ---------------------------------------------------------------------------
+const T=(x,y,s,o={})=>`<text x="${x}" y="${y}" font-size="${o.fs||11}" text-anchor="${o.a||'start'}" fill="${o.c||'var(--cmuted)'}"${o.w?` font-weight="${o.w}"`:''}${o.st?` font-style="${o.st}"`:''}${o.op?` opacity="${o.op}"`:''}>${s}</text>`;
+const L=(x1,y1,x2,y2,c='var(--cmuted)',w=1,da='')=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}"${da?` stroke-dasharray="${da}"`:''}/>`;
+const R=(x,y,w,h,fill,o='')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" ${o}/>`;
+const svg=(w,h,label,body)=>`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}">${body}</svg>`;
+function rnd(seed){return()=>((seed=Math.imul(seed^seed>>>15,1|seed)+0x6D2B79F5|0)>>>0)/4294967296}
+const HATCH=`<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(122,78,12,.06)"/><line x1="0" y1="0" x2="0" y2="6" stroke="rgba(122,78,12,.35)" stroke-width="2"/></pattern><pattern id="hatchS" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(107,79,184,.18)"/><line x1="0" y1="0" x2="0" y2="6" stroke="rgba(107,79,184,.55)" stroke-width="2"/></pattern></defs>`;
+
+// ---------------------------------------------------------------------------
+// Block 1 pictures (130 x 90): illustrative or structural only, never target-derived (§8.5).
+// ---------------------------------------------------------------------------
+const chalk='var(--chalk)',faintc='var(--faint)',nowc='var(--now)';
+const PIC={
+ row_card:()=>`<svg viewBox="0 0 130 90" aria-hidden="true"><rect x="4" y="4" width="122" height="82" rx="4" fill="none" stroke="${faintc}"/>
+   ${T(10,17,'une ligne',{fs:9,c:nowc})}
+   ${T(10,32,'Moteur',{fs:8,c:faintc})}${T(56,32,'…  …  …  …',{fs:9,c:chalk})}
+   ${T(10,46,'Carrosserie',{fs:8,c:faintc})}${T(56,46,'…  …',{fs:9,c:chalk})}
+   ${T(10,60,'Modèle',{fs:8,c:faintc})}${T(56,60,'…  …  …',{fs:9,c:chalk})}
+   <rect x="8" y="66" width="114" height="15" rx="2" fill="rgba(240,209,120,.12)"/>${T(10,77,'mpg, à prédire',{fs:8,c:nowc})}${T(84,77,'…',{fs:9,c:nowc})}</svg>`,
+ moment_timeline:()=>`<svg viewBox="0 0 130 90" aria-hidden="true">${L(8,50,124,50,faintc,1.5)}
+   ${[14,46,78,112].map((x,i)=>`<circle cx="${x}" cy="50" r="${i===3?4:3}" fill="${i===3?'var(--warn)':chalk}"/>`).join('')}
+   ${L(62,24,62,72,nowc,2,'3 2')}${T(62,18,'moment',{fs:9,a:'middle',c:nowc})}
+   ${T(14,66,'connu',{fs:8,a:'middle',c:faintc})}${T(14,76,'avant',{fs:8,a:'middle',c:faintc})}
+   ${T(112,66,'mpg',{fs:8,a:'middle',c:'var(--warn)'})}${T(112,76,'mesuré',{fs:8,a:'middle',c:'var(--warn)'})}
+   ${T(4,88,'hypothèse du scénario',{fs:7.5,c:faintc,st:'italic'})}</svg>`,
+ variables_board:()=>`<svg viewBox="0 0 130 90" aria-hidden="true">
+   ${[['✓','gardées',5,'var(--ok)'],['✕','exclue',1,'var(--warn)'],['—','pas des variables',3,faintc]].map(([s,l,n,c],i)=>{const x=6+i*42;let r=`${T(x,14,s+' '+n,{fs:10,c})}`;for(let k=0;k<n;k++)r+=`<rect x="${x}" y="${20+k*11}" width="36" height="8" rx="2" fill="none" stroke="${c}"${s==='✕'?' stroke-dasharray="2 2"':''}/>`;return r}).join('')}
+   ${T(6,86,'gardées · exclue · ni l\'un ni l\'autre',{fs:7.5,c:faintc})}</svg>`,
+ partition_strip:()=>`<svg viewBox="0 0 130 90" aria-hidden="true"><rect x="4" y="34" width="92" height="22" rx="3" fill="none" stroke="${faintc}"/>${T(50,49,'318 développement',{fs:8.5,a:'middle',c:chalk})}
+   <rect x="100" y="34" width="26" height="22" rx="3" fill="var(--seal)" opacity=".85"/>${T(113,49,'80',{fs:9,a:'middle',c:'var(--board)'})}
+   ${T(113,26,'scellées',{fs:8.5,a:'middle',c:'var(--seal)'})}${T(65,74,'398 lignes · comptes seulement',{fs:8,a:'middle',c:faintc})}</svg>`,
+ error_gap:()=>`<svg viewBox="0 0 130 90" aria-hidden="true">${L(10,78,124,78,faintc)}${L(10,78,10,8,faintc)}
+   <circle cx="66" cy="22" r="4" fill="${chalk}"/>${T(74,25,'observé',{fs:9,c:chalk})}
+   <circle cx="66" cy="60" r="4" fill="none" stroke="${nowc}" stroke-width="1.8"/>${T(74,63,'prédit',{fs:9,c:nowc})}
+   ${L(60,24,60,58,'var(--warn)',1.6)}${L(56,24,64,24,'var(--warn)',1.2)}${L(56,58,64,58,'var(--warn)',1.2)}${T(54,44,'erreur',{fs:9,a:'end',c:'var(--warn)'})}
+   ${T(14,88,'exemple fictif',{fs:7.5,c:faintc,st:'italic'})}</svg>`,
+ criterion_bar:()=>`<svg viewBox="0 0 130 90" aria-hidden="true">${T(6,14,'erreur de la référence',{fs:8.5,c:faintc})}
+   <rect x="6" y="18" width="112" height="14" rx="2" fill="none" stroke="${faintc}"/>
+   ${T(6,50,'erreur visée',{fs:8.5,c:nowc})}<rect x="6" y="54" width="100" height="14" rx="2" fill="rgba(240,209,120,.25)" stroke="${nowc}"/>
+   ${L(106,14,106,74,'var(--ok)',1.5,'3 2')}${T(104,84,'10 % plus bas',{fs:8,a:'middle',c:'var(--ok)'})}
+   ${T(6,84,'✎',{fs:9,c:faintc})}</svg>`,
+ quality_checks:()=>`<svg viewBox="0 0 130 90" aria-hidden="true">
+   <rect x="8" y="8" width="22" height="16" fill="none" stroke="${faintc}"/>${T(19,20,'?',{fs:11,a:'middle',c:'var(--warn)'})}${T(38,20,'cellule vide',{fs:8.5,c:chalk})}
+   ${[10,6,2].map((h,i)=>`<rect x="${8+i*8}" y="${48-h*1.6}" width="6" height="${h*1.6}" fill="${faintc}"/>`).join('')}${T(38,46,'catégorie rare',{fs:8.5,c:chalk})}
+   <path d="M8,72 C14,56 18,56 22,66 S28,72 32,72" fill="none" stroke="${faintc}"/>${T(38,70,'longue traîne',{fs:8.5,c:chalk})}
+   ${T(38,86,'hors plage',{fs:8.5,c:chalk})}${L(8,82,30,82,faintc)}<circle cx="34" cy="82" r="2" fill="var(--warn)"/></svg>`,
+ log_before_after:()=>`<svg viewBox="0 0 130 90" aria-hidden="true">${[20,26,16,9,6,4,3,2].map((h,i)=>`<rect x="${4+i*6}" y="${66-h*2}" width="5" height="${h*2}" fill="${faintc}"/>`).join('')}
+   ${T(26,80,'avant',{fs:8.5,a:'middle',c:faintc})}${T(64,46,'→ log',{fs:9,a:'middle',c:nowc})}
+   ${[4,9,15,19,15,9,4,2].map((h,i)=>`<rect x="${80+i*6}" y="${66-h*2}" width="5" height="${h*2}" fill="${nowc}" opacity=".85"/>`).join('')}${T(104,80,'après',{fs:8.5,a:'middle',c:nowc})}
+   ${T(4,10,'exemple fictif',{fs:7.5,c:faintc,st:'italic'})}</svg>`,
+ trend_reading:()=>`<svg viewBox="0 0 130 90" aria-hidden="true">${L(10,80,125,80,faintc)}${L(10,80,10,6,faintc)}${[[20,18],[30,26],[38,24],[50,38],[60,44],[72,52],[84,58],[96,62],[108,64],[118,66]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.6" fill="${chalk}"/>`).join('')}<path d="M18,20 C50,40 80,58 120,66" fill="none" stroke="${nowc}" stroke-width="2"/>${T(70,22,'la tendance',{fs:9,c:nowc})}${T(14,90,'exemple fictif',{fs:7.5,c:faintc,st:'italic'})}</svg>`,
+ mean_vs_line:()=>`<svg viewBox="0 0 130 90" aria-hidden="true">${L(10,80,125,80,faintc)}${L(10,80,10,6,faintc)}
+   ${[[18,70],[28,62],[36,66],[48,52],[58,50],[68,44],[80,36],[92,34],[104,24],[116,18]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.6" fill="${chalk}"/>`).join('')}
+   ${L(12,46,124,46,faintc,2,'4 3')}${T(124,58,'moyenne',{fs:8.5,a:'end',c:faintc})}
+   ${L(14,72,122,16,nowc,2)}${T(14,14,'droite',{fs:9,c:nowc})}${T(14,90,'exemple fictif',{fs:7.5,c:faintc,st:'italic'})}</svg>`,
+ line_misses_curve:()=>`<svg viewBox="0 0 130 90" aria-hidden="true">${L(10,80,125,80,faintc)}${[[18,22],[30,40],[42,54],[54,62],[66,66],[78,64],[90,58],[102,48],[114,34]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.6" fill="${chalk}"/>`).join('')}${L(14,40,120,50,faintc,2,'4 3')}<path d="M16,22 Q66,96 116,32" fill="none" stroke="${nowc}" stroke-width="2"/>${T(18,12,'droite',{fs:9,c:faintc})}${T(80,12,'courbe',{fs:9,c:nowc})}${T(14,90,'exemple fictif',{fs:7.5,c:faintc,st:'italic'})}</svg>`,
+ one_se_rule:()=>`<svg viewBox="0 0 130 90" aria-hidden="true"><rect x="20" y="14" width="44" height="50" fill="rgba(240,209,120,.15)"/>${L(20,14,20,64,nowc,1)}${L(64,14,64,64,nowc,1,'3 2')}
+   ${T(42,10,'meilleure + 1 erreur type',{fs:7.5,a:'middle',c:nowc})}
+   ${[['simple',56,26],['moyen',50,42],['souple',22,58]].map(([n,x,y])=>`<circle cx="${x}" cy="${y}" r="3.2" fill="${chalk}"/>${T(72,y+3,n,{fs:8.5,c:faintc})}`).join('')}
+   ${T(108,29,'◂',{fs:10,c:nowc})}${T(6,80,'la plus simple dans la bande',{fs:8,c:nowc})}${T(6,89,'exemple fictif',{fs:7.5,c:faintc,st:'italic'})}</svg>`,
+ sealed_once:()=>`<svg viewBox="0 0 130 90" aria-hidden="true"><rect x="4" y="30" width="86" height="22" rx="3" fill="none" stroke="${faintc}"/>${T(47,45,'318 · a servi à choisir',{fs:8,a:'middle',c:faintc})}<rect x="94" y="30" width="32" height="22" rx="3" fill="var(--seal)" opacity=".85"/>${T(110,45,'80',{fs:9,a:'middle',c:'var(--board)'})}${L(110,58,110,70,nowc,2)}${T(110,82,'lu une fois',{fs:8.5,a:'middle',c:nowc})}${T(110,22,'scellées',{fs:8,a:'middle',c:'var(--seal)'})}</svg>`,
+ dev_vs_final:()=>`<svg viewBox="0 0 130 90" aria-hidden="true">${T(6,16,'◐ développement',{fs:9,c:chalk})}${T(6,28,'a servi à choisir, optimiste',{fs:8,c:faintc})}
+   ${T(6,54,'● test final',{fs:9,c:'var(--seal)'})}${T(6,66,'lu une fois, indépendant',{fs:8,c:faintc})}${L(6,38,124,38,'var(--line2)',1)}${T(6,86,'deux cadres, une échelle',{fs:8,c:faintc})}</svg>`
+};
+
+// ---------------------------------------------------------------------------
+// Charts of block 3.
+// ---------------------------------------------------------------------------
+// Step 1: 8-row sample drawn once (fixed seed), raw values, mpg shown (counted look).
+const SAMPLE=[['L34','19,0','6','232','100','2634','13,0','71','1','amc gremlin'],['L69','13,0','8','350','155','4502','13,5','72','1','buick lesabre custom'],
+ ['L85','27,0','4','97','88','2100','16,5','72','3','toyota corolla 1600 (sw)'],['L100','18,0','6','232','100','2945','16,0','73','1','amc hornet'],
+ ['L122','15,0','8','318','150','3399','11,0','73','1','dodge dart custom'],['L123','24,0','4','121','110','2660','14,0','73','2','saab 99le'],
+ ['L267','30,0','4','98','68','2155','16,5','78','1','chevrolet chevette'],['L384','38,0','4','91','67','1965','15,0','82','3','honda civic']];
+const QROWS=[['L33','','4','98','?','2046','19,0','71','1','ford pinto'],['L127','','6','200','?','2875','17,0','74','1','ford maverick'],['L331','','4','85','?','1835','17,3','80','2','renault lecar deluxe'],
+ ['L337','','4','140','?','2905','14,3','80','1','ford mustang cobra'],['L355','','4','100','?','2320','15,8','81','2','renault 18i'],['L375','','4','151','?','3035','20,5','82','1','amc concord dl']];
+function sampleTable(rows,label,withTarget=true){
+  const head='<tr><th>ligne</th>'+(withTarget?'<th class="n tgt">mpg ◂ à prédire</th>':'')+'<th class="n">cylindres</th><th class="n">cylindrée</th><th class="n">puissance</th><th class="n">poids</th><th class="n">accélération</th><th class="n">année</th><th class="n">origine</th><th>nom</th></tr>';
+  return `<div class="scrollx" tabindex="0" role="region" aria-label="${label}"><table class="mini sample">${head}${rows.map(r=>`<tr><td class="key">${r[0]}</td>${withTarget?`<td class="n tgt">${r[1]}</td>`:''}${r.slice(2,9).map(c=>`<td class="n${c==='?'?' q':''}">${c}</td>`).join('')}<td>${r[9]}</td></tr>`).join('')}</table></div>`;
+}
+function chSample(){return `<p class="cap" style="margin-bottom:2px"><b>Aperçu · 8 lignes tirées au hasard parmi les 318 de développement</b> · valeurs brutes, telles que dans le fichier</p>${sampleTable(SAMPLE,'Aperçu de 8 lignes de développement')}<p class="cap">Faites défiler le tableau vers la droite. Le tirage est fixé : panneau, rapport et notebook montrent les mêmes lignes.</p>`}
+function chStructure(){
+  const rows=[['lignes de développement',318],['noms de voiture distincts',254],['lignes dont le nom revient ailleurs',107],['doublons exacts',0]];
+  let b='';rows.forEach(([l,v],i)=>{const y=18+i*36,w=v/318*230;b+=T(0,y,l,{fs:11,c:'var(--cink)'})+R(0,y+5,Math.max(w,1.5),13,i===2?'var(--orange)':'var(--pen)','opacity=".75"')+T(w+5,y+16,String(v),{fs:11,c:'var(--cink)',w:600})});
+  return svg(300,150,'Structure des 318 lignes de développement : 254 noms distincts, 107 lignes dont le nom revient, aucun doublon exact',b);
+}
+// Steps 2–3: prediction-moment timeline (case-display milestones, scenario assumption).
+const MS=[{id:'design',l:['Moteur','conçu']},{id:'body',l:['Carrosserie','et poids fixés']},{id:'tests',l:['Essais de','performance']},{id:'measured',l:['Consommation','mesurée (mpg)']}];
+const MX=[34,116,198,276],STOPX=[75,157,237];
+const TLCOLS=[['cylindres',0],['cylindrée',0],['puissance',0],['origine',0],['poids',1],['accélération',null]];
+function tlState(pos){const kept=[],dropped=[],unc=[];TLCOLS.forEach(([n,k])=>{if(k===null)unc.push(n);else if(k<=pos)kept.push(n);else dropped.push(n)});return{kept,dropped,unc}}
+function tlSvg(pos){
+  const st=tlState(pos),mx=STOPX[pos];let b=HATCH;
+  b+=T(0,12,'hypothèse du scénario, pas un fait des données',{fs:10,c:'var(--cacc)',st:'italic'});
+  b+=R(mx,22,290-mx,134,'rgba(34,48,43,.07)')+T(286,52,'connu',{fs:9.5,a:'end'})+T(286,63,'après',{fs:9.5,a:'end'});
+  b+=L(10,120,292,120,'var(--cink)',1.6)+`<path d="M292,120 l-6,-4 v8 z" fill="var(--cink)"/>`;
+  MS.forEach((m,i)=>{const x=MX[i],last=i===3;b+=`<circle cx="${x}" cy="120" r="${last?5:4}" fill="${last?'var(--cwarn)':'var(--cink)'}"/>`;
+    if(last){b+=T(x+10,96,'◎ consommation',{fs:10,a:'end',c:'var(--cwarn)'})+T(x+10,108,'mesurée (mpg)',{fs:10,a:'end',c:'var(--cwarn)'});return}
+    const a=i===0?'start':'middle',tx=i===0?x-8:x;
+    b+=T(tx,136,m.l[0],{fs:10,a,c:'var(--cink)'})+T(tx,148,m.l[1],{fs:10,a,c:'var(--cink)'})});
+  // columns stacked above the milestone where they become known
+  const at={0:[],1:[]};TLCOLS.forEach(([n,k])=>{if(k!==null)at[k].push(n)});
+  [0,1].forEach(k=>at[k].forEach((n,j)=>{const ok=k<=pos,x=k===0?MX[0]-8:MX[1];b+=T(x,108-j*13,(ok?'✓ ':'✕ ')+n,{fs:10.5,a:k===0?'start':'middle',c:ok?'var(--leaf)':'var(--cmuted)',op:ok?1:.6})}));
+  // marker
+  b+=L(mx,24,mx,128,'var(--cacc)',2,'4 3')+`<path d="M${mx-5},22 h10 l-5,7 z" fill="var(--cacc)"/>`;
+  b+=T(mx,36,pos===1?'moment proposé':'moment déplacé',{fs:10,a:mx>200?'end':'middle',c:'var(--cacc)',w:600});
+  // "?" lane: availability undocumented, outside the time line
+  b+=`<rect x="10" y="160" width="282" height="22" rx="3" fill="url(#hatch)" stroke="var(--cacc)" stroke-dasharray="3 2"/>`+T(18,175,'voie « ? » · date non documentée : '+st.unc.join(', '),{fs:10.5,c:'var(--cacc)'});
+  return svg(300,190,`Frise du moment de la prédiction, hypothèse du scénario. Moment ${pos===1?'proposé':'déplacé'} après « ${MS[pos].l.join(' ')} ». Connues avant : ${st.kept.join(', ')}. Connues après : ${st.dropped.join(', ')||'aucune'}. Incertaine : ${st.unc.join(', ')}.`,b);
+}
+function tlLists(pos){const st=tlState(pos);return `<div class="lists" aria-live="polite"><span class="k"><b>Connues avant le moment (${st.kept.length}) :</b> ${st.kept.join(', ')}</span><span class="x"><b>Connues après (${st.dropped.length}) :</b> ${st.dropped.join(', ')||'aucune'}</span><span class="u"><b>Incertaine (${st.unc.length}) :</b> ${st.unc.join(', ')}, quel que soit le moment</span></div>`}
+function chTimeline(interactive){
+  if(!interactive)return `<div class="tl">${tlSvg(1)}</div>`;
+  const vt=p=>`après « ${MS[p].l.join(' ')} »`;
+  return `<div class="tl" data-tl>${'<div class="tlsvg">'+tlSvg(SL)+'</div>'}
+   <label class="sr" for="tlr">Déplacer le moment de la prédiction</label>
+   <input id="tlr" type="range" min="0" max="2" step="1" value="${SL}" aria-valuetext="${vt(SL)}">
+   <div class="stops" aria-hidden="true"><span>après Moteur conçu</span><span>après Carrosserie</span><span>après Essais</span></div>
+   <div class="tllists">${tlLists(SL)}</div>
+   <p class="only">Pour voir seulement : la décision se prend dans le chat. Le curseur s'arrête avant la mesure de mpg.</p></div>`;
+}
+function chVariables(){
+  const G=[['Moteur',[['cylindres','kept'],['cylindrée','kept'],['puissance','kept']]],
+   ['Carrosserie et performances',[['poids','kept'],['accélération','excl','disponibilité au moment de la prédiction non documentée']]],
+   ['Modèle',[['origine','kept'],['année du modèle','nf','ordre du découpage'],['nom','nf','identifiant']]],
+   ['Résultat',[['mpg','nf','la cible']]]];
+  const ic={kept:'✓ gardée',excl:'✕ exclue',nf:'— pas une variable'};
+  return `<div class="vb">${G.map(([g,cs])=>`<div class="g"><div class="gn">${g}</div><div class="cs">${cs.map(([n,s,why])=>`<span class="vchip ${s}"><span>${s==='kept'?'✓':s==='excl'?'✕':'—'} ${n}</span><small>${s==='kept'?'gardée':s==='excl'?'exclue : '+why:'pas une variable : '+why}</small></span>`).join('')}</div></div>`).join('')}</div>
+   <p class="vlegend">Chaque état a son signe et son mot, pas seulement une couleur.</p>
+   <p class="cap" style="margin-top:8px"><b>Sur la frise</b> (même moment, curseur fixe)</p>${chTimeline(false)}`;
+}
+// Step 4: strata of the sealed draw (counts only, no bin edge, no target value).
+function chStrata(opened){
+  const dev=[64,64,64,63,63],sea=[16,16,16,16,16];let b='';
+  b+=R(0,4,12,10,'var(--grey)')+T(16,13,'développement (318)',{fs:10.5,c:'var(--cink)'})+R(136,4,12,10,'var(--cseal)')+T(152,13,'scellées (80)'+(opened?', lues une fois':''),{fs:10.5,c:'var(--cink)'});
+  dev.forEach((d,i)=>{const x=22+i*54,base=158,hd=d*1.3,hs=sea[i]*1.3;
+    b+=R(x,base-hd,40,hd,'var(--grey)')+T(x+20,base-hd/2+4,String(d),{fs:11,a:'middle',c:'var(--cink)',w:600});
+    b+=R(x,base-hd-hs-2,40,hs,'var(--cseal)',opened?'stroke="var(--cink)" stroke-width="1.5"':'')+T(x+20,base-hd-hs/2+2,String(sea[i]),{fs:11,a:'middle',c:'#fff',w:600});
+    b+=T(x+20,172,String(i+1),{fs:11,a:'middle'})});
+  b+=T(150,188,'tranches de mpg, de la plus basse à la plus haute',{fs:10.5,a:'middle'});
+  return svg(300,194,'Tirage des 80 lignes scellées : 16 dans chacune des 5 tranches de la cible ; 64, 64, 64, 63 et 63 lignes de développement par tranche. Comptes seulement.',b);
+}
+// Step 4: what a 5-fold cross-validation is, on the development rows ordered by model year.
+function chFolds(){
+  const yrs=['70–72','72–75','75–78','78–80','80–82'],rows=[64,64,64,63,63];let b='';
+  b+=T(46,11,'année du modèle →',{fs:10.5,c:'var(--cink)',w:600});
+  yrs.forEach((y,j)=>{const x=46+j*40;b+=T(x+19,26,y,{fs:9.5,a:'middle'})+T(x+19,38,rows[j]+' l.',{fs:9.5,a:'middle'})});
+  for(let i=0;i<5;i++){const y=46+i*24;b+=T(0,y+14,'tour '+(i+1),{fs:10.5,c:'var(--cink)'});
+    for(let j=0;j<5;j++){const x=46+j*40;b+=R(x,y,38,19,i===j?'var(--ochre)':'var(--grey)','rx="2"');if(i===j)b+=T(x+19,y+13.5,'prédites',{fs:8.5,a:'middle',c:'var(--cink)',w:600})}}
+  b+=`<rect x="252" y="46" width="46" height="115" rx="3" fill="rgba(107,79,184,.12)" stroke="var(--cseal)" stroke-dasharray="4 2"/>`+T(275,92,'80',{fs:12,a:'middle',c:'var(--cseal)',w:700})+T(275,106,'scellées',{fs:9,a:'middle',c:'var(--cseal)'})+T(275,118,'jamais',{fs:9,a:'middle',c:'var(--cseal)'})+T(275,130,'utilisées',{fs:9,a:'middle',c:'var(--cseal)'});
+  b+=R(0,172,14,11,'var(--ochre)')+T(19,181,'validation · prédites dans ce tour',{fs:10.5,c:'var(--cink)'});
+  b+=R(0,189,14,11,'var(--grey)')+T(19,198,'entraînement · le modèle en apprend',{fs:10.5,c:'var(--cink)'});
+  return svg(300,204,'Validation croisée à 5 plis : les 318 lignes de développement en 5 blocs dans l\'ordre de l\'année du modèle (64, 64, 64, 63, 63 lignes) ; à chaque tour, un bloc est prédit par un modèle entraîné sur les 4 autres ; les 80 lignes scellées restent à part.',HATCH+b)
+   +`<p class="after">→ chaque ligne est prédite une fois par un modèle qui ne l'a pas vue.</p>`;
+}
+// Step 5: made-up errors 1,1,1,1,6 -> MAE 2, RMSE sqrt(8) ~ 2.83.
+function chMetric(){
+  const e=[1,1,1,1,6];let b='';
+  b+=T(0,14,'les 5 erreurs (mpg)',{fs:10.5,c:'var(--cink)',w:600})+T(160,14,'les mêmes, au carré',{fs:10.5,c:'var(--cink)',w:600});
+  const base=140;b+=L(4,base,140,base,'var(--cmuted)')+L(160,base,296,base,'var(--cmuted)');
+  e.forEach((v,i)=>{const x=12+i*25,h=v*15;b+=R(x,base-h,18,h,'var(--pen)','opacity=".8"')+T(x+9,base-h-4,String(v),{fs:11,a:'middle',c:'var(--cink)'});
+    const xs=168+i*25,hs=v*v*2.6;b+=R(xs,base-hs,18,hs,'var(--orange)','opacity=".75"')+T(xs+9,base-hs-4,String(v*v),{fs:11,a:'middle',c:'var(--cink)'})});
+  b+=L(4,base-30,140,base-30,'var(--leaf)',1.8,'5 3')+T(4,base-36,'moyenne 2',{fs:10.5,c:'var(--leaf)',w:600});
+  b+=L(160,base-20.8,296,base-20.8,'var(--leaf)',1.8,'5 3')+T(232,base-25,'moyenne 8',{fs:10.5,a:'middle',c:'var(--leaf)',w:600});
+  b+=T(0,160,'MAE = moyenne = 2 mpg',{fs:11,c:'var(--cink)',w:600})+T(160,160,'RMSE = √8 ≈ 2,83 mpg',{fs:11,c:'var(--cink)',w:600});
+  b+=T(0,178,'exemple fictif · aucune donnée de l\'étude',{fs:10.5,c:'var(--cacc)',st:'italic',w:600});
+  return svg(300,184,'Exemple fictif : cinq erreurs 1, 1, 1, 1 et 6 mpg ; leur moyenne, la MAE, vaut 2 ; la moyenne des carrés vaut 8 et sa racine, la RMSE, environ 2,83.',b)
+   +`<p class="after">Unité : en mpg, comme la cible. Pour un ordre de grandeur, 25 mpg ≈ 9,4 L/100 km.</p>`;
+}
+// Step 7: missing share per column; per-column verdicts, transformed column first.
+function chMissing(){
+  const rows=[['puissance',1.9],['cylindres',0],['cylindrée',0],['poids',0],['origine',0]];let b='';
+  const X=v=>78+v/3*200;
+  b+=L(X(0),6,X(0),124,'var(--cmuted)');
+  rows.forEach(([n,v],i)=>{const y=12+i*22;b+=T(72,y+11,n,{fs:11,a:'end',c:'var(--cink)'})+R(X(0),y,Math.max(X(v)-X(0),1.5),14,v>0?'var(--orange)':'var(--grey)')+T(X(v)+5,y+11,v?f(v,1)+' % (6 « ? »)':'0',{fs:11,c:'var(--cink)'})});
+  [0,1,2,3].forEach(t=>b+=T(X(t),140,t+' %',{fs:10.5,a:'middle'}));
+  return svg(300,146,'Part de cellules manquantes par colonne, lignes de développement : puissance 1,9 % (6 « ? »), toutes les autres 0.',b);
+}
+function verdictTable(rows,label){
+  return `<div class="scrollx" role="region" tabindex="0" aria-label="${label}"><table class="mini"><tr><th>Colonne</th><th>Contrôle</th><th class="n">Valeur · seuil</th><th>Verdict</th></tr>${rows.map(r=>`<tr${r[5]?' class="chosen"':''}><td>${r[0]}</td><td>${r[1]}</td><td class="n">${r[2]}</td><td><span class="chip ${r[3]}">${r[4]}</span></td></tr>`).join('')}</table></div>`;
+}
+function chQualityTable(){return verdictTable([
+  ['puissance','manquants','6 · signalé dès 1','over','seuil dépassé',1],['puissance','asymétrie','1,1 · 1,0','over','seuil dépassé',1],
+  ['cylindrée','asymétrie','0,7 · 1,0','under','sous le seuil'],['poids','asymétrie','0,5 · 1,0','under','sous le seuil'],
+  ['cylindres','asymétrie','0,5 · 1,0','under','sous le seuil'],['origine','catégorie la plus rare','18 % · 5 %','under','sous le seuil']],'Verdicts par colonne')+
+  `<p class="cap">Colonne transformée d'abord. Seuils et valeurs autres que les 6 « ? » : <b>illustratifs</b>.</p>`}
+// Step 8: horsepower before/after the log (feature only, no target); unchanged columns.
+function chLog(){
+  const a=[10,36,62,58,44,33,26,18,12,8,6,3,2],c=[4,9,18,30,42,50,47,40,30,20,12,7,3];let b='';
+  const hist=(arr,x0,col,mx)=>arr.map((v,i)=>R(x0+i*10,118-v/mx*90,9,v/mx*90,col,'opacity=".8"')).join('');
+  b+=T(0,12,'puissance (ch)',{fs:10.5,c:'var(--cink)',w:600})+T(160,12,'log de la puissance',{fs:10.5,c:'var(--cink)',w:600});
+  b+=hist(a,4,'var(--pen)',62)+hist(c,160,'var(--leaf)',50);
+  b+=L(2,118,138,118)+L(158,118,296,118);
+  b+=T(4,132,'50',{fs:10})+T(134,132,'230',{fs:10,a:'end'})+T(70,148,'asymétrie 1,1',{fs:11,a:'middle',c:'var(--cink)'});
+  b+=T(160,132,'3,8',{fs:10})+T(290,132,'5,4',{fs:10,a:'end'})+T(226,148,'asymétrie 0,1',{fs:11,a:'middle',c:'var(--cink)'});
+  return svg(300,154,'Distribution de la puissance sur les lignes de développement, avant le log (traîne de valeurs hautes, asymétrie 1,1) et après (presque symétrique).',b);
+}
+function chUnchanged(){return verdictTable([
+  ['cylindrée','asymétrie','0,7 · 1,0','under','aucun changement'],['poids','asymétrie','0,5 · 1,0','under','aucun changement'],
+  ['cylindres','asymétrie','0,5 · 1,0','under','aucun changement'],['origine','catégorie rare','18 % · 5 %','under','aucun changement']],'Colonnes laissées telles quelles')+
+  `<p class="cap">Valeurs et seuils <b>illustratifs</b> ; le verdict vient de la même règle que la préparation.</p>`}
+// Step 9: exploration charts.
+function chHist(){const bins=[4,14,28,41,47,52,44,33,24,15,9,5,2];const w=260/bins.length,mx=52;let b='';
+  bins.forEach((v,i)=>{const h=v/mx*100;b+=R(30+i*w,115-h,w-2,h,'var(--pen)','opacity=".75"')});
+  const med=30+(23-9)/(47-9)*260;b+=L(med,10,med,115,'var(--cacc)',1.5,'4 3')+T(med+4,20,'médiane 23',{c:'var(--cacc)'});
+  b+=L(30,115,290,115);[10,20,30,40].forEach(t=>{const x=30+(t-9)/(47-9)*260;b+=T(x,130,t,{a:'middle'})});
+  return svg(300,150,'Histogramme de mpg sur 318 lignes de développement, de 9 à 47, médiane 23',b+T(160,146,'mpg (miles par gallon)',{a:'middle'}))}
+function chTrend(){const r=rnd(7);let b='';const X=w=>34+(w-1600)/(5200-1600)*256,Y=m=>130-(m-8)/(48-8)*115;
+  for(let i=0;i<90;i++){const w=1700+r()*3400;const m=46*Math.exp(-(w-1700)/2300)+10+(r()-.5)*7;b+=`<circle cx="${X(w)}" cy="${Y(m)}" r="2.3" fill="var(--cink)" opacity=".5"/>`}
+  let p='';for(let w=1700;w<=5100;w+=100){const m=46*Math.exp(-(w-1700)/2300)+10;p+=`${p?'L':'M'}${X(w)},${Y(m)}`}
+  b+=`<path d="${p}" fill="none" stroke="var(--orange)" stroke-width="2.4"/>`+T(X(4250),Y(19)-8,'tendance (lissage)',{c:'var(--orange)'});
+  b+=L(34,130,290,130)+L(34,15,34,130);[2000,3000,4000,5000].forEach(t=>b+=T(X(t),144,t,{a:'middle'}));
+  [10,20,30,40].forEach(t=>b+=T(29,Y(t)+4,t,{a:'end'}));b+=T(38,12,'mpg',{c:'var(--cink)'});
+  return svg(300,162,'mpg selon le poids : la consommation baisse avec le poids, la tendance s\'aplatit au-delà de 3 500 livres',b+T(162,159,'poids (livres)',{a:'middle'}))}
+function chCorr(){const v=['cylindres','cylindrée','puissance','poids','origine'],m=[[1,.95,.84,.9,-.57],[.95,1,.9,.93,-.61],[.84,.9,1,.86,-.45],[.9,.93,.86,1,-.58],[-.57,-.61,-.45,-.58,1]];
+  const c=40,x0=66,y0=58;let b='';
+  v.forEach((n,i)=>{b+=T(x0-6,y0+i*c+24,n,{fs:10.5,a:'end',c:'var(--cink)'})+`<text x="${x0+i*c+c/2}" y="${y0-6}" font-size="10.5" fill="var(--cink)" transform="rotate(-35 ${x0+i*c+c/2} ${y0-6})">${n}</text>`;
+   v.forEach((_,j)=>{const x=m[i][j],a=Math.abs(x);b+=R(x0+j*c,y0+i*c,c-2,c-2,x>0?'var(--pen)':'var(--orange)',`opacity="${.12+a*.75}"`)+T(x0+j*c+c/2-1,y0+i*c+24,f(x).replace('1,00','1'),{fs:10.5,a:'middle',c:a>.6?'#fff':'var(--cink)'})})});
+  return svg(300,262,'Matrice de corrélation entre prédicteurs, lignes de développement, sans la cible : cylindres, cylindrée, puissance et poids très liés (0,84 à 0,95)',b)}
+// Step 10: per-fold errors vs reference; observed vs predicted with EQUAL axes.
+function chModelDots(){const X=v=>86+(v-2)/(9-2)*200;let b='';
+  [2,3,4,5,6,7,8,9].forEach(t=>b+=L(X(t),14,X(t),104,'rgba(34,48,43,.14)')+T(X(t),118,t,{a:'middle'}));
+  [['Référence',7.16,6.64,7.70,[6.4,7.9,6.8,7.0,7.7]],['Linéaire',3.69,3.37,4.03,[3.1,3.5,3.9,3.6,4.35]]].forEach(([n,m,lo,hi,pf],i)=>{const y=38+i*42;
+   b+=T(78,y+4,n,{fs:11.5,a:'end',c:'var(--cink)'});pf.forEach(v=>b+=`<circle cx="${X(v)}" cy="${y-9}" r="3" fill="none" stroke="var(--cmuted)" stroke-width="1.3"/>`);
+   b+=L(X(lo),y+6,X(hi),y+6,'var(--cink)',2.2)+`<circle cx="${X(m)}" cy="${y+6}" r="4.5" fill="var(--cink)"/>`+T(X(m),y+22,f(m),{fs:10.5,a:'middle',c:'var(--cink)',w:600})});
+  b+=T(160,134,'erreur absolue moyenne hors pli (mpg)',{a:'middle'});
+  b+=`<circle cx="6" cy="148" r="3" fill="none" stroke="var(--cmuted)" stroke-width="1.3"/>`+T(13,152,'un pli (illustratif)',{fs:10.5})+`<circle cx="140" cy="148" r="4" fill="var(--cink)"/>`+T(148,152,'moyenne et intervalle',{fs:10.5});
+  return svg(300,158,'Erreur absolue moyenne hors pli : référence 7,16 [6,64 ; 7,70], modèle linéaire 3,69 [3,37 ; 4,03] ; points par pli illustratifs',b)}
+function chObsPred(o){
+  // Square plot area, same min/max and the same ticks on both axes (R62, PA-10).
+  const r=rnd(o.seed),lo=8,hi=48,P0=46,PS=228,X=v=>P0+(v-lo)/(hi-lo)*PS,Y=v=>12+PS-(v-lo)/(hi-lo)*PS;let b='';
+  b+=R(P0,12,PS,PS,'rgba(255,255,255,.35)','stroke="var(--cline)"');
+  [10,20,30,40].forEach(t=>{b+=L(X(t),12,X(t),12+PS,'rgba(34,48,43,.10)')+L(P0,Y(t),P0+PS,Y(t),'rgba(34,48,43,.10)')+T(X(t),12+PS+14,t,{a:'middle'})+T(P0-5,Y(t)+4,t,{a:'end'})});
+  b+=L(X(lo),Y(lo),X(hi),Y(hi),'var(--leaf)',1.6,'5 3')+`<text x="${X(36)}" y="${Y(36)-6}" font-size="10.5" fill="var(--leaf)" transform="rotate(-45 ${X(36)} ${Y(36)-6})">prédiction parfaite</text>`;
+  for(let i=0;i<o.n;i++){const obs=10+Math.pow(r(),1.25)*34;const pred=Math.min(hi-1,Math.max(lo+1,23.5+0.82*(obs-23.5)+(r()-.5)*o.noise*2));
+    b+=`<circle cx="${X(pred)}" cy="${Y(obs)}" r="${o.n>100?2.2:2.8}" fill="${o.final?'var(--pen)':'var(--cink)'}" opacity="${o.final?.75:.5}"/>`}
+  b+=T(P0,8,'observé (mpg) ↑',{fs:10.5,c:'var(--cink)'})+T(P0+PS,12+PS+30,'prédit (mpg) →',{fs:10.5,a:'end',c:'var(--cink)'});
+  return svg(300,12+PS+36,o.label,b);
+}
+// Step 11: residuals vs horsepower (U shape), bias by period.
+function chResid(){const r=rnd(3);let b='';const X=h=>34+(h-45)/(230-45)*256,Y=e=>92-e*6;
+  b+=L(34,Y(0),290,Y(0),'var(--cink)',1.2)+T(288,Y(0)+14,'erreur nulle',{a:'end',c:'var(--cink)'});
+  for(let i=0;i<90;i++){const h=48+r()*175;const e=.0008*(h-120)**2-3.2+(r()-.5)*5;b+=`<circle cx="${X(h)}" cy="${Y(e)}" r="2.3" fill="var(--cink)" opacity=".5"/>`}
+  let p='';for(let h=48;h<=224;h+=4){const e=.0008*(h-120)**2-3.2;p+=`${p?'L':'M'}${X(h)},${Y(e)}`}
+  b+=`<path d="${p}" fill="none" stroke="var(--orange)" stroke-width="2.4"/>`+L(34,140,290,140);
+  [50,100,150,200].forEach(t=>b+=T(X(t),152,t,{a:'middle'}));
+  return svg(300,170,'Erreurs du modèle linéaire selon la puissance, hors pli : elles dessinent une courbe en U',b+T(34,12,'observé − prédit (mpg)',{c:'var(--cink)'})+T(162,166,'puissance (ch)',{a:'middle'}))}
+function chPeriod(){const rows=[['1970–72',-2.46],['1973–75',-1.2],['1976–78',.3],['1979–80',2.1],['1981–82',5.27]];const X=v=>142+v*21;let b='';
+  b+=L(X(0),10,X(0),122,'var(--cink)',1.2);
+  rows.forEach(([p,v],i)=>{const y=22+i*22,real=i===0||i===4;b+=T(48,y+4,p,{fs:11,a:'end',c:'var(--cink)'})+R(Math.min(X(0),X(v)),y-7,Math.abs(X(v)-X(0)),14,v>0?'var(--orange)':'var(--pen)',`opacity="${real?.85:.45}"`)+T(v>0?X(v)+4:X(v)-4,y+4,sg(v)+(real?'':' *'),{fs:11,a:v>0?'start':'end',c:'var(--cink)'})});
+  return svg(300,160,'Biais moyen du modèle linéaire par période, hors pli : de −2,46 mpg en 1970–72 à +5,27 en 1981–82 ; périodes intermédiaires illustratives',b+T(150,140,'← sur-prédit · biais moyen (mpg) · sous-prédit →',{a:'middle'})+T(150,155,'* illustratif',{fs:10,a:'middle',c:'var(--cacc)'}))}
+// Step 12: paired differences ± one standard error; one-SE rule with the study's values.
+function chPaired(){const x=v=>110+(v+0.6)/0.9*180;let b='';
+  b+=R(x(0),8,x(0.3)-x(0),80,'rgba(34,48,43,.06)')+T(x(0.3)-2,20,'plus d\'erreur',{fs:10.5,a:'end'})+T(x(-0.6)+2,20,'moins d\'erreur',{fs:10.5});
+  [-0.6,-0.4,-0.2,0,0.2].forEach(t=>b+=L(x(t),24,x(t),88,t===0?'var(--cink)':'rgba(34,48,43,.18)',t===0?1.5:1)+T(x(t),102,t===0?'0':f(t,1),{a:'middle'}));
+  [['Ridge − linéaire',-0.01,-0.04,0.02],['EBM − linéaire',-0.29,-0.47,-0.12]].forEach(([n,v,lo,hi],i)=>{const y=44+i*28;
+   b+=T(0,y+4,n,{fs:11.5,c:'var(--cink)'})+L(x(lo),y,x(hi),y,'var(--cmuted)',2.2)+L(x(lo),y-5,x(lo),y+5,'var(--cmuted)',2)+L(x(hi),y-5,x(hi),y+5,'var(--cmuted)',2)+`<circle cx="${x(v)}" cy="${y}" r="4.5" fill="var(--cink)"/>`;
+   if(i===1)b+=T(x(lo),y+17,f(lo),{fs:10.5,a:'middle'})+T(x(hi),y+17,f(hi),{fs:10.5,a:'middle'})+T(x(v),y-8,f(v),{fs:10.5,a:'middle',c:'var(--cink)',w:600})});
+  return svg(300,124,'Écart apparié d\'erreur avec le modèle linéaire, plus ou moins une erreur type : ridge −0,01 [−0,04 ; +0,02], contient zéro ; EBM −0,29 [−0,47 ; −0,12], exclut zéro',b+T(150,118,'écart d\'erreur moyenne (mpg), ± une erreur type',{fs:10.5,a:'middle'}))}
+function chOneSE(){const x=v=>92+(v-3)/(4.2-3)*196;let b='';
+  b+=R(x(3.40),18,x(3.72)-x(3.40),100,'rgba(211,155,42,.22)')+L(x(3.72),16,x(3.72),118,'var(--cacc)',1.6,'4 3')+T(x(3.72)+3,11,'meilleure + 1 erreur type = 3,72',{fs:10.5,a:'end',c:'var(--cacc)'});
+  [3,3.5,4].forEach(t=>b+=T(x(t),132,f(t,1),{a:'middle'}));
+  [['Linéaire','le plus simple · désigné ▸',3.69,3.37,4.03],['Ridge','pénalité',3.68,null,null],['EBM','le plus souple',3.40,3.09,3.72]].forEach(([n,s,v,lo,hi],i)=>{const y=42+i*30;
+   b+=T(0,y+1,n,{fs:11.5,c:'var(--cink)',w:i===0?600:400})+T(0,y+13,s,{fs:9.5,c:i===0?'var(--cacc)':'var(--cmuted)',w:i===0?600:400});
+   if(lo!==null)b+=L(x(lo),y,x(hi),y,'var(--cmuted)',2);b+=`<circle cx="${x(v)}" cy="${y}" r="4.5" fill="var(--cink)"/>`+T(x(v),y-8,f(v),{fs:10.5,a:'middle',c:'var(--cink)'})});
+  return svg(300,146,'Règle d\'une erreur type : meilleure erreur 3,40 (EBM), bande jusqu\'à 3,72 ; le linéaire, 3,69, est la configuration la plus simple dans la bande',b+T(150,144,'erreur absolue moyenne hors pli (mpg)',{fs:10.5,a:'middle'}))}
+// Steps 13–14: development vs final, criterion bound on the final rows; reduction.
+function chDevFinal(){const X=v=>86+(v-2)/(8.5-2)*200;let b='';
+  [3,4,5,6,7,8].forEach(t=>b+=L(X(t),22,X(t),112,'rgba(34,48,43,.14)')+T(X(t),126,t,{a:'middle'}));
+  b+=L(X(5.97),16,X(5.97),112,'var(--leaf)',1.8)+T(X(5.97)-3,14,'borne du critère, test final : 5,97',{fs:10.5,a:'end',c:'var(--leaf)'});
+  [['Linéaire',3.69,3.37,4.03,2.88,2.38,3.40],['Référence',7.16,6.64,7.70,6.64,5.76,7.51]].forEach(([n,d,dl,dh,fv,fl,fh],i)=>{const y=40+i*40;
+   b+=T(78,y+10,n,{fs:11.5,a:'end',c:'var(--cink)'})+L(X(dl),y,X(dh),y,'var(--cmuted)',2)+`<circle cx="${X(d)}" cy="${y}" r="4.5" fill="var(--card)" stroke="var(--cink)" stroke-width="1.8"/>`
+    +L(X(fl),y+15,X(fh),y+15,'var(--pen)',2)+`<circle cx="${X(fv)}" cy="${y+15}" r="4.5" fill="var(--pen)"/>`});
+  b+=`<circle cx="8" cy="146" r="4" fill="var(--card)" stroke="var(--cink)" stroke-width="1.6"/>`+T(16,150,'◐ développement',{fs:10.5})+`<circle cx="140" cy="146" r="4" fill="var(--pen)"/>`+T(148,150,'● test final, lu une fois',{fs:10.5});
+  return svg(300,156,'Erreur absolue moyenne, développement (cercle) et test final (disque) : linéaire 3,69 puis 2,88 [2,38 ; 3,40] ; référence 7,16 puis 6,64 [5,76 ; 7,51] ; borne du critère sur le test final 5,97',b)}
+function chReduction(){const X=v=>16+v/100*268;let b='';
+  [0,25,50,75,100].forEach(t=>b+=T(X(t),72,t+' %',{a:t===100?'end':t===0?'start':'middle'}));
+  b+=L(X(10),8,X(10),58,'var(--leaf)',1.8)+T(X(10)+3,16,'minimum 10 %',{c:'var(--leaf)'});
+  b+=L(X(43.6),38,X(70.3),38,'var(--pen)',2.4)+`<circle cx="${X(56.6)}" cy="38" r="5" fill="var(--pen)"/>`+T(X(56.6),28,'56,6 %',{a:'middle',c:'var(--cink)',w:600})+T(X(43.6),54,'43,6',{fs:10,a:'middle'})+T(X(70.3),54,'70,3',{fs:10,a:'middle'});
+  return svg(300,80,'Réduction d\'erreur par rapport à la référence, sur le test final : 56,6 %, intervalle 43,6 à 70,3 %, contre un minimum de 10 %',b)}
+function chFinalTable(){
+  return `<div class="scrollx" role="region" tabindex="0" aria-label="Développement et test final"><table class="mini"><tr><th>Configuration</th><th class="n">◐ Développement<br><small>hors pli, a servi à choisir</small></th><th class="n">● Test final<br><small>lu une fois</small></th></tr>
+   <tr class="chosen"><td>Linéaire (choisi)</td><td class="n">3,69 [3,37 ; 4,03]</td><td class="n">2,88 [2,38 ; 3,40]</td></tr>
+   <tr><td>Ridge</td><td class="n">3,68</td><td class="nm">non mesuré</td></tr>
+   <tr><td>EBM</td><td class="n">3,40 [3,09 ; 3,72]</td><td class="nm">non mesuré</td></tr>
+   <tr><td>Référence (prédire la moyenne)</td><td class="n">7,16 [6,64 ; 7,70]</td><td class="n">6,64 [5,76 ; 7,51]</td></tr>
+   <tr class="sep"><td>Réduction, linéaire contre référence</td><td class="n">48,5 %</td><td class="n">56,6 % [43,6 ; 70,3]</td></tr>
+   <tr><td>Critère, au moins 10 %</td><td class="n">atteint</td><td class="n">atteint</td></tr></table></div>
+   <p class="cap">« Non mesuré » : le test final ne mesure que le modèle choisi. Erreur absolue moyenne en mpg. La réduction de développement est calculée ici depuis 3,69 et 7,16.</p>`}
+
+// ---------------------------------------------------------------------------
+// The 14 steps. Readings: "see" cites numbers; "concl" never recommends an option
+// (no essayer/choisir/garder/retenir, no option name of the open decision); "cannot" = limit.
+// ---------------------------------------------------------------------------
+const PH=[['Cadrer',[1,2,3,4,5,6]],['Préparer',[7,8,9]],['Comparer',[10,11,12]],['Conclure',[13,14]]];
+const phaseOf=n=>PH.find(p=>p[1].includes(n))[0];
+const FR={str:'◇ Structure, sans la cible',none:'○ Aucune donnée lue',dev:'◐ Preuve de développement',fin:'● Preuve finale',ill:'✎ Illustration'};
+const STEPS={
+1:{name:'Découvrir les données',short:'Données',pic:'row_card',
+  cap:'<b>Une ligne = un modèle de voiture d\'une année de modèle.</b> Ses colonnes décrivent sa fiche technique ; mpg est la valeur à prédire.',
+  more:'Avant toute décision, on vérifie que les données décrivent bien la question : qui est une ligne, quelles colonnes, quelles anomalies de structure. Rien n\'est mesuré ici.',
+  prepares:'Ces réponses préparent l\'étape <b>Moment de la prédiction</b> : savoir ce que chaque colonne décrit.',
+  ask:'La fiche des données est affichée. On passe au moment de la prédiction ?',opts:['On passe au moment de la prédiction','Expliquer d\'abord'],copy:'Que veut dire displacement ?',
+  frame:`<b>${FR.str}</b> · plus un aperçu de 8 lignes, cible comprise : un regard compté (regards : 1)`,
+  ev:[{h:'Que décrit une ligne, et que disent les colonnes ?',ct:'aperçu tiré au hasard · valeurs brutes',fig:chSample,
+      see:'Une ligne décrit un modèle de voiture pour une année : <b>9</b> colonnes, dont mpg, la cible ; la puissance contient <b>6</b> « ? ».',
+      concl:'Chaque ligne est une voiture à prédire, décrite par sa fiche technique : les données répondent à la question posée. Les « ? » sont une anomalie de structure, traitée au contrôle de qualité.',
+      cannot:'Huit lignes ne décrivent pas les 318 : elles montrent la forme des données, pas leur répartition. Voir leur mpg est déjà un regard sur la cible.',
+      how:['Une ligne par voiture ; la colonne ocre est la cible.','« ? » est écrit tel quel dans le fichier : une valeur manquante.'],trap:'Le fichier est trié par année : ses premières lignes ne ressemblent pas aux autres. L\'aperçu est tiré au hasard pour cette raison.',
+      folds:[['Les 9 colonnes et leur sens',`<table class="mini"><tr><th>Nom affiché</th><th>Dans le fichier</th><th>Sens</th><th class="n">Manquants</th></tr><tr><td>mpg</td><td>mpg</td><td>miles par gallon, à prédire ; plus c'est haut, moins la voiture consomme</td><td class="n">0</td></tr><tr><td>cylindres</td><td>cylinders</td><td>nombre de cylindres</td><td class="n">0</td></tr><tr><td>cylindrée</td><td>displacement</td><td>pouces cubes</td><td class="n">0</td></tr><tr><td>puissance</td><td>horsepower</td><td>chevaux</td><td class="n">6 « ? »</td></tr><tr><td>poids</td><td>weight</td><td>livres</td><td class="n">0</td></tr><tr><td>accélération</td><td>acceleration</td><td>0 à 60 mph, en secondes</td><td class="n">0</td></tr><tr><td>année du modèle</td><td>model_year</td><td>70 à 82, lue 1970 à 1982</td><td class="n">0</td></tr><tr><td>origine</td><td>origin</td><td>codes 1, 2, 3 (non documentés)</td><td class="n">0</td></tr><tr><td>nom</td><td>car_name</td><td>nom du modèle</td><td class="n">0</td></tr></table>`],
+             ['Les 6 lignes avec « ? », sans la cible',sampleTable(QROWS,'Les 6 lignes avec des valeurs manquantes',false)+'<p class="cap">Montrées sans mpg : elles décrivent l\'anomalie, pas ce qu\'on prédit.</p>']]},
+     {h:'Un découpage pourrait-il séparer une voiture de sa jumelle ?',ct:'structure · lignes de développement',fig:chStructure,
+      see:'<b>254</b> noms de voiture distincts pour <b>318</b> lignes de développement ; <b>107</b> lignes partagent leur nom avec une autre ; <b>0</b> doublon exact.',
+      concl:'Un même modèle revient d\'une année à l\'autre : un découpage peut placer une ligne en entraînement et sa jumelle en validation, ce qui flatterait un peu l\'erreur. Le découpage devra traiter ou nommer ce point.',
+      cannot:'Un même nom ne prouve pas une même voiture : la fiche peut changer d\'une année à l\'autre. Le compte ne dit pas de combien l\'erreur serait flattée.',
+      how:['Chaque barre compte des lignes.','La barre orange : les lignes dont le nom apparaît aussi sur une autre ligne.'],trap:'Zéro doublon exact ne veut pas dire zéro voiture répétée : deux lignes peuvent différer d\'une seule colonne.'}],
+  limit:'Rien n\'est encore mesuré : ni modèle ni chiffre de performance. Le seul regard sur la cible est l\'aperçu, compté.',
+  next:'<b>Ensuite : le moment de la prédiction.</b> Il fixe quelles colonnes on a le droit d\'utiliser.',
+  dec:'Fiche lue ; on passe au moment de la prédiction.',who:'vos mots · « on continue »'},
+2:{name:'Moment de la prédiction',short:'Moment',pic:'moment_timeline',
+  cap:'<b>Prédire, c\'est se placer à un moment.</b> Seules les colonnes connues avant ce moment peuvent servir ; mpg n\'est mesuré qu\'après.',
+  more:'Une colonne connue après le moment serait une fuite : le modèle tricherait en lisant une information absente au moment de servir. Les jalons d\'Auto MPG sont une hypothèse du scénario pédagogique.',
+  prepares:'Cette réponse prépare l\'étape <b>Variables disponibles</b> : la liste des colonnes permises.',
+  qs:['À quel moment la prédiction est-elle faite, et que sait-on alors ?'],
+  ask:'Moment de la prédiction : quand les caractéristiques techniques sont fixées, avant de mesurer la consommation ?',opts:['J\'adopte','Changer quelque chose','Expliquer d\'abord'],copy:'Pourquoi le moment change-t-il les colonnes permises ?',
+  frame:`<b>${FR.none}</b> · métadonnées du cas, aucune valeur`,
+  ev:[{h:'À quel moment la prédiction est-elle faite, et que sait-on alors ?',ct:'frise du moment · curseur pour voir, sans décider',fig:()=>chTimeline(true),
+      see:'Au moment proposé, <b>5</b> colonnes sont connues ; l\'accélération est dans la voie « ? » ; mpg n\'est mesuré qu\'au dernier jalon.',
+      concl:'Le moment fixe la liste des colonnes permises : plus tôt, le poids sort de la liste ; plus tard, aucune colonne n\'y entre ici. L\'accélération ne dépend pas du curseur : sa date n\'est pas documentée, quel que soit le moment.',
+      cannot:'Ces jalons sont une hypothèse du scénario, pas un fait des données : la frise ne prouve pas quand chaque colonne était connue.',
+      how:['Déplacez le curseur : les colonnes à gauche du moment sont connues, celles à droite ne le sont pas encore.','La voie « ? » regroupe les colonnes dont la date n\'est pas documentée.'],trap:'Les jalons sont régulièrement espacés pour la lisibilité : les distances ne sont pas des durées.'}],
+  limit:'Le moment est une hypothèse du scénario : la documentation des données ne l\'établit pas.',
+  next:'<b>Ensuite : les variables disponibles</b>, colonne par colonne, sur la même frise.',
+  dec:'Quand les caractéristiques techniques sont fixées, avant de mesurer la consommation.',who:'vos mots · « oui, ce moment-là »'},
+3:{name:'Variables disponibles',short:'Variables',pic:'variables_board',
+  cap:'<b>Trois sortes de colonnes :</b> celles que le modèle lira, celles qu\'on exclut, et celles qui ne sont pas des variables.',
+  more:'La cible n\'est pas une variable ; un identifiant non plus, car un nom de modèle ne se généralise pas à une autre voiture. L\'année du modèle sert à ordonner le découpage.',
+  prepares:'Cette réponse prépare le <b>Découpage</b> et les <b>Modèles</b> : ce que chaque modèle aura le droit de lire.',
+  qs:['Quelles variables sont connues au moment, lesquelles sont exclues, et pourquoi ?'],
+  ask:'Variables : garder cylindres, cylindrée, puissance, poids et origine, et exclure l\'accélération ?',opts:['J\'adopte','Changer quelque chose','Expliquer d\'abord'],copy:'Pourquoi exclure l\'accélération ?',
+  frame:`<b>${FR.none}</b> · disponibilité déclarée par le cas, aucune valeur`,
+  ev:[{h:'Quelles variables sont connues au moment, lesquelles sont exclues, et pourquoi ?',ct:'colonnes par groupe du cas · gardées, exclues, pas des variables',fig:chVariables,
+      see:'<b>5</b> colonnes gardées, <b>1</b> exclue, l\'accélération, et <b>3</b> qui ne sont pas des variables : mpg, le nom et l\'année du modèle.',
+      concl:'Les modèles ne liront que les 5 colonnes connues au moment de la prédiction. Exclure une colonne incertaine peut coûter un peu de précision ; l\'inclure ferait reposer le modèle sur une information peut-être absente au moment voulu.',
+      cannot:'Le tableau ne dit pas combien l\'accélération aurait aidé : on ne le mesure pas. Ni si les 5 colonnes gardées suffisent.',
+      how:['✓ : le modèle la lira ; ✕ : exclue, avec sa raison ; — : pas une variable.','Sous le tableau, la même frise situe chaque colonne.'],trap:'Les groupes viennent du cas (moteur, carrosserie, modèle) : ils ne disent rien de l\'importance d\'une colonne.'}],
+  limit:'La disponibilité vient du scénario, pas d\'un contrôle des données.',
+  next:'<b>Ensuite : le découpage</b>, qui met des lignes de côté avant tout regard sur leurs résultats.',
+  dec:'Garder cylindres, cylindrée, puissance, poids et origine ; exclure l\'accélération.',who:'vos mots'},
+4:{name:'Découpage',short:'Découpage',pic:'partition_strip',
+  cap:'<b>Mettre des lignes de côté avant tout regard.</b> 80 lignes scellées pour la fin ; les 318 autres, découpées en blocs, servent à comparer.',
+  more:'Validation croisée à k plis : les lignes de développement en k blocs ; chaque bloc est prédit par un modèle entraîné sur les autres. Ici k = 5, dans l\'ordre de l\'année du modèle.',
+  prepares:'Ces réponses préparent toutes les mesures suivantes : <b>sur quelles lignes</b> chaque erreur sera calculée.',
+  qs:['Quelles lignes sont scellées, et comment ont-elles été tirées ?','Comment chaque ligne de développement sera-t-elle prédite ?'],
+  ask:'Découpage : une validation croisée à 5 plis, dans l\'ordre de l\'année du modèle, sur les 318 lignes de développement ?',opts:['J\'adopte','Changer quelque chose','Expliquer d\'abord'],copy:'Pourquoi des blocs dans l\'ordre des années ?',
+  frame:`<b>${FR.str}</b> · comptes de lignes seulement, aucune valeur de mpg`,
+  ev:[{h:'Quelles lignes sont scellées, et comment ont-elles été tirées ?',ct:'tirage des lignes scellées · par tranche de la cible, comptes seulement',fig:()=>chStrata(false),
+      see:'Les <b>80</b> lignes scellées ont été tirées au hasard dans <b>5</b> tranches de mpg, <b>16</b> par tranche ; les <b>318</b> autres sont les lignes de développement.',
+      concl:'Le test final couvre toute l\'étendue de la cible, des voitures peu sobres aux plus sobres : son chiffre ne viendra pas d\'un coin facile des données.',
+      cannot:'Ces 80 lignes viennent de la même période, 1970–82 : elles ne disent rien des voitures d\'après. Le dessin ne montre aucune valeur de mpg : on ne les regarde pas.',
+      how:['Une colonne par tranche de la cible, de la plus basse à la plus haute.','Violet : tirées pour le test final ; gris : lignes de développement.'],trap:'Les tranches n\'ont pas de bornes affichées, à dessein : les montrer serait déjà un regard sur la cible.'},
+     {h:'Comment chaque ligne de développement sera-t-elle prédite ?',ct:'validation croisée à 5 plis · blocs dans l\'ordre de l\'année du modèle',fig:chFolds,
+      see:'Les <b>318</b> lignes de développement en <b>5</b> blocs : <b>64</b>, <b>64</b>, <b>64</b>, <b>63</b> et <b>63</b> lignes, de 1970–72 à 1980–82 ; les <b>80</b> scellées restent à part.',
+      concl:'Chaque bloc est prédit par un modèle entraîné sur les quatre autres, années suivantes comprises : l\'erreur mesurée dira la stabilité d\'une période à l\'autre, pas une prévision du futur.',
+      cannot:'Cinq blocs ne sont pas cinq échantillons indépendants : l\'écart d\'un bloc à l\'autre est indicatif. Et le découpage ne rend pas « jamais vues » les 8 lignes de l\'aperçu.',
+      how:['Une rangée par tour ; le bloc ocre est prédit, les gris servent à apprendre.','Au bout des 5 tours, chaque ligne a été prédite une fois.'],trap:'Les années se chevauchent d\'un bloc à l\'autre (72, 75, 78, 80) : un bloc coupe une année quand les comptes l\'exigent.'}],
+  limit:'Les 80 lignes scellées sont un protocole suivi par l\'outil et par vous, pas un verrou.',
+  next:'<b>Ensuite : la mesure de l\'erreur</b>, choisie avant de voir le moindre chiffre.',
+  dec:'Validation croisée à 5 plis dans l\'ordre de l\'année du modèle ; 80 lignes scellées.',who:'vos mots'},
+5:{name:'Mesure de l\'erreur',short:'Mesure',pic:'error_gap',
+  cap:'<b>L\'erreur d\'une prédiction : l\'écart entre l\'observé et le prédit.</b> Reste à choisir comment résumer les écarts de toutes les voitures.',
+  more:'Erreur absolue moyenne (MAE) : la moyenne des écarts, sans signe. Racine de l\'erreur quadratique moyenne (RMSE) : la racine de la moyenne des écarts au carré ; un gros écart y pèse beaucoup plus.',
+  prepares:'Cette réponse prépare le <b>Critère de succès</b> : la mesure sur laquelle il sera fixé.',
+  qs:['Un gros raté coûte-t-il beaucoup plus que plusieurs petits ?'],
+  ask:'Quelle mesure de l\'erreur retient-on : l\'erreur absolue moyenne (MAE) ?',opts:['J\'adopte la MAE','Changer : la RMSE','Expliquer d\'abord'],
+  optnote:'Proposition du moteur : MAE, parce que chaque erreur pèse pareil et qu\'elle se lit en mpg. RMSE : si un gros raté coûte bien plus que plusieurs petits.',copy:'Quand faut-il la RMSE plutôt que la MAE ?',
+  frame:`<b>${FR.ill}</b> · exemple fictif, aucune donnée de l\'étude, aucun regard`,
+  ev:[{h:'Un gros raté coûte-t-il beaucoup plus que plusieurs petits ?',ct:'cinq erreurs fictives, puis leurs carrés',fig:chMetric,
+      see:'Cinq erreurs fictives : <b>1</b>, <b>1</b>, <b>1</b>, <b>1</b> et <b>6</b> mpg. Leur moyenne vaut <b>2</b> ; la moyenne des carrés vaut <b>8</b>, sa racine ≈ <b>2,83</b>.',
+      concl:'Le seul gros raté fait 6 sur 10 de la somme des écarts, mais 36 sur 40 de la somme des carrés. La décision dépend d\'une question métier : un gros raté coûte-t-il bien plus que plusieurs petits ?',
+      cannot:'L\'exemple est fictif : il ne dit rien des erreurs que feront les modèles sur Auto MPG, ni laquelle des deux mesures les départagera.',
+      how:['À gauche, les écarts ; la ligne verte est leur moyenne.','À droite, les mêmes au carré : le 6 devient 36.'],trap:'Les deux panneaux n\'ont pas la même échelle verticale : comparez les valeurs écrites, pas les hauteurs.'}],
+  limit:'La mesure ne dit pas quelle erreur est acceptable : c\'est l\'étape suivante.',
+  next:'<b>Ensuite : le critère de succès</b>, une barre fixée sur cette mesure avant tout modèle.',
+  dec:'Erreur absolue moyenne (MAE) : chaque erreur pèse pareil, et elle se lit en mpg.',who:'vos mots · « la MAE, oui »'},
+6:{name:'Critère de succès',short:'Critère',pic:'criterion_bar',
+  cap:'<b>Fixer la barre avant de voir un chiffre.</b> Le modèle devra se tromper nettement moins que la référence, qui prédit toujours la moyenne.',
+  more:'La référence (prédire la moyenne) est le modèle le plus naïf. Le critère dit de combien un modèle doit faire mieux pour compter ; il sera jugé sur le test final, contre la référence mesurée sur les mêmes lignes.',
+  prepares:'Cette réponse prépare le <b>Test final</b> et la <b>Conclusion</b> : la barre qu\'ils jugeront.',
+  qs:['De combien l\'erreur du modèle doit-elle être plus petite que celle de la référence, sur la mesure choisie ?'],
+  ask:'Critère de succès : au moins 10 % d\'erreur absolue moyenne en moins que la référence (prédire la moyenne), jugé sur le test final ?',opts:['J\'adopte','Changer le pourcentage','Expliquer d\'abord'],copy:'Comment fixer un pourcentage raisonnable ?',
+  frame:`<b>${FR.none}</b> · aucun modèle, aucun chiffre`,
+  noChart:'Rien n\'est mesuré avant les modèles : la barre est fixée avant de voir un chiffre.',
+  limit:'Atteindre le critère ne dira pas que le modèle suffit pour tout usage : c\'est une question métier.',
+  next:'<b>Ensuite : le contrôle de qualité</b>, colonne par colonne, sans regarder la cible.',
+  dec:'Au moins 10 % d\'erreur absolue moyenne en moins que la référence, jugé sur le test final.',who:'vos mots'},
+7:{name:'Contrôle de qualité',short:'Qualité',pic:'quality_checks',
+  cap:'<b>Quatre contrôles par colonne :</b> cellules vides, catégories rares, longues traînes, valeurs hors plage. Chacun a son seuil, fixé d\'avance.',
+  more:'Les contrôles lisent les colonnes de la fiche technique, jamais mpg. Un seuil franchi déclenche une proposition de préparation ; il ne change rien tout seul.',
+  prepares:'Ces réponses préparent la <b>Préparation</b> : quelles colonnes transformer, et pourquoi.',
+  qs:['Quelles colonnes ont des cellules manquantes ?','Quelles colonnes sont asymétriques, à longue traîne ou à catégories rares ?'],
+  ask:'Contrôle de qualité : lire les 6 « ? » de la puissance comme des valeurs manquantes ?',opts:['J\'adopte','Changer quelque chose','Expliquer d\'abord'],copy:'Que faire des 6 « ? » ?',
+  frame:`<b>${FR.str}</b> · 318 lignes de développement, colonnes de la fiche technique`,
+  ev:[{h:'Quelles colonnes ont des cellules manquantes ?',ct:'part de cellules manquantes par colonne',fig:chMissing,chip:['over','seuil dépassé'],
+      see:'Une seule colonne a des cellules manquantes : la puissance, <b>6</b> « ? » sur <b>318</b> lignes, soit <b>1,9 %</b>.',
+      concl:'Les « ? » doivent être lus comme manquants, sinon la colonne serait lue comme du texte. Leur part est faible : la façon de les remplacer pèsera peu sur l\'erreur.',
+      cannot:'Le graphique ne dit pas pourquoi ces 6 valeurs manquent, ni si elles manquent au hasard.',
+      how:['Une barre par colonne : la part de cellules vides.'],trap:'Une barre très courte reste un problème si la colonne est lue comme du texte : un seul « ? » suffit.'},
+     {h:'Quelles colonnes sont asymétriques, à longue traîne ou à catégories rares ?',ct:'vue par colonne · verdict et seuil',fig:chQualityTable,
+      see:'La puissance dépasse le seuil d\'asymétrie : <b>1,1</b> pour un seuil de <b>1,0</b> ; les autres colonnes restent sous leurs seuils.',
+      concl:'Une seule colonne appelle une transformation : la préparation portera sur la puissance. Les autres n\'ont pas de motif de changement enregistré.',
+      cannot:'Un seuil franchi ne dit pas qu\'une transformation réduira l\'erreur : seuls les modèles le mesureront.',
+      how:['Une ligne par contrôle ; la colonne transformée vient d\'abord.','Le verdict compare la valeur au seuil fixé avant le contrôle.'],trap:'L\'asymétrie résume la forme en un nombre ; deux colonnes à 0,9 et 1,1 se ressemblent plus que leurs verdicts.'}],
+  limit:'Contrôle de structure : il ne lit pas mpg et ne dit rien de l\'erreur des modèles.',
+  next:'<b>Ensuite : la préparation</b>, colonne par colonne, avec la raison de chaque changement et de chaque statu quo.',
+  dec:'Les 6 « ? » de la puissance lus comme manquants.',who:'vos mots'},
+8:{name:'Préparation',short:'Préparation',pic:'log_before_after',
+  cap:'<b>Une longue traîne peut écraser une droite.</b> Le log resserre les grandes valeurs ; la distribution devient plus symétrique.',
+  more:'Chaque transformation est apprise sur la partie entraînement de chaque pli, puis appliquée à la partie prédite : la médiane des manquants ne voit jamais les lignes qu\'elle aide à prédire.',
+  prepares:'Ces réponses préparent les <b>Modèles</b> : les colonnes telles qu\'ils les liront.',
+  qs:['Quelles colonnes reçoivent une transformation, et pourquoi ?','Pourquoi les autres colonnes restent-elles telles quelles ?'],
+  ask:'Préparation : la médiane pour les 6 manquants et le log de la puissance ; les autres colonnes telles quelles ?',opts:['J\'adopte','Changer quelque chose','Expliquer d\'abord'],copy:'Pourquoi un log, et pas un plafond ?',
+  frame:`<b>${FR.str}</b> · 318 lignes de développement, sans la cible`,
+  ev:[{h:'Quelles colonnes reçoivent une transformation, et pourquoi ?',ct:'puissance, avant et après le log · formes illustratives',fig:chLog,
+      see:'La puissance a une traîne de valeurs hautes, asymétrie <b>1,1</b> ; après le log, la distribution est presque symétrique.',
+      concl:'Le log resserre les grandes puissances, qui pèseraient sinon beaucoup sur une droite. La médiane des 6 manquants est apprise sur la partie entraînement de chaque pli, jamais sur la partie prédite.',
+      cannot:'L\'histogramme ne regarde pas mpg : il ne dit pas si le log réduira l\'erreur. Seuls les modèles le mesureront.',
+      how:['À gauche, la puissance brute ; à droite, son log.','Les deux histogrammes comptent les mêmes 312 lignes renseignées.'],trap:'L\'axe de droite est en log : un pas vaut un rapport, pas une différence de chevaux.'},
+     {h:'Pourquoi les autres colonnes restent-elles telles quelles ?',ct:'colonnes inchangées · valeur et seuil',fig:chUnchanged,
+      see:'Cylindrée, poids et cylindres restent sous le seuil d\'asymétrie ; l\'origine n\'a pas de catégorie rare.',
+      concl:'Ces colonnes entrent dans les modèles telles qu\'elles sont : aucune règle ne demande de les changer. Un changement sans motif enregistré serait un choix fait à l\'œil, que l\'étude devrait signaler.',
+      cannot:'« Sous le seuil » ne veut pas dire « sans effet » : une transformation pourrait quand même changer l\'erreur.',
+      how:['Une ligne par colonne laissée telle quelle, avec la règle qui la laisse.'],trap:'Un « aucun changement » est une décision comme une autre : il a sa raison, ici le seuil.'}],
+  limit:'La préparation est apprise sur les lignes de développement ; le test final la reçoit telle quelle.',
+  next:'<b>Ensuite : l\'exploration</b>, le premier regard compté sur la cible.',
+  dec:'Médiane pour les manquants, log de la puissance ; les autres colonnes telles quelles.',who:'vos mots'},
+9:{name:'Exploration',short:'Exploration',pic:'trend_reading',pause:true,
+  cap:'<b>Lire la cible selon une variable.</b> Un point par voiture ; la courbe de tendance suit la forme générale, droite ou courbe.',
+  more:'La courbe de tendance (un lissage) suit les points localement, sans supposer une droite. Si elle se plie, une relation droite ne suffira pas.',
+  prepares:'Ces réponses préparent les <b>Modèles</b> : quelle forme ils auront à suivre.',
+  qs:['Comment se répartit mpg ?','Quelles variables bougent avec mpg, en droite ou en courbe ?','Certaines variables disent-elles la même chose ?'],
+  ask:'Les graphiques de l\'exploration sont affichés. On passe aux modèles ?',opts:['On passe aux modèles','Expliquer d\'abord'],copy:'Que dois-je chercher dans ces graphiques ?',
+  frame:`<b>${FR.dev}</b> · lignes de développement (318) · regard sur la cible, compté (regards : 4)`,
+  ev:[{h:'Comment se répartit mpg ?',ct:'histogramme · mpg · formes illustratives',fig:chHist,
+      see:'mpg va de <b>9</b> à <b>47</b>, médiane <b>23</b>, sur <b>318</b> voitures.',
+      concl:'La plupart des voitures sont entre 15 et 30 mpg, avec une traîne vers les voitures très sobres. Une erreur de quelques mpg pèse plus sur une voiture peu sobre que sur une voiture sobre.',
+      cannot:'Ce graphique ne dit rien du lien entre mpg et les autres colonnes, ni des voitures hors de 1970–82.',
+      how:['Chaque barre compte les voitures dans une tranche de mpg.','Le pointillé marque la médiane : la moitié des voitures au-dessus.'],trap:'La largeur des tranches change la forme : une bosse peut apparaître ou disparaître.'},
+     {h:'Quelles variables bougent avec mpg, en droite ou en courbe ?',ct:'nuage · mpg selon le poids, avec tendance · points illustratifs',fig:chTrend,
+      see:'Plus lourd, moins de mpg ; la tendance s\'aplatit au-delà de <b>3 500</b> livres.',
+      concl:'Le poids porte l\'un des signaux les plus forts, mais la relation n\'est pas droite : une droite sur le poids brut se tromperait dans le même sens aux deux bouts. Les modèles mesureront combien cela coûte.',
+      cannot:'Ce lien n\'est pas une cause : les voitures lourdes ont aussi de gros moteurs. Il décrit ces voitures-ci, pas l\'effet d\'alléger une voiture donnée.',
+      how:['Un point par voiture.','La courbe orange suit la tendance sans supposer une droite.'],trap:'Un lissage suit aussi le bruit aux bords, où il y a peu de points.',others:['mpg selon la puissance','mpg selon la cylindrée','mpg selon les cylindres','mpg selon l\'origine','mpg selon l\'année du modèle']},
+     {h:'Certaines variables disent-elles la même chose ?',ct:'matrice de corrélation entre prédicteurs · sans la cible · valeurs illustratives',fig:chCorr,
+      see:'Poids, cylindrée, cylindres et puissance sont très liés : de <b>0,84</b> à <b>0,95</b>.',
+      concl:'Ces quatre colonnes décrivent presque la même chose, la taille du moteur et de la voiture. Une prédiction peut rester bonne, mais leurs coefficients séparés seront instables : ils ne se liront pas un par un.',
+      cannot:'Une forte corrélation ne dit pas laquelle compte le plus, ni s\'il faut en retirer une.',
+      how:['Chaque case croise deux variables.','Bleu foncé : elles montent ensemble ; orange : l\'une monte quand l\'autre baisse.'],trap:'Une corrélation résume une tendance droite : deux colonnes liées en courbe peuvent afficher un nombre modeste.'}],
+  limit:'Preuve de développement : ces graphiques ne choisissent rien, et chaque regard sur la cible est compté.',
+  next:'<b>Ensuite : les modèles.</b> La référence et le modèle linéaire d\'abord.',
+  dec:'Exploration lue : 3 graphiques sur la cible, regards comptés.',who:'vos mots · « on passe aux modèles » (pause)'},
+10:{name:'Modèles',short:'Modèles',pic:'mean_vs_line',
+  cap:'<b>Deux modèles simples d\'abord.</b> La référence prédit toujours la moyenne : une ligne plate. Le modèle linéaire trace une droite à travers les points.',
+  more:'La référence est la barre que tout modèle doit battre. Le modèle linéaire est simple et lisible ; ses erreurs montreront ce qu\'une forme plus souple devrait corriger.',
+  prepares:'Ces réponses préparent les <b>Variantes</b> : ce que le modèle linéaire rate.',
+  qs:['Le modèle linéaire se trompe-t-il moins que la référence, hors pli ?','Où le modèle linéaire se trompe-t-il ?'],
+  ask:'La référence et le modèle linéaire sont ajustés. On passe aux variantes ?',opts:['On passe aux variantes','Expliquer d\'abord'],copy:'Que veut dire « hors pli » ?',
+  frame:`<b>${FR.dev}</b> · hors pli, 318 voitures, 5 blocs · a servi à choisir`,
+  ev:[{h:'Le modèle linéaire se trompe-t-il moins que la référence, hors pli ?',ct:'erreur absolue moyenne par pli, moyenne et intervalle',fig:chModelDots,
+      see:'Hors pli, le linéaire se trompe de <b>3,69</b> mpg [3,37 ; 4,03], la référence de <b>7,16</b> [6,64 ; 7,70].',
+      concl:'Le modèle linéaire se trompe environ deux fois moins que prédire la moyenne, et les deux intervalles ne se touchent pas : il apprend quelque chose des fiches techniques. Le critère, lui, ne sera jugé que sur le test final.',
+      cannot:'Ces chiffres ont servi à comparer : ils sont un peu optimistes. Ils ne disent pas si une forme plus souple ferait mieux.',
+      how:['Petits cercles : un pli chacun ; disque : la moyenne ; trait : son intervalle.'],trap:'Les 5 plis ne sont pas indépendants : leur dispersion sous-estime l\'incertitude réelle.'},
+     {h:'Où le modèle linéaire se trompe-t-il ?',ct:'observé contre prédit, hors pli · axes égaux · points illustratifs',fig:()=>chObsPred({seed:11,n:150,noise:3.2,label:'Observé contre prédit hors pli, modèle linéaire, 318 voitures ; mêmes axes de 8 à 48 mpg ; diagonale prédiction parfaite ; points illustratifs'}),
+      see:'Sur les voitures prédites hors pli, les points s\'écartent de la diagonale aux deux bouts : les voitures peu sobres sont sur-prédites, les très sobres sous-prédites.',
+      concl:'Les erreurs ne sont pas réparties au hasard : elles grandissent aux extrêmes de mpg. L\'étape Variantes examine ce motif, variable par variable.',
+      cannot:'Ce nuage ne dit pas quelle variable cause l\'écart, ni si un autre modèle le corrigerait.',
+      how:['Un point par voiture : prédit en bas, observé à gauche, sur la même échelle.','Sur la diagonale, la prédiction est parfaite ; au-dessus, la voiture fait plus de mpg que prédit.'],trap:'Les deux axes ont la même échelle : sans cela, la diagonale ne serait pas y = x et le nuage semblerait décalé.',others:['erreurs selon la prédiction']}],
+  limit:'Ces chiffres ont servi à choisir : ils sont optimistes, et le test final reste scellé.',
+  next:'<b>Ensuite : les variantes</b>, sous la même évaluation.',
+  dec:'Référence et modèle linéaire ajustés ; on passe aux variantes.',who:'vos mots · « on continue »'},
+11:{name:'Variantes',short:'Variantes',pic:'line_misses_curve',budget:[0,3],
+  cap:'<b>Une droite peut rater une courbe.</b> Une variante essaie une forme plus souple, sous la même évaluation.',
+  more:'Ridge : la même droite, avec des coefficients retenus (pénalité). EBM : une courbe apprise par variable, additionnées ; plus souple, encore lisible.',
+  prepares:'Ces réponses préparent le choix des <b>variantes à comparer</b>.',
+  qs:['Les erreurs du modèle linéaire dessinent-elles une forme ?','L\'erreur est-elle stable d\'une période à l\'autre ?'],
+  ask:'On compare le modèle linéaire à deux variantes : une ridge (pénalité réglée) et un EBM ?',opts:['J\'adopte','Changer quelque chose','Expliquer d\'abord'],copy:'Pourquoi ces deux variantes ?',
+  frame:`<b>${FR.dev}</b> · hors pli, 318 voitures · a servi à choisir`,
+  ev:[{h:'Les erreurs du modèle linéaire dessinent-elles une forme ?',ct:'erreurs du modèle linéaire selon la puissance, hors pli · points illustratifs',fig:chResid,
+      see:'Les erreurs forment un <b>U</b> le long de la puissance : la droite sous-prédit aux deux bouts.',
+      concl:'La droite rate une courbe : elle se trompe dans le même sens pour les voitures peu puissantes et très puissantes. Une variante n\'aide sur ce point que si elle peut suivre une courbe ; la comparaison mesurera si elle le fait.',
+      cannot:'Une forme dans les erreurs ne garantit pas qu\'un autre modèle fera mieux en moyenne : seul l\'écart apparié le dira.',
+      how:['Un point par voiture : son erreur, observé moins prédit.','Sans forme, les points flotteraient autour de la ligne zéro.'],trap:'La courbe orange est un lissage : aux bords, peu de points la tirent.',others:['erreurs selon le poids','erreurs selon la cylindrée']},
+     {h:'L\'erreur est-elle stable d\'une période à l\'autre ?',ct:'biais moyen par période, hors pli',fig:chPeriod,
+      see:'Le biais passe de <b>−2,46</b> mpg (1970–72) à <b>+5,27</b> (1981–82).',
+      concl:'Le modèle se trompe dans un sens qui change avec les années : une limite à écrire dans la conclusion.',
+      cannot:'Avec 5 blocs, c\'est un signal, pas une preuve ; rien ne dit comment le modèle se comporterait après 1982.',
+      how:['Chaque barre : l\'erreur moyenne des voitures d\'une période.','À droite de zéro : le modèle prédit trop peu de mpg.'],trap:'Les périodes ne comptent pas le même nombre de voitures : une barre de petite période bouge plus.'}],
+  limit:'Ces diagnostics viennent des lignes qui servent à choisir : ils sont optimistes, et le test final reste scellé.',
+  next:'<b>Ensuite : le choix du modèle</b>, sur l\'écart apparié et la règle d\'une erreur type.',
+  dec:'Comparer le modèle linéaire à une ridge (pénalité réglée) et à un EBM.',who:'vos mots'},
+12:{name:'Choix du modèle',short:'Choix',pic:'one_se_rule',budget:[2,3],todo:true,
+  cap:'<b>Le plus simple qui tient la comparaison.</b> Parmi les configurations à moins d\'une erreur type de la meilleure, la règle désigne la plus simple.',
+  more:'Erreur type : la variation d\'un chiffre d\'un échantillon à l\'autre. La règle d\'une erreur type est une règle de l\'outil, pas votre décision : elle désigne, vous choisissez dans le chat.',
+  prepares:'Ces réponses préparent le <b>Test final</b> : la configuration qui y sera lue, une fois.',
+  qs:['Quelle configuration se trompe le moins, et l\'écart dépasse-t-il le bruit ?','Quelle est la plus simple à moins d\'une erreur type de la meilleure ?'],
+  ask:'Quelle configuration retient-on pour le test final ?',opts:['le modèle linéaire','la ridge','l\'EBM'],optnote:'Du plus simple au plus souple ; l\'ordre n\'est pas une recommandation.',copy:'Comment trancher entre un gain mesuré et la simplicité ?',
+  frame:`<b>${FR.dev}</b> · hors pli, 318 voitures, 5 blocs · a servi à choisir`,
+  ev:[{h:'Quelle configuration se trompe le moins, et l\'écart dépasse-t-il le bruit ?',ct:'écart apparié avec le modèle linéaire, ± une erreur type',fig:chPaired,chip:['ok','critère atteint par les trois, en développement'],
+      see:'Écart apparié, ± une erreur type : EBM − linéaire <b>−0,29</b> [−0,47 ; −0,12] ; ridge − linéaire <b>−0,01</b> [−0,04 ; +0,02].',
+      concl:'La configuration la plus souple se trompe moins que la plus simple, et l\'intervalle exclut zéro : l\'écart ne vient pas seulement du hasard des plis. La décision pèse quelques dixièmes de mpg contre la simplicité.',
+      cannot:'L\'écart apparié dit que la différence existe sur ces 318 voitures, pas qu\'elle compte pour l\'usage, ni qu\'elle tiendra sur le test final.',
+      how:['Chaque point : la différence d\'erreur, variante moins linéaire, sur les mêmes voitures.','À gauche de zéro, la variante se trompe moins.'],trap:'Le trait couvre ± une erreur type, pas un intervalle à 95 % : il est plus court.',others:['erreur par pli, trois configurations']},
+     {h:'Quelle est la plus simple à moins d\'une erreur type de la meilleure ?',ct:'règle d\'une erreur type · valeurs de l\'étude',fig:chOneSE,
+      see:'Meilleure erreur : <b>3,40</b> [3,09 ; 3,72]. Le linéaire, <b>3,69</b>, est sous <b>3,72</b> ; la ridge, <b>3,68</b>, aussi.',
+      concl:'La règle désigne la plus simple des configurations à moins d\'une erreur type de la meilleure. C\'est une règle de l\'outil, pas une décision : elle ignore si quelques dixièmes de mpg comptent pour votre usage.',
+      cannot:'La règle ne dit pas que les configurations se valent : l\'écart apparié dit le contraire. Ni laquelle tiendra le mieux sur le test final.',
+      how:['La bande ocre va de la meilleure erreur à une erreur type au-dessus.','Les configurations sont rangées de la plus simple à la plus souple.'],trap:'Être dans la bande ne veut pas dire « équivalent » : c\'est un seuil de simplicité, pas un test.'}],
+  limit:'Pas encore affirmable : l\'erreur sur des voitures jamais utilisées. Le test final la mesurera, une fois.',
+  next:'<b>Ensuite : le test final</b>, ouvert une fois, dans le chat, quand vous l\'aurez décidé.',
+  dec:'Le modèle linéaire, que la règle d\'une erreur type désignait ; l\'EBM faisait 0,29 mpg de mieux.',who:'vos mots · « le linéaire, plus simple à expliquer »'},
+13:{name:'Test final',short:'Test final',pic:'sealed_once',
+  cap:'<b>Le seul chiffre indépendant.</b> 80 voitures mises de côté au départ, lues une fois, avec le modèle choisi.',
+  more:'Les chiffres de développement ont servi à choisir : ils sont un peu optimistes. Le test final n\'a influencé aucun choix ; une fois ouvert, il ne se referme pas.',
+  prepares:'Ces réponses préparent la <b>Conclusion</b> : le chiffre qu\'elle pourra affirmer.',
+  qs:['Que mesure l\'ouverture, et sur quelles lignes ?','Le modèle bat-il la référence sur le test final ?','Où le modèle se trompe-t-il sur les lignes scellées ?'],
+  ask:()=>F13==='before'?'On ouvre le test final, une fois, avec le modèle linéaire réentraîné sur les 318 lignes de développement ?':'Le test final est ouvert et lu une fois. On passe à la conclusion ?',
+  opts:()=>F13==='before'?['J\'ouvre le test final','Expliquer d\'abord']:['On passe à la conclusion','Expliquer d\'abord'],copy:'Que se passe-t-il une fois le test final ouvert ?',
+  frame:()=>F13==='before'?`<b>${FR.str}</b> avant l\'ouverture · puis <b>${FR.fin}</b>, mesurée une fois`:`<b>${FR.fin}</b> · 80 voitures de la même période (1970–82) · mesurée une fois`,
+  ev:[{h:'Que mesure l\'ouverture, et sur quelles lignes ?',ct:'les lignes scellées, par tranche de la cible · comptes seulement',fig:()=>chStrata(F13==='after'),
+      see:'Les <b>80</b> lignes scellées, <b>16</b> par tranche de la cible, lues une fois avec le modèle linéaire réentraîné sur les <b>318</b> lignes de développement.',
+      concl:'Ce chiffre n\'aura influencé aucun choix : c\'est la seule mesure indépendante de l\'étude. Après l\'ouverture, tout calcul qui revient sur une étape est marqué « après le test final ».',
+      cannot:'Les 80 lignes viennent de 1970–82 : elles ne disent rien des voitures d\'après 1982.',
+      how:['Le même tirage qu\'au découpage ; les cases violettes sont les lignes lues.'],trap:'Ouvrir une fois ne protège pas d\'un regard antérieur : l\'étude compte ceux de l\'aperçu.'},
+     {h:'Le modèle bat-il la référence sur le test final ?',ct:'erreur absolue moyenne · développement et test final, une échelle',fig:chDevFinal,pendingWhenBefore:true,
+      see:'Test final : linéaire <b>2,88</b> mpg [2,38 ; 3,40], référence <b>6,64</b> [5,76 ; 7,51] ; borne du critère <b>5,97</b>.',
+      concl:'Le modèle se trompe deux fois moins que la référence sur des voitures jamais utilisées, et sous la borne du critère. L\'écart avec le développement, 3,69 contre 2,88, reste dans l\'incertitude du test final.',
+      cannot:'80 voitures, c\'est peu : l\'intervalle couvre un mpg. Un chiffre final plus bas ne prouve pas que le modèle est meilleur qu\'en développement.',
+      how:['Cercle : développement ; disque : test final ; trait : intervalle.','La ligne verte : 10 % sous la référence mesurée sur les mêmes 80 lignes.'],trap:'La borne du critère est calculée sur le test final (6,64 × 0,9) ; elle ne s\'applique pas aux cercles.'},
+     {h:'Où le modèle se trompe-t-il sur les lignes scellées ?',ct:'observé contre prédit, 80 lignes du test final · axes égaux · points illustratifs',fig:()=>chObsPred({seed:5,n:80,noise:2.6,final:true,label:'Observé contre prédit sur les 80 lignes du test final, modèle linéaire ; mêmes axes de 8 à 48 mpg ; points illustratifs'}),pendingWhenBefore:true,
+      see:'Les <b>80</b> voitures du test final, chacune prédite une fois : les points suivent la diagonale, plus écartés pour les voitures les plus sobres.',
+      concl:'Les erreurs finales ont la même forme qu\'en développement : le motif vu aux variantes est toujours là. La conclusion devra le nommer.',
+      cannot:'Ce nuage ne dit rien des voitures d\'après 1982, ni de la cause des écarts.',
+      how:['Un point par voiture scellée ; mêmes axes que la figure des modèles.'],trap:'80 points : un ou deux écarts suffisent à donner une impression de forme.',others:['biais par période sur les lignes scellées']}],
+  limit:'Un seul tirage, de la même période : le chiffre final dit l\'erreur sur ces voitures-là, pas sur des voitures futures.',
+  next:'<b>Ensuite : la conclusion</b>, avec ce chiffre et ses limites.',
+  dec:'Test final ouvert une fois, avec le modèle linéaire réentraîné sur les 318 lignes.',who:'vos mots · « on l\'ouvre »'},
+14:{name:'Conclusion',short:'Conclusion',pic:'dev_vs_final',
+  cap:'<b>Deux cadres, une seule échelle.</b> Le développement a servi à choisir ; le test final, lu une fois, dit ce que l\'étude peut affirmer.',
+  more:'Une conclusion mesurée dit le chiffre final, la population à laquelle il s\'applique, et ce qu\'il ne dit pas. Les configurations non retenues n\'ont pas de chiffre final.',
+  prepares:'Ces réponses forment la <b>conclusion</b> de l\'étude.',
+  qs:['Que mesure l\'étude, en développement et sur le test final ?','Votre critère est-il atteint ?'],
+  ask:'Conclusion : adopter le modèle linéaire, 2,88 mpg d\'erreur sur le test final, avec ses limites ?',opts:['J\'adopte','Changer quelque chose','Expliquer d\'abord'],copy:'Comment écrire une conclusion mesurée ?',
+  frame:`<b>${FR.fin}</b> · mesurée une fois · avec la preuve de développement pour comparaison`,
+  ev:[{h:'Que mesure l\'étude, en développement et sur le test final ?',ct:'un tableau · développement et test final',fig:chFinalTable,
+      see:'Linéaire : <b>3,69</b> en développement, <b>2,88</b> sur le test final ; référence <b>7,16</b> et <b>6,64</b> ; ridge et EBM non mesurés sur le test final.',
+      concl:'Seule la configuration désignée au Choix du modèle a été lue sur le test final : la comparaison entre configurations reste une preuve de développement. Le chiffre final, lui, n\'a servi à aucun choix.',
+      cannot:'Le tableau ne dit pas comment les configurations non retenues se seraient comportées sur le test final : elles n\'y ont pas été mesurées.',
+      how:['Une ligne par configuration, une colonne par cadre.','La ligne surlignée : le modèle choisi.'],trap:'Les deux colonnes ne portent pas sur les mêmes lignes : ne pas soustraire l\'une de l\'autre comme un gain.'},
+     {h:'Votre critère est-il atteint ?',ct:'réduction d\'erreur sur le test final, contre la référence',fig:chReduction,chip:['ok','atteint'],
+      see:'Réduction de <b>56,6 %</b> [43,6 ; 70,3], au-dessus du minimum de <b>10 %</b>.',
+      concl:'Le critère fixé avant tout modèle est atteint, même au bas de l\'intervalle.',
+      cannot:'Atteindre le minimum ne dit pas que le modèle suffit pour tout usage : c\'est une question métier.',
+      how:['Le point : la réduction mesurée ; le trait : son intervalle.','La ligne verte : le minimum fixé avant tout modèle.'],trap:'Un minimum de 10 % est une barre basse : un dépassement large ne mesure pas l\'utilité.'}],
+  establish:{yes:['Sur 80 voitures de 1970–82 mises de côté avant tout regard, le modèle linéaire se trompe de 2,88 mpg en moyenne [2,38 ; 3,40].','Il se trompe deux fois moins que prédire la moyenne ; le critère fixé d\'avance est atteint.'],
+   no:['Rien sur les voitures d\'après 1982 : le biais par période montre déjà une dérive.','Rien sur la cause : le poids est associé à la consommation, le modèle ne dit pas pourquoi.','Rien sur les configurations non retenues au test final.']},
+  limit:'Rien sur les voitures d\'après 1982 ; le poids est associé à la consommation, le modèle ne dit pas pourquoi.',
+  next:'<b>Et après :</b> présenter la conclusion à votre binôme, le dossier de passation, ou l\'export Azure ML.',
+  dec:'Adopter le modèle linéaire : 2,88 mpg d\'erreur sur le test final, critère atteint, avec ses limites.',who:'vos mots'}
+};
+
+// ---------------------------------------------------------------------------
+// Rendering.
+// ---------------------------------------------------------------------------
+const val=v=>typeof v==='function'?v():v;
+const cur=()=>M==='live'?S:S+1;                     // the step the study is at (15 = done)
+const opened=()=>cur()>13||(cur()===13&&F13==='after');
+const isPending=e=>e.pendingWhenBefore&&S===13&&M==='live'&&F13==='before';
+
+function readx(e){return `<div class="readx"><p class="r1"><span class="rl">Ce qu'on voit</span>${e.see}${e.chip?`<span class="chip ${e.chip[0]}">${e.chip[1]}</span>`:''}</p><p class="r2"><span class="rl">Ce qu'on en conclut</span>${e.concl}</p><p class="r3"><span class="rl">Ce qu'on ne peut pas conclure</span>${e.cannot}</p><p class="src">chiffres cités du résultat enregistré · révision 34</p></div>`}
+function fold(id,label,body,cls='f'){return `<details class="${cls}" data-id="${id}"${OPEN.has(id)?' open':''}><summary>${label}</summary><div>${body}</div></details>`}
+function evBlock(st,e,i,pre){
+  const multi=st.ev.length>1,id=pre+S+'-'+i;
+  if(isPending(e))return `<div class="ev" data-question-id="q${i+1}"><div class="lab">${multi?`<span class="qn">Q${i+1}</span>`:''}<h4>${e.h}</h4></div><p class="pending">Pas encore calculé : le test final s'ouvre dans le chat, une fois. Le résultat s'affichera ici ; rien à répondre maintenant.</p></div>`;
+  return `<div class="ev" data-question-id="q${i+1}"><div class="lab">${multi?`<span class="qn">Q${i+1}</span>`:''}<h4>${e.h}</h4></div><div class="ct">${e.ct.replace(/(points illustratifs|formes illustratives|valeurs illustratives)/,'<span class="ill">$1</span>')}</div>${e.fig()}
+   ${readx(e)}
+   ${(e.folds||[]).map((fo,k)=>fold(id+'-x'+k,fo[0],fo[1])).join('')}
+   ${fold(id+'-h','Comment le lire',`<ol>${e.how.map(x=>`<li>${x}</li>`).join('')}</ol>`)}
+   ${fold(id+'-t','Attention',e.trap)}
+   ${e.others?fold(id+'-o',`Autres graphiques (${e.others.length})`,e.others.join(' · ')):''}</div>`;
+}
+function budget(st){if(!st.budget)return '';const[u,m]=st.budget;return `<div class="budget"><span class="bb" aria-hidden="true">${Array.from({length:m},(_,i)=>`<i class="${i<u?'u':''}"></i>`).join('')}</span><span>Budget de variantes : <b style="color:var(--ink)">${u} sur ${m} utilisés</b></span></div>`}
+function live(st){
+  const qs=st.qs||st.ev.map(e=>e.h);const one=qs.length===1;
+  return `<section class="blk" data-block="picture"><div class="bk"><span class="n">1</span>L'étape en une image</div>
+   <div class="idea">${PIC[st.pic]()}<div><p>${st.cap}</p>${fold('more'+S,'En savoir plus',st.more,'more')}</div></div></section>
+  <section class="blk" data-block="establish"><div class="bk"><span class="n">2</span>Ce que l'étape doit établir</div>
+   <p class="feeds">${st.prepares}</p>
+   <ol class="qs${one?' one':''}">${qs.map((q,i)=>`<li>${one?'':`<span class="qn">Q${i+1}</span>`}<span>${q}</span></li>`).join('')}</ol>
+   ${budget(st)}
+   ${st.pause?`<p class="pause"><b>Pause · on lit l'exploration avant les modèles.</b> Le plan s'arrête ici : aucun modèle n'est encore ajusté. Lisez les trois graphiques, puis répondez dans le chat.</p>`:''}
+   <div class="ask"><div class="who">Le chat attend</div><h3>${val(st.ask)}</h3><p class="opts"><span>Réponses proposées dans le chat :</span> ${val(st.opts).join(' · ')}</p>${st.optnote?`<p class="optnote">${st.optnote}</p>`:''}<button class="copy">Copier « ${st.copy} »</button></div></section>
+  <section class="blk" data-block="answer"><div class="bk"><span class="n">3</span>Pour répondre, regardez</div>
+   <p class="frame">${val(st.frame)}</p>
+   ${st.noChart?`<p class="nochart"><b>Pas de graphique pour ce point.</b> ${st.noChart}</p>`:st.ev.map((e,i)=>evBlock(st,e,i,'L')).join('')}</section>
+  <section class="blk" data-block="limit"><div class="bk"><span class="n">4</span>${S===14?'Ce que l\'étude établit · Et après':'Ce que ça ne dit pas · Ensuite'}</div>${S===14?establish(st):`<p class="limit">${st.limit}</p><p class="next">${st.next}</p>`}</section>`;
+}
+function establish(st){
+  return `<div class="est"><div><h5>Ce que l'étude établit</h5><ul>${st.establish.yes.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+   <div class="no"><h5>Ce qu'elle n'établit pas</h5><ul>${st.establish.no.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+   <div class="then"><h5>Et après</h5><p>La question du chat viendra après la conclusion : « Que voulez-vous faire de ce résultat ? ». Présenter la conclusion à votre binôme d'abord ; puis, si besoin :</p>
+   <button class="act">Exporter le dossier de passation<span class="w">W7</span></button><button class="act">Export Azure ML : voir le plan<span class="w">lecture</span></button><button class="act">Exporter le projet Azure ML<span class="w">W8 · v3</span></button>
+   <p class="off" style="margin-top:4px">Le plan Azure ML n'écrit rien ; l'export écrit un dossier hors de l'étude ; aucun job Azure n'est lancé depuis le panneau.</p></div></div>`;
+}
+// Review form (ST-7): decision first, then answers, each opening its chart in place, then the limit.
+function reviewForm(n){
+  const st=STEPS[n];
+  const saved=S,savedF=F13;S=n;F13='after';   // a done step shows its charts as they ended; restore afterwards
+  let h=`<p class="decided"><b>Décidé :</b> ${st.dec}<span class="who2">${st.who}</span></p>`;
+  if(st.noChart){h+=`<ul class="recap"><li><div class="rq">${(st.qs||[])[0]}</div><div class="ra">Pas de graphique pour ce point. ${st.noChart}</div></li></ul>`}
+  else h+=`<ul class="recap">${st.ev.map((e,i)=>{const k='g'+n+'-'+i,o=OPEN.has(k);return `<li><div class="rq">${st.ev.length>1?`<span class="qn">Q${i+1}</span>`:''}<span>${e.h}</span></div><div class="ra">${e.see}${e.chip?`<span class="chip ${e.chip[0]==='ok'?'ok':e.chip[0]}" style="color:${e.chip[0]==='ok'?'var(--ok)':'var(--warn)'}">${e.chip[1]}</span>`:''}</div><button class="lnk" data-open="${k}" aria-expanded="${o}">${o?'Masquer le graphique':'Voir le graphique'}</button>${o?`<div class="ev"><div class="ct">${e.ct}</div><div class="efr">${val(st.frame).replace(/<[^>]+>/g,'')}</div>${e.fig()}${readx(e)}</div>`:''}</li>`}).join('')}</ul>`;
+  h+=`<p class="limit rvlimit">${st.limit}</p>`;
+  S=saved;F13=savedF;return h;
+}
+function header(){
+  const c=cur(),op=opened();
+  const seal=op?`<span class="pill seal open" title="Ouvert une fois ; tout calcul fait ensuite est marqué « après le test final ».">test final ouvert · une fois</span>`:`<span class="pill seal" title="80 lignes mises de côté à la création ; aucun graphique ni calcul ne les lit.">🔒 test final scellé</span>`;
+  const pts=c<=6?4:c<=12?3:c===13?(op?1:2):1;
+  const def=c>14?`<span class="pill def ok" title="Limites : même période (1970–82) ; 80 voitures ; le scellé est un protocole, pas un verrou.">Défendable · 3 limites</span>`:`<span class="pill def" title="Ce qu'il faudra pour défendre l'étude">Défendable à la fin · ${pts} point${pts>1?'s':''}</span>`;
+  return `<div class="hd"><span class="name">mpg-1028</span>${seal}${def}</div>`;
+}
+function prog(){
+  const c=cur();
+  const bars=PH.map(([nm,ix])=>`<span class="ph" style="--n:${ix.length}" title="${nm}">${ix.map(i=>`<i class="${i===c?'c':i<c?'d':''}" title="${STEPS[i].short}"></i>`).join('')}</span>`).join('');
+  const lbl=c>14?'<b>Étude terminée</b>':`<b>Étape ${c}/14</b> · ${phaseOf(c)}`;
+  return `<div class="prog"><div class="bars" aria-hidden="true">${bars}</div><span class="lbl">${lbl}</span></div>`;
+}
+function todo(){
+  const c=cur();if(!(c===11||c===12))return '';
+  return `<section class="todo"><h2>À traiter (1)</h2><p><b>Rapport et notebook périmés.</b> Ils datent de la révision 31 ; l'étude est à la révision 34.<br><button class="act">Régénérer<span class="w">W5</span></button></p></section>`;
+}
+function nowSection(){
+  const c=cur();
+  if(M==='live'){const st=STEPS[S];
+    return `<h2 class="sec nowh">Maintenant · Étape ${S}/14<span class="full">${st.name}</span></h2>${live(st)}`;}
+  if(c>14)return `<h2 class="sec nowh">Maintenant<span class="full">Étude terminée</span></h2><div class="stub"><div class="who">Le chat attend</div><h3 style="font:400 1.08rem/1.3 var(--serif);margin:2px 0 4px">Que voulez-vous faire de ce résultat ?</h3><p class="opts"><span>Réponses proposées dans le chat :</span> Présenter la conclusion à votre binôme · Préparer le dossier de passation · Préparer l'export Azure ML</p><p class="hint">La conclusion relue s'ouvre ci-dessous, dans le parcours.</p></div>`;
+  const st=STEPS[c];
+  return `<h2 class="sec nowh">Maintenant · Étape ${c}/14<span class="full">${st.name}</span></h2><div class="stub"><div class="who">Le chat attend</div><h3 style="font:400 1.08rem/1.3 var(--serif);margin:2px 0 4px">${val(st.ask)}</h3><p class="opts"><span>Réponses proposées dans le chat :</span> ${val(st.opts).join(' · ')}</p><p class="hint">Ici, les quatre blocs de l'étape ${c} (mode « Pendant l'étape »). L'étape ${S}, faite, se relit ci-dessous dans le parcours.</p></div>`;
+}
+function path(){
+  const c=cur(),looks=c<=9?1:4,opens=opened()?1:0,cfg=c<=10?0:c<=12?(c===12?3:1):3;
+  let h=`<p class="ledger"><b>Registre :</b> test final ${opens}/1 ouverture · ${looks} regard${looks>1?'s':''} sur la cible · ${cfg?cfg+' configuration'+(cfg>1?'s':'')+' essayée'+(cfg>1?'s':'')+' + la référence':'aucun modèle'}</p><ul class="path">`;
+  PH.forEach(([nm,ix])=>{h+=`<li class="phl">${nm}</li>`;ix.forEach(n=>{const st=STEPS[n];
+    if(n<c){const id='p'+n,hl=M==='review'&&n===S;
+      h+=`<li class="st${hl?' hl':''}" id="path-${n}"><details data-id="${id}"${OPEN.has(id)?' open':''}><summary><span class="mk d" aria-hidden="true">✓</span><span class="sr">fait :</span><span class="tv"><span class="t">${n} · ${st.name}</span><span class="v">${st.dec}</span></span><span class="chev" aria-hidden="true">›</span></summary><div class="rv">${OPEN.has(id)?reviewForm(n):''}</div></details></li>`;}
+    else if(n===c)h+=`<li class="st"><div class="row"><span class="mk c" aria-hidden="true">●</span><span class="tv"><span class="t">${n} · ${st.name}</span><span class="v">en cours, voir Maintenant</span></span><span class="b">vous attend</span></div></li>`;
+    else h+=`<li class="st later"><div class="row"><span class="mk l" aria-hidden="true">○</span><span class="sr">à venir :</span><span class="tv"><span class="t">${n} · ${st.name}</span></span></div></li>`;});});
+  return h+'</ul>';
+}
+function tools(){
+  const c=cur(),afterSplit=c>4,end=c>14;
+  let h='<h2 class="sec">Outils</h2>';
+  h+=fold('t-data',`Les données <span class="c">${afterSplit?'fiche, graphiques':'fiche'}</span>`,`La fiche et le contrôle de qualité.${afterSplit?`<br><button class="act">Lancer un graphique de l'exploration<span class="w">W4</span></button><button class="act">Matrice de corrélation des prédicteurs<span class="w">W4 · sans la cible</span></button><p class="off" style="margin-top:4px">Sur les lignes de développement seulement ; un graphique sur la cible compte comme un regard et se range sous Exploration.</p>`:'<p class="off">Un autre graphique : après le découpage, sur les lignes de développement seulement.</p>'}`,'p');
+  h+=fold('t-out','Livrables <span class="c">rapport, notebooks</span>',`<div class="dl">Rapport <button class="lnk">Ouvrir</button></div><div class="dl">Notebook généré <button class="lnk">Ouvrir dans Marimo (lecture)</button></div><div class="dl">Copie éditable de l'étude <button class="lnk">Ouvrir dans Marimo</button></div><div class="dl">Atelier (vos essais) <button class="lnk">Ouvrir dans Marimo</button></div><button class="act">Régénérer le rapport et le notebook<span class="w">W5</span></button>${end?'<button class="act">Exporter le dossier de passation<span class="w">W7</span></button>':''}`,'p');
+  return h+`<p class="foot">Le panneau lit l'étude par la ligne de commande hypotrail. Les décisions se prennent dans le chat ; le chat, le rapport et le notebook restent complets sans lui.</p>`;
+}
+function controls(){
+  const stepBtns=Array.from({length:14},(_,i)=>`<button data-s="${i+1}" aria-pressed="${S===i+1}" title="${STEPS[i+1].name}">${i+1}</button>`).join('');
+  return `<span><span class="ctl">Étape</span><span class="seg steps">${stepBtns}</span></span>
+   <span><span class="ctl">Mode</span><span class="seg"><button data-m="live" aria-pressed="${M==='live'}">Pendant l'étape</button><button data-m="review" aria-pressed="${M==='review'}">Relecture dans le parcours</button></span></span>
+   <span><span class="ctl">Largeur</span><span class="seg"><button data-w="w420" aria-pressed="${W==='w420'}">420</button><button data-w="w600" aria-pressed="${W==='w600'}">600</button></span></span>
+   ${S===13&&M==='live'?`<span><span class="ctl">Test final</span><span class="seg"><button data-f="before" aria-pressed="${F13==='before'}">Avant l'ouverture</button><button data-f="after" aria-pressed="${F13==='after'}">Après l'ouverture</button></span></span>`:''}`;
+}
+function render(keepScroll){
+  const pane=document.getElementById('pane'),y=pane.scrollTop;
+  if(M==='review')OPEN.add('p'+S);
+  document.getElementById('controls').innerHTML=controls();
+  document.getElementById('vsc').className='vsc '+W;
+  pane.innerHTML=`<div class="top">${header()}${prog()}</div><div class="in">${todo()}${nowSection()}<h2 class="sec">Le parcours</h2>${path()}${tools()}</div>`;
+  document.getElementById('notes').innerHTML=notes();
+  [pane,document.getElementById('notes')].forEach(root=>{const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode()))if(/ [;:?!»]|« /.test(n.nodeValue))n.nodeValue=nb(n.nodeValue)});
+  if(keepScroll)pane.scrollTop=y;
+  else if(M==='review'&&scrollToPath){const el=document.getElementById('path-'+S);if(el)pane.scrollTop=el.offsetTop-110;}
+  else pane.scrollTop=0;
+  scrollToPath=false;
+}
+
+// ---------------------------------------------------------------------------
+// Notes beside the panel: sources, real vs illustrative, owner checks.
+// ---------------------------------------------------------------------------
+const NOTES={
+1:{src:'§3.1 ligne 1 · R54 (question, « valeurs brutes ») · §8.10 (dictionnaire et lignes « ? » gardés)',real:'318 / 80 / 398 ; 6 « ? » ; 254 noms ; 107 lignes en groupes répétés ; 0 doublon ; l\'aperçu est le tirage de la maquette de synthèse.',ill:'aucun',check:['107 et 254 comptés sur les 318 lignes de développement (et non sur les 398) ?']},
+2:{src:'§3.1 ligne 2 · R57 · PA-6 · §8.6 (voie « ? », « hypothèse du scénario », arrêt avant la mesure)',real:'disponibilités du cas (accélération « unknown »).',ill:'les quatre jalons et leurs libellés (EN-18), hypothèse du scénario.',check:['Les jalons « Moteur conçu / Carrosserie et poids fixés / Essais de performance / Consommation mesurée » et le moment après « Carrosserie ».','L\'origine placée à « Moteur conçu ».','Curseur à trois arrêts : le troisième ne change rien (l\'accélération reste « ? »). Est-ce parlant, ou faut-il deux arrêts ?']},
+3:{src:'§3.1 ligne 3 · R58 · PA-7',real:'groupes du cas (Moteur, Carrosserie et performances, Modèle, Résultat), exclusion de l\'accélération.',ill:'aucun',check:['« année du modèle » classée « pas une variable : ordre du découpage » (§3.1). Ta session l\'a-t-elle bien exclue des modèles ?']},
+4:{src:'§3.1 ligne 4 · R59 + précision · R63 · EN-17, EN-20',real:'5 blocs de 64, 64, 64, 63, 63 lignes sur 70–72 … 80–82 ; 80 scellées.',ill:'la répartition des 80 et des 318 par tranche (16 par tranche ; développement 64, 64, 64, 63, 63 supposé).',check:['5 tranches de la cible pour le tirage (bins = 5).','Le dessin des plis est tracé avec les blocs du calcul ; avant le calcul, blocs égaux sans années (EN-20).']},
+5:{src:'§3.1 ligne 5 · R60 option A · EN-10 · PA-9',real:'constantes de l\'exemple : 1, 1, 1, 1, 6 ; 2 ; 8 ; √8 ≈ 2,83 ; 25 mpg ≈ 9,4 L/100 km.',ill:'tout (exemple fictif, marqué).',check:['Le libellé des options « J\'adopte la MAE / Changer : la RMSE ».']},
+6:{src:'§3.1 ligne 6 · ST-10',real:'10 % ; mesure MAE.',ill:'l\'image du bloc 1 (barre sans chiffre).',check:['Pas de graphique au bloc 3 (raison du moteur). La barre « erreur de la référence » reste en image, sans chiffre : la référence n\'est pas encore mesurée.']},
+7:{src:'§3.1 ligne 7 · ST-6 (pastilles de verdict permises ici)',real:'6 « ? », 1,9 % (6 / 318), asymétrie 1,1 de la puissance (session de synthèse).',ill:'les seuils et les valeurs des autres colonnes.',check:['Trois questions de la spécification ramenées à deux : manquants, puis une vue par colonne (asymétrie, traîne, catégories) où la colonne transformée vient d\'abord.']},
+8:{src:'§3.1 ligne 8 · R41 (les « aucun changement » expliqués)',real:'asymétrie 1,1 ; 6 manquants ; 312 lignes renseignées.',ill:'formes des histogrammes, asymétrie après log, valeurs des colonnes inchangées.',check:[]},
+9:{src:'§3.1 ligne 9 · R61 (pause) · EN-12',real:'318 lignes ; regards comptés.',ill:'histogramme, nuage, matrice (valeurs de la maquette précédente).',check:['§8 reporte EN-16 : le graphique principal de Q2 suit l\'ordre du cas ; ici le poids, comme dans la maquette validée.']},
+10:{src:'§3.1 ligne 10 · R61 · R62 (axes égaux)',real:'3,69 [3,37 ; 4,03] ; 7,16 [6,64 ; 7,70].',ill:'les points par pli et le nuage observé-prédit.',check:['La question du chat à cette étape : une pause « on passe aux variantes ? » (le plan n\'a pas de décision ici).']},
+11:{src:'§3.1 ligne 11 · PA-11 (budget, côtés du biais) · §3.2 variants.period',real:'−2,46 (1970–72) et +5,27 (1981–82).',ill:'les trois périodes intermédiaires (marquées *), le nuage des erreurs.',check:['§8 reporte EN-15 et variants.period pour la première démo ; la maquette les montre comme demandé. À garder pour la démo, ou en « Autres graphiques » plus tard ?']},
+12:{src:'§3.1 ligne 12 · §8.5 (image du bloc 1 illustrative) · ST-6',real:'3,69 · 3,68 · 3,40 [3,09 ; 3,72] ; écarts appariés −0,29 [−0,47 ; −0,12] et −0,01 [−0,04 ; +0,02] ; budget 2 sur 3.',ill:'l\'image du bloc 1.',check:['Les intervalles de développement sont lus comme ± une erreur type : la borne 3,72 de l\'EBM sert de seuil de la règle. À confirmer.','§8 reporte paired_intervals ; la maquette le met en graphique principal de Q1 (l\'erreur par pli passe en « Autres graphiques »).','L\'intervalle de la ridge n\'est pas connu : point seul.']},
+13:{src:'§3.1 lignes 13–14 · R48, R52 · R62',real:'2,88 [2,38 ; 3,40] ; 6,64 [5,76 ; 7,51] ; borne 5,97 (6,64 × 0,9) ; 80 lignes.',ill:'le nuage observé-prédit des 80 lignes ; la répartition par tranche.',check:['Écart à la spécification : « Le modèle bat-il la référence ? » et « Où se trompe-t-il ? » sont placés au Test final (après l\'ouverture), comme demandé ; la Conclusion garde le tableau et le critère.','Avant l\'ouverture, Q2 et Q3 disent « Pas encore calculé » (ST-11).']},
+14:{src:'§3.1 ligne 14 · R52 (un tableau, « non mesuré ») · R49 (W7, W8)',real:'tous les chiffres du tableau, sauf la réduction de développement (48,5 %), calculée depuis 3,69 et 7,16.',ill:'aucun',check:['L\'intervalle de la ridge en développement n\'est pas connu : chiffre seul.','Les boutons W7 et W8 sont dans « Et après » et dans les outils (W7) ; W8 au niveau v3 seulement.']}
+};
+function notes(){
+  const st=STEPS[S],n=NOTES[S];
+  return `<h2>${S} · ${st.name} · ${M==='live'?'pendant l\'étape':'relecture dans le parcours'}</h2>
+   <h3>Sources</h3><p>${n.src}</p>
+   <h3>Chiffres de ta session</h3><p>${n.real}</p>
+   <h3>Illustratif</h3><p>${n.ill}</p>
+   ${n.check.length?`<h3>À confirmer</h3><ul>${n.check.map(x=>`<li>${x}</li>`).join('')}</ul>`:''}
+   <h3>Règles appliquées partout</h3><ul>
+    <li>Pendant l'étape : les quatre blocs ; trois parties sous chaque graphique (environ 80 mots) ; « Attention » ne garde que les pièges de lecture.</li>
+    <li>« Ce qu'on en conclut » ne recommande aucune option et ne nomme pas les options de la décision ouverte.</li>
+    <li>Relecture : la décision, puis les réponses ; « Voir le graphique » ouvre le graphique et sa lecture sur place. Cliquez une étape faite du parcours pour la relire.</li>
+    <li>Coupés pour la première démo (§8) et absents ici : « Deviner d'abord », « Rejouer l'étape », la validation croisée imbriquée de la ridge.</li>
+    <li>Le curseur de la frise ne fait que montrer : rien n'est enregistré, aucun appel.</li></ul>`;
+}
+
+// ---------------------------------------------------------------------------
+// Events.
+// ---------------------------------------------------------------------------
+document.addEventListener('toggle',e=>{const d=e.target;if(!(d instanceof HTMLDetailsElement)||!d.dataset.id)return;
+  const id=d.dataset.id,was=OPEN.has(id);if(d.open)OPEN.add(id);else OPEN.delete(id);
+  // Path entries render their review form lazily: re-render when one opens.
+  if(/^p\d+$/.test(id)&&d.open&&!was){const rv=d.querySelector('.rv');if(rv&&!rv.innerHTML){rv.innerHTML=reviewForm(+id.slice(1));const w=document.createTreeWalker(rv,NodeFilter.SHOW_TEXT);let t;while((t=w.nextNode()))if(/ [;:?!»]|« /.test(t.nodeValue))t.nodeValue=nb(t.nodeValue)}}
+},true);
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.s){S=+b.dataset.s;if(M==='review')scrollToPath=true;render(false)}
+  else if(b.dataset.m){M=b.dataset.m;scrollToPath=M==='review';render(false)}
+  else if(b.dataset.w){W=b.dataset.w;render(true)}
+  else if(b.dataset.f){F13=b.dataset.f;render(true)}
+  else if(b.dataset.open){const k=b.dataset.open;OPEN.has(k)?OPEN.delete(k):OPEN.add(k);render(true)}
+});
+document.addEventListener('input',e=>{const r=e.target;if(r.id!=='tlr')return;SL=+r.value;
+  const tl=r.closest('[data-tl]');tl.querySelector('.tlsvg').innerHTML=tlSvg(SL);tl.querySelector('.tllists').innerHTML=tlLists(SL);
+  r.setAttribute('aria-valuetext',`après « ${MS[SL].l.join(' ')} »`);});
+render(false);
+})();
+</script>
+</body>
+</html>
