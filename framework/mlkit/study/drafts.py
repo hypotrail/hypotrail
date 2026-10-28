@@ -168,7 +168,20 @@ def missing_distributions(study, state: Mapping) -> list[str]:
     if quality is None:
         return []
     keep = candidates(state, case)
-    return [c for c in screened_columns(quality, keep, case)
+    # R39 (owner batch of 2026-10-28): a column the quality check's skewness drafts a log for
+    # is drawn too, so the proposal shows the distribution it cites. It reads that column
+    # only, and the draft does not read it back (the column is already drafted).
+    def capped(item):
+        q99, top = (item.get('quantiles') or {}).get('0.99'), item.get('max')
+        outside = int(item.get('n_above') or 0) + int(item.get('n_below') or 0)
+        return outside > 0 or (isinstance(q99, (int, float)) and isinstance(top, (int, float))
+                               and q99 > 0 and top > EXTREME_TAIL_RATIO * q99)
+    skewed = [item.get('column') for item in quality.get('ranges') or []
+              if item.get('column') in keep and _numeric(case, item.get('column'))
+              and isinstance(item.get('skewness'), (int, float))
+              and item['skewness'] >= SKEW_LOG_MIN and not capped(item)]
+    wanted = list(dict.fromkeys(screened_columns(quality, keep, case) + skewed))
+    return [c for c in wanted
             if current_values(study, state, distribution_slot(c))[0] is None]
 
 
@@ -194,6 +207,79 @@ def distribution_run(study, state: Mapping, action: Mapping, lang: str) -> dict 
                 f"Avant de proposer la préparation, on lit la distribution de {column} : une "
                 "colonne dont les valeurs s'étendent sur une large plage peut demander une "
                 'transformation logarithmique. Seule cette colonne est lue, jamais la cible.')}
+
+
+# Owner batch of 2026-10-28 (R40, R45): the exploration step runs the case catalogue's charts
+# itself, once the target summary and the special values are current: the target against
+# each kept feature (``eda.mean_by`` for a regression, ``eda.rate_by`` for a binary target),
+# the predictor correlation matrix (``eda.correlation``, no target), then each kept feature's
+# distribution (``eda.distribution``, no target). Each target chart is a look, counted as any
+# other. At most :data:`MAX_EXPLORATION_FEATURES` features (the case's order), so a wide case
+# stays fast. Structural-first studies only: the preparation is decided before these looks.
+MAX_EXPLORATION_FEATURES = 12
+TARGET_BY = {st.BINARY: 'eda.rate_by', st.REGRESSION: 'eda.mean_by'}
+CORRELATION = 'eda.correlation'
+
+
+def exploration_slots(state: Mapping, case) -> list[tuple[str, str | None]]:
+    """``[(activity, column or None)]`` the exploration step runs, in order (R40, R45)."""
+    keep = [c for c in candidates(state, case)
+            if (case.variables.get(c) or {}).get('role') == 'feature'][:MAX_EXPLORATION_FEATURES]
+    by = TARGET_BY.get(st.task_of(state), 'eda.rate_by')
+    out: list[tuple[str, str | None]] = [(by, c) for c in keep]
+    if sum(_numeric(case, c) for c in keep) >= 2:
+        out.append((CORRELATION, None))
+    out += [(DISTRIBUTION, c) for c in keep]
+    return out
+
+
+def exploration_run(study, state: Mapping, action: Mapping, lang: str) -> dict | None:
+    """The ``run`` of the next exploration chart of the plan (R40, R45), or None: in a
+    structural-first study, before the final test is opened, once the exploration's own
+    activities are current and the plan moves on to a later step."""
+    case = _case(state)
+    if case is None or not st.structural_first(state) or st.final_test_opened(state):
+        return None
+    plan = [s.get('id') for s in st.derive_plan(state)]
+    if 'train_eda' not in plan:
+        return None
+    from . import companion_env
+    step = companion_env.current_step(action, st.derive_plan(state))
+    if step not in plan or plan.index(step) <= plan.index('train_eda'):
+        return None
+    fixed = next((s for s in st.derive_plan(state) if s.get('id') == 'train_eda'), {})
+    if any(current_values(study, state, a)[0] is None for a in fixed.get('activities') or ()):
+        return None
+    # Only on the way from the exploration to the models: a study already past its fits (one
+    # written before this rule included) is never sent back to explore.
+    if current_values(study, state, 'fit.baseline')[0] is not None:
+        return None
+    for activity, column in exploration_slots(state, case):
+        slot = f'{activity}:{column}' if column else activity
+        if current_values(study, state, slot)[0] is not None:
+            continue
+        from . import audience
+        what = audience.activity_words(activity, lang)
+        reads_target = activity == TARGET_BY.get(st.task_of(state))
+        named = f'{what} ({column})' if column else what
+        out = {'kind': 'run', 'step': 'train_eda', 'activity': activity,
+               'message': (f'Run {activity}' + (f' --column {column}' if column else '')
+                           + ': the exploration step runs the case catalogue\'s charts '
+                             'before the models. ' + ('It reads the target: a look, counted.'
+                                                      if reads_target else
+                                                      'It reads no target.')),
+               'audience': audience.AGENT,
+               'junior_message': _t(
+                   lang, f'The exploration continues with {named}. '
+                         + ('It reads the target of the development rows: one more look, '
+                            'counted.' if reads_target else 'It reads no target.'),
+                   f"L'exploration continue avec {named}. "
+                   + ('Elle lit la cible des lignes de développement : un regard de plus, '
+                      'compté.' if reads_target else 'Elle ne lit pas la cible.'))}
+        if column:
+            out['options'] = {'column': column}
+        return out
+    return None
 
 
 def _reason(parameter: str, column: str | None, rule: str, rid: str, path: str,
@@ -328,6 +414,121 @@ def preprocessing_draft(study, state: Mapping, lang: str) -> dict | None:
             'motivated_by': value['motivated_by']}
 
 
+# Owner batch of 2026-10-28 (R40, R41): the quality check's verdict for every column, the
+# transformed ones and those left unchanged, with the threshold that decided it, as data the
+# panel and the report draw (CLI-CONTRACT §17.6). The thresholds are the draft's own rules.
+VERDICT_KEYS = ('column', 'kept', 'changed', 'parameters', 'checks', 'text')
+PARAMETER_WORDS = {
+    'log_transform': {EN: 'a signed log', FR: 'un log signé'},
+    'caps': {EN: 'caps at the training quantiles', FR: "des plafonds aux quantiles d'entraînement"},
+    'missing': {EN: 'a missing-value indicator column',
+                FR: 'une colonne indicatrice de valeur manquante'},
+    'rare_category_min_rows': {EN: 'its rare categories grouped',
+                               FR: 'ses catégories rares regroupées'}}
+CHECK_KEYS = ('rule', 'value', 'threshold', 'exceeds', 'path', 'words')
+
+
+def _num(x, lang: str, digits: int = 2) -> str:
+    text = f'{x:.{digits}f}'.rstrip('0').rstrip('.') if isinstance(x, float) else f'{x}'
+    return text.replace('.', ',') if lang == FR else text
+
+
+def quality_verdicts(study, state: Mapping, lang: str, draft: Mapping | None = None
+                     ) -> dict | None:
+    """``{result_id, columns: [...]}`` (:data:`VERDICT_KEYS`) of a structural-first study
+    whose quality check is current, else None. Each column of the quality check states what
+    each rule measured against its threshold (:data:`CHECK_KEYS`: the skewness against
+    :data:`SKEW_LOG_MIN`, the maximum against :data:`EXTREME_TAIL_RATIO` times the 99th
+    percentile, the share of missing cells against :data:`MISSING_MIN_SHARE`, the categories
+    with fewer than the check's ``rare_rows`` rows), the parameters the draft gives it
+    (``changed``), and one sentence in the study language; the changed columns come first.
+    A "no change" is backed by the same figures as a change."""
+    case = _case(state)
+    if case is None or not st.structural_first(state):
+        return None
+    qid, quality = current_values(study, state, QUALITY_SLOT)
+    if quality is None:
+        return None
+    draft = draft if draft is not None else preprocessing_draft(study, state, lang)
+    keep = candidates(state, case)
+    params: dict[str, list[str]] = {}
+    for reason in (draft or {}).get('reasons') or []:
+        params.setdefault(reason.get('column'), []).append(reason.get('parameter'))
+    n = quality.get('n_rows') or 0
+    found: dict[str, list[dict]] = {}
+    order: list[str] = []
+
+    def add(column, check):
+        if column not in found:
+            found[column] = []
+            order.append(column)
+        found[column].append(check)
+    for i, item in enumerate(quality.get('missing') or []):
+        k = int(item.get('n_missing') or 0)
+        share = k / n if n else 0.0
+        add(item.get('column'), {
+            'rule': 'missing_indicator', 'value': share, 'threshold': MISSING_MIN_SHARE,
+            'exceeds': bool(n) and share >= MISSING_MIN_SHARE, 'path': f'missing.{i}.n_missing',
+            'words': _t(lang, f'{k} missing of {n} ({_num(100 * share, lang, 1)}%) '
+                              f'{"≥" if share >= MISSING_MIN_SHARE else "<"} 5%',
+                        f'{k} manquantes sur {n} ({_num(100 * share, lang, 1)} %) '
+                        f'{"≥" if share >= MISSING_MIN_SHARE else "<"} 5 %')})
+    for i, item in enumerate(quality.get('ranges') or []):
+        column = item.get('column')
+        skew = item.get('skewness')
+        if isinstance(skew, (int, float)):
+            add(column, {'rule': 'signed_log', 'value': skew, 'threshold': SKEW_LOG_MIN,
+                         'exceeds': skew >= SKEW_LOG_MIN, 'path': f'ranges.{i}.skewness',
+                         'words': _t(lang, f'skewness {_num(float(skew), lang)} '
+                                           f'{"≥" if skew >= SKEW_LOG_MIN else "<"} 1',
+                                     f'asymétrie {_num(float(skew), lang)} '
+                                     f'{"≥" if skew >= SKEW_LOG_MIN else "<"} 1')})
+        q99 = (item.get('quantiles') or {}).get('0.99')
+        top = item.get('max')
+        if isinstance(q99, (int, float)) and isinstance(top, (int, float)) and q99 > 0:
+            bound = EXTREME_TAIL_RATIO * q99
+            add(column, {'rule': 'cap_extreme_tail', 'value': top, 'threshold': bound,
+                         'exceeds': top > bound, 'path': f'ranges.{i}.max',
+                         'words': _t(lang, f'max {_num(float(top), lang)} '
+                                           f'{">" if top > bound else "≤"} 3 × q99 '
+                                           f'({_num(float(bound), lang)})',
+                                     f'max {_num(float(top), lang)} '
+                                     f'{">" if top > bound else "≤"} 3 × q99 '
+                                     f'({_num(float(bound), lang)})')})
+        outside = int(item.get('n_above') or 0) + int(item.get('n_below') or 0)
+        if item.get('declared') is not None:
+            add(column, {'rule': 'cap_declared_range', 'value': outside, 'threshold': 0,
+                         'exceeds': outside > 0, 'path': f'ranges.{i}.n_above',
+                         'words': _t(lang, f'{outside} values outside the declared range',
+                                     f'{outside} valeurs hors de la plage déclarée')})
+    for i, item in enumerate(quality.get('cardinality') or []):
+        threshold = int(item.get('rare_rows') or 0)
+        rare = item.get('rare') or []
+        count = len(rare)
+        add(item.get('column'), {
+            'rule': 'rare_categories', 'value': count, 'threshold': threshold,
+            'exceeds': count > 0, 'path': f'cardinality.{i}.rare',
+            'words': _t(lang, (f'{count} categories under {threshold} rows' if count else
+                               f'no category under {threshold} rows'),
+                        (f'{count} catégories sous {threshold} lignes' if count else
+                         f'aucune catégorie sous {threshold} lignes'))})
+    none_words = _t(lang, 'no change', 'pas de changement')
+    columns = []
+    for column in order:
+        given = list(dict.fromkeys(params.get(column) or []))
+        checks = found[column]
+        words = (', ' if lang != FR else ', ').join(c['words'] for c in checks)
+        named = [PARAMETER_WORDS.get(p, {}).get(lang, p) for p in given]
+        outcome = (_t(lang, 'drafted: ', 'proposé : ') + ', '.join(named)) if given \
+            else none_words
+        columns.append({'column': column, 'kept': column in keep, 'changed': bool(given),
+                        'parameters': given, 'checks': checks,
+                        'text': f'{column}{_t(lang, ": ", " : ")}{words}{_t(lang, ": ", " : ")}'
+                                f'{outcome}.'})
+    columns.sort(key=lambda c: (not c['changed'], not c['kept']))
+    return {'result_id': qid, 'columns': columns}
+
+
 PIPELINE_SENTENCE = {
     EN: 'In every case, the model replaces a missing value by the median or the most frequent '
         'category, puts the numbers on the same scale and codes each category as a 0/1 '
@@ -403,6 +604,9 @@ def with_preprocessing_draft(study, state: Mapping, action: dict, lang: str) -> 
     out = dict(action)
     out['default_value'] = copy.deepcopy(draft['value'])
     out['recommended'] = preprocessing_recommended(draft, lang)
+    # R40, R41: every column's verdict and the threshold that decided it (additive, last).
+    out['recommended']['verdicts'] = (quality_verdicts(study, state, lang, draft) or {}).get(
+        'columns')
     if draft['drafted']:
         out['alternatives'] = preprocessing_alternatives(draft, lang)
     return out

@@ -458,7 +458,7 @@ fr_labels:
   Positive share overall: Part de positifs sur l'ensemble
   Precision: Précision
   Precision gain over the baseline on the final test (points): Gain de précision sur le modèle de référence au test final (points)
-  Prediction for every row (training mean): Prédiction pour chaque ligne (moyenne d'entraînement)
+  Prediction for every row (training mean): 'Prédiction pour chaque ligne (référence : prédire la moyenne)'
   RMSE: RMSE
   Ranking quality on validation (AUC): Qualité du classement sur le jeu de validation (AUC)
   Ranking quality out of fold (AUC): Qualité du classement hors pli (AUC)

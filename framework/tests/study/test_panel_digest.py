@@ -141,7 +141,9 @@ def test_step_1_is_pending_with_its_sample_and_an_empty_ledger(tmp_path, synthet
     assert d['defensibility']['count'] == sum(s != 'context' for s in kinds.values())
     assert d['ledger'] == {'final_test': {'openings': 0, 'max': 1},
                            'target_looks': {'eda': 0, 'sample': 1, 'total': 1},
-                           'configurations': {'tried': 0, 'reference': False}}
+                           'configurations': {'tried': 0, 'reference': False},
+                           # Owner batch of 2026-10-28 (R47, additive): the live budget.
+                           'variants': {'used': 0, 'max': 3, 'remaining': 3}}
     assert d['sample']['recorded'] is True and len(d['sample']['row_keys']) == 8
     assert d['sample']['row_keys'] == [i['row_key'] for i in
                                        f.call('data', '--study', f.study)['rows']['items']]
@@ -244,7 +246,9 @@ def test_the_binary_walkthrough(binary, tmp_path):
     assert reason['junior_text'].startswith('This rule is proposed after you saw')
     d = _digest(f)
     [proposal] = [p for p in d['open_proposals'] if p['decision_id'] == 'policy']
-    assert proposal['data_contingent'] is True and list(proposal)[-1] == 'data_contingent'
+    # Owner batch of 2026-10-28 (R40, additive): ``evidence`` now follows it, last.
+    assert proposal['data_contingent'] is True and list(proposal)[-2:] == ['data_contingent',
+                                                                          'evidence']
     assert d['texts']['en']['data_contingent'] == {proposal['proposal_id']:
                                                    reason['junior_text']}
     assert d['texts']['fr']['data_contingent'][proposal['proposal_id']].startswith(

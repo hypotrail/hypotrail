@@ -26,7 +26,7 @@ SUMMARY_REVIEW_KEYS = ('items', 'done', 'total')
 SUMMARY_DEFENSIBILITY_KEYS = ('kind', 'count', 'items')
 DEFENSIBILITY_ITEM_KEYS = ('id', 'severity')
 DEFENSIBILITY_KINDS = ('warn', 'limits', 'pending')
-SUMMARY_LEDGER_KEYS = ('final_test', 'target_looks', 'configurations')
+SUMMARY_LEDGER_KEYS = ('final_test', 'target_looks', 'configurations', 'variants')
 LEDGER_FINAL_TEST_KEYS = ('openings', 'max')
 LEDGER_LOOK_KEYS = ('eda', 'sample', 'total')
 LEDGER_CONFIGURATION_KEYS = ('tried', 'reference')
@@ -148,7 +148,20 @@ def ledger(built: Mapping, entries: list[Mapping]) -> dict:
                            else {'openings': 1 if status == 'opened' else 0, 'max': 1}),
             'target_looks': {'eda': looks, 'sample': samples, 'total': looks + samples},
             'configurations': {'tried': (built.get('trials') or {}).get('count') or 0,
-                               'reference': BASELINE in (built.get('results') or {})}}
+                               'reference': BASELINE in (built.get('results') or {})},
+            'variants': None}
+
+
+def variant_budget(state: Mapping) -> dict | None:
+    """``ledger.variants`` (R47, §17.6): the live trial budget of the study's state,
+    ``{used, max, remaining}`` (``trials.budget``: the distinct variants of every confirmed
+    ``model_variant`` value), or None in a study without the variant decision. The panel's
+    budget line reads it, never a budget a result stored at another revision."""
+    from . import state as st, trials
+    if not st.has_wp_b1_decisions(state):
+        return None
+    found = trials.budget(state)
+    return {k: found[k] for k in ('used', 'max', 'remaining')}
 
 
 # --- a result's channel (§17.2.5) ------------------------------------------------------------
@@ -391,7 +404,9 @@ def _regression_configurations(built: Mapping, value: Mapping) -> dict | None:
         return None
     values = item['values']
     models = list((item.get('params') or {}).get('models') or (values.get('models') or {}))
-    reference = _mae(values, BASELINE)
+    # R46: the error the confirmed criterion names (MAE by default, or RMSE).
+    error = criterion_mod.ERROR_METRIC.get(value.get('metric'), 'mae')
+    reference = _error(values, BASELINE, error)
     if not cite.is_number(reference):
         return None
     minimum = value['min_share']
@@ -400,23 +415,27 @@ def _regression_configurations(built: Mapping, value: Mapping) -> dict | None:
     order = _ordered(models, candidate)
     configurations = []
     for slot in order:
-        mae = _mae(values, slot)
+        mae = _error(values, slot, error)
         if not cite.is_number(mae):
             continue
-        delta = ((values.get('deltas') or {}).get(slot) or {}).get('mae')
+        delta = ((values.get('deltas') or {}).get(slot) or {}).get(error)
         gain = low = high = None
         if slot != BASELINE and isinstance(delta, Mapping) and cite.is_number(delta.get('point')):
             gain = -delta['point'] / reference
             if cite.is_number(delta.get('low')) and cite.is_number(delta.get('high')):
                 low, high = -delta['high'] / reference, -delta['low'] / reference
         configurations.append(_configuration(
-            slot, mae, item['result_id'], cite.format_path(['models', slot, 'mae']),
+            slot, mae, item['result_id'], cite.format_path(['models', slot, error]),
             mae <= bound + TOLERANCE, gain, low, high, minimum))
-    return {'metric': 'mae_reduction', 'unit': values.get('unit'),
+    return {'metric': value.get('metric') or 'mae_reduction', 'unit': values.get('unit'),
             'bound': {'value': bound, 'reference': reference, 'minimum': minimum,
                       'result_id': item['result_id'],
-                      'path': cite.format_path(['models', BASELINE, 'mae'])},
+                      'path': cite.format_path(['models', BASELINE, error])},
             'configurations': configurations}
+
+
+def _error(values, model, error: str = 'mae'):
+    return ((values.get('models') or {}).get(model) or {}).get(error)
 
 
 def _ordered(models: list[str], candidate: str | None) -> list[str]:
@@ -519,8 +538,8 @@ def _final_configuration(built: Mapping, value: Mapping, crit: Mapping,
     slot = values.get('model') or crit.get('model')
     models = values.get('models') or {}
     regression = built.get('task') == 'regression'
-    metric = 'mae' if regression else criterion_mod.DELTA_METRIC.get(value.get('metric'),
-                                                                      'precision')
+    metric = (criterion_mod.ERROR_METRIC.get(value.get('metric'), 'mae') if regression
+              else criterion_mod.DELTA_METRIC.get(value.get('metric'), 'precision'))
     reference = (models.get(BASELINE) or {}).get(metric)
     mine = (models.get(slot) or {}).get(metric)
     minimum = value.get('min_share' if regression else 'min_points')
@@ -534,6 +553,10 @@ def _final_configuration(built: Mapping, value: Mapping, crit: Mapping,
         bound = reference + minimum / 100
         meets = mine >= bound - TOLERANCE
     registered = values.get('criterion') if isinstance(values.get('criterion'), Mapping) else {}
+    if regression and metric == 'rmse':
+        # R46: the evaluation registers the MAE criterion; the RMSE one is computed from
+        # its RMSE figures (``criterion.assess``).
+        registered = final
     figure = {k: registered.get(k) if cite.is_number(registered.get(k)) else None
               for k in ('gain', 'low', 'high')}
     return {'slot': slot, 'value': mine, 'result_id': item['result_id'],
@@ -608,7 +631,23 @@ def texts(built: Mapping, lang: str, *, contingency: Mapping, has_sample: bool,
                             for pid, (flag, reason) in contingency.items()
                             if pid in open_ids and flag is True},
         'sample_note': _sample_note(lang) if has_sample else None,
+        # Owner batch of 2026-10-28 (§17.6).
+        'plan_recap': action.get('plan_recap'),
+        'step_limit': junior.step_limit(built, lang),
+        'criterion_words': criterion_words(built, lang),
     }
+
+
+def criterion_words(built: Mapping, lang: str) -> str | None:
+    """R48: the confirmed criterion in words, on the frame it is judged on: "error (MAE) on
+    the final test …" once the opened final test judges it, else the out-of-fold or
+    validation error; null without a held criterion."""
+    from . import texts as tx
+    crit = built.get('criterion') or {}
+    if crit.get('decision_status') not in ('confirmed', 'reconfirm_required'):
+        return None
+    cv = tx.scheme_of(built) == tx.CROSS_VALIDATION
+    return criterion_mod.value_words(crit.get('value'), lang, cv, crit.get('judged_on'))
 
 
 def additions(study, built: Mapping, summary_out: Mapping) -> dict:
@@ -617,14 +656,29 @@ def additions(study, built: Mapping, summary_out: Mapping) -> dict:
     records = study.revisions(0)
     entries = study.exposure_records()
     found, _ = headlines(built, summary_out)
+    from . import cmd_data, drafts
+    lang = built.get('language') or 'en'
+    verdicts = drafts.quality_verdicts(study, state, lang)
     return {'panel_contract': companion_env.PANEL_CONTRACT,
             'automation': automation(state),
             'review_queue': review_queue(state, built, records),
             'defensibility': defensibility(built, summary_out),
-            'ledger': ledger(built, entries),
+            'ledger': {**ledger(built, entries), 'variants': variant_budget(state)},
             'sample': sample(study, state, entries),
             'headlines': found,
-            'criterion_configurations': criterion_configurations(built)}
+            'criterion_configurations': criterion_configurations(built),
+            # Owner batch of 2026-10-28 (CLI-CONTRACT §17.6): the duplicates and groups known
+            # before the split (R38), and every column's quality verdict (R40, R41).
+            'data_structure': cmd_data.structure_of(study),
+            'quality_verdicts': verdicts}
+
+
+def proposal_evidence(built: Mapping, proposal: Mapping) -> list[str]:
+    """R40: the slots of the current results that show the data facts an open proposal
+    cites (``junior.evidence_slots`` for its decision); the drafted preparation's reasons
+    name the distributions concerned."""
+    action = {'decision': proposal.get('decision_id'), 'default_value': proposal.get('value')}
+    return junior.evidence_slots(action, built, proposal.get('decision_id'))
 
 
 __all__ = ['additions', 'automation', 'review_queue', 'defensibility', 'ledger', 'sample',

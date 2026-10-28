@@ -54,20 +54,26 @@ DIGEST_SUMMARY_KEYS = SUMMARY_KEYS + ('moments', 'pauses', 'last_session', 'dige
                                       # after ``texts``, in this order.
                                       'panel_contract', 'automation', 'review_queue',
                                       'defensibility', 'ledger', 'sample', 'headlines',
-                                      'criterion_configurations')
+                                      'criterion_configurations',
+                                      # Owner batch of 2026-10-28 (§17.6, additive).
+                                      'data_structure', 'quality_verdicts')
 # L3: the tables of ``texts.<language>`` (``view.LANGUAGE_TEXT_KEYS``); contract P1 (§17.2.3)
 # appends the awaited question and its options, the explanation, the headlines, the
 # data-contingent marks and the sample's note.
 LANGUAGE_TEXT_KEYS = ('plan', 'moments', 'next_action', 'choice_options', 'limits',
                       'artifacts', 'recap', 'digest', 'goal', 'proposals', 'question',
                       'options', 'options_note', 'junior_digest', 'headlines',
-                      'data_contingent', 'sample_note')
+                      'data_contingent', 'sample_note',
+                      # Owner batch of 2026-10-28 (§17.6, additive).
+                      'plan_recap', 'step_limit', 'criterion_words')
 # Contract P1 (CLI-CONTRACT §17.2): the keys of the digest additions, and the keys added
 # inside existing structures with ``--digest`` only.
 SUMMARY_AUTOMATION_KEYS = ('variant', 'active', 'started_revision', 'ended')
 SUMMARY_REVIEW_KEYS = ('items', 'done', 'total')
 SUMMARY_DEFENSIBILITY_KEYS = ('kind', 'count', 'items')
-SUMMARY_LEDGER_KEYS = ('final_test', 'target_looks', 'configurations')
+SUMMARY_LEDGER_KEYS = ('final_test', 'target_looks', 'configurations',
+                       # Owner batch of 2026-10-28 (R47, §17.6): the live trial budget.
+                       'variants')
 SUMMARY_SAMPLE_KEYS = ('seed', 'row_keys', 'recorded')
 HEADLINE_KEYS = ('decision_id', 'basis', 'results')
 SUMMARY_CRITERION_CONFIG_KEYS = ('metric', 'unit', 'bound', 'configurations', 'final_test')

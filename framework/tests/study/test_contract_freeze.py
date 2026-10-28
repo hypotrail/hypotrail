@@ -1434,19 +1434,21 @@ def test_panel_contract_p1_digest_keys(tmp_path, synthetic_case_dir):
     (without ``--digest``) keeps exactly its keys."""
     import companion_contract as cc
     from mlkit.study import audience, panel_digest as pd
-    assert view.DIGEST_SUMMARY_KEYS[-8:] == ('panel_contract', 'automation', 'review_queue',
-                                             'defensibility', 'ledger', 'sample', 'headlines',
-                                             'criterion_configurations')
-    assert view.LANGUAGE_TEXT_KEYS[10:] == ('question', 'options', 'options_note',
-                                            'junior_digest', 'headlines', 'data_contingent',
-                                            'sample_note')
+    # The owner batch of 2026-10-28 appends its keys after these (§17.6, additive; see
+    # test_owner_batch_2026_10_28_digest_keys), so the P1 keys are read by position.
+    assert view.DIGEST_SUMMARY_KEYS[-10:-2] == ('panel_contract', 'automation', 'review_queue',
+                                                'defensibility', 'ledger', 'sample',
+                                                'headlines', 'criterion_configurations')
+    assert view.LANGUAGE_TEXT_KEYS[10:17] == ('question', 'options', 'options_note',
+                                              'junior_digest', 'headlines', 'data_contingent',
+                                              'sample_note')
     for name in ('SUMMARY_AUTOMATION_KEYS', 'SUMMARY_REVIEW_KEYS', 'SUMMARY_DEFENSIBILITY_KEYS',
                  'SUMMARY_LEDGER_KEYS', 'SUMMARY_SAMPLE_KEYS', 'HEADLINE_KEYS',
                  'SUMMARY_CRITERION_CONFIG_KEYS', 'CRITERION_BOUND_KEYS',
                  'CRITERION_CONFIGURATION_KEYS', 'FINAL_CONFIGURATION_KEYS'):
         assert getattr(pd, name) == getattr(cc, name), name
     assert audience.SEVERITIES == ('blocking', 'caveat', 'not_final', 'context')
-    for key in view.DIGEST_SUMMARY_KEYS[-8:] + view.LANGUAGE_TEXT_KEYS[10:]:
+    for key in view.DIGEST_SUMMARY_KEYS[-10:-2] + view.LANGUAGE_TEXT_KEYS[10:17]:
         assert f'`{key}`' in DOC, key
     study = tmp_path / 'study'
     assert _run('init', '--case', synthetic_case_dir, '--study', study).exit_code == 0
@@ -1461,6 +1463,32 @@ def test_panel_contract_p1_digest_keys(tmp_path, synthetic_case_dir):
     assert tuple(full['defensibility']) == cc.SUMMARY_DEFENSIBILITY_KEYS
     for lang in ('en', 'fr'):
         assert tuple(full['texts'][lang]) == cc.LANGUAGE_TEXT_KEYS
+
+
+def test_owner_batch_2026_10_28_digest_keys():
+    """Owner batch of 2026-10-28 (CLI-CONTRACT §17.6, additive): the digest keys after
+    ``criterion_configurations``, the ``texts`` additions, the ledger's live budget, the
+    structure of the step-1 card, the quality verdicts, the evidence of a proposal, the
+    plan recap, the panel line's form (R35); every name documented."""
+    from mlkit.study import cmd_data, companion_env as ce, drafts, junior
+    assert view.DIGEST_SUMMARY_KEYS[-2:] == ('data_structure', 'quality_verdicts')
+    assert view.LANGUAGE_TEXT_KEYS[-3:] == ('plan_recap', 'step_limit', 'criterion_words')
+    assert cmd_data.STRUCTURE_KEYS == ('duplicates', 'groups')
+    assert cmd_data.STRUCTURE_DUPLICATE_KEYS == ('rows', 'identical_feature_rows')
+    assert cmd_data.STRUCTURE_GROUP_KEYS == ('column', 'groups', 'rows_in_repeated_groups')
+    assert drafts.VERDICT_KEYS == ('column', 'kept', 'changed', 'parameters', 'checks', 'text')
+    assert drafts.CHECK_KEYS == ('rule', 'value', 'threshold', 'exceeds', 'path', 'words')
+    assert ce.LINE_MARK == {'en': '> 🧭 **Panel** · ', 'fr': '> 🧭 **Panneau** · '}
+    assert ce.SESSION_GAP_MINUTES == view.SESSION_GAP_MINUTES == 20
+    assert set(junior.EVIDENCE_SLOTS) == {'preprocessing', 'model_variant', 'model_choice',
+                                          'policy', 'conclusion'}
+    flat = ' '.join(DOC.split())
+    for key in ('data_structure', 'quality_verdicts', 'plan_recap', 'step_limit',
+                'criterion_words', 'evidence', 'variants', 'identical_feature_rows',
+                'rows_in_repeated_groups', 'rmse_reduction', 'verdicts',
+                'drafts.quality_verdicts', 'companion_env.SESSION_GAP_MINUTES'):
+        assert f'`{key}`' in DOC, key
+    assert '> 🧭 **Panneau** · <place>' in flat
 
 
 def test_l7_after_study_and_structure_limit_contract():

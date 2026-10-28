@@ -515,6 +515,31 @@ def duplicates_line(out: Mapping, group_policy: bool, lang: str) -> str:
               f"{out['n_groups']} groupes de lignes identiques.")
 
 
+def structure_lines(duplicates: Mapping, groups: list, lang: str) -> list[str]:
+    """R38: the data card's lines on rows identical in what describes them and on the
+    declared groups, known before the split (``data --json`` ``development``)."""
+    out = []
+    twins = duplicates.get('identical_feature_rows')
+    if isinstance(twins, int) and twins:
+        out.append(_t(lang, f'{twins} development rows are identical to another row on every '
+                            'column that describes them (their target may differ): split '
+                            'apart, a row is predicted from its twin.',
+                      f"{twins} lignes de l'échantillon de développement sont identiques à une "
+                      "autre sur toutes les colonnes qui les décrivent (leur cible peut "
+                      "différer) : séparée de sa jumelle, une ligne est prédite à partir "
+                      "d'elle."))
+    for g in groups or []:
+        n, rows = g.get('groups'), g.get('rows_in_repeated_groups')
+        if not isinstance(n, int):
+            continue
+        out.append(_t(lang, f'{g["column"]}: {n} distinct values; {rows} rows share their value '
+                            'with another row, so the folds can put a group on both sides.',
+                      f'{g["column"]} : {n} valeurs distinctes ; {rows} lignes partagent leur '
+                      'valeur avec une autre ligne : les plis peuvent mettre un même groupe '
+                      'des deux côtés.'))
+    return out
+
+
 DATA_NOTE_FR = ("Ce sont uniquement des lignes de l'échantillon de développement ; "
                 "l'échantillon de test final reste scellé. La fiche montre le sens des colonnes "
                 'et quelques lignes, jamais la fréquence du résultat : elle est explorée après '
@@ -651,14 +676,19 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
                   'the estimate rests on more rows than one validation set.',
             'La validation croisée à k plis utilise chaque ligne de développement une fois en '
             'validation : l\'estimation repose sur plus de lignes qu\'un seul jeu de '
-            'validation.'),
+            'validation.') + (_t(lang, f' Here k = {value["folds"]}: {value["folds"]} folds.',
+                                 f' Ici k = {value["folds"]} : {value["folds"]} plis.')
+                              if isinstance(value, Mapping) and isinstance(value.get('folds'), int)
+                              and not isinstance(value.get('folds'), bool) else ''),
         'preprocessing': _t(
-            lang, 'The default changes nothing (no indicator, no grouping, no cap, no '
-                  'transform), so the results stay comparable and nothing is tuned on the '
-                  'outcome.',
-            'Le choix par défaut ne change rien (ni indicateur, ni regroupement, ni plafond, '
-            'ni transformation) : les résultats restent comparables et rien n\'est ajusté sur '
-            'le résultat.'),
+            # R39: "no indicator" says what it means (missing cells are still imputed).
+            lang, 'The default changes nothing (no missing-value indicator column, missing '
+                  'cells still imputed; no grouping, no cap, no transform), so the results '
+                  'stay comparable and nothing is tuned on the outcome.',
+            'Le choix par défaut ne change rien (pas de colonne indicatrice de valeur '
+            'manquante, les cellules manquantes restant imputées ; ni regroupement, ni '
+            'plafond, ni transformation) : les résultats restent comparables et rien n\'est '
+            'ajusté sur le résultat.'),
         'model_variant': _t(
             lang, 'The penalty chosen by nested cross-validation is the simplest check that '
                   'the candidate is not fitting noise; it counts as one trial of the budget of '
@@ -769,6 +799,16 @@ def _recommended_criterion(action: Mapping, lang: str) -> dict | None:
                  f"L'option du milieu, {pct} % d'erreur en moins que la moyenne de référence : "
                  'un seuil modéré, choisi par convention et non à partir des coûts de ce cas. '
                  "Gardez-le, ou indiquez le minimum dont votre équipe a besoin.")
+        if any(m.get('metric') == 'rmse_reduction' for m in options.get('metrics') or []):
+            # R46: the metric is a decision; MAE is proposed by default, and why.
+            why += _t(lang, ' The metric is the mean absolute error (MAE): every error weighs '
+                            'the same and it reads in the unit of the target. Choose the RMSE '
+                            'instead if one big miss is much worse than '
+                            'several small ones.',
+                      " La métrique est l'erreur absolue moyenne (MAE) : chaque erreur pèse "
+                      "autant et elle se lit dans l'unité de la cible. Choisissez plutôt la "
+                      'RMSE si une grosse erreur est bien pire que plusieurs '
+                      'petites.')
         return {'value': value, 'why': why}
     default = options.get('default_metric')
     if isinstance(default, str) and default != value.get('metric'):
@@ -810,6 +850,16 @@ def audience_metric(metric: str, lang: str) -> str:
     return _t(lang, 'precision', 'précision')
 
 
+def _k_folds(action: Mapping) -> int | None:
+    """The number of folds of the split value an action proposes or waits on, else None."""
+    for value in (action.get('default_value'), (action.get('recommended') or {}).get('value')
+                  if isinstance(action.get('recommended'), Mapping) else None):
+        folds = value.get('folds') if isinstance(value, Mapping) else None
+        if isinstance(folds, int) and not isinstance(folds, bool) and folds > 1:
+            return folds
+    return None
+
+
 def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> str | None:
     kind = action.get('kind')
     decision = action.get('decision')
@@ -842,8 +892,13 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
                                          'must be excluded?',
                                    'Quelles colonnes sont connues à ce moment-là, et lesquelles '
                                    'faut-il exclure ?'),
-        'split': _t(lang, 'Do you evaluate with this k-fold cross-validation?',
-                    'Évaluez-vous avec cette validation croisée à k plis ?') if cv else
+        # R36: k is stated (the folds of the drafted value) when it is known.
+        'split': (_t(lang, f'Do you evaluate with this {_k_folds(action)}-fold cross-validation '
+                           f'(k = {_k_folds(action)})?',
+                     f'Évaluez-vous avec cette validation croisée à {_k_folds(action)} plis '
+                     f'(k = {_k_folds(action)}) ?') if _k_folds(action) else
+                  _t(lang, 'Do you evaluate with this k-fold cross-validation?',
+                     'Évaluez-vous avec cette validation croisée à k plis ?')) if cv else
         _t(lang, 'How should the rows be divided between the training set and the validation '
                  'set?',
            "Comment répartir les lignes entre le jeu d'entraînement et le jeu de validation ?"),
@@ -852,10 +907,13 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
                                  'Quelle métrique, et quel gain minimum sur le modèle de '
                                  'référence, rendraient le modèle utile ?')
                               if task == st.BINARY else
-                              _t(lang, 'Which minimum reduction of the baseline\'s error would '
-                                       'make the model worth using?',
-                                 'Quelle réduction minimale de l\'erreur de référence rendrait '
-                                 'le modèle utile ?')),
+                              # R46: the metric is part of the question (MAE or RMSE).
+                              _t(lang, 'Which error (MAE by default, or RMSE), and which minimum '
+                                       'reduction of the baseline\'s error, would make the '
+                                       'model worth using?',
+                                 'Quelle erreur (la MAE par défaut, ou la RMSE), et quelle '
+                                 'réduction minimale de l\'erreur de référence, rendraient le '
+                                 'modèle utile ?')),
         'preprocessing': (_t(lang, 'Do you keep this preparation, drafted from the quality '
                                    'check, or the default, or change one parameter for a '
                                    'reason you can state?',
@@ -1316,10 +1374,161 @@ def enrich(view: dict, state: Mapping, case=None, *, accepts=None) -> dict:
     action['recommended'] = recommended
     action['question'] = _question(action, view, lang, ctx['cv'])
     action['junior_digest'] = _digest(action, view, state, ctx, lang)
+    # Owner batch of 2026-10-28: the plan in its real order (R36, R37) and the registered
+    # results that show the data facts the step cites (R40).
+    action['plan_recap'] = plan_recap(view, state, action, lang)
+    action['evidence'] = evidence_slots(action, view)
     choices = choice_options(action, state, lang, accepts)
     if choices:
         action['choice_options'] = choices
     return view
+
+
+# --- the plan recap (R36, R37) and the evidence of a step (R40) -----------------------------
+
+PLAN_RECAP_WORDS = {
+    EN: {'lead': 'The plan, in order: ', 'join': ', ', 'moments': '; ',
+         'current': 'Current step: {step} ({n} of {total}).',
+         'done': 'Every step of the plan is done.'},
+    FR: {'lead': "Le plan, dans l'ordre : ", 'join': ', ', 'moments': ' ; ',
+         'current': 'Étape actuelle : {step} ({n} sur {total}).',
+         'done': 'Toutes les étapes du plan sont faites.'},
+}
+
+
+def plan_recap(view: Mapping, state: Mapping, action: Mapping | None, lang: str) -> str:
+    """``next_action.plan_recap``: the study's own plan, its moments and their steps in plan
+    order (the panel's short step names, ``companion_env.STEP_LABELS``), then the current
+    step; never a fixed list, so a structural-first study reads Quality, Preparation,
+    Exploration in that order (R36, R37)."""
+    from . import companion_env as ce
+    from . import view as vw
+    words = PLAN_RECAP_WORDS[FR if lang == FR else EN]
+    plan = list(view.get('plan') or [])
+    ids = [s.get('id') for s in plan]
+    try:
+        moments = vw.moments(view.get('task') or st.BINARY, state)
+    except Exception:                    # noqa: BLE001 - a plan without moments: one list
+        moments = [{'title': '', 'steps': ids}]
+    parts = []
+    for m in moments:
+        steps = [s for s in m.get('steps') or [] if s in ids]
+        if not steps:
+            continue
+        names = words['join'].join(ce.step_label(s, lang) for s in steps)
+        parts.append(f'{m["title"]} ({names})' if m.get('title') else names)
+    text = words['lead'] + words['moments'].join(parts) + '.'
+    current = ce.current_step(action, plan)
+    if (action or {}).get('kind') == 'done' or current not in ids:
+        return f'{text} {words["done"]}' if (action or {}).get('kind') == 'done' else text
+    return f'{text} ' + words['current'].format(step=ce.step_label(current, lang),
+                                                n=ids.index(current) + 1, total=len(ids))
+
+
+# R43, R48 (owner batch of 2026-10-28): the one limit that fits the current step, for the
+# panel's limit line (``texts.<lang>.step_limit`` of the digest).
+STEP_LIMITS = {
+    'frame': (
+        'Nothing is measured yet: these decisions fix the protocol before any model is fitted.',
+        "Rien n'est encore mesuré : ces décisions fixent le protocole avant tout modèle."),
+    'structural_eda': (
+        'This check reads the development rows without the target: it is not a look at the '
+        'target.',
+        "Ce contrôle lit les lignes de développement sans la cible : ce n'est pas un regard "
+        'sur la cible.'),
+    'preprocessing': (
+        'The preparation is decided from target-free checks, before any look at the target.',
+        'La préparation est décidée à partir de contrôles sans la cible, avant tout regard sur '
+        'la cible.'),
+    'train_eda': (
+        'These charts read the target of the development rows: each look is counted.',
+        'Ces graphiques lisent la cible des lignes de développement : chaque regard est '
+        'compté.'),
+    'final': (
+        'The final test measures the chosen configuration once, on rows no choice used: it is '
+        "the study's independent evidence. It does not establish the performance on later "
+        'periods or other data, nor a causal effect.',
+        "Le test final mesure une fois la configuration choisie, sur des lignes qu'aucun choix "
+        "n'a utilisées : c'est la preuve indépendante de l'étude. Il n'établit ni la "
+        "performance sur d'autres périodes ou d'autres données, ni un effet causal."),
+}
+FRAME_STEPS = ('discover_data', 'prediction_time', 'feature_availability', 'split',
+               st.SUCCESS_CRITERION)
+
+
+def step_limit(view: Mapping, lang: str) -> str | None:
+    """The limit line of the current step (R43, R48): the framing steps measure nothing yet;
+    the quality check reads no target; the exploration's charts are counted looks; the
+    models, variants and choice rest on development evidence (the study's
+    ``validation_is_not_independent`` limit); the final test and the conclusion say what the
+    final test does and does not establish."""
+    from . import companion_env as ce
+    action = view.get('next_action') or {}
+    plan = list(view.get('plan') or [])
+    step = ce.current_step(action, plan)
+    if action.get('kind') == 'done' or step == 'conclusion' or _final_opened(view):
+        return STEP_LIMITS['final'][lang == FR]
+    if step in FRAME_STEPS:
+        return STEP_LIMITS['frame'][lang == FR]
+    if step in STEP_LIMITS:
+        return STEP_LIMITS[step][lang == FR]
+    item = next((x for x in view.get('not_yet_defensible') or []
+                 if x.get('id') == 'validation_is_not_independent'), None)
+    return (item.get('junior_text') or item.get('text')) if item else None
+
+
+def _final_opened(view: Mapping) -> bool:
+    status = ((view.get('final_test') or {}).get('status'))
+    return status == 'opened'
+
+
+# The registered results each data-backed decision rests on (R40): the panel places their
+# figures in Now, the report beside the decision.
+EVIDENCE_SLOTS = {
+    st.PREPROCESSING: ('eda.quality',),
+    st.MODEL_VARIANT: ('diag.regression', 'diag.binary'),
+    'model_choice': ('evaluate.regression', 'policy.evaluation', 'diag.regression',
+                     'diag.binary'),
+    'policy': ('policy.evaluation', 'diag.binary'),
+    'conclusion': ('final_test.evaluation', 'diag.final_test'),
+}
+
+
+def evidence_slots(action: Mapping, view: Mapping, decision: str | None = None) -> list[str]:
+    """The slots of the current results (integrity ok) that show the data facts a proposal
+    of ``decision`` (default: the action's) cites (R40): the quality check and the
+    distributions of the columns a drafted preparation names, the linear model's diagnostics
+    for the variants, the evaluation and its diagnostics for the model choice or the rule,
+    the final evaluation and its diagnostics for the conclusion. Empty for a decision that
+    rests on no data (the moment, the availability, the split, the criterion) and for a
+    run."""
+    action = action or {}
+    decision = decision or action.get('decision')
+    if action.get('kind') == 'done':
+        decision = 'conclusion'
+    if action.get('kind') == 'run' or decision not in EVIDENCE_SLOTS:
+        return []
+    results = view.get('results') or {}
+
+    def usable(slot):
+        item = results.get(slot) or {}
+        return bool(item.get('current')) and item.get('integrity', 'ok') == 'ok'
+    slots = [s for s in EVIDENCE_SLOTS[decision] if usable(s)]
+    if decision == st.PREPROCESSING:
+        columns = [r.get('column') for r in
+                   ((action.get('recommended') or {}).get('reasons') or [])
+                   if isinstance(action.get('recommended'), Mapping)]
+        value = action.get('default_value')
+        if isinstance(value, Mapping):
+            columns += list(value.get('log_transform') or [])
+            for key in ('caps', 'missing', 'rare_category_min_rows'):
+                if isinstance(value.get(key), Mapping):
+                    columns += list(value[key])
+        for column in dict.fromkeys(c for c in columns if isinstance(c, str)):
+            slot = f'eda.distribution:{column}'
+            if usable(slot) and slot not in slots:
+                slots.append(slot)
+    return slots
 
 
 # --- the study panel's texts (contract P1, CLI-CONTRACT §17.2.3) ----------------------------

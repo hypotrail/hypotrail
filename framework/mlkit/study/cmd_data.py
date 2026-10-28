@@ -120,6 +120,65 @@ def _duplicates(case, dataset, lang: str = 'en') -> dict:
                                                   lang)}
 
 
+# Owner batch of 2026-10-28 (R38): the structural facts that condition the split, known at
+# step 1 (CLI-CONTRACT §17.6). Development rows only, counted without reading a value out.
+STRUCTURE_KEYS = ('duplicates', 'groups')
+STRUCTURE_DUPLICATE_KEYS = ('rows', 'identical_feature_rows')
+STRUCTURE_GROUP_KEYS = ('column', 'groups', 'rows_in_repeated_groups')
+GROUP_ROLES = ('group_id', 'identifier')
+DESCRIBING_ROLES = ('feature', 'time')
+
+
+def structure(case, frame) -> dict:
+    """``{duplicates: {rows, identical_feature_rows}, groups: [{column, groups,
+    rows_in_repeated_groups}]}`` of the development rows ``frame`` (R38):
+
+    * ``duplicates.rows``: rows identical to another row on every column, the target included
+      (``data.duplicate_summary``'s ``n_rows``, counted here on the frame);
+    * ``duplicates.identical_feature_rows``: rows identical to another row on every column
+      that describes it (role ``feature`` or ``time``), whatever their target, identifier or
+      group: a pair split across folds is predicted from its twin;
+    * ``groups``: for each declared group or identifier column (role ``group_id`` or
+      ``identifier``, and the case's ``structure.group_column``), the number of distinct
+      values and the rows whose value occurs more than once (rows that the folds can divide);
+      a missing value forms no group.
+    The target is compared, never shown."""
+    columns = [c for c in case.column_names if c in frame.columns]
+    describing = [v['name'] for v in case.document['variables']
+                  if v['role'] in DESCRIBING_ROLES and v['name'] in frame.columns]
+    rows = int(frame[columns].duplicated(keep=False).sum()) if columns and len(frame) else 0
+    twins = (int(frame[describing].duplicated(keep=False).sum())
+             if describing and len(frame) else 0)
+    grouped = [v['name'] for v in case.document['variables']
+               if v['role'] in GROUP_ROLES and v['name'] in frame.columns]
+    declared = (((case.document.get('structure') or {}).get('group_column') or {})
+                .get('value'))
+    if isinstance(declared, str) and declared in frame.columns and declared not in grouped:
+        grouped.append(declared)
+    groups = []
+    for column in grouped:
+        values = frame[column].dropna()
+        counts = values.value_counts()
+        groups.append({'column': column, 'groups': int(len(counts)),
+                       'rows_in_repeated_groups': int(counts[counts > 1].sum())})
+    return {'duplicates': {'rows': rows, 'identical_feature_rows': twins}, 'groups': groups}
+
+
+def structure_of(study) -> dict | None:
+    """:func:`structure` of a study's development rows (the digest's ``data_structure``),
+    or None when the case or its data cannot be read."""
+    from . import case as c
+    from . import data as dt
+    from . import partition
+    try:
+        state = study.state
+        case = c.case_of(state, verify_data=True)
+        keys = partition.development_keys(study.blob, partition.inputs(state))
+        return structure(case, dt.load_development(case, keys).frame)
+    except Exception:                     # noqa: BLE001 - a read never fails on this addition
+        return None
+
+
 def sample_rows(study, frame, case) -> dict:
     """``rows`` (:data:`ROWS_KEYS`): the seeded step-1 sample (contract P1.9), target first,
     in row-key order. The target is shown only once the look is recorded
@@ -257,6 +316,11 @@ def card(study_dir) -> dict:
                  'junior_text': junior.DATA_NOTE_FR if language == 'fr' else NOTE},
         'special_rows': special_rows,
     }
+    # R38 (CLI-CONTRACT §17.6): duplicates and groups known before the split, additive keys
+    # of ``development`` (after its earlier keys).
+    found = structure(case, frame)
+    payload['development']['duplicates'].update(found['duplicates'])
+    payload['development']['groups'] = found['groups']
     payload['note']['text'] = ' '.join(filter(None, (
         NOTE, assurance.scope_notice(case))))
     payload['note']['junior_text'] = ' '.join(filter(None, (
@@ -324,6 +388,10 @@ def text(payload: Mapping) -> str:
     lines = [f'{w["one_row"]}{colon}{say(unit, unit.get("value")) or w["not_stated"]}',
              w['development'].format(rows=dev['rows'], columns=dev['columns']),
              dev['duplicates']['junior_text'] if junior else dev['duplicates']['line']]
+    # R38: near-duplicates and declared groups, before the split.
+    from . import junior as jr
+    lines.extend(jr.structure_lines(dev.get('duplicates') or {}, dev.get('groups') or [],
+                                    'fr' if junior else 'en'))
     description = (t.get('description_fr') if junior else None) or t['description']
     if t['task'] == 'binary':
         labels = ' / '.join(str(x) for x in (t['positive_label'], t['negative_label'])

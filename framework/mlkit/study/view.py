@@ -1652,6 +1652,13 @@ def _runnable(study: read.Study, state: Mapping, action: dict | None) -> dict | 
         # Round 5 (review E, R5E-8): after the opening, a decision proposed while the final
         # evaluation is not current says so too (E4-2 for the runs).
         action = _with_final_test_notice(study, state, action)
+    if kind in ('run', 'propose') and st.structural_first(state):
+        # Owner batch of 2026-10-28 (R40, R45): on the way to the models, the exploration
+        # step runs the case catalogue's charts itself, each target chart a counted look.
+        from . import drafts
+        run = drafts.exploration_run(study, state, action, st.language_of(state))
+        if run is not None:
+            return run
     if kind == 'propose' and st.structural_first(state) \
             and action.get('decision') in (st.PREPROCESSING, st.MODEL_VARIANT):
         # Owner session 2026-10-26 (L5, R5, R13; D6, D9): the drafts read the evidence. The
@@ -1957,8 +1964,10 @@ def _wp_f1(state: dict, results: dict) -> dict:
     values = diag.get('values') if diag.get('integrity') == 'ok' else None
     # Owner session 2026-10-26 (L5, R14, D10): each family in the junior's words, and why no
     # random forest (additive keys ``families[].junior_words``, ``not_offered``).
-    from . import drafts
-    return {'model_selection': tr.selection(results, state, task),
+    from . import criterion as criterion_mod, drafts
+    # R46: the one-standard-error selection on the error the criterion names (MAE unless the
+    # junior chose RMSE).
+    return {'model_selection': criterion_mod.selection(results, state, task),
             'model_families': drafts.with_junior_words(
                 tr.shortlist(document, values, task, st.language_of(state),
                              diag.get('result_id')), st.language_of(state))}
@@ -2080,7 +2089,10 @@ DIGEST_SUMMARY_KEYS = ('moments', 'pauses', 'last_session', 'digest', 'task', 'c
                        # Contract P1 (CLI-CONTRACT §17.2, the one-page study panel): after
                        # ``texts``, in this order (:mod:`mlkit.study.panel_digest`).
                        'panel_contract', 'automation', 'review_queue', 'defensibility',
-                       'ledger', 'sample', 'headlines', 'criterion_configurations')
+                       'ledger', 'sample', 'headlines', 'criterion_configurations',
+                       # Owner batch of 2026-10-28 (CLI-CONTRACT §17.6): the structure known
+                       # before the split (R38) and every column's quality verdict (R41).
+                       'data_structure', 'quality_verdicts')
 # ``texts.<language>``: where each junior text of the summary is, by its id (L3, D4b).
 LANGUAGE_TEXT_KEYS = ('plan', 'moments', 'next_action', 'choice_options', 'limits',
                       'artifacts', 'recap', 'digest', 'goal', 'proposals',
@@ -2088,7 +2100,11 @@ LANGUAGE_TEXT_KEYS = ('plan', 'moments', 'next_action', 'choice_options', 'limit
                       # and why, the explanation, the headlines, the data-contingent marks,
                       # the step-1 sample's note.
                       'question', 'options', 'options_note', 'junior_digest', 'headlines',
-                      'data_contingent', 'sample_note')
+                      'data_contingent', 'sample_note',
+                      # Owner batch of 2026-10-28 (§17.6): the plan in its order (R36), the
+                      # limit of the current step (R43, R48), the criterion in words on the
+                      # frame it is judged on (R48).
+                      'plan_recap', 'step_limit', 'criterion_words')
 # The engine's own texts of ``texts.fr``, set in French typography (a narrow no-break space
 # before ; : ? ! », after «); the others are the junior's or the agent's words, as written.
 FRENCH_TYPOGRAPHY_KEYS = tuple(k for k in LANGUAGE_TEXT_KEYS if k not in ('goal', 'proposals'))
@@ -2548,7 +2564,10 @@ def with_digest(study: read.Study, built: dict, summary_out: dict, *,
     out['open_proposals'] = [{**p, 'origin': (state['proposals'].get(p['proposal_id']) or {})
                               .get('origin'),
                               'data_contingent': contingency.get(p['proposal_id'],
-                                                                 (None, None))[0]}
+                                                                 (None, None))[0],
+                              # Owner batch of 2026-10-28 (R40, §17.6): the results that
+                              # show the data facts the proposal cites.
+                              'evidence': panel_digest.proposal_evidence(built, p)}
                              for p in summary_out['open_proposals']]
     start = session['boundary_revision'] if since is None else since
     out.update({'moments': moments(built['task'], state), 'pauses': pauses(state),
