@@ -36,6 +36,7 @@ import re
 from typing import Mapping
 
 from . import audience, cite, render_charts, render_guide as g, texts
+from . import render_evidence as ev
 from . import render_html as rh
 from . import render_narrative as rn
 
@@ -101,6 +102,11 @@ def model_names(view: Mapping, language: str) -> dict[str, str]:
     """The display names of the variants (R26: by their family)."""
     from . import trials
     out = {}
+    if view.get('task') == 'regression':
+        # R45, R48: the reference is "reference (predict the mean)", never "training mean".
+        out['fit.baseline'] = texts.say(texts.lesson('models.baseline_regression'), language)
+        out['phrase:fit.baseline'] = texts.say(
+            texts.lesson('models.baseline_regression_phrase'), language)
     for slot, item in (view.get('results') or {}).items():
         if not slot.startswith('fit.variant') or not isinstance(item.get('values'), Mapping):
             continue
@@ -564,9 +570,29 @@ def _verdict(c) -> str:
         crit = f'<div class="crit"><b>{e(label)}</b>{stamp_html} : {text}{extra}</div>' \
             if c.lang == 'fr' else \
             f'<div class="crit"><b>{e(label)}</b>{stamp_html}: {text}{extra}</div>'
+    # R52: a regression's development and final evidence in one table, configuration by
+    # configuration; the criterion is its last row, judged on the final test once opened.
+    table = ev.regression_table(view, citer) if task == 'regression' else ''
+    evidence_html = table if table else f'<div class="vgrid">{boxes}</div>{crit}'
     # figure V
     figure = ''
-    if task == 'regression':
+    fin = citer.slot_rid('final_test.evaluation')
+    if task == 'regression' and table and fin:
+        # R52, R48: once the final test is opened, figure V draws the table's values as dots
+        # with their intervals, development and final side by side, the final-test bound.
+        fv = citer.results[fin].values
+        dev = citer.slot_rid('evaluate.regression')
+        m = cite.format_path(['models', str(fv.get('model')), 'mae'])
+        b = cite.format_path(['models', 'fit.baseline', 'mae'])
+        dots = ev.evidence_dots(view, citer)
+        if dots and dev and citer.has(dev, m) and citer.has(fin, m) and citer.has(fin, b):
+            figure = c.frame('verdict', 'evidence_dots', dots,
+                             values={'dev': citer.num(dev, m, 'f2'),
+                                     'final': citer.num(fin, m, 'f2'),
+                                     'base': citer.num(fin, b, 'f2')},
+                             slot='final_test.evaluation', evidence='final',
+                             frame_html=g.frame_line('final', rn._frame_rows(c, fin)))
+    elif task == 'regression':
         rid = citer.slot_rid('evaluate.regression')
         if rid:
             values = citer.results[rid].values
@@ -616,7 +642,7 @@ def _verdict(c) -> str:
             f'<div class="card verdict plain">'
             f'<div class="lbl">{g.t("verdict.label", revision=rh.lit("revision", view["revision"]))} '
             f'{g.stamp("real")}</div>{big}'
-            f'<div class="vgrid">{boxes}</div>{crit}{figure}{plan}{limits_html}'
+            f'{evidence_html}{figure}{plan}{limits_html}'
             f'{where}{links}</div></section>')
 
 
@@ -766,7 +792,8 @@ def _appendix(view: Mapping, citer: cite.Citer, surfaces: Mapping) -> str:
 # --- style ------------------------------------------------------------------------------------
 
 def css() -> str:
-    return CSS + render_charts.CHART_CSS_LESSON
+    from . import render_evidence
+    return CSS + render_charts.CHART_CSS_LESSON + render_evidence.CSS
 
 
 CSS = r'''

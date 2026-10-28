@@ -653,7 +653,10 @@ def _table(citer: cite.Citer, rid: str, table: Mapping, items: list) -> str:
 def slot_title(slot: str) -> str:
     """The title of a result in the edition's language: a variant by its family (R26), else
     the activity's label."""
-    if slot.startswith('fit.variant'):
+    if slot.startswith('fit.variant') or (slot == 'fit.baseline'
+                                          and (_MODEL_NAMES.get() or {}).get(slot)):
+        # R45: the lesson report names the regression reference "reference (predict the
+        # mean)" (``render_lesson.model_names``).
         return model_name(slot)
     return texts.activity(slot).get('label') or _labels().get('slot_labels', {}).get(slot, slot)
 
@@ -1257,6 +1260,9 @@ def model_phrase(model: str) -> str:
     """A model named inside a sentence, with its article: "the linear model", "la variante
     EBM (modèle non linéaire lisible)"."""
     lang = texts.report_language()
+    named = (_MODEL_NAMES.get() or {}).get('phrase:' + str(model))
+    if named:
+        return named
     if model in ('fit.linear', 'fit.logistic', 'fit.baseline'):
         return audience.model_words(model, lang)
     return ('la ' if lang == 'fr' else 'the ') + _lower_first(_model_name(model))

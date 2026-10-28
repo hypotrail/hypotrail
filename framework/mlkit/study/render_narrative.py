@@ -35,6 +35,7 @@ import re
 from typing import Mapping
 
 from . import cite, render_charts, render_diagnostics, render_guide as g, render_trials, texts
+from . import render_evidence as ev
 from . import render_html as rh
 
 e = html.escape
@@ -403,6 +404,15 @@ def _ch1(c: Context, steps, status) -> Parts:
         sealed_n = final.get('rows') if 'sealed' in rows else 0
         bar = render_charts.parts_bar(view['dataset']['rows'], dev_n or 0, sealed_n or 0,
                                       language, opened=opened)
+        method = final.get('method')
+        if bar and sealed_n and g.has(f'evidence.methods.{method}') \
+                and cite.is_number(final.get('fraction')):
+            # R53: how the sealed rows were drawn, from the study state.
+            bar += (f'<p class="cap" data-partition-method="{e(str(method))}">'
+                    + ev.t('partition_how', method=e(ev.say(f'methods.{method}')),
+                           fraction=lit('structure', cite.format_value(
+                               final['fraction'], 'pct0', language)))
+                    + '</p>')
         p.evidence.append(c.frame(
             'ch1', 'parts', bar, stamp_kind='state',
             values={k: rows[k] for k in ('total', 'dev', 'sealed') if k in rows},
@@ -600,6 +610,15 @@ def _ch3(c: Context, steps, status) -> Parts:
                                     e(g.say('ui.frame_words.no_model')))))
         if folds:
             p.plus.append((fvalues['folds'], g.t('chapters.ch3.plus.folds')))
+            rotation = ev.cv_rotation(citer, rid, values)
+            if rotation and rows.get('dev'):
+                p.evidence.append(c.frame(
+                    'ch3', 'cv_rotation', rotation, slot=slot,
+                    evidence=evidence_class(view, slot, item),
+                    values={'folds': citer.num(rid, 'folds', 'int'), 'dev': rows['dev']},
+                    attention=None if values.get('method') == 'temporal_folds' else 'none',
+                    frame_html=g.frame_line('none', _frame_rows(c, rid), '',
+                                            e(g.say('ui.frame_words.no_model')))))
     p.values['fig'] = c.figure_ref('folds')
     p.code_steps = ['split']
     p.uncertain = _limits(view, 'ch3')
@@ -684,6 +703,14 @@ def _ch4(c: Context, steps, status) -> Parts:
                 frame_html=g.frame_line('structural' if cls == 'structural' else 'development',
                                         _frame_rows(c, rid), '',
                                         e(g.say('ui.frame_words.no_model')))))
+            if slot == 'eda.quality' and conclude is None:
+                view_chart = ev.column_view(citer, rid, values, _transformed(c))
+                if view_chart:
+                    p.evidence.append(c.frame(
+                        'ch4', 'column_view', view_chart, slot=slot, evidence=cls,
+                        values=fvalues,
+                        frame_html=g.frame_line('structural', _frame_rows(c, rid), '',
+                                                e(g.say('ui.frame_words.no_model')))))
     looks_data = view.get('eda_looks') or {}
     count = looks_data.get('target_looks')
     if isinstance(count, int) and count:
@@ -708,6 +735,15 @@ def _ch4(c: Context, steps, status) -> Parts:
                         f'({_structure(count)} {e(words["looks_count"])})</li>')
     p.uncertain = items
     return p
+
+
+def _transformed(c: Context) -> list[str]:
+    """The columns the recorded preparation transforms (signed log, caps)."""
+    value = (c.view['decisions'].get('preprocessing') or {}).get('value')
+    if not isinstance(value, Mapping):
+        return []
+    return [str(x) for x in value.get('log_transform') or []] + \
+        [str(x) for x in (value.get('caps') or {})]
 
 
 def _ch5(c: Context, steps, status) -> Parts:
@@ -743,7 +779,17 @@ def _ch5(c: Context, steps, status) -> Parts:
         p.evidence.append(_muted(words['absent_chapter']))
     else:
         p.evidence.append(_muted(words['motivation_none']))
-    fit = c.citer.slot_rid('fit.linear' if c.task == 'regression' else 'fit.logistic')
+    fit_slot = 'fit.linear' if c.task == 'regression' else 'fit.logistic'
+    fit = c.citer.slot_rid(fit_slot)
+    pipe = ev.pipeline(view, c.citer, fit_slot, c.citer.slot_rid('eda.quality')) if fit else ''
+    if pipe and isinstance(value, Mapping):
+        p.evidence.insert(0, c.frame(
+            'ch5', 'pipeline', pipe, slot=fit_slot, evidence='development',
+            values={'preparation': lit('decision_value', rh.value_words('preprocessing', value,
+                                                                        c.task))},
+            attention=None if value.get('data_contingent') else 'none',
+            frame_html=g.frame_line('development', _frame_rows(c, fit), '',
+                                    e(rh.capital(rh.model_name(fit_slot))), final_note=False)))
     if fit:
         from .code_cells import preparation_steps
         code = preparation_steps(c.citer.results[fit].values)
@@ -987,6 +1033,13 @@ def _ch7(c: Context, steps, status) -> Parts:
         _ch7_binary(c, p, rid, values, line)
     sel = values.get('model_selection') if isinstance(values, Mapping) else None
     one = (sel or {}).get('one_se') or {}
+    rule = ev.one_se(citer, rid, sel) if isinstance(sel, Mapping) else ''
+    if rule and one.get('pick') and one.get('best'):
+        p.evidence.insert(1, c.frame(
+            'ch7', 'one_se', rule, slot=slot, evidence='development',
+            values={'pick': e(rh.model_phrase(one['pick'])),
+                    'best': e(rh.model_phrase(one['best']))},
+            frame_html=line))
     if one.get('pick') and one.get('best'):
         p.ici['one_se'] = g.t('chapters.ch7.here.one_se', pick=e(rh.model_phrase(one['pick'])),
                               best=e(rh.model_phrase(one['best']))) \
@@ -1147,11 +1200,7 @@ def _versus_frame(c: Context) -> str:
                          citer.num(final_rid, final_path, fmt)))
 
     if c.task == 'regression':
-        row(words['rows'], 'n', 'n', 'int')
-        row(words['mae'], cite.format_path(['models', model, 'mae']),
-            cite.format_path(['models', model, 'mae']), 'f2')
-        row(words['mae_baseline'], cite.format_path(['models', 'fit.baseline', 'mae']),
-            cite.format_path(['models', 'fit.baseline', 'mae']), 'f2')
+        return _evidence_table_frame(c)
     else:
         rule = final.get('rule_final') or final.get('rule')
         if not rule:
@@ -1179,6 +1228,47 @@ def _versus_frame(c: Context) -> str:
              f'<tbody>{body}</tbody></table></div>')
     return c.frame('ch8', 'versus', table, what='table', slot='final_test.evaluation',
                    evidence='final', frame_html=g.frame_line('final', _frame_rows(c, final_rid)))
+
+
+def _evidence_table_frame(c: Context) -> str:
+    """R52: development and final evidence in one table, configuration by configuration."""
+    citer, view = c.citer, c.view
+    table = ev.regression_table(view, citer)
+    if not table:
+        return ''
+    fin = citer.slot_rid('final_test.evaluation')
+    fvalues, conclude = {}, 'sealed'
+    if fin:
+        fv = citer.results[fin].values
+        model = cite.format_path(['models', str(fv.get('model')), 'mae'])
+        base = cite.format_path(['models', 'fit.baseline', 'mae'])
+        status = ((fv.get('criterion') or {}).get('status')) or 'not_assessed'
+        if citer.has(fin, model) and citer.has(fin, base):
+            fvalues = {'final': citer.num(fin, model, 'f2'), 'base': citer.num(fin, base, 'f2'),
+                       'status': e(ev.say('status_final.' + status))}
+            conclude = None
+    return c.frame('ch8', 'evidence_table', table, what='table',
+                   slot='final_test.evaluation' if fin else 'evaluate.regression',
+                   evidence='final' if fin else 'development', values=fvalues,
+                   conclude=conclude, attention=None if fin else 'none',
+                   frame_html=g.frame_line('final' if fin else 'development',
+                                           _frame_rows(c, fin or citer.slot_rid(
+                                               'evaluate.regression')),
+                                           '' if fin else _scored()))
+
+
+def _exposure_frame(c: Context) -> str:
+    """R53: the exposure ledger as a timeline."""
+    view = c.view
+    chart = ev.exposure_timeline(view, _slot_label)
+    looks = (view.get('eda_looks') or {}).get('target_looks')
+    if not chart or not isinstance(looks, int):
+        return ''
+    opened = (view.get('final_test') or {}).get('status') == 'opened'
+    return c.frame('ch8', 'exposure_timeline', chart, stamp_kind='state',
+                   values={'looks': _structure(looks)},
+                   conclude=None if opened else 'sealed',
+                   frame_html=g.frame_line('none', '', '', '', final_note=False))
 
 
 def _ch8(c: Context, steps, status) -> Parts:
@@ -1212,6 +1302,7 @@ def _ch8(c: Context, steps, status) -> Parts:
         evidence='final' if rid else None,
         frame_html=g.frame_line('final' if rid else 'none', rows.get('sealed') and
                                 g.rows_words(rows['sealed']) or '')))
+    p.evidence.append(_exposure_frame(c))
     if rid:
         p.evidence.append(_versus_frame(c))
         dslot = render_diagnostics.FINAL_SLOT
@@ -1229,25 +1320,91 @@ def _ch8(c: Context, steps, status) -> Parts:
     return p
 
 
+def _established(c: Context) -> list[str]:
+    """R48: what the study establishes, the numbers carried by charts: the criterion judged on
+    the final test and the development and final errors on one scale (regression); the
+    criterion row otherwise."""
+    view, citer = c.view, c.citer
+    fin = citer.slot_rid('final_test.evaluation')
+    fallback = [g.dl(((e(k), v) for k, v in rh.criterion_rows(view)), 'facts')]
+    if c.task != 'regression':
+        return fallback
+    if not fin:
+        return [f'<p class="established">{ev.t("established_none")}</p>']
+    fv = citer.results[fin].values
+    model = str(fv.get('model'))
+    m = cite.format_path(['models', model, 'mae'])
+    b = cite.format_path(['models', 'fit.baseline', 'mae'])
+    if not all(citer.has(fin, x) for x in (m, b, 'n', 'criterion.gain', 'criterion.minimum')):
+        return fallback
+    unit = fv.get('unit')
+    unit_html = f' {lit("case", unit)}' if unit else ''
+    out = ['<p class="established">' + ev.t(
+        'established_regression', n=citer.num(fin, 'n', 'int'),
+        model=e(rh.model_phrase(model)), mae=citer.num(fin, m, 'f2') + unit_html,
+        base=citer.num(fin, b, 'f2'), gain=citer.num(fin, 'criterion.gain', 'pct1'),
+        interval=ev._interval(citer, fin, 'criterion', 'pct1'),
+        minimum=citer.num(fin, 'criterion.minimum', 'pct0')) + '</p>']
+    chart = ev.criterion_final(view, citer)
+    status = (fv.get('criterion') or {}).get('status') or 'not_assessed'
+    if chart and citer.has(fin, 'criterion.low') and citer.has(fin, 'criterion.high'):
+        out.append(c.frame(
+            'ch9', 'criterion_final', chart, slot='final_test.evaluation', evidence='final',
+            values={'gain': citer.num(fin, 'criterion.gain', 'pct1'),
+                    'low': citer.num(fin, 'criterion.low', 'pct1'),
+                    'high': citer.num(fin, 'criterion.high', 'pct1'),
+                    'minimum': citer.num(fin, 'criterion.minimum', 'pct0'),
+                    'status': e(ev.say('status_final.' + status))},
+            frame_html=g.frame_line('final', _frame_rows(c, fin), '',
+                                    e(rh.capital(rh.model_name(model))))))
+    dots = ev.evidence_dots(view, citer)
+    dev = citer.slot_rid('evaluate.regression')
+    if dots and dev and citer.has(dev, m):
+        out.append(c.frame(
+            'ch9', 'evidence_dots', dots, slot='final_test.evaluation', evidence='final',
+            values={'dev': citer.num(dev, m, 'f2'), 'final': citer.num(fin, m, 'f2'),
+                    'base': citer.num(fin, b, 'f2')},
+            frame_html=g.frame_line('final', _frame_rows(c, fin))))
+    return out
+
+
+def _no_chart(c: Context) -> str:
+    """R40/R48: the conclusion's charts the engine cannot draw, said rather than left out."""
+    if c.task != 'regression' or not c.citer.slot_rid('final_test.evaluation'):
+        return ''
+    return (f'<div class="nochart" data-no-chart="final_rows"><p>{e(ev.say("no_chart"))}</p>'
+            f'<ul><li data-no-chart="observed_predicted">{e(ev.say("no_chart_observed"))}</li>'
+            f'<li data-no-chart="error_by_period">{e(ev.say("no_chart_by_year"))}</li></ul>'
+            f'</div>')
+
+
 def _ch9(c: Context, steps, status) -> Parts:
     p, view = Parts(), c.view
     words = _words()
     p.choice = _choice(_decision_cards(c, steps), _choice_label(c, steps))
-    criterion = rh.criterion_rows(view)
-    facts = g.dl(((e(k), v) for k, v in criterion), 'facts')
     shown = [x for x in view['not_yet_defensible'] if x.get('junior') is not False]
     n = _structure(len(shown))
-    p.evidence.append(facts + f'<p>{e(words["conclusion_evidence"])} '
-                              f'<a href="#verdict">{e(words["chapters"]["verdict"])}</a> · '
-                              f'<a href="#ch8">{e(words["chapters"]["ch8"]["title"])}</a></p>')
+    # R48: three parts, "what the study establishes", "what it does not establish", "and
+    # then", the numbers carried by the charts.
+    p.evidence.append(f'<h4 class="concl-part" data-part="established">'
+                      f'{e(ev.say("established"))}</h4>')
+    p.evidence.extend(_established(c))
+    p.evidence.append(f'<h4 class="concl-part" data-part="not_established">'
+                      f'{e(ev.say("not_established"))}</h4>')
     p.evidence.append(c.frame('ch9', 'limits', demote(rh._not_yet_defensible(view), 2),
                               what='list', stamp_kind='text', values={'n': n},
                               frame_html=g.frame_line('none')))
+    p.evidence.append(_no_chart(c))
+    p.evidence.append(f'<h4 class="concl-part" data-part="next">{e(ev.say("next"))}</h4>')
+    links = (f'<p>{e(words["conclusion_evidence"])} '
+             f'<a href="#verdict">{e(words["chapters"]["verdict"])}</a> · '
+             f'<a href="#ch8">{e(words["chapters"]["ch8"]["title"])}</a></p>')
     conclusion = view['decisions'].get('conclusion') or {}
     if conclusion.get('status') == 'confirmed':
-        p.evidence.append(f'<p class="next-step">{e(words["next_step"])}</p>')
+        p.evidence.append(f'<p class="next-step">{e(words["next_step"])}</p>' + links)
         p.keep = g.t('chapters.ch9.keep_done', n=n)
     else:
+        p.evidence.append(links)
         p.keep = g.t('chapters.ch9.keep_open', n=n)
     p.uncertain = [f'<li><a href="#{c.figure_ids.get("limits", "not-yet-defensible")}">'
                    f'{e(g.say("figures.limits.title"))}</a></li>']

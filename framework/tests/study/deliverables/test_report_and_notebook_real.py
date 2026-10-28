@@ -395,7 +395,14 @@ def test_report_layout_and_traceability(studies, name):
     # the verdict card and the data section
     verdict = re.search(r'<section class="blk" id="verdict">.*?</section>', page,
                         re.S).group(0)
-    assert 'data-result-id' in verdict and 'Met' in verdict
+    assert 'data-result-id' in verdict
+    if name == 'auto':
+        # R52 (2026-10-28): a regression's criterion is the last row of the one evidence
+        # table, its status in words in each column.
+        row = verdict.split('data-row="criterion"')[1].split('</tr>')[0]
+        assert re.search(r'\bmet (in development|on the final test)\b', row)
+    else:
+        assert 'Met' in verdict
     assert 'stay sealed' in page and 'data-feature-basis' in page
     # both languages are in the file, the other edition's ids suffixed (R27)
     assert set(editions(whole)) == {'en', 'fr'} and 'id="ch1--fr"' in whole
@@ -515,16 +522,28 @@ def test_the_verdict_card_separates_development_and_final_evidence(cv_studies, n
     page = primary((study / mf.ARTIFACTS['report']).read_text(encoding='utf-8'))
     verdict = re.search(r'<section class="blk" id="verdict">.*?</section>', page,
                         re.S).group(0)
-    assert 'Development evidence' in verdict and 'out-of-fold' in verdict
-    assert 'Final test' in verdict and 'Opened once, on' in verdict
-    assert 'Success criterion on the final test' in verdict
     final = read.open(study).current('final_test.evaluation')['result_id']
-    assert f'data-result-id="{final}"' in verdict
-    assert 'Configurations compared' in verdict
-    # WP-B6a: once opened, the final-test evidence comes first, the development second.
-    assert verdict.index('Opened once, on') < verdict.index('Development evidence')
-    assert verdict.index('Success criterion on the final test') \
-        < verdict.index('Development evidence')
+    if name == 'auto':
+        # R52 (2026-10-28): a regression's development and final evidence are one table, a
+        # row per configuration, a column per frame; the criterion is judged in the final
+        # column, and the separation is the columns, not two cards.
+        assert 'class="vbox' not in verdict
+        table = verdict.split('<table class="evtab"')[1].split('</table>')[0]
+        assert 'Development (out of fold, used to choose)' in table
+        assert 'Final test (read once)' in table
+        assert f'data-result-id="{final}"' in table
+        assert 'error on the final test reduced by' in table
+        assert 'data-unmeasured="unmeasured"' in table
+    else:
+        assert 'Development evidence' in verdict and 'out-of-fold' in verdict
+        assert 'Final test' in verdict and 'Opened once, on' in verdict
+        assert 'Success criterion on the final test' in verdict
+        assert f'data-result-id="{final}"' in verdict
+        assert 'Configurations compared' in verdict
+        # WP-B6a: once opened, the final-test evidence comes first, the development second.
+        assert verdict.index('Opened once, on') < verdict.index('Development evidence')
+        assert verdict.index('Success criterion on the final test') \
+            < verdict.index('Development evidence')
     assert 'id="variant-comparison"' in page
     report = cmd_check.run_check(study)
     assert report['clean'], report['findings']

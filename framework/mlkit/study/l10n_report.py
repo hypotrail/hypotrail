@@ -156,7 +156,7 @@ EXACT = {
         'Parmi les lignes que chaque règle sélectionne, combien de lignes positives le modèle '
         'trouve-t-il, comparé au modèle de référence ?',
     'Linear model': 'Modèle linéaire',
-    'Mean baseline': 'Moyenne de référence',
+    'Mean baseline': 'Référence (prédire la moyenne)',
     'median': 'médiane',
     'Bin of the column': 'Classe de la colonne',
     'Rows in the bin or group': 'Lignes de la classe ou du groupe',

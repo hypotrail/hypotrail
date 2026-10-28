@@ -435,7 +435,7 @@ summary:
   phrase_label: {en: "In one sentence", fr: "En une phrase"}
   phrase_open: {en: "\"The study estimates {target}. On the development rows, {best}. These figures were used to choose; the verdict will come from the final test, and the conclusion is still to be written in my words.\"", fr: "« L'étude estime {target}. Sur les lignes de développement, {best}. Ces chiffres ont servi à choisir ; le verdict viendra du test final, et la conclusion reste à écrire avec mes mots. »"}
   phrase_closed: {en: "\"The study estimates {target}. On the development rows, {best}. The final test, opened once, is the independent evidence; the conclusion lists its limits.\"", fr: "« L'étude estime {target}. Sur les lignes de développement, {best}. Le test final, ouvert une fois, est la preuve indépendante ; la conclusion en liste les limites. »"}
-  best_regression: {en: "{model} errs by {mae_model} on average, against {mae_base} for the mean baseline", fr: "{model} se trompe en moyenne de {mae_model}, contre {mae_base} pour la moyenne de référence"}
+  best_regression: {en: "{model} errs by {mae_model} on average, against {mae_base} for the reference (predict the mean)", fr: "{model} se trompe en moyenne de {mae_model}, contre {mae_base} pour la référence (prédire la moyenne)"}
   best_binary: {en: "{model} ranks the rows with an AUC of {auc}", fr: "{model} classe les lignes avec une AUC de {auc}"}
   phrase_none: {en: "\"The study estimates {target}. No model figure is recorded yet.\"", fr: "« L'étude estime {target}. Aucun chiffre de modèle n'est encore enregistré. »"}
 voice:
@@ -455,6 +455,9 @@ models:
   ebm: {en: "EBM variant (readable non-linear model)", fr: "Variante EBM (modèle non linéaire lisible)"}
   hgb: {en: "Gradient boosting variant", fr: "Variante gradient boosting"}
   other: {en: "Variant: {words}", fr: "Variante : {words}"}
+  # R45, R48: the regression reference, never "training mean".
+  baseline_regression: {en: "Reference (predict the mean)", fr: "Référence (prédire la moyenne)"}
+  baseline_regression_phrase: {en: "the reference (predict the mean)", fr: "la référence (prédire la moyenne)"}
 models_short:
   linear: {en: linear, fr: linéaire}
   logistic: {en: logistic, fr: logistique}
@@ -464,6 +467,112 @@ models_short:
   ebm: {en: EBM, fr: EBM}
   hgb: {en: boosting, fr: boosting}
   other: {en: variant, fr: variante}
+
+# R41, R48, R52, R53 (owner remarks 2026-10-28): the evidence table, the dots, the criterion
+# judged on the final test, the method diagrams (render_evidence).
+evidence:
+  interval: {en: " [{low}, {high}]", fr: " [{low} ; {high}]"}
+  chosen: {en: chosen, fr: choisi}
+  col_config: {en: Configuration, fr: Configuration}
+  col_dev: {en: "Development (out of fold, used to choose)", fr: "Développement (hors pli, a servi à choisir)"}
+  col_final: {en: "Final test (read once)", fr: "Test final (lu une fois)"}
+  unmeasured: {en: "not measured: the final test measures only the chosen model", fr: "non mesuré : le test final ne mesure que le modèle choisi"}
+  sealed_cell: {en: "sealed: not read yet", fr: "scellé : pas encore lu"}
+  absent_cell: {en: "no final test in this study", fr: "pas de test final dans cette étude"}
+  paired: {en: "Paired difference with the reference ({model} − {reference})", fr: "Écart apparié avec la référence ({model} − {reference})"}
+  criterion: {en: "Success criterion: an error at least {share} below the reference's", fr: "Critère de succès : une erreur au moins {share} sous celle de la référence"}
+  criterion_dev: {en: "{status}, context only", fr: "{status}, pour contexte seulement"}
+  criterion_final: {en: "error on the final test reduced by {gain}{interval}", fr: "erreur sur le test final réduite de {gain}{interval}"}
+  status:
+    met: {en: met in development, fr: atteint en développement}
+    not_met: {en: not met in development, fr: non atteint en développement}
+    uncertain: {en: uncertain in development, fr: incertain en développement}
+    not_assessed: {en: not assessed in development, fr: non évalué en développement}
+  status_final:
+    met: {en: "met on the final test", fr: "atteint sur le test final"}
+    not_met: {en: "not met on the final test", fr: "non atteint sur le test final"}
+    uncertain: {en: "uncertain on the final test", fr: "incertain sur le test final"}
+    not_assessed: {en: "not assessed", fr: "non évalué"}
+  table_note: {en: "Mean absolute error, in {unit}; in brackets, the bootstrap interval of each value. The highlighted row is the configuration carried to the final test; the reference predicts the mean of the rows it is fitted on.", fr: "Erreur absolue moyenne, en {unit} ; entre crochets, l'intervalle bootstrap de chaque valeur. La ligne surlignée est la configuration portée au test final ; la référence prédit la moyenne des lignes sur lesquelles elle est ajustée."}
+  dots_question: {en: "Where does each configuration land, in development and on the final test?", fr: "Où tombe chaque configuration, en développement et sur le test final ?"}
+  dots_label: {en: "Development and final errors with their intervals", fr: "Erreurs de développement et finales avec leurs intervalles"}
+  dots_note: {en: "Open dot: out-of-fold error on the development rows; filled dot: error on the final test; line: bootstrap interval. The dashed line is the criterion's bound on the final test (the reference's final error reduced by the criterion's share), drawn only.", fr: "Point creux : erreur hors pli sur les lignes de développement ; point plein : erreur sur le test final ; trait : intervalle bootstrap. Le pointillé est la borne du critère sur le test final (l'erreur finale de la référence diminuée de la part du critère), seulement dessinée."}
+  dot_dev: {en: development, fr: développement}
+  dot_final: {en: final test, fr: test final}
+  key_dev: {en: "development (out of fold)", fr: "développement (hors pli)"}
+  key_final: {en: "final test", fr: "test final"}
+  key_ci: {en: bootstrap interval, fr: intervalle bootstrap}
+  bound: {en: "criterion's bound, final test", fr: "borne du critère, test final"}
+  minimum: {en: "minimum", fr: "minimum"}
+  criterion_question: {en: "By how much does the chosen model reduce the reference's error on the final test?", fr: "De combien le modèle choisi réduit-il l'erreur de la référence sur le test final ?"}
+  criterion_label: {en: "The criterion judged on the final test", fr: "Le critère jugé sur le test final"}
+  criterion_note: {en: "The dot is the reduction of the error on the final test, the line its bootstrap interval; the dashed line is the minimum fixed before any model, the shaded zone what meets it.", fr: "Le point est la réduction de l'erreur sur le test final, le trait son intervalle bootstrap ; le pointillé est le minimum fixé avant tout modèle, la zone grisée ce qui l'atteint."}
+  cv_row: {en: "fold", fr: "pli"}
+  cv-val: {en: "predicted out of fold", fr: "prédites hors pli"}
+  cv-fit: {en: "rows the model is fitted on", fr: "lignes d'ajustement du modèle"}
+  cv_older: {en: "← earlier", fr: "← plus ancien"}
+  cv_newer: {en: "later →", fr: "plus récent →"}
+  cv_label: {en: "Each fold predicted by a model fitted on the others", fr: "Chaque pli prédit par un modèle ajusté sur les autres"}
+  cv_question: {en: "Which rows fit the model that predicts each fold?", fr: "Quelles lignes ajustent le modèle qui prédit chaque pli ?"}
+  cv_note: {en: "One line per fold: the green block is predicted by a model fitted on the blue blocks; the number is its rows. Every development row is predicted once.", fr: "Une ligne par pli : le bloc vert est prédit par un modèle ajusté sur les blocs bleus ; le nombre est son nombre de lignes. Chaque ligne de développement est prédite une fois."}
+  cv_note_temporal: {en: "One line per fold, in time order: the green block is predicted by a model fitted on the blue blocks, later years included; the number is its rows. Every development row is predicted once.", fr: "Une ligne par pli, dans l'ordre du temps : le bloc vert est prédit par un modèle ajusté sur les blocs bleus, années postérieures comprises ; le nombre est son nombre de lignes. Chaque ligne de développement est prédite une fois."}
+  cv_col: {en: column, fr: colonne}
+  cv_missing: {en: missing, fr: manquantes}
+  cv_range: {en: "range, minimum to maximum", fr: "étendue, du minimum au maximum"}
+  cv_skew: {en: skewness, fr: asymétrie}
+  distinct: {en: distinct values, fr: valeurs distinctes}
+  cv_view_label: {en: "The quality check, column by column", fr: "Le contrôle de qualité, colonne par colonne"}
+  column_question: {en: "What does each column look like before any preparation?", fr: "À quoi ressemble chaque colonne avant toute préparation ?"}
+  column_note: {en: "One line per column: the missing cells (bar and count), the range from minimum to maximum with the band from the first to the ninety-ninth percentile and the median, and the skewness (zero: symmetric; positive: a long tail of large values). Highlighted first: the columns the preparation transformed.", fr: "Une ligne par colonne : les cellules manquantes (barre et nombre), l'étendue du minimum au maximum avec la bande du premier au quatre-vingt-dix-neuvième centile et la médiane, et l'asymétrie (zéro : symétrique ; positive : une longue traîne de grandes valeurs). Surlignées en premier : les colonnes que la préparation a transformées."}
+  key_band: {en: "first to ninety-ninth percentile", fr: "premier au quatre-vingt-dix-neuvième centile"}
+  key_median: {en: median, fr: médiane}
+  key_transformed: {en: transformed by the preparation, fr: transformée par la préparation}
+  pipe_columns: {en: Columns, fr: Colonnes}
+  pipe_indicators: {en: Missing-value indicators, fr: Indicateurs de valeur manquante}
+  pipe_rare: {en: Rare categories grouped, fr: Catégories rares regroupées}
+  pipe_caps: {en: Caps, fr: Plafonds}
+  pipe_log: {en: Signed log, fr: Log signé}
+  pipe_scale: {en: Imputation and scaling, fr: Imputation et mise à l'échelle}
+  pipe_scale_detail: {en: "numbers: training median, then standardised; categories: most frequent value, then one column per category", fr: "nombres : médiane d'ajustement, puis standardisation ; catégories : valeur la plus fréquente, puis une colonne par catégorie"}
+  pipe_model: {en: Model, fr: Modèle}
+  pipe_none: {en: none, fr: aucun}
+  pipe_note: {en: "Every step is learnt on the fitting rows of each fold only and applied unchanged to the fold it predicts, so no predicted row informs its own preparation.", fr: "Chaque étape est apprise sur les lignes d'ajustement de chaque pli seulement et appliquée telle quelle au pli prédit : aucune ligne prédite ne nourrit sa propre préparation."}
+  verdicts: {en: "Each numeric column's verdict", fr: "Le verdict de chaque colonne numérique"}
+  verdict_log: {en: "signed log (skewness {skew})", fr: "log signé (asymétrie {skew})"}
+  verdict_cap: {en: "capped (skewness {skew})", fr: "plafonnée (asymétrie {skew})"}
+  verdict_none: {en: "unchanged (skewness {skew})", fr: "inchangée (asymétrie {skew})"}
+  threshold_missing: {en: "The threshold that decided each verdict is not recorded by the engine: only the skewness behind it is shown.", fr: "Le seuil qui a décidé chaque verdict n'est pas enregistré par le moteur : seule l'asymétrie qui le fonde est montrée."}
+  se_question: {en: "Which configurations are within one standard error of the best, and which is the simplest of them?", fr: "Quelles configurations sont à moins d'une erreur type de la meilleure, et laquelle est la plus simple ?"}
+  se_label: {en: "The one-standard-error rule", fr: "La règle d'une erreur type"}
+  se_mean: {en: mean error over the folds, fr: erreur moyenne sur les plis}
+  se_ci: {en: "± one standard error", fr: "± une erreur type"}
+  se_band: {en: "best mean to best plus one standard error", fr: "de la meilleure moyenne à la meilleure plus une erreur type"}
+  se_bound: {en: "best + one SE", fr: "meilleure + une ET"}
+  se_pick: {en: picked by the rule, fr: retenue par la règle}
+  se_note: {en: "Each configuration's mean out-of-fold error over the folds, with one standard error each side. Every configuration whose mean falls in the green band is not told apart from the best; the rule keeps the simplest of them (ringed).", fr: "L'erreur hors pli moyenne de chaque configuration sur les plis, avec une erreur type de chaque côté. Toute configuration dont la moyenne tombe dans la bande verte ne se distingue pas de la meilleure ; la règle garde la plus simple d'entre elles (cerclée)."}
+  lane_structural: {en: structure only, fr: structure seule}
+  lane_look: {en: looks at the target, fr: regards sur la cible}
+  lane_model: {en: "fits and comparisons", fr: "ajustements et comparaisons"}
+  lane_final: {en: final test, fr: test final}
+  opened_at: {en: "final test opened", fr: "test final ouvert"}
+  revisions: {en: "study revision →", fr: "révision de l'étude →"}
+  exposure_label: {en: "The exposure ledger as a timeline", fr: "Le registre d'exposition comme une frise"}
+  exposure_question: {en: "When was the target read, and when was the final test opened?", fr: "Quand la cible a-t-elle été lue, et quand le test final a-t-il été ouvert ?"}
+  exposure_note: {en: "One dot per recorded result, at the revision it started, on the lane of what it read. Everything left of the dashed line was decided without the final test.", fr: "Un point par résultat enregistré, à la révision où il a commencé, sur la ligne de ce qu'il a lu. Tout ce qui est à gauche du pointillé a été décidé sans le test final."}
+  partition_how: {en: "How the sealed rows were drawn: {method}, a share of {fraction} of the file, at the study's creation, before any look.", fr: "Comment les lignes scellées ont été tirées : {method}, une part de {fraction} du fichier, à la création de l'étude, avant tout regard."}
+  methods:
+    quantile_stratified: {en: "stratified by quantiles of the target", fr: "stratifiées par quantiles de la cible"}
+    temporal: {en: "the latest rows in time order", fr: "les lignes les plus récentes dans l'ordre du temps"}
+    random: {en: "at random", fr: "au hasard"}
+    stratified: {en: "stratified by the target", fr: "stratifiées sur la cible"}
+  established: {en: "What the study establishes", fr: "Ce que l'étude établit"}
+  not_established: {en: "What it does not establish", fr: "Ce qu'elle n'établit pas"}
+  next: {en: "And then", fr: "Et après"}
+  established_regression: {en: "On the {n} final-test rows, read once, {model} errs by {mae} on average against {base} for the reference (predict the mean): the error on the final test is reduced by {gain}{interval}, against a minimum of {minimum} fixed before any model.", fr: "Sur les {n} lignes du test final, lues une fois, {model} se trompe de {mae} en moyenne contre {base} pour la référence (prédire la moyenne) : l'erreur sur le test final est réduite de {gain}{interval}, face à un minimum de {minimum} fixé avant tout modèle."}
+  established_none: {en: "The final test is not opened: the study establishes no independent figure yet. The development figures are in the verdict and in chapter seven.", fr: "Le test final n'est pas ouvert : l'étude n'établit encore aucun chiffre indépendant. Les chiffres de développement sont dans le verdict et au chapitre sept."}
+  no_chart: {en: "No chart for these points: the engine does not record the values they need.", fr: "Pas de graphique pour ces points : le moteur n'enregistre pas les valeurs qu'il leur faut."}
+  no_chart_observed: {en: "Observed against predicted on the final rows: the final evaluation records summaries (errors, residual quantiles), not the predictions row by row.", fr: "Valeurs observées contre prédites sur les lignes finales : l'évaluation finale enregistre des résumés (erreurs, quantiles des résidus), pas les prédictions ligne par ligne."}
+  no_chart_by_year: {en: "Error by period on the final rows: the final evaluation records no error by period, and its rows were drawn without time order.", fr: "Erreur par période sur les lignes finales : l'évaluation finale n'enregistre aucune erreur par période, et ses lignes ont été tirées sans ordre de temps."}
 
 # Guided readings, one per figure kind (R30). ``why`` answers "why this figure"; ``frame``
 # names the evidence, the rows and the model; ``read`` is the step-by-step reading;
@@ -533,7 +642,7 @@ figures:
     read:
       - {en: "The box holds the middle half of the rows; the thick line is the median.", fr: "La boîte contient la moitié centrale des lignes ; le trait épais est la médiane."}
       - {en: "The circle is the mean, with its interval.", fr: "Le cercle est la moyenne, avec son intervalle."}
-    conclude: {en: "The target has a mean of {mean} and a standard deviation of {sd}: a model must err less than the mean baseline to be useful.", fr: "La cible a une moyenne de {mean} et un écart-type de {sd} : un modèle doit se tromper moins que la moyenne de référence pour être utile."}
+    conclude: {en: "The target has a mean of {mean} and a standard deviation of {sd}: a model must err less than the reference (predict the mean) to be useful.", fr: "La cible a une moyenne de {mean} et un écart-type de {sd} : un modèle doit se tromper moins que la référence (prédire la moyenne) pour être utile."}
     attention: {en: "This is a look at the target: it is counted.", fr: "C'est un regard sur la cible : il est compté."}
   target_balance:
     title: {en: "The outcome on the development rows", fr: "La cible sur les lignes de développement"}
@@ -804,6 +913,75 @@ figures:
       - {en: "Read each item: some disappear with a decision in your words, others stay attached to the conclusion.", fr: "Lisez chaque point : certains disparaissent avec une décision prise avec vos mots, d'autres restent attachés à la conclusion."}
     conclude: {en: "{n} limits are recorded.", fr: "{n} limites sont enregistrées."}
     attention: {en: "An empty list would not make the study causal: it ranks or estimates, nothing more.", fr: "Une liste vide ne rendrait pas l'étude causale : elle classe ou estime, rien de plus."}
+  evidence_table:
+    title: {en: "Development and final test, configuration by configuration", fr: "Développement et test final, configuration par configuration"}
+    why: {en: "The development figures helped choose; the final figure did not. One table puts each configuration on the same line in both frames, so the gap between them reads at a glance.", fr: "Les chiffres de développement ont aidé à choisir ; le chiffre final non. Un seul tableau met chaque configuration sur la même ligne dans les deux cadres, pour lire l'écart d'un coup d'œil."}
+    read:
+      - {en: "Find the highlighted row: the configuration carried to the final test.", fr: "Repérez la ligne surlignée : la configuration portée au test final."}
+      - {en: "Compare its two columns: development (used to choose, optimistic) and final test (read once).", fr: "Comparez ses deux colonnes : développement (a servi à choisir, optimiste) et test final (lu une fois)."}
+      - {en: "Read the last two rows: the paired difference with the reference, then the criterion judged on the final test.", fr: "Lisez les deux dernières lignes : l'écart apparié avec la référence, puis le critère jugé sur le test final."}
+    conclude: {en: "On the final test, the chosen configuration errs by {final} against {base} for the reference; the criterion is {status}.", fr: "Sur le test final, la configuration choisie se trompe de {final} contre {base} pour la référence ; le critère est {status}."}
+    conclude_sealed: {en: "The final test is still sealed: only the development column is filled, and it is not a final result.", fr: "Le test final est encore scellé : seule la colonne de développement est remplie, et ce n'est pas un résultat final."}
+    attention: {en: "The other configurations have no final figure on purpose: measuring them there would turn the final test into a second selection.", fr: "Les autres configurations n'ont pas de chiffre final, exprès : les y mesurer ferait du test final une seconde sélection."}
+  evidence_dots:
+    title: {en: "Development and final errors on one scale", fr: "Erreurs de développement et finales sur une même échelle"}
+    why: {en: "The table's values drawn: each configuration's error in development and, for the chosen one and the reference, on the final test, with the criterion's bound on the final test.", fr: "Les valeurs du tableau dessinées : l'erreur de chaque configuration en développement et, pour la configuration choisie et la référence, sur le test final, avec la borne du critère sur le test final."}
+    read:
+      - {en: "Find the dashed line: left of it, an error meets the criterion on the final test.", fr: "Repérez le pointillé : à sa gauche, une erreur atteint le critère sur le test final."}
+      - {en: "For each configuration, compare the open dot (development) with the filled dot (final test).", fr: "Pour chaque configuration, comparez le point creux (développement) au point plein (test final)."}
+      - {en: "Look at the lines: overlapping intervals are not told apart on this chart alone.", fr: "Regardez les traits : des intervalles qui se chevauchent ne se distinguent pas sur ce seul graphique."}
+    conclude: {en: "The chosen configuration errs by {dev} in development and {final} on the final test, the reference by {base}.", fr: "La configuration choisie se trompe de {dev} en développement et de {final} sur le test final, la référence de {base}."}
+    attention: {en: "A final test of few rows has a wide interval: a gap between development and final can be chance.", fr: "Un test final de peu de lignes a un intervalle large : un écart entre développement et final peut être dû au hasard."}
+  criterion_final:
+    title: {en: "The criterion, judged on the final test", fr: "Le critère, jugé sur le test final"}
+    why: {en: "The conclusion rests on one question fixed before any model: does the chosen model reduce the reference's error on the final test by at least the minimum?", fr: "La conclusion repose sur une question fixée avant tout modèle : le modèle choisi réduit-il l'erreur de la référence sur le test final d'au moins le minimum ?"}
+    read:
+      - {en: "Find the dashed line: the minimum fixed before any model.", fr: "Repérez le pointillé : le minimum fixé avant tout modèle."}
+      - {en: "Read the dot and its line: the reduction on the final test and its interval.", fr: "Lisez le point et son trait : la réduction sur le test final et son intervalle."}
+    conclude: {en: "The error on the final test is reduced by {gain} [{low}, {high}] against a minimum of {minimum}: the criterion is {status}.", fr: "L'erreur sur le test final est réduite de {gain} [{low} ; {high}] face à un minimum de {minimum} : le critère est {status}."}
+    attention: {en: "Met on the final test does not promise the same error on future rows: the final rows come from the same file and the same period.", fr: "Atteint sur le test final ne promet pas la même erreur sur de futures lignes : les lignes finales viennent du même fichier et de la même période."}
+  cv_rotation:
+    title: {en: "Each fold, predicted by a model fitted on the others", fr: "Chaque pli, prédit par un modèle ajusté sur les autres"}
+    why: {en: "It shows how cross-validation reuses the rows: each fold is predicted once, by a model that never saw it.", fr: "Il montre comment la validation croisée réutilise les lignes : chaque pli est prédit une fois, par un modèle qui ne l'a jamais vu."}
+    read:
+      - {en: "Read one line: the green block is predicted, the blue blocks fit the model.", fr: "Lisez une ligne : le bloc vert est prédit, les blocs bleus ajustent le modèle."}
+      - {en: "Go down the lines: the green block moves, so every row is predicted once.", fr: "Descendez les lignes : le bloc vert se déplace, donc chaque ligne est prédite une fois."}
+    conclude: {en: "{folds} models are fitted, each predicting one fold of the {dev} development rows.", fr: "{folds} modèles sont ajustés, chacun prédisant un pli des {dev} lignes de développement."}
+    attention: {en: "Under a time order, the early folds are predicted by models fitted on later years too: a forecast would only use the past.", fr: "Sous un ordre temporel, les premiers plis sont prédits par des modèles ajustés aussi sur des années postérieures : une prévision n'utiliserait que le passé."}
+  column_view:
+    title: {en: "The quality check, column by column", fr: "Le contrôle de qualité, colonne par colonne"}
+    why: {en: "The preparation is decided from these figures: missing cells, extreme values and skewed columns. A column left unchanged is backed by the same figures as a column transformed.", fr: "La préparation se décide sur ces chiffres : cellules manquantes, valeurs extrêmes et colonnes asymétriques. Une colonne laissée telle quelle s'appuie sur les mêmes chiffres qu'une colonne transformée."}
+    read:
+      - {en: "Read the missing column: a bar only where cells are missing.", fr: "Lisez la colonne des manquantes : une barre seulement là où des cellules manquent."}
+      - {en: "Read each range: a median far from the middle of the band means a skewed column.", fr: "Lisez chaque étendue : une médiane loin du milieu de la bande signale une colonne asymétrique."}
+      - {en: "Compare the skewness bars: the longest is the most skewed column.", fr: "Comparez les barres d'asymétrie : la plus longue est la colonne la plus asymétrique."}
+    conclude: {en: "{rows_missing} development rows have at least one missing cell, out of {rows}.", fr: "{rows_missing} lignes de développement ont au moins une cellule manquante, sur {rows}."}
+    attention: {en: "A value coded by a marker (a question mark, a sentinel value) is missing even when the cell is not empty.", fr: "Une valeur codée par un marqueur (un point d'interrogation, une valeur sentinelle) est manquante même quand la case n'est pas vide."}
+  pipeline:
+    title: {en: "The preparation, step by step", fr: "La préparation, étape par étape"}
+    why: {en: "It answers \"what happens to each column before the model sees it, and from which rows is each step learnt?\".", fr: "Il répond à « qu'arrive-t-il à chaque colonne avant que le modèle la voie, et sur quelles lignes chaque étape est-elle apprise ? »."}
+    read:
+      - {en: "Follow the arrows: a column goes through each step in this order.", fr: "Suivez les flèches : une colonne passe par chaque étape dans cet ordre."}
+      - {en: "Read the verdicts below: each numeric column with what was done and the skewness behind it.", fr: "Lisez les verdicts dessous : chaque colonne numérique avec ce qui a été fait et l'asymétrie qui le fonde."}
+    conclude: {en: "The preparation recorded: {preparation}.", fr: "La préparation enregistrée : {preparation}."}
+    attention: {en: "A preparation chosen after reading the development rows makes the out-of-fold figures slightly optimistic; the final test is not affected.", fr: "Une préparation choisie après lecture des lignes de développement rend les chiffres hors pli un peu optimistes ; le test final n'est pas touché."}
+  one_se:
+    title: {en: "The one-standard-error rule, drawn", fr: "La règle d'une erreur type, dessinée"}
+    why: {en: "The choice of the model follows a rule fixed in advance: among the configurations not told apart from the best, keep the simplest.", fr: "Le choix du modèle suit une règle fixée d'avance : parmi les configurations qu'on ne distingue pas de la meilleure, garder la plus simple."}
+    read:
+      - {en: "Find the green band: from the best mean to the best plus one standard error.", fr: "Repérez la bande verte : de la meilleure moyenne à la meilleure plus une erreur type."}
+      - {en: "See which dots fall in it, then the ringed one: the simplest of them.", fr: "Voyez quels points y tombent, puis le point cerclé : le plus simple d'entre eux."}
+    conclude: {en: "The best mean is {best}'s; the rule keeps {pick}, inside the band.", fr: "La meilleure moyenne est celle de {best} ; la règle garde {pick}, dans la bande."}
+    attention: {en: "The fold standard errors ignore the overlap of the folds' fitting rows: the band is narrower than the true noise.", fr: "Les erreurs types des plis ignorent le recouvrement des lignes d'ajustement des plis : la bande est plus étroite que le vrai bruit."}
+  exposure_timeline:
+    title: {en: "What was read, and when", fr: "Ce qui a été lu, et quand"}
+    why: {en: "The exposure ledger records every reading of the data. As a timeline, it shows that every choice came before the final test was opened.", fr: "Le registre d'exposition enregistre chaque lecture des données. En frise, il montre que chaque choix a précédé l'ouverture du test final."}
+    read:
+      - {en: "Read the lanes from top to bottom: structure, looks at the target, models, final test.", fr: "Lisez les lignes de haut en bas : structure, regards sur la cible, modèles, test final."}
+      - {en: "Find the dashed line: the opening of the final test.", fr: "Repérez le pointillé : l'ouverture du test final."}
+    conclude: {en: "The target was looked at {looks} times on the development rows, all before the final test was opened.", fr: "La cible a été regardée {looks} fois sur les lignes de développement, toutes avant l'ouverture du test final."}
+    conclude_sealed: {en: "The target was looked at {looks} times on the development rows; the final test is still sealed.", fr: "La cible a été regardée {looks} fois sur les lignes de développement ; le test final est encore scellé."}
+    attention: {en: "Changing the split later does not make the rows already read unseen.", fr: "Changer le découpage plus tard ne rend pas non vues les lignes déjà lues."}
 
 # The words of the lesson report's own charts (render_charts).
 charts:
@@ -861,7 +1039,7 @@ regression:
     ch6:
       terms: [baseline, linear_regression, mae, residual]
       here:
-        baseline: {en: "The mean baseline predicts the mean of the fitted rows for every row; its mean absolute error is {mae_base}.", fr: "La moyenne de référence prédit, pour chaque ligne, la moyenne des lignes d'ajustement ; son erreur absolue moyenne vaut {mae_base}."}
+        baseline: {en: "The reference (predict the mean) predicts the mean of the fitted rows for every row; its mean absolute error is {mae_base}.", fr: "La référence (prédire la moyenne) prédit, pour chaque ligne, la moyenne des lignes d'ajustement ; son erreur absolue moyenne vaut {mae_base}."}
       keep: {en: "Out of fold, the candidate errs by {mae_model} on average, the reference by {mae_base}.", fr: "Hors pli, le candidat se trompe en moyenne de {mae_model}, la référence de {mae_base}."}
     ch7:
       intro: {en: "This step chooses the model the study will carry to the final test, among the reference, the linear model and the variants. The evidence is the out-of-fold errors, compared pair by pair on the same rows with a bootstrap interval, and the one-standard-error rule over the folds. The final test is still apart: the choice is made without it.", fr: "Cette étape choisit le modèle que l'étude portera au test final, parmi la référence, le modèle linéaire et les variantes. La preuve est faite des erreurs hors pli, comparées deux à deux sur les mêmes lignes avec un intervalle bootstrap, et de la règle d'une erreur type sur les plis. Le test final reste à part : le choix se fait sans lui."}
