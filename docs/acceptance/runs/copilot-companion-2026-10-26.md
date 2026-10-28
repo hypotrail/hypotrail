@@ -941,3 +941,12 @@ its warning.
   uncertain columns (acceleration) shown as such. The earlier implementation was not found in
   this repository (searched the panel, the mockups and the paused companion); rebuild it from
   this description. Noted only, not fixed.
+- **R58. A visual of kept and excluded variables at the availability step (owner remark,
+  2026-10-28).** The availability proposal ("exclure acceleration, garder cylinders,
+  displacement, horsepower, weight, origin") is text only. Show in Now (and in the path detail,
+  R55) every column as a row or chip, grouped as the case groups them (engine, body and
+  performance, model), each marked kept / excluded / not a feature (target `mpg`, identifier
+  `car_name`, order `model_year`), with the reason for each exclusion ("disponibilité au moment
+  de la prédiction non documentée") and its place on the R57 timeline (the same timeline,
+  with the prediction moment, reused here). Display only; the decision stays in the chat.
+  Noted only, not fixed.
