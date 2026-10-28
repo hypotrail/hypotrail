@@ -135,7 +135,7 @@ moments:
   - id: frame
     title: Frame the change
     title_fr: Cadrer le changement
-    steps: [discover_data, prediction_time, feature_availability, split, success_criterion]
+    steps: [discover_data, prediction_time, feature_availability, split, error_metric, success_criterion]
   - id: evidence
     title: Prepare evidence
     title_fr: Préparer les preuves

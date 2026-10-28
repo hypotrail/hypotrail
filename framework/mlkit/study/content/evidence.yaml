@@ -87,7 +87,7 @@ fr:
     eda.distribution: "Distribution sur {{r:@.n_rows|int}} lignes de développement"
     fit.baseline: "MAE hors pli {{r:@.validation.mae|f2}} <unit> sur {{r:@.validation.n_rows|int}} lignes de développement"
     fit.linear: "MAE hors pli {{r:@.validation.mae|f2}} <unit> sur {{r:@.validation.n_rows|int}} lignes de développement"
-    evaluate.regression: "MAE {{r:@.models.[fit.linear].mae|f2}} <unit> pour le modèle linéaire et {{r:@.models.[fit.baseline].mae|f2}} <unit> pour la moyenne de référence sur les prédictions hors pli de {{r:@.n|int}} lignes de développement"
+    evaluate.regression: "MAE {{r:@.models.[fit.linear].mae|f2}} <unit> pour le modèle linéaire et {{r:@.models.[fit.baseline].mae|f2}} <unit> pour la référence (prédire la moyenne) sur les prédictions hors pli de {{r:@.n|int}} lignes de développement"
   regression_headlines:
     split: "{{r:@.partitions.train.n_rows|int}} lignes d'entraînement / {{r:@.partitions.validation.n_rows|int}} lignes de validation"
     eda.target_summary: "Moyenne {{r:@.mean|f2}} <unit>, écart-type {{r:@.sd|f2}} sur {{r:@.n_rows|int}} lignes d'entraînement"
@@ -96,7 +96,7 @@ fr:
     eda.distribution: "Distribution sur {{r:@.n_rows|int}} lignes d'entraînement"
     fit.baseline: "MAE de validation {{r:@.validation.mae|f2}} <unit> sur {{r:@.validation.n_rows|int}} lignes"
     fit.linear: "MAE de validation {{r:@.validation.mae|f2}} <unit> sur {{r:@.validation.n_rows|int}} lignes"
-    evaluate.regression: "MAE {{r:@.models.[fit.linear].mae|f2}} <unit> pour le modèle linéaire et {{r:@.models.[fit.baseline].mae|f2}} <unit> pour la moyenne de référence sur {{r:@.n|int}} lignes de validation"
+    evaluate.regression: "MAE {{r:@.models.[fit.linear].mae|f2}} <unit> pour le modèle linéaire et {{r:@.models.[fit.baseline].mae|f2}} <unit> pour la référence (prédire la moyenne) sur {{r:@.n|int}} lignes de validation"
     diag.regression: "Résidu moyen {{r:@.models.[fit.linear].residuals.mean|f2}} <unit>, corrélation de rang entre la taille de l'erreur et la prédiction {{r:@.models.[fit.linear].heteroscedasticity.abs_residual_prediction_correlation|f2}} sur {{r:@.n|int}} lignes de développement"
     diag.final_test: "Diagnostics du test final sur {{r:@.n|int}} lignes"
 changes:
@@ -109,3 +109,4 @@ changes:
   model_choice: a different model choice
   preprocessing: a different preparation of the variables
   success_criterion: a different success criterion
+  error_metric: a different error measure

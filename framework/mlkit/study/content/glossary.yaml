@@ -406,7 +406,7 @@ regression_terms:
     definition: The simplest reference model, here the training mean of the target predicted for every row. Keeping the baseline is a valid conclusion.
     definition_fr: "Le modèle de référence le plus simple, ici la moyenne de la cible sur le jeu d'entraînement, prédite pour chaque ligne. Garder le modèle de référence est une conclusion valable."
     cited_example: "Here the mean baseline predicts {{slot:fit.baseline:train_mean|f2}} <unit> for every row, the mean of the training rows."
-    cited_example_fr: "Ici, la moyenne de référence prédit {{slot:fit.baseline:train_mean|f2}} <unit> pour chaque ligne, la moyenne des lignes d'entraînement."
+    cited_example_fr: "Ici, la référence (prédire la moyenne) prédit {{slot:fit.baseline:train_mean|f2}} <unit> pour chaque ligne, la moyenne des lignes d'entraînement."
   linear_regression:
     term: Linear regression
     term_fr: "régression linéaire"
@@ -435,14 +435,14 @@ regression_terms:
     definition: The average size of the residuals, in the unit of the target. It reads directly as the typical error of one prediction.
     definition_fr: "La taille moyenne des résidus, dans l'unité de la cible. Elle se lit directement comme l'erreur typique d'une prédiction."
     cited_example: "Here the linear model's validation MAE is {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit>, against {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> for the mean baseline."
-    cited_example_fr: "Ici, la MAE de validation du modèle linéaire vaut {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit>, contre {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> pour la moyenne de référence."
+    cited_example_fr: "Ici, la MAE de validation du modèle linéaire vaut {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit>, contre {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> pour la référence (prédire la moyenne)."
   rmse:
     term: Root mean squared error (RMSE)
     term_fr: "racine de l'erreur quadratique moyenne (RMSE)"
     definition: The square root of the average squared residual, in the unit of the target. Squaring weighs large errors more, so a gap between RMSE and MAE signals a few large errors.
     definition_fr: "La racine carrée de la moyenne des résidus au carré, dans l'unité de la cible. Le carré pèse davantage les grandes erreurs : un écart entre RMSE et MAE signale quelques grandes erreurs."
     cited_example: "Here the linear model's validation RMSE is {{slot:evaluate.regression:models.[fit.linear].rmse|f2}} <unit>, against {{slot:evaluate.regression:models.[fit.baseline].rmse|f2}} <unit> for the mean baseline."
-    cited_example_fr: "Ici, la RMSE de validation du modèle linéaire vaut {{slot:evaluate.regression:models.[fit.linear].rmse|f2}} <unit>, contre {{slot:evaluate.regression:models.[fit.baseline].rmse|f2}} <unit> pour la moyenne de référence."
+    cited_example_fr: "Ici, la RMSE de validation du modèle linéaire vaut {{slot:evaluate.regression:models.[fit.linear].rmse|f2}} <unit>, contre {{slot:evaluate.regression:models.[fit.baseline].rmse|f2}} <unit> pour la référence (prédire la moyenne)."
   paired_bootstrap:
     term: Paired bootstrap
     term_fr: "bootstrap apparié"
@@ -631,10 +631,10 @@ regression_cv_terms:
     cited_example_fr: "Ici, le résidu moyen du modèle linéaire hors pli vaut {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}} <unit>."
   mae:
     cited_example: "Here the linear model's out-of-fold MAE is {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit>, against {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> for the mean baseline."
-    cited_example_fr: "Ici, la MAE hors pli du modèle linéaire vaut {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit>, contre {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> pour la moyenne de référence."
+    cited_example_fr: "Ici, la MAE hors pli du modèle linéaire vaut {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit>, contre {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> pour la référence (prédire la moyenne)."
   rmse:
     cited_example: "Here the linear model's out-of-fold RMSE is {{slot:evaluate.regression:models.[fit.linear].rmse|f2}} <unit>, against {{slot:evaluate.regression:models.[fit.baseline].rmse|f2}} <unit> for the mean baseline."
-    cited_example_fr: "Ici, la RMSE hors pli du modèle linéaire vaut {{slot:evaluate.regression:models.[fit.linear].rmse|f2}} <unit>, contre {{slot:evaluate.regression:models.[fit.baseline].rmse|f2}} <unit> pour la moyenne de référence."
+    cited_example_fr: "Ici, la RMSE hors pli du modèle linéaire vaut {{slot:evaluate.regression:models.[fit.linear].rmse|f2}} <unit>, contre {{slot:evaluate.regression:models.[fit.baseline].rmse|f2}} <unit> pour la référence (prédire la moyenne)."
   paired_bootstrap:
     definition: Resampling the same out-of-fold predictions for both models at once, so the interval describes their difference rather than each one separately.
     definition_fr: "Rééchantillonner les mêmes prédictions hors pli pour les deux modèles à la fois, pour que l'intervalle décrive leur différence plutôt que chacun séparément."

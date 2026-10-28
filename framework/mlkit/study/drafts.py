@@ -233,6 +233,18 @@ def exploration_slots(state: Mapping, case) -> list[tuple[str, str | None]]:
     return out
 
 
+def exploration_complete(study, state: Mapping) -> bool:
+    """Lot 2026-10-28 (EN-12): every exploration chart of the plan (the step's own activities
+    and :func:`exploration_slots`) is current, and no model is fitted yet."""
+    case = _case(state)
+    if case is None or current_values(study, state, 'fit.baseline')[0] is not None:
+        return False
+    fixed = next((s for s in st.derive_plan(state) if s.get('id') == 'train_eda'), {})
+    slots = list(fixed.get('activities') or ()) + [
+        f'{a}:{c}' if c else a for a, c in exploration_slots(state, case)]
+    return all(current_values(study, state, s)[0] is not None for s in slots)
+
+
 def exploration_run(study, state: Mapping, action: Mapping, lang: str) -> dict | None:
     """The ``run`` of the next exploration chart of the plan (R40, R45), or None: in a
     structural-first study, before the final test is opened, once the exploration's own

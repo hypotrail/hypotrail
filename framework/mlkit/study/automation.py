@@ -269,6 +269,10 @@ def run(study_dir, *, request_id: str, expected_revision: int,
                 'kind': 'propose', 'decision': 'prediction_time',
                 'recommended': recommended})
             kind = 'propose'
+        if kind == 'read_exploration':
+            # Lot 2026-10-28 (EN-12): the automatic mode does not pause; it runs ``then``.
+            action = {**action, 'kind': 'run', 'activity': action['then']['activity']}
+            kind = 'run'
         if not st.action_covered(state, action):
             stopped_at = action
             reason = 'reached_end' if kind == 'done' or action.get('review') or (

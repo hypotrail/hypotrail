@@ -1,0 +1,28 @@
+# How the Auto MPG case is displayed (hypotrail.case-display/1; lot 2026-10-28, owner remarks
+# R57, R58, R59). Short column names for titles, axes and the correlation matrix, and the
+# prediction-moment timeline. The milestones are a TEACHING SCENARIO ASSUMPTION, drawn as
+# such: the dataset documentation does not establish when each column is known. acceleration
+# has an unknown availability in the case, so it has no milestone (the "?" lane). Read by
+# mlkit.study.case_display; not a source of any result.
+schema: hypotrail.case-display/1
+columns:
+  mpg: {en: mpg, fr: mpg}
+  cylinders: {en: cylinders, fr: cylindres}
+  displacement: {en: displacement, fr: cylindrée}
+  horsepower: {en: horsepower, fr: puissance}
+  weight: {en: weight, fr: poids}
+  acceleration: {en: acceleration, fr: accélération}
+  model_year: {en: model year, fr: année du modèle}
+  origin: {en: origin, fr: origine}
+  car_name: {en: car name, fr: nom de la voiture}
+timeline:
+  status: scenario_assumption
+  source: Teaching scenario assumption
+  milestones:
+    - {id: design, label: {en: Engine designed, fr: Moteur conçu}}
+    - {id: body, label: {en: Body and weight fixed, fr: Carrosserie et poids fixés}}
+    - {id: tests, label: {en: Performance tests, fr: Essais de performance}}
+    - {id: measured, label: {en: Fuel use measured, fr: Consommation mesurée}}
+  proposed_after: body
+  known_at: {cylinders: design, displacement: design, horsepower: design, origin: design,
+             weight: body, mpg: measured}

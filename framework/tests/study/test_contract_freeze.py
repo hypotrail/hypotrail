@@ -218,7 +218,9 @@ DELEGATION_SCOPES = ('this_decision', 'standing')
 STANDING_DELEGATION_DECISIONS = ('prediction_time', 'feature_availability', 'split')
 # v0.2b (WP-B2): in the express mode, the framing decisions that follow the split too.
 EXPRESS_STANDING_DELEGATION_DECISIONS = ('prediction_time', 'feature_availability', 'split',
-                                         'success_criterion', 'preprocessing')
+                                         'success_criterion', 'preprocessing',
+                                         # Lot 2026-10-28 (EN-11).
+                                         'error_metric')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created',
                       # ADR 0005: restatements per language, and the study-language one,
@@ -313,7 +315,9 @@ REGRESSION_MUTATION_IDS = {1: 'prediction_time', 2: 'feature_availability.featur
                            # v0.2b (WP-B1).
                            17: 'model_variant',
                            # Reliability roadmap J3: action objective/rule mutation.
-                           18: 'success_criterion.selection', '*': 'unknown'}
+                           18: 'success_criterion.selection',
+                           # Lot 2026-10-28 (EN-9): the error measure.
+                           19: 'error_metric', '*': 'unknown'}
 NEXT_ACTION_KINDS = {'acknowledge_interruption', 'reconfirm', 'await_user_words', 'blocked',
                      'propose', 'run', 'done',
                      # Closure fix F1: a dead execution seen by the read-only lease probe.
@@ -321,7 +325,9 @@ NEXT_ACTION_KINDS = {'acknowledge_interruption', 'reconfirm', 'await_user_words'
                      # v0.2a (WP-A4, R2): step 0, informational.
                      'show_data_card',
                      # Review round 6 (area E): a decision the junior put on hold.
-                     'resolve_hold'}
+                     'resolve_hold',
+                     # Lot 2026-10-28 (EN-12): the pause after the exploration.
+                     'read_exploration'}
 EXECUTION_VIEW_KEYS = ('active', 'interrupted', 'late', 'suspected_interrupted')
 LIVENESS_VALUES = ('running', 'outcome_unknown', 'not_checked')
 NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independent',
@@ -1091,7 +1097,9 @@ def test_final_test_partition_contract(tmp_path, synthetic_case_dir):
     # optional ``groups`` of a case whose identical records are grouped.
     assert partition.STATUSES == ('sealed', 'opened') and partition.STATUS_ABSENT == 'absent'
     assert partition.OPTIONAL_RECORD_KEYS == ('groups', 'opening', 'prior_exposed',
-                                              'training_exclusions', 'analysis_protocol')
+                                              'training_exclusions', 'analysis_protocol',
+                                              # Lot 2026-10-28 (EN-17).
+                                              'strata_counts')
     # WP-B6a: rows the case declares as already exposed, kept out of the final test; the
     # opening's time in the status view.
     assert partition.PRIOR_EXPOSED_KEYS == ('path', 'sha256', 'declared_rows', 'excluded_rows')
@@ -1436,7 +1444,8 @@ def test_panel_contract_p1_digest_keys(tmp_path, synthetic_case_dir):
     from mlkit.study import audience, panel_digest as pd
     # The owner batch of 2026-10-28 appends its keys after these (§17.6, additive; see
     # test_owner_batch_2026_10_28_digest_keys), so the P1 keys are read by position.
-    assert view.DIGEST_SUMMARY_KEYS[-10:-2] == ('panel_contract', 'automation', 'review_queue',
+    # The lot of 2026-10-28 appends two more (§18, additive; test_lot_2026_10_28_keys).
+    assert view.DIGEST_SUMMARY_KEYS[-12:-4] == ('panel_contract', 'automation', 'review_queue',
                                                 'defensibility', 'ledger', 'sample',
                                                 'headlines', 'criterion_configurations')
     assert view.LANGUAGE_TEXT_KEYS[10:17] == ('question', 'options', 'options_note',
@@ -1448,7 +1457,7 @@ def test_panel_contract_p1_digest_keys(tmp_path, synthetic_case_dir):
                  'CRITERION_CONFIGURATION_KEYS', 'FINAL_CONFIGURATION_KEYS'):
         assert getattr(pd, name) == getattr(cc, name), name
     assert audience.SEVERITIES == ('blocking', 'caveat', 'not_final', 'context')
-    for key in view.DIGEST_SUMMARY_KEYS[-10:-2] + view.LANGUAGE_TEXT_KEYS[10:17]:
+    for key in view.DIGEST_SUMMARY_KEYS[-12:-4] + view.LANGUAGE_TEXT_KEYS[10:17]:
         assert f'`{key}`' in DOC, key
     study = tmp_path / 'study'
     assert _run('init', '--case', synthetic_case_dir, '--study', study).exit_code == 0
@@ -1465,14 +1474,54 @@ def test_panel_contract_p1_digest_keys(tmp_path, synthetic_case_dir):
         assert tuple(full['texts'][lang]) == cc.LANGUAGE_TEXT_KEYS
 
 
+def test_lot_2026_10_28_keys():
+    """Lot 2026-10-28 (CLI-CONTRACT §18, additive): the digest keys after
+    ``quality_verdicts``, the ``texts`` additions, the step cards' keys, the error measure's
+    decision set, the new next-action kind; every name documented in §18."""
+    from mlkit.study import case_brief, case_display, panel_digest as pd, step_cards as sc
+    assert view.DIGEST_SUMMARY_KEYS[-2:] == ('case_brief', 'case_display')
+    assert view.LANGUAGE_TEXT_KEYS[-3:] == ('step_cards', 'case_brief', 'defensibility_note')
+    assert sc.SCHEMA == 'hypotrail.step_cards/1'
+    assert sc.CARDS_KEYS == ('schema', 'current', 'total', 'steps')
+    assert sc.STEP_KEYS == ('step', 'n', 'name', 'short', 'moment', 'state', 'picture',
+                            'prepares', 'questions', 'no_chart', 'limit', 'next', 'decision')
+    assert sc.QUESTION_KEYS == ('id', 'n', 'text', 'source', 'chart', 'chart_data',
+                                'other_charts', 'frame', 'status', 'result_id',
+                                'result_revision', 'reading', 'cites', 'verdict', 'folds')
+    assert sc.PICTURE_KEYS == ('kind', 'caption', 'more', 'illustrative', 'data')
+    assert sc.CITE_KEYS == ('name', 'result_id', 'path', 'value', 'text')
+    assert sc.OTHER_CHART_KEYS == ('slot', 'chart', 'result_id', 'result_revision', 'status')
+    assert sc.DECISION_KEYS == ('decision_id', 'words', 'basis', 'who')
+    assert sc.STATUSES == ('answered', 'stale', 'pending', 'no_chart', 'integrity_failed')
+    assert sc.WHO == ('you', 'automatic', 'delegated')
+    assert case_display.CHART_KEYS == ('milestones', 'moment_after', 'slider', 'decided',
+                                       'status', 'columns', 'positions')
+    assert case_display.POSITION_KEYS == ('after', 'kept', 'dropped', 'uncertain')
+    assert case_brief.DIGEST_KEYS == ('fictitious', 'current_method_error', 'target_error')
+    assert pd.SUMMARY_DEFENSIBILITY_KEYS[-1] == 'checklist'
+    assert pd.SUMMARY_CRITERION_CONFIG_KEYS[-1] == 'business'
+    assert pd.BUSINESS_KEYS == ('max_error', 'measure', 'configurations', 'final_test',
+                                'judged_on', 'met')
+    assert st.ERROR_METRIC == 'error_metric' and st.ERROR_METRICS == ('mae', 'rmse')
+    assert st.M1_REGRESSION_DECISION_IDS.index('error_metric') + 1 == \
+        st.M1_REGRESSION_DECISION_IDS.index('success_criterion')
+    section = DOC[DOC.index('## 18. One structure for every step'):]
+    for name in ('read_exploration', 'error_metric', 'strata_counts', 'case_brief',
+                 'case_display', 'business_max_error', 'checklist', 'defensibility_note',
+                 'step_cards', 'criterion_example', 'integrity_failed', 'chart_data',
+                 'result_revision', 'positions', 'business') + sc.STEP_KEYS + sc.QUESTION_KEYS:
+        assert name in section, name
+
+
 def test_owner_batch_2026_10_28_digest_keys():
     """Owner batch of 2026-10-28 (CLI-CONTRACT §17.6, additive): the digest keys after
     ``criterion_configurations``, the ``texts`` additions, the ledger's live budget, the
     structure of the step-1 card, the quality verdicts, the evidence of a proposal, the
     plan recap, the panel line's form (R35); every name documented."""
     from mlkit.study import cmd_data, companion_env as ce, drafts, junior
-    assert view.DIGEST_SUMMARY_KEYS[-2:] == ('data_structure', 'quality_verdicts')
-    assert view.LANGUAGE_TEXT_KEYS[-3:] == ('plan_recap', 'step_limit', 'criterion_words')
+    # The lot of 2026-10-28 appends its keys after these (§18; test_lot_2026_10_28_keys).
+    assert view.DIGEST_SUMMARY_KEYS[-4:-2] == ('data_structure', 'quality_verdicts')
+    assert view.LANGUAGE_TEXT_KEYS[-6:-3] == ('plan_recap', 'step_limit', 'criterion_words')
     assert cmd_data.STRUCTURE_KEYS == ('duplicates', 'groups')
     assert cmd_data.STRUCTURE_DUPLICATE_KEYS == ('rows', 'identical_feature_rows')
     assert cmd_data.STRUCTURE_GROUP_KEYS == ('column', 'groups', 'rows_in_repeated_groups')

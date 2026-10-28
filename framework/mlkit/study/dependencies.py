@@ -179,6 +179,14 @@ REGRESSION_MUTATIONS: tuple[dict, ...] = (
      're_policy': ('evaluate.regression',), 'recompute': (),
      'reconfirm': ('model_choice', 'conclusion'), 'blocked_until': (),
      'notes': BY_MUTATION['model_variant']['notes']},
+    # Lot 2026-10-28 (EN-9): the error measure changed. No result changes (the evaluations
+    # store both errors); the criterion fixed on the measure, the choice made on it and the
+    # conclusion are asked again.
+    {'row': 19, 'mutation': 'error_metric', 'refit': (), 're_eda': (), 're_policy': (),
+     'recompute': (), 'reconfirm': ('success_criterion', 'model_choice', 'conclusion'),
+     'blocked_until': (),
+     'notes': ('No result changes: the evaluations store both errors. The criterion is fixed '
+               'again on the new measure.',)},
     BY_MUTATION['unknown'],
 )
 REGRESSION_BY_MUTATION = {m['mutation']: m for m in REGRESSION_MUTATIONS}
@@ -257,6 +265,9 @@ def classify(decision_id: str, old: Any, new: Any) -> str:
         return ('success_criterion.selection'
                 if rec.canonical(old.get('selection')) != rec.canonical(new.get('selection'))
                 or old.get('metric') != new.get('metric') else 'success_criterion')
+    if decision_id == 'error_metric':
+        return 'error_metric' if isinstance(old, Mapping) and isinstance(new, Mapping) \
+            else 'unknown'
     if decision_id == 'model_variant':
         return 'model_variant' if isinstance(old, Mapping) and isinstance(new, Mapping) \
             else 'unknown'
@@ -458,7 +469,9 @@ DECISION_OF_MUTATION = {'prediction_time': 'prediction_time',
                         'success_criterion': 'success_criterion',
                         'success_criterion.selection': 'success_criterion',
                         # WP-B1.
-                        'model_variant': 'model_variant'}
+                        'model_variant': 'model_variant',
+                        # Lot 2026-10-28 (EN-9).
+                        'error_metric': 'error_metric'}
 # The rows whose mutation can change a confirmed decision, by task (CC §5 ``impacts``):
 # rows 1 to 6 for a binary study, rows 1 to 4 and 13 for a regression study.
 DECISION_MUTATIONS = {

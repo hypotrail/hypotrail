@@ -67,7 +67,7 @@ def _steps_fr() -> dict[str, str]:
         S['models']['title']: 'Ajuster un modèle de référence et un modèle logistique',
         S['policy']['title']: 'Choisir une règle de décision',
         S['conclusion']['title']: 'Conclure avec mesure',
-        R['models']['title']: 'Ajuster une moyenne de référence et un modèle linéaire',
+        R['models']['title']: 'Ajuster une référence (prédire la moyenne) et un modèle linéaire',
         R['model_choice']['title']: 'Choisir le modèle',
         st.DISCOVER_STEP['title']: 'Découvrir les données',
         st.SUCCESS_STEP['title']: 'Fixer le critère de succès avant de voir un modèle',
@@ -75,6 +75,15 @@ def _steps_fr() -> dict[str, str]:
         st.VARIANT_STEP['title']: 'Choisir les variantes à comparer',
         st.MODEL_CHOICE_STEP['title']: 'Choisir le modèle',
         st.FINAL_TEST_STEP['title']: "Ouvrir une fois l'échantillon de test final",
+        # Lot 2026-10-28 (EN-9).
+        st.ERROR_METRIC_STEP['title']: "Choisir comment l'erreur est mesurée",
+        st.ERROR_METRIC_STEP['question']:
+            "L'erreur d'une prédiction est l'écart entre la valeur observée et la valeur "
+            "prédite. L'erreur absolue moyenne (MAE) fait la moyenne de ces écarts ; la racine "
+            "de l'erreur quadratique moyenne (RMSE) fait la moyenne de leurs carrés, puis en "
+            'prend la racine : un gros raté y pèse beaucoup plus. Laquelle des deux mesure '
+            "l'erreur de cette étude ? Elle est choisie maintenant, avant tout ajustement de "
+            'modèle.',
         cv['train_eda']['title']: "Explorer l'échantillon de développement",
         # questions
         S['prediction_time']['question']: 'À quel moment la prédiction est-elle faite, et '
@@ -107,7 +116,7 @@ def _steps_fr() -> dict[str, str]:
         R['models']['question']: "Quelles prédictions la moyenne du jeu d'entraînement et un "
                                  'modèle linéaire donnent-ils pour le jeu de validation ?',
         R['model_choice']['question']: 'Le modèle linéaire réduit-il assez l\'erreur de '
-                                       'validation de la moyenne de référence, dans l\'unité '
+                                       'validation de la référence (prédire la moyenne), dans l\'unité '
                                        'de la cible, pour être adopté, compte tenu des '
                                        'intervalles appariés et des résidus ?',
         st.DISCOVER_STEP['question']: 'Que décrit une ligne, quelles colonnes y a-t-il et que '
@@ -130,12 +139,12 @@ def _steps_fr() -> dict[str, str]:
                                      'tout ajustement de modèle.',
         st.REGRESSION_SUCCESS_STEP['question']: "L'erreur absolue moyenne (MAE) est la taille "
                                                 "moyenne de l'erreur d'une prédiction, dans "
-                                                "l'unité de la cible. La moyenne de référence "
+                                                "l'unité de la cible. La référence (prédire la moyenne) "
                                                 'prédit, pour chaque ligne du jeu de '
                                                 'validation, la moyenne de la cible sur le jeu '
                                                 "d'entraînement. De combien l'erreur de "
                                                 'validation du modèle doit-elle être plus '
-                                                'petite que celle de la moyenne de référence '
+                                                'petite que celle de la référence (prédire la moyenne) '
                                                 'pour qu\'il soit utile ? Le critère est fixé '
                                                 'maintenant, avant tout ajustement de modèle.',
         st.PREPROCESSING_STEP['question']: 'Comment le modèle doit-il traiter les valeurs '
@@ -166,7 +175,7 @@ def _steps_fr() -> dict[str, str]:
                                          'Ensuite, tout changement est fait après le test '
                                          'final.',
         cv['split']['question']: "Comment l'échantillon de développement est-il découpé en "
-                                 'plis pour la validation croisée à k plis, avant toute '
+                                 'plis pour la validation croisée, avant toute '
                                  'exploration de la cible ? Chaque pli est à son tour le pli '
                                  'de validation, prédit par un modèle ajusté sur les autres '
                                  "plis, les plis d'entraînement.",
@@ -187,13 +196,13 @@ def _steps_fr() -> dict[str, str]:
                                   'développement ?',
         rcv['success_criterion']['question']: "L'erreur absolue moyenne (MAE) est la taille "
                                               "moyenne de l'erreur d'une prédiction, dans "
-                                              "l'unité de la cible. La moyenne de référence "
+                                              "l'unité de la cible. La référence (prédire la moyenne) "
                                               "prédit, pour chaque ligne d'un pli de "
                                               'validation, la moyenne des plis '
                                               "d'entraînement. De "
                                               "combien l'erreur hors pli du modèle doit-elle "
-                                              'être plus petite que celle de la moyenne de '
-                                              "référence pour qu'il soit utile ? Le critère est "
+                                              'être plus petite que celle de la référence (prédire '
+                                              "la moyenne) pour qu'il soit utile ? Le critère est "
                                               'fixé maintenant, avant tout ajustement de '
                                               'modèle.',
         rcv['train_eda']['question']: "Que montre l'échantillon de développement sur la "
@@ -202,11 +211,11 @@ def _steps_fr() -> dict[str, str]:
                                       'les moyennes par variable, les distributions, le signal '
                                       "d'une variable seule) répondent chacune à une question "
                                       "posée d'abord ; chaque regard sur la cible est compté.",
-        rcv['models']['question']: 'Quelles prédictions la moyenne de référence et un modèle '
+        rcv['models']['question']: 'Quelles prédictions la référence (prédire la moyenne) et un modèle '
                                    "linéaire donnent-ils pour chaque ligne de l'échantillon de "
                                    'développement, prédite hors pli ?',
         rcv['model_choice']['question']: 'Le modèle linéaire réduit-il assez l\'erreur hors pli '
-                                         'de la moyenne de référence, dans l\'unité de la '
+                                         'de la référence (prédire la moyenne), dans l\'unité de la '
                                          'cible, pour être adopté, compte tenu des intervalles '
                                          'appariés et des résidus ?',
         # Owner session 2026-10-26 (L5, D5): the structural-first plan.
@@ -277,6 +286,7 @@ def all_step_texts() -> list[str]:
                   dict(st.PREPROCESSING_STEP, question=st.STRUCTURAL_PREPROCESSING_QUESTION)]
     structural += [dict(st.STEPS[3], **texts) for texts in st.STRUCTURAL_TRAIN_EDA_TEXTS.values()]
     groups.append(tuple(structural))
+    groups.append((st.ERROR_METRIC_STEP,))              # lot 2026-10-28 (EN-9)
     out: list[str] = []
     for g in groups:
         for s in g:
@@ -635,6 +645,16 @@ def case_fact(view: Mapping, state: Mapping, fact_id: str, lang: str) -> dict | 
     return {**fact, 'value': french} if french else fact
 
 
+def _unit_of(state) -> str | None:
+    """The unit of a regression study's target (the case's), or None."""
+    from .case import case_of
+    try:
+        case = case_of(state)
+    except Exception:                    # noqa: BLE001 - a case that cannot be read: no unit
+        return None
+    return case.target_unit if case.task == st.REGRESSION else None
+
+
 def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> dict | None:
     """The engine's default for the decision ``action`` proposes, with a one-line why."""
     if action.get('kind') != 'propose':
@@ -674,10 +694,10 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
         'split': _t(
             lang, 'k-fold cross-validation uses every development row once as validation, so '
                   'the estimate rests on more rows than one validation set.',
-            'La validation croisée à k plis utilise chaque ligne de développement une fois en '
+            'La validation croisée utilise chaque ligne de développement une fois en '
             'validation : l\'estimation repose sur plus de lignes qu\'un seul jeu de '
-            'validation.') + (_t(lang, f' Here k = {value["folds"]}: {value["folds"]} folds.',
-                                 f' Ici k = {value["folds"]} : {value["folds"]} plis.')
+            'validation.') + (_t(lang, f' Here {value["folds"]} folds.',
+                                 f' Ici, {value["folds"]} plis.')
                               if isinstance(value, Mapping) and isinstance(value.get('folds'), int)
                               and not isinstance(value.get('folds'), bool) else ''),
         'preprocessing': _t(
@@ -696,6 +716,16 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
             'La pénalité choisie par validation croisée imbriquée est le contrôle le plus '
             'simple que le candidat n\'apprend pas du bruit ; elle compte comme un essai du '
             'budget de trois.'),
+        # Lot 2026-10-28 (EN-10).
+        st.ERROR_METRIC: _t(
+            lang, 'The MAE: every error weighs the same, and it reads in '
+                  f'{_unit_of(state) or "the unit of the target"}. The RMSE is the alternative: '
+                  'one big miss weighs much more; choose it if one big miss costs much more '
+                  'than several small ones.',
+            "La MAE : chaque erreur pèse pareil, et elle se lit en "
+            f"{_unit_of(state) or 'unité de la cible'}. La RMSE est l'autre choix : un gros "
+            'raté y pèse beaucoup plus ; à choisir si un gros raté coûte bien plus que '
+            'plusieurs petits.'),
         'final_test': _t(
             lang, 'This is the configuration you chose; the holdout (final test) measures it '
                   'once.',
@@ -793,12 +823,22 @@ def _recommended_criterion(action: Mapping, lang: str) -> dict | None:
     value = dict(middle['value'])
     if options.get('task') == st.REGRESSION:
         pct = round(100 * float(value['min_share']))
-        why = _t(lang, f'The middle option, {pct}% less error than the mean baseline: a moderate '
-                       'bar chosen by convention, not from the costs of this case. Keep it, or '
-                       'name the minimum your team needs.',
-                 f"L'option du milieu, {pct} % d'erreur en moins que la moyenne de référence : "
-                 'un seuil modéré, choisi par convention et non à partir des coûts de ce cas. '
-                 "Gardez-le, ou indiquez le minimum dont votre équipe a besoin.")
+        why = _t(lang, f'The middle option, {pct}% less error than the reference (predict the '
+                       'mean): a moderate bar chosen by convention, not from the costs of this '
+                       'case. Keep it, or name the minimum your team needs.',
+                 f"L'option du milieu, {pct} % d'erreur en moins que la référence (prédire la "
+                 'moyenne) : un seuil modéré, choisi par convention et non à partir des coûts '
+                 "de ce cas. Gardez-le, ou indiquez le minimum dont votre équipe a besoin.")
+        bar = value.get('business_max_error')
+        if isinstance(bar, (int, float)):
+            # R67: the business bar of the use-case brief, judged with the minimum.
+            from .cite import format_value
+            why += _t(lang, ' The business bar is the current method\'s error, '
+                            f'{format_value(bar, "f1", "en")} from the use-case brief: both '
+                            'levels are fixed now and judged on the final test.',
+                      " La barre métier est l'erreur de la méthode actuelle, "
+                      f'{format_value(bar, "f1", "fr")} selon la fiche du cas d\'usage : les '
+                      'deux niveaux sont fixés maintenant et jugés sur le test final.')
         if any(m.get('metric') == 'rmse_reduction' for m in options.get('metrics') or []):
             # R46: the metric is a decision; MAE is proposed by default, and why.
             why += _t(lang, ' The metric is the mean absolute error (MAE): every error weighs '
@@ -880,8 +920,14 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
         return _t(lang, 'Is the condition you set met now?',
                   'La condition que vous avez posée est-elle remplie maintenant ?')
     if kind == 'show_data_card':
-        return _t(lang, 'Shall we look at the data card together?',
-                  'On regarde ensemble la fiche des données ?')
+        # Lot 2026-10-28 (EN-13, R54): the question says what is shown and names the next
+        # step by its full name.
+        return _t(lang, 'The data card is shown. Shall we move on to the prediction moment?',
+                  'La fiche des données est affichée. On passe au moment de la prédiction ?')
+    if kind == 'read_exploration':
+        # Lot 2026-10-28 (EN-12, R61): the pause after the exploration.
+        return _t(lang, "The exploration's charts are shown. Shall we move on to the models?",
+                  "Les graphiques de l'exploration sont affichés. On passe aux modèles ?")
     if kind != 'propose':
         return None
     task = view.get('task') or st.BINARY
@@ -893,12 +939,13 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
                                    'Quelles colonnes sont connues à ce moment-là, et lesquelles '
                                    'faut-il exclure ?'),
         # R36: k is stated (the folds of the drafted value) when it is known.
-        'split': (_t(lang, f'Do you evaluate with this {_k_folds(action)}-fold cross-validation '
-                           f'(k = {_k_folds(action)})?',
-                     f'Évaluez-vous avec cette validation croisée à {_k_folds(action)} plis '
-                     f'(k = {_k_folds(action)}) ?') if _k_folds(action) else
-                  _t(lang, 'Do you evaluate with this k-fold cross-validation?',
-                     'Évaluez-vous avec cette validation croisée à k plis ?')) if cv else
+        # Lot 2026-10-28 (EN-21): « validation croisée à 5 plis » once, no "k".
+        'split': (_t(lang, f'Do you evaluate with this {_k_folds(action)}-fold '
+                           'cross-validation?',
+                     f'Évaluez-vous avec cette validation croisée à {_k_folds(action)} plis ?')
+                  if _k_folds(action) else
+                  _t(lang, 'Do you evaluate with this cross-validation?',
+                     'Évaluez-vous avec cette validation croisée ?')) if cv else
         _t(lang, 'How should the rows be divided between the training set and the validation '
                  'set?',
            "Comment répartir les lignes entre le jeu d'entraînement et le jeu de validation ?"),
@@ -925,6 +972,11 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
                                    'parameter for a reason you can state?',
                              'Gardez-vous la préparation par défaut, ou changez-vous un '
                              'paramètre pour une raison que vous pouvez énoncer ?')),
+        # Lot 2026-10-28 (EN-10, R54): the question names the drafted measure.
+        st.ERROR_METRIC: _t(lang, 'Which error measure do we keep: the mean absolute error '
+                                  '(MAE)?',
+                            "Quelle mesure de l'erreur retient-on : l'erreur absolue moyenne "
+                            '(MAE) ?'),
         'model_variant': _t(lang, 'Which variants, at most three, should be compared with '
                                   'the candidate, and which question does each answer?',
                             'Quelles variantes, trois au plus, comparer au candidat, et à '
@@ -1023,13 +1075,13 @@ def _digest_propose(decision: str, view: Mapping, ctx: dict, lang: str,
                              f'k-fold cross-validation: the development set is divided into '
                              f'{folds} folds; each fold is in turn the validation fold, predicted '
                              f'by a model fitted on the training folds.',
-                       f'Validation croisée à k plis (k-fold cross-validation) : '
+                       f'Validation croisée à {folds} plis (k-fold cross-validation) : '
                        f"l'échantillon de développement ({_int(dev, lang)} lignes) est découpé "
                        f'en {folds} plis ; chaque pli est à son tour le pli de validation, '
                        f'prédit par un modèle ajusté sur les autres plis, les plis '
                        f"d'entraînement. Chaque ligne de développement reçoit une prédiction "
                        f'hors pli.' if isinstance(dev, int) else
-                       f'Validation croisée à k plis : l\'échantillon de développement est '
+                       f'Validation croisée à {folds} plis : l\'échantillon de développement est '
                        f'découpé en {folds} plis ; chaque pli est à son tour le pli de '
                        f"validation, prédit par un modèle ajusté sur les plis d'entraînement."),
                     _holdout_sentence(holdout, lang)]
@@ -1139,7 +1191,7 @@ def _digest_propose(decision: str, view: Mapping, ctx: dict, lang: str,
                     _criterion_status_words(view, lang) or '']
         return [_t(lang, 'Model choice: keep the mean baseline or adopt the linear model, read '
                          'on the mean absolute error (MAE) and its paired interval.',
-                   'Choix du modèle : garder la moyenne de référence ou adopter le modèle '
+                   'Choix du modèle : garder la référence (prédire la moyenne) ou adopter le modèle '
                    "linéaire, lu sur l'erreur absolue moyenne (MAE) et son intervalle "
                    'apparié.'), _criterion_status_words(view, lang) or '']
     if decision == 'final_test':
@@ -1287,7 +1339,8 @@ VERDICT_LABELS = {'adopt_policy': ('Adopt the rule', 'Adopter la règle'),
                   'keep_baseline': ('Keep the baseline', 'Garder le modèle de référence'),
                   'inconclusive': ('Do not conclude (inconclusive)',
                                    'Ne pas conclure (non concluant)')}
-REGRESSION_KEEP_LABEL = ('Keep the mean baseline', 'Garder la moyenne de référence')
+REGRESSION_KEEP_LABEL = ('Keep the reference (predict the mean)',
+                         'Garder la référence (prédire la moyenne)')
 _ORDINAL_VARIANTS = {EN: ('The first variant', 'The second variant', 'The third variant'),
                      FR: ('La première variante', 'La deuxième variante',
                           'La troisième variante')}
@@ -1358,9 +1411,18 @@ def enrich(view: dict, state: Mapping, case=None, *, accepts=None) -> dict:
     if action.get('kind') in ('propose', 'await_user_words') \
             and decision == st.SUCCESS_CRITERION:
         from . import criterion
+        measure = business = None
+        if isinstance(state, Mapping) and st.has_error_metric(state):
+            # Lot 2026-10-28 (EN-9, R67): a study deciding its error measure fixes the
+            # criterion on it, with the business bar of the use-case brief by default.
+            from . import case_brief
+            measure = st.confirmed_error_metric(state)
+            business = case_brief.business_bar(case_brief.of_state(state),
+                                               measure or st.DEFAULT_ERROR_METRIC)
         action['criterion_options'] = criterion.options(
             view, lang, unit=case.target_unit if case is not None
-            and getattr(case, 'task', None) == 'regression' else None)
+            and getattr(case, 'task', None) == 'regression' else None,
+            measure=measure, business=business)
     ctx = _context(view, state, case)
     action['language'] = lang
     recommended = _recommended(action, view, state, lang)
@@ -1415,13 +1477,13 @@ def plan_recap(view: Mapping, state: Mapping, action: Mapping | None, lang: str)
         steps = [s for s in m.get('steps') or [] if s in ids]
         if not steps:
             continue
-        names = words['join'].join(ce.step_label(s, lang) for s in steps)
+        names = words['join'].join(ce.step_name(s, lang) for s in steps)
         parts.append(f'{m["title"]} ({names})' if m.get('title') else names)
     text = words['lead'] + words['moments'].join(parts) + '.'
     current = ce.current_step(action, plan)
     if (action or {}).get('kind') == 'done' or current not in ids:
         return f'{text} {words["done"]}' if (action or {}).get('kind') == 'done' else text
-    return f'{text} ' + words['current'].format(step=ce.step_label(current, lang),
+    return f'{text} ' + words['current'].format(step=ce.step_name(current, lang),
                                                 n=ids.index(current) + 1, total=len(ids))
 
 
@@ -1453,7 +1515,7 @@ STEP_LIMITS = {
         "performance sur d'autres périodes ou d'autres données, ni un effet causal."),
 }
 FRAME_STEPS = ('discover_data', 'prediction_time', 'feature_availability', 'split',
-               st.SUCCESS_CRITERION)
+               st.ERROR_METRIC, st.SUCCESS_CRITERION)
 
 
 def step_limit(view: Mapping, lang: str) -> str | None:

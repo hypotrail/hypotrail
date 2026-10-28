@@ -958,6 +958,14 @@ CLAUDE_CODE_DIGESTS = {
     'binary': '18719e74569e7be56cb9b6b985ae5598fc45c5960dd668a747a9ff3fed9483e5',
     'regression': 'b4a890b652378d935ad16664ff2232cd1431014062730159a8489d4567d018a2'}
 CLAUDE_CODE_INTENDED_CHANGES = {
+    # Lot 2026-10-28 (EN-9, EN-12): the error measure before the criterion, and the pause
+    # after the exploration (``read_exploration``).
+    'Lot 2026-10-28: the error measure and the pause after the exploration (rule 3)': (
+        '      **error measure** (`error_metric`) and the **success criterion**, before any '
+        'model is\n      fitted; after the exploration, the **preprocessing**. At '
+        '`read_exploration`, ask its\n      question; on "continue", run `then.command`;\n',
+        '      **success criterion**, before any model is fitted; after the exploration, the\n'
+        '      **preprocessing**;\n'),
     # Owner batch of 2026-10-28. Listed first: R35 and the skill's panel-line item restore
     # the text that the R21 entries below then read.
     # R35: the engine gives the line only when it adds something (not while Now shows the

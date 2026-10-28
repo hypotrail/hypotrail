@@ -529,7 +529,7 @@ def _final_result(view: Mapping, lang: str) -> str | None:
         base = models.get('fit.baseline') or {}
         if _is_number(base.get('mae')) and values.get('model') != 'fit.baseline':
             text += _t(lang, f', against {_num(base["mae"], lang)}{unit} for the mean baseline',
-                       f', contre {_num(base["mae"], lang)}{unit} pour la moyenne de référence')
+                       f', contre {_num(base["mae"], lang)}{unit} pour la référence (prédire la moyenne)')
     elif _is_number(chosen.get('precision')):
         text += _t(lang, f': precision of {model_name(view, values.get("model"))} '
                          f'{_pct(chosen["precision"], lang)}',
@@ -682,7 +682,7 @@ def _model_line(view: Mapping, lang: str) -> str | None:
     base = model_figure(view, reference) if reference and reference != slot else None
     if base:
         text += _t(lang, f', against {base[1]} for the mean baseline',
-                   f', contre {base[1]} pour la moyenne de référence')
+                   f', contre {base[1]} pour la référence (prédire la moyenne)')
     best = selection.get('best')
     if best and best != slot:
         other = model_figure(view, best)

@@ -67,7 +67,7 @@ stale: Pas à jour, non cité.
 regression_steps:
   success_criterion:
     context: Le critère est fixé à la pause du découpage, avant tout ajustement de modèle, pour que le résultat ne puisse pas l'influencer.
-    method: Vous indiquez la plus petite réduction relative de l'erreur absolue moyenne de validation de la moyenne de référence qui rendrait le modèle utile.
+    method: Vous indiquez la plus petite réduction relative de l'erreur absolue moyenne de validation de la référence (prédire la moyenne) qui rendrait le modèle utile.
     interpretation: La conclusion est lue par rapport à ce critère. Une réduction inférieure, ou dont l'intervalle apparié contient zéro, ne justifie pas d'adopter le modèle.
     consequence: Le changer plus tard demande de confirmer à nouveau la conclusion.
   preprocessing:
@@ -93,15 +93,15 @@ regression_steps:
   train_eda:
     context: "La cible est : {{fact:target|non indiqué par le cas}}. L'exploration lit seulement les lignes d'entraînement."
     method: Le résumé de la cible et les valeurs spéciales sont calculés sur la partition d'entraînement, avec leurs effectifs.
-    interpretation: "Sur les lignes d'entraînement, la cible a une moyenne de {{slot:eda.target_summary:mean|f2}} et un écart-type de {{slot:eda.target_summary:sd|f2}}, dans l'unité de la cible. La moyenne de référence prédit cette moyenne pour chaque ligne ; un modèle doit faire mieux pour être utile."
+    interpretation: "Sur les lignes d'entraînement, la cible a une moyenne de {{slot:eda.target_summary:mean|f2}} et un écart-type de {{slot:eda.target_summary:sd|f2}}, dans l'unité de la cible. La référence (prédire la moyenne) prédit cette moyenne pour chaque ligne ; un modèle doit faire mieux pour être utile."
     consequence: Un marqueur de valeur manquante sur une variable numérique devient un indicateur et une valeur imputée dans le modèle, jamais un nombre ordinaire.
   models:
-    context: Une moyenne de référence et un modèle linéaire sont ajustés sur les lignes d'entraînement et prédisent les lignes de validation.
+    context: Une référence (prédire la moyenne) et un modèle linéaire sont ajustés sur les lignes d'entraînement et prédisent les lignes de validation.
     method: Les prédictions sur les lignes de validation sont enregistrées, donc comparer et choisir un modèle ne demande jamais de réajustement.
-    interpretation: "Sur les lignes de validation, la moyenne de référence a une erreur absolue moyenne de {{slot:fit.baseline:validation.mae|f2}} et le modèle linéaire de {{slot:fit.linear:validation.mae|f2}}, dans l'unité de la cible."
+    interpretation: "Sur les lignes de validation, la référence (prédire la moyenne) a une erreur absolue moyenne de {{slot:fit.baseline:validation.mae|f2}} et le modèle linéaire de {{slot:fit.linear:validation.mae|f2}}, dans l'unité de la cible."
     consequence: La comparaison des modèles lit ces prédictions enregistrées.
   model_choice:
-    context: "L'usage prévu est : {{fact:intended_use|non indiqué par le cas}}. Un modèle n'est adopté que s'il réduit l'erreur de la moyenne de référence de plus que la variabilité de ces lignes de validation, et si ses résidus ne montrent pas de biais qui compte pour cet usage."
+    context: "L'usage prévu est : {{fact:intended_use|non indiqué par le cas}}. Un modèle n'est adopté que s'il réduit l'erreur de la référence (prédire la moyenne) de plus que la variabilité de ces lignes de validation, et si ses résidus ne montrent pas de biais qui compte pour cet usage."
     method: La MAE et la RMSE sont calculées dans l'unité de la cible sur les prédictions de validation enregistrées, avec des intervalles bootstrap appariés de chacune et de l'écart avec le modèle de référence, et les résidus par période.
     interpretation: "La MAE du modèle linéaire moins celle du modèle de référence vaut {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} sur les lignes de validation, entre {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} et {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} sur des rééchantillonnages de ces lignes. Son résidu moyen (biais) vaut {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}}. Ces lignes ont servi au choix, donc les chiffres sont optimistes et ne sont pas une prévision."
     consequence: Changer le choix du modèle réutilise les prédictions enregistrées et l'évaluation ; rien n'est réajusté.
@@ -129,7 +129,7 @@ cv_steps:
     interpretation: La conclusion repose sur des chiffres hors pli de lignes qui ont servi à la sélection, et sur le test final une fois qu'il est ouvert.
 regression_cv_steps:
   success_criterion:
-    method: Vous indiquez la plus petite réduction relative de l'erreur absolue moyenne hors pli de la moyenne de référence qui rendrait le modèle utile.
+    method: Vous indiquez la plus petite réduction relative de l'erreur absolue moyenne hors pli de la référence (prédire la moyenne) qui rendrait le modèle utile.
   preprocessing:
     context: L'exploration des lignes de développement peut motiver la façon dont le modèle prépare les variables ; les analyses qui l'ont motivée sont enregistrées avec elle.
     method: Les indicateurs de valeur manquante, le nombre minimal de lignes d'une catégorie, les plafonds aux quantiles et les transformations logarithmiques sont appris, pli par pli, sur les lignes sur lesquelles chaque modèle est ajusté, et appliqués tels quels au pli qu'il prédit. Le choix par défaut ne change rien.
@@ -141,13 +141,13 @@ regression_cv_steps:
   train_eda:
     context: "La cible est : {{fact:target|non indiqué par le cas}}. L'exploration lit les lignes de développement ; l'échantillon de test final reste scellé."
     method: Le résumé de la cible et les valeurs spéciales sont calculés sur les lignes de développement, avec leurs effectifs.
-    interpretation: "Sur les lignes de développement, la cible a une moyenne de {{slot:eda.target_summary:mean|f2}} et un écart-type de {{slot:eda.target_summary:sd|f2}}, dans l'unité de la cible. La moyenne de référence prédit la moyenne des lignes sur lesquelles elle est ajustée ; un modèle doit faire mieux pour être utile."
+    interpretation: "Sur les lignes de développement, la cible a une moyenne de {{slot:eda.target_summary:mean|f2}} et un écart-type de {{slot:eda.target_summary:sd|f2}}, dans l'unité de la cible. La référence (prédire la moyenne) prédit la moyenne des lignes sur lesquelles elle est ajustée ; un modèle doit faire mieux pour être utile."
   models:
-    context: Une moyenne de référence et un modèle linéaire sont ajustés pli par pli ; chaque pli est prédit par des modèles ajustés sur les autres plis.
+    context: Une référence (prédire la moyenne) et un modèle linéaire sont ajustés pli par pli ; chaque pli est prédit par des modèles ajustés sur les autres plis.
     method: Les prédictions hors pli de chaque ligne de développement sont enregistrées, donc comparer et choisir un modèle ne demande jamais de réajustement.
-    interpretation: "Hors pli, la moyenne de référence a une erreur absolue moyenne de {{slot:fit.baseline:validation.mae|f2}} et le modèle linéaire de {{slot:fit.linear:validation.mae|f2}}, dans l'unité de la cible."
+    interpretation: "Hors pli, la référence (prédire la moyenne) a une erreur absolue moyenne de {{slot:fit.baseline:validation.mae|f2}} et le modèle linéaire de {{slot:fit.linear:validation.mae|f2}}, dans l'unité de la cible."
   model_choice:
-    context: "L'usage prévu est : {{fact:intended_use|non indiqué par le cas}}. Un modèle n'est adopté que s'il réduit l'erreur de la moyenne de référence de plus que la variabilité de ces prédictions hors pli, et si ses résidus ne montrent pas de biais qui compte pour cet usage."
+    context: "L'usage prévu est : {{fact:intended_use|non indiqué par le cas}}. Un modèle n'est adopté que s'il réduit l'erreur de la référence (prédire la moyenne) de plus que la variabilité de ces prédictions hors pli, et si ses résidus ne montrent pas de biais qui compte pour cet usage."
     method: La MAE et la RMSE sont calculées dans l'unité de la cible sur les prédictions hors pli enregistrées, avec des intervalles bootstrap appariés de chacune et de l'écart avec le modèle de référence, et les résidus par période.
     interpretation: "La MAE du modèle linéaire moins celle du modèle de référence vaut {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} hors pli, entre {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} et {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} sur des rééchantillonnages de ces lignes. Son résidu moyen (biais) vaut {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}}. Ces lignes ont servi au choix, donc les chiffres sont optimistes et ne sont pas une prévision."
   conclusion:
@@ -166,5 +166,5 @@ regression_forward_steps:
     method: Des fenêtres du moment de la prédiction, avec l'écart enregistré entre les lignes sur lesquelles un modèle est ajusté et la fenêtre qu'il prédit ; une ligne d'entraînement dont la cible arrive dans la fenêtre est écartée de ce pli. Les lignes lues sont enregistrées comme exposition.
     interpretation: "{{slot:split:folds|int}} plis sur {{slot:split:n_rows|int}} lignes de développement : {{slot:split:n_scored|int}} lignes sont prédites une fois, hors pli, et {{slot:split:n_warmup|int}} lignes d'amorçage servent seulement à l'entraînement."
   models:
-    context: Une moyenne de référence et un modèle linéaire sont ajustés pli par pli ; chaque pli est prédit par des modèles ajustés seulement sur des lignes plus anciennes.
+    context: Une référence (prédire la moyenne) et un modèle linéaire sont ajustés pli par pli ; chaque pli est prédit par des modèles ajustés seulement sur des lignes plus anciennes.
     method: Les prédictions hors pli de chaque ligne prédite sont enregistrées (les lignes d'amorçage n'en ont pas), donc comparer et choisir un modèle ne demande jamais de réajustement.

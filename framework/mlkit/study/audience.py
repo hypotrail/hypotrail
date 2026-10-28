@@ -35,7 +35,9 @@ DECISION_WORDS = {'prediction_time': 'the prediction moment',
                   'preprocessing': 'the preparation of the variables',
                   # v0.2b (WP-B1)
                   'model_variant': 'the variant to compare',
-                  'final_test': 'the opening of the final test'}
+                  'final_test': 'the opening of the final test',
+                  # Lot 2026-10-28 (EN-9)
+                  'error_metric': 'the error measure'}
 # Plan steps in words (the steps without a decision of their own).
 STEP_WORDS = {'train_eda': 'the exploration of the data', 'models': 'the model fits',
               'discover_data': 'the discovery of the data'}
@@ -49,7 +51,8 @@ DECISION_WORDS_FR = {'prediction_time': 'le moment de la prédiction',
                      'success_criterion': 'le critère de succès',
                      'preprocessing': 'la préparation des variables',
                      'model_variant': 'la variante à comparer',
-                     'final_test': "l'ouverture de l'échantillon de test final"}
+                     'final_test': "l'ouverture de l'échantillon de test final",
+                     'error_metric': "la mesure de l'erreur"}
 STEP_WORDS_FR = {'train_eda': "l'exploration des données", 'models': "l'ajustement des modèles",
                  'discover_data': 'la découverte des données'}
 EN, FR = 'en', 'fr'
@@ -128,7 +131,7 @@ MODEL_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean basel
                'fit.variant:2': 'the second variant', 'fit.variant:3': 'the third variant'}
 VERDICT_WORDS = {'adopt_policy': 'adopt the policy', 'adopt_model': 'adopt the chosen model',
                  'keep_baseline': 'keep the baseline', 'inconclusive': 'inconclusive'}
-MODEL_WORDS_FR = {'fit.linear': 'le modèle linéaire', 'fit.baseline': 'la moyenne de référence',
+MODEL_WORDS_FR = {'fit.linear': 'le modèle linéaire', 'fit.baseline': 'la référence (prédire la moyenne)',
                   'fit.logistic': 'le modèle logistique', 'fit.variant': 'la variante',
                   # v0.3 (WP-F1)
                   'fit.variant:2': 'la deuxième variante',
@@ -355,6 +358,14 @@ def _junior_next(action: Mapping, lang: str = EN) -> tuple[str, str]:
                        'the columns and what each one means, and eight rows drawn at random. '
                        'Nothing '
                        'is decided at this step.')
+    if kind == 'read_exploration':
+        # Lot 2026-10-28 (EN-12, R61): the pause after the exploration.
+        if fr:
+            return JUNIOR, ("Les graphiques de l'exploration sont affichés et aucun modèle "
+                            "n'est encore ajusté. Lisez-les, puis dites si l'on passe aux "
+                            'modèles.')
+        return JUNIOR, ("The exploration's charts are shown and no model is fitted yet. Read "
+                        'them, then say whether we move on to the models.')
     if kind in ('propose', 'run'):
         # The step's question, written for the junior (state.STEPS); WP-C: in French, its
         # translation (``junior.step_text``).

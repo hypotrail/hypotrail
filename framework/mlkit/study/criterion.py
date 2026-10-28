@@ -45,6 +45,11 @@ DEFAULT_METRIC = dict(governance.CRITERION_METRICS)
 DELTA_METRIC = {'precision_gain': 'precision', 'recall_gain': 'recall'}
 # The error each regression criterion metric reads (the evaluations' keys).
 ERROR_METRIC = {'mae_reduction': 'mae', 'rmse_reduction': 'rmse'}
+# Lot 2026-10-28 (EN-9): the criterion metric of a confirmed error measure.
+REDUCTION_OF_ERROR = {v: k for k, v in ERROR_METRIC.items()}
+# R67 (owner validation of 2026-10-28): the optional business bar of a regression criterion,
+# an absolute error in the unit of the target on the criterion's measure.
+BUSINESS_KEY = 'business_max_error'
 # Candidate minimums shown as options (the junior may give any other).
 CANDIDATE_POINTS = (2, 5, 10)
 CANDIDATE_SHARES = (0.05, 0.1, 0.2)
@@ -71,7 +76,15 @@ def _int(n: int, lang: str) -> str:
 # --- validation and assessment -------------------------------------------------------------
 
 def check(value: Any, task: str) -> None:
-    """Refuse a criterion value that does not fit the task (``governance.ValueProblem``)."""
+    """Refuse a criterion value that does not fit the task (``governance.ValueProblem``).
+    R67: a regression value may add ``business_max_error``, a positive number (the business
+    bar, in the unit of the target); the rest is checked as before."""
+    if task == REGRESSION and isinstance(value, Mapping) and BUSINESS_KEY in value:
+        bar = value[BUSINESS_KEY]
+        if isinstance(bar, bool) or not isinstance(bar, (int, float)) or not bar > 0:
+            raise governance.ValueProblem(f'{BUSINESS_KEY} is a positive error in the unit of '
+                                          'the target.', field=BUSINESS_KEY)
+        value = {k: v for k, v in value.items() if k != BUSINESS_KEY}
     if task == BINARY and isinstance(value, Mapping) and value.get('metric') == 'recall_gain':
         governance.check_criterion(dict(value, metric='precision_gain'), task)
         return
@@ -101,6 +114,51 @@ def assess(view: Mapping, canonical: Callable[[str], str] = lambda r: r) -> dict
     """``governance.assess`` with the metric the confirmed value names. For ``recall_gain``
     the development gain is the recall delta of the same rule and model, and the final-test
     criterion is read from the recall delta of the final evaluation."""
+    out = _assess(view, canonical)
+    if out is not None:
+        business = business_level(out, view)
+        if business is not None:
+            out['business'] = business
+    return out
+
+
+def business_level(out: Mapping, view: Mapping) -> dict | None:
+    """R67 (owner validation of 2026-10-28): the second level of a regression criterion that
+    names a business bar (``business_max_error``), fixed before any model with the minimum
+    gain: the chosen model's error on the criterion's measure against that absolute bar, on
+    the development evidence (``evaluate.regression``) and on the opened final test
+    (``final_test.evaluation``), each read from registered values. None for a criterion
+    without a bar (one level, as before)."""
+    value = out.get('value')
+    if not isinstance(value, Mapping) or not isinstance(value.get(BUSINESS_KEY), (int, float)):
+        return None
+    bar = float(value[BUSINESS_KEY])
+    error = ERROR_METRIC.get(value.get('metric'), 'mae')
+    results = view.get('results') or {}
+
+    def level(slot: str, model) -> dict | None:
+        item = results.get(slot)
+        if not governance._citable(item) or not model:
+            return None
+        mine = ((item['values'].get('models') or {}).get(model) or {}).get(error)
+        if not isinstance(mine, (int, float)):
+            return None
+        return {'model': model, 'value': mine, 'met': mine <= bar + 1e-12,
+                'result_id': item['result_id'], 'path': f'models.[{model}].{error}'}
+
+    development = level('evaluate.regression', out.get('model'))
+    final_item = results.get('final_test.evaluation')
+    final_model = ((final_item or {}).get('values') or {}).get('model') \
+        if isinstance(final_item, Mapping) else None
+    final = level('final_test.evaluation', final_model)
+    judged = final if final is not None else development
+    return {'max_error': bar, 'measure': error, 'development': development,
+            'final_test': final,
+            'judged_on': 'final_test' if final is not None else 'development',
+            'met': judged['met'] if judged is not None else None}
+
+
+def _assess(view: Mapping, canonical: Callable[[str], str]) -> dict | None:
     out = governance.assess(view, canonical)
     if out is None:
         return None
@@ -320,8 +378,15 @@ def value_words(value: Any, lang: str = EN, cv: bool = False,
         else:
             error = (_t(lang, f'out-of-fold error ({name})', f'erreur hors pli ({name})') if cv
                      else _t(lang, f'validation error ({name})', f'erreur de validation ({name})'))
-        return _t(lang, f'{error} at least {pct}% below the reference (predict the mean)',
-                  f'{error} au moins {pct} % sous celle de la référence (prédire la moyenne)')
+        words = _t(lang, f'{error} at least {pct}% below the reference (predict the mean)',
+                   f'{error} au moins {pct} % sous celle de la référence (prédire la moyenne)')
+        bar = value.get(BUSINESS_KEY)
+        if isinstance(bar, (int, float)) and not isinstance(bar, bool):
+            # R67: the business bar, the second level.
+            from .cite import format_value
+            words += _t(lang, f', and at most {format_value(bar, "f1", "en")} (business bar)',
+                        f', et au plus {format_value(bar, "f1", "fr")} (barre métier)')
+        return words
     return None
 
 
@@ -464,7 +529,7 @@ def _candidates(task: str, reference: dict | None, share: float | None, lang: st
                         'text': _t(lang, f'{pct}% less error: if the mean baseline errs by E{u} '
                                          f'on average, the model must err by at most '
                                          f'{_num(1 - f, lang, 2)} E{u}.',
-                                   f'{pct} % d\'erreur en moins : si la moyenne de référence se '
+                                   f'{pct} % d\'erreur en moins : si la référence (prédire la moyenne) se '
                                    f'trompe de E{u} en moyenne, le modèle doit se tromper d\'au '
                                    f'plus {_num(1 - f, lang, 2)} E{u}.')})
         return out
@@ -523,8 +588,14 @@ def review_value(value: Mapping, task: str, share: float | None = None) -> dict:
     return out
 
 
-def options(view: Mapping, lang: str = EN, unit: str | None = None) -> dict:
-    """The ``criterion_options`` of ``next_action`` at the success criterion (R18, R19)."""
+def options(view: Mapping, lang: str = EN, unit: str | None = None, *,
+            measure: str | None = None, business: float | None = None) -> dict:
+    """The ``criterion_options`` of ``next_action`` at the success criterion (R18, R19).
+
+    Lot 2026-10-28: ``measure`` is the confirmed error measure of a regression study that
+    decides it (EN-9): the metrics are then that measure's only, and every candidate is fixed
+    on it. ``business`` (R67) is the default business bar, the current method's error from
+    the use-case brief: every candidate then carries it as ``business_max_error``."""
     from . import texts
     task = view.get('task') or BINARY
     cv = texts.scheme_of(view) == texts.CROSS_VALIDATION
@@ -549,6 +620,14 @@ def options(view: Mapping, lang: str = EN, unit: str | None = None) -> dict:
             'positifs, donc précision, rappel et lift classent les configurations de la même '
             'façon. Avec un seuil, le nombre d\'actions change et ils diffèrent.')
     candidates = _candidates(task, reference, share, lang, unit)
+    if task == REGRESSION and measure in REDUCTION_OF_ERROR:
+        default = REDUCTION_OF_ERROR[measure]
+        metrics = [m for m in metrics if m['metric'] == default]
+        for item in candidates:
+            item['value'] = dict(item['value'], metric=default)
+    if task == REGRESSION and isinstance(business, (int, float)) and business > 0:
+        for item in candidates:
+            item['value'] = dict(item['value'], **{BUSINESS_KEY: float(business)})
     if (view.get('assurance') or {}).get('profile') == 'review-v1':
         # Round 5 (review E, R5E-6): under review-v1 a criterion also states its decision
         # rule and the selection it is measured at, so each option is a complete value.
@@ -586,8 +665,9 @@ def options(view: Mapping, lang: str = EN, unit: str | None = None) -> dict:
         lead = _t(lang, f'The criterion is a share of the mean baseline\'s mean absolute error, '
                         f'in {unit or "the unit of the target"}; the baseline\'s error is known '
                         f'once the models are fitted.',
-                  f'Le critère est une part de l\'erreur absolue moyenne de la moyenne de '
-                  f'référence, en {unit or "unité de la cible"} ; l\'erreur de référence est '
+                  f'Le critère est une part de l\'erreur absolue moyenne de la référence '
+                  f'(prédire la moyenne), en {unit or "unité de la cible"} ; l\'erreur de '
+                  f'référence est '
                   f'connue une fois les modèles ajustés.')
     out = {'task': task, 'action': action, 'default_metric': default,
            'metrics': [dict(m, default=m['metric'] == default) for m in metrics],
