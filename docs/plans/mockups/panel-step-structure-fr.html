@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Structure d'une étape</title>
+<style>
+/* Charte « tableau noir / papier millimétré » v5. */
+:root{
+  --board:#20312C; --board2:#1A2925; --chalk:#EDE8DA; --chalk2:#C9C4B6; --dust:rgba(237,232,218,.55);
+  --ink:#EDE8DA; --soft:#C9C4B6; --faint:#A3ADA6; --line:rgba(237,232,218,.14); --line2:rgba(237,232,218,.45);
+  --now:#F0D178; --ok:#B9E2C4; --seal:#C8B6F5; --warn:#F3A28F;
+  --card:#F5F1E6; --cink:#22302B; --cmuted:#4A5651; --cline:rgba(34,48,43,.16); --csoft:#ECE7D8; --cacc:#7A4E0C;
+  --pen:#1E4E9E; --leaf:#1F6B3D; --orange:#C2571A; --gridmm:rgba(38,72,124,.045);
+  --serif:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --sans:"Avenir Next",Avenir,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--board);color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--now);outline-offset:2px}
+.page{max-width:1260px;margin:0 auto;padding:20px 16px 60px}
+.eyebrow{font:600 .72rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--now)}
+.page>h1{font:400 2rem/1.15 var(--serif);margin:6px 0 8px;color:var(--chalk);text-shadow:0 0 1px var(--dust)}
+.lede{color:var(--chalk2);max-width:78ch}
+.controls{position:sticky;top:0;z-index:20;background:var(--board);border-bottom:1px solid var(--line2);display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:10px 0;margin-top:16px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1.5px solid var(--line2);border-radius:4px;overflow:hidden}
+.seg button{background:transparent;border:0;padding:6px 10px;font-size:.85rem}
+.seg button+button{border-left:1px solid var(--line2)}
+.seg button[aria-pressed="true"]{background:var(--now);color:var(--cink);font-weight:600}
+.ctl{font-size:.8rem;color:var(--faint);margin-right:4px}
+.stage{display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;margin-top:20px;align-items:start}
+@media (max-width:1040px){.stage{grid-template-columns:minmax(0,1fr)}}
+.stage>*{min-width:0}
+.notes h2{font:400 1.4rem var(--serif);margin-bottom:6px}
+.notes h3{font:600 .72rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--now);margin:14px 0 4px}
+.notes ul{padding-left:18px;color:var(--chalk2)} .notes li{margin:3px 0}
+.notes table{border-collapse:collapse;font-size:.86rem;margin-top:6px;width:100%}
+.notes td,.notes th{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top;color:var(--chalk2)}
+.notes th{color:var(--now);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em}
+
+/* panneau simulé */
+.vsc{border:1px solid #0d1512;border-radius:6px;overflow:hidden;box-shadow:0 18px 40px -20px rgba(0,0,0,.7);width:420px;max-width:100%}
+.vsc.w600{width:600px}
+.bar{background:#151d1a;color:#9aa59f;font:12px var(--sans);padding:6px 10px}
+.pane{background:var(--board);height:820px;overflow:auto;font-size:14px}
+.top{position:sticky;top:0;z-index:3;background:var(--board);border-bottom:1px solid var(--line);padding:9px 14px 8px}
+.top .name{font:400 1.15rem var(--serif)}
+.prog{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:.8rem;color:var(--soft)}
+.prog i{flex:1;height:5px;border-radius:2px;background:var(--line2);display:block}
+.prog i.d{background:var(--ok)} .prog i.c{background:var(--now);height:9px}
+.in{padding:10px 14px 24px}
+.blk{margin-top:16px}
+.blk:first-child{margin-top:4px}
+.bk{display:flex;gap:8px;align-items:baseline;font:600 .7rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.bk .n{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--faint);font-size:.66rem;letter-spacing:0}
+/* bloc 1 : image */
+.idea{display:grid;grid-template-columns:132px minmax(0,1fr);gap:12px;align-items:center;background:rgba(0,0,0,.14);border:1px solid var(--line);border-radius:5px;padding:10px}
+.w420 .idea{grid-template-columns:110px minmax(0,1fr)}
+.idea p{font-size:.88rem;color:var(--soft)} .idea p b{color:var(--ink);font-weight:600}
+.idea svg text{font-family:var(--sans)}
+details.more>summary{list-style:none;cursor:pointer;font-size:.8rem;color:var(--now);margin-top:4px}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸ "} details.more[open]>summary::before{content:"▾ "}
+details.more>div{font-size:.84rem;color:var(--soft);margin-top:4px}
+/* bloc 2 */
+.feeds{font-size:.9rem;color:var(--soft)} .feeds b{color:var(--ink);font-weight:600}
+ol.qs{list-style:none;margin:8px 0 10px;display:grid;gap:4px}
+ol.qs li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:6px;font-size:.92rem}
+.qn{font:700 .72rem var(--sans);color:var(--cink);background:var(--now);border-radius:3px;text-align:center;padding:1px 0;height:18px;margin-top:2px}
+.ask{border-top:1px solid var(--line);padding-top:8px}
+.who{font:600 .7rem var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--now)}
+.ask h3{font:400 1.12rem/1.3 var(--serif);margin:2px 0 4px}
+.opts{font-size:.86rem;color:var(--soft)} .opts span{color:var(--faint)}
+.copy{margin-top:6px;background:transparent;border:1px solid var(--line2);border-radius:3px;padding:2px 8px;font-size:.78rem}
+/* bloc 3 : preuves */
+.frame{font-size:.8rem;color:var(--soft);margin-bottom:6px}
+.frame b{color:var(--ink);font-weight:600}
+.ev{background-color:var(--card);color:var(--cink);border-radius:4px;padding:10px 12px;margin-top:10px;box-shadow:0 8px 18px -12px rgba(0,0,0,.55);
+  background-image:linear-gradient(var(--gridmm) 1px,transparent 1px),linear-gradient(90deg,var(--gridmm) 1px,transparent 1px);background-size:6px 6px}
+.ev .lab{display:flex;gap:8px;align-items:baseline}
+.ev .lab .qn{flex:none;width:24px}
+.ev .lab h4{font:400 1rem/1.3 var(--serif)}
+.ev .ct{font-size:.74rem;color:var(--cmuted);margin:2px 0 4px}
+.read{border-left:3px solid var(--cmuted);padding:3px 0 3px 9px;margin:6px 0;font-size:.88rem}
+.read b{font-weight:600}
+.read .src{color:var(--cmuted);font-size:.72rem}
+.chip{display:inline-block;font:600 .7rem var(--sans);border-radius:10px;padding:0 7px;border:1px solid currentColor;margin-left:4px;vertical-align:1px}
+.chip.ok{color:var(--leaf)}
+.reveal{background:transparent;border:1px dashed var(--cacc);color:var(--cacc);border-radius:3px;padding:3px 9px;font-size:.82rem;margin:6px 0}
+details.f{border-top:1px solid var(--cline)}
+details.f>summary{list-style:none;cursor:pointer;padding:5px 0;font-size:.82rem;color:var(--cmuted)}
+details.f>summary::-webkit-details-marker{display:none}
+details.f>summary::before{content:"▸ ";color:var(--cacc)} details.f[open]>summary::before{content:"▾ "}
+details.f>div{font-size:.85rem;padding-bottom:6px}
+details.f ol{padding-left:18px}
+.ev svg{display:block;width:100%;height:auto}
+.ev svg text{font-family:var(--sans)}
+/* bloc 4 */
+.limit{font-size:.86rem;color:var(--soft);display:grid;grid-template-columns:16px minmax(0,1fr);gap:6px}
+.limit::before{content:"◐";color:var(--warn)}
+.next{font-size:.86rem;color:var(--soft);margin-top:4px} .next b{color:var(--ink);font-weight:600}
+/* mode relecture */
+.recap{list-style:none;display:grid;gap:6px}
+.recap li{background:rgba(0,0,0,.14);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:.88rem}
+.recap .rq{display:flex;gap:6px;align-items:baseline;color:var(--soft);font-size:.82rem}
+.recap .ra{margin-top:2px}
+.recap .lnk{background:transparent;border:0;padding:0;color:var(--now);text-decoration:underline;font-size:.8rem;margin-top:2px}
+.decided{font-size:.9rem;border-left:3px solid var(--ok);padding:3px 0 3px 9px;margin-bottom:8px}
+.decided b{font-weight:600}
+.decided .who2{display:block;font-size:.76rem;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="eyebrow">Maquette · structure d'une étape du panel · R64 · 2026-10-28</div>
+  <h1>Chaque étape, une petite enquête</h1>
+  <p class="lede">Synthèse de la proposition et de sa revue fraîche. <b>Pendant l'étape</b>, on apprend : l'image, ce que l'étape doit établir (les questions), les preuves rangées par question, puis la limite. <b>Une fois l'étape passée</b>, on relit : les réponses d'abord, chaque graphique à un clic. Trois étapes d'Auto MPG ; chiffres illustratifs, sauf ceux repris de ta session (variantes, test final).</p>
+
+  <div class="controls">
+    <span><span class="ctl">Étape</span><span class="seg" id="segS"><button data-s="eda" aria-pressed="true">Exploration</button><button data-s="var">Variantes</button><button data-s="end">Conclusion</button></span></span>
+    <span><span class="ctl">Mode</span><span class="seg" id="segM"><button data-m="live" aria-pressed="true">Pendant l'étape</button><button data-m="review">Relecture (parcours)</button></span></span>
+    <span><span class="ctl">Atelier</span><span class="seg" id="segG"><button data-g="0" aria-pressed="true">Lecture affichée</button><button data-g="1">Deviner d'abord</button></span></span>
+    <span><span class="ctl">Largeur</span><span class="seg" id="segW"><button data-w="w420" aria-pressed="true">420</button><button data-w="w600">600</button></span></span>
+  </div>
+
+  <div class="stage">
+    <div class="vsc" id="vsc"><div class="bar">HYPOTRAIL : ÉTUDE</div><div class="pane" id="pane"></div></div>
+    <aside class="notes" id="notes"></aside>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+let S='eda',M='live',G=0,shown=new Set();
+const fr=v=>String(v).replace('.',',').replace('-','−');
+
+// —— petites figures (repère 300 de large, texte 11–12 px)
+function axisLine(x1,y1,x2,y2){return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--cmuted)" stroke-width="1"/>`}
+function hist(){const bins=[4,14,28,41,47,52,44,33,24,15,9,5,2];const w=260/bins.length,mx=52;
+  let s=`<svg viewBox="0 0 300 150" role="img" aria-label="Histogramme de mpg sur 318 lignes, de 9 à 47, médiane 23">`;
+  bins.forEach((b,i)=>{const h=b/mx*100;s+=`<rect x="${30+i*w}" y="${115-h}" width="${w-2}" height="${h}" fill="var(--pen)" opacity=".75"/>`});
+  const med=30+(23-9)/(47-9)*260;s+=`<line x1="${med}" x2="${med}" y1="10" y2="115" stroke="var(--cacc)" stroke-dasharray="4 3" stroke-width="1.5"/><text x="${med+4}" y="20" font-size="11" fill="var(--cacc)">médiane 23</text>`;
+  s+=axisLine(30,115,290,115);[10,20,30,40].forEach(t=>{const x=30+(t-9)/(47-9)*260;s+=`<text x="${x}" y="130" font-size="11" text-anchor="middle" fill="var(--cmuted)">${t}</text>`});
+  return s+`<text x="160" y="146" font-size="11" text-anchor="middle" fill="var(--cmuted)">mpg (miles par gallon)</text></svg>`}
+function rnd(seed){return()=>((seed=Math.imul(seed^seed>>>15,1|seed)+0x6D2B79F5|0)>>>0)/4294967296}
+function scatter(){const r=rnd(7);let s=`<svg viewBox="0 0 300 160" role="img" aria-label="mpg selon le poids : la consommation baisse avec le poids, la courbe s'aplatit au-delà de 3 500 livres">`;
+  const X=w=>30+(w-1600)/(5200-1600)*260,Y=m=>130-(m-8)/(48-8)*115;
+  for(let i=0;i<90;i++){const w=1700+r()*3400;const m=46*Math.exp(-(w-1700)/2300)+10+ (r()-.5)*7;s+=`<circle cx="${X(w)}" cy="${Y(m)}" r="2.3" fill="var(--cink)" opacity=".55"/>`}
+  let p='';for(let w=1700;w<=5100;w+=100){const m=46*Math.exp(-(w-1700)/2300)+10;p+=`${p?'L':'M'}${X(w)},${Y(m)}`}
+  s+=`<path d="${p}" fill="none" stroke="var(--orange)" stroke-width="2.4"/><text x="${X(4300)}" y="${Y(17)-8}" font-size="11" fill="var(--orange)">tendance</text>`;
+  s+=axisLine(30,130,290,130)+axisLine(30,15,30,130);[2000,3000,4000,5000].forEach(t=>s+=`<text x="${X(t)}" y="144" font-size="11" text-anchor="middle" fill="var(--cmuted)">${t}</text>`);
+  [10,20,30,40].forEach(t=>s+=`<text x="25" y="${Y(t)+4}" font-size="11" text-anchor="end" fill="var(--cmuted)">${t}</text>`);
+  return s+`<text x="160" y="158" font-size="11" text-anchor="middle" fill="var(--cmuted)">poids (livres) · axe vertical : mpg</text></svg>`}
+function corr(){const v=['cyl.','displ.','hp','weight','origin'],m=[[1,.95,.84,.9,-.57],[.95,1,.9,.93,-.61],[.84,.9,1,.86,-.45],[.9,.93,.86,1,-.58],[-.57,-.61,-.45,-.58,1]];
+  const c=34;let s=`<svg viewBox="0 0 300 200" role="img" aria-label="Matrice de corrélation entre prédicteurs : cylindrée, cylindres, puissance et poids très liés (0,84 à 0,95)">`;
+  v.forEach((n,i)=>{s+=`<text x="58" y="${32+i*c+20}" font-size="11" text-anchor="end" fill="var(--cmuted)">${n}</text><text x="${66+i*c+c/2}" y="22" font-size="11" text-anchor="middle" fill="var(--cmuted)">${n}</text>`;
+   v.forEach((_,j)=>{const x=m[i][j],a=Math.abs(x);s+=`<rect x="${66+j*c}" y="${32+i*c}" width="${c-2}" height="${c-2}" fill="${x>0?'var(--pen)':'var(--orange)'}" opacity="${.12+a*.75}"/><text x="${66+j*c+c/2-1}" y="${32+i*c+20}" font-size="10" text-anchor="middle" fill="${a>.6?'#fff':'var(--cink)'}">${fr(x.toFixed(2)).replace('1,00','1')}</text>`})});
+  return s+`</svg>`}
+function residuals(){const r=rnd(3);let s=`<svg viewBox="0 0 300 160" role="img" aria-label="Erreurs du modèle linéaire selon la puissance, hors pli : elles dessinent une courbe en U">`;
+  const X=h=>30+(h-45)/(230-45)*260,Y=e=>92-e*6;
+  s+=`<line x1="30" x2="290" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--cink)" stroke-width="1.2"/><text x="288" y="${Y(0)+14}" font-size="11" text-anchor="end" fill="var(--cink)">erreur nulle</text>`;
+  for(let i=0;i<90;i++){const h=48+r()*175;const e=.0008*(h-120)**2-3.2+(r()-.5)*5;s+=`<circle cx="${X(h)}" cy="${Y(e)}" r="2.3" fill="var(--cink)" opacity=".55"/>`}
+  let p='';for(let h=48;h<=224;h+=4){const e=.0008*(h-120)**2-3.2;p+=`${p?'L':'M'}${X(h)},${Y(e)}`}
+  s+=`<path d="${p}" fill="none" stroke="var(--orange)" stroke-width="2.4"/>`+axisLine(30,140,290,140);
+  [50,100,150,200].forEach(t=>s+=`<text x="${X(t)}" y="152" font-size="11" text-anchor="middle" fill="var(--cmuted)">${t}</text>`);
+  return s+`<text x="34" y="14" font-size="11" fill="var(--cmuted)">observé − prédit (mpg) · axe horizontal : puissance (ch)</text></svg>`}
+function period(){const rows=[['70–72',-2.46],['73–75',-1.2],['76–78',.3],['79–80',2.1],['81–82',5.27]];const X=v=>150+v*20;
+  let s=`<svg viewBox="0 0 300 150" role="img" aria-label="Biais du modèle linéaire par période, hors pli : de −2,46 mpg en 1970–72 à +5,27 en 1981–82">`;
+  s+=`<line x1="${X(0)}" x2="${X(0)}" y1="10" y2="122" stroke="var(--cink)" stroke-width="1.2"/>`;
+  rows.forEach(([p,v],i)=>{const y=22+i*22;s+=`<text x="40" y="${y+4}" font-size="11" text-anchor="end" fill="var(--cmuted)">${p}</text><rect x="${Math.min(X(0),X(v))}" y="${y-7}" width="${Math.abs(X(v)-X(0))}" height="14" fill="${v>0?'var(--orange)':'var(--pen)'}" opacity=".8"/><text x="${v>0?X(v)+4:X(v)-4}" y="${y+4}" font-size="11" text-anchor="${v>0?'start':'end'}" fill="var(--cink)">${(v>0?'+':'')+fr(v.toFixed(2))}</text>`});
+  return s+`<text x="150" y="142" font-size="11" text-anchor="middle" fill="var(--cmuted)">← sur-prédit · biais moyen (mpg) · sous-prédit →</text></svg>`}
+function devfinal(){const X=v=>80+(v-2)/(8.5-2)*205;const rows=[['Linéaire',3.69,3.37,4.03,2.88,2.38,3.40],['Référence',7.16,6.64,7.70,6.64,5.76,7.51]];
+  let s=`<svg viewBox="0 0 300 150" role="img" aria-label="Erreur moyenne, développement (cercle) et test final (disque), avec intervalles ; seuil du critère sur le test final 5,97">`;
+  [3,4,5,6,7,8].forEach(t=>s+=`<line x1="${X(t)}" x2="${X(t)}" y1="18" y2="112" stroke="rgba(34,48,43,.14)"/><text x="${X(t)}" y="126" font-size="11" text-anchor="middle" fill="var(--cmuted)">${t}</text>`);
+  s+=`<line x1="${X(5.97)}" x2="${X(5.97)}" y1="14" y2="112" stroke="var(--leaf)" stroke-width="1.8"/><text x="${X(5.97)-3}" y="14" font-size="11" text-anchor="end" fill="var(--leaf)">seuil 5,97</text>`;
+  rows.forEach(([n,d,dl,dh,f,fl,fh],i)=>{const y=40+i*42;s+=`<text x="72" y="${y+8}" font-size="12" text-anchor="end" fill="var(--cink)">${n}</text>
+   <line x1="${X(dl)}" x2="${X(dh)}" y1="${y}" y2="${y}" stroke="var(--cmuted)" stroke-width="2"/><circle cx="${X(d)}" cy="${y}" r="4.5" fill="var(--card)" stroke="var(--cink)" stroke-width="1.8"/>
+   <line x1="${X(fl)}" x2="${X(fh)}" y1="${y+14}" y2="${y+14}" stroke="var(--pen)" stroke-width="2"/><circle cx="${X(f)}" cy="${y+14}" r="4.5" fill="var(--pen)"/>`});
+  return s+`<circle cx="70" cy="140" r="4" fill="var(--card)" stroke="var(--cink)" stroke-width="1.6"/><text x="78" y="144" font-size="11" fill="var(--cmuted)">développement</text><circle cx="180" cy="140" r="4" fill="var(--pen)"/><text x="188" y="144" font-size="11" fill="var(--cmuted)">test final, lu une fois</text></svg>`}
+function reduction(){const X=v=>20+v/100*260;let s=`<svg viewBox="0 0 300 80" role="img" aria-label="Réduction d'erreur sur le test final : 56,6 %, intervalle 43,6 à 70,3 %, contre un minimum de 10 %">`;
+  [0,25,50,75,100].forEach(t=>s+=`<text x="${X(t)}" y="72" font-size="11" text-anchor="middle" fill="var(--cmuted)">${t} %</text>`);
+  s+=`<line x1="${X(10)}" x2="${X(10)}" y1="8" y2="58" stroke="var(--leaf)" stroke-width="1.8"/><text x="${X(10)+3}" y="16" font-size="11" fill="var(--leaf)">minimum 10 %</text>`;
+  s+=`<line x1="${X(43.6)}" x2="${X(70.3)}" y1="38" y2="38" stroke="var(--pen)" stroke-width="2.4"/><circle cx="${X(56.6)}" cy="38" r="5" fill="var(--pen)"/><text x="${X(56.6)}" y="28" font-size="11" text-anchor="middle" fill="var(--cink)">56,6 %</text>`;
+  return s+`</svg>`}
+// —— images du bloc 1 (concept, pas de données)
+const IDEAS={
+ eda:`<svg viewBox="0 0 130 90" aria-hidden="true"><line x1="10" y1="80" x2="125" y2="80" stroke="var(--faint)"/><line x1="10" y1="80" x2="10" y2="6" stroke="var(--faint)"/>${[[20,18],[30,26],[38,24],[50,38],[60,44],[72,52],[84,58],[96,62],[108,64],[118,66]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.6" fill="var(--chalk)"/>`).join('')}<path d="M18,20 C50,40 80,58 120,66" fill="none" stroke="var(--now)" stroke-width="2"/><text x="70" y="22" font-size="9" fill="var(--now)">la tendance</text></svg>`,
+ var:`<svg viewBox="0 0 130 90" aria-hidden="true"><line x1="10" y1="80" x2="125" y2="80" stroke="var(--faint)"/>${[[18,22],[30,40],[42,54],[54,62],[66,66],[78,64],[90,58],[102,48],[114,34]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.6" fill="var(--chalk)"/>`).join('')}<line x1="14" y1="40" x2="120" y2="50" stroke="var(--faint)" stroke-width="2" stroke-dasharray="4 3"/><path d="M16,22 Q66,96 116,32" fill="none" stroke="var(--now)" stroke-width="2"/><text x="18" y="14" font-size="9" fill="var(--faint)">droite</text><text x="78" y="14" font-size="9" fill="var(--now)">courbe</text></svg>`,
+ end:`<svg viewBox="0 0 130 90" aria-hidden="true"><rect x="8" y="30" width="80" height="22" rx="3" fill="none" stroke="var(--faint)"/><text x="48" y="45" font-size="9" text-anchor="middle" fill="var(--faint)">318 · a servi à choisir</text><rect x="94" y="30" width="30" height="22" rx="3" fill="var(--seal)" opacity=".85"/><text x="109" y="45" font-size="9" text-anchor="middle" fill="var(--board)">80</text><path d="M109,58 v14" stroke="var(--now)" stroke-width="2"/><text x="109" y="84" font-size="9" text-anchor="middle" fill="var(--now)">lu une fois</text><text x="109" y="24" font-size="11" text-anchor="middle" fill="var(--seal)">🔒</text></svg>`};
+
+const STEPS={
+ eda:{n:8,title:'Exploration',phase:'Préparer les preuves',
+  idea:'<b>Lire la cible selon une variable.</b> Un point par voiture ; la courbe de tendance suit la forme générale, droite ou courbe.',
+  ideaMore:'La courbe de tendance (un lissage) suit les points localement, sans supposer une droite. Si elle se plie, une relation droite ne suffira pas.',
+  feeds:'Ces réponses préparent l\'étape <b>Modèles</b> : quelle forme essayer d\'abord.',
+  qs:['Comment se répartit mpg ?','Quelles variables bougent avec mpg, en droite ou en courbe ?','Certaines variables disent-elles la même chose ?'],
+  ask:'On regarde ces graphiques, puis on passe aux modèles ?',opts:['On passe aux modèles','Expliquer d\'abord'],copy:'Que dois-je chercher dans ces graphiques ?',
+  frame:'<b>Lignes d\'entraînement (318)</b> · regard sur la cible, compté (regards : 3)',
+  ev:[{q:1,h:'Comment se répartit mpg ?',ct:'histogramme · mpg',fig:hist,read:'mpg va de <b>9</b> à <b>47</b>, médiane <b>23</b>, sur 318 voitures.',how:['Chaque barre compte les voitures dans une tranche de mpg.','Le pointillé marque la médiane : la moitié des voitures au-dessus.'],watch:'Un histogramme décrit ces 318 voitures, pas les voitures en général.'},
+      {q:2,h:'Quelles variables bougent avec mpg, et comment ?',ct:'nuage · mpg selon le poids, avec tendance',fig:scatter,read:'Plus lourd, moins de mpg : corrélation de rang <b>−0,88</b> ; la tendance s\'aplatit au-delà de <b>3 500</b> livres.',how:['Un point par voiture.','La courbe orange suit la tendance sans supposer une droite.'],watch:'Une corrélation résume une tendance droite ; la courbure se lit sur le graphique.',others:['mpg selon la puissance','mpg selon la cylindrée','mpg selon l\'origine']},
+      {q:3,h:'Certaines variables disent-elles la même chose ?',ct:'matrice de corrélation entre prédicteurs',fig:corr,read:'Poids, cylindrée, cylindres et puissance sont très liés : de <b>0,84</b> à <b>0,95</b>.',how:['Chaque case croise deux variables.','Bleu foncé : elles montent ensemble ; orange : l\'une monte quand l\'autre baisse.'],watch:'Des variables très liées rendent leurs coefficients instables d\'un ajustement à l\'autre ; la prédiction, elle, peut rester bonne.'}],
+  limit:'Preuve de développement : ces graphiques ne choisissent rien, et chaque regard sur la cible est compté.',
+  next:'<b>Ensuite : les modèles.</b> La référence et le modèle linéaire d\'abord ; les variantes testeront si une droite rate la courbe.',
+  decided:'Exploration faite : 3 graphiques sur la cible, regards comptés.',by:'calcul lancé par le plan'},
+ var:{n:10,title:'Variantes',phase:'Comparer',
+  idea:'<b>Une droite peut rater une courbe.</b> Une variante essaie une forme plus souple, sous la même évaluation.',
+  ideaMore:'Ridge : la même droite, avec des coefficients retenus (pénalité). EBM : une courbe apprise par variable, additionnées ; plus souple, encore lisible.',
+  feeds:'Ces réponses préparent le choix des <b>variantes à comparer</b> (budget : 0 sur 3 utilisés).',
+  qs:['Les erreurs du modèle linéaire dessinent-elles une forme ?','L\'erreur est-elle stable d\'une période à l\'autre ?'],
+  ask:'On compare le modèle linéaire à une ridge et à un EBM ?',opts:['J\'adopte','Changer quelque chose','Expliquer d\'abord'],copy:'Pourquoi ces deux variantes ?',
+  frame:'<b>Preuve de développement</b> · hors pli, 318 voitures · a servi à choisir',
+  ev:[{q:1,h:'Les erreurs dessinent-elles une forme ?',ct:'erreurs du modèle linéaire selon la puissance, hors pli',fig:residuals,read:'Les erreurs forment un <b>U</b> le long de la puissance : la droite sous-prédit aux deux bouts.',how:['Un point par voiture : son erreur, observé moins prédit.','Si le modèle n\'oubliait rien, les points flotteraient autour de la ligne zéro, sans forme.'],watch:'Une forme dans les erreurs montre ce que le modèle rate ; elle ne dit pas qu\'un autre modèle fera mieux. La comparaison le dira.',others:['erreurs selon le poids','observé contre prédit']},
+      {q:2,h:'L\'erreur est-elle stable dans le temps ?',ct:'biais moyen par période, hors pli',fig:period,read:'Le biais passe de <b>−2,46</b> mpg (1970–72) à <b>+5,27</b> (1981–82) : les voitures récentes sont sous-prédites.',how:['Chaque barre : l\'erreur moyenne des voitures d\'une période.','À droite de zéro : le modèle prédit trop peu de mpg.'],watch:'Les blocs ne sont pas indépendants ; une dérive sur 5 blocs est un signal, pas une preuve.'}],
+  limit:'Ces diagnostics viennent des lignes qui servent à choisir : ils sont optimistes, et le test final reste scellé.',
+  next:'<b>Ensuite : le choix du modèle</b>, sur l\'écart apparié avec le linéaire et la règle d\'une erreur type.',
+  decided:'Comparer le modèle linéaire à une ridge (pénalité réglée) et à un EBM.',by:'confirmé par vous'},
+ end:{n:13,title:'Conclusion',phase:'Conclure',
+  idea:'<b>Le seul chiffre indépendant.</b> 80 voitures mises de côté au départ, lues une fois, avec le modèle choisi.',
+  ideaMore:'Les chiffres de développement ont servi à choisir : ils sont un peu optimistes. Le test final n\'a influencé aucun choix.',
+  feeds:'Ces réponses forment la <b>conclusion</b> de l\'étude.',
+  qs:['Le modèle bat-il la référence sur le test final ?','Votre critère est-il atteint ?'],
+  ask:'Conclusion : adopter le modèle linéaire, avec ses limites ?',opts:['J\'adopte','Changer quelque chose','Expliquer d\'abord'],copy:'Comment écrire une conclusion mesurée ?',
+  frame:'<b>Preuve finale</b> · 80 voitures de la même période (1970–82) · mesurée une fois',
+  ev:[{q:1,h:'Le modèle bat-il la référence ?',ct:'erreur moyenne, développement et test final',fig:devfinal,read:'Sur le test final, le linéaire se trompe de <b>2,88</b> mpg [2,38 ; 3,40], la référence de <b>6,64</b>.',how:['Cercle : développement ; disque : test final.','Le trait couvre l\'intervalle.'],watch:'L\'écart avec le développement (3,69 contre 2,88) est dans l\'incertitude du test final : ni optimisme ni dégradation démontrés.'},
+      {q:2,h:'Votre critère est-il atteint ?',ct:'réduction d\'erreur sur le test final',fig:reduction,read:'Réduction de <b>56,6 %</b> [43,6 ; 70,3], au-dessus du minimum de <b>10 %</b>.',chip:'atteint',how:['Le point : la réduction mesurée ; le trait : son intervalle.','La ligne verte : le minimum fixé avant tout modèle.'],watch:'Un minimum de 10 % était une barre basse ; le dépasser de loin ne rend pas le modèle bon pour tout usage.'}],
+  limit:'Rien sur les voitures d\'après 1982 ; le poids est associé à la consommation, le modèle ne dit pas pourquoi.',
+  next:'<b>Et après :</b> présenter la conclusion à votre binôme, le dossier de passation, ou l\'export Azure ML.',
+  decided:'Adopter le modèle linéaire : 2,88 mpg d\'erreur sur le test final, critère atteint.',by:'confirmé par vous'}};
+
+function evBlock(st,e){
+  const hidden=G&&!shown.has(S+e.q);
+  return `<div class="ev" id="ev-${e.q}"><div class="lab"><span class="qn">Q${e.q}</span><h4>${e.h}</h4></div><div class="ct">${e.ct}</div>${e.fig()}
+   ${hidden?`<button class="reveal" data-reveal="${e.q}">Voir ce qu'on en lit</button>`:`<p class="read">${e.read}${e.chip?`<span class="chip ok">${e.chip}</span>`:''}<br><span class="src">cité du résultat enregistré · révision 34</span></p>`}
+   <details class="f"><summary>Comment le lire</summary><div><ol>${e.how.map(x=>`<li>${x}</li>`).join('')}</ol></div></details>
+   <details class="f"><summary>Attention</summary><div>${e.watch}</div></details>
+   ${e.others?`<details class="f"><summary>Autres graphiques (${e.others.length})</summary><div>${e.others.join(' · ')}</div></details>`:''}</div>`;
+}
+function live(st){
+  return `<section class="blk"><div class="bk"><span class="n">1</span>L'étape en une image</div>
+   <div class="idea">${IDEAS[S]}<div><p>${st.idea}</p><details class="more"><summary>En savoir plus</summary><div>${st.ideaMore}</div></details></div></div></section>
+  <section class="blk"><div class="bk"><span class="n">2</span>Ce que l'étape doit établir</div>
+   <p class="feeds">${st.feeds}</p>
+   <ol class="qs">${st.qs.map((q,i)=>`<li><span class="qn">Q${i+1}</span><span>${q}</span></li>`).join('')}</ol>
+   <div class="ask"><div class="who">Le chat attend</div><h3>${st.ask}</h3><p class="opts"><span>Réponses proposées dans le chat :</span> ${st.opts.join(' · ')}</p><button class="copy">Copier « ${st.copy} »</button></div></section>
+  <section class="blk"><div class="bk"><span class="n">3</span>Pour répondre, regardez</div>
+   <p class="frame">${st.frame}</p>${st.ev.map(e=>evBlock(st,e)).join('')}</section>
+  <section class="blk"><div class="bk"><span class="n">4</span>Ce que ça ne dit pas · Ensuite</div><p class="limit">${st.limit}</p><p class="next">${st.next}</p></section>`;
+}
+function review(st){
+  return `<section class="blk"><div class="bk">Le parcours · étape ${st.n} · ${st.title} (faite)</div>
+   <p class="decided"><b>Décidé :</b> ${st.decided}<span class="who2">${st.by}</span></p>
+   <ul class="recap">${st.ev.map(e=>`<li><div class="rq"><span class="qn">Q${e.q}</span>${e.h}</div><div class="ra">${e.read}${e.chip?`<span class="chip ok">${e.chip}</span>`:''}</div><button class="lnk" data-open="${e.q}">${shown.has('r'+S+e.q)?'Masquer le graphique':'Voir le graphique'}</button>${shown.has('r'+S+e.q)?`<div class="ev">${e.fig()}<p class="frame" style="color:var(--cmuted)">${e.ct}</p></div>`:''}</li>`).join('')}</ul>
+   <details class="more"><summary>Rejouer l'étape telle qu'elle était</summary><div>L'image, les questions et les preuves complètes, comme pendant l'étape (lecture seule).</div></details>
+   <p class="limit" style="margin-top:10px">${st.limit}</p></section>`;
+}
+function render(){
+  const st=STEPS[S];
+  const segs=Array.from({length:13},(_,i)=>`<i class="${i<st.n-1?'d':i===st.n-1?'c':''}"></i>`).join('');
+  document.getElementById('pane').innerHTML=`<div class="top"><div class="name">mpg-1028-0943</div><div class="prog">${segs}<span style="white-space:nowrap"><b style="color:var(--ink)">Étape ${st.n}/13</b> · ${st.phase}</span></div></div><div class="in">${M==='live'?live(st):review(st)}</div>`;
+  document.getElementById('notes').innerHTML=notes(st);
+}
+function notes(st){
+  return `<h2>${st.title} · ${M==='live'?'pendant l\'étape':'relecture'}</h2>
+  <h3>La structure</h3>
+  ${M==='live'?`<table><tr><th>Bloc</th><th>Ce qu'il porte</th><th>Limite</th></tr>
+   <tr><td>1 · L'étape en une image</td><td>le concept dessiné, sans les données</td><td>1 image, ≤ 30 mots</td></tr>
+   <tr><td>2 · Ce que l'étape doit établir</td><td>ce que l'étape prépare, 2–3 questions, puis la question du chat</td><td>≤ 60 mots</td></tr>
+   <tr><td>3 · Pour répondre, regardez</td><td>une section par question : graphique ouvert, une phrase « ce qu'on lit » citée, plis</td><td>≤ 25 mots par lecture</td></tr>
+   <tr><td>4 · Ce que ça ne dit pas · Ensuite</td><td>la limite de l'étape, la suite et son pourquoi</td><td>2 lignes</td></tr></table>`
+  :`<ul><li>Les réponses d'abord : on relit, on ne découvre plus.</li><li>Chaque réponse ouvre son graphique sur place.</li><li>« Rejouer l'étape » redonne la vue complète (R55).</li><li>Même format pour le rapport et la relecture du mode automatique.</li></ul>`}
+  <h3>Règles</h3>
+  <ul><li>Les questions viennent du moteur, liées chacune à un résultat enregistré ; la phrase de lecture ne fait que remplir des chiffres enregistrés (citée, avec sa révision).</li>
+  <li>Une pastille seulement si le moteur a un verdict avec son seuil (ici, le critère « atteint »). Pas de pastille sur une distribution.</li>
+  <li>Pas de conclusion avant les preuves pendant l'étape : pas de recommandation déguisée, pas de lecture par confirmation.</li>
+  <li>« Deviner d'abord » (atelier) cache les lectures derrière un bouton ; rien n'est enregistré.</li>
+  <li>Étape sans graphique : le bloc 1 suffit, ou « pas de graphique pour ce point ». Un seul graphique : pas de numéros.</li></ul>`;
+}
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.s){S=b.dataset.s;document.querySelectorAll('#segS button').forEach(x=>x.setAttribute('aria-pressed',x===b))}
+  else if(b.dataset.m){M=b.dataset.m;document.querySelectorAll('#segM button').forEach(x=>x.setAttribute('aria-pressed',x===b))}
+  else if(b.dataset.g){G=+b.dataset.g;shown=new Set([...shown].filter(k=>k.startsWith('r')));document.querySelectorAll('#segG button').forEach(x=>x.setAttribute('aria-pressed',x===b))}
+  else if(b.dataset.w){document.getElementById('vsc').className='vsc '+b.dataset.w;document.querySelectorAll('#segW button').forEach(x=>x.setAttribute('aria-pressed',x===b));return}
+  else if(b.dataset.reveal){shown.add(S+b.dataset.reveal)}
+  else if(b.dataset.open){const k='r'+S+b.dataset.open;shown.has(k)?shown.delete(k):shown.add(k)}
+  else return;
+  const p=document.getElementById('pane'),y=p.scrollTop;render();p.scrollTop=(b.dataset.s||b.dataset.m)?0:y;});
+render();
+})();
+</script>
+</body>
+</html>

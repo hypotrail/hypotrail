@@ -1009,3 +1009,19 @@ its warning.
   part of the range. Use counts only (no target values, so no look at the target), with a
   one-line reading; at the data or split step, and kept in the path (R55). Noted only, not
   fixed.
+- **R64. One structure for every step of the panel (owner request, 2026-10-28; proposal
+  reviewed in fresh context, mockup `docs/plans/mockups/panel-step-structure-fr.html`).**
+  During a step (learning), Now has four blocks: (1) the step in one picture (concept, no data,
+  ≤ 30 words, fold for more); (2) what the step must establish: what it prepares, 2–3 numbered
+  questions, then the chat's question, options and copy (≤ 60 words); (3) "Pour répondre,
+  regardez": one section per question, its main chart open with its frame, one cited "what we
+  read" sentence (≤ 25 words, engine template filled from registered values, with revision), a
+  verdict chip only when the engine registers a verdict with its bound, folds "how to read",
+  "watch out", "other charts"; (4) the step's limit and what comes next. No conclusion before
+  the evidence while learning (no hidden recommendation, no confirmation reading); a workshop
+  option hides the readings behind "see what we read". After the step (reviewing: path, report,
+  automatic-mode review): answers first, each opening its chart in place, plus "replay the step"
+  (R55). Questions owned by the engine (ids bound to result slots, EN/FR templates with
+  placeholders only; a lint test refuses digits in content files); pictures and folds in a
+  content file; the panel only lays out. Steps without charts keep block 1 or "pas de graphique
+  pour ce point"; a single chart drops the numbering. Noted only, not fixed.
