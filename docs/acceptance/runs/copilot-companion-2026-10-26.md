@@ -1050,3 +1050,14 @@ its warning.
   1993) is real. Content lives in the use case (`use-cases/<id>/case-brief.yaml`, EN/FR, read
   by the engine and passed through the digest and the report), never written by the panel.
   Shown in the all-steps mockup.
+- **R67. Explain what the criterion's 10 % means for the business (owner request,
+  2026-10-28).** At the criterion step, "Pour répondre, regardez" shows a fictitious example
+  (no study value is read before the models): four error bars in mpg — the reference
+  (predict the mean, e.g. 7), the 10 % minimum (6,3), the current manual method (≈ 4,5, from
+  the PO's brief) and the PO's target (≈ 3,5) — with the reading: the 10 % criterion is a
+  statistical minimum a model can meet while staying worse than the current method; the
+  useful business bar is the current method; 1 mpg ≈ 0,4 L/100 km near 23 mpg. The current
+  method's error and the PO's target come from the case brief (R66). Proposal for the owner:
+  a two-level criterion, both fixed before any model — the statistical minimum vs the
+  reference and a business bar vs the current method (an absolute error from the brief) — the
+  conclusion reporting both. Shown in the all-steps mockup.

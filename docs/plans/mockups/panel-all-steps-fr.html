@@ -450,6 +450,15 @@ function chMetric(){
    +`<p class="after">Unité : en mpg, comme la cible. Pour un ordre de grandeur, 25 mpg ≈ 9,4 L/100 km.</p>`;
 }
 // Step 7: missing share per column; per-column verdicts, transformed column first.
+function chTenPct(){
+  // Illustrative only: no study value is read before the models (the reference is measured at step 10).
+  const X=v=>110+v/8*140;let b='';
+  [0,2,4,6,8].forEach(t=>b+=L(X(t),8,X(t),118,'rgba(34,48,43,.12)')+T(X(t),132,t,{fs:10.5,a:'middle'}));
+  const rows=[['référence','prédire la moyenne',7.0,'var(--grey)'],['critère 10 %','minimum statistique',6.3,'var(--cacc)'],['méthode actuelle','estimation manuelle',4.5,'var(--orange)'],['objectif du PO','« nettement mieux »',3.5,'var(--leaf)']];
+  rows.forEach(([n,s2,v,c],i)=>{const y=10+i*27;b+=T(104,y+9,n,{fs:11,a:'end',c:'var(--cink)',w:600})+T(104,y+21,s2,{fs:9.5,a:'end'})+R(X(0),y+2,X(v)-X(0),16,c,'opacity=".8"')+T(X(v)+4,y+14,f(v,1)+' mpg',{fs:10.5,c:'var(--cink)'})});
+  b+=T(180,146,'erreur moyenne (mpg) · exemple fictif',{fs:10,a:'middle',st:'italic'});
+  return svg(300,150,'Exemple fictif : la référence se trompe de 7 mpg ; le critère de 10 % demande 6,3 mpg ou moins ; la méthode manuelle actuelle se trompe de 4,5 mpg ; l\'objectif du PO est d\'environ 3,5 mpg.',b);
+}
 function chMissing(){
   const rows=[['puissance',1.9],['cylindres',0],['cylindrée',0],['poids',0],['origine',0]];let b='';
   const X=v=>78+v/3*200;
@@ -669,10 +678,15 @@ const STEPS={
   cap:'<b>Fixer la barre avant de voir un chiffre.</b> Le modèle devra se tromper nettement moins que la référence, qui prédit toujours la moyenne.',
   more:'La référence (prédire la moyenne) est le modèle le plus naïf. Le critère dit de combien un modèle doit faire mieux pour compter ; il sera jugé sur le test final, contre la référence mesurée sur les mêmes lignes.',
   prepares:'Cette réponse prépare le <b>Test final</b> et la <b>Conclusion</b> : la barre qu\'ils jugeront.',
-  qs:['De combien l\'erreur du modèle doit-elle être plus petite que celle de la référence, sur la mesure choisie ?'],
+  qs:['De combien l\'erreur du modèle doit-elle être plus petite que celle de la référence, et que veut dire ce seuil pour le métier ?'],
   ask:'Critère de succès : au moins 10 % d\'erreur absolue moyenne en moins que la référence (prédire la moyenne), jugé sur le test final ?',opts:['J\'adopte','Changer le pourcentage','Expliquer d\'abord'],copy:'Comment fixer un pourcentage raisonnable ?',
-  frame:`<b>${FR.none}</b> · aucun modèle, aucun chiffre`,
-  noChart:'Rien n\'est mesuré avant les modèles : la barre est fixée avant de voir un chiffre.',
+  frame:`<b>${FR.none}</b> · aucun chiffre de l\'étude : exemple fictif et chiffres du PO`,
+  ev:[{h:'Que veut dire 10 % pour le métier ?',ct:'exemple fictif · quatre barres d\'erreur, en mpg',fig:chTenPct,
+    see:'Si la référence se trompait de <b>7</b> mpg, le critère de 10 % demanderait <b>6,3</b> mpg ou moins. L\'estimation manuelle actuelle se trompe d\'environ <b>4,5</b> mpg (chiffre du PO) ; le PO vise environ <b>3,5</b>.',
+    concl:'Le critère de 10 % est un minimum statistique : un modèle peut l\'atteindre tout en restant moins bon que la méthode actuelle. Pour le métier, la barre utile est la méthode actuelle ; 1 mpg vaut environ 0,4 L/100 km vers 23 mpg.',
+    cannot:'Ces chiffres sont un exemple : l\'erreur réelle de la référence ne sera connue qu\'à l\'étape Modèles, et celle de la méthode manuelle vient du PO, pas de ces données.',
+    how:['Chaque barre : une erreur moyenne en mpg ; plus courte, c\'est mieux.','La barre ocre est le minimum fixé ici ; les deux dernières viennent de la fiche du cas d\'usage.'],
+    trap:'Un pourcentage relatif dépend de la référence : 10 % d\'une référence faible reste une barre basse.',src:'exemple fictif et chiffres de la fiche du PO : rien n\'est calculé sur les données'}],
   limit:'Atteindre le critère ne dira pas que le modèle suffit pour tout usage : c\'est une question métier.',
   next:'<b>Ensuite : le contrôle de qualité</b>, colonne par colonne, sans regarder la cible.',
   dec:'Au moins 10 % d\'erreur absolue moyenne en moins que la référence, jugé sur le test final.',who:'vos mots'},
@@ -859,7 +873,7 @@ const cur=()=>M==='live'?S:S+1;                     // the step the study is at 
 const opened=()=>cur()>13||(cur()===13&&F13==='after');
 const isPending=e=>e.pendingWhenBefore&&S===13&&M==='live'&&F13==='before';
 
-function readx(e){return `<div class="readx"><p class="r1"><span class="rl">Ce qu'on voit</span>${e.see}${e.chip?`<span class="chip ${e.chip[0]}">${e.chip[1]}</span>`:''}</p><p class="r2"><span class="rl">Ce qu'on en conclut</span>${e.concl}</p><p class="r3"><span class="rl">Ce qu'on ne peut pas conclure</span>${e.cannot}</p><p class="src">chiffres cités du résultat enregistré · révision 34</p></div>`}
+function readx(e){return `<div class="readx"><p class="r1"><span class="rl">Ce qu'on voit</span>${e.see}${e.chip?`<span class="chip ${e.chip[0]}">${e.chip[1]}</span>`:''}</p><p class="r2"><span class="rl">Ce qu'on en conclut</span>${e.concl}</p><p class="r3"><span class="rl">Ce qu'on ne peut pas conclure</span>${e.cannot}</p><p class="src">${e.src||'chiffres cités du résultat enregistré · révision 34'}</p></div>`}
 function fold(id,label,body,cls='f'){return `<details class="${cls}" data-id="${id}"${OPEN.has(id)?' open':''}><summary>${label}</summary><div>${body}</div></details>`}
 function evBlock(st,e,i,pre){
   const multi=st.ev.length>1,id=pre+S+'-'+i;
@@ -875,9 +889,9 @@ function budget(st){if(!st.budget)return '';const[u,m]=st.budget;return `<div cl
 function brief(){return `<section class="blk brief" data-block="brief"><div class="bk"><span class="n">0</span>Le cas d'usage</div>
   <div class="briefcard"><p class="bsrc">Fiche du cas d'usage · Confluence, espace « Produit véhicules » · rédigée par le PO · <b>scénario fictif pour la simulation</b> (seule la provenance des données est réelle)</p>
   <dl class="bkey">
-   <dt>Le problème</dt><dd>L'équipe Conception doit annoncer la consommation d'un nouveau modèle dès que sa fiche technique est validée, environ six mois avant les essais sur route. Aujourd'hui, un ingénieur l'estime à la main en comparant avec un modèle proche.</dd>
+   <dt>Le problème</dt><dd>L'équipe Conception doit annoncer la consommation d'un nouveau modèle dès que sa fiche technique est validée, environ six mois avant les essais sur route. Aujourd'hui, un ingénieur l'estime à la main en comparant avec un modèle proche ; écart moyen constaté : environ 4,5 mpg.</dd>
    <dt>La décision aidée</dt><dd>Quels prototypes envoyer d'abord aux essais de consommation (une vingtaine d'essais par an), et quel chiffre provisoire afficher dans les premières fiches produit.</dd>
-   <dt>L'objectif</dt><dd>Estimer la consommation à partir de la fiche technique seule, nettement mieux que l'estimation manuelle, avec une fourchette.</dd>
+   <dt>L'objectif</dt><dd>Estimer la consommation à partir de la fiche technique seule, nettement mieux que l'estimation manuelle (viser environ 3,5 mpg d'écart moyen), avec une fourchette.</dd>
    <dt>En production</dt><dd>Un service de prédiction appelé par l'outil de conception à chaque nouvelle fiche ; l'estimation et sa fourchette sont relues par un ingénieur avant tout usage ; le modèle est réentraîné chaque année avec les nouveaux essais.</dd>
   </dl>
   ${fold('b-data','D\'où viennent les données','<p><b>Réel :</b> le jeu « Auto MPG » du UCI Machine Learning Repository (issu de StatLib, Carnegie Mellon ; utilisé par Quinlan en 1993) : 398 modèles de voitures vendus aux États-Unis de 1970 à 1982, une ligne par modèle et par année.</p><p><b>Dans le scénario :</b> il sert d\'historique en attendant l\'extraction de l\'entrepôt interne des essais. Les données sont publiques et déjà très explorées : aucune ligne n\'est vraiment « jamais vue ».</p>','more')}
