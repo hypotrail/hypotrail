@@ -12,13 +12,17 @@
   // `scenario`, the teaching scenario's defaults (`status --json`, view.scenario_defaults).
   // v0.3 (WP-K): `trials`, the trial budget and the model-family shortlist of the same read
   // (`status --json`, view.model_selection and view.model_families; CLI-CONTRACT §14).
+  // Lot P (R49, ADR 0004 decision 14): `azureml`, the Azure ML export plan
+  // (`export azureml --plan`, which writes nothing), read at the end of the study.
   const VIEWS = ['summary', 'decisions', 'eda', 'evidence', 'whatif', 'explain', 'check', 'session_report', 'data',
-    'scenario', 'trials'];
+    'scenario', 'trials', 'azureml'];
   // v0.3 narrowing (ADR 0004 amendment, R23, I2): W1 confirm, W2 withdraw and W3 propose
   // are withdrawn; decisions are made in the chat only. The remaining ids keep their numbers.
   // Owner decision R31 (2026-10-27, ADR 0004 amendment): W6, the acknowledgement of an
   // interrupted execution in typed words, is withdrawn too; it is made in the chat.
-  const WRITE_OPS = ['W4', 'W5', 'W7'];
+  // Lot P (R49, ADR 0004 decision 14, 2026-10-28): W8, the Azure ML export
+  // (`export azureml --out <dir>`), outside the study state, never an Azure job.
+  const WRITE_OPS = ['W4', 'W5', 'W7', 'W8'];
   const OUTCOME_KINDS = ['ok', 'ok_with_problems', 'not_promoted', 'refused', 'failed', 'invalid', 'cancelled'];
   const NAV_KINDS = ['result', 'decision', 'proposal', 'step', 'limit', 'execution', 'term'];
   const ARTIFACTS = ['report', 'notebook', 'editable', 'workbench'];
@@ -107,6 +111,11 @@
       },
     },
     export_handoff: { stage: 'v3', write: 'W7', fields: { revision: rev } },
+    // Lot P (R49, ADR 0004 decision 14): the Azure ML export, outside the study state, only
+    // when the engine says the chosen model is supported (`after_study.azureml.supported`).
+    export_azureml: { stage: 'v3', write: 'W8', fields: { revision: rev } },
+    // Lot P (R51, ADR 0004 decision 14): open What if? in its own read-only editor tab.
+    open_whatif: { stage: 'v2', fields: {} },
     switch_study: { stage: 'v1', fields: {} },
     learn_set: {
       stage: 'v3',
@@ -154,6 +163,9 @@
         // ADR 0004 d13 (CLI-CONTRACT §17.1.5): the contract version the panel speaks
         // (lib/flag.js PANEL_CONTRACT), compared with the digest's `panel_contract` (skew line).
         panelContract: { t: 'int', min: 1, opt: true },
+        // Lot P (R51, ADR 0004 decision 14): the surface this document draws: the one page
+        // (`panel`), or the read-only What if? editor tab (`whatif`).
+        surface: { t: 'enum', values: ['panel', 'whatif'], opt: true },
       },
     },
     // CR.1: `currency` is the version, with the revision, a model was read at.

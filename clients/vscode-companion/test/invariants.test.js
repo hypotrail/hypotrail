@@ -25,6 +25,8 @@ const SAMPLES = {
   W4: () => cli.WRITES.W4(AGENT, { activity: 'eda.distribution', column: 'age', requestId: UUID, expectedRevision: 3 }),
   W5: () => cli.WRITES.W5(AGENT),
   W7: () => cli.WRITES.W7(AGENT, { parent: '/tmp/handoff packs', revision: 3 }),
+  // ADR 0004 decision 14 (R49): the Azure ML export, outside the study state.
+  W8: () => cli.WRITES.W8(AGENT, { parent: '/tmp/azure exports', revision: 3 }),
 };
 
 test('INV-1: only lib/cli.js requires child_process, and nothing reads .hypotrail/*.json', () => {
@@ -47,21 +49,25 @@ test('INV-2: no vscode.lm, network module, socket, browser storage, or workspace
   }
 });
 
-test('INV-3, INV-13: exactly three write builders W4, W5, W7 (W1-W3 withdrawn, v0.3; W6 withdrawn, R31), each a whitelisted argv', () => {
-  assert.deepEqual(Object.keys(cli.WRITES), ['W4', 'W5', 'W7']);
+test('INV-3, INV-13: exactly four write builders W4, W5, W7, W8 (W1-W3 withdrawn, v0.3; W6 withdrawn, R31; W8 added by ADR 0004 d14), each a whitelisted argv', () => {
+  assert.deepEqual(Object.keys(cli.WRITES), ['W4', 'W5', 'W7', 'W8']);
   const builders = Object.entries(cli).filter(([k, v]) => typeof v === 'function' && /Argv$/.test(k)).map(([k]) => k);
   const writes = Object.values(cli.WRITES).map(fn => fn.name);
   const reads = Object.values(cli.READS).map(fn => fn.name);
   assert.deepEqual(builders.sort(), [...writes, ...reads].sort(), 'every argv builder is a listed read or write');
-  assert.equal(new Set(writes).size, 3);
+  assert.equal(new Set(writes).size, 4);
   assert.deepEqual(Object.keys(cli.READS), ['summary', 'decisions', 'effects', 'evidence', 'preview', 'draft', 'check',
-    'explain', 'session_report', 'view', 'data']);
+    'explain', 'session_report', 'view', 'data', 'azureml_plan']);
+  // The Azure ML plan is a read: `--plan` writes nothing; W8 never carries it.
+  assert.ok(cli.READS.azureml_plan(AGENT, { revision: 3 }).includes('--plan'));
+  assert.ok(!SAMPLES.W8().includes('--plan'));
   for (const [w, sample] of Object.entries(SAMPLES)) {
     const tail = sample().slice(AGENT.argv.length);
     const verbs = tail.slice(0, 2).join(' ');
-    // v0.3 (WP-J, R35): every write names the panel as its channel.
-    assert.equal(tail.filter(a => a === '--channel=webview').length, 1, `${w} names its channel once`);
-    assert.ok(['run eda.distribution', 'render --channel=webview', 'export handoff'].includes(verbs),
+    // v0.3 (WP-J, R35): every write that the engine records names the panel as its channel;
+    // W8 records nothing in the study (no state, event or channel record), so it has none.
+    assert.equal(tail.filter(a => a === '--channel=webview').length, w === 'W8' ? 0 : 1, `${w} names its channel once`);
+    assert.ok(['run eda.distribution', 'render --channel=webview', 'export handoff', 'export azureml'].includes(verbs),
       `${w}: ${verbs}`);
     // ADR 0004 amendment (R23, I2): no write of the panel is a `decide` command; R31: none
     // acknowledges an interruption, and none passes the junior's words.
@@ -69,7 +75,7 @@ test('INV-3, INV-13: exactly three write builders W4, W5, W7 (W1-W3 withdrawn, v
     assert.ok(!tail.includes('--acknowledge-interruption') && !tail.some(a => a.startsWith('--user-words')), w);
     if (w === 'W5') {
       assert.ok(!tail.includes('--request-id') && !tail.includes('--expected-revision'), `${w} has no revision`);
-    } else if (w === 'W7') {
+    } else if (w === 'W7' || w === 'W8') {
       // CR.6: the export names the revision the junior saw; it writes no study state, so
       // it carries no request id.
       assert.ok(!tail.includes('--request-id'), 'W7 has no request id');
@@ -100,6 +106,7 @@ test('INV-4, INV-13: no builder emits a delegation, a note, a fit, a split, or a
     () => cli.WRITES.W4(AGENT, { activity: 'eda.distribution', column: 'age\0--basis', requestId: UUID, expectedRevision: 3 }),
     () => cli.WRITES.W4(AGENT, { activity: 'eda.distribution', column: 'age', requestId: 'not-a-uuid', expectedRevision: 3 }),
     () => cli.WRITES.W7(AGENT, { parent: path.join(AGENT.studyDir, '.hypotrail'), revision: 3 }),
+    () => cli.WRITES.W8(AGENT, { parent: path.join(AGENT.studyDir, '.hypotrail'), revision: 3 }),
   ];
   for (const fn of bad) assert.throws(fn, cli.ArgvError);
 });

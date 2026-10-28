@@ -248,7 +248,8 @@ test('draft: `preview proposal` texts posted as draft_result; nothing is written
 test('WI-3 (WP-E1): no W3; propose is no message any more and nothing writes, at every stage and task', async () => {
   // v0.3 narrowing (ADR 0004 amendment, integrator decision I2): "Ask the agent to propose
   // this" copies a question (ask_agent, tested in bridge.test.js); the panel proposes nothing.
-  assert.deepEqual(Object.keys(whatif.types), ['preview_policy', 'draft']);
+  // Lot P (R51): `open_whatif` opens the read-only editor tab; it writes nothing.
+  assert.deepEqual(Object.keys(whatif.types), ['preview_policy', 'draft', 'open_whatif']);
   assert.equal(whatif.modalText, undefined);
   for (const [task, message] of [['binary', { decisionId: 'policy', value: 'capacity:100', revision: 26 }],
     ['regression', { decisionId: 'model_choice', value: 'fit.linear', revision: 22 }]]) {

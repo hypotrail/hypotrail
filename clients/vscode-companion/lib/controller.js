@@ -115,7 +115,7 @@ function semaphore(limit) {
   };
 }
 
-function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SETTINGS, host = {},
+function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SETTINGS, host = {}, surface = 'panel',
   openArtifact = host.openArtifact || (async () => {}),
   exists = target => fs.existsSync(target), uuid = () => crypto.randomUUID(), log = () => {},
   handlers = loadHandlers() }) {
@@ -165,6 +165,8 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     send({ type: 'init', stage: active.stage, reviewer: active.reviewer === true, learningLayer: active.learningLayer !== false,
       chatInsert: active.chatInsert === true, task: snapshot ? snapshot.task : null, study: studyKey(agent.studyDir),
       panelContract: flag.PANEL_CONTRACT,
+      // Lot P (R51, ADR 0004 decision 14): the read-only What if? tab draws only What if?.
+      surface: surface === 'whatif' ? 'whatif' : 'panel',
       marimo: launch.display(agent),
       language: ['auto', 'en', 'fr'].includes(active.language) ? active.language : 'auto' });
   }
@@ -305,12 +307,14 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
   }
 
   /**
-   * ctx.write: one whitelisted write (W4, W5, W7). `argv(requestId)` builds it with lib/cli.js;
+   * ctx.write: one whitelisted write (W4, W5, W7, W8). `argv(requestId)` builds it with lib/cli.js;
    * `record(payload)` returns the `recorded` object of a success. Exclusive: reads wait;
    * a second write while one runs is `invalid`. Always refreshes after the outcome.
    */
   async function write(op, { target = null, argv, record = null, refresh: again_ = true } = {}) {
     if (!protocol.WRITE_OPS.includes(op)) throw new Error(`unknown write ${op}`);
+    // Lot P (R51): the What if? tab writes nothing, whatever the stage.
+    if (surface === 'whatif') { invalid(op, say('whatifReadOnly'), target); return null; }
     if (active.reviewer && !REVIEWER_ALLOWED.includes(op)) { invalid(op, say('reviewerRefusal'), target); return null; }
     if (busy) { invalid(op, say('busyRefusal'), target); return null; }
     let built;
@@ -352,7 +356,14 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     if (!loader || (loader.stage && !stageAtLeast(loader.stage)) || (typeof loader.when === 'function' && !loader.when({ ...active }))) {
       return send({ type: 'load_error', view: message.view, message: say('notAvailable'), detail: '' });
     }
-    const out = await read(loader.key(message), loader.argv(cli, agent, message), loader.model);
+    let argv;
+    try {
+      // Lot P (R49): a loader may read the snapshot's revision (the Azure ML plan).
+      argv = loader.argv(cli, agent, message, snapshot);
+    } catch (e) {
+      return send({ type: 'load_error', view: message.view, message: String((e && e.message) || e), detail: '' });
+    }
+    const out = await read(loader.key(message), argv, loader.model);
     if (!out.ok) return send({ type: 'load_error', view: message.view, message: out.message, detail: out.detail || '' });
     const reply = { type: 'view_data', view: message.view, revision: out.revision, currency: out.currency, model: out.model };
     if (message.resultId !== undefined) reply.resultId = message.resultId;
@@ -408,6 +419,10 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
       return;
     }
     const spec = protocol.TO_EXTENSION[message.type];
+    if (spec.write && surface === 'whatif') {
+      invalid(spec.write, say('whatifReadOnly'), null);
+      return;
+    }
     if (spec.write && active.reviewer && !REVIEWER_ALLOWED.includes(spec.write)) {
       invalid(spec.write, say('reviewerRefusal'), message.proposalId || message.executionId || null);
       return;

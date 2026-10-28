@@ -1,9 +1,9 @@
 'use strict';
 // Hypotrail study companion (ADR 0002, ADR 0003, ADR 0004). A VS Code webview that is one
 // more client of the `hypotrail` CLI. It has no state, database, server, socket, or
-// language-model integration of its own. Its writes are the whitelist W4, W5, W7 of
+// language-model integration of its own. Its writes are the whitelist W4, W5, W7, W8 of
 // COMPANION-ADVANCED §7, each gated by `hypotrail.companion.stage` (default "v0": no
-// write; W1-W3, confirm, withdraw and propose, were withdrawn by the v0.3 narrowing of
+// write; W8, the Azure ML export outside the study state, was added by ADR 0004 decision 14; W1-W3, confirm, withdraw and propose, were withdrawn by the v0.3 narrowing of
 // ADR 0004: decisions are made in the chat only; W6, the acknowledgement of an
 // interrupted execution, was withdrawn by owner decision R31: it is made in the chat).
 //
@@ -32,6 +32,8 @@ const COMMAND = 'hypotrail.companion.open';
 const REVIEWER_COMMAND = 'hypotrail.companion.openReviewer';
 const GO_TO_RESULT_COMMAND = 'hypotrail.companion.goToResult';
 const VIEW_TYPE = 'hypotrail.companion.study';
+// Lot P (R51, ADR 0004 decision 14): What if? in its own read-only editor tab.
+const WHATIF_VIEW_TYPE = 'hypotrail.companion.whatif';
 // v0.3 (WP-K, R21): the extension's words follow `hypotrail.companion.language`: `en`, `fr`,
 // else the open study's language, else VS Code's display language (lib/l10n.js).
 function lang() {
@@ -145,7 +147,49 @@ function host(context, agent) {
     notify: text => vscode.window.showInformationMessage(text),
     globalState: context.globalState,
     switchStudy: async () => openPanel(context, { reviewer: current ? current.reviewer : false, pick: true }),
+    openWhatIf: async () => openWhatIf(context, agent),
   };
+}
+
+let whatif = null;   // {panel, controller, watcher, agent}: the read-only What if? tab
+
+/**
+ * Lot P (R51, ADR 0004 decision 14): What if? in a wide editor tab, a second webview of this
+ * extension for the same study. Its controller has `surface: 'whatif'`: it reads like the
+ * panel and refuses every write; the panel keeps its one page.
+ */
+function openWhatIf(context, agent) {
+  if (whatif && whatif.agent.studyDir === agent.studyDir) {
+    whatif.panel.reveal(vscode.ViewColumn.Active);
+    return whatif.controller.refresh();
+  }
+  if (whatif) whatif.panel.dispose();
+  const panel = vscode.window.createWebviewPanel(WHATIF_VIEW_TYPE, say('whatifTitle'), vscode.ViewColumn.Active, {
+    enableScripts: true, enableCommandUris: false, enableForms: false, retainContextWhenHidden: false, localResourceRoots: [],
+  });
+  const settings = flag.settings(vscode, process.env, { forceReviewer: current ? current.reviewer : false });
+  const controller = createController({
+    agent, settings, surface: 'whatif',
+    post: message => { panel.webview.postMessage(message); },
+    exists: target => fs.existsSync(target),
+    host: { ...host(context, agent), openWhatIf: async () => panel.reveal(vscode.ViewColumn.Active) },
+    log: e => console.error('[hypotrail companion]', e),
+  });
+  const mine = { panel, controller, watcher: watchStudy(agent.studyDir, () => controller.refresh()), agent };
+  whatif = mine;
+  const subscriptions = [
+    panel.webview.onDidReceiveMessage(message => {
+      controller.handle(message).catch(e => console.error('[hypotrail companion]', e));
+    }),
+    panel.onDidDispose(() => {
+      if (mine.watcher) mine.watcher.dispose();
+      controller.dispose();
+      if (whatif === mine) whatif = null;
+    }),
+  ];
+  context.subscriptions.push(...subscriptions);
+  panel.webview.html = renderHtml();
+  return mine;
 }
 
 async function openPanel(context, { reviewer = false, pick = false, want = null } = {}) {
@@ -296,11 +340,12 @@ function activate(context) {
     context.subscriptions.push(vscode.window.registerUriHandler({ handleUri: link => handleUri(context, link).catch(report) }));
   }
   // For tests and diagnostics only: the panel currently open, if any.
-  return { current: () => current };
+  return { current: () => current, whatif: () => whatif };
 }
 
 function deactivate() {
+  if (whatif) whatif.panel.dispose();
   close();
 }
 
-module.exports = { activate, deactivate, COMMAND, REVIEWER_COMMAND, GO_TO_RESULT_COMMAND, VIEW_TYPE };
+module.exports = { activate, deactivate, COMMAND, REVIEWER_COMMAND, GO_TO_RESULT_COMMAND, VIEW_TYPE, WHATIF_VIEW_TYPE };

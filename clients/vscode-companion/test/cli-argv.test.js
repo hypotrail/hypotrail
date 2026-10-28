@@ -40,10 +40,10 @@ test('reads: exact argv (§5)', () => {
   }
 });
 
-test('writes: exact argv of W4, W5, W7 (§7); W1-W3 and W6 are withdrawn (v0.3 narrowing, R31)', () => {
+test('writes: exact argv of W4, W5, W7, W8 (§7); W1-W3 and W6 are withdrawn (v0.3 narrowing, R31)', () => {
   // ADR 0004 amendments (R23, I2; R31, 2026-10-27): the panel has no confirm, withdraw,
-  // propose, or acknowledgement builder.
-  assert.deepEqual(Object.keys(cli.WRITES), ['W4', 'W5', 'W7']);
+  // propose, or acknowledgement builder. Decision 14 (R49, 2026-10-28) adds W8.
+  assert.deepEqual(Object.keys(cli.WRITES), ['W4', 'W5', 'W7', 'W8']);
   for (const name of ['confirmArgv', 'withdrawArgv', 'proposeArgv', 'acknowledgeArgv']) assert.equal(cli[name], undefined, name);
   assert.deepEqual(cli.WRITES.W4(AGENT, { activity: 'eda.distribution', column: '-age', requestId: ID, expectedRevision: 3 }),
     [...A, 'run', 'eda.distribution', '--column=-age', '--channel=webview', '--request-id', ID, '--expected-revision', '3', ...T]);
@@ -54,11 +54,17 @@ test('writes: exact argv of W4, W5, W7 (§7); W1-W3 and W6 are withdrawn (v0.3 n
     [...A, 'export', 'handoff', '--out=/tmp/hand off/revision-26', '--channel=webview', '--expected-revision', '26', ...T]);
   assert.deepEqual(cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26, legacy: true }),
     cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26 }));
+  // W8 (ADR 0004 decision 14): the Azure ML export, outside the study state, never `--plan`
+  // (a read), never an Azure job; the plan is a read of the same command with `--plan`.
+  assert.deepEqual(cli.WRITES.W8(AGENT, { parent: '/tmp/az ure', revision: 45 }),
+    [...A, 'export', 'azureml', '--out=/tmp/az ure/azureml-revision-45', '--expected-revision', '45', ...T]);
+  assert.throws(() => cli.WRITES.W8(AGENT, { parent: 'relative', revision: 45 }), cli.ArgvError);
+  assert.deepEqual(cli.READS.azureml_plan(AGENT, { revision: 45 }), [...A, 'export', 'azureml', '--expected-revision', '45', '--plan', ...T]);
 });
 
 test('timeouts and buffer (§7, §11)', () => {
   assert.equal(cli.MAX_BUFFER, 16 * 1024 * 1024);
-  assert.deepEqual({ ...cli.TIMEOUTS }, { read: 30000, W4: 300000, W5: 120000, W7: 120000 });
+  assert.deepEqual({ ...cli.TIMEOUTS }, { read: 30000, W4: 300000, W5: 120000, W7: 120000, W8: 120000 });
 });
 
 test('run: no shell, the buffer, and every failure is a message (never a rejection)', async () => {

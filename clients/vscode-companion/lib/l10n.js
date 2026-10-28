@@ -38,6 +38,8 @@ const EN = {
   goTitle: 'Hypotrail: go to a result',
   goPrompt: 'The result id, or its first 8 or more characters, as the report shows it.',
   panelTitle: 'Hypotrail study',
+  // Lot P (R51): the read-only What if? editor tab.
+  whatifTitle: 'Hypotrail: What if? (read only)',
   panelTitleReviewer: 'Hypotrail study (reviewer)',
   // handlers/evidence.js (go to a result)
   resultsUnreadable: message => `The results of this study could not be read: ${message}`,
@@ -68,6 +70,8 @@ const EN = {
   notLastExport: 'That folder is not the last export of this panel. Nothing was opened.',
   learningOff: 'The learning layer is off (hypotrail.companion.learningLayer). Nothing was stored.',
   learningUnknown: 'The learning layer does not know that item. Nothing was stored.',
+  // handlers/after.js (lot P, R49)
+  azuremlUnsupported: 'The engine does not support an Azure ML export of the chosen model. Nothing was exported.',
   // bridge.js (what happened to the copied question)
   copied: 'Copied. Paste it into the chat with your assistant.',
   inserted: 'Inserted into the chat input, not sent. Read it, then send it yourself.',
@@ -76,6 +80,7 @@ const EN = {
   // controller.js (outcome lines)
   unknownOutcome: 'The outcome is unknown: the refreshed panel shows whether anything was recorded.',
   reviewerRefusal: 'Read-only reviewer mode.',
+  whatifReadOnly: 'What if? is read only: it records and exports nothing.',
   busyRefusal: 'Another request is in progress.',
   notPromoted: 'The result was computed but not used: the study changed while it ran. Nothing in the study changed.',
   notAvailable: 'Not available in this stage.',
@@ -98,6 +103,7 @@ const FR = {
   exportHere: 'Exporter ici',
   goTitle: 'Hypotrail : aller à un résultat',
   goPrompt: "L'identifiant du résultat, ou ses 8 premiers caractères ou plus, tel que le rapport l'affiche.",
+  whatifTitle: 'Hypotrail : Et si ? (lecture seule)',
   panelTitle: 'Étude Hypotrail',
   panelTitleReviewer: 'Étude Hypotrail (relecture)',
   resultsUnreadable: message => `Les résultats de cette étude n'ont pas pu être lus : ${message}`,
@@ -124,12 +130,14 @@ const FR = {
   notLastExport: "Ce dossier n'est pas le dernier export de ce panneau. Rien n'a été ouvert.",
   learningOff: "La couche d'apprentissage est désactivée (hypotrail.companion.learningLayer). Rien n'a été enregistré.",
   learningUnknown: "La couche d'apprentissage ne connaît pas cet élément. Rien n'a été enregistré.",
+  azuremlUnsupported: "Le moteur ne prend pas en charge un export Azure ML du modèle choisi. Rien n'a été exporté.",
   copied: "Copié. Collez-le dans le chat avec votre assistant.",
   inserted: "Inséré dans la saisie du chat, pas envoyé. Relisez-le, puis envoyez-le vous-même.",
   fellBack: "La saisie du chat n'a pas pu s'ouvrir, la question a donc été copiée. Collez-la dans le chat avec votre assistant.",
   copyFailed: "La question n'a pas pu être copiée. Rien n'a été envoyé.",
   unknownOutcome: "L'issue est inconnue : le panneau actualisé montre si quelque chose a été enregistré.",
   reviewerRefusal: 'Mode relecture, en lecture seule.',
+  whatifReadOnly: "Et si ? est en lecture seule : il n'enregistre et n'exporte rien.",
   busyRefusal: 'Une autre requête est en cours.',
   notPromoted: "Le résultat a été calculé mais pas retenu : l'étude a changé pendant le calcul. Rien n'a changé dans l'étude.",
   notAvailable: "Pas disponible à cette étape.",

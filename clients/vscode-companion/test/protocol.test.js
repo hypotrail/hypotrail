@@ -29,6 +29,9 @@ const TO_EXTENSION = {
   navigate_external: [{ kind: 'reveal_export', path: '/tmp/x/revision-3' }, ['kind', 'open']],
   ask_agent: [{ about: { kind: 'result', id: 'abcd1234' }, question: '', mode: 'copy' }, ['mode', 'send']],
   export_handoff: [{ revision: 3 }, ['revision', 1.5]],
+  // Lot P (ADR 0004 decision 14): W8, and the What if? editor tab (no field).
+  export_azureml: [{ revision: 3 }, ['revision', 0]],
+  open_whatif: [{}, null],
   switch_study: [{}, null],
   learn_set: [{ key: 'prediction', id: 'binary.train_eda.rare', value: 'rare' }, ['key', 'words']],
 };
@@ -72,7 +75,7 @@ test('webview -> extension: every type validates, an extra field or a wrong type
   for (const type of ['confirm', 'withdraw', 'propose', 'acknowledge']) assert.equal(protocol.TO_EXTENSION[type], undefined, type);
   assert.equal(protocol.validateIncoming({ v: 2, type: 'confirm', proposalId: 'p_1', words: 'Yes.', revision: 3 }), null);
   assert.equal(protocol.validateIncoming({ v: 2, type: 'acknowledge', executionId: 'e_1', words: 'I know.', revision: 3 }), null);
-  assert.deepEqual(protocol.WRITE_OPS, ['W4', 'W5', 'W7']);
+  assert.deepEqual(protocol.WRITE_OPS, ['W4', 'W5', 'W7', 'W8']);
   assert.equal(protocol.validateOutgoing({ v: 2, type: 'busy', busy: true, op: 'W1', target: 'p_1' }), null);
   assert.equal(protocol.validateOutgoing({ v: 2, type: 'busy', busy: true, op: 'W6', target: 'e_1' }), null);
 });
@@ -131,7 +134,11 @@ test('stages: every incoming type has one; field stages raise it; writes carry t
     assert.ok(protocol.STAGES.includes(entry.stage), type);
     if (entry.write) writes[type] = entry.write;
   }
-  assert.deepEqual(writes, { run_eda: 'W4', render: 'W5', export_handoff: 'W7' });
+  assert.deepEqual(writes, { run_eda: 'W4', render: 'W5', export_handoff: 'W7', export_azureml: 'W8' });
+  // Lot P (ADR 0004 decision 14): W8 from v3 only; the What if? tab opens from v2 and writes nothing.
+  assert.equal(protocol.TO_EXTENSION.export_azureml.stage, 'v3');
+  assert.equal(protocol.TO_EXTENSION.open_whatif.stage, 'v2');
+  assert.equal(protocol.TO_EXTENSION.open_whatif.write, undefined);
   // WP-E1: the agent bridge copies a question at every stage (the read-only proposal card).
   assert.equal(protocol.TO_EXTENSION.ask_agent.stage, 'v0');
   assert.equal(protocol.stageOf({ v: 2, type: 'open_artifact', artifact: 'report' }), 'v0');

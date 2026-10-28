@@ -38,7 +38,9 @@ test('ready: init, then the summary; every stage reads with --digest', async () 
       // v0.3 (WP-E2, R21): the panel language setting, `auto` by default.
       language: 'auto',
       // ADR 0004 d13 (CLI-CONTRACT §17.1.5): the contract the panel speaks.
-      panelContract: 2 });
+      panelContract: 2,
+      // Lot P (R51): the surface this document draws (the one page; the What if? tab is `whatif`).
+      surface: 'panel' });
     assert.equal(runCli.calls[0].tail.includes('--digest'), digest);
     const snap = posted.find(m => m.type === 'snapshot');
     assert.equal(snap.revision, revision);
@@ -273,7 +275,7 @@ test('settings: updateSettings posts init again; navigate resolves and validates
     marimo: { kernel: '/opt/py/bin/python', notebook: '/opt/py/bin/python -m marimo run notebooks/study_generated.py',
         editable: '/opt/py/bin/python -m marimo edit notebooks/study_editable.py',
         workbench: '/opt/py/bin/python -m marimo edit notebooks/workbench.py' },
-    language: 'auto', panelContract: 2 });
+    language: 'auto', panelContract: 2, surface: 'panel' });
   // A result id the summary does not list (no snapshot yet) opens the path's head.
   assert.equal(c.navigate({ kind: 'result', id: 'a'.repeat(64) }), true);
   assert.equal(posted.at(-1).anchor, 'path');

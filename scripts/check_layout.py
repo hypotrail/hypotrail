@@ -146,7 +146,8 @@ def companion_terminal_errors(sources):
 # v0.3 narrowing (ADR 0004 amendment; owner decision R23, integrator decision I2): the
 # panel records no decision. No client source may invoke `decide confirm`, `decide
 # withdraw`, or `decide propose`, neither as an argv array ('decide', 'confirm') nor as a
-# command string ("decide confirm"); W4, W5 and W7 are its only writes (W6: below, R31).
+# command string ("decide confirm"); W4, W5, W7 and W8 are its only writes (W6: below, R31;
+# W8: below, ADR 0004 decision 14).
 DECIDE_WRITE = re.compile(r"""['"`]decide['"`]\s*,\s*['"`](?:confirm|withdraw|propose)['"`]"""
                           r'|\bdecide\s+(?:confirm|withdraw|propose)\b')
 
@@ -168,6 +169,40 @@ def companion_acknowledge_errors(sources):
     """Errors of the R31 rule over ``{relative path: text}`` of the client sources."""
     return [f'Companion client source builds a withdrawn acknowledgement write (W6): {rel}'
             for rel, text in sorted(sources.items()) if ACKNOWLEDGE_WRITE.search(text)]
+
+
+# ADR 0004 decision 14 (owner request R49, 2026-10-28): the whitelist of writes is exactly W4,
+# W5, W7 and W8, the builders of `lib/cli.js` `WRITES`. W8 is the Azure ML export
+# (`export azureml --out`), outside the study state; `export azureml --plan` is a read. Only
+# lib/cli.js builds an `export azureml` argv; the W8 builder never carries `--plan`; and no
+# client source starts an Azure job or calls the Azure CLI (`az ml job`, an `'az'` argv).
+COMPANION_WRITES = ('W4', 'W5', 'W7', 'W8')
+COMPANION_CLI_FILE = 'lib/cli.js'
+WRITES_BLOCK = re.compile(r'const WRITES = Object\.freeze\(\{(?P<body>[^}]*)\}\)')
+AZUREML_ARGV = re.compile(r"""['"`]export['"`]\s*,\s*['"`]azureml['"`]""")
+AZURE_JOB = re.compile(r"""\baz\s+ml\b|['"`]az['"`]\s*,\s*['"`]ml['"`]|\bsubmit_job\b|\bjobs\.create_or_update\b""")
+
+
+def companion_write_errors(sources):
+    """Errors of the write whitelist over ``{relative path: text}`` of the client sources."""
+    errors = []
+    cli = sources.get(COMPANION_CLI_FILE, '')
+    block = WRITES_BLOCK.search(cli)
+    keys = tuple(re.findall(r'\b(W[0-9]+)\s*:', block.group('body'))) if block else ()
+    if keys != COMPANION_WRITES:
+        errors.append(f'Companion client {COMPANION_CLI_FILE} WRITES is not exactly {", ".join(COMPANION_WRITES)}: '
+                      f'{", ".join(keys) or "none found"}')
+    for rel, text in sorted(sources.items()):
+        if rel != COMPANION_CLI_FILE and AZUREML_ARGV.search(text):
+            errors.append(f'Companion client source builds an export azureml argv outside {COMPANION_CLI_FILE}: {rel}')
+        if AZURE_JOB.search(text):
+            errors.append(f'Companion client source starts an Azure job or calls the Azure CLI: {rel}')
+    w8 = re.search(r'function exportAzuremlArgv\([^)]*\)\s*\{(?P<body>.*?)\n\}', cli, re.S)
+    if not w8:
+        errors.append(f'Companion client {COMPANION_CLI_FILE} has no W8 builder exportAzuremlArgv')
+    elif '--plan' in w8.group('body') or '--out=' not in w8.group('body'):
+        errors.append(f'Companion client {COMPANION_CLI_FILE} W8 must write with --out and never carry --plan')
+    return errors
 
 
 # The same narrowing in the words the extension shows before it runs (R9UX-3): its name,
@@ -224,6 +259,7 @@ def check_companion_client(errors):
     errors.extend(companion_terminal_errors(texts))
     errors.extend(companion_decide_errors(texts))
     errors.extend(companion_acknowledge_errors(texts))
+    errors.extend(companion_write_errors(texts))
     return len(sources)
 
 def main():
