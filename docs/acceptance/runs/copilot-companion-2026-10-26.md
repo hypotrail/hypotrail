@@ -901,3 +901,17 @@ its warning.
   - the journey itself (the 13 steps and the decisions taken) as the report's overview.
   Place each in Now at its step and in the path's detail (R50), and in the report's chapter.
   Noted only, not fixed.
+
+## Seventh session (lot R34–R53 demo, `5c1573b`) — for the next batch
+
+- **R54. Step-1 question does not match the screen nor its options (owner remark,
+  2026-10-28).** The chat and the panel ask "On regarde ensemble la fiche des données ?" while
+  the data card and the sample are already displayed, and the picker's options are "On
+  continue — passer au moment de la prédiction" / "Expliquer d'abord". The question must say
+  what the answer decides: "La fiche des données est affichée. On passe au moment de la
+  prédiction ?" (EN "The data card is shown. Shall we move on to the prediction moment?"),
+  consistent with the options; same check for every step's question vs its options. Also
+  seen: the chat's summary says "318 lignes d'entraînement" for the development rows (they are
+  development rows, used for training and validation by folds); the panel's sample shows
+  model-year values without the century and acceleration with mixed decimals (13 / 16.9),
+  fine as raw data but the column header could say "valeurs brutes". Noted only, not fixed.
