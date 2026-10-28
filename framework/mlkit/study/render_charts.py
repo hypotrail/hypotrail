@@ -419,14 +419,16 @@ def by_group(citer: cite.Citer, rid: str, values: Mapping, *, rate: bool) -> str
     chart = (values.get('null_band') or {}).get('chart') or {}
     note = ''
     if chart:
+        # one sentence per text node, so the French edition translates each
+        # (``l10n_report``)
         if chart.get('outside'):
-            note = ('The spread between groups is larger than every one of the shuffles of the '
-                    'target: a pattern unlikely to be chance alone. ')
+            note = ('<span>The spread between groups is larger than every one of the shuffles '
+                    'of the target: a pattern unlikely to be chance alone.</span> ')
         else:
-            note = ('The spread between groups stays within what shuffling the target draws: '
-                    'it is not distinguishable from chance. ')
-    note += (f'Dashed line: the overall value on {_rows()}. An association between groups, '
-             'not an effect of the variable.')
+            note = ('<span>The spread between groups stays within what shuffling the target '
+                    'draws: it is not distinguishable from chance.</span> ')
+    note += (f'<span>Dashed line: the overall value on {_rows()}. An association between '
+             'groups, not an effect of the variable.</span>')
     column = str(values.get('column', ''))
     question = values.get('question') or f'Does the outcome differ across the groups of {column}?'
     note += ' Intervals: <span data-literal="setting">95%</span> level.'
@@ -1019,8 +1021,9 @@ def correlation(citer: cite.Citer, rid: str, values: Mapping) -> str:
     flagged = [(i, p) for i, p in pairs if p.get('flag') and _num(p.get('value'))]
     flagged.sort(key=lambda ip: -abs(ip[1]['value']))
     level = citer.num(rid, 'level', 'f2') if citer.has(rid, 'level') else ''
-    note = ('Columns are in the same order as the rows, grouped so that associated '
-            'predictors sit together; a darker cell is a stronger association. ')
+    # one sentence per text node, so the French edition translates each (``l10n_report``)
+    note = ('<span>Columns are in the same order as the rows, grouped so that associated '
+            'predictors sit together; a darker cell is a stronger association.</span> ')
     if flagged:
         items = '; '.join(f'<code data-literal="identifier">{e(str(p.get("a")))}</code> and '
                           f'<code data-literal="identifier">{e(str(p.get("b")))}</code> '
@@ -1029,8 +1032,8 @@ def correlation(citer: cite.Citer, rid: str, values: Mapping) -> str:
         note += f'Pairs at or above {level} in size: {items}. '
     else:
         note += f'No pair reaches {level} in size. '
-    note += ('The target is not read: this is not a look at the outcome. A flagged pair only '
-             'asks whether both predictors are needed.')
+    note += ('<span>The target is not read: this is not a look at the outcome. A flagged pair '
+             'only asks whether both predictors are needed.</span>')
     return figure('correlation', values.get('question') or
                   'Which predictors carry nearly the same information?', svg, lg, note)
 

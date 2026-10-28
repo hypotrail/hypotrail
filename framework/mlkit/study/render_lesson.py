@@ -167,7 +167,10 @@ def page(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | Non
                 # v4: in the second edition (shown only by the script), the hover title of a
                 # cited number is set by the script from its attributes (it named the result
                 # twice in each of a thousand numbers); the first edition keeps it.
-                citer.titles = language == study
+                # 2026-10-28: the first edition's titles are added below with the result's
+                # short identifier (as the annex shows it), which keeps the page within its
+                # budget once the plan runs the exploration charts.
+                citer.titles = False
                 body, title = edition(v, citer, surfaces=surfaces, variables=variables or [],
                                       sample=sample, understanding=understanding,
                                       primary=language == study)
@@ -178,6 +181,9 @@ def page(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | Non
                     body = l10n_report.french(body)
                 if language != study:
                     body = suffix_ids(body, language)
+                else:
+                    body = _short_titles(body)
+                body = _compact(body)
                 consumed |= {c['result_id'] for c in citer.cited}
                 editions.append((language, body, title))
     snapshot_json = json.dumps(view.get('presentation'), sort_keys=True,
@@ -207,6 +213,55 @@ def page(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | Non
            + f'<script type="application/json" id="hypotrail-presentation">{snapshot_json}'
              f'</script><script>{SCRIPT}</script></body></html>\n')
     return out, sorted(consumed)
+
+
+_CITED = re.compile(r'<data value="[^"]*" data-result-id="([0-9a-f]+)" data-path="[^"]*"'
+                    r'(?: data-scale="\d+")?(?=>)')
+
+
+def _short_titles(body: str) -> str:
+    """The hover title of every cited number of the edition read without script: "result
+    <short identifier>", the identifier's first twelve characters as the annex lists it (the
+    full one and the path stay in ``data-result-id`` and ``data-path``; with the script, the
+    hover shows both, as in the other edition)."""
+    return _CITED.sub(lambda m: f'{m.group(0)} title="result {m.group(1)[:12]}"', body)
+
+
+_TERM = re.compile(r'<p(?: lang="[a-z]+")?><strong class="term">([^<]*)</strong>.*?</p>')
+_SVG = re.compile(r'<svg class="chart".*?</svg>', re.S)
+_COORD = re.compile(r'\b((?:x|y|x1|x2|y1|y2|cx|cy|width|height)=")(-?\d+)\.(\d+)"')
+_POINTS = re.compile(r'points="([^"]*)"')
+
+
+def _round(m: re.Match) -> str:
+    return f'{m.group(1)}{round(float(m.group(2) + "." + m.group(3)))}"'
+
+
+def _points(m: re.Match) -> str:
+    return 'points="' + ' '.join(','.join(str(round(float(v))) for v in pt.split(','))
+                                 for pt in m.group(1).split()) + '"'
+
+
+def _compact(body: str) -> str:
+    """An edition within the page budget once the plan runs the exploration charts
+    (2026-10-28): a term's definition paragraph inside a result is shown at its first
+    occurrence only (the chapters' term cards and the glossary hold it), and the chart
+    coordinates are whole pixels (positions for the drawing, never a cited number), without
+    the default ``text-anchor="start"``."""
+    seen: set[str] = set()
+
+    def term(m: re.Match) -> str:
+        key = m.group(1)
+        if key in seen:
+            return ''
+        seen.add(key)
+        return m.group(0)
+
+    def svg(m: re.Match) -> str:
+        out = _POINTS.sub(_points, _COORD.sub(_round, m.group(0)))
+        return out.replace(' text-anchor="start"', '')
+    body = _TERM.sub(term, body)
+    return _SVG.sub(svg, body)
 
 
 def _tools(study: str) -> str:
@@ -573,7 +628,8 @@ def _verdict(c) -> str:
     # R52: a regression's development and final evidence in one table, configuration by
     # configuration; the criterion is its last row, judged on the final test once opened.
     table = ev.regression_table(view, citer) if task == 'regression' else ''
-    evidence_html = table if table else f'<div class="vgrid">{boxes}</div>{crit}'
+    evidence_html = (rn.evidence_table_frame(c) if table
+                     else f'<div class="vgrid">{boxes}</div>{crit}')
     # figure V
     figure = ''
     fin = citer.slot_rid('final_test.evaluation')
@@ -777,7 +833,10 @@ def _decisions(c) -> str:
 def _appendix(view: Mapping, citer: cite.Citer, surfaces: Mapping) -> str:
     words = texts.report()['narrative']
     annex = words['annex']
-    extras = [('plan', annex['plan'], rh._plan(view)), ('facts', annex['facts'], rh._facts(view)),
+    # 2026-10-28 (page budget, once the plan runs the exploration charts): the plan is the
+    # verdict's "where the study stands", the contents and each chapter's steps; the annex
+    # keeps the facts, the history and the revision.
+    extras = [('facts', annex['facts'], rh._facts(view)),
               ('history', annex['history'], rh._history(view)),
               ('revision', annex['revision'], rh._surfaces(view, surfaces))]
     more = ''.join(f'<details class="f annex-part" data-annex="{key}"><summary>{e(title)}'
@@ -1124,6 +1183,6 @@ function openHash(){var h=window.location.hash;if(!h){return;}var id=h.slice(1);
 if(n&&n.closest&&n.closest(".ed")&&n.closest(".ed").getAttribute("data-ed")!==lang()){setLang(n.closest(".ed").getAttribute("data-ed"));}
 if(base(id).indexOf("r-")===0&&n&&n.tagName==="DETAILS"){var p=n;while(p){if(p.tagName==="DETAILS"){p.open=true;}p=p.parentElement;}n.scrollIntoView();}}
 openHash();window.addEventListener("hashchange",openHash);
-function titled(ev){var d=ev.target&&ev.target.closest&&ev.target.closest("data[data-result-id],text[data-result-id]");if(d&&!d.getAttribute("title")){var t="result "+d.getAttribute("data-result-id")+" · "+d.getAttribute("data-path");d.setAttribute("title",t);if(d.tagName.toLowerCase()==="text"){var s=document.createElementNS(d.namespaceURI,"title");s.textContent=t;d.appendChild(s);}}}
+function titled(ev){var d=ev.target&&ev.target.closest&&ev.target.closest("data[data-result-id],text[data-result-id]");if(d&&(d.getAttribute("title")||"").indexOf(" · ")<0){var t="result "+d.getAttribute("data-result-id")+" · "+d.getAttribute("data-path");d.setAttribute("title",t);if(d.tagName.toLowerCase()==="text"){var s=document.createElementNS(d.namespaceURI,"title");s.textContent=t;d.appendChild(s);}}}
 document.addEventListener("mouseover",titled);document.addEventListener("focusin",titled);
 })();'''

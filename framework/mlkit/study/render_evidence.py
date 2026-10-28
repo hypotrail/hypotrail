@@ -294,7 +294,7 @@ def cv_rotation(citer, rid: str, values: Mapping) -> str:
             w = (x1 - x0) * h['n_rows'] / total
             cls = 'cv-val' if j == i else 'cv-fit'
             body.append(f'<rect class="{cls}" x="{x + 1:.1f}" y="{y}" width="{max(1.0, w - 2):.1f}" '
-                        f'height="20" rx="2"><title>{e(say(cls))}</title></rect>')
+                        f'height="20" rx="2"/>')
             if j == i:
                 body.append(citer.svg_num(rid, f'fold_rows.{i}.n_rows', 'int', x=x + w / 2,
                                           y=y + 14, anchor='middle', cls='val cv-n'))
@@ -431,25 +431,59 @@ def pipeline(view: Mapping, citer, fit_slot: str, quality_rid: str | None) -> st
         qv = _mapping(citer.results[quality_rid].values)
         logs = set(str(x) for x in fitted.get('log_transform') or [])
         caps = set(str(x) for x in _mapping(fitted.get('caps')))
+        missing = {str(_mapping(m).get('column')): j
+                   for j, m in enumerate(qv.get('missing') or [])}
         rows = []
         for i, r in enumerate(qv.get('ranges') or []):
             column = str(_mapping(r).get('column'))
-            if column not in features or not citer.has(quality_rid, f'ranges.{i}.skewness'):
+            if column not in features:
+                continue
+            checks = _checks(citer, quality_rid, i, _mapping(r), missing.get(column))
+            if not checks:
                 continue
             verdict = ('verdict_log' if column in logs else 'verdict_cap' if column in caps
                        else 'verdict_none')
-            skew = citer.num(quality_rid, f'ranges.{i}.skewness', 'f2')
-            rows.append((0 if verdict != 'verdict_none' else 1,
+            sep = ' : ' if texts.report_language() == 'fr' else ': '
+            rows.append((verdict == 'verdict_none',
                          f'<li class="{"changed" if verdict != "verdict_none" else ""}">'
-                         f'{rh.lit("identifier", column, "code")} : '
-                         f'{t(verdict, skew=skew)}</li>' if texts.report_language() == 'fr' else
-                         f'<li class="{"changed" if verdict != "verdict_none" else ""}">'
-                         f'{rh.lit("identifier", column, "code")}: {t(verdict, skew=skew)}</li>'))
+                         f'{rh.lit("identifier", column, "code")}{sep}<b>{e(say(verdict))}</b>'
+                         f' — {" ; ".join(checks)}</li>'))
         if rows:
             rows.sort(key=lambda x: x[0])
             out += (f'<p class="sub-k">{e(say("verdicts"))}</p><ul class="verdicts">'
                     + ''.join(r for _, r in rows) + f'</ul><p class="cap">'
-                    f'{e(say("threshold_missing"))}</p>')
+                    f'{e(say("thresholds_note"))}</p>')
+    return out
+
+
+def _setting(value, kind: str = 'auto') -> str:
+    """A threshold of the engine's preparation rules (``drafts``): a setting, not a result."""
+    return rh.lit('setting', cite.format_value(value, kind, texts.report_language()))
+
+
+def _checks(citer, rid: str, i: int, r: Mapping, j: int | None) -> list[str]:
+    """R41: what each preparation rule measured on one column against its threshold, the
+    measure cited from the quality check, the threshold the engine's (``drafts``): the
+    skewness against the signed-log minimum, the maximum against a multiple of the 99th
+    percentile, the share of missing cells against the indicator minimum."""
+    from . import drafts
+    out = []
+    if _num(r.get('skewness')) and citer.has(rid, f'ranges.{i}.skewness'):
+        out.append(t('check_skew', value=citer.num(rid, f'ranges.{i}.skewness', 'f2'),
+                     op='≥' if r['skewness'] >= drafts.SKEW_LOG_MIN else '<',
+                     threshold=_setting(drafts.SKEW_LOG_MIN)))
+    q99 = _mapping(r.get('quantiles')).get('0.99')
+    if _num(q99) and q99 > 0 and _num(r.get('max')) and citer.has(rid, f'ranges.{i}.max'):
+        out.append(t('check_tail', value=citer.num(rid, f'ranges.{i}.max', 'auto'),
+                     op='>' if r['max'] > drafts.EXTREME_TAIL_RATIO * q99 else '≤',
+                     ratio=_setting(drafts.EXTREME_TAIL_RATIO),
+                     q99=citer.num(rid, cite.format_path(['ranges', str(i), 'quantiles', '0.99']),
+                                   'auto')))
+    if j is not None and citer.has(rid, f'missing.{j}.share'):
+        share = citer.value(rid, f'missing.{j}.share')
+        out.append(t('check_missing', value=citer.num(rid, f'missing.{j}.share', 'pct1'),
+                     op='≥' if share >= drafts.MISSING_MIN_SHARE else '<',
+                     threshold=_setting(drafts.MISSING_MIN_SHARE, 'pct0')))
     return out
 
 

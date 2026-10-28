@@ -538,10 +538,13 @@ evidence:
   pipe_none: {en: none, fr: aucun}
   pipe_note: {en: "Every step is learnt on the fitting rows of each fold only and applied unchanged to the fold it predicts, so no predicted row informs its own preparation.", fr: "Chaque étape est apprise sur les lignes d'ajustement de chaque pli seulement et appliquée telle quelle au pli prédit : aucune ligne prédite ne nourrit sa propre préparation."}
   verdicts: {en: "Each numeric column's verdict", fr: "Le verdict de chaque colonne numérique"}
-  verdict_log: {en: "signed log (skewness {skew})", fr: "log signé (asymétrie {skew})"}
-  verdict_cap: {en: "capped (skewness {skew})", fr: "plafonnée (asymétrie {skew})"}
-  verdict_none: {en: "unchanged (skewness {skew})", fr: "inchangée (asymétrie {skew})"}
-  threshold_missing: {en: "The threshold that decided each verdict is not recorded by the engine: only the skewness behind it is shown.", fr: "Le seuil qui a décidé chaque verdict n'est pas enregistré par le moteur : seule l'asymétrie qui le fonde est montrée."}
+  verdict_log: {en: "signed log", fr: "log signé"}
+  verdict_cap: {en: "capped", fr: "plafonnée"}
+  verdict_none: {en: "unchanged", fr: "inchangée"}
+  check_skew: {en: "skewness {value} {op} {threshold}", fr: "asymétrie {value} {op} {threshold}"}
+  check_tail: {en: "maximum {value} {op} {ratio} × ninety-ninth percentile ({q99})", fr: "maximum {value} {op} {ratio} × quatre-vingt-dix-neuvième centile ({q99})"}
+  check_missing: {en: "missing {value} {op} {threshold}", fr: "manquantes {value} {op} {threshold}"}
+  thresholds_note: {en: "Each measure comes from the quality check; each threshold is the engine's preparation rule (a log at a skewness of one or more, a cap when the maximum exceeds three times the ninety-ninth percentile, a missing-value indicator from a share of five percent).", fr: "Chaque mesure vient du contrôle de qualité ; chaque seuil est la règle de préparation du moteur (un log dès une asymétrie de un, un plafond quand le maximum dépasse trois fois le quatre-vingt-dix-neuvième centile, un indicateur de valeur manquante dès une part de cinq pour cent)."}
   se_question: {en: "Which configurations are within one standard error of the best, and which is the simplest of them?", fr: "Quelles configurations sont à moins d'une erreur type de la meilleure, et laquelle est la plus simple ?"}
   se_label: {en: "The one-standard-error rule", fr: "La règle d'une erreur type"}
   se_mean: {en: mean error over the folds, fr: erreur moyenne sur les plis}
@@ -565,6 +568,10 @@ evidence:
     temporal: {en: "the latest rows in time order", fr: "les lignes les plus récentes dans l'ordre du temps"}
     random: {en: "at random", fr: "au hasard"}
     stratified: {en: "stratified by the target", fr: "stratifiées sur la cible"}
+  see_table: {en: "Development and final evidence, configuration by configuration, are one table at the top of the report:", fr: "Les preuves de développement et finale, configuration par configuration, forment un seul tableau en tête du rapport :"}
+  see_dots: {en: "The development and final errors of every configuration, on one scale, with the criterion's bound:", fr: "Les erreurs de développement et finales de chaque configuration, sur une même échelle, avec la borne du critère :"}
+  table_v: {en: "table V", fr: "tableau V"}
+  figure_v: {en: "figure V", fr: "figure V"}
   established: {en: "What the study establishes", fr: "Ce que l'étude établit"}
   not_established: {en: "What it does not establish", fr: "Ce qu'elle n'établit pas"}
   next: {en: "And then", fr: "Et après"}

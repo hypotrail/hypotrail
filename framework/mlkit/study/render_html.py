@@ -661,7 +661,12 @@ def slot_title(slot: str) -> str:
     return texts.activity(slot).get('label') or _labels().get('slot_labels', {}).get(slot, slot)
 
 
-def _result_block(view: Mapping, citer: cite.Citer, slot: str) -> str:
+def _result_block(view: Mapping, citer: cite.Citer, slot: str, compact: bool = False,
+                  tables: bool = True) -> str:
+    """The figures of one result. ``compact`` (the lesson report, under a chart that asks
+    the question and a frame that names the rows; the term is the chapter's card) leaves
+    out the question, the term and the rows read; ``tables=False`` leaves out the tables a
+    chart already draws, keeping the highlighted figures."""
     labels = _labels()
     spec = texts.activity(slot)
     title = slot_title(slot)
@@ -676,13 +681,16 @@ def _result_block(view: Mapping, citer: cite.Citer, slot: str) -> str:
                 f'<p class="small">{lit("message", audience.reason_words(reason))}</p></div>')
     question = item['values'].get('question') if isinstance(item['values'], Mapping) else None
     asked = f'<p><strong>Question.</strong> {lit("message", question)}</p>' if question else ''
+    intro = '' if compact else (
+        f'{asked}{_concept(spec.get("glossary")) if spec.get("glossary") else ""}'
+        f'<p class="small">{e(labels["words"]["rows_read"])} '
+        f'{e(_rows_words(item["partition"]))}.</p>')
+    figures = _figures(citer, item['result_id'], spec if tables else
+                       {k: v for k, v in spec.items() if k != 'tables'})
     return (f'<div data-slot="{e(slot)}" data-state="current">'
             f'<h4 data-result="{e(item["result_id"])}" '
-            f'data-partition="{e(str(item["partition"]))}">{e(title)}</h4>{asked}'
-            f'{_concept(spec.get("glossary")) if spec.get("glossary") else ""}'
-            f'<p class="small">{e(labels["words"]["rows_read"])} '
-            f'{e(_rows_words(item["partition"]))}.</p>'
-            f'{_figures(citer, item["result_id"], spec)}</div>')
+            f'data-partition="{e(str(item["partition"]))}">{e(title)}</h4>{intro}'
+            f'{figures}</div>')
 
 
 def why_step(view: Mapping, citer: cite.Citer, step: Mapping) -> str:
@@ -859,14 +867,18 @@ def _comparison_rows(citer: cite.Citer, rid: str, rules: Mapping | None, metrics
             f'<tbody>{"".join(rows)}</tbody></table></div>')
 
 
-def _model_comparison(view: Mapping, citer: cite.Citer) -> str:
+def _model_comparison(view: Mapping, citer: cite.Citer, charted: bool = False) -> str:
     """Regression model comparison from the canonical ``evaluate.regression`` values
     (``models``, ``intervals``, ``deltas``, ``residuals``, ``residuals_by``;
-    CLI-CONTRACT.md section 8.5). Every number is cited."""
+    CLI-CONTRACT.md section 8.5). Every number is cited. ``charted`` (the lesson report, whose
+    chapter draws the paired differences and the residual boxes and holds the terms' cards)
+    leaves out the terms, the paired table against the reference and the residual
+    quantiles."""
     labels = _labels()
+    terms = '' if charted else (f'{_concept("mae")}{_concept("rmse")}{_concept("residual")}'
+                                f'{_concept("bias")}{_concept("paired_bootstrap")}')
     head = (f'<section class="card" id="model-comparison"><h2>{e(labels["sections"]["policy"])}</h2>'
-            f'{_concept("mae")}{_concept("rmse")}{_concept("residual")}{_concept("bias")}'
-            f'{_concept("paired_bootstrap")}')
+            f'{terms}')
     rid = citer.slot_rid('evaluate.regression')
     if rid is None:
         return head + f'<p class="muted">{e(labels["model_missing"])}</p></section>'
@@ -919,7 +931,7 @@ def _model_comparison(view: Mapping, citer: cite.Citer) -> str:
         table = (f'<div class="scroll"><table class="metrics"><thead><tr><th>Model</th>{th}</tr>'
                  f'</thead><tbody>{"".join(rows)}</tbody></table></div>')
     pair_table = ''
-    if paired:
+    if paired and not charted:
         pair_table = (f'<h3>{e(labels["model_paired_heading"])}</h3><div class="scroll">'
                       '<table class="paired"><thead><tr><th>Model</th><th>Metric</th>'
                       '<th>Difference</th><th>Interval</th></tr></thead>'
@@ -928,7 +940,7 @@ def _model_comparison(view: Mapping, citer: cite.Citer) -> str:
         else labels['model_note']
     return (head + f'<p class="notice">{e(note)}{level}{unit_note}</p>'
             f'{table}{pair_table}{_comparison_rows(citer, rid, None, metrics)}'
-            f'{_residuals(citer, rid, values)}'
+            f'{_residuals(citer, rid, values, quantiles=not charted)}'
             f'{_figures(citer, rid, texts.activity("evaluate.regression"))}</section>')
 
 
@@ -937,13 +949,13 @@ RESIDUAL_COLUMNS = (('mean', 'Mean (bias)'), ('sd', 'Standard deviation'), ('q05
                     ('q95', '95th percentile'))
 
 
-def _residuals(citer: cite.Citer, rid: str, values: Mapping) -> str:
+def _residuals(citer: cite.Citer, rid: str, values: Mapping, quantiles: bool = True) -> str:
     """Residual distribution per model, then residuals by period (cited tables)."""
     labels = _labels()
     out = ''
     residuals = values.get('residuals') if isinstance(values.get('residuals'), Mapping) else {}
     rows = []
-    for model in residuals:
+    for model in residuals if quantiles else ():
         cells = []
         for key, _ in RESIDUAL_COLUMNS:
             path = cite.format_path(['residuals', str(model), key])
@@ -1062,12 +1074,11 @@ def _annex(view: Mapping, citer: cite.Citer) -> str:
             anchor_value = (f'{lit("identifier", cite.format_path(first), "code")}: '
                             f'{citer.num(rid, cite.format_path(first), "auto")}'
                             if first is not None else '')
-        env = item['environment'] or {}
-        meta = (f'<p class="small">Full id {lit("identifier", rid, "code")}; partition '
-                f'{lit("identifier", item["partition"] or "not recorded")}; parameters '
-                f'{lit("parameter", _value_text(item["params"]), "code")}; code fingerprint '
-                f'{lit("identifier", (item["code_fingerprint"] or "")[:12], "code")}; environment '
-                f'{lit("environment", "Python " + str(env.get("python", "unknown")))}.</p>')
+        # 2026-10-28 (page budget, once the plan runs the exploration charts): the full
+        # identifier, the parameters and the environment are in the evidence command below.
+        meta = (f'<p class="small">Partition '
+                f'{lit("identifier", item["partition"] or "not recorded")}; code fingerprint '
+                f'{lit("identifier", (item["code_fingerprint"] or "")[:12], "code")}.</p>')
         uses = (f'<p class="small" data-cited-values="{n_cited}">{anchor_value}. '
                 f'{lit("structure", n_cited)} {e(words["cited"])}. {e(words["all_values"])} '
                 f'{lit("identifier", "hypotrail evidence --result " + rid, "code")}</p>')

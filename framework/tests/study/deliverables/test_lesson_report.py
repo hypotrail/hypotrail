@@ -322,9 +322,13 @@ def test_development_and_final_evidence_are_one_table(studies):
         assert 'data-figure="evidence_dots"' in verdict
         dots = verdict.split('data-figure="evidence_dots"')[1]
         assert '<line class="thr"' in dots                      # the final-test bound
-        # the same layout once more in chapter eight, with its reading
+        # the table is framed with its reading in the verdict (table V); chapter eight
+        # points to it rather than repeating it (2026-10-28, page budget)
+        assert 'id="tab-V' in verdict and 'data-figure="evidence_table"' in verdict
+        assert '<details class="f lire" open>' in verdict.split('data-figure="evidence_table"')[1]
         ch8 = chapter_html(fragment, 'ch8' if lang == 'fr' else 'ch8--en')
-        assert 'data-figure="evidence_table"' in ch8 and 'data-figure="versus"' not in ch8
+        assert 'data-see="tab-V"' in ch8 and 'data-figure="versus"' not in ch8
+        assert re.search(r'href="#tab-V(--en)?"', ch8)
     for lang, fragment in editions(sealed).items():
         table = _verdict(fragment).split('<table class="evtab"')[1].split('</table>')[0]
         assert table.count('data-unmeasured="sealed_cell"') >= 4
@@ -343,7 +347,9 @@ def test_the_conclusion_is_split_and_carried_by_charts(studies):
         established = ch9.split('data-part="established"')[1].split(
             'data-part="not_established"')[0]
         assert 'data-figure="criterion_final"' in established
-        assert 'data-figure="evidence_dots"' in established
+        # the development and final errors on one scale: figure V, pointed to from here
+        assert 'data-see="fig-V"' in established
+        assert re.search(r'href="#fig-V(--en)?"', established)
         assert 'data-path="criterion.minimum"' in established
         assert 'data-no-chart="observed_predicted"' in ch9
         assert 'data-no-chart="error_by_period"' in ch9

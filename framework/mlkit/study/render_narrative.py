@@ -635,6 +635,9 @@ EDA_KIND = {'eda.quality': 'quality', 'eda.distribution': 'distribution',
             'eda.rate_by': 'by_group', 'eda.mean_by': 'by_group'}
 
 
+BY_GROUP_SLOTS = ('eda.mean_by', 'eda.rate_by')
+
+
 def _exploration_order(slot: str) -> tuple:
     base = slot.partition(':')[0]
     rank = EXPLORATION_ORDER.index(base) if base in EXPLORATION_ORDER else len(EXPLORATION_ORDER)
@@ -695,8 +698,15 @@ def _ch4(c: Context, steps, status) -> Parts:
             values = item['values'] if isinstance(item.get('values'), Mapping) else {}
             fvalues, conclude = _eda_values(c, slot, rid, values)
             cls = evidence_class(view, slot, item)
+            charts = c.charts.get(slot, [])
+            # 2026-10-28 (R42): under a chart, the result's figures without the question,
+            # the term and the rows the chart and the frame already give; a mean or rate by
+            # group keeps its highlighted figures, its table being the chart's own values.
+            figures = (rh._result_block(view, citer, slot, compact=True,
+                                        tables=slot.partition(':')[0] not in BY_GROUP_SLOTS)
+                       if charts else _result_figures(c, slot))
             body = (f'<div class="evidence-block ev-{cls}" id="{anchor_id(slot)}">'
-                    + ''.join(c.charts.get(slot, [])) + _result_figures(c, slot) + '</div>')
+                    + ''.join(charts) + figures + '</div>')
             p.evidence.append(c.frame(
                 'ch4', kind, body, slot=slot, evidence=cls, values=fvalues, conclude=conclude,
                 what='chart' if c.charts.get(slot) else 'table',
@@ -1097,7 +1107,8 @@ def _ch7_regression(c: Context, p: Parts, rid: str, values: Mapping, line: str) 
                                   render_charts.residuals_by(citer, rid, values),
                                   values=bvalues, conclude=bconclude,
                                   title_values={'column': column}, frame_html=line))
-    p.evidence.append(c.frame('ch7', 'comparison', demote(rh._model_comparison(view, citer), 1),
+    p.evidence.append(c.frame('ch7', 'comparison',
+                              demote(rh._model_comparison(view, citer, charted=True), 1),
                               what='table', values={'delta': pvalues.get('delta', '')},
                               conclude='none' if not pvalues else None, frame_html=line))
     choice = view['decisions'].get('model_choice') or {}
@@ -1200,7 +1211,9 @@ def _versus_frame(c: Context) -> str:
                          citer.num(final_rid, final_path, fmt)))
 
     if c.task == 'regression':
-        return _evidence_table_frame(c)
+        # R52: the one table is the verdict's (table V); one copy keeps the page in budget.
+        return (f'<p class="see-v" data-see="tab-V">{ev.t("see_table")} '
+                f'<a href="#tab-V">{e(ev.say("table_v"))}</a>.</p>')
     else:
         rule = final.get('rule_final') or final.get('rule')
         if not rule:
@@ -1230,8 +1243,10 @@ def _versus_frame(c: Context) -> str:
                    evidence='final', frame_html=g.frame_line('final', _frame_rows(c, final_rid)))
 
 
-def _evidence_table_frame(c: Context) -> str:
-    """R52: development and final evidence in one table, configuration by configuration."""
+def evidence_table_frame(c: Context, cid: str = 'verdict',
+                         figure_id: str | None = 'tab-V') -> str:
+    """R52: development and final evidence in one table, configuration by configuration (in
+    the verdict, "Table V"; the chapters refer to it)."""
     citer, view = c.citer, c.view
     table = ev.regression_table(view, citer)
     if not table:
@@ -1247,7 +1262,7 @@ def _evidence_table_frame(c: Context) -> str:
             fvalues = {'final': citer.num(fin, model, 'f2'), 'base': citer.num(fin, base, 'f2'),
                        'status': e(ev.say('status_final.' + status))}
             conclude = None
-    return c.frame('ch8', 'evidence_table', table, what='table',
+    return c.frame(cid, 'evidence_table', table, what='table', figure_id=figure_id,
                    slot='final_test.evaluation' if fin else 'evaluate.regression',
                    evidence='final' if fin else 'development', values=fvalues,
                    conclude=conclude, attention=None if fin else 'none',
@@ -1357,14 +1372,10 @@ def _established(c: Context) -> list[str]:
                     'status': e(ev.say('status_final.' + status))},
             frame_html=g.frame_line('final', _frame_rows(c, fin), '',
                                     e(rh.capital(rh.model_name(model))))))
-    dots = ev.evidence_dots(view, citer)
-    dev = citer.slot_rid('evaluate.regression')
-    if dots and dev and citer.has(dev, m):
-        out.append(c.frame(
-            'ch9', 'evidence_dots', dots, slot='final_test.evaluation', evidence='final',
-            values={'dev': citer.num(dev, m, 'f2'), 'final': citer.num(fin, m, 'f2'),
-                    'base': citer.num(fin, b, 'f2')},
-            frame_html=g.frame_line('final', _frame_rows(c, fin))))
+    # R48: the development and final errors on one scale are figure V, under table V.
+    out.append(f'<p class="see-v" data-see="fig-V">{ev.t("see_dots")} '
+               f'<a href="#fig-V">{e(ev.say("figure_v"))}</a> · '
+               f'<a href="#tab-V">{e(ev.say("table_v"))}</a>.</p>')
     return out
 
 
