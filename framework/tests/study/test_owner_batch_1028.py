@@ -40,12 +40,16 @@ KEPT = ('cylinders', 'displacement', 'horsepower', 'weight', 'origin')
 
 
 class _RmseFlow(fk.Flow):
-    """The test junior chooses the RMSE at the success criterion (R46)."""
+    """The test junior chooses the RMSE at the success criterion (R46). Since the lot of
+    2026-10-28 (EN-9) a new study chooses the measure at its own step first, so the junior
+    chooses the RMSE there too."""
 
     def call(self, *args, expect=0):
         args = [str(a) for a in args]
         if args[:3] == ['decide', 'propose', 'success_criterion'] and '--value-json' in args:
             args[args.index('--value-json') + 1] = json.dumps(RMSE)
+        if args[:3] == ['decide', 'propose', 'error_metric'] and '--value-json' in args:
+            args[args.index('--value-json') + 1] = json.dumps({'metric': 'rmse'})
         return super().call(*args, expect=expect)
 
 
@@ -117,11 +121,14 @@ def test_the_plan_recap_follows_the_plan(walked):
     action = _first(seen['reads'], lambda a: a.get('decision') == 'preprocessing')
     recap = action['plan_recap']
     assert recap.startswith("Le plan, dans l'ordre : ")
-    assert recap.index('Qualité') < recap.index('Préparation') < recap.index('Exploration') \
-        < recap.index('Modèles') < recap.index('Conclusion')
-    assert recap.endswith('Étape actuelle : Préparation (7 sur 13).')
+    # Lot 2026-10-28 (EN-14, EN-21): full step names, the error measure's step (14 steps),
+    # and « validation croisée à 5 plis » without "k".
+    assert recap.index('Mesure de l\'erreur') < recap.index('Critère de succès') \
+        < recap.index('Contrôle de qualité') < recap.index('Préparation') \
+        < recap.index('Exploration') < recap.index('Modèles') < recap.index('Conclusion')
+    assert recap.endswith('Étape actuelle : Préparation (8 sur 14).')
     split = _first(seen['reads'], lambda a: a.get('decision') == 'split')
-    assert split['question'] == 'Évaluez-vous avec cette validation croisée à 5 plis (k = 5) ?'
+    assert split['question'] == 'Évaluez-vous avec cette validation croisée à 5 plis ?'
 
 
 def test_the_structure_is_known_at_step_1(walked):
@@ -202,7 +209,9 @@ def test_the_rmse_criterion(walked):
     assert 'rmse_reduction' in refused['error']['details']['metrics']
     options = _first(seen['reads'], lambda a: a.get('decision') == 'success_criterion')
     metrics = {m['metric']: m['default'] for m in options['criterion_options']['metrics']}
-    assert metrics == {'mae_reduction': True, 'rmse_reduction': False}
+    # Lot 2026-10-28 (EN-9): the picker offers the confirmed measure only (a study of before
+    # the lot still offers both, test_lot_1028_guided).
+    assert metrics == {'rmse_reduction': True}
     with pytest.raises(governance.ValueProblem):
         crit.check({'metric': 'rmse_reduction', 'min_share': 1.5}, 'regression')
     criterion = seen['view']['criterion']

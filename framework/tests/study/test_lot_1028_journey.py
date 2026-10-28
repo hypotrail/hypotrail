@@ -142,7 +142,11 @@ def test_the_pictures_of_the_framing_steps(demo):
 
 
 def test_the_french_texts_name_the_reference_and_the_folds(demo):
-    flat = json.dumps(demo['digest']['texts']['fr'], ensure_ascii=False)
+    texts = json.loads(json.dumps(demo['digest']['texts']['fr']))
+    split = next(s for s in texts['step_cards']['steps'] if s['step'] == 'split')
+    # EN-21: the term « k plis » is defined in the split picture's « En savoir plus » only.
+    assert 'k plis' in split['picture'].pop('more')
+    flat = json.dumps(texts, ensure_ascii=False)
     for phrase in FORBIDDEN_FR:
         assert phrase not in flat, phrase
 
