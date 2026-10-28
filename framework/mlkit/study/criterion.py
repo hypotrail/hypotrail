@@ -306,8 +306,9 @@ def value_words(value: Any, lang: str = EN, cv: bool = False,
         pct = round(100 * value['min_share'])
         error = (_t(lang, 'out-of-fold error', 'erreur hors pli') if cv
                  else _t(lang, 'validation error', 'erreur de validation'))
-        return _t(lang, f'{error} at least {pct}% below the mean baseline',
-                  f'{error} au moins {pct} % sous celle de la moyenne de référence')
+        # CLI-CONTRACT §17.6 (R48): the reference of a regression is "reference (predict the mean)".
+        return _t(lang, f'{error} at least {pct}% below the reference (predict the mean)',
+                  f'{error} au moins {pct} % sous celle de la référence (prédire la moyenne)')
     if metric in ERROR_METRIC and isinstance(value.get('min_share'), (int, float)):
         # R46, R48: the RMSE criterion, and either criterion judged on the final test; the
         # reference is named "reference (predict the mean)".
