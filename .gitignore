@@ -47,3 +47,7 @@ htmlcov/
 # Datasets copied from an installed package by a use case prepare.py (not redistributed)
 /use-cases/breast-cancer-wdbc/data/
 /use-cases/diabetes/data/
+
+# Workshop studies and the packaged study panel (scripts/workshop/, .devcontainer/)
+/studies/
+/.workshop-cache/
