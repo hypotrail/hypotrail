@@ -994,3 +994,18 @@ its warning.
   suggests the two axes do not share the same scale or range; an observed-vs-predicted chart
   must use equal scales on both axes (square plot, same min and max) so the diagonal is the
   true y = x. Noted only, not fixed.
+- **R59 (precision, 2026-10-28).** The cross-validation diagram exists ("Validation croisée :
+  les lignes de développement en blocs dans l'ordre du temps", 5 rows, one block highlighted
+  per fold, rows and years per block) but appears only later, in the evidence of the model
+  steps. Show it (or an illustrative version) at the split step, before any fit, as the step's
+  visual explanation (R61). Same diagram: add a legend (ochre = rows predicted in this round,
+  grey = rows the model learns from) and drop the code styling of `model_year` in the title
+  ("année du modèle").
+- **R63. Show how the sealed final-test rows were drawn (owner request, 2026-10-28).** The
+  partition strip says "tirées au hasard dans des quantiles, pour que les lignes scellées
+  ressemblent aux autres" without a picture. Draw it: the strata used for the draw (e.g. 5
+  quantile bins) as columns, each split into development rows and sealed rows with their
+  counts (≈ 16 sealed per bin), so the junior sees the 80 rows were taken evenly from every
+  part of the range. Use counts only (no target values, so no look at the target), with a
+  one-line reading; at the data or split step, and kept in the path (R55). Noted only, not
+  fixed.
