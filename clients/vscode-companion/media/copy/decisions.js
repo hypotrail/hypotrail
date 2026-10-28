@@ -64,6 +64,7 @@
       feature_availability: 'the available variables',
       split: 'the split',
       // WP-A7: the two decisions of WP-A4, in the words of media/copy/junior.js.
+      error_metric: 'the error measure',
       success_criterion: 'the success criterion',
       preprocessing: 'the data preparation',
       // WP-B5: the two decisions of WP-B1.

@@ -19,6 +19,7 @@
     split: 'le découpage',
     policy: regression(task) ? 'la troisième décision' : 'la règle de décision',
     model_choice: 'le choix du modèle',
+    error_metric: "la mesure de l'erreur",
     success_criterion: 'le critère de succès',
     preprocessing: 'la préparation des données',
     model_variant: 'la variante à comparer',
@@ -33,6 +34,7 @@
     policy: regression(task) ? 'Cette décision transforme les résultats en action.'
       : "La règle de décision transforme les scores en action : sur quels cas agir, compte tenu de ce que l'équipe peut traiter.",
     model_choice: 'Le choix du modèle retient le modèle dont les erreurs sur les lignes de validation conviennent à votre usage.',
+    error_metric: "La mesure de l'erreur dit comment compter un raté : l'erreur absolue moyenne (MAE) pèse chaque raté pareil, la racine de l'erreur quadratique moyenne (RMSE) pèse beaucoup plus un gros raté.",
     success_criterion: "Le critère de succès fixe, avant de voir les résultats, de combien un modèle doit battre la référence pour valoir la peine d'être adopté.",
     preprocessing: "La préparation des données dit comment sont traités les valeurs manquantes, les catégories rares, les valeurs extrêmes et les colonnes asymétriques ; elle est apprise sur les lignes d'entraînement seulement.",
     model_variant: regression(task)
@@ -141,6 +143,12 @@
     return `Ouvrir le test final une fois pour ${modelName(v.model, task)}${r ? ` (${r.toLowerCase()})` : ''}`;
   }
 
+  function errorMetric(raw) {
+    const v = parse(raw);
+    const m = v && typeof v === 'object' ? v.metric : raw;
+    return { mae: "L'erreur absolue moyenne (MAE)", rmse: "La racine de l'erreur quadratique moyenne (RMSE)" }[m] || null;
+  }
+
   function criterion(raw) {
     const v = parse(raw);
     if (!v || typeof v !== 'object') return null;
@@ -213,6 +221,7 @@
         return parts.join(' · ');
       }
       case 'split': return split(raw);
+      case 'error_metric': return errorMetric(raw);
       case 'success_criterion': return criterion(raw);
       case 'preprocessing': return preparation(raw);
       case 'model_variant': return variant(raw);
