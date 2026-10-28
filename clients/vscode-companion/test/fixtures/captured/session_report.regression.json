@@ -14,41 +14,41 @@
   "schema": "hypotrail.session_report/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 38,
+  "revision": 40,
   "since": null,
   "sources": {
-   "revisions": 38,
+   "revisions": 40,
    "events": 1,
    "session_log": {
     "enabled": true,
-    "entries": 54,
+    "entries": 58,
     "path": ".hypotrail/session-log.jsonl",
     "note": null
    },
    "artifacts_status": "ok"
   },
   "span": {
-   "first": "2026-10-28T08:41:06.452935+00:00",
-   "last": "2026-10-28T08:41:30.727743+00:00",
-   "seconds": 24.3,
-   "revisions": 38
+   "first": "2026-10-28T12:44:39.144035+00:00",
+   "last": "2026-10-28T12:45:06.944424+00:00",
+   "seconds": 27.8,
+   "revisions": 40
   },
   "commands": {
-   "decide confirm": 6,
-   "decide propose": 7,
+   "decide confirm": 7,
+   "decide propose": 8,
    "init": 1,
    "run": 12,
-   "status": 28
+   "status": 30
   },
   "refusals": [],
   "decisions": [
    {
     "proposal_id": "p_1",
     "decision_id": "prediction_time",
-    "proposed_at": "2026-10-28T08:41:06.563377+00:00",
+    "proposed_at": "2026-10-28T12:44:39.271394+00:00",
     "proposed_revision": 2,
     "outcome": "confirmed",
-    "closed_at": "2026-10-28T08:41:07.035874+00:00",
+    "closed_at": "2026-10-28T12:44:39.807910+00:00",
     "seconds_open": 0.5,
     "basis": "restated",
     "delegation_scope": null,
@@ -58,11 +58,11 @@
    {
     "proposal_id": "p_2",
     "decision_id": "feature_availability",
-    "proposed_at": "2026-10-28T08:41:07.612602+00:00",
+    "proposed_at": "2026-10-28T12:44:40.576391+00:00",
     "proposed_revision": 4,
     "outcome": "confirmed",
-    "closed_at": "2026-10-28T08:41:08.128263+00:00",
-    "seconds_open": 0.5,
+    "closed_at": "2026-10-28T12:44:41.185773+00:00",
+    "seconds_open": 0.6,
     "basis": "restated",
     "delegation_scope": null,
     "refused_confirmations": 0,
@@ -71,36 +71,10 @@
    {
     "proposal_id": "p_3",
     "decision_id": "split",
-    "proposed_at": "2026-10-28T08:41:08.927999+00:00",
+    "proposed_at": "2026-10-28T12:44:42.137307+00:00",
     "proposed_revision": 6,
     "outcome": "confirmed",
-    "closed_at": "2026-10-28T08:41:09.596954+00:00",
-    "seconds_open": 0.7,
-    "basis": "restated",
-    "delegation_scope": null,
-    "refused_confirmations": 0,
-    "refusal_reasons": {}
-   },
-   {
-    "proposal_id": "p_4",
-    "decision_id": "success_criterion",
-    "proposed_at": "2026-10-28T08:41:10.403638+00:00",
-    "proposed_revision": 8,
-    "outcome": "confirmed",
-    "closed_at": "2026-10-28T08:41:11.152664+00:00",
-    "seconds_open": 0.7,
-    "basis": "restated",
-    "delegation_scope": null,
-    "refused_confirmations": 0,
-    "refusal_reasons": {}
-   },
-   {
-    "proposal_id": "p_5",
-    "decision_id": "preprocessing",
-    "proposed_at": "2026-10-28T08:41:12.033346+00:00",
-    "proposed_revision": 10,
-    "outcome": "confirmed",
-    "closed_at": "2026-10-28T08:41:12.835875+00:00",
+    "closed_at": "2026-10-28T12:44:42.901807+00:00",
     "seconds_open": 0.8,
     "basis": "restated",
     "delegation_scope": null,
@@ -108,12 +82,38 @@
     "refusal_reasons": {}
    },
    {
-    "proposal_id": "p_6",
-    "decision_id": "model_variant",
-    "proposed_at": "2026-10-28T08:41:24.558236+00:00",
-    "proposed_revision": 32,
+    "proposal_id": "p_4",
+    "decision_id": "error_metric",
+    "proposed_at": "2026-10-28T12:44:43.768717+00:00",
+    "proposed_revision": 8,
     "outcome": "confirmed",
-    "closed_at": "2026-10-28T08:41:25.460144+00:00",
+    "closed_at": "2026-10-28T12:44:44.530108+00:00",
+    "seconds_open": 0.8,
+    "basis": "restated",
+    "delegation_scope": null,
+    "refused_confirmations": 0,
+    "refusal_reasons": {}
+   },
+   {
+    "proposal_id": "p_5",
+    "decision_id": "success_criterion",
+    "proposed_at": "2026-10-28T12:44:45.592061+00:00",
+    "proposed_revision": 10,
+    "outcome": "confirmed",
+    "closed_at": "2026-10-28T12:44:46.601410+00:00",
+    "seconds_open": 1.0,
+    "basis": "restated",
+    "delegation_scope": null,
+    "refused_confirmations": 0,
+    "refusal_reasons": {}
+   },
+   {
+    "proposal_id": "p_6",
+    "decision_id": "preprocessing",
+    "proposed_at": "2026-10-28T12:44:47.479276+00:00",
+    "proposed_revision": 12,
+    "outcome": "confirmed",
+    "closed_at": "2026-10-28T12:44:48.361883+00:00",
     "seconds_open": 0.9,
     "basis": "restated",
     "delegation_scope": null,
@@ -122,9 +122,22 @@
    },
    {
     "proposal_id": "p_7",
+    "decision_id": "model_variant",
+    "proposed_at": "2026-10-28T12:45:00.298953+00:00",
+    "proposed_revision": 34,
+    "outcome": "confirmed",
+    "closed_at": "2026-10-28T12:45:01.150916+00:00",
+    "seconds_open": 0.9,
+    "basis": "restated",
+    "delegation_scope": null,
+    "refused_confirmations": 0,
+    "refusal_reasons": {}
+   },
+   {
+    "proposal_id": "p_8",
     "decision_id": "model_choice",
-    "proposed_at": "2026-10-28T08:41:29.054481+00:00",
-    "proposed_revision": 38,
+    "proposed_at": "2026-10-28T12:45:04.537660+00:00",
+    "proposed_revision": 40,
     "outcome": "open",
     "closed_at": null,
     "seconds_open": null,
@@ -141,9 +154,9 @@
      "prediction_time",
      "feature_availability"
     ],
-    "opened_at": "2026-10-28T08:41:06.563377+00:00",
-    "closed_at": "2026-10-28T08:41:08.128263+00:00",
-    "seconds": 1.6,
+    "opened_at": "2026-10-28T12:44:39.271394+00:00",
+    "closed_at": "2026-10-28T12:44:41.185773+00:00",
+    "seconds": 1.9,
     "proposals": 2,
     "confirmed": [
      "feature_availability",
@@ -156,14 +169,16 @@
     "pause": 2,
     "decisions": [
      "split",
+     "error_metric",
      "success_criterion",
      "preprocessing"
     ],
-    "opened_at": "2026-10-28T08:41:08.927999+00:00",
-    "closed_at": "2026-10-28T08:41:12.835875+00:00",
-    "seconds": 3.9,
-    "proposals": 3,
+    "opened_at": "2026-10-28T12:44:42.137307+00:00",
+    "closed_at": "2026-10-28T12:44:48.361883+00:00",
+    "seconds": 6.2,
+    "proposals": 4,
     "confirmed": [
+     "error_metric",
      "preprocessing",
      "split",
      "success_criterion"
@@ -179,7 +194,7 @@
      "final_test",
      "conclusion"
     ],
-    "opened_at": "2026-10-28T08:41:24.558236+00:00",
+    "opened_at": "2026-10-28T12:45:00.298953+00:00",
     "closed_at": null,
     "seconds": null,
     "proposals": 2,
@@ -192,145 +207,145 @@
   ],
   "runs": [
    {
-    "execution_id": "e_ea1ff066194e9ce5fbc1533b",
+    "execution_id": "e_305370681065d9971a93f227",
     "activity": "split",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T08:41:13.753568+00:00",
+    "started_at": "2026-10-28T12:44:49.441312+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T08:41:13.827276+00:00",
+    "ended_at": "2026-10-28T12:44:49.526403+00:00",
     "seconds": 0.1,
     "slot": "split",
     "result_id": "3c4563d5"
    },
    {
-    "execution_id": "e_f37508d21e9ebda7c2ebce28",
+    "execution_id": "e_808e66ec55e19cf01a72e71c",
     "activity": "eda.target_summary",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T08:41:14.666637+00:00",
+    "started_at": "2026-10-28T12:44:50.488037+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T08:41:14.745596+00:00",
+    "ended_at": "2026-10-28T12:44:50.561158+00:00",
     "seconds": 0.1,
     "slot": "eda.target_summary",
     "result_id": "90390311"
    },
    {
-    "execution_id": "e_305370681065d9971a93f227",
+    "execution_id": "e_75c47b1ef767a30eb39cdb4d",
     "activity": "eda.special_values",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T08:41:15.768220+00:00",
+    "started_at": "2026-10-28T12:44:51.477798+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T08:41:15.843301+00:00",
+    "ended_at": "2026-10-28T12:44:51.545669+00:00",
     "seconds": 0.1,
     "slot": "eda.special_values",
     "result_id": "693e6c9b"
    },
    {
-    "execution_id": "e_808e66ec55e19cf01a72e71c",
+    "execution_id": "e_5f95a7d242e4ea751ed82afb",
     "activity": "eda.quality",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T08:41:16.823830+00:00",
+    "started_at": "2026-10-28T12:44:52.484030+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T08:41:16.906612+00:00",
+    "ended_at": "2026-10-28T12:44:52.595195+00:00",
     "seconds": 0.1,
     "slot": "eda.quality",
     "result_id": "c985c7d9"
    },
    {
-    "execution_id": "e_75c47b1ef767a30eb39cdb4d",
+    "execution_id": "e_622dd0c704d6af123eea761a",
     "activity": "eda.single_feature_signal",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T08:41:17.862742+00:00",
+    "started_at": "2026-10-28T12:44:53.553362+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T08:41:18.254693+00:00",
+    "ended_at": "2026-10-28T12:44:53.947232+00:00",
     "seconds": 0.4,
     "slot": "eda.single_feature_signal",
     "result_id": "99cecf88"
    },
    {
-    "execution_id": "e_5f95a7d242e4ea751ed82afb",
+    "execution_id": "e_284db43c31758f9aef75cd0b",
     "activity": "eda.mean_by",
     "rules": null,
     "column": "model_year",
-    "started_at": "2026-10-28T08:41:19.177210+00:00",
+    "started_at": "2026-10-28T12:44:54.939548+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T08:41:19.255771+00:00",
+    "ended_at": "2026-10-28T12:44:55.012006+00:00",
     "seconds": 0.1,
     "slot": "eda.mean_by:model_year",
     "result_id": "54d72772"
    },
    {
-    "execution_id": "e_622dd0c704d6af123eea761a",
+    "execution_id": "e_aa1477c41bc44c975f9888ce",
     "activity": "eda.distribution",
     "rules": null,
     "column": "weight",
-    "started_at": "2026-10-28T08:41:20.199784+00:00",
+    "started_at": "2026-10-28T12:44:56.026355+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T08:41:20.270213+00:00",
+    "ended_at": "2026-10-28T12:44:56.093119+00:00",
     "seconds": 0.1,
     "slot": "eda.distribution:weight",
     "result_id": "bedade14"
    },
    {
-    "execution_id": "e_284db43c31758f9aef75cd0b",
+    "execution_id": "e_2033db067e905124ef78ea82",
     "activity": "eda.correlation",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T08:41:21.241671+00:00",
+    "started_at": "2026-10-28T12:44:57.018932+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T08:41:21.348759+00:00",
+    "ended_at": "2026-10-28T12:44:57.100912+00:00",
     "seconds": 0.1,
     "slot": "eda.correlation",
     "result_id": "42942f01"
    },
    {
-    "execution_id": "e_aa1477c41bc44c975f9888ce",
+    "execution_id": "e_ea00d1a0450c556a8e3289e1",
     "activity": "fit.baseline",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T08:41:22.301701+00:00",
+    "started_at": "2026-10-28T12:44:58.127474+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T08:41:22.369440+00:00",
+    "ended_at": "2026-10-28T12:44:58.198681+00:00",
     "seconds": 0.1,
     "slot": "fit.baseline",
     "result_id": "a3648c6e"
    },
    {
-    "execution_id": "e_2033db067e905124ef78ea82",
+    "execution_id": "e_e2a8db59374ecd02f11773fa",
     "activity": "fit.linear",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T08:41:23.494879+00:00",
+    "started_at": "2026-10-28T12:44:59.185954+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T08:41:23.593330+00:00",
+    "ended_at": "2026-10-28T12:44:59.283868+00:00",
     "seconds": 0.1,
     "slot": "fit.linear",
     "result_id": "8639586c"
    },
    {
-    "execution_id": "e_9ef87905207eafeced71da38",
+    "execution_id": "e_bad9a6f0e28076da5c45d47f",
     "activity": "fit.variant",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T08:41:26.475933+00:00",
+    "started_at": "2026-10-28T12:45:02.186738+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T08:41:26.616921+00:00",
+    "ended_at": "2026-10-28T12:45:02.300525+00:00",
     "seconds": 0.1,
     "slot": "fit.variant",
     "result_id": "84b648d6"
    },
    {
-    "execution_id": "e_952532c3c79c0a600a6ca16b",
+    "execution_id": "e_3a7193d6091b2b9b9c7123cb",
     "activity": "evaluate.regression",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T08:41:27.838474+00:00",
+    "started_at": "2026-10-28T12:45:03.319610+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T08:41:27.982630+00:00",
+    "ended_at": "2026-10-28T12:45:03.459575+00:00",
     "seconds": 0.1,
     "slot": "evaluate.regression",
     "result_id": "f1f5a9a3"
@@ -338,7 +353,7 @@
   ],
   "renders": [
    {
-    "time": "2026-10-28T08:41:06.948491+00:00",
+    "time": "2026-10-28T12:44:39.721552+00:00",
     "command": "decide",
     "revision": 2,
     "artifacts": {
@@ -349,7 +364,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:07.480686+00:00",
+    "time": "2026-10-28T12:44:40.398693+00:00",
     "command": "decide",
     "revision": 3,
     "artifacts": {
@@ -360,7 +375,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:08.017572+00:00",
+    "time": "2026-10-28T12:44:41.062530+00:00",
     "command": "decide",
     "revision": 4,
     "artifacts": {
@@ -371,7 +386,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:08.783061+00:00",
+    "time": "2026-10-28T12:44:41.960383+00:00",
     "command": "decide",
     "revision": 5,
     "artifacts": {
@@ -382,7 +397,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:09.465182+00:00",
+    "time": "2026-10-28T12:44:42.734355+00:00",
     "command": "decide",
     "revision": 6,
     "artifacts": {
@@ -393,7 +408,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:10.226147+00:00",
+    "time": "2026-10-28T12:44:43.596287+00:00",
     "command": "decide",
     "revision": 7,
     "artifacts": {
@@ -404,7 +419,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:10.977303+00:00",
+    "time": "2026-10-28T12:44:44.379097+00:00",
     "command": "decide",
     "revision": 8,
     "artifacts": {
@@ -415,7 +430,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:11.825884+00:00",
+    "time": "2026-10-28T12:44:45.369643+00:00",
     "command": "decide",
     "revision": 9,
     "artifacts": {
@@ -426,7 +441,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:12.653459+00:00",
+    "time": "2026-10-28T12:44:46.305138+00:00",
     "command": "decide",
     "revision": 10,
     "artifacts": {
@@ -437,7 +452,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:13.553373+00:00",
+    "time": "2026-10-28T12:44:47.293356+00:00",
     "command": "decide",
     "revision": 11,
     "artifacts": {
@@ -448,8 +463,19 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:14.474182+00:00",
-    "command": "run",
+    "time": "2026-10-28T12:44:48.067901+00:00",
+    "command": "decide",
+    "revision": 12,
+    "artifacts": {
+     "editable": "ok",
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    }
+   },
+   {
+    "time": "2026-10-28T12:44:49.208106+00:00",
+    "command": "decide",
     "revision": 13,
     "artifacts": {
      "editable": "ok",
@@ -459,7 +485,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:15.554700+00:00",
+    "time": "2026-10-28T12:44:50.288390+00:00",
     "command": "run",
     "revision": 15,
     "artifacts": {
@@ -470,7 +496,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:16.623893+00:00",
+    "time": "2026-10-28T12:44:51.283605+00:00",
     "command": "run",
     "revision": 17,
     "artifacts": {
@@ -481,7 +507,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:17.633827+00:00",
+    "time": "2026-10-28T12:44:52.289342+00:00",
     "command": "run",
     "revision": 19,
     "artifacts": {
@@ -492,7 +518,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:18.963686+00:00",
+    "time": "2026-10-28T12:44:53.357598+00:00",
     "command": "run",
     "revision": 21,
     "artifacts": {
@@ -503,7 +529,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:19.995093+00:00",
+    "time": "2026-10-28T12:44:54.739122+00:00",
     "command": "run",
     "revision": 23,
     "artifacts": {
@@ -514,7 +540,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:20.996901+00:00",
+    "time": "2026-10-28T12:44:55.822889+00:00",
     "command": "run",
     "revision": 25,
     "artifacts": {
@@ -525,7 +551,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:22.101062+00:00",
+    "time": "2026-10-28T12:44:56.828750+00:00",
     "command": "run",
     "revision": 27,
     "artifacts": {
@@ -536,7 +562,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:23.197844+00:00",
+    "time": "2026-10-28T12:44:57.937053+00:00",
     "command": "run",
     "revision": 29,
     "artifacts": {
@@ -547,7 +573,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:24.356358+00:00",
+    "time": "2026-10-28T12:44:58.987132+00:00",
     "command": "run",
     "revision": 31,
     "artifacts": {
@@ -558,19 +584,8 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:25.228948+00:00",
-    "command": "decide",
-    "revision": 32,
-    "artifacts": {
-     "editable": "ok",
-     "notebook": "ok",
-     "report": "ok",
-     "workbench": "ok"
-    }
-   },
-   {
-    "time": "2026-10-28T08:41:26.241780+00:00",
-    "command": "decide",
+    "time": "2026-10-28T12:45:00.099818+00:00",
+    "command": "run",
     "revision": 33,
     "artifacts": {
      "editable": "ok",
@@ -580,8 +595,19 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:27.615555+00:00",
-    "command": "run",
+    "time": "2026-10-28T12:45:01.001531+00:00",
+    "command": "decide",
+    "revision": 34,
+    "artifacts": {
+     "editable": "ok",
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    }
+   },
+   {
+    "time": "2026-10-28T12:45:01.992733+00:00",
+    "command": "decide",
     "revision": 35,
     "artifacts": {
      "editable": "ok",
@@ -591,7 +617,7 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:28.874672+00:00",
+    "time": "2026-10-28T12:45:03.130457+00:00",
     "command": "run",
     "revision": 37,
     "artifacts": {
@@ -602,9 +628,20 @@
     }
    },
    {
-    "time": "2026-10-28T08:41:29.792089+00:00",
+    "time": "2026-10-28T12:45:04.350636+00:00",
+    "command": "run",
+    "revision": 39,
+    "artifacts": {
+     "editable": "ok",
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    }
+   },
+   {
+    "time": "2026-10-28T12:45:05.279550+00:00",
     "command": "decide",
-    "revision": 38,
+    "revision": 40,
     "artifacts": {
      "editable": "ok",
      "notebook": "ok",
@@ -617,20 +654,20 @@
   "gaps": [],
   "timeline": [
    {
-    "time": "2026-10-28T08:41:06.452935+00:00",
+    "time": "2026-10-28T12:44:39.144035+00:00",
     "source": "revision",
     "revision": 1,
     "action": "init"
    },
    {
-    "time": "2026-10-28T08:41:06.455707+00:00",
+    "time": "2026-10-28T12:44:39.147380+00:00",
     "source": "event",
     "kind": "study_created",
     "revision": 1
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:06.486987+00:00",
+    "time": "2026-10-28T12:44:39.182829+00:00",
     "command": "init",
     "verb": null,
     "exit_code": 0,
@@ -640,7 +677,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:06.557629+00:00",
+    "time": "2026-10-28T12:44:39.265009+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -651,7 +688,7 @@
     "next_action": "show_data_card"
    },
    {
-    "time": "2026-10-28T08:41:06.563377+00:00",
+    "time": "2026-10-28T12:44:39.271394+00:00",
     "source": "revision",
     "revision": 2,
     "action": "decide.propose",
@@ -661,7 +698,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:06.948491+00:00",
+    "time": "2026-10-28T12:44:39.721552+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -681,7 +718,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:07.027360+00:00",
+    "time": "2026-10-28T12:44:39.795143+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -692,7 +729,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-28T08:41:07.035874+00:00",
+    "time": "2026-10-28T12:44:39.807910+00:00",
     "source": "revision",
     "revision": 3,
     "action": "decide.confirm",
@@ -707,7 +744,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:07.480686+00:00",
+    "time": "2026-10-28T12:44:40.398693+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -732,7 +769,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:07.589331+00:00",
+    "time": "2026-10-28T12:44:40.553157+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -743,7 +780,7 @@
     "next_action": "propose"
    },
    {
-    "time": "2026-10-28T08:41:07.612602+00:00",
+    "time": "2026-10-28T12:44:40.576391+00:00",
     "source": "revision",
     "revision": 4,
     "action": "decide.propose",
@@ -753,7 +790,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:08.017572+00:00",
+    "time": "2026-10-28T12:44:41.062530+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -773,7 +810,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:08.100701+00:00",
+    "time": "2026-10-28T12:44:41.160433+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -784,7 +821,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-28T08:41:08.128263+00:00",
+    "time": "2026-10-28T12:44:41.185773+00:00",
     "source": "revision",
     "revision": 5,
     "action": "decide.confirm",
@@ -799,7 +836,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:08.783061+00:00",
+    "time": "2026-10-28T12:44:41.960383+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -824,7 +861,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:08.920513+00:00",
+    "time": "2026-10-28T12:44:42.129520+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -835,7 +872,7 @@
     "next_action": "propose"
    },
    {
-    "time": "2026-10-28T08:41:08.927999+00:00",
+    "time": "2026-10-28T12:44:42.137307+00:00",
     "source": "revision",
     "revision": 6,
     "action": "decide.propose",
@@ -845,7 +882,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:09.465182+00:00",
+    "time": "2026-10-28T12:44:42.734355+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -865,7 +902,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:09.589425+00:00",
+    "time": "2026-10-28T12:44:42.892405+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -876,7 +913,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-28T08:41:09.596954+00:00",
+    "time": "2026-10-28T12:44:42.901807+00:00",
     "source": "revision",
     "revision": 7,
     "action": "decide.confirm",
@@ -891,7 +928,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:10.226147+00:00",
+    "time": "2026-10-28T12:44:43.596287+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -916,7 +953,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:10.397142+00:00",
+    "time": "2026-10-28T12:44:43.760154+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -927,24 +964,24 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T08:41:10.403638+00:00",
+    "time": "2026-10-28T12:44:43.768717+00:00",
     "source": "revision",
     "revision": 8,
     "action": "decide.propose",
-    "decision_id": "success_criterion",
+    "decision_id": "error_metric",
     "proposal_id": "p_4",
     "superseded": []
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:10.977303+00:00",
+    "time": "2026-10-28T12:44:44.379097+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
     "ok": true,
     "revision": 8,
     "options": {},
-    "decision_id": "success_criterion",
+    "decision_id": "error_metric",
     "proposal_id": "p_4",
     "replayed": false,
     "status": "open",
@@ -957,7 +994,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:11.145296+00:00",
+    "time": "2026-10-28T12:44:44.520421+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -968,11 +1005,11 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-28T08:41:11.152664+00:00",
+    "time": "2026-10-28T12:44:44.530108+00:00",
     "source": "revision",
     "revision": 9,
     "action": "decide.confirm",
-    "decision_id": "success_criterion",
+    "decision_id": "error_metric",
     "proposal_id": "p_4",
     "basis": "restated",
     "delegation_scope": null,
@@ -983,14 +1020,14 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:11.825884+00:00",
+    "time": "2026-10-28T12:44:45.369643+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
     "ok": true,
     "revision": 9,
     "options": {},
-    "decision_id": "success_criterion",
+    "decision_id": "error_metric",
     "proposal_id": "p_4",
     "replayed": false,
     "status": "confirmed",
@@ -1008,7 +1045,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:11.990053+00:00",
+    "time": "2026-10-28T12:44:45.583555+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1019,24 +1056,24 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T08:41:12.033346+00:00",
+    "time": "2026-10-28T12:44:45.592061+00:00",
     "source": "revision",
     "revision": 10,
     "action": "decide.propose",
-    "decision_id": "preprocessing",
+    "decision_id": "success_criterion",
     "proposal_id": "p_5",
     "superseded": []
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:12.653459+00:00",
+    "time": "2026-10-28T12:44:46.305138+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
     "ok": true,
     "revision": 10,
     "options": {},
-    "decision_id": "preprocessing",
+    "decision_id": "success_criterion",
     "proposal_id": "p_5",
     "replayed": false,
     "status": "open",
@@ -1049,7 +1086,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:12.808719+00:00",
+    "time": "2026-10-28T12:44:46.589206+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1060,11 +1097,11 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-28T08:41:12.835875+00:00",
+    "time": "2026-10-28T12:44:46.601410+00:00",
     "source": "revision",
     "revision": 11,
     "action": "decide.confirm",
-    "decision_id": "preprocessing",
+    "decision_id": "success_criterion",
     "proposal_id": "p_5",
     "basis": "restated",
     "delegation_scope": null,
@@ -1075,14 +1112,14 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:13.553373+00:00",
+    "time": "2026-10-28T12:44:47.293356+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
     "ok": true,
     "revision": 11,
     "options": {},
-    "decision_id": "preprocessing",
+    "decision_id": "success_criterion",
     "proposal_id": "p_5",
     "replayed": false,
     "status": "confirmed",
@@ -1100,7 +1137,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:13.721281+00:00",
+    "time": "2026-10-28T12:44:47.437306+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1111,87 +1148,127 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T08:41:13.753568+00:00",
+    "time": "2026-10-28T12:44:47.479276+00:00",
     "source": "revision",
     "revision": 12,
-    "action": "run.reserve",
-    "activity": "split",
-    "execution_id": "e_ea1ff066194e9ce5fbc1533b",
-    "status": "running"
-   },
-   {
-    "time": "2026-10-28T08:41:13.827276+00:00",
-    "source": "revision",
-    "revision": 13,
-    "action": "run.promote",
-    "activity": "split",
-    "execution_id": "e_ea1ff066194e9ce5fbc1533b",
-    "slot": "split",
-    "status": "promoted",
-    "result_id": "3c4563d5"
+    "action": "decide.propose",
+    "decision_id": "preprocessing",
+    "proposal_id": "p_6",
+    "superseded": []
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:14.474182+00:00",
-    "command": "run",
-    "verb": null,
+    "time": "2026-10-28T12:44:48.067901+00:00",
+    "command": "decide",
+    "verb": "propose",
     "exit_code": 0,
     "ok": true,
-    "revision": 13,
+    "revision": 12,
     "options": {},
-    "activity": "split",
-    "status": "promoted",
+    "decision_id": "preprocessing",
+    "proposal_id": "p_6",
+    "replayed": false,
+    "status": "open",
     "artifacts": {
      "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
-    },
-    "slot": "split",
-    "result_id": "3c4563d5"
+    }
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:14.638334+00:00",
+    "time": "2026-10-28T12:44:48.320829+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 12,
+    "options": {},
+    "current_step": "split",
+    "next_action": "await_user_words"
+   },
+   {
+    "time": "2026-10-28T12:44:48.361883+00:00",
+    "source": "revision",
+    "revision": 13,
+    "action": "decide.confirm",
+    "decision_id": "preprocessing",
+    "proposal_id": "p_6",
+    "basis": "restated",
+    "delegation_scope": null,
+    "invalidation": {
+     "mutation": "first_confirmation",
+     "stale_results": 0
+    }
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-28T12:44:49.208106+00:00",
+    "command": "decide",
+    "verb": "confirm",
+    "exit_code": 0,
+    "ok": true,
+    "revision": 13,
+    "options": {},
+    "decision_id": "preprocessing",
+    "proposal_id": "p_6",
+    "replayed": false,
+    "status": "confirmed",
+    "basis": "restated",
+    "invalidation": {
+     "mutation": "first_confirmation",
+     "stale_results": 0
+    },
+    "artifacts": {
+     "editable": "ok",
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    }
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-28T12:44:49.415452+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
     "revision": 13,
     "options": {},
-    "current_step": "structural_eda",
+    "current_step": "split",
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T08:41:14.666637+00:00",
+    "time": "2026-10-28T12:44:49.441312+00:00",
     "source": "revision",
     "revision": 14,
     "action": "run.reserve",
-    "activity": "eda.target_summary",
-    "execution_id": "e_f37508d21e9ebda7c2ebce28",
+    "activity": "split",
+    "execution_id": "e_305370681065d9971a93f227",
     "status": "running"
    },
    {
-    "time": "2026-10-28T08:41:14.745596+00:00",
+    "time": "2026-10-28T12:44:49.526403+00:00",
     "source": "revision",
     "revision": 15,
     "action": "run.promote",
-    "activity": "eda.target_summary",
-    "execution_id": "e_f37508d21e9ebda7c2ebce28",
-    "slot": "eda.target_summary",
+    "activity": "split",
+    "execution_id": "e_305370681065d9971a93f227",
+    "slot": "split",
     "status": "promoted",
-    "result_id": "90390311"
+    "result_id": "3c4563d5"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:15.554700+00:00",
+    "time": "2026-10-28T12:44:50.288390+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
     "ok": true,
     "revision": 15,
     "options": {},
-    "activity": "eda.target_summary",
+    "activity": "split",
     "status": "promoted",
     "artifacts": {
      "editable": "ok",
@@ -1199,12 +1276,12 @@
      "report": "ok",
      "workbench": "ok"
     },
-    "slot": "eda.target_summary",
-    "result_id": "90390311"
+    "slot": "split",
+    "result_id": "3c4563d5"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:15.737963+00:00",
+    "time": "2026-10-28T12:44:50.461414+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1215,35 +1292,35 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T08:41:15.768220+00:00",
+    "time": "2026-10-28T12:44:50.488037+00:00",
     "source": "revision",
     "revision": 16,
     "action": "run.reserve",
-    "activity": "eda.special_values",
-    "execution_id": "e_305370681065d9971a93f227",
+    "activity": "eda.target_summary",
+    "execution_id": "e_808e66ec55e19cf01a72e71c",
     "status": "running"
    },
    {
-    "time": "2026-10-28T08:41:15.843301+00:00",
+    "time": "2026-10-28T12:44:50.561158+00:00",
     "source": "revision",
     "revision": 17,
     "action": "run.promote",
-    "activity": "eda.special_values",
-    "execution_id": "e_305370681065d9971a93f227",
-    "slot": "eda.special_values",
+    "activity": "eda.target_summary",
+    "execution_id": "e_808e66ec55e19cf01a72e71c",
+    "slot": "eda.target_summary",
     "status": "promoted",
-    "result_id": "693e6c9b"
+    "result_id": "90390311"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:16.623893+00:00",
+    "time": "2026-10-28T12:44:51.283605+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
     "ok": true,
     "revision": 17,
     "options": {},
-    "activity": "eda.special_values",
+    "activity": "eda.target_summary",
     "status": "promoted",
     "artifacts": {
      "editable": "ok",
@@ -1251,12 +1328,12 @@
      "report": "ok",
      "workbench": "ok"
     },
-    "slot": "eda.special_values",
-    "result_id": "693e6c9b"
+    "slot": "eda.target_summary",
+    "result_id": "90390311"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:16.794349+00:00",
+    "time": "2026-10-28T12:44:51.451230+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1267,35 +1344,35 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T08:41:16.823830+00:00",
+    "time": "2026-10-28T12:44:51.477798+00:00",
     "source": "revision",
     "revision": 18,
     "action": "run.reserve",
-    "activity": "eda.quality",
-    "execution_id": "e_808e66ec55e19cf01a72e71c",
+    "activity": "eda.special_values",
+    "execution_id": "e_75c47b1ef767a30eb39cdb4d",
     "status": "running"
    },
    {
-    "time": "2026-10-28T08:41:16.906612+00:00",
+    "time": "2026-10-28T12:44:51.545669+00:00",
     "source": "revision",
     "revision": 19,
     "action": "run.promote",
-    "activity": "eda.quality",
-    "execution_id": "e_808e66ec55e19cf01a72e71c",
-    "slot": "eda.quality",
+    "activity": "eda.special_values",
+    "execution_id": "e_75c47b1ef767a30eb39cdb4d",
+    "slot": "eda.special_values",
     "status": "promoted",
-    "result_id": "c985c7d9"
+    "result_id": "693e6c9b"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:17.633827+00:00",
+    "time": "2026-10-28T12:44:52.289342+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
     "ok": true,
     "revision": 19,
     "options": {},
-    "activity": "eda.quality",
+    "activity": "eda.special_values",
     "status": "promoted",
     "artifacts": {
      "editable": "ok",
@@ -1303,49 +1380,101 @@
      "report": "ok",
      "workbench": "ok"
     },
-    "slot": "eda.quality",
-    "result_id": "c985c7d9"
+    "slot": "eda.special_values",
+    "result_id": "693e6c9b"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:17.819639+00:00",
+    "time": "2026-10-28T12:44:52.447916+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
     "revision": 19,
     "options": {},
-    "current_step": "models",
+    "current_step": "structural_eda",
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T08:41:17.862742+00:00",
+    "time": "2026-10-28T12:44:52.484030+00:00",
     "source": "revision",
     "revision": 20,
     "action": "run.reserve",
-    "activity": "eda.single_feature_signal",
-    "execution_id": "e_75c47b1ef767a30eb39cdb4d",
+    "activity": "eda.quality",
+    "execution_id": "e_5f95a7d242e4ea751ed82afb",
     "status": "running"
    },
    {
-    "time": "2026-10-28T08:41:18.254693+00:00",
+    "time": "2026-10-28T12:44:52.595195+00:00",
     "source": "revision",
     "revision": 21,
     "action": "run.promote",
+    "activity": "eda.quality",
+    "execution_id": "e_5f95a7d242e4ea751ed82afb",
+    "slot": "eda.quality",
+    "status": "promoted",
+    "result_id": "c985c7d9"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-28T12:44:53.357598+00:00",
+    "command": "run",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 21,
+    "options": {},
+    "activity": "eda.quality",
+    "status": "promoted",
+    "artifacts": {
+     "editable": "ok",
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    },
+    "slot": "eda.quality",
+    "result_id": "c985c7d9"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-28T12:44:53.524435+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 21,
+    "options": {},
+    "current_step": "models",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-28T12:44:53.553362+00:00",
+    "source": "revision",
+    "revision": 22,
+    "action": "run.reserve",
     "activity": "eda.single_feature_signal",
-    "execution_id": "e_75c47b1ef767a30eb39cdb4d",
+    "execution_id": "e_622dd0c704d6af123eea761a",
+    "status": "running"
+   },
+   {
+    "time": "2026-10-28T12:44:53.947232+00:00",
+    "source": "revision",
+    "revision": 23,
+    "action": "run.promote",
+    "activity": "eda.single_feature_signal",
+    "execution_id": "e_622dd0c704d6af123eea761a",
     "slot": "eda.single_feature_signal",
     "status": "promoted",
     "result_id": "99cecf88"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:18.963686+00:00",
+    "time": "2026-10-28T12:44:54.739122+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 21,
+    "revision": 23,
     "options": {},
     "activity": "eda.single_feature_signal",
     "status": "promoted",
@@ -1360,45 +1489,45 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:19.148106+00:00",
+    "time": "2026-10-28T12:44:54.907577+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 21,
+    "revision": 23,
     "options": {},
     "current_step": "models",
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T08:41:19.177210+00:00",
+    "time": "2026-10-28T12:44:54.939548+00:00",
     "source": "revision",
-    "revision": 22,
+    "revision": 24,
     "action": "run.reserve",
     "activity": "eda.mean_by",
-    "execution_id": "e_5f95a7d242e4ea751ed82afb",
+    "execution_id": "e_284db43c31758f9aef75cd0b",
     "status": "running",
     "column": "model_year"
    },
    {
-    "time": "2026-10-28T08:41:19.255771+00:00",
+    "time": "2026-10-28T12:44:55.012006+00:00",
     "source": "revision",
-    "revision": 23,
+    "revision": 25,
     "action": "run.promote",
     "activity": "eda.mean_by",
-    "execution_id": "e_5f95a7d242e4ea751ed82afb",
+    "execution_id": "e_284db43c31758f9aef75cd0b",
     "slot": "eda.mean_by:model_year",
     "status": "promoted",
     "result_id": "54d72772"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:19.995093+00:00",
+    "time": "2026-10-28T12:44:55.822889+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 23,
+    "revision": 25,
     "options": {
      "column": "model_year"
     },
@@ -1415,45 +1544,45 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:20.172207+00:00",
+    "time": "2026-10-28T12:44:55.998468+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 23,
+    "revision": 25,
     "options": {},
     "current_step": "models",
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T08:41:20.199784+00:00",
+    "time": "2026-10-28T12:44:56.026355+00:00",
     "source": "revision",
-    "revision": 24,
+    "revision": 26,
     "action": "run.reserve",
     "activity": "eda.distribution",
-    "execution_id": "e_622dd0c704d6af123eea761a",
+    "execution_id": "e_aa1477c41bc44c975f9888ce",
     "status": "running",
     "column": "weight"
    },
    {
-    "time": "2026-10-28T08:41:20.270213+00:00",
+    "time": "2026-10-28T12:44:56.093119+00:00",
     "source": "revision",
-    "revision": 25,
+    "revision": 27,
     "action": "run.promote",
     "activity": "eda.distribution",
-    "execution_id": "e_622dd0c704d6af123eea761a",
+    "execution_id": "e_aa1477c41bc44c975f9888ce",
     "slot": "eda.distribution:weight",
     "status": "promoted",
     "result_id": "bedade14"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:20.996901+00:00",
+    "time": "2026-10-28T12:44:56.828750+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 25,
+    "revision": 27,
     "options": {
      "column": "weight"
     },
@@ -1470,59 +1599,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:21.197756+00:00",
-    "command": "status",
-    "verb": null,
-    "exit_code": 0,
-    "ok": true,
-    "revision": 25,
-    "options": {},
-    "current_step": "models",
-    "next_action": "run"
-   },
-   {
-    "time": "2026-10-28T08:41:21.241671+00:00",
-    "source": "revision",
-    "revision": 26,
-    "action": "run.reserve",
-    "activity": "eda.correlation",
-    "execution_id": "e_284db43c31758f9aef75cd0b",
-    "status": "running"
-   },
-   {
-    "time": "2026-10-28T08:41:21.348759+00:00",
-    "source": "revision",
-    "revision": 27,
-    "action": "run.promote",
-    "activity": "eda.correlation",
-    "execution_id": "e_284db43c31758f9aef75cd0b",
-    "slot": "eda.correlation",
-    "status": "promoted",
-    "result_id": "42942f01"
-   },
-   {
-    "source": "session_log",
-    "time": "2026-10-28T08:41:22.101062+00:00",
-    "command": "run",
-    "verb": null,
-    "exit_code": 0,
-    "ok": true,
-    "revision": 27,
-    "options": {},
-    "activity": "eda.correlation",
-    "status": "promoted",
-    "artifacts": {
-     "editable": "ok",
-     "notebook": "ok",
-     "report": "ok",
-     "workbench": "ok"
-    },
-    "slot": "eda.correlation",
-    "result_id": "42942f01"
-   },
-   {
-    "source": "session_log",
-    "time": "2026-10-28T08:41:22.273125+00:00",
+    "time": "2026-10-28T12:44:56.992431+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1533,35 +1610,35 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T08:41:22.301701+00:00",
+    "time": "2026-10-28T12:44:57.018932+00:00",
     "source": "revision",
     "revision": 28,
     "action": "run.reserve",
-    "activity": "fit.baseline",
-    "execution_id": "e_aa1477c41bc44c975f9888ce",
+    "activity": "eda.correlation",
+    "execution_id": "e_2033db067e905124ef78ea82",
     "status": "running"
    },
    {
-    "time": "2026-10-28T08:41:22.369440+00:00",
+    "time": "2026-10-28T12:44:57.100912+00:00",
     "source": "revision",
     "revision": 29,
     "action": "run.promote",
-    "activity": "fit.baseline",
-    "execution_id": "e_aa1477c41bc44c975f9888ce",
-    "slot": "fit.baseline",
+    "activity": "eda.correlation",
+    "execution_id": "e_2033db067e905124ef78ea82",
+    "slot": "eda.correlation",
     "status": "promoted",
-    "result_id": "a3648c6e"
+    "result_id": "42942f01"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:23.197844+00:00",
+    "time": "2026-10-28T12:44:57.937053+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
     "ok": true,
     "revision": 29,
     "options": {},
-    "activity": "fit.baseline",
+    "activity": "eda.correlation",
     "status": "promoted",
     "artifacts": {
      "editable": "ok",
@@ -1569,12 +1646,12 @@
      "report": "ok",
      "workbench": "ok"
     },
-    "slot": "fit.baseline",
-    "result_id": "a3648c6e"
+    "slot": "eda.correlation",
+    "result_id": "42942f01"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:23.375350+00:00",
+    "time": "2026-10-28T12:44:58.099292+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1585,33 +1662,85 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T08:41:23.494879+00:00",
+    "time": "2026-10-28T12:44:58.127474+00:00",
     "source": "revision",
     "revision": 30,
     "action": "run.reserve",
-    "activity": "fit.linear",
-    "execution_id": "e_2033db067e905124ef78ea82",
+    "activity": "fit.baseline",
+    "execution_id": "e_ea00d1a0450c556a8e3289e1",
     "status": "running"
    },
    {
-    "time": "2026-10-28T08:41:23.593330+00:00",
+    "time": "2026-10-28T12:44:58.198681+00:00",
     "source": "revision",
     "revision": 31,
     "action": "run.promote",
+    "activity": "fit.baseline",
+    "execution_id": "e_ea00d1a0450c556a8e3289e1",
+    "slot": "fit.baseline",
+    "status": "promoted",
+    "result_id": "a3648c6e"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-28T12:44:58.987132+00:00",
+    "command": "run",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 31,
+    "options": {},
+    "activity": "fit.baseline",
+    "status": "promoted",
+    "artifacts": {
+     "editable": "ok",
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    },
+    "slot": "fit.baseline",
+    "result_id": "a3648c6e"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-28T12:44:59.157940+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 31,
+    "options": {},
+    "current_step": "models",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-28T12:44:59.185954+00:00",
+    "source": "revision",
+    "revision": 32,
+    "action": "run.reserve",
     "activity": "fit.linear",
-    "execution_id": "e_2033db067e905124ef78ea82",
+    "execution_id": "e_e2a8db59374ecd02f11773fa",
+    "status": "running"
+   },
+   {
+    "time": "2026-10-28T12:44:59.283868+00:00",
+    "source": "revision",
+    "revision": 33,
+    "action": "run.promote",
+    "activity": "fit.linear",
+    "execution_id": "e_e2a8db59374ecd02f11773fa",
     "slot": "fit.linear",
     "status": "promoted",
     "result_id": "8639586c"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:24.356358+00:00",
+    "time": "2026-10-28T12:45:00.099818+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 31,
+    "revision": 33,
     "options": {},
     "activity": "fit.linear",
     "status": "promoted",
@@ -1626,36 +1755,36 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:24.531022+00:00",
+    "time": "2026-10-28T12:45:00.273587+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 31,
+    "revision": 33,
     "options": {},
     "current_step": "models",
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T08:41:24.558236+00:00",
+    "time": "2026-10-28T12:45:00.298953+00:00",
     "source": "revision",
-    "revision": 32,
+    "revision": 34,
     "action": "decide.propose",
     "decision_id": "model_variant",
-    "proposal_id": "p_6",
+    "proposal_id": "p_7",
     "superseded": []
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:25.228948+00:00",
+    "time": "2026-10-28T12:45:01.001531+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
     "ok": true,
-    "revision": 32,
+    "revision": 34,
     "options": {},
     "decision_id": "model_variant",
-    "proposal_id": "p_6",
+    "proposal_id": "p_7",
     "replayed": false,
     "status": "open",
     "artifacts": {
@@ -1667,23 +1796,23 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:25.433504+00:00",
+    "time": "2026-10-28T12:45:01.127413+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 32,
+    "revision": 34,
     "options": {},
     "current_step": "models",
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-28T08:41:25.460144+00:00",
+    "time": "2026-10-28T12:45:01.150916+00:00",
     "source": "revision",
-    "revision": 33,
+    "revision": 35,
     "action": "decide.confirm",
     "decision_id": "model_variant",
-    "proposal_id": "p_6",
+    "proposal_id": "p_7",
     "basis": "restated",
     "delegation_scope": null,
     "invalidation": {
@@ -1693,15 +1822,15 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:26.241780+00:00",
+    "time": "2026-10-28T12:45:01.992733+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
     "ok": true,
-    "revision": 33,
+    "revision": 35,
     "options": {},
     "decision_id": "model_variant",
-    "proposal_id": "p_6",
+    "proposal_id": "p_7",
     "replayed": false,
     "status": "confirmed",
     "basis": "restated",
@@ -1718,96 +1847,96 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:26.444762+00:00",
+    "time": "2026-10-28T12:45:02.158915+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 33,
+    "revision": 35,
     "options": {},
     "current_step": "model_variant",
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T08:41:26.475933+00:00",
-    "source": "revision",
-    "revision": 34,
-    "action": "run.reserve",
-    "activity": "fit.variant",
-    "execution_id": "e_9ef87905207eafeced71da38",
-    "status": "running"
-   },
-   {
-    "time": "2026-10-28T08:41:26.616921+00:00",
-    "source": "revision",
-    "revision": 35,
-    "action": "run.promote",
-    "activity": "fit.variant",
-    "execution_id": "e_9ef87905207eafeced71da38",
-    "slot": "fit.variant",
-    "status": "promoted",
-    "result_id": "84b648d6"
-   },
-   {
-    "source": "session_log",
-    "time": "2026-10-28T08:41:27.615555+00:00",
-    "command": "run",
-    "verb": null,
-    "exit_code": 0,
-    "ok": true,
-    "revision": 35,
-    "options": {},
-    "activity": "fit.variant",
-    "status": "promoted",
-    "artifacts": {
-     "editable": "ok",
-     "notebook": "ok",
-     "report": "ok",
-     "workbench": "ok"
-    },
-    "slot": "fit.variant",
-    "result_id": "84b648d6"
-   },
-   {
-    "source": "session_log",
-    "time": "2026-10-28T08:41:27.808827+00:00",
-    "command": "status",
-    "verb": null,
-    "exit_code": 0,
-    "ok": true,
-    "revision": 35,
-    "options": {},
-    "current_step": "model_choice",
-    "next_action": "run"
-   },
-   {
-    "time": "2026-10-28T08:41:27.838474+00:00",
+    "time": "2026-10-28T12:45:02.186738+00:00",
     "source": "revision",
     "revision": 36,
     "action": "run.reserve",
-    "activity": "evaluate.regression",
-    "execution_id": "e_952532c3c79c0a600a6ca16b",
+    "activity": "fit.variant",
+    "execution_id": "e_bad9a6f0e28076da5c45d47f",
     "status": "running"
    },
    {
-    "time": "2026-10-28T08:41:27.982630+00:00",
+    "time": "2026-10-28T12:45:02.300525+00:00",
     "source": "revision",
     "revision": 37,
     "action": "run.promote",
+    "activity": "fit.variant",
+    "execution_id": "e_bad9a6f0e28076da5c45d47f",
+    "slot": "fit.variant",
+    "status": "promoted",
+    "result_id": "84b648d6"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-28T12:45:03.130457+00:00",
+    "command": "run",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 37,
+    "options": {},
+    "activity": "fit.variant",
+    "status": "promoted",
+    "artifacts": {
+     "editable": "ok",
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    },
+    "slot": "fit.variant",
+    "result_id": "84b648d6"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-28T12:45:03.292868+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 37,
+    "options": {},
+    "current_step": "model_choice",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-28T12:45:03.319610+00:00",
+    "source": "revision",
+    "revision": 38,
+    "action": "run.reserve",
     "activity": "evaluate.regression",
-    "execution_id": "e_952532c3c79c0a600a6ca16b",
+    "execution_id": "e_3a7193d6091b2b9b9c7123cb",
+    "status": "running"
+   },
+   {
+    "time": "2026-10-28T12:45:03.459575+00:00",
+    "source": "revision",
+    "revision": 39,
+    "action": "run.promote",
+    "activity": "evaluate.regression",
+    "execution_id": "e_3a7193d6091b2b9b9c7123cb",
     "slot": "evaluate.regression",
     "status": "promoted",
     "result_id": "f1f5a9a3"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:28.874672+00:00",
+    "time": "2026-10-28T12:45:04.350636+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 37,
+    "revision": 39,
     "options": {},
     "activity": "evaluate.regression",
     "status": "promoted",
@@ -1822,36 +1951,36 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:29.047040+00:00",
+    "time": "2026-10-28T12:45:04.529358+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 37,
+    "revision": 39,
     "options": {},
     "current_step": "model_choice",
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T08:41:29.054481+00:00",
+    "time": "2026-10-28T12:45:04.537660+00:00",
     "source": "revision",
-    "revision": 38,
+    "revision": 40,
     "action": "decide.propose",
     "decision_id": "model_choice",
-    "proposal_id": "p_7",
+    "proposal_id": "p_8",
     "superseded": []
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:29.792089+00:00",
+    "time": "2026-10-28T12:45:05.279550+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
     "ok": true,
-    "revision": 38,
+    "revision": 40,
     "options": {},
     "decision_id": "model_choice",
-    "proposal_id": "p_7",
+    "proposal_id": "p_8",
     "replayed": false,
     "status": "open",
     "artifacts": {
@@ -1863,12 +1992,12 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:29.921202+00:00",
+    "time": "2026-10-28T12:45:05.443987+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 38,
+    "revision": 40,
     "options": {
      "json": true,
      "summary": true
@@ -1878,12 +2007,12 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:30.332703+00:00",
+    "time": "2026-10-28T12:45:06.532376+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 38,
+    "revision": 40,
     "options": {
      "digest": true,
      "json": true,
@@ -1894,12 +2023,12 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T08:41:30.727743+00:00",
+    "time": "2026-10-28T12:45:06.944424+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 38,
+    "revision": 40,
     "options": {
      "json": true
     },

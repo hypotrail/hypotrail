@@ -14,15 +14,15 @@
   "schema": "hypotrail.status/1",
   "ok": true,
   "study": "/studies/auto mpg cv",
-  "revision": 61,
+  "revision": 63,
   "since": null,
   "changed": null,
   "changes_since": null,
   "view": {
    "schema": "hypotrail.view/1",
    "study": "/studies/auto mpg cv",
-   "revision": 61,
-   "updated": "2026-10-28T08:44:19.362951+00:00",
+   "revision": 63,
+   "updated": "2026-10-28T12:48:04.489329+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
@@ -106,6 +106,23 @@
      "current": false
     },
     {
+     "id": "error_metric",
+     "title": "Choose how the error is measured",
+     "question": "The error of one prediction is the gap between the observed value and the predicted one. The mean absolute error (MAE) averages these gaps; the root mean squared error (RMSE) averages their squares, then takes the root, so one big miss weighs much more. Which of the two measures the error of this study? It is chosen now, before any model is fitted.",
+     "expected_output": "A confirmed error measure (MAE or RMSE), chosen before any model result is seen.",
+     "completion": "Decision error_metric is confirmed.",
+     "pause": 2,
+     "decision": "error_metric",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "split"
+     ],
+     "status": "done",
+     "current": false
+    },
+    {
      "id": "success_criterion",
      "title": "Fix the success criterion before seeing a model",
      "question": "The mean absolute error is the average size of a prediction's error, in the unit of the target. The mean baseline predicts, for every row of a validation fold, the mean of the training folds. How much smaller than the error of the mean baseline should the out-of-fold error of the model be for it to be worth using? It is fixed now, before any model is fitted.",
@@ -117,7 +134,8 @@
      "decide_first": true,
      "missing_results": [],
      "requires": [
-      "split"
+      "split",
+      "error_metric"
      ],
      "status": "done",
      "current": false
@@ -251,11 +269,13 @@
      "pause": 3,
      "decision": "final_test",
      "activities": [
-      "final_test.evaluation"
+      "final_test.evaluation",
+      "diag.final_test"
      ],
      "decide_first": true,
      "missing_results": [
-      "final_test.evaluation"
+      "final_test.evaluation",
+      "diag.final_test"
      ],
      "requires": [
       "model_choice"
@@ -293,7 +313,7 @@
     "recommended": null,
     "question": "Which model do you choose, given the errors and their intervals?",
     "junior_digest": "Model choice: keep the mean baseline or adopt the linear model, read on the mean absolute error (MAE) and its paired interval. The success criterion is met on the development set.",
-    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Choice (11 of 13).",
+    "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Error measure, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Model choice); Conclude and hand over (Final test, Conclusion). Current step: Model choice (12 of 14).",
     "evidence": [
      "evaluate.regression",
      "diag.regression"
@@ -324,11 +344,11 @@
      "schema": "hypotrail.pause/1",
      "kind": "choice",
      "language": "en",
-     "revision": 61,
+     "revision": 63,
      "position": {
       "step_id": "model_choice",
-      "completed": 10,
-      "total": 13
+      "completed": 11,
+      "total": 14
      },
      "learned": [],
      "limitations": [
@@ -386,7 +406,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-28T08:43:22.429024+00:00",
+      "time": "2026-10-28T12:47:06.650053+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -425,7 +445,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-28T08:43:23.692005+00:00",
+      "time": "2026-10-28T12:47:08.038281+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -466,7 +486,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-28T08:43:25.242877+00:00",
+      "time": "2026-10-28T12:47:09.607852+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -481,6 +501,38 @@
      "open_proposals": [],
      "feature_basis": null
     },
+    "error_metric": {
+     "decision_id": "error_metric",
+     "status": "confirmed",
+     "value": {
+      "metric": "mae"
+     },
+     "proposal_id": "p_4",
+     "depends_on": [],
+     "revision": 9,
+     "reason": null,
+     "confirmation": {
+      "user_words": "Yes, I want the error_metric exactly as you stated it",
+      "channel": "chat",
+      "actor": "user",
+      "restatement": "You decide the error_metric as stated.",
+      "proposal_id": "p_4",
+      "revision": 9,
+      "time": "2026-10-28T12:47:11.131735+00:00",
+      "authenticated": false,
+      "basis": "restated",
+      "delegation_scope": null,
+      "agent_concern": null,
+      "mode": "guided",
+      "warnings": [],
+      "reason_given": null,
+      "adoption_question": false,
+      "label": "You decide the error_metric as stated.",
+      "adopted_from": null
+     },
+     "open_proposals": [],
+     "feature_basis": null
+    },
     "success_criterion": {
      "decision_id": "success_criterion",
      "status": "confirmed",
@@ -488,18 +540,20 @@
       "metric": "mae_reduction",
       "min_share": 0.1
      },
-     "proposal_id": "p_4",
-     "depends_on": [],
-     "revision": 9,
+     "proposal_id": "p_5",
+     "depends_on": [
+      "error_metric"
+     ],
+     "revision": 11,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the success_criterion exactly as you stated it",
       "channel": "chat",
       "actor": "user",
       "restatement": "You decide the success_criterion as stated.",
-      "proposal_id": "p_4",
-      "revision": 9,
-      "time": "2026-10-28T08:43:26.776205+00:00",
+      "proposal_id": "p_5",
+      "revision": 11,
+      "time": "2026-10-28T12:47:12.952699+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -530,18 +584,18 @@
       "rare_category_min_rows": 0,
       "target_looks_before": 0
      },
-     "proposal_id": "p_5",
+     "proposal_id": "p_6",
      "depends_on": [],
-     "revision": 17,
+     "revision": 19,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the preprocessing exactly as you stated it",
       "channel": "chat",
       "actor": "user",
       "restatement": "You keep the drafted preparation: each change rests on the quality check.",
-      "proposal_id": "p_5",
-      "revision": 17,
-      "time": "2026-10-28T08:43:33.438644+00:00",
+      "proposal_id": "p_6",
+      "revision": 19,
+      "time": "2026-10-28T12:47:20.035908+00:00",
       "authenticated": false,
       "basis": "endorsed",
       "delegation_scope": null,
@@ -572,18 +626,18 @@
        }
       ]
      },
-     "proposal_id": "p_6",
+     "proposal_id": "p_7",
      "depends_on": [],
-     "revision": 53,
+     "revision": 55,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the model_variant exactly as you stated it",
       "channel": "chat",
       "actor": "user",
       "restatement": "You compare a tuned ridge and an EBM with the linear model.",
-      "proposal_id": "p_6",
-      "revision": 53,
-      "time": "2026-10-28T08:44:00.105108+00:00",
+      "proposal_id": "p_7",
+      "revision": 55,
+      "time": "2026-10-28T12:47:45.748320+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -622,6 +676,7 @@
      "value": null,
      "proposal_id": null,
      "depends_on": [
+      "error_metric",
       "prediction_time",
       "feature_availability",
       "split",
@@ -642,6 +697,7 @@
      "value": null,
      "proposal_id": null,
      "depends_on": [
+      "error_metric",
       "prediction_time",
       "feature_availability",
       "split",
@@ -6871,9 +6927,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_8f8894cfd0d89135d5c3402c",
-     "exposure_id": "x_f8764c79364a482c9177fc18c92e620a",
-     "started_revision": 60,
+     "execution_id": "e_cca2d0a0feb38ddc0531cb38",
+     "exposure_id": "x_aef6a26e711e41798369f00ff0060357",
+     "started_revision": 62,
      "integrity": "ok"
     },
     "eda.correlation": {
@@ -7131,9 +7187,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
-     "exposure_id": "x_5370ec3b5be2409295d80ef5e328f648",
-     "started_revision": 34,
+     "execution_id": "e_6f568a7e009178d11fe5261f",
+     "exposure_id": "x_858d0378da614e4fa7631f9c7dddab29",
+     "started_revision": 36,
      "integrity": "ok"
     },
     "eda.distribution:acceleration": {
@@ -7281,9 +7337,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_f09116e554021da514197565",
-     "exposure_id": "x_23022e74a3bb48a7b8a9cd30cbe7a7bc",
-     "started_revision": 42,
+     "execution_id": "e_f02c465bbc8626047ce0b4cc",
+     "exposure_id": "x_85aad0ec7c87409ca7697dd9cbcb4667",
+     "started_revision": 44,
      "integrity": "ok"
     },
     "eda.distribution:cylinders": {
@@ -7373,9 +7429,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_0b8fc9580cdd4e33bc5c14db",
-     "exposure_id": "x_9959f7d5ba9e44d88764beed90cbab13",
-     "started_revision": 36,
+     "execution_id": "e_c747f3646963f5be94a54bdb",
+     "exposure_id": "x_99689281ecc04e3ba7cf8a3e7a8f373e",
+     "started_revision": 38,
      "integrity": "ok"
     },
     "eda.distribution:displacement": {
@@ -7523,9 +7579,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_6f568a7e009178d11fe5261f",
-     "exposure_id": "x_3c75fcf4b8ef44d89a6a45f538fd0cea",
-     "started_revision": 38,
+     "execution_id": "e_f09116e554021da514197565",
+     "exposure_id": "x_d86b69faa2ac4b5e9a98bc6acb35f026",
+     "started_revision": 40,
      "integrity": "ok"
     },
     "eda.distribution:horsepower": {
@@ -7685,9 +7741,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_0eee3a0bb608847ca1ac05a7",
-     "exposure_id": "x_57ad4703cf484ebfb43e186f3ee0199f",
-     "started_revision": 14,
+     "execution_id": "e_9c2f7f2c69f91be9c07e4331",
+     "exposure_id": "x_9a195789568f44039e767e29badd207c",
+     "started_revision": 16,
      "integrity": "ok"
     },
     "eda.distribution:origin": {
@@ -7765,9 +7821,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_ed89c3d6b5ceb43c540c9096",
-     "exposure_id": "x_4e3c82f2227e4e39b5726fee443b5cc2",
-     "started_revision": 44,
+     "execution_id": "e_5904912825f5be2c5a9088d0",
+     "exposure_id": "x_955c84d975344803bfbaf0fb382b90a0",
+     "started_revision": 46,
      "integrity": "ok"
     },
     "eda.distribution:weight": {
@@ -7915,9 +7971,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_c747f3646963f5be94a54bdb",
-     "exposure_id": "x_3a8a0d5acdeb47c7a8d8ea0d28e3ba6d",
-     "started_revision": 40,
+     "execution_id": "e_ed89c3d6b5ceb43c540c9096",
+     "exposure_id": "x_e4aba04fb8344f88ab16f255b3fccb56",
+     "started_revision": 42,
      "integrity": "ok"
     },
     "eda.mean_by:acceleration": {
@@ -8077,9 +8133,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_88662ab87ecb5884e6688116",
-     "exposure_id": "x_1ce8a1cba31f457e93152091ffebfd86",
-     "started_revision": 30,
+     "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
+     "exposure_id": "x_1013e105c4e84cb0a8946d244d9e8e6b",
+     "started_revision": 32,
      "integrity": "ok"
     },
     "eda.mean_by:cylinders": {
@@ -8242,9 +8298,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_afbcc5b5c6d6b10afa774b86",
-     "exposure_id": "x_bc6416a05a8248868d62ab0dc7b35b71",
-     "started_revision": 22,
+     "execution_id": "e_8b6b767c3df161e7401893c1",
+     "exposure_id": "x_446cb287715d4d47b345d943e926e0a3",
+     "started_revision": 24,
      "integrity": "ok"
     },
     "eda.mean_by:displacement": {
@@ -8404,9 +8460,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_061502fb4d6e55bbb43de53a",
-     "exposure_id": "x_dcbd5f69906747579ff3d0c0215356cd",
-     "started_revision": 24,
+     "execution_id": "e_a633b01aa452bb85d7c21822",
+     "exposure_id": "x_746a5019821a43d78987b24ed528cfb5",
+     "started_revision": 26,
      "integrity": "ok"
     },
     "eda.mean_by:horsepower": {
@@ -8590,9 +8646,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_8b6b767c3df161e7401893c1",
-     "exposure_id": "x_28283a1e53b247888c1a52b8fa34c24f",
-     "started_revision": 26,
+     "execution_id": "e_88662ab87ecb5884e6688116",
+     "exposure_id": "x_0c19b766ea994e0eae375cefa4a61b6b",
+     "started_revision": 28,
      "integrity": "ok"
     },
     "eda.mean_by:origin": {
@@ -8718,9 +8774,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_947162f1b37ea74e53f6086a",
-     "exposure_id": "x_3f7349e6895d44fdace1f5995560d400",
-     "started_revision": 32,
+     "execution_id": "e_0b8fc9580cdd4e33bc5c14db",
+     "exposure_id": "x_a02a17d5901844c497b5f53c0f0d18ec",
+     "started_revision": 34,
      "integrity": "ok"
     },
     "eda.mean_by:weight": {
@@ -8880,9 +8936,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_a633b01aa452bb85d7c21822",
-     "exposure_id": "x_d99e7ca166fd4af38b74042153a5593b",
-     "started_revision": 28,
+     "execution_id": "e_947162f1b37ea74e53f6086a",
+     "exposure_id": "x_6bfe8d3d9340401f98532aea4aef4d16",
+     "started_revision": 30,
      "integrity": "ok"
     },
     "eda.quality": {
@@ -10124,9 +10180,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_ce9ad9e64710577437be7e6c",
-     "exposure_id": "x_380f68b02edb41b8a2f6aebe9f4e49ee",
-     "started_revision": 12,
+     "execution_id": "e_2ab8c63a63b208bd8731b8b3",
+     "exposure_id": "x_fd495fbda4b44e26b24ad80667481891",
+     "started_revision": 14,
      "integrity": "ok"
     },
     "eda.special_values": {
@@ -10194,9 +10250,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_c4434080afdaeb4edd1ce5b5",
-     "exposure_id": "x_641b8da74a4e45c0b28298a368476af8",
-     "started_revision": 20,
+     "execution_id": "e_061502fb4d6e55bbb43de53a",
+     "exposure_id": "x_42d9cf8fc0e14d9895cc8558675f821b",
+     "started_revision": 22,
      "integrity": "ok"
     },
     "eda.target_summary": {
@@ -10260,9 +10316,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_9c2f7f2c69f91be9c07e4331",
-     "exposure_id": "x_3e3bd70567ee4e0eb9c4740fcc90dea6",
-     "started_revision": 18,
+     "execution_id": "e_afbcc5b5c6d6b10afa774b86",
+     "exposure_id": "x_b8863063738e4728992031f0f47477a2",
+     "started_revision": 20,
      "integrity": "ok"
     },
     "evaluate.regression": {
@@ -10836,9 +10892,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_2c515241b96823b32e92d4c1",
-     "exposure_id": "x_db41784baf684f8e89ba5afa06a0385d",
-     "started_revision": 58,
+     "execution_id": "e_8f5c345335630fb2ac505a65",
+     "exposure_id": "x_e7c410b8d3d64c2eb52ce6c5b9910a21",
+     "started_revision": 60,
      "integrity": "ok"
     },
     "fit.baseline": {
@@ -10974,9 +11030,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_f02c465bbc8626047ce0b4cc",
-     "exposure_id": "x_ccb2542605a24cde9f47c3f257e67944",
-     "started_revision": 46,
+     "execution_id": "e_8519f7987822bead348d47d9",
+     "exposure_id": "x_c5e11579dfa84425882e4f0156f8662a",
+     "started_revision": 48,
      "integrity": "ok"
     },
     "fit.linear": {
@@ -11187,9 +11243,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_5904912825f5be2c5a9088d0",
-     "exposure_id": "x_1b0b93df908d4940865ee3c321a1d54e",
-     "started_revision": 48,
+     "execution_id": "e_0840d5a4c86aa1a0c3b1ef84",
+     "exposure_id": "x_cdefb84af52e4354a0a65fb1f1019ec1",
+     "started_revision": 50,
      "integrity": "ok"
     },
     "fit.variant": {
@@ -11596,9 +11652,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_c7acc1c7811ed60617bfe6ae",
-     "exposure_id": "x_33c599b05e1840a4b479c558de2e8f0e",
-     "started_revision": 54,
+     "execution_id": "e_2c515241b96823b32e92d4c1",
+     "exposure_id": "x_42f6bf88674346399c3a9104f5c94bef",
+     "started_revision": 56,
      "integrity": "ok"
     },
     "fit.variant:2": {
@@ -12758,9 +12814,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_60f840ebe562aefdfb0411ae",
-     "exposure_id": "x_f1ef3b0f6c38462dacc30b950db0abdd",
-     "started_revision": 56,
+     "execution_id": "e_8f8894cfd0d89135d5c3402c",
+     "exposure_id": "x_ebb371c3a66c4ba8bf4d1a0c2c3919fe",
+     "started_revision": 58,
      "integrity": "ok"
     },
     "split": {
@@ -12893,16 +12949,16 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_45e56db55964c2ea7d665907",
-     "exposure_id": "x_2b9471f7e09041fe899fdb42a5ef837d",
-     "started_revision": 10,
+     "execution_id": "e_0eee3a0bb608847ca1ac05a7",
+     "exposure_id": "x_350249ba494540eaab39183b316f2e80",
+     "started_revision": 12,
      "integrity": "ok"
     }
    },
    "stale": {
     "62f774885fc62eaccdd876e9c57560540b145f768a6c6b0988466d100fa6344e": {
      "reason": "model_variant confirmed for the first time",
-     "since": 53
+     "since": 55
     }
    },
    "invalidations": [
@@ -12933,7 +12989,7 @@
      "previous": null,
      "reason": "model_variant confirmed for the first time",
      "reconfirm_required": [],
-     "revision": 53,
+     "revision": 55,
      "row": null,
      "stale_results": [
       "62f774885fc62eaccdd876e9c57560540b145f768a6c6b0988466d100fa6344e"
@@ -12959,10 +13015,10 @@
       "error": null,
       "generated": false,
       "kind": "marimo_notebook",
-      "last_ok_revision": 61,
+      "last_ok_revision": 63,
       "path": "notebooks/study_editable.py",
-      "revision": 61,
-      "sha256": "206a4749797a9068bcb22257a4cf0a69c7eb048c0eda4886380b2a6a9426d426",
+      "revision": 63,
+      "sha256": "0385afa1508be2c546d03ef99c843db74acfca9dc4a7b77f801e1b2d474fee7c",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -12999,14 +13055,14 @@
        "d6a53e63450ea32206f5f7aad01e1e4dfdcdaffd43b83a36447dee6ec64e4856",
        "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
       ],
-      "edit_check_sha256": "c3606de4bb961167da761c9eae92bf7d45b16a59483613de41ef8463f1f9c827",
+      "edit_check_sha256": "a5bd683bb8cc9af2a29c80ec0af5c102adce903de6e0558e9b9002987742c893",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
-      "last_ok_revision": 61,
+      "last_ok_revision": 63,
       "path": "notebooks/study_generated.py",
-      "revision": 61,
-      "sha256": "533b9b705a1c84a62aae2abe6a2e10f1cf70a3698d995d8ec1b16dfb79e11610",
+      "revision": 63,
+      "sha256": "e61f33f4be711bc49d87cd5e30a2d02e8573a2bc76d2d005b2a33e7ab126ede5",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -13046,10 +13102,10 @@
       "error": null,
       "generated": true,
       "kind": "html",
-      "last_ok_revision": 61,
+      "last_ok_revision": 63,
       "path": "reports/study.html",
-      "revision": 61,
-      "sha256": "34eabe347ae552212bd1ebb94a557b402c6576615fffad0e31b44fd9a36cc593",
+      "revision": 63,
+      "sha256": "ab3d43e0a16d7c0a42079b110f817ebb1fff265f8010d6dcf7273faee0822f0d",
       "status": "ok",
       "template_version": 4,
       "user_edits_preserved": [],
@@ -13823,7 +13879,7 @@
    "claim_eligibility": null,
    "presentation": {
     "schema": "hypotrail.presentation/1",
-    "revision": 61,
+    "revision": 63,
     "result_ids": {
      "diag.regression": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
      "eda.correlation": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
@@ -13871,11 +13927,11 @@
      "schema": "hypotrail.pause/1",
      "kind": "choice",
      "language": "en",
-     "revision": 61,
+     "revision": 63,
      "position": {
       "step_id": "model_choice",
-      "completed": 10,
-      "total": 13
+      "completed": 11,
+      "total": 14
      },
      "learned": [],
      "limitations": [

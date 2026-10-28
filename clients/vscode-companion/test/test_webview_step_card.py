@@ -18,7 +18,8 @@ from pathlib import Path
 import pytest
 
 import themes
-from panel_cases import STYLE_GUARD, set_language
+from conftest import read_payload
+from panel_cases import STYLE_GUARD, set_language, without_step_cards
 
 STATES = ['data', 'moment', 'variables', 'split', 'metric', 'criterion', 'quality', 'preparation', 'exploration', 'models',
           'variants', 'choice', 'final', 'conclusion', 'done', 'done.automatic']
@@ -36,7 +37,7 @@ def sc_views(model):
     out['trials'] = model('trials', 'stepcards/status.done')
     out['decisions'] = model('decisions', 'stepcards/decisions.done')
     out['data'] = model('data', 'stepcards/data.done')
-    out['plain'] = model('summary', 'captured/summary.regression.cv.preparation')
+    out['plain'] = model('summary', without_step_cards(read_payload('captured/summary.regression.cv.preparation')))
     return out
 
 

@@ -14,15 +14,15 @@
   "schema": "hypotrail.status/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 67,
+  "revision": 71,
   "since": null,
   "changed": null,
   "changes_since": null,
   "view": {
    "schema": "hypotrail.view/1",
    "study": "/studies/auto mpg",
-   "revision": 67,
-   "updated": "2026-10-28T08:42:51.054303+00:00",
+   "revision": 71,
+   "updated": "2026-10-28T12:46:32.879092+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
@@ -106,6 +106,23 @@
      "current": false
     },
     {
+     "id": "error_metric",
+     "title": "Choose how the error is measured",
+     "question": "The error of one prediction is the gap between the observed value and the predicted one. The mean absolute error (MAE) averages these gaps; the root mean squared error (RMSE) averages their squares, then takes the root, so one big miss weighs much more. Which of the two measures the error of this study? It is chosen now, before any model is fitted.",
+     "expected_output": "A confirmed error measure (MAE or RMSE), chosen before any model result is seen.",
+     "completion": "Decision error_metric is confirmed.",
+     "pause": 2,
+     "decision": "error_metric",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "split"
+     ],
+     "status": "done",
+     "current": false
+    },
+    {
      "id": "success_criterion",
      "title": "Fix the success criterion before seeing a model",
      "question": "The mean absolute error is the average size of a prediction's error, in the unit of the target. The mean baseline predicts, for every row of the validation set, the mean of the target on the training set. How much smaller than the error of the mean baseline should the validation error of the model be for it to be worth using? It is fixed now, before any model is fitted.",
@@ -117,7 +134,8 @@
      "decide_first": true,
      "missing_results": [],
      "requires": [
-      "split"
+      "split",
+      "error_metric"
      ],
      "status": "done",
      "current": false
@@ -250,7 +268,8 @@
      "pause": 3,
      "decision": "final_test",
      "activities": [
-      "final_test.evaluation"
+      "final_test.evaluation",
+      "diag.final_test"
      ],
      "decide_first": true,
      "missing_results": [],
@@ -288,19 +307,20 @@
     "recommended": null,
     "question": null,
     "junior_digest": "Every step of the plan is done. Before relying on the conclusion, read the limits the report lists. The success criterion is met on the holdout (final test).",
-    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Every step of the plan is done.",
+    "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Error measure, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Model choice); Conclude and hand over (Final test, Conclusion). Every step of the plan is done.",
     "evidence": [
-     "final_test.evaluation"
+     "final_test.evaluation",
+     "diag.final_test"
     ],
     "after_study": {
      "handoff": {
-      "command": "hypotrail export handoff --study '/studies/auto mpg' --expected-revision 67"
+      "command": "hypotrail export handoff --study '/studies/auto mpg' --expected-revision 71"
      },
      "azureml": {
       "supported": true,
       "reason_id": null,
       "reason": null,
-      "plan_command": "hypotrail export azureml --study '/studies/auto mpg' --expected-revision 67 --plan",
+      "plan_command": "hypotrail export azureml --study '/studies/auto mpg' --expected-revision 71 --plan",
       "model": {
        "task": "regression",
        "family": "linear",
@@ -315,11 +335,11 @@
      "schema": "hypotrail.pause/1",
      "kind": "complete",
      "language": "en",
-     "revision": 67,
+     "revision": 71,
      "position": {
       "step_id": null,
-      "completed": 13,
-      "total": 13
+      "completed": 14,
+      "total": 14
      },
      "learned": [],
      "limitations": [
@@ -367,7 +387,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-28T08:41:54.636935+00:00",
+      "time": "2026-10-28T12:45:33.166543+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -406,7 +426,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-28T08:41:56.035985+00:00",
+      "time": "2026-10-28T12:45:34.474601+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -447,7 +467,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-28T08:41:57.530318+00:00",
+      "time": "2026-10-28T12:45:36.144662+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -462,6 +482,38 @@
      "open_proposals": [],
      "feature_basis": null
     },
+    "error_metric": {
+     "decision_id": "error_metric",
+     "status": "confirmed",
+     "value": {
+      "metric": "mae"
+     },
+     "proposal_id": "p_4",
+     "depends_on": [],
+     "revision": 9,
+     "reason": null,
+     "confirmation": {
+      "user_words": "Yes, I want the error_metric exactly as you stated it",
+      "channel": "chat",
+      "actor": "user",
+      "restatement": "You decide the error_metric as stated.",
+      "proposal_id": "p_4",
+      "revision": 9,
+      "time": "2026-10-28T12:45:37.783309+00:00",
+      "authenticated": false,
+      "basis": "restated",
+      "delegation_scope": null,
+      "agent_concern": null,
+      "mode": "guided",
+      "warnings": [],
+      "reason_given": null,
+      "adoption_question": false,
+      "label": "You decide the error_metric as stated.",
+      "adopted_from": null
+     },
+     "open_proposals": [],
+     "feature_basis": null
+    },
     "success_criterion": {
      "decision_id": "success_criterion",
      "status": "confirmed",
@@ -469,18 +521,20 @@
       "metric": "mae_reduction",
       "min_share": 0.1
      },
-     "proposal_id": "p_4",
-     "depends_on": [],
-     "revision": 9,
+     "proposal_id": "p_5",
+     "depends_on": [
+      "error_metric"
+     ],
+     "revision": 11,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the success_criterion exactly as you stated it",
       "channel": "chat",
       "actor": "user",
       "restatement": "You decide the success_criterion as stated.",
-      "proposal_id": "p_4",
-      "revision": 9,
-      "time": "2026-10-28T08:41:59.115170+00:00",
+      "proposal_id": "p_5",
+      "revision": 11,
+      "time": "2026-10-28T12:45:39.549088+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -507,18 +561,18 @@
       "rare_category_min_rows": 0,
       "target_looks_before": 0
      },
-     "proposal_id": "p_5",
+     "proposal_id": "p_6",
      "depends_on": [],
-     "revision": 11,
+     "revision": 13,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the preprocessing exactly as you stated it",
       "channel": "chat",
       "actor": "user",
       "restatement": "You decide the preprocessing as stated.",
-      "proposal_id": "p_5",
-      "revision": 11,
-      "time": "2026-10-28T08:42:00.695176+00:00",
+      "proposal_id": "p_6",
+      "revision": 13,
+      "time": "2026-10-28T12:45:41.380355+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -540,18 +594,18 @@
       "kind": "regularisation",
       "strength": "strong"
      },
-     "proposal_id": "p_6",
+     "proposal_id": "p_7",
      "depends_on": [],
-     "revision": 49,
+     "revision": 51,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the model_variant exactly as you stated it",
       "channel": "chat",
       "actor": "user",
       "restatement": "You decide the model_variant as stated.",
-      "proposal_id": "p_6",
-      "revision": 49,
-      "time": "2026-10-28T08:42:26.132431+00:00",
+      "proposal_id": "p_7",
+      "revision": 51,
+      "time": "2026-10-28T12:46:07.432194+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -570,7 +624,7 @@
      "decision_id": "model_choice",
      "status": "confirmed",
      "value": "fit.linear",
-     "proposal_id": "p_7",
+     "proposal_id": "p_8",
      "depends_on": [
       "prediction_time",
       "feature_availability",
@@ -578,16 +632,16 @@
       "preprocessing",
       "model_variant"
      ],
-     "revision": 59,
+     "revision": 61,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I keep the linear model, because its error is the lowest and it is the simplest",
       "channel": "chat",
       "actor": "user",
       "restatement": "You decide the model_choice as stated.",
-      "proposal_id": "p_7",
-      "revision": 59,
-      "time": "2026-10-28T08:42:40.983760+00:00",
+      "proposal_id": "p_8",
+      "revision": 61,
+      "time": "2026-10-28T12:46:22.263843+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -609,8 +663,9 @@
       "model": "fit.linear",
       "rule": null
      },
-     "proposal_id": "p_8",
+     "proposal_id": "p_9",
      "depends_on": [
+      "error_metric",
       "prediction_time",
       "feature_availability",
       "split",
@@ -619,16 +674,16 @@
       "model_variant",
       "model_choice"
      ],
-     "revision": 63,
+     "revision": 65,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
       "channel": "chat",
       "actor": "user",
       "restatement": "You open the sealed final test once, for the chosen model.",
-      "proposal_id": "p_8",
-      "revision": 63,
-      "time": "2026-10-28T08:42:47.995933+00:00",
+      "proposal_id": "p_9",
+      "revision": 65,
+      "time": "2026-10-28T12:46:28.639137+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -650,8 +705,9 @@
       "text": "The development evidence and the final test, opened once, are what the study can cite; it does not show future performance or a causal effect.",
       "verdict": "adopt_model"
      },
-     "proposal_id": "p_9",
+     "proposal_id": "p_10",
      "depends_on": [
+      "error_metric",
       "prediction_time",
       "feature_availability",
       "split",
@@ -661,16 +717,16 @@
       "model_choice",
       "final_test"
      ],
-     "revision": 67,
+     "revision": 71,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the conclusion exactly as you stated it, because it fits our situation",
       "channel": "chat",
       "actor": "user",
       "restatement": "You decide the conclusion as stated.",
-      "proposal_id": "p_9",
-      "revision": 67,
-      "time": "2026-10-28T08:42:51.054238+00:00",
+      "proposal_id": "p_10",
+      "revision": 71,
+      "time": "2026-10-28T12:46:32.879001+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -757,6 +813,1118 @@
     }
    },
    "results": {
+    "diag.final_test": {
+     "slot": "diag.final_test",
+     "result_id": "7244fc732d497d1e6737a1e13403486e60f75f2a03e489e1a17924c853c56c85",
+     "activity": "diag.final_test",
+     "current": true,
+     "stale_reason": null,
+     "partition": "final_test",
+     "n_rows": 80,
+     "values": {
+      "question": "On rows nothing had seen, where are the chosen model's predictions off, and does the error grow with the prediction?",
+      "evidence": "final",
+      "purpose": "final_evaluation",
+      "partition": "final_test",
+      "evaluation": "final_test",
+      "n": 80,
+      "model": "fit.linear",
+      "final_evaluation": "0b79256e6607efe99f6c4edd22bd33c79d404c819c3da97a0626910caceec978",
+      "target": "mpg",
+      "unit": "mpg",
+      "residual_columns": [
+       "origin",
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight"
+      ],
+      "residual_definition": "residual = observed minus predicted",
+      "target_transform": null,
+      "smearing": {
+       "applies": false,
+       "implemented": false,
+       "note": "The model predicts the target on its own scale (no transform of the target), so no retransformation correction such as Duan's smearing applies. Smearing is not implemented: a log-transformed target would need it."
+      },
+      "normality_note": "The quantile-quantile points compare the standardised residuals with a normal distribution. Normality is not needed for the mean error or the coefficients with this many rows (Lumley et al. 2002); it matters for prediction intervals, which this study does not give.",
+      "models": {
+       "fit.linear": {
+        "errors": {
+         "n": 80,
+         "mae": 3.0682381773458416,
+         "rmse": 3.9885201019161314,
+         "mean_residual": -0.007065335936603833,
+         "median_abs_residual": 2.5761363425269828,
+         "max_abs_residual": 13.459931862941886
+        },
+        "residuals": {
+         "n": 80,
+         "mean": -0.007065335936603833,
+         "sd": 4.013678218913346,
+         "min": -7.638464406361944,
+         "q05": -6.0019005746256235,
+         "q25": -2.7035302028616854,
+         "median": -0.1578589660497851,
+         "q75": 2.0225265169263045,
+         "q95": 6.525960057857088,
+         "max": 13.459931862941886,
+         "skewness": 0.6273645185504763,
+         "excess_kurtosis": 0.7484701298662984
+        },
+        "qq": {
+         "points": [
+          {
+           "probability": 0.01,
+           "theoretical": -2.3263478740408408,
+           "sample": -1.8269960388165352
+          },
+          {
+           "probability": 0.025,
+           "theoretical": -1.9599639845400545,
+           "sample": -1.6165854512273288
+          },
+          {
+           "probability": 0.05,
+           "theoretical": -1.6448536269514729,
+           "sample": -1.4936013580859624
+          },
+          {
+           "probability": 0.1,
+           "theoretical": -1.2815515655446004,
+           "sample": -1.2507084144661968
+          },
+          {
+           "probability": 0.15,
+           "theoretical": -1.0364333894937898,
+           "sample": -0.9589347302573735
+          },
+          {
+           "probability": 0.2,
+           "theoretical": -0.8416212335729142,
+           "sample": -0.8312144906198257
+          },
+          {
+           "probability": 0.25,
+           "theoretical": -0.6744897501960817,
+           "sample": -0.6718188952514277
+          },
+          {
+           "probability": 0.3,
+           "theoretical": -0.5244005127080409,
+           "sample": -0.551302994966125
+          },
+          {
+           "probability": 0.35,
+           "theoretical": -0.38532046640756773,
+           "sample": -0.4030168748254222
+          },
+          {
+           "probability": 0.4,
+           "theoretical": -0.2533471031357997,
+           "sample": -0.26293236793080177
+          },
+          {
+           "probability": 0.45,
+           "theoretical": -0.12566134685507402,
+           "sample": -0.13035814646413457
+          },
+          {
+           "probability": 0.5,
+           "theoretical": 0.0,
+           "sample": -0.037569935079152114
+          },
+          {
+           "probability": 0.55,
+           "theoretical": 0.12566134685507416,
+           "sample": 0.11474345656511072
+          },
+          {
+           "probability": 0.6,
+           "theoretical": 0.2533471031357997,
+           "sample": 0.13229537431429733
+          },
+          {
+           "probability": 0.65,
+           "theoretical": 0.38532046640756773,
+           "sample": 0.27026571302859814
+          },
+          {
+           "probability": 0.7,
+           "theoretical": 0.5244005127080407,
+           "sample": 0.37778798717136847
+          },
+          {
+           "probability": 0.75,
+           "theoretical": 0.6744897501960817,
+           "sample": 0.5056688010760353
+          },
+          {
+           "probability": 0.8,
+           "theoretical": 0.8416212335729143,
+           "sample": 0.7017744299065861
+          },
+          {
+           "probability": 0.85,
+           "theoretical": 1.0364333894937898,
+           "sample": 0.9698165828964601
+          },
+          {
+           "probability": 0.9,
+           "theoretical": 1.2815515655446004,
+           "sample": 1.1764941152017818
+          },
+          {
+           "probability": 0.95,
+           "theoretical": 1.6448536269514722,
+           "sample": 1.6276903721401037
+          },
+          {
+           "probability": 0.975,
+           "theoretical": 1.959963984540054,
+           "sample": 2.323845516852838
+          },
+          {
+           "probability": 0.99,
+           "theoretical": 2.3263478740408408,
+           "sample": 2.5626842612805794
+          }
+         ],
+         "definition": "Quantiles of the residuals standardised by their mean and standard deviation, against the same quantiles of a normal distribution: on a straight diagonal line when the residuals are normal."
+        },
+        "by_prediction": {
+         "binning": "10 equal-count bins of the prediction, in prediction order",
+         "bins": [
+          {
+           "bin": 1,
+           "n": 8,
+           "prediction_min": 8.495881120389964,
+           "prediction_max": 13.475327981361398,
+           "mean_prediction": 10.330575193204998,
+           "mean_observed": 12.25,
+           "mean_residual": 1.9194248067950017,
+           "sd_residual": 1.5080212952098284,
+           "mae": 1.9561125432254283
+          },
+          {
+           "bin": 2,
+           "n": 8,
+           "prediction_min": 14.060595496440992,
+           "prediction_max": 15.88395136691041,
+           "mean_prediction": 14.964899390714741,
+           "mean_observed": 16.375,
+           "mean_residual": 1.4101006092852582,
+           "sd_residual": 1.3785432458880873,
+           "mae": 1.6290921857883238
+          },
+          {
+           "bin": 3,
+           "n": 8,
+           "prediction_min": 16.133415712666515,
+           "prediction_max": 20.5868353261938,
+           "mean_prediction": 17.942551440527293,
+           "mean_observed": 16.275,
+           "mean_residual": -1.667551440527292,
+           "sd_residual": 2.6207574946609618,
+           "mae": 2.0385788363276185
+          },
+          {
+           "bin": 4,
+           "n": 8,
+           "prediction_min": 20.832510021988575,
+           "prediction_max": 22.843890701475203,
+           "mean_prediction": 21.90595270495021,
+           "mean_observed": 19.7625,
+           "mean_residual": -2.1434527049502092,
+           "sd_residual": 3.28024866521329,
+           "mae": 3.159314119869337
+          },
+          {
+           "bin": 5,
+           "n": 8,
+           "prediction_min": 22.929357190366193,
+           "prediction_max": 23.716560223932937,
+           "mean_prediction": 23.275197815961864,
+           "mean_observed": 22.0625,
+           "mean_residual": -1.2126978159618647,
+           "sd_residual": 2.79440564201378,
+           "mae": 2.2079751314800475
+          },
+          {
+           "bin": 6,
+           "n": 8,
+           "prediction_min": 24.582361850052475,
+           "prediction_max": 26.566912690760095,
+           "mean_prediction": 25.27446847411488,
+           "mean_observed": 24.6375,
+           "mean_residual": -0.6369684741148798,
+           "sd_residual": 5.043550363876376,
+           "mae": 3.7166981234236967
+          },
+          {
+           "bin": 7,
+           "n": 8,
+           "prediction_min": 26.99055146262694,
+           "prediction_max": 28.57691414559544,
+           "mean_prediction": 27.978664616902286,
+           "mean_observed": 28.2875,
+           "mean_residual": 0.30883538309771463,
+           "sd_residual": 5.2124049437577495,
+           "mae": 4.380085210803463
+          },
+          {
+           "bin": 8,
+           "n": 8,
+           "prediction_min": 28.682794239544553,
+           "prediction_max": 29.940068137058113,
+           "mean_prediction": 29.1985021330474,
+           "mean_observed": 32.35,
+           "mean_residual": 3.1514978669526026,
+           "sd_residual": 6.886139811913093,
+           "mae": 5.942425978014786
+          },
+          {
+           "bin": 9,
+           "n": 8,
+           "prediction_min": 30.034549091422647,
+           "prediction_max": 31.524207026351753,
+           "mean_prediction": 30.856511932887898,
+           "mean_observed": 30.112499999999997,
+           "mean_residual": -0.7440119328878954,
+           "sd_residual": 4.117557805632722,
+           "mae": 3.5905953718675407
+          },
+          {
+           "bin": 10,
+           "n": 8,
+           "prediction_min": 31.73537115107095,
+           "prediction_max": 34.571035275468944,
+           "mean_prediction": 33.04332965705447,
+           "mean_observed": 32.5875,
+           "mean_residual": -0.4558296570544744,
+           "sd_residual": 2.4148956381555635,
+           "mae": 2.0615042726581763
+          }
+         ]
+        },
+        "heteroscedasticity": {
+         "abs_residual_prediction_correlation": 0.2735029712021941,
+         "spread_ratio_top_bottom": 2.023052684672623,
+         "flag": true,
+         "rule": "Flagged when the rank correlation of the absolute residual with the prediction is at least 0.2 in size, or the residual standard deviation of the top third of the predictions is more than 1.5 times (or less than 1/1.5 of) that of the bottom third",
+         "meaning": "An error that grows with the prediction makes one interval width wrong for every row; the mean error stays a fair summary."
+        },
+        "by_feature": [
+         {
+          "column": "origin",
+          "binned": false,
+          "binning": null,
+          "groups": [
+           {
+            "value": "1",
+            "n": 52,
+            "mean_residual": 0.4412508455008744,
+            "mae": 2.9100462863492598,
+            "small_cell": false
+           },
+           {
+            "value": "2",
+            "n": 12,
+            "mean_residual": 0.9567507641307958,
+            "mae": 3.544887273669507,
+            "small_cell": true
+           },
+           {
+            "value": "3",
+            "n": 16,
+            "mean_residual": -2.1869550006589575,
+            "mae": 3.224875000841984,
+            "small_cell": true
+           }
+          ]
+         },
+         {
+          "column": "cylinders",
+          "binned": false,
+          "binning": null,
+          "groups": [
+           {
+            "value": "3",
+            "n": 1,
+            "mean_residual": -5.004270825101983,
+            "mae": 5.004270825101983,
+            "small_cell": true
+           },
+           {
+            "value": "4",
+            "n": 39,
+            "mean_residual": 0.7725340436811386,
+            "mae": 3.779057637234928,
+            "small_cell": false
+           },
+           {
+            "value": "6",
+            "n": 17,
+            "mean_residual": -2.5588562656454483,
+            "mae": 2.733015764106324,
+            "small_cell": true
+           },
+           {
+            "value": "8",
+            "n": 23,
+            "mean_residual": 0.7743814244600824,
+            "mae": 2.0265333704606814,
+            "small_cell": true
+           }
+          ]
+         },
+         {
+          "column": "displacement",
+          "binned": true,
+          "binning": "5 quantile bins of the rows shown",
+          "groups": [
+           {
+            "value": "(69.999, 97.0]",
+            "n": 17,
+            "mean_residual": -0.07243188641075156,
+            "mae": 3.4423694913551253,
+            "small_cell": true
+           },
+           {
+            "value": "(97.0, 122.0]",
+            "n": 16,
+            "mean_residual": 1.1440270270406123,
+            "mae": 4.20281098784311,
+            "small_cell": true
+           },
+           {
+            "value": "(122.0, 227.4]",
+            "n": 15,
+            "mean_residual": -0.6404817272030034,
+            "mae": 3.0166502701388285,
+            "small_cell": true
+           },
+           {
+            "value": "(227.4, 318.0]",
+            "n": 20,
+            "mean_residual": -0.957754766623623,
+            "mae": 2.618677463633717,
+            "small_cell": true
+           },
+           {
+            "value": "(318.0, 455.0]",
+            "n": 12,
+            "mean_residual": 0.9270003334935154,
+            "mae": 1.839207808698639,
+            "small_cell": true
+           }
+          ]
+         },
+         {
+          "column": "horsepower",
+          "binned": true,
+          "binning": "5 quantile bins of the rows shown",
+          "groups": [
+           {
+            "value": "(47.999, 67.8]",
+            "n": 16,
+            "mean_residual": 1.883841745930667,
+            "mae": 4.111729841836299,
+            "small_cell": true
+           },
+           {
+            "value": "(67.8, 88.0]",
+            "n": 22,
+            "mean_residual": -0.7746215048218815,
+            "mae": 3.8510107376856384,
+            "small_cell": true
+           },
+           {
+            "value": "(88.0, 100.0]",
+            "n": 13,
+            "mean_residual": -0.8710627636985087,
+            "mae": 2.4869202325431266,
+            "small_cell": true
+           },
+           {
+            "value": "(100.0, 141.0]",
+            "n": 13,
+            "mean_residual": -1.3085841914646656,
+            "mae": 2.590055140323959,
+            "small_cell": true
+           },
+           {
+            "value": "(141.0, 225.0]",
+            "n": 16,
+            "mean_residual": 0.9168992945864798,
+            "mae": 1.8092787901206495,
+            "small_cell": true
+           }
+          ]
+         },
+         {
+          "column": "weight",
+          "binned": true,
+          "binning": "5 quantile bins of the rows shown",
+          "groups": [
+           {
+            "value": "(1759.999, 2129.0]",
+            "n": 16,
+            "mean_residual": 1.118189732690208,
+            "mae": 2.9328741101986564,
+            "small_cell": true
+           },
+           {
+            "value": "(2129.0, 2438.6]",
+            "n": 16,
+            "mean_residual": 0.5065467908968417,
+            "mae": 5.548922000006402,
+            "small_cell": true
+           },
+           {
+            "value": "(2438.6, 3070.0]",
+            "n": 16,
+            "mean_residual": -1.4232301596616437,
+            "mae": 2.4717522550089916,
+            "small_cell": true
+           },
+           {
+            "value": "(3070.0, 3892.0]",
+            "n": 16,
+            "mean_residual": -1.7967734524247887,
+            "mae": 2.6998624562320486,
+            "small_cell": true
+           },
+           {
+            "value": "(3892.0, 4955.0]",
+            "n": 16,
+            "mean_residual": 1.5599404088163635,
+            "mae": 1.6877800652831096,
+            "small_cell": true
+           }
+          ]
+         }
+        ],
+        "scatter": {
+         "n_rows": 80,
+         "n_shown": 80,
+         "sampling": "every row",
+         "points": [
+          {
+           "row_key": "L26",
+           "prediction": 8.495881120389964,
+           "observed": 10.0,
+           "residual": 1.5041188796100364
+          },
+          {
+           "row_key": "L95",
+           "prediction": 8.9766985852823,
+           "observed": 13.0,
+           "residual": 4.0233014147177
+          },
+          {
+           "row_key": "L43",
+           "prediction": 9.254833234540618,
+           "observed": 12.0,
+           "residual": 2.7451667654593823
+          },
+          {
+           "row_key": "L28",
+           "prediction": 9.404385466635162,
+           "observed": 11.0,
+           "residual": 1.595614533364838
+          },
+          {
+           "row_key": "L68",
+           "prediction": 9.770505495191262,
+           "observed": 11.0,
+           "residual": 1.2294945048087378
+          },
+          {
+           "row_key": "L9",
+           "prediction": 10.120218716517577,
+           "observed": 14.0,
+           "residual": 3.879781283482423
+          },
+          {
+           "row_key": "L93",
+           "prediction": 13.146750945721706,
+           "observed": 13.0,
+           "residual": -0.14675094572170622
+          },
+          {
+           "row_key": "L39",
+           "prediction": 13.475327981361398,
+           "observed": 14.0,
+           "residual": 0.5246720186386025
+          },
+          {
+           "row_key": "L189",
+           "prediction": 14.060595496440992,
+           "observed": 16.0,
+           "residual": 1.9394045035590075
+          },
+          {
+           "row_key": "L188",
+           "prediction": 14.374549124522822,
+           "observed": 17.5,
+           "residual": 3.1254508754771777
+          },
+          {
+           "row_key": "L42",
+           "prediction": 14.5323754003761,
+           "observed": 14.0,
+           "residual": -0.5323754003761003
+          },
+          {
+           "row_key": "L225",
+           "prediction": 14.54784752978636,
+           "observed": 15.0,
+           "residual": 0.45215247021364036
+          },
+          {
+           "row_key": "L266",
+           "prediction": 15.228107442971805,
+           "observed": 17.5,
+           "residual": 2.2718925570281954
+          },
+          {
+           "row_key": "L116",
+           "prediction": 15.343590905636162,
+           "observed": 15.0,
+           "residual": -0.34359090563616235
+          },
+          {
+           "row_key": "L222",
+           "prediction": 15.748177859073284,
+           "observed": 17.5,
+           "residual": 1.7518221409267163
+          },
+          {
+           "row_key": "L293",
+           "prediction": 15.88395136691041,
+           "observed": 18.5,
+           "residual": 2.6160486330895907
+          },
+          {
+           "row_key": "L90",
+           "prediction": 16.133415712666515,
+           "observed": 15.0,
+           "residual": -1.1334157126665154
+          },
+          {
+           "row_key": "L288",
+           "prediction": 16.425334646653546,
+           "observed": 16.5,
+           "residual": 0.07466535334645386
+          },
+          {
+           "row_key": "L12",
+           "prediction": 16.659017400085546,
+           "observed": 14.0,
+           "residual": -2.6590174000855455
+          },
+          {
+           "row_key": "L289",
+           "prediction": 16.790555770145147,
+           "observed": 18.2,
+           "residual": 1.4094442298548522
+          },
+          {
+           "row_key": "L13",
+           "prediction": 17.323885599787328,
+           "observed": 15.0,
+           "residual": -2.323885599787328
+          },
+          {
+           "row_key": "L136",
+           "prediction": 19.36065565395293,
+           "observed": 18.0,
+           "residual": -1.3606556539529286
+          },
+          {
+           "row_key": "L167",
+           "prediction": 20.260711414733525,
+           "observed": 13.0,
+           "residual": -7.2607114147335245
+          },
+          {
+           "row_key": "L257",
+           "prediction": 20.5868353261938,
+           "observed": 20.5,
+           "residual": -0.08683532619379974
+          },
+          {
+           "row_key": "L301",
+           "prediction": 20.832510021988575,
+           "observed": 23.9,
+           "residual": 3.067489978011423
+          },
+          {
+           "row_key": "L193",
+           "prediction": 21.004044318334913,
+           "observed": 22.0,
+           "residual": 0.9959556816650874
+          },
+          {
+           "row_key": "L36",
+           "prediction": 21.4322133020047,
+           "observed": 17.0,
+           "residual": -4.432213302004701
+          },
+          {
+           "row_key": "L165",
+           "prediction": 22.015041615135278,
+           "observed": 21.0,
+           "residual": -1.015041615135278
+          },
+          {
+           "row_key": "L126",
+           "prediction": 22.175217827025193,
+           "observed": 20.0,
+           "residual": -2.175217827025193
+          },
+          {
+           "row_key": "L37",
+           "prediction": 22.306239447275864,
+           "observed": 19.0,
+           "residual": -3.306239447275864
+          },
+          {
+           "row_key": "L155",
+           "prediction": 22.638464406361944,
+           "observed": 15.0,
+           "residual": -7.638464406361944
+          },
+          {
+           "row_key": "L366",
+           "prediction": 22.843890701475203,
+           "observed": 20.2,
+           "residual": -2.643890701475204
+          },
+          {
+           "row_key": "L390",
+           "prediction": 22.929357190366193,
+           "observed": 22.0,
+           "residual": -0.9293571903661935
+          },
+          {
+           "row_key": "L195",
+           "prediction": 23.02856737979704,
+           "observed": 22.5,
+           "residual": -0.5285673797970389
+          },
+          {
+           "row_key": "L208",
+           "prediction": 23.067863799370315,
+           "observed": 20.0,
+           "residual": -3.067863799370315
+          },
+          {
+           "row_key": "L102",
+           "prediction": 23.168966986377864,
+           "observed": 23.0,
+           "residual": -0.168966986377864
+          },
+          {
+           "row_key": "L170",
+           "prediction": 23.2713762099233,
+           "observed": 20.0,
+           "residual": -3.2713762099233
+          },
+          {
+           "row_key": "L393",
+           "prediction": 23.503290793179623,
+           "observed": 27.0,
+           "residual": 3.496709206820377
+          },
+          {
+           "row_key": "L194",
+           "prediction": 23.515599944747645,
+           "observed": 24.0,
+           "residual": 0.48440005525235463
+          },
+          {
+           "row_key": "L101",
+           "prediction": 23.716560223932937,
+           "observed": 18.0,
+           "residual": -5.716560223932937
+          },
+          {
+           "row_key": "L373",
+           "prediction": 24.582361850052475,
+           "observed": 27.0,
+           "residual": 2.417638149947525
+          },
+          {
+           "row_key": "L256",
+           "prediction": 24.631806861952164,
+           "observed": 25.1,
+           "residual": 0.46819313804783746
+          },
+          {
+           "row_key": "L79",
+           "prediction": 24.71385911972078,
+           "observed": 21.0,
+           "residual": -3.71385911972078
+          },
+          {
+           "row_key": "L179",
+           "prediction": 24.762732784959812,
+           "observed": 23.0,
+           "residual": -1.7627327849598124
+          },
+          {
+           "row_key": "L124",
+           "prediction": 25.231627146994388,
+           "observed": 20.0,
+           "residual": -5.231627146994388
+          },
+          {
+           "row_key": "L211",
+           "prediction": 25.475898836073434,
+           "observed": 19.0,
+           "residual": -6.4758988360734335
+          },
+          {
+           "row_key": "L131",
+           "prediction": 26.23054850240589,
+           "observed": 26.0,
+           "residual": -0.23054850240589175
+          },
+          {
+           "row_key": "L392",
+           "prediction": 26.566912690760095,
+           "observed": 36.0,
+           "residual": 9.433087309239905
+          },
+          {
+           "row_key": "L62",
+           "prediction": 26.99055146262694,
+           "observed": 21.0,
+           "residual": -5.990551462626939
+          },
+          {
+           "row_key": "L110",
+           "prediction": 27.217533702600615,
+           "observed": 21.0,
+           "residual": -6.217533702600615
+          },
+          {
+           "row_key": "L302",
+           "prediction": 27.875573747269478,
+           "observed": 34.2,
+           "residual": 6.324426252730525
+          },
+          {
+           "row_key": "L312",
+           "prediction": 28.18231821189448,
+           "observed": 32.1,
+           "residual": 3.917681788105522
+          },
+          {
+           "row_key": "L351",
+           "prediction": 28.231090076202427,
+           "observed": 34.7,
+           "residual": 6.468909923797575
+          },
+          {
+           "row_key": "L319",
+           "prediction": 28.27876378728931,
+           "observed": 29.8,
+           "residual": 1.52123621271069
+          },
+          {
+           "row_key": "L142",
+           "prediction": 28.476571801739603,
+           "observed": 29.0,
+           "residual": 0.5234281982603974
+          },
+          {
+           "row_key": "L197",
+           "prediction": 28.57691414559544,
+           "observed": 24.5,
+           "residual": -4.076914145595438
+          },
+          {
+           "row_key": "L379",
+           "prediction": 28.682794239544553,
+           "observed": 38.0,
+           "residual": 9.317205760455447
+          },
+          {
+           "row_key": "L335",
+           "prediction": 28.704270825101982,
+           "observed": 23.7,
+           "residual": -5.004270825101983
+          },
+          {
+           "row_key": "L51",
+           "prediction": 28.771284398417976,
+           "observed": 28.0,
+           "residual": -0.7712843984179756
+          },
+          {
+           "row_key": "L352",
+           "prediction": 28.866452888124805,
+           "observed": 34.4,
+           "residual": 5.533547111875194
+          },
+          {
+           "row_key": "L15",
+           "prediction": 29.388157220728772,
+           "observed": 24.0,
+           "residual": -5.388157220728772
+          },
+          {
+           "row_key": "L53",
+           "prediction": 29.54490196039087,
+           "observed": 30.0,
+           "residual": 0.45509803960912976
+          },
+          {
+           "row_key": "L305",
+           "prediction": 29.690087395012103,
+           "observed": 37.3,
+           "residual": 7.609912604987894
+          },
+          {
+           "row_key": "L327",
+           "prediction": 29.940068137058113,
+           "observed": 43.4,
+           "residual": 13.459931862941886
+          },
+          {
+           "row_key": "L246",
+           "prediction": 30.034549091422647,
+           "observed": 36.1,
+           "residual": 6.065450908577354
+          },
+          {
+           "row_key": "L152",
+           "prediction": 30.30317132792654,
+           "observed": 31.0,
+           "residual": 0.6968286720734618
+          },
+          {
+           "row_key": "L143",
+           "prediction": 30.488871928411633,
+           "observed": 26.0,
+           "residual": -4.488871928411633
+          },
+          {
+           "row_key": "L19",
+           "prediction": 30.816921946224532,
+           "observed": 27.0,
+           "residual": -3.8169219462245323
+          },
+          {
+           "row_key": "L30",
+           "prediction": 30.816921946224532,
+           "observed": 27.0,
+           "residual": -3.8169219462245323
+          },
+          {
+           "row_key": "L382",
+           "prediction": 31.375945824732234,
+           "observed": 36.0,
+           "residual": 4.624054175267766
+          },
+          {
+           "row_key": "L206",
+           "prediction": 31.491506371809294,
+           "observed": 28.0,
+           "residual": -3.491506371809294
+          },
+          {
+           "row_key": "L333",
+           "prediction": 31.524207026351753,
+           "observed": 29.8,
+           "residual": -1.7242070263517526
+          },
+          {
+           "row_key": "L219",
+           "prediction": 31.73537115107095,
+           "observed": 36.0,
+           "residual": 4.26462884892905
+          },
+          {
+           "row_key": "L280",
+           "prediction": 32.036224051964375,
+           "observed": 29.5,
+           "residual": -2.536224051964375
+          },
+          {
+           "row_key": "L130",
+           "prediction": 32.76903616277529,
+           "observed": 31.0,
+           "residual": -1.7690361627752935
+          },
+          {
+           "row_key": "L240",
+           "prediction": 32.837068611190105,
+           "observed": 30.0,
+           "residual": -2.837068611190105
+          },
+          {
+           "row_key": "L295",
+           "prediction": 32.86141894734856,
+           "observed": 34.1,
+           "residual": 1.2385810526514405
+          },
+          {
+           "row_key": "L132",
+           "prediction": 33.355971617451885,
+           "observed": 32.0,
+           "residual": -1.3559716174518854
+          },
+          {
+           "row_key": "L346",
+           "prediction": 34.180511439165684,
+           "observed": 35.1,
+           "residual": 0.9194885608343171
+          },
+          {
+           "row_key": "L182",
+           "prediction": 34.571035275468944,
+           "observed": 33.0,
+           "residual": -1.5710352754689438
+          }
+         ]
+        },
+        "examples": {
+         "largest_errors": [
+          {
+           "row_key": "L327",
+           "observed": 43.4,
+           "prediction": 29.940068137058113,
+           "residual": 13.459931862941886,
+           "values": {
+            "cylinders": "4",
+            "displacement": "90",
+            "horsepower": "48",
+            "weight": "2335",
+            "origin": "2"
+           }
+          },
+          {
+           "row_key": "L392",
+           "observed": 36.0,
+           "prediction": 26.566912690760095,
+           "residual": 9.433087309239905,
+           "values": {
+            "cylinders": "4",
+            "displacement": "135",
+            "horsepower": "84",
+            "weight": "2370",
+            "origin": "1"
+           }
+          },
+          {
+           "row_key": "L379",
+           "observed": 38.0,
+           "prediction": 28.682794239544553,
+           "residual": 9.317205760455447,
+           "values": {
+            "cylinders": "4",
+            "displacement": "105",
+            "horsepower": "63",
+            "weight": "2125",
+            "origin": "1"
+           }
+          },
+          {
+           "row_key": "L155",
+           "observed": 15.0,
+           "prediction": 22.638464406361944,
+           "residual": -7.638464406361944,
+           "values": {
+            "cylinders": "6",
+            "displacement": "250",
+            "horsepower": "72",
+            "weight": "3432",
+            "origin": "1"
+           }
+          },
+          {
+           "row_key": "L305",
+           "observed": 37.3,
+           "prediction": 29.690087395012103,
+           "residual": 7.609912604987894,
+           "values": {
+            "cylinders": "4",
+            "displacement": "91",
+            "horsepower": "69",
+            "weight": "2130",
+            "origin": "2"
+           }
+          }
+         ],
+         "features": [
+          "cylinders",
+          "displacement",
+          "horsepower",
+          "weight",
+          "origin"
+         ],
+         "note": "The rows with the largest absolute residuals, with the feature values as written in the file."
+        },
+        "predictions": "0b79256e6607efe99f6c4edd22bd33c79d404c819c3da97a0626910caceec978"
+       }
+      },
+      "note": "Final evidence: computed once the final test was opened, from the predictions of its one evaluation, on rows no choice had seen."
+     },
+     "blobs": {},
+     "params": {
+      "evaluation": "final_test",
+      "model": "fit.linear",
+      "residual_columns": [
+       "origin",
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight"
+      ],
+      "segments": [
+       "origin"
+      ]
+     },
+     "inputs": {
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "final_test": {
+       "n_rows": 80,
+       "row_keys": "69c90175e77d2fa1e733d3cf937b3c1a46af3500072cb345ea43a7b856b5ae5e"
+      },
+      "results": {
+       "final_test.evaluation": "0b79256e6607efe99f6c4edd22bd33c79d404c819c3da97a0626910caceec978"
+      },
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      }
+     },
+     "code_fingerprint": "5d24ed51d46cc1ca5049e04789d7799d0d290f32915455ade542c45afd07debe",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_3115013178a3386610dd5adb",
+     "exposure_id": "x_525baae9980743b59bff18d38ad67f50",
+     "started_revision": 68,
+     "integrity": "ok"
+    },
     "diag.regression": {
      "slot": "diag.regression",
      "result_id": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
@@ -3478,9 +4646,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_682b0aeeca4e660d1e6ba6f2",
-     "exposure_id": "x_179306f0ed49451eabedf1eb659991e4",
-     "started_revision": 54,
+     "execution_id": "e_5886f523fa5699d045fe1858",
+     "exposure_id": "x_5076288ba1ee4059a8180e8c3d203f2f",
+     "started_revision": 56,
      "integrity": "ok"
     },
     "eda.correlation": {
@@ -3738,9 +4906,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_8142a37e0a93ddb744855aa8",
-     "exposure_id": "x_b3530099fdb6446db97aa63f38aac86f",
-     "started_revision": 30,
+     "execution_id": "e_3d00c3aea34475b6aac5c90f",
+     "exposure_id": "x_03d4eb7960574301ad441bf91cffb869",
+     "started_revision": 32,
      "integrity": "ok"
     },
     "eda.distribution:cylinders": {
@@ -3830,9 +4998,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_2e0d6c177d108bbe4bb3bf56",
-     "exposure_id": "x_e4c110f3d59b4afb9f8b387636aad78a",
-     "started_revision": 32,
+     "execution_id": "e_4ba73dbb8f60ee57805069ab",
+     "exposure_id": "x_b0215108f3754edba9eaad63e804889b",
+     "started_revision": 34,
      "integrity": "ok"
     },
     "eda.distribution:displacement": {
@@ -3980,9 +5148,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_3d00c3aea34475b6aac5c90f",
-     "exposure_id": "x_f92657e3d3a944cb88e57a9697042c89",
-     "started_revision": 34,
+     "execution_id": "e_45be80197b00c439ae8b996d",
+     "exposure_id": "x_639736041a0d4ada8252f0d57f6493b3",
+     "started_revision": 36,
      "integrity": "ok"
     },
     "eda.distribution:horsepower": {
@@ -4142,9 +5310,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_4ba73dbb8f60ee57805069ab",
-     "exposure_id": "x_fc681da76fe6464ca9755a0587c80d62",
-     "started_revision": 36,
+     "execution_id": "e_3cce5a55affa8b851abebc12",
+     "exposure_id": "x_214c9b26bc4c4c2a87c57a62ed033367",
+     "started_revision": 38,
      "integrity": "ok"
     },
     "eda.distribution:origin": {
@@ -4222,9 +5390,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_3cce5a55affa8b851abebc12",
-     "exposure_id": "x_993b95f189874a4eb613835e02cb3672",
-     "started_revision": 40,
+     "execution_id": "e_62f4c37fe186a371147175df",
+     "exposure_id": "x_0470f3ce10434cd7b0ddc5a5eaa35ce0",
+     "started_revision": 42,
      "integrity": "ok"
     },
     "eda.distribution:weight": {
@@ -4372,9 +5540,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_45be80197b00c439ae8b996d",
-     "exposure_id": "x_1a6289e91db549aa990a5203b28b7943",
-     "started_revision": 38,
+     "execution_id": "e_7e66b22d4e31fa7c48a2de13",
+     "exposure_id": "x_ffd5f89f37d440338b670a23516e08e0",
+     "started_revision": 40,
      "integrity": "ok"
     },
     "eda.mean_by:cylinders": {
@@ -4532,9 +5700,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_47e14a8659b67b6ecc88b5f7",
-     "exposure_id": "x_aafde2eb399b406c8d1b2f29fb3938a1",
-     "started_revision": 20,
+     "execution_id": "e_742cb865548c9b2f674c0f23",
+     "exposure_id": "x_680f42ec9f064f1c9db5fac213a38276",
+     "started_revision": 22,
      "integrity": "ok"
     },
     "eda.mean_by:displacement": {
@@ -4694,9 +5862,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_d8c0a36ea30eea85e955656e",
-     "exposure_id": "x_2fed2a11779d485db86764d0daf08169",
-     "started_revision": 22,
+     "execution_id": "e_9b5a307c93714d054dab44ec",
+     "exposure_id": "x_ad1e1bb21e054e34aec7b8ce57be9d21",
+     "started_revision": 24,
      "integrity": "ok"
     },
     "eda.mean_by:horsepower": {
@@ -4880,9 +6048,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_742cb865548c9b2f674c0f23",
-     "exposure_id": "x_ab3c70261280447ea94fc782eadb7db4",
-     "started_revision": 24,
+     "execution_id": "e_acd92bfdf1765b950c8316a8",
+     "exposure_id": "x_2d71224810b9451397298eac48fea275",
+     "started_revision": 26,
      "integrity": "ok"
     },
     "eda.mean_by:model_year": {
@@ -5119,8 +6287,8 @@
       "python": "3.13.16"
      },
      "execution_id": "e_652a57bfe02cfb4ce76a3a62",
-     "exposure_id": "x_23c1fb69b04040dd851653c2e2b2581e",
-     "started_revision": 56,
+     "exposure_id": "x_92ce0c7a142b4cd6b0cd4f66fdc0df46",
+     "started_revision": 58,
      "integrity": "ok"
     },
     "eda.mean_by:origin": {
@@ -5246,9 +6414,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_acd92bfdf1765b950c8316a8",
-     "exposure_id": "x_9c5aa4a0058a4985b2da9963110ccd6f",
-     "started_revision": 28,
+     "execution_id": "e_2e0d6c177d108bbe4bb3bf56",
+     "exposure_id": "x_f86f936202c146c8b018b6859b57cd94",
+     "started_revision": 30,
      "integrity": "ok"
     },
     "eda.mean_by:weight": {
@@ -5408,9 +6576,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_9b5a307c93714d054dab44ec",
-     "exposure_id": "x_3f22f378bd0844f0b3bddd7aff30a8f2",
-     "started_revision": 26,
+     "execution_id": "e_8142a37e0a93ddb744855aa8",
+     "exposure_id": "x_ed87e1fb7f9b4beba5ccaf05e2d1661e",
+     "started_revision": 28,
      "integrity": "ok"
     },
     "eda.quality": {
@@ -6652,9 +7820,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_f2a9d4ff734c5609ecaf8062",
-     "exposure_id": "x_7e311fb6ed7748de8d3efa180ed17868",
-     "started_revision": 14,
+     "execution_id": "e_ef6d58ebcc377e92b00e1641",
+     "exposure_id": "x_6b4cd9ff12d649b8aa19727feac7b2ba",
+     "started_revision": 16,
      "integrity": "ok"
     },
     "eda.special_values": {
@@ -6722,9 +7890,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_ef6d58ebcc377e92b00e1641",
-     "exposure_id": "x_174a3b9a7b994bd5847ed126bb22bb34",
-     "started_revision": 18,
+     "execution_id": "e_d8c0a36ea30eea85e955656e",
+     "exposure_id": "x_01c0bd4faec34d1fb05972365cc1ee10",
+     "started_revision": 20,
      "integrity": "ok"
     },
     "eda.target_summary": {
@@ -6788,9 +7956,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_01e009ee66e5659fa376f9c8",
-     "exposure_id": "x_590a63cf2d7f4c849b835c5e074f461a",
-     "started_revision": 16,
+     "execution_id": "e_47e14a8659b67b6ecc88b5f7",
+     "exposure_id": "x_52383ea045694542a70344fe5a36be77",
+     "started_revision": 18,
      "integrity": "ok"
     },
     "evaluate.regression": {
@@ -7138,14 +8306,14 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_d224f0bc270d92fcb447a017",
-     "exposure_id": "x_e97994f50c8e435fb524dbf68474620c",
-     "started_revision": 52,
+     "execution_id": "e_6a53c569c15f166a86da500c",
+     "exposure_id": "x_efcb93fa217744b39a05dc9e72a71c30",
+     "started_revision": 54,
      "integrity": "ok"
     },
     "final_test.evaluation": {
      "slot": "final_test.evaluation",
-     "result_id": "239e0a442bd77fb510a4e7631a16a1e234550cd268b59ffa12ab6ac5cf8afd56",
+     "result_id": "0b79256e6607efe99f6c4edd22bd33c79d404c819c3da97a0626910caceec978",
      "activity": "final_test.evaluation",
      "current": true,
      "stale_reason": null,
@@ -7267,8 +8435,8 @@
       },
       "note": "Measured once on the sealed final-test rows, with the configuration chosen on the development rows refitted on all of them: this is the study's independent evidence. Any later change is made after the final test.",
       "predictor": {
-       "predictor_id": "d3a92aa0fb911531a2af29cd1177fdb877859caaf2d0accec6f7a1de6ec01595",
-       "capture": "fe8cb861b3ee1356c5e5a266717ece8ff9877e18418bb81da43a121d17f728e6",
+       "predictor_id": "27962ec5b35145e4ac647c01dae9d422b861f6b3041dbeb9a48548f77cd62c1f",
+       "capture": "f28232ba29e67eba2ecb4c23066a568f9b2d0435c4311a934c1357cccb3b886b",
        "evaluated": "reloaded_capture",
        "parity_before_opening": "ok",
        "note": "The final-test rows were scored by the captured predictor, reloaded and checked on its parity rows before they were read; no model was refitted."
@@ -7337,16 +8505,16 @@
        ]
       },
       "predictor": {
-       "bundle": "predictors/d3a92aa0fb911531a2af29cd1177fdb877859caaf2d0accec6f7a1de6ec01595+mlflow_pyfunc",
+       "bundle": "predictors/27962ec5b35145e4ac647c01dae9d422b861f6b3041dbeb9a48548f77cd62c1f+mlflow_pyfunc",
        "packages": [
         "mlflow_pyfunc"
        ],
-       "predictor_id": "d3a92aa0fb911531a2af29cd1177fdb877859caaf2d0accec6f7a1de6ec01595",
+       "predictor_id": "27962ec5b35145e4ac647c01dae9d422b861f6b3041dbeb9a48548f77cd62c1f",
        "profile": "workshop",
-       "result_id": "fe8cb861b3ee1356c5e5a266717ece8ff9877e18418bb81da43a121d17f728e6"
+       "result_id": "f28232ba29e67eba2ecb4c23066a568f9b2d0435c4311a934c1357cccb3b886b"
       },
       "results": {
-       "predictor.capture": "fe8cb861b3ee1356c5e5a266717ece8ff9877e18418bb81da43a121d17f728e6"
+       "predictor.capture": "f28232ba29e67eba2ecb4c23066a568f9b2d0435c4311a934c1357cccb3b886b"
       },
       "target": {
        "column": "mpg",
@@ -7366,9 +8534,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_4116b73878d0f9e90acadc76",
-     "exposure_id": "x_57c4f4f2f6b946acad7929efaa3b3870",
-     "started_revision": 64,
+     "execution_id": "e_4c8fba25c381bbe323f2a634",
+     "exposure_id": "x_43a91b4c6efb4b4cb4a86e08c6f872f5",
+     "started_revision": 66,
      "integrity": "ok"
     },
     "fit.baseline": {
@@ -7446,9 +8614,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_7e66b22d4e31fa7c48a2de13",
-     "exposure_id": "x_382d1582ff4749a89326bc3948cc7ff2",
-     "started_revision": 42,
+     "execution_id": "e_9562864c0fd20d384a545966",
+     "exposure_id": "x_c551caccc6174542be3fb6d7946bf3e7",
+     "started_revision": 44,
      "integrity": "ok"
     },
     "fit.linear": {
@@ -7591,9 +8759,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_62f4c37fe186a371147175df",
-     "exposure_id": "x_85d3e97bde7742439910bde92029612c",
-     "started_revision": 44,
+     "execution_id": "e_abf640fd9c7fa4196d91789f",
+     "exposure_id": "x_2817b0618df14915bbf2a3af5369e00d",
+     "started_revision": 46,
      "integrity": "ok"
     },
     "fit.variant": {
@@ -7746,22 +8914,22 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_db93ae0d219ba5ba4fff324c",
-     "exposure_id": "x_f108af4d45144ca193c062b18c5965c4",
-     "started_revision": 50,
+     "execution_id": "e_682b0aeeca4e660d1e6ba6f2",
+     "exposure_id": "x_ba278a53b3524515bc98eea8be28cf9d",
+     "started_revision": 52,
      "integrity": "ok"
     },
     "predictor.capture": {
      "slot": "predictor.capture",
-     "result_id": "fe8cb861b3ee1356c5e5a266717ece8ff9877e18418bb81da43a121d17f728e6",
+     "result_id": "f28232ba29e67eba2ecb4c23066a568f9b2d0435c4311a934c1357cccb3b886b",
      "activity": "predictor.capture",
      "current": true,
      "stale_reason": null,
      "partition": "development",
      "n_rows": 318,
      "values": {
-      "predictor_id": "d3a92aa0fb911531a2af29cd1177fdb877859caaf2d0accec6f7a1de6ec01595",
-      "bundle": "predictors/d3a92aa0fb911531a2af29cd1177fdb877859caaf2d0accec6f7a1de6ec01595+mlflow_pyfunc",
+      "predictor_id": "27962ec5b35145e4ac647c01dae9d422b861f6b3041dbeb9a48548f77cd62c1f",
+      "bundle": "predictors/27962ec5b35145e4ac647c01dae9d422b861f6b3041dbeb9a48548f77cd62c1f+mlflow_pyfunc",
       "reused": false,
       "profile": "workshop",
       "model": "fit.linear",
@@ -7778,7 +8946,7 @@
        "weight",
        "origin"
       ],
-      "recipe_sha256": "e8c77b45bcf671e41b25545f6cc9a11eb99f9dbdb4556d9f72836a4377e88d98",
+      "recipe_sha256": "59bd32c0d9a32f4d78523bc76048f5e4ea09504e72f5abb6297aa53707b6e5fc",
       "data_contract_sha256": "6d04a5d4332997d16ceeb01d78e838779fc730fad644d4d81c02ed2d7241d0cc",
       "training_scope": {
        "role": "final_development_refit",
@@ -7852,7 +9020,7 @@
       "packages": [
        {
         "format": "mlflow_pyfunc",
-        "artifact_id": "c0e02b03b791b216b089987ef6957f969d836afa199691fc2452e81bf17bc57d"
+        "artifact_id": "2508c35d19414b656244c21898bf44a0078b7ebedaf989e79357d338a4f1c243"
        }
       ],
       "runtime": {
@@ -7860,7 +9028,7 @@
        "version": "1.0.0",
        "api_version": "1.0"
       },
-      "computation_id": "bff51c2026d583a01573a6e1e1a98681b0887cf0487a1027781ea6a6957c1662",
+      "computation_id": "4eb65c62c3a132b37499313c7bfc18e770957ad4acbedfd07c3a381143d85530",
       "limitations": [
        "Trusted local serialisation (pickle): the bundle digest proves integrity, not safety; load it only from a source you control.",
        "Parity rows are development rows (features only): they check reproduction, not generalisation.",
@@ -7935,7 +9103,7 @@
        "evidence_ids": [
         "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c"
        ],
-       "revision": 59
+       "revision": 61
       },
       "target": {
        "column": "mpg",
@@ -7955,9 +9123,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_9cab32247acaa4abccb2a4d9",
-     "exposure_id": "x_b8ee462d0f2a474ca86fe214a3b4a5c9",
-     "started_revision": 60,
+     "execution_id": "e_1ac725d7e8510d30af3a9fd6",
+     "exposure_id": "x_fffeb4b50cb2400e922c6bd98f34e4a4",
+     "started_revision": 62,
      "integrity": "ok"
     },
     "split": {
@@ -8048,16 +9216,16 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_911198e0a8508fa9f4a6fa78",
-     "exposure_id": "x_da7715eb89d34631b49994bea033f63b",
-     "started_revision": 12,
+     "execution_id": "e_01e009ee66e5659fa376f9c8",
+     "exposure_id": "x_73ec7a49c430400889e6832315cfae84",
+     "started_revision": 14,
      "integrity": "ok"
     }
    },
    "stale": {
     "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f": {
      "reason": "model_variant confirmed for the first time",
-     "since": 49
+     "since": 51
     }
    },
    "invalidations": [
@@ -8088,7 +9256,7 @@
      "previous": null,
      "reason": "model_variant confirmed for the first time",
      "reconfirm_required": [],
-     "revision": 49,
+     "revision": 51,
      "row": null,
      "stale_results": [
       "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f"
@@ -8114,10 +9282,10 @@
       "error": null,
       "generated": false,
       "kind": "marimo_notebook",
-      "last_ok_revision": 67,
+      "last_ok_revision": 71,
       "path": "notebooks/study_editable.py",
-      "revision": 67,
-      "sha256": "eb36bb1f7c49226ae8e799045c9b86c18a4d38dd7249ba060f166952ca36014d",
+      "revision": 71,
+      "sha256": "f81700b1159c573f30b2ce91a36032e9a9d7a2ea16ed88fc19146498d150a8ce",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -8130,9 +9298,9 @@
      "notebook": {
       "candidate": null,
       "consumed": [
+       "0b79256e6607efe99f6c4edd22bd33c79d404c819c3da97a0626910caceec978",
        "0bb6517c6fa11b311b2a7f187869255fc97f97e74187326c39e2afba67352308",
        "14b2379e03941123f73a919b135349c28cc3676d84ea126312500f0cd5aae323",
-       "239e0a442bd77fb510a4e7631a16a1e234550cd268b59ffa12ab6ac5cf8afd56",
        "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
        "2f1edbf1345c892f0f9f052d940d202752d0c63dbfcb8ca0ebf743449ec318aa",
        "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
@@ -8140,6 +9308,7 @@
        "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
        "56cc994eab94aea0b1f650fe229922c75e95395ccfc0133625c60d0ea5d4d3c6",
        "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+       "7244fc732d497d1e6737a1e13403486e60f75f2a03e489e1a17924c853c56c85",
        "8269de3c39b61fcb6d0ba8921ff6ed7e96c81b46c8c313dae12a781d99fb89b2",
        "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
        "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
@@ -8151,17 +9320,17 @@
        "c4482186eeb1f3c7a61df53def6cb81437edf14b7dbc5481f98084defc9526a8",
        "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
        "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
-       "f38db57bfbce3a9737dc3cdb7ab38c80f8217253ecb583d73fe62cdc3ad51d99",
-       "fe8cb861b3ee1356c5e5a266717ece8ff9877e18418bb81da43a121d17f728e6"
+       "f28232ba29e67eba2ecb4c23066a568f9b2d0435c4311a934c1357cccb3b886b",
+       "f38db57bfbce3a9737dc3cdb7ab38c80f8217253ecb583d73fe62cdc3ad51d99"
       ],
-      "edit_check_sha256": "7378780572ff8f1372e2d116be1c90d3d189d42a3764802caed23d57514230bc",
+      "edit_check_sha256": "076bec4b92cbc503d18a4b3a524c539903fab2deede7627a9c86ac2af95e677c",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
-      "last_ok_revision": 67,
+      "last_ok_revision": 71,
       "path": "notebooks/study_generated.py",
-      "revision": 67,
-      "sha256": "a7fbc03db2ab6acae53ce1f409fcf6909907df285f474e3cf7a88c8548edf52d",
+      "revision": 71,
+      "sha256": "253742b8ae8a3a918131d7914846fad43c555e5cf7b37375dc7027dad17a7072",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -8174,9 +9343,9 @@
      "report": {
       "candidate": null,
       "consumed": [
+       "0b79256e6607efe99f6c4edd22bd33c79d404c819c3da97a0626910caceec978",
        "0bb6517c6fa11b311b2a7f187869255fc97f97e74187326c39e2afba67352308",
        "14b2379e03941123f73a919b135349c28cc3676d84ea126312500f0cd5aae323",
-       "239e0a442bd77fb510a4e7631a16a1e234550cd268b59ffa12ab6ac5cf8afd56",
        "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
        "2f1edbf1345c892f0f9f052d940d202752d0c63dbfcb8ca0ebf743449ec318aa",
        "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
@@ -8184,6 +9353,7 @@
        "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
        "56cc994eab94aea0b1f650fe229922c75e95395ccfc0133625c60d0ea5d4d3c6",
        "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+       "7244fc732d497d1e6737a1e13403486e60f75f2a03e489e1a17924c853c56c85",
        "8269de3c39b61fcb6d0ba8921ff6ed7e96c81b46c8c313dae12a781d99fb89b2",
        "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
        "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
@@ -8195,16 +9365,16 @@
        "c4482186eeb1f3c7a61df53def6cb81437edf14b7dbc5481f98084defc9526a8",
        "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
        "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
-       "f38db57bfbce3a9737dc3cdb7ab38c80f8217253ecb583d73fe62cdc3ad51d99",
-       "fe8cb861b3ee1356c5e5a266717ece8ff9877e18418bb81da43a121d17f728e6"
+       "f28232ba29e67eba2ecb4c23066a568f9b2d0435c4311a934c1357cccb3b886b",
+       "f38db57bfbce3a9737dc3cdb7ab38c80f8217253ecb583d73fe62cdc3ad51d99"
       ],
       "error": null,
       "generated": true,
       "kind": "html",
-      "last_ok_revision": 67,
+      "last_ok_revision": 71,
       "path": "reports/study.html",
-      "revision": 67,
-      "sha256": "94ca17511e6fdc70ea320fd0e5f0f25d70f88a1de07da7e51a8b6f9268fd3369",
+      "revision": 71,
+      "sha256": "5dbaf5f6162479c943a4ff4585d6e9e2d9f98a96964a759151be6c0d32564f90",
       "status": "ok",
       "template_version": 4,
       "user_edits_preserved": [],
@@ -8237,7 +9407,7 @@
     }
    },
    "exposure": {
-    "records": 33,
+    "records": 34,
     "rows_exposed": 398,
     "by_purpose": {
      "development_diagnostics": 318,
@@ -8349,12 +9519,12 @@
     "development_rows": 318,
     "schema_check": "pass",
     "opening": {
-     "revision": 64,
+     "revision": 66,
      "model": "fit.linear",
      "rule": null,
-     "result_id": "239e0a442bd77fb510a4e7631a16a1e234550cd268b59ffa12ab6ac5cf8afd56",
+     "result_id": "0b79256e6607efe99f6c4edd22bd33c79d404c819c3da97a0626910caceec978",
      "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
-     "time": "2026-10-28T08:42:48.102696+00:00"
+     "time": "2026-10-28T12:46:28.718186+00:00"
     },
     "post_final_test": false,
     "changed_after": [],
@@ -8443,7 +9613,7 @@
      "decision_rule": null,
      "decision_status": null,
      "basis": null,
-     "result_id": "239e0a442bd77fb510a4e7631a16a1e234550cd268b59ffa12ab6ac5cf8afd56"
+     "result_id": "0b79256e6607efe99f6c4edd22bd33c79d404c819c3da97a0626910caceec978"
     },
     "judged_on": "final_test",
     "judged_status": "met"
@@ -8829,8 +9999,9 @@
    "claim_eligibility": null,
    "presentation": {
     "schema": "hypotrail.presentation/1",
-    "revision": 67,
+    "revision": 71,
     "result_ids": {
+     "diag.final_test": "7244fc732d497d1e6737a1e13403486e60f75f2a03e489e1a17924c853c56c85",
      "diag.regression": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
      "eda.correlation": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
      "eda.distribution:cylinders": "abaa0ff1b69f9ef16029e575977967dda3d33b720f3600b5145dc4d25ff89d66",
@@ -8848,11 +10019,11 @@
      "eda.special_values": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
      "eda.target_summary": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
      "evaluate.regression": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
-     "final_test.evaluation": "239e0a442bd77fb510a4e7631a16a1e234550cd268b59ffa12ab6ac5cf8afd56",
+     "final_test.evaluation": "0b79256e6607efe99f6c4edd22bd33c79d404c819c3da97a0626910caceec978",
      "fit.baseline": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
      "fit.linear": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
      "fit.variant": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
-     "predictor.capture": "fe8cb861b3ee1356c5e5a266717ece8ff9877e18418bb81da43a121d17f728e6",
+     "predictor.capture": "f28232ba29e67eba2ecb4c23066a568f9b2d0435c4311a934c1357cccb3b886b",
      "split": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba"
     },
     "eligibility": null,
@@ -8877,11 +10048,11 @@
      "schema": "hypotrail.pause/1",
      "kind": "complete",
      "language": "en",
-     "revision": 67,
+     "revision": 71,
      "position": {
       "step_id": null,
-      "completed": 13,
-      "total": 13
+      "completed": 14,
+      "total": 14
      },
      "learned": [],
      "limitations": [

@@ -122,7 +122,7 @@
    "recommended": null,
    "question": "Do you adopt this decision?",
    "junior_digest": "Proposal on the decision policy: \"Call the 100 clients with the highest scores.\" If it suits you, say that you adopt it; otherwise say what you change.",
-   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Rule (12 of 14).",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Rule (12 of 14).",
    "evidence": [
     "policy.evaluation",
     "diag.binary"
@@ -755,7 +755,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-28T08:37:55.989296+00:00",
+   "boundary_time": "2026-10-28T12:41:27.744905+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -764,7 +764,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-28T08:37:56.191829+00:00",
+     "time": "2026-10-28T12:41:27.941858+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -787,7 +787,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-28T08:37:57.833203+00:00",
+     "time": "2026-10-28T12:41:29.705687+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -817,7 +817,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-28T08:37:58.619614+00:00",
+     "time": "2026-10-28T12:41:30.938171+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -840,7 +840,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-28T08:37:59.375141+00:00",
+     "time": "2026-10-28T12:41:31.823778+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -870,7 +870,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-28T08:38:00.488014+00:00",
+     "time": "2026-10-28T12:41:33.243741+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -893,7 +893,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-28T08:38:01.475940+00:00",
+     "time": "2026-10-28T12:41:34.241625+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -923,7 +923,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-28T08:38:02.681000+00:00",
+     "time": "2026-10-28T12:41:35.418174+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -946,7 +946,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-28T08:38:03.686103+00:00",
+     "time": "2026-10-28T12:41:36.376856+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -976,7 +976,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-28T08:38:04.932344+00:00",
+     "time": "2026-10-28T12:41:37.610572+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -999,7 +999,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-28T08:38:06.114842+00:00",
+     "time": "2026-10-28T12:41:38.687055+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -1029,7 +1029,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-28T08:38:08.243765+00:00",
+     "time": "2026-10-28T12:41:40.861784+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1052,7 +1052,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-28T08:38:09.598206+00:00",
+     "time": "2026-10-28T12:41:42.467193+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1075,7 +1075,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-28T08:38:11.007419+00:00",
+     "time": "2026-10-28T12:41:44.010144+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1098,7 +1098,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-28T08:38:12.651151+00:00",
+     "time": "2026-10-28T12:41:45.623878+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1121,7 +1121,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-28T08:38:15.311267+00:00",
+     "time": "2026-10-28T12:41:48.353402+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1144,7 +1144,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-28T08:38:16.832111+00:00",
+     "time": "2026-10-28T12:41:49.887870+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1167,7 +1167,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-28T08:38:18.432558+00:00",
+     "time": "2026-10-28T12:41:51.619360+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1190,7 +1190,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-28T08:38:20.058246+00:00",
+     "time": "2026-10-28T12:41:53.126657+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1213,7 +1213,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-28T08:38:21.682206+00:00",
+     "time": "2026-10-28T12:41:54.674291+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1236,7 +1236,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-28T08:38:23.700433+00:00",
+     "time": "2026-10-28T12:41:56.614869+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1259,7 +1259,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-28T08:38:25.445766+00:00",
+     "time": "2026-10-28T12:41:58.318614+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1282,7 +1282,7 @@
     },
     {
      "revision": 35,
-     "time": "2026-10-28T08:38:27.037765+00:00",
+     "time": "2026-10-28T12:41:59.953805+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1305,7 +1305,7 @@
     },
     {
      "revision": 36,
-     "time": "2026-10-28T08:38:28.476833+00:00",
+     "time": "2026-10-28T12:42:01.570198+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1328,7 +1328,7 @@
     },
     {
      "revision": 37,
-     "time": "2026-10-28T08:38:29.874840+00:00",
+     "time": "2026-10-28T12:42:02.899815+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1361,7 +1361,7 @@
     },
     {
      "revision": 39,
-     "time": "2026-10-28T08:38:32.018502+00:00",
+     "time": "2026-10-28T12:42:04.640821+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1384,7 +1384,7 @@
     },
     {
      "revision": 41,
-     "time": "2026-10-28T08:38:33.532307+00:00",
+     "time": "2026-10-28T12:42:06.347175+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1409,7 +1409,7 @@
     },
     {
      "revision": 42,
-     "time": "2026-10-28T08:38:34.815729+00:00",
+     "time": "2026-10-28T12:42:07.607346+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1432,7 +1432,7 @@
     },
     {
      "revision": 43,
-     "time": "2026-10-28T08:38:35.995646+00:00",
+     "time": "2026-10-28T12:42:08.899566+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_choice",
@@ -1466,7 +1466,7 @@
     },
     {
      "revision": 44,
-     "time": "2026-10-28T08:38:37.420835+00:00",
+     "time": "2026-10-28T12:42:10.308606+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
@@ -1489,7 +1489,7 @@
     },
     {
      "revision": 45,
-     "time": "2026-10-28T08:38:38.595668+00:00",
+     "time": "2026-10-28T12:42:11.559285+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "policy",
@@ -1523,7 +1523,7 @@
     },
     {
      "revision": 47,
-     "time": "2026-10-28T08:38:40.410921+00:00",
+     "time": "2026-10-28T12:42:13.501920+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1546,7 +1546,7 @@
     },
     {
      "revision": 49,
-     "time": "2026-10-28T08:38:43.222866+00:00",
+     "time": "2026-10-28T12:42:16.150881+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1571,7 +1571,7 @@
     },
     {
      "revision": 50,
-     "time": "2026-10-28T08:38:45.237927+00:00",
+     "time": "2026-10-28T12:42:18.357468+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
@@ -1609,7 +1609,7 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "fb80ce9467fcc4c7",
+  "currency": "afdddcc53ace9d64",
   "texts": {
    "en": {
     "plan": {
@@ -1727,9 +1727,23 @@
      "p_9": "This rule is proposed after you saw how the earlier one did on the validation rows: a change guided by those figures makes them slightly optimistic. It is recorded, not refused."
     },
     "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before.",
-    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Rule (12 of 14).",
+    "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Rule (12 of 14).",
     "step_limit": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance.",
-    "criterion_words": "precision gain over the baseline of at least 5 points"
+    "criterion_words": "precision gain over the baseline of at least 5 points",
+    "step_cards": null,
+    "case_brief": null,
+    "defensibility_note": {
+     "meaning": "Defensible means the study can support its conclusion before a reviewer: every decision taken in your words, the model chosen by you, the final test opened once, the conclusion written, and no stale figure.",
+     "checklist": {
+      "framing_in_your_words": "The framing decisions, taken in your words",
+      "model_chosen_by_you": "The model, chosen by you",
+      "final_test_opened_once": "The final test, opened once",
+      "conclusion_written": "The conclusion, written",
+      "no_stale_figure": "No stale figure"
+     },
+     "not_alarm": "This is not an alarm: it is the list of what the study must gather by the end. It turns to a warning only when something is wrong (a decision to confirm again, a stale figure, an automatic decision to review).",
+     "limits_lead": "The study is defensible, with these limits:"
+    }
    },
    "fr": {
     "plan": {
@@ -1847,9 +1861,23 @@
      "p_9": "Cette règle est proposée après que vous avez vu les résultats de la précédente sur les lignes de validation : un changement guidé par ces chiffres les rend un peu optimistes. Il est enregistré, pas refusé."
     },
     "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant.",
-    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment, Variables, Découpage, Critère) ; Préparer les preuves (Qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Règle) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Règle (12 sur 14).",
+    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment de la prédiction, Variables disponibles, Découpage, Critère de succès) ; Préparer les preuves (Contrôle de qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Règle) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Règle (12 sur 14).",
     "step_limit": "Le jeu de validation sert à comparer les modèles et à choisir la règle et son seuil ou sa capacité : ses résultats ne sont donc pas une preuve indépendante de la performance future.",
-    "criterion_words": "gain de précision sur le modèle de référence d'au moins 5 points"
+    "criterion_words": "gain de précision sur le modèle de référence d'au moins 5 points",
+    "step_cards": null,
+    "case_brief": null,
+    "defensibility_note": {
+     "meaning": "Défendable veut dire que l'étude peut soutenir sa conclusion devant un relecteur : chaque décision prise avec vos mots, le modèle choisi par vous, le test final ouvert une seule fois, la conclusion écrite, et aucun chiffre périmé.",
+     "checklist": {
+      "framing_in_your_words": "Les décisions de cadrage, prises avec vos mots",
+      "model_chosen_by_you": "Le modèle, choisi par vous",
+      "final_test_opened_once": "Le test final, ouvert une fois",
+      "conclusion_written": "La conclusion, écrite",
+      "no_stale_figure": "Aucun chiffre périmé"
+     },
+     "not_alarm": "Ce n'est pas une alerte : c'est la liste de ce que l'étude devra réunir d'ici la fin. Elle passe en alerte seulement si quelque chose pose problème (décision à reconfirmer, chiffre périmé, décision automatique à relire).",
+     "limits_lead": "L'étude est défendable, avec ces limites :"
+    }
    }
   },
   "panel_contract": 2,
@@ -1891,6 +1919,28 @@
      "id": "workbench_not_tracked",
      "severity": "context"
     }
+   ],
+   "checklist": [
+    {
+     "id": "framing_in_your_words",
+     "done": false
+    },
+    {
+     "id": "model_chosen_by_you",
+     "done": false
+    },
+    {
+     "id": "final_test_opened_once",
+     "done": false
+    },
+    {
+     "id": "conclusion_written",
+     "done": false
+    },
+    {
+     "id": "no_stale_figure",
+     "done": true
+    }
    ]
   },
   "ledger": {
@@ -1914,16 +1964,16 @@
    }
   },
   "sample": {
-   "seed": "f40f0350056b03a5",
+   "seed": "be32233201bea6ea",
    "row_keys": [
-    "L1737",
-    "L1784",
-    "L2708",
-    "L3389",
-    "L3698",
-    "L4023",
-    "L4225",
-    "L4248"
+    "L871",
+    "L1406",
+    "L2298",
+    "L2672",
+    "L2784",
+    "L3910",
+    "L4049",
+    "L4361"
    ],
    "recorded": true
   },
@@ -2456,6 +2506,8 @@
      "text": "campaign: 0 missing of 3617 (0%) < 5%, skewness 4.55 ≥ 1, max 50 > 3 × q99 (48): no change."
     }
    ]
-  }
+  },
+  "case_brief": null,
+  "case_display": null
  }
 }

@@ -122,7 +122,7 @@
    "recommended": null,
    "question": "What do you conclude, for which use, and with which limits?",
    "junior_digest": "Conclusion: what the study can say, for which use, and with which limits. Keeping the baseline is a valid result. Final figures come first, development figures next to them, labelled as such. The success criterion is met on the development set.",
-   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Conclusion (14 of 14).",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Conclusion (14 of 14).",
    "evidence": [
     "final_test.evaluation",
     "diag.final_test"
@@ -552,7 +552,7 @@
     "rule": "share:0.1",
     "result_id": "8bca31b17840800e58699b9ed2b7aa1fbe080bcf4ebfd71a8b31639677b52d94",
     "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
-    "time": "2026-10-28T08:39:35.537456+00:00"
+    "time": "2026-10-28T12:43:10.659972+00:00"
    },
    "post_final_test": true,
    "changed_after": [
@@ -758,7 +758,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-28T08:38:59.657104+00:00",
+   "boundary_time": "2026-10-28T12:42:33.367554+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -767,7 +767,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-28T08:38:59.783325+00:00",
+     "time": "2026-10-28T12:42:33.497056+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -790,7 +790,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-28T08:39:00.437300+00:00",
+     "time": "2026-10-28T12:42:34.240658+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -820,7 +820,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-28T08:39:01.396238+00:00",
+     "time": "2026-10-28T12:42:35.248611+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -843,7 +843,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-28T08:39:02.175531+00:00",
+     "time": "2026-10-28T12:42:36.087290+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -873,7 +873,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-28T08:39:03.291823+00:00",
+     "time": "2026-10-28T12:42:37.540808+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -896,7 +896,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-28T08:39:04.255606+00:00",
+     "time": "2026-10-28T12:42:38.743735+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -926,7 +926,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-28T08:39:05.713514+00:00",
+     "time": "2026-10-28T12:42:39.996446+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -949,7 +949,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-28T08:39:06.715488+00:00",
+     "time": "2026-10-28T12:42:40.999130+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -979,7 +979,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-28T08:39:07.961114+00:00",
+     "time": "2026-10-28T12:42:42.270171+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -1002,7 +1002,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-28T08:39:09.018747+00:00",
+     "time": "2026-10-28T12:42:43.484653+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -1032,7 +1032,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-28T08:39:10.452456+00:00",
+     "time": "2026-10-28T12:42:44.965664+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1055,7 +1055,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-28T08:39:11.962134+00:00",
+     "time": "2026-10-28T12:42:46.833625+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1078,7 +1078,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-28T08:39:13.654201+00:00",
+     "time": "2026-10-28T12:42:48.364696+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1101,7 +1101,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-28T08:39:15.441118+00:00",
+     "time": "2026-10-28T12:42:50.237664+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1124,7 +1124,7 @@
     },
     {
      "revision": 20,
-     "time": "2026-10-28T08:39:16.726571+00:00",
+     "time": "2026-10-28T12:42:51.718067+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1147,7 +1147,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-28T08:39:17.872515+00:00",
+     "time": "2026-10-28T12:42:53.257699+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1180,7 +1180,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-28T08:39:19.618611+00:00",
+     "time": "2026-10-28T12:42:55.154287+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1203,7 +1203,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-28T08:39:25.381244+00:00",
+     "time": "2026-10-28T12:43:00.491102+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1229,7 +1229,7 @@
     },
     {
      "revision": 26,
-     "time": "2026-10-28T08:39:26.773899+00:00",
+     "time": "2026-10-28T12:43:01.923995+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1252,7 +1252,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-28T08:39:27.907965+00:00",
+     "time": "2026-10-28T12:43:03.281926+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_choice",
@@ -1286,7 +1286,7 @@
     },
     {
      "revision": 28,
-     "time": "2026-10-28T08:39:29.289582+00:00",
+     "time": "2026-10-28T12:43:04.651756+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
@@ -1309,7 +1309,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-28T08:39:30.601021+00:00",
+     "time": "2026-10-28T12:43:05.827953+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "policy",
@@ -1343,7 +1343,7 @@
     },
     {
      "revision": 30,
-     "time": "2026-10-28T08:39:31.917134+00:00",
+     "time": "2026-10-28T12:43:07.133463+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "final_test",
@@ -1366,7 +1366,7 @@
     },
     {
      "revision": 32,
-     "time": "2026-10-28T08:39:33.380523+00:00",
+     "time": "2026-10-28T12:43:08.544114+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1389,7 +1389,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-28T08:39:35.487111+00:00",
+     "time": "2026-10-28T12:43:10.619396+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "final_test",
@@ -1423,7 +1423,7 @@
     },
     {
      "revision": 35,
-     "time": "2026-10-28T08:39:36.242145+00:00",
+     "time": "2026-10-28T12:43:11.165355+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1446,7 +1446,7 @@
     },
     {
      "revision": 37,
-     "time": "2026-10-28T08:39:38.308866+00:00",
+     "time": "2026-10-28T12:43:13.168798+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1469,7 +1469,7 @@
     },
     {
      "revision": 39,
-     "time": "2026-10-28T08:39:43.926914+00:00",
+     "time": "2026-10-28T12:43:18.903355+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1495,7 +1495,7 @@
     },
     {
      "revision": 40,
-     "time": "2026-10-28T08:39:47.640509+00:00",
+     "time": "2026-10-28T12:43:22.652170+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
@@ -1518,7 +1518,7 @@
     },
     {
      "revision": 41,
-     "time": "2026-10-28T08:39:49.278250+00:00",
+     "time": "2026-10-28T12:43:23.943595+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "policy",
@@ -1554,7 +1554,7 @@
     },
     {
      "revision": 43,
-     "time": "2026-10-28T08:39:51.083166+00:00",
+     "time": "2026-10-28T12:43:25.616375+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1577,7 +1577,7 @@
     },
     {
      "revision": 45,
-     "time": "2026-10-28T08:39:54.931370+00:00",
+     "time": "2026-10-28T12:43:29.197934+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1600,7 +1600,7 @@
     },
     {
      "revision": 47,
-     "time": "2026-10-28T08:39:57.107604+00:00",
+     "time": "2026-10-28T12:43:31.147891+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1638,7 +1638,7 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "ff1e4fb7da74506a",
+  "currency": "ba1de7537f87c30d",
   "texts": {
    "en": {
     "plan": {
@@ -1758,9 +1758,23 @@
     },
     "data_contingent": {},
     "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before.",
-    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Conclusion (14 of 14).",
+    "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Conclusion (14 of 14).",
     "step_limit": "The final test measures the chosen configuration once, on rows no choice used: it is the study's independent evidence. It does not establish the performance on later periods or other data, nor a causal effect.",
-    "criterion_words": "precision gain over the baseline of at least 5 points"
+    "criterion_words": "precision gain over the baseline of at least 5 points",
+    "step_cards": null,
+    "case_brief": null,
+    "defensibility_note": {
+     "meaning": "Defensible means the study can support its conclusion before a reviewer: every decision taken in your words, the model chosen by you, the final test opened once, the conclusion written, and no stale figure.",
+     "checklist": {
+      "framing_in_your_words": "The framing decisions, taken in your words",
+      "model_chosen_by_you": "The model, chosen by you",
+      "final_test_opened_once": "The final test, opened once",
+      "conclusion_written": "The conclusion, written",
+      "no_stale_figure": "No stale figure"
+     },
+     "not_alarm": "This is not an alarm: it is the list of what the study must gather by the end. It turns to a warning only when something is wrong (a decision to confirm again, a stale figure, an automatic decision to review).",
+     "limits_lead": "The study is defensible, with these limits:"
+    }
    },
    "fr": {
     "plan": {
@@ -1880,9 +1894,23 @@
     },
     "data_contingent": {},
     "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant.",
-    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment, Variables, Découpage, Critère) ; Préparer les preuves (Qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Règle) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Conclusion (14 sur 14).",
+    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment de la prédiction, Variables disponibles, Découpage, Critère de succès) ; Préparer les preuves (Contrôle de qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Règle) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Conclusion (14 sur 14).",
     "step_limit": "Le test final mesure une fois la configuration choisie, sur des lignes qu'aucun choix n'a utilisées : c'est la preuve indépendante de l'étude. Il n'établit ni la performance sur d'autres périodes ou d'autres données, ni un effet causal.",
-    "criterion_words": "gain de précision sur le modèle de référence d'au moins 5 points"
+    "criterion_words": "gain de précision sur le modèle de référence d'au moins 5 points",
+    "step_cards": null,
+    "case_brief": null,
+    "defensibility_note": {
+     "meaning": "Défendable veut dire que l'étude peut soutenir sa conclusion devant un relecteur : chaque décision prise avec vos mots, le modèle choisi par vous, le test final ouvert une seule fois, la conclusion écrite, et aucun chiffre périmé.",
+     "checklist": {
+      "framing_in_your_words": "Les décisions de cadrage, prises avec vos mots",
+      "model_chosen_by_you": "Le modèle, choisi par vous",
+      "final_test_opened_once": "Le test final, ouvert une fois",
+      "conclusion_written": "La conclusion, écrite",
+      "no_stale_figure": "Aucun chiffre périmé"
+     },
+     "not_alarm": "Ce n'est pas une alerte : c'est la liste de ce que l'étude devra réunir d'ici la fin. Elle passe en alerte seulement si quelque chose pose problème (décision à reconfirmer, chiffre périmé, décision automatique à relire).",
+     "limits_lead": "L'étude est défendable, avec ces limites :"
+    }
    }
   },
   "panel_contract": 2,
@@ -1928,6 +1956,28 @@
      "id": "workbench_not_tracked",
      "severity": "context"
     }
+   ],
+   "checklist": [
+    {
+     "id": "framing_in_your_words",
+     "done": false
+    },
+    {
+     "id": "model_chosen_by_you",
+     "done": false
+    },
+    {
+     "id": "final_test_opened_once",
+     "done": true
+    },
+    {
+     "id": "conclusion_written",
+     "done": false
+    },
+    {
+     "id": "no_stale_figure",
+     "done": true
+    }
    ]
   },
   "ledger": {
@@ -1951,16 +2001,16 @@
    }
   },
   "sample": {
-   "seed": "37891c28045bf314",
+   "seed": "181e108189c91152",
    "row_keys": [
-    "L906",
-    "L1862",
-    "L2289",
-    "L2667",
-    "L3147",
-    "L3233",
-    "L3275",
-    "L4487"
+    "L956",
+    "L1078",
+    "L1912",
+    "L2493",
+    "L3029",
+    "L3328",
+    "L3543",
+    "L3975"
    ],
    "recorded": true
   },
@@ -2077,7 +2127,8 @@
      "judged_on": "development"
     }
    ],
-   "final_test": null
+   "final_test": null,
+   "business": null
   },
   "data_structure": {
    "duplicates": {
@@ -2550,6 +2601,8 @@
      "text": "campaign: 0 missing of 3617 (0%) < 5%, skewness 4.55 ≥ 1, max 50 > 3 × q99 (48): no change."
     }
    ]
-  }
+  },
+  "case_brief": null,
+  "case_display": null
  }
 }

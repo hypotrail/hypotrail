@@ -20,7 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from panel_cases import STATES, click_fold, deliver_views, load_views, open_all, open_case
+from conftest import read_payload
+from panel_cases import STATES, click_fold, deliver_views, load_views, open_all, open_case, without_step_cards
 
 CV = ['preparation', 'variants', 'choice', 'done']
 
@@ -29,7 +30,8 @@ CV = ['preparation', 'variants', 'choice', 'done']
 def cv_views(model):
     out = {}
     for state in CV:
-        out[f'summary.{state}'] = model('summary', f'captured/summary.regression.cv.{state}')
+        # The lot P Now (figures behind the step) is the one a study without step cards keeps.
+        out[f'summary.{state}'] = model('summary', without_step_cards(read_payload(f'captured/summary.regression.cv.{state}')))
     reads = {'variants': 'variants', 'preparation': None, 'choice': None, 'done': 'done'}
     for state, suffix in reads.items():
         tail = f'.{suffix}' if suffix else ''

@@ -61,6 +61,11 @@
     "status": "blocked"
    },
    {
+    "id": "error_metric",
+    "title": "Choose how the error is measured",
+    "status": "blocked"
+   },
+   {
     "id": "success_criterion",
     "title": "Fix the success criterion before seeing a model",
     "status": "blocked"
@@ -114,9 +119,9 @@
    "junior_message": "First, look at the data with the assistant: what one row describes, the columns and what each one means, and eight rows drawn at random. Nothing is decided at this step.",
    "language": "en",
    "recommended": null,
-   "question": "Shall we look at the data card together?",
+   "question": "The data card is shown. Shall we move on to the prediction moment?",
    "junior_digest": "Step 0, discover the data. The development set is the rows the study may explore and use to choose: 318 rows. The holdout (final test), 80 rows, stays sealed and is opened once at the end. The target is mpg (mpg). The data card shows what one row describes, the columns grouped with their meaning, and eight development rows drawn at random, target included: a look at the target, counted in the exposure ledger. Nothing is decided at this step.",
-   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Data (1 of 13).",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Error measure, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Model choice); Conclude and hand over (Final test, Conclusion). Current step: Data (1 of 14).",
    "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
@@ -126,13 +131,13 @@
     "position": {
      "step_id": "discover_data",
      "completed": 0,
-     "total": 13
+     "total": 14
     },
     "learned": [],
     "limitations": [
      {
       "code": "unconfirmed_decisions",
-      "text": "Not confirmed by you yet: the prediction moment, the feature availability, the split, the success criterion, the preparation of the variables, the variant to compare, the model choice, the opening of the final test and the conclusion."
+      "text": "Not confirmed by you yet: the prediction moment, the feature availability, the split, the error measure, the success criterion, the preparation of the variables, the variant to compare, the model choice, the opening of the final test and the conclusion."
      },
      {
       "code": "validation_is_not_independent",
@@ -154,7 +159,7 @@
      "continue": "Let's continue",
      "explain": "Explain first"
     },
-    "question": "Shall we look at the data card together?",
+    "question": "The data card is shown. Shall we move on to the prediction moment?",
     "evidence_refs": [],
     "detail_topics": [
      "metric",
@@ -200,6 +205,16 @@
     "feature_basis": null
    },
    "split": {
+    "status": "open",
+    "value": null,
+    "basis": null,
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "error_metric": {
     "status": "open",
     "value": null,
     "basis": null,
@@ -318,9 +333,9 @@
    "top": [
     {
      "id": "unconfirmed_decisions",
-     "text": "These decisions are not confirmed: prediction_time, feature_availability, split, success_criterion, preprocessing, model_variant, model_choice, final_test, conclusion.",
+     "text": "These decisions are not confirmed: prediction_time, feature_availability, split, error_metric, success_criterion, preprocessing, model_variant, model_choice, final_test, conclusion.",
      "audience": "agent",
-     "junior_text": "Not confirmed by you yet: the prediction moment, the feature availability, the split, the success criterion, the preparation of the variables, the variant to compare, the model choice, the opening of the final test and the conclusion."
+     "junior_text": "Not confirmed by you yet: the prediction moment, the feature availability, the split, the error measure, the success criterion, the preparation of the variables, the variant to compare, the model choice, the opening of the final test and the conclusion."
     },
     {
      "id": "validation_is_not_independent",
@@ -460,6 +475,7 @@
      "prediction_time",
      "feature_availability",
      "split",
+     "error_metric",
      "success_criterion"
     ]
    },
@@ -504,6 +520,7 @@
     "pause": 2,
     "decisions": [
      "split",
+     "error_metric",
      "success_criterion",
      "preprocessing"
     ],
@@ -524,7 +541,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-28T08:41:53.441567+00:00",
+   "boundary_time": "2026-10-28T12:45:31.711728+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -547,7 +564,7 @@
    "channel_actions": []
   },
   "task": "regression",
-  "currency": "382b115381bc999b",
+  "currency": "98d56bc9bc42cfe0",
   "texts": {
    "en": {
     "plan": {
@@ -555,6 +572,7 @@
      "prediction_time": "Define the prediction moment",
      "feature_availability": "Decide which variables are available at prediction time",
      "split": "Split the data before exploring it",
+     "error_metric": "Choose how the error is measured",
      "success_criterion": "Fix the success criterion before seeing a model",
      "structural_eda": "Check the structure of the data",
      "preprocessing": "Decide how the model prepares the variables",
@@ -574,7 +592,7 @@
     "next_action": "First, look at the data with the assistant: what one row describes, the columns and what each one means, and eight rows drawn at random. Nothing is decided at this step.",
     "choice_options": {},
     "limits": {
-     "unconfirmed_decisions": "Not confirmed by you yet: the prediction moment, the feature availability, the split, the success criterion, the preparation of the variables, the variant to compare, the model choice, the opening of the final test and the conclusion.",
+     "unconfirmed_decisions": "Not confirmed by you yet: the prediction moment, the feature availability, the split, the error measure, the success criterion, the preparation of the variables, the variant to compare, the model choice, the opening of the final test and the conclusion.",
      "validation_is_not_independent": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error.",
      "public_data_already_explored": "The data were explored or published before this study; its rows are not unseen.",
      "grouped_split_unsupported": "Rows that share a value of car_name can fall in both partitions: this version has no grouped split, so a split reports how many group values its partitions share instead of preventing it. Validation rows of a shared group are not independent of the training rows.",
@@ -603,7 +621,7 @@
      "prediction_time": "When technical characteristics are fixed, before measuring fuel efficiency"
     },
     "proposals": {},
-    "question": "Shall we look at the data card together?",
+    "question": "The data card is shown. Shall we move on to the prediction moment?",
     "options": {
      "continue": "Let's continue",
      "explain": "Explain first"
@@ -613,9 +631,452 @@
     "headlines": {},
     "data_contingent": {},
     "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before.",
-    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Data (1 of 13).",
+    "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Error measure, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Model choice); Conclude and hand over (Final test, Conclusion). Current step: Data (1 of 14).",
     "step_limit": "Nothing is measured yet: these decisions fix the protocol before any model is fitted.",
-    "criterion_words": null
+    "criterion_words": null,
+    "step_cards": {
+     "schema": "hypotrail.step_cards/1",
+     "current": "discover_data",
+     "total": 14,
+     "steps": [
+      {
+       "step": "discover_data",
+       "n": 1,
+       "name": "Data",
+       "short": "Data",
+       "moment": "Frame the change",
+       "state": "current",
+       "picture": {
+        "kind": "row_card",
+        "caption": "One row = A vehicle model for a model year. The columns are grouped as the case groups them.",
+        "more": "The data card shows the values as written in the file, before any preparation. A question mark or an odd code is read as it stands, then decided later.",
+        "illustrative": false,
+        "data": null
+       },
+       "prepares": "These answers prepare the Prediction moment step, which fixes the columns allowed.",
+       "questions": [
+        {
+         "id": "data.row",
+         "n": 1,
+         "text": "What does one row describe, and what do the columns say?",
+         "source": {
+          "kind": "digest",
+          "slot": null,
+          "key": "sample"
+         },
+         "chart": "sample_table",
+         "chart_data": null,
+         "other_charts": [],
+         "frame": {
+          "evidence": "structure",
+          "rows": "Structure · development rows (318), without the target"
+         },
+         "status": "answered",
+         "result_id": null,
+         "result_revision": null,
+         "reading": {
+          "see": "9 columns describe each row; the sample shows 8 development rows drawn at random, values as written in the file.",
+          "conclude": "Reading the columns first tells what each one describes and when it is known; the prediction moment rests on this reading.",
+          "cannot": "A handful of rows says nothing of the whole distribution, and the sample is a look at the target, counted."
+         },
+         "cites": [
+          {
+           "name": "n_columns",
+           "result_id": null,
+           "path": "case:variables",
+           "value": 9,
+           "text": "9"
+          },
+          {
+           "name": "n_sample",
+           "result_id": null,
+           "path": "digest:sample.row_keys",
+           "value": 8,
+           "text": "8"
+          }
+         ],
+         "verdict": null,
+         "folds": {
+          "how": "One row per line of the file; the target column is marked.",
+          "trap": "A file is often sorted; its first rows do not look like the others. The sample is drawn at random for that reason."
+         }
+        },
+        {
+         "id": "data.structure",
+         "n": 2,
+         "text": "Could a split separate a row from its twin?",
+         "source": {
+          "kind": "digest",
+          "slot": null,
+          "key": "data_structure"
+         },
+         "chart": "structure_bars",
+         "chart_data": null,
+         "other_charts": [],
+         "frame": {
+          "evidence": "structure",
+          "rows": "Structure · development rows (318), without the target"
+         },
+         "status": "answered",
+         "result_id": null,
+         "result_revision": null,
+         "reading": {
+          "see": "Distinct values of car name: 254; rows sharing their value with another row: 107; exact duplicates: 0.",
+          "conclude": "The same entity comes back from one row to another; a split can put one row in training and its twin in validation, which would flatter the error a little.",
+          "cannot": "A shared name does not prove a shared entity, and the count does not say by how much the error would be flattered."
+         },
+         "cites": [
+          {
+           "name": "duplicates",
+           "result_id": null,
+           "path": "digest:data_structure.duplicates.rows",
+           "value": 0,
+           "text": "0"
+          },
+          {
+           "name": "n_groups",
+           "result_id": null,
+           "path": "digest:data_structure.groups.0.groups",
+           "value": 254,
+           "text": "254"
+          },
+          {
+           "name": "repeated",
+           "result_id": null,
+           "path": "digest:data_structure.groups.0.rows_in_repeated_groups",
+           "value": 107,
+           "text": "107"
+          }
+         ],
+         "verdict": null,
+         "folds": {
+          "how": "Each bar counts rows.",
+          "trap": "No exact duplicate does not mean no repeated entity; two rows can differ by one column only."
+         }
+        }
+       ],
+       "no_chart": null,
+       "limit": "Nothing is measured yet, no model and no performance figure. The only look at the target is the sample, counted.",
+       "next": "Next: the prediction moment, which fixes the columns the models may use.",
+       "decision": null
+      },
+      {
+       "step": "prediction_time",
+       "n": 2,
+       "name": "Prediction moment",
+       "short": "Moment",
+       "moment": "Frame the change",
+       "state": "upcoming",
+       "picture": {
+        "kind": "moment_timeline",
+        "caption": "To predict is to stand at a moment. Only the columns known before it may serve; the target is measured after.",
+        "more": "A column known after the moment would be a leak, information the model would not have when it serves. The milestones are a hypothesis of the scenario.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "This answer prepares the Available variables step, the list of allowed columns.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "The moment is a hypothesis of the scenario; the data documentation does not establish it.",
+       "next": "Next: the available variables, column by column, on the same timeline.",
+       "decision": null
+      },
+      {
+       "step": "feature_availability",
+       "n": 3,
+       "name": "Available variables",
+       "short": "Variables",
+       "moment": "Frame the change",
+       "state": "upcoming",
+       "picture": {
+        "kind": "variables_board",
+        "caption": "Three kinds of columns: those the model will read, those excluded, and those that are not variables.",
+        "more": "The target is not a variable; an identifier neither, since a name does not carry over to another row. A time column orders the split.",
+        "illustrative": false,
+        "data": null
+       },
+       "prepares": "This answer prepares the Split and the Models, what each model may read.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "The availability comes from the scenario, not from a check of the data.",
+       "next": "Next: the split, which sets rows aside before any look at their outcomes.",
+       "decision": null
+      },
+      {
+       "step": "split",
+       "n": 4,
+       "name": "Split",
+       "short": "Split",
+       "moment": "Frame the change",
+       "state": "upcoming",
+       "picture": {
+        "kind": "partition_strip",
+        "caption": "Set rows aside before any look: 80 sealed rows for the end; the 318 others, cut into blocks, serve to compare.",
+        "more": "Cross-validation with k folds: the development rows in k blocks; each block is predicted by a model fitted on the others. Here k = 5.",
+        "illustrative": false,
+        "data": {
+         "development": 318,
+         "sealed": 80
+        }
+       },
+       "prepares": "These answers prepare every later measure, on which rows each error is computed.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "The sealed rows are a protocol the tool and you follow, not a lock.",
+       "next": "Next: the error measure, chosen before seeing any figure.",
+       "decision": null
+      },
+      {
+       "step": "error_metric",
+       "n": 5,
+       "name": "Error measure",
+       "short": "Measure",
+       "moment": "Frame the change",
+       "state": "upcoming",
+       "picture": {
+        "kind": "error_gap",
+        "caption": "The error of one prediction is the gap between the observed and the predicted value. It remains to summarise the gaps of every row.",
+        "more": "The mean absolute error (MAE) is the mean of the gaps, without sign. The root mean squared error (RMSE) is the root of the mean of the squared gaps; a big gap weighs much more in it.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "This answer prepares the Success criterion, the measure it will be fixed on.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "The measure does not say which error is acceptable; that is the next step.",
+       "next": "Next: the success criterion, a bar fixed on this measure before any model.",
+       "decision": null
+      },
+      {
+       "step": "success_criterion",
+       "n": 6,
+       "name": "Success criterion",
+       "short": "Criterion",
+       "moment": "Frame the change",
+       "state": "upcoming",
+       "picture": {
+        "kind": "criterion_bar",
+        "caption": "Fix the bar before seeing a figure: the model must err clearly less than the reference, here at least 10% less.",
+        "more": "The reference (predict the mean) is the most naive model. The criterion says by how much a model must do better to count; it is judged on the final test, against the reference measured on the same rows.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "This answer prepares the Final test and the Conclusion, the bar they will judge.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "Reaching the criterion will not say the model is enough for every use; that is a business question.",
+       "next": "Next: the quality check, column by column, without looking at the target.",
+       "decision": null
+      },
+      {
+       "step": "structural_eda",
+       "n": 7,
+       "name": "Quality check",
+       "short": "Quality",
+       "moment": "Prepare evidence",
+       "state": "upcoming",
+       "picture": {
+        "kind": "quality_checks",
+        "caption": "Checks per column: empty cells, rare categories, long tails, values out of range. Each has its limit, fixed beforehand.",
+        "more": "The checks read the columns of the development rows, never the target. A limit crossed triggers a preparation proposal; it changes nothing by itself.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "These answers prepare the Preparation, which columns to transform and why.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "A structural check; it does not read the target and says nothing of the models' error.",
+       "next": "Next: the preparation, with the reason of each change and of each status quo.",
+       "decision": null
+      },
+      {
+       "step": "preprocessing",
+       "n": 8,
+       "name": "Preparation",
+       "short": "Preparation",
+       "moment": "Prepare evidence",
+       "state": "upcoming",
+       "picture": {
+        "kind": "log_before_after",
+        "caption": "A long tail can crush a straight line. The log draws the large values closer; the distribution becomes more symmetric.",
+        "more": "Each transformation is learnt on the training part of each fold, then applied to the part it predicts; the predicted rows never shape it.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "These answers prepare the Models, the columns as they will read them.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "The preparation is learnt on the development rows; the final test receives it as it is.",
+       "next": "Next: the exploration, the first counted look at the target.",
+       "decision": null
+      },
+      {
+       "step": "train_eda",
+       "n": 9,
+       "name": "Exploration",
+       "short": "Explore",
+       "moment": "Prepare evidence",
+       "state": "upcoming",
+       "picture": {
+        "kind": "trend_reading",
+        "caption": "Read the target along a variable. The trend follows the overall shape, straight or curved.",
+        "more": "The mean of the target by band of a column follows the shape without assuming a straight line. If it bends, a straight relation will not be enough.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "These answers prepare the Models, which shape they will have to follow.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "Development evidence; these charts choose nothing, and each look at the target is counted.",
+       "next": "Next: the models, the reference and the linear model first.",
+       "decision": null
+      },
+      {
+       "step": "models",
+       "n": 10,
+       "name": "Models",
+       "short": "Models",
+       "moment": "Work and compare",
+       "state": "upcoming",
+       "picture": {
+        "kind": "mean_vs_line",
+        "caption": "Two simple models first. The reference always predicts the mean, a flat line; the linear model draws a straight line through the points.",
+        "more": "The reference is the bar any model must beat. The linear model is simple and readable; its errors show what a more flexible shape would have to correct.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "These answers prepare the Variants, what the linear model misses.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "These figures served to compare; they are optimistic, and the final test stays sealed.",
+       "next": "Next: the variants, under the same evaluation.",
+       "decision": null
+      },
+      {
+       "step": "model_variant",
+       "n": 11,
+       "name": "Variants",
+       "short": "Variants",
+       "moment": "Work and compare",
+       "state": "upcoming",
+       "picture": {
+        "kind": "line_misses_curve",
+        "caption": "A straight line can miss a curve. A variant tries a more flexible shape, under the same evaluation.",
+        "more": "Each variant answers one question and counts in a budget of trials; the more configurations compared on the same folds, the more the best one is flattered.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "These answers prepare the Model choice, the configurations it will weigh.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "Development evidence; every configuration compared on the same folds flatters the best one a little.",
+       "next": "Next: the model choice, with the noise from one fold to the next.",
+       "decision": null
+      },
+      {
+       "step": "model_choice",
+       "n": 12,
+       "name": "Model choice",
+       "short": "Choice",
+       "moment": "Work and compare",
+       "state": "upcoming",
+       "picture": {
+        "kind": "one_se_rule",
+        "caption": "The best mean is not the whole story: a simpler configuration within one standard error of the best does as well, within the noise.",
+        "more": "The one-standard-error rule keeps the simplest configuration whose mean is within one standard error of the best one. It is fixed before the results.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "These answers prepare the Final test, the one configuration it will measure.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "These figures served to choose; the chosen one is flattered by the choice itself.",
+       "next": "Next: the final test, opened once on the chosen configuration.",
+       "decision": null
+      },
+      {
+       "step": "final_test",
+       "n": 13,
+       "name": "Final test",
+       "short": "Final test",
+       "moment": "Conclude and hand over",
+       "state": "upcoming",
+       "picture": {
+        "kind": "sealed_once",
+        "caption": "The 318 development rows served to choose; the 80 sealed rows are read once.",
+        "more": "Once opened, every later change is marked as made after the final test. The opening measures the chosen configuration and the reference on the same rows.",
+        "illustrative": false,
+        "data": {
+         "development": 318,
+         "sealed": 80
+        }
+       },
+       "prepares": "This answer prepares the Conclusion, the independent evidence it rests on.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "One opening gives one measure with its interval, not a guarantee on later data.",
+       "next": "Next: the conclusion, what the study can claim and its limits.",
+       "decision": null
+      },
+      {
+       "step": "conclusion",
+       "n": 14,
+       "name": "Conclusion",
+       "short": "Conclusion",
+       "moment": "Conclude and hand over",
+       "state": "upcoming",
+       "picture": {
+        "kind": "dev_vs_final",
+        "caption": "Two frames: development figures, used to choose and optimistic; the final test, measured once on rows no choice used.",
+        "more": "The conclusion is judged against the criterion fixed before any model. Keeping the reference, or not concluding, are valid results.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "These answers prepare your conclusion, for which use and with which limits.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "The final test comes from the same period as the development rows; it establishes neither later performance nor a causal effect.",
+       "next": "Next: present the conclusion, then hand the study over.",
+       "decision": null
+      }
+     ]
+    },
+    "case_brief": {
+     "source": "Use-case brief · Confluence, space \"Vehicle product\" · written by the PO · fictitious scenario for the simulation (only the provenance of the data is real)",
+     "problem": "The Design team must announce the fuel efficiency of a new model as soon as its technical sheet is approved, about six months before the road tests. Today an engineer estimates it by hand by comparing with a similar model; mean gap observed, about 4.5 mpg.",
+     "decision": "Which prototypes to send first to the fuel-efficiency tests (about twenty tests a year), and which provisional figure to show in the first product sheets.",
+     "objective": "Estimate the fuel efficiency from the technical sheet alone, clearly better than the manual estimate (aim at a mean gap of about 3.5 mpg), with a range.",
+     "production": "A prediction service called by the design tool for each new technical sheet; the estimate and its range are read by an engineer before any use; the model is retrained every year with the new tests.",
+     "data_provenance": {
+      "real": "Real: the \"Auto MPG\" dataset of the UCI Machine Learning Repository (from StatLib, Carnegie Mellon; used by Quinlan in 1993): 398 car models sold in the United States from 1970 to 1982, one row per model and model year.",
+      "scenario": "In the scenario: it serves as history until the extract of the internal test warehouse arrives. The data are public and already much explored: no row is truly \"never seen\"."
+     },
+     "users_and_cost_of_error": {
+      "users": "Users: the design engineers and the product manager.",
+      "cost": "Cost of an error: announcing a fuel use that is too low exposes to a public correction; an estimate that is too high can wrongly drop a prototype from the tests. The PO notes that large errors on a flagship model are especially awkward: a point to discuss when choosing the error measure."
+     },
+     "out_of_scope_and_risks": {
+      "out_of_scope": "Out of scope: the official homologation (it stays measured on the road); explaining the causes of fuel use.",
+      "risks": "Risks: recent cars differ from older ones (the model can drift); the data stop in 1982."
+     },
+     "links": {
+      "prediction_moment": "The prediction moment will be the approval of the technical sheet (step 2).",
+      "error_measure": "The error measure will have to reflect this cost (step 5).",
+      "conclusion": "The conclusion will say whether the estimate does better than the current method."
+     }
+    },
+    "defensibility_note": {
+     "meaning": "Defensible means the study can support its conclusion before a reviewer: every decision taken in your words, the model chosen by you, the final test opened once, the conclusion written, and no stale figure.",
+     "checklist": {
+      "framing_in_your_words": "The framing decisions, taken in your words",
+      "model_chosen_by_you": "The model, chosen by you",
+      "final_test_opened_once": "The final test, opened once",
+      "conclusion_written": "The conclusion, written",
+      "no_stale_figure": "No stale figure"
+     },
+     "not_alarm": "This is not an alarm: it is the list of what the study must gather by the end. It turns to a warning only when something is wrong (a decision to confirm again, a stale figure, an automatic decision to review).",
+     "limits_lead": "The study is defensible, with these limits:"
+    }
    },
    "fr": {
     "plan": {
@@ -623,11 +1084,12 @@
      "prediction_time": "Définir le moment de la prédiction",
      "feature_availability": "Décider quelles variables sont disponibles au moment de la prédiction",
      "split": "Découper les données avant de les explorer",
+     "error_metric": "Choisir comment l'erreur est mesurée",
      "success_criterion": "Fixer le critère de succès avant de voir un modèle",
      "structural_eda": "Vérifier la structure des données",
      "preprocessing": "Décider comment le modèle prépare les variables",
      "train_eda": "Explorer la cible sur l'échantillon de développement",
-     "models": "Ajuster une moyenne de référence et un modèle linéaire",
+     "models": "Ajuster une référence (prédire la moyenne) et un modèle linéaire",
      "model_variant": "Choisir les variantes à comparer",
      "model_choice": "Choisir le modèle",
      "final_test": "Ouvrir une fois l'échantillon de test final",
@@ -642,7 +1104,7 @@
     "next_action": "D'abord, regardez les données avec l'assistant : ce que décrit une ligne, les colonnes et ce que chacune signifie, et huit lignes tirées au hasard. Rien n'est décidé à cette étape.",
     "choice_options": {},
     "limits": {
-     "unconfirmed_decisions": "Pas encore confirmé par vous : le moment de la prédiction, la disponibilité des variables, le découpage des données, le critère de succès, la préparation des variables, la variante à comparer, le choix du modèle, l'ouverture de l'échantillon de test final et la conclusion.",
+     "unconfirmed_decisions": "Pas encore confirmé par vous : le moment de la prédiction, la disponibilité des variables, le découpage des données, la mesure de l'erreur, le critère de succès, la préparation des variables, la variante à comparer, le choix du modèle, l'ouverture de l'échantillon de test final et la conclusion.",
      "validation_is_not_independent": "Le jeu de validation sert à comparer les modèles et à en choisir un : ses erreurs ne sont donc pas une preuve indépendante de l'erreur future.",
      "public_data_already_explored": "Les données ont été explorées ou publiées avant cette étude : ses lignes ne sont pas inédites.",
      "grouped_split_unsupported": "Des lignes qui partagent une valeur de car_name peuvent tomber dans les deux jeux : cette version ne fait pas de découpage groupé, elle compte les valeurs partagées. Le jeu de validation n'est alors pas indépendant du jeu d'entraînement pour ces groupes.",
@@ -671,7 +1133,7 @@
      "prediction_time": "Quand les caractéristiques techniques sont fixées, avant de mesurer la consommation"
     },
     "proposals": {},
-    "question": "On regarde ensemble la fiche des données ?",
+    "question": "La fiche des données est affichée. On passe au moment de la prédiction ?",
     "options": {
      "continue": "On continue",
      "explain": "Expliquer d'abord"
@@ -681,9 +1143,452 @@
     "headlines": {},
     "data_contingent": {},
     "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant.",
-    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment, Variables, Découpage, Critère) ; Préparer les preuves (Qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Choix) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Données (1 sur 13).",
+    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment de la prédiction, Variables disponibles, Découpage, Mesure de l'erreur, Critère de succès) ; Préparer les preuves (Contrôle de qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Choix du modèle) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Données (1 sur 14).",
     "step_limit": "Rien n'est encore mesuré : ces décisions fixent le protocole avant tout modèle.",
-    "criterion_words": null
+    "criterion_words": null,
+    "step_cards": {
+     "schema": "hypotrail.step_cards/1",
+     "current": "discover_data",
+     "total": 14,
+     "steps": [
+      {
+       "step": "discover_data",
+       "n": 1,
+       "name": "Données",
+       "short": "Données",
+       "moment": "Cadrer le changement",
+       "state": "current",
+       "picture": {
+        "kind": "row_card",
+        "caption": "Une ligne = Un modèle de véhicule pour une année de modèle. Les colonnes sont groupées comme le cas les groupe.",
+        "more": "La fiche montre les valeurs telles qu'écrites dans le fichier, avant toute préparation. Un point d'interrogation ou un code étrange est lu tel quel, puis décidé plus tard.",
+        "illustrative": false,
+        "data": null
+       },
+       "prepares": "Ces réponses préparent l'étape Moment de la prédiction, qui fixe les colonnes permises.",
+       "questions": [
+        {
+         "id": "data.row",
+         "n": 1,
+         "text": "Que décrit une ligne, et que disent les colonnes ?",
+         "source": {
+          "kind": "digest",
+          "slot": null,
+          "key": "sample"
+         },
+         "chart": "sample_table",
+         "chart_data": null,
+         "other_charts": [],
+         "frame": {
+          "evidence": "structure",
+          "rows": "Structure · lignes de développement (318), sans la cible"
+         },
+         "status": "answered",
+         "result_id": null,
+         "result_revision": null,
+         "reading": {
+          "see": "9 colonnes décrivent chaque ligne ; l'aperçu montre 8 lignes de développement tirées au hasard, valeurs telles qu'écrites dans le fichier.",
+          "conclude": "Lire les colonnes d'abord dit ce que chacune décrit et quand elle est connue ; le moment de la prédiction repose sur cette lecture.",
+          "cannot": "Quelques lignes ne disent rien de toute la distribution, et l'aperçu est un regard sur la cible, compté."
+         },
+         "cites": [
+          {
+           "name": "n_columns",
+           "result_id": null,
+           "path": "case:variables",
+           "value": 9,
+           "text": "9"
+          },
+          {
+           "name": "n_sample",
+           "result_id": null,
+           "path": "digest:sample.row_keys",
+           "value": 8,
+           "text": "8"
+          }
+         ],
+         "verdict": null,
+         "folds": {
+          "how": "Une ligne par ligne du fichier ; la colonne cible est marquée.",
+          "trap": "Un fichier est souvent trié ; ses premières lignes ne ressemblent pas aux autres. L'aperçu est tiré au hasard pour cette raison."
+         }
+        },
+        {
+         "id": "data.structure",
+         "n": 2,
+         "text": "Un découpage pourrait-il séparer une ligne de sa jumelle ?",
+         "source": {
+          "kind": "digest",
+          "slot": null,
+          "key": "data_structure"
+         },
+         "chart": "structure_bars",
+         "chart_data": null,
+         "other_charts": [],
+         "frame": {
+          "evidence": "structure",
+          "rows": "Structure · lignes de développement (318), sans la cible"
+         },
+         "status": "answered",
+         "result_id": null,
+         "result_revision": null,
+         "reading": {
+          "see": "Valeurs distinctes de « nom de la voiture » : 254 ; lignes qui partagent leur valeur avec une autre : 107 ; doublons exacts : 0.",
+          "conclude": "Une même entité revient d'une ligne à l'autre ; un découpage peut placer une ligne en entraînement et sa jumelle en validation, ce qui flatterait un peu l'erreur.",
+          "cannot": "Un même nom ne prouve pas une même entité, et le compte ne dit pas de combien l'erreur serait flattée."
+         },
+         "cites": [
+          {
+           "name": "duplicates",
+           "result_id": null,
+           "path": "digest:data_structure.duplicates.rows",
+           "value": 0,
+           "text": "0"
+          },
+          {
+           "name": "n_groups",
+           "result_id": null,
+           "path": "digest:data_structure.groups.0.groups",
+           "value": 254,
+           "text": "254"
+          },
+          {
+           "name": "repeated",
+           "result_id": null,
+           "path": "digest:data_structure.groups.0.rows_in_repeated_groups",
+           "value": 107,
+           "text": "107"
+          }
+         ],
+         "verdict": null,
+         "folds": {
+          "how": "Chaque barre compte des lignes.",
+          "trap": "Aucun doublon exact ne veut pas dire aucune entité répétée ; deux lignes peuvent différer d'une seule colonne."
+         }
+        }
+       ],
+       "no_chart": null,
+       "limit": "Rien n'est encore mesuré, ni modèle ni chiffre de performance. Le seul regard sur la cible est l'aperçu, compté.",
+       "next": "Ensuite : le moment de la prédiction, qui fixe les colonnes que les modèles peuvent utiliser.",
+       "decision": null
+      },
+      {
+       "step": "prediction_time",
+       "n": 2,
+       "name": "Moment de la prédiction",
+       "short": "Moment",
+       "moment": "Cadrer le changement",
+       "state": "upcoming",
+       "picture": {
+        "kind": "moment_timeline",
+        "caption": "Prédire, c'est se placer à un moment. Seules les colonnes connues avant lui peuvent servir ; la cible est mesurée après.",
+        "more": "Une colonne connue après le moment serait une fuite, une information que le modèle n'aurait pas au moment de servir. Les jalons sont une hypothèse du scénario.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "Cette réponse prépare l'étape Variables disponibles, la liste des colonnes permises.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "Le moment est une hypothèse du scénario ; la documentation des données ne l'établit pas.",
+       "next": "Ensuite : les variables disponibles, colonne par colonne, sur la même frise.",
+       "decision": null
+      },
+      {
+       "step": "feature_availability",
+       "n": 3,
+       "name": "Variables disponibles",
+       "short": "Variables",
+       "moment": "Cadrer le changement",
+       "state": "upcoming",
+       "picture": {
+        "kind": "variables_board",
+        "caption": "Trois sortes de colonnes : celles que le modèle lira, celles qu'on exclut, et celles qui ne sont pas des variables.",
+        "more": "La cible n'est pas une variable ; un identifiant non plus, car un nom ne se transpose pas à une autre ligne. Une colonne de temps ordonne le découpage.",
+        "illustrative": false,
+        "data": null
+       },
+       "prepares": "Cette réponse prépare le Découpage et les Modèles, ce que chaque modèle aura le droit de lire.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "La disponibilité vient du scénario, pas d'un contrôle des données.",
+       "next": "Ensuite : le découpage, qui met des lignes de côté avant tout regard sur leurs résultats.",
+       "decision": null
+      },
+      {
+       "step": "split",
+       "n": 4,
+       "name": "Découpage",
+       "short": "Découpage",
+       "moment": "Cadrer le changement",
+       "state": "upcoming",
+       "picture": {
+        "kind": "partition_strip",
+        "caption": "Mettre des lignes de côté avant tout regard : 80 lignes scellées pour la fin ; les 318 autres, découpées en blocs, servent à comparer.",
+        "more": "Validation croisée à k plis : les lignes de développement en k blocs ; chaque bloc est prédit par un modèle entraîné sur les autres. Ici k = 5.",
+        "illustrative": false,
+        "data": {
+         "development": 318,
+         "sealed": 80
+        }
+       },
+       "prepares": "Ces réponses préparent toutes les mesures suivantes, sur quelles lignes chaque erreur sera calculée.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "Les lignes scellées sont un protocole suivi par l'outil et par vous, pas un verrou.",
+       "next": "Ensuite : la mesure de l'erreur, choisie avant de voir le moindre chiffre.",
+       "decision": null
+      },
+      {
+       "step": "error_metric",
+       "n": 5,
+       "name": "Mesure de l'erreur",
+       "short": "Mesure",
+       "moment": "Cadrer le changement",
+       "state": "upcoming",
+       "picture": {
+        "kind": "error_gap",
+        "caption": "L'erreur d'une prédiction est l'écart entre l'observé et le prédit. Reste à résumer les écarts de toutes les lignes.",
+        "more": "L'erreur absolue moyenne (MAE) est la moyenne des écarts, sans signe. La racine de l'erreur quadratique moyenne (RMSE) est la racine de la moyenne des écarts au carré ; un gros écart y pèse beaucoup plus.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "Cette réponse prépare le Critère de succès, la mesure sur laquelle il sera fixé.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "La mesure ne dit pas quelle erreur est acceptable ; c'est l'étape suivante.",
+       "next": "Ensuite : le critère de succès, une barre fixée sur cette mesure avant tout modèle.",
+       "decision": null
+      },
+      {
+       "step": "success_criterion",
+       "n": 6,
+       "name": "Critère de succès",
+       "short": "Critère",
+       "moment": "Cadrer le changement",
+       "state": "upcoming",
+       "picture": {
+        "kind": "criterion_bar",
+        "caption": "Fixer la barre avant de voir un chiffre : le modèle devra se tromper nettement moins que la référence, ici au moins 10 % de moins.",
+        "more": "La référence (prédire la moyenne) est le modèle le plus naïf. Le critère dit de combien un modèle doit faire mieux pour compter ; il sera jugé sur le test final, contre la référence mesurée sur les mêmes lignes.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "Cette réponse prépare le Test final et la Conclusion, la barre qu'ils jugeront.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "Atteindre le critère ne dira pas que le modèle suffit pour tout usage ; c'est une question métier.",
+       "next": "Ensuite : le contrôle de qualité, colonne par colonne, sans regarder la cible.",
+       "decision": null
+      },
+      {
+       "step": "structural_eda",
+       "n": 7,
+       "name": "Contrôle de qualité",
+       "short": "Qualité",
+       "moment": "Préparer les preuves",
+       "state": "upcoming",
+       "picture": {
+        "kind": "quality_checks",
+        "caption": "Des contrôles par colonne : cellules vides, catégories rares, longues traînes, valeurs hors plage. Chacun a son seuil, fixé d'avance.",
+        "more": "Les contrôles lisent les colonnes des lignes de développement, jamais la cible. Un seuil franchi déclenche une proposition de préparation ; il ne change rien tout seul.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "Ces réponses préparent la Préparation, quelles colonnes transformer, et pourquoi.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "Un contrôle de structure ; il ne lit pas la cible et ne dit rien de l'erreur des modèles.",
+       "next": "Ensuite : la préparation, avec la raison de chaque changement et de chaque statu quo.",
+       "decision": null
+      },
+      {
+       "step": "preprocessing",
+       "n": 8,
+       "name": "Préparation",
+       "short": "Préparation",
+       "moment": "Préparer les preuves",
+       "state": "upcoming",
+       "picture": {
+        "kind": "log_before_after",
+        "caption": "Une longue traîne peut écraser une droite. Le log resserre les grandes valeurs ; la distribution devient plus symétrique.",
+        "more": "Chaque transformation est apprise sur la partie entraînement de chaque pli, puis appliquée à la partie prédite ; les lignes prédites ne la façonnent jamais.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "Ces réponses préparent les Modèles, les colonnes telles qu'ils les liront.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "La préparation est apprise sur les lignes de développement ; le test final la reçoit telle quelle.",
+       "next": "Ensuite : l'exploration, le premier regard compté sur la cible.",
+       "decision": null
+      },
+      {
+       "step": "train_eda",
+       "n": 9,
+       "name": "Exploration",
+       "short": "Exploration",
+       "moment": "Préparer les preuves",
+       "state": "upcoming",
+       "picture": {
+        "kind": "trend_reading",
+        "caption": "Lire la cible selon une variable. La tendance suit la forme générale, droite ou courbe.",
+        "more": "La moyenne de la cible par tranche d'une colonne suit la forme sans supposer une droite. Si elle se plie, une relation droite ne suffira pas.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "Ces réponses préparent les Modèles, quelle forme ils auront à suivre.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "Preuve de développement ; ces graphiques ne choisissent rien, et chaque regard sur la cible est compté.",
+       "next": "Ensuite : les modèles, la référence et le modèle linéaire d'abord.",
+       "decision": null
+      },
+      {
+       "step": "models",
+       "n": 10,
+       "name": "Modèles",
+       "short": "Modèles",
+       "moment": "Travailler et comparer",
+       "state": "upcoming",
+       "picture": {
+        "kind": "mean_vs_line",
+        "caption": "Deux modèles simples d'abord. La référence prédit toujours la moyenne, une ligne plate ; le modèle linéaire trace une droite à travers les points.",
+        "more": "La référence est la barre que tout modèle doit battre. Le modèle linéaire est simple et lisible ; ses erreurs montrent ce qu'une forme plus souple devrait corriger.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "Ces réponses préparent les Variantes, ce que le modèle linéaire rate.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "Ces chiffres ont servi à comparer ; ils sont optimistes, et le test final reste scellé.",
+       "next": "Ensuite : les variantes, sous la même évaluation.",
+       "decision": null
+      },
+      {
+       "step": "model_variant",
+       "n": 11,
+       "name": "Variantes",
+       "short": "Variantes",
+       "moment": "Travailler et comparer",
+       "state": "upcoming",
+       "picture": {
+        "kind": "line_misses_curve",
+        "caption": "Une droite peut rater une courbe. Une variante essaie une forme plus souple, sous la même évaluation.",
+        "more": "Chaque variante répond à une question et compte dans un budget d'essais ; plus on compare de configurations sur les mêmes plis, plus la meilleure est flattée.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "Ces réponses préparent le Choix du modèle, les configurations qu'il pèsera.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "Preuve de développement ; chaque configuration comparée sur les mêmes plis flatte un peu la meilleure.",
+       "next": "Ensuite : le choix du modèle, avec le bruit d'un pli à l'autre.",
+       "decision": null
+      },
+      {
+       "step": "model_choice",
+       "n": 12,
+       "name": "Choix du modèle",
+       "short": "Choix",
+       "moment": "Travailler et comparer",
+       "state": "upcoming",
+       "picture": {
+        "kind": "one_se_rule",
+        "caption": "La meilleure moyenne ne dit pas tout : une configuration plus simple à moins d'une erreur type de la meilleure fait aussi bien, au bruit près.",
+        "more": "La règle d'une erreur type retient la configuration la plus simple dont la moyenne est à moins d'une erreur type de la meilleure. Elle est fixée avant les résultats.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "Ces réponses préparent le Test final, la seule configuration qu'il mesurera.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "Ces chiffres ont servi à choisir ; celui qui est choisi est flatté par le choix lui-même.",
+       "next": "Ensuite : le test final, ouvert une fois sur la configuration choisie.",
+       "decision": null
+      },
+      {
+       "step": "final_test",
+       "n": 13,
+       "name": "Test final",
+       "short": "Test final",
+       "moment": "Conclure et transmettre",
+       "state": "upcoming",
+       "picture": {
+        "kind": "sealed_once",
+        "caption": "Les 318 lignes de développement ont servi à choisir ; les 80 lignes scellées sont lues une fois.",
+        "more": "Une fois ouvert, tout changement ultérieur est marqué comme fait après le test final. L'ouverture mesure la configuration choisie et la référence sur les mêmes lignes.",
+        "illustrative": false,
+        "data": {
+         "development": 318,
+         "sealed": 80
+        }
+       },
+       "prepares": "Cette réponse prépare la Conclusion, la preuve indépendante sur laquelle elle repose.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "Une ouverture donne une mesure avec son intervalle, pas une garantie sur d'autres données.",
+       "next": "Ensuite : la conclusion, ce que l'étude peut affirmer et ses limites.",
+       "decision": null
+      },
+      {
+       "step": "conclusion",
+       "n": 14,
+       "name": "Conclusion",
+       "short": "Conclusion",
+       "moment": "Conclure et transmettre",
+       "state": "upcoming",
+       "picture": {
+        "kind": "dev_vs_final",
+        "caption": "Deux cadres : les chiffres de développement, qui ont servi à choisir et sont optimistes ; le test final, mesuré une fois sur des lignes qu'aucun choix n'a utilisées.",
+        "more": "La conclusion est jugée contre le critère fixé avant tout modèle. Garder la référence, ou ne pas conclure, sont des résultats valables.",
+        "illustrative": true,
+        "data": null
+       },
+       "prepares": "Ces réponses préparent votre conclusion, pour quel usage et avec quelles limites.",
+       "questions": [],
+       "no_chart": null,
+       "limit": "Le test final vient de la même période que les lignes de développement ; il n'établit ni la performance future ni un effet causal.",
+       "next": "Ensuite : présenter la conclusion, puis transmettre l'étude.",
+       "decision": null
+      }
+     ]
+    },
+    "case_brief": {
+     "source": "Fiche du cas d'usage · Confluence, espace « Produit véhicules » · rédigée par le PO · scénario fictif pour la simulation (seule la provenance des données est réelle)",
+     "problem": "L'équipe Conception doit annoncer la consommation d'un nouveau modèle dès que sa fiche technique est validée, environ six mois avant les essais sur route. Aujourd'hui, un ingénieur l'estime à la main en comparant avec un modèle proche ; écart moyen constaté, environ 4,5 mpg.",
+     "decision": "Quels prototypes envoyer d'abord aux essais de consommation (une vingtaine d'essais par an), et quel chiffre provisoire afficher dans les premières fiches produit.",
+     "objective": "Estimer la consommation à partir de la fiche technique seule, nettement mieux que l'estimation manuelle (viser un écart moyen d'environ 3,5 mpg), avec une fourchette.",
+     "production": "Un service de prédiction appelé par l'outil de conception à chaque nouvelle fiche ; l'estimation et sa fourchette sont relues par un ingénieur avant tout usage ; le modèle est réentraîné chaque année avec les nouveaux essais.",
+     "data_provenance": {
+      "real": "Réel : le jeu « Auto MPG » du UCI Machine Learning Repository (issu de StatLib, Carnegie Mellon ; utilisé par Quinlan en 1993) : 398 modèles de voitures vendus aux États-Unis de 1970 à 1982, une ligne par modèle et par année.",
+      "scenario": "Dans le scénario : il sert d'historique en attendant l'extraction de l'entrepôt interne des essais. Les données sont publiques et déjà très explorées : aucune ligne n'est vraiment « jamais vue »."
+     },
+     "users_and_cost_of_error": {
+      "users": "Utilisateurs : les ingénieurs de conception et le chef de produit.",
+      "cost": "Coût d'une erreur : annoncer une consommation trop basse expose à une correction publique ; une estimation trop haute peut faire écarter à tort un prototype des essais. Le PO note que les grosses erreurs sur un modèle phare sont particulièrement gênantes : un point à discuter au choix de la mesure de l'erreur."
+     },
+     "out_of_scope_and_risks": {
+      "out_of_scope": "Hors périmètre : l'homologation officielle (elle reste mesurée sur route) ; expliquer les causes de la consommation.",
+      "risks": "Risques : les voitures récentes diffèrent des anciennes (le modèle peut dériver) ; les données s'arrêtent en 1982."
+     },
+     "links": {
+      "prediction_moment": "Le moment de la prédiction sera la validation de la fiche technique (étape 2).",
+      "error_measure": "La mesure de l'erreur devra refléter ce coût (étape 5).",
+      "conclusion": "La conclusion dira si l'estimation fait mieux que la méthode actuelle."
+     }
+    },
+    "defensibility_note": {
+     "meaning": "Défendable veut dire que l'étude peut soutenir sa conclusion devant un relecteur : chaque décision prise avec vos mots, le modèle choisi par vous, le test final ouvert une seule fois, la conclusion écrite, et aucun chiffre périmé.",
+     "checklist": {
+      "framing_in_your_words": "Les décisions de cadrage, prises avec vos mots",
+      "model_chosen_by_you": "Le modèle, choisi par vous",
+      "final_test_opened_once": "Le test final, ouvert une fois",
+      "conclusion_written": "La conclusion, écrite",
+      "no_stale_figure": "Aucun chiffre périmé"
+     },
+     "not_alarm": "Ce n'est pas une alerte : c'est la liste de ce que l'étude devra réunir d'ici la fin. Elle passe en alerte seulement si quelque chose pose problème (décision à reconfirmer, chiffre périmé, décision automatique à relire).",
+     "limits_lead": "L'étude est défendable, avec ces limites :"
+    }
    }
   },
   "panel_contract": 2,
@@ -721,6 +1626,28 @@
      "id": "workbench_not_tracked",
      "severity": "context"
     }
+   ],
+   "checklist": [
+    {
+     "id": "framing_in_your_words",
+     "done": false
+    },
+    {
+     "id": "model_chosen_by_you",
+     "done": false
+    },
+    {
+     "id": "final_test_opened_once",
+     "done": false
+    },
+    {
+     "id": "conclusion_written",
+     "done": false
+    },
+    {
+     "id": "no_stale_figure",
+     "done": true
+    }
    ]
   },
   "ledger": {
@@ -744,16 +1671,16 @@
    }
   },
   "sample": {
-   "seed": "1f6ad757c511e8b1",
+   "seed": "64020efccf00e8a9",
    "row_keys": [
-    "L31",
-    "L67",
-    "L80",
-    "L86",
-    "L105",
-    "L106",
-    "L258",
-    "L339"
+    "L66",
+    "L163",
+    "L166",
+    "L176",
+    "L202",
+    "L231",
+    "L276",
+    "L307"
    ],
    "recorded": true
   },
@@ -772,6 +1699,59 @@
     }
    ]
   },
-  "quality_verdicts": null
+  "quality_verdicts": null,
+  "case_brief": {
+   "fictitious": true,
+   "current_method_error": {
+    "value": 4.5,
+    "unit": "mpg",
+    "measure": "mae"
+   },
+   "target_error": {
+    "value": 3.5,
+    "unit": "mpg",
+    "measure": "mae"
+   }
+  },
+  "case_display": {
+   "columns": {
+    "mpg": {
+     "en": "mpg",
+     "fr": "mpg"
+    },
+    "cylinders": {
+     "en": "cylinders",
+     "fr": "cylindres"
+    },
+    "displacement": {
+     "en": "displacement",
+     "fr": "cylindrée"
+    },
+    "horsepower": {
+     "en": "horsepower",
+     "fr": "puissance"
+    },
+    "weight": {
+     "en": "weight",
+     "fr": "poids"
+    },
+    "acceleration": {
+     "en": "acceleration",
+     "fr": "accélération"
+    },
+    "model_year": {
+     "en": "model year",
+     "fr": "année du modèle"
+    },
+    "origin": {
+     "en": "origin",
+     "fr": "origine"
+    },
+    "car_name": {
+     "en": "car name",
+     "fr": "nom de la voiture"
+    }
+   }
+  }
  }
 }

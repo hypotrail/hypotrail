@@ -14,7 +14,7 @@
   "schema": "hypotrail.data/1",
   "ok": true,
   "study": "/studies/auto mpg fr",
-  "revision": 32,
+  "revision": 34,
   "observation_unit": {
    "value": "A vehicle model for a model year",
    "status": "scenario_assumption",
@@ -389,122 +389,122 @@
    "order": "seeded sample",
    "items": [
     {
-     "row_key": "L34",
+     "row_key": "L31",
      "values": {
-      "mpg": 19,
-      "cylinders": 6,
-      "displacement": 232,
-      "horsepower": 100,
-      "weight": 2634,
-      "acceleration": 13,
-      "model_year": 71,
-      "origin": 1,
-      "car_name": "amc gremlin"
-     }
-    },
-    {
-     "row_key": "L61",
-     "values": {
-      "mpg": 20,
+      "mpg": 28,
       "cylinders": 4,
       "displacement": 140,
       "horsepower": 90,
-      "weight": 2408,
-      "acceleration": 19.5,
+      "weight": 2264,
+      "acceleration": 15.5,
+      "model_year": 71,
+      "origin": 1,
+      "car_name": "chevrolet vega 2300"
+     }
+    },
+    {
+     "row_key": "L41",
+     "values": {
+      "mpg": 14,
+      "cylinders": 8,
+      "displacement": 351,
+      "horsepower": 153,
+      "weight": 4154,
+      "acceleration": 13.5,
+      "model_year": 71,
+      "origin": 1,
+      "car_name": "ford galaxie 500"
+     }
+    },
+    {
+     "row_key": "L71",
+     "values": {
+      "mpg": 13,
+      "cylinders": 8,
+      "displacement": 400,
+      "horsepower": 190,
+      "weight": 4422,
+      "acceleration": 12.5,
       "model_year": 72,
       "origin": 1,
-      "car_name": "chevrolet vega"
+      "car_name": "chrysler newport royal"
      }
     },
     {
-     "row_key": "L103",
+     "row_key": "L109",
      "values": {
-      "mpg": 26,
+      "mpg": 20,
       "cylinders": 4,
       "displacement": 97,
-      "horsepower": 46,
-      "weight": 1950,
-      "acceleration": 21,
+      "horsepower": 88,
+      "weight": 2279,
+      "acceleration": 19,
       "model_year": 73,
-      "origin": 2,
-      "car_name": "volkswagen super beetle"
-     }
-    },
-    {
-     "row_key": "L260",
-     "values": {
-      "mpg": 20.8,
-      "cylinders": 6,
-      "displacement": 200,
-      "horsepower": 85,
-      "weight": 3070,
-      "acceleration": 16.7,
-      "model_year": 78,
-      "origin": 1,
-      "car_name": "mercury zephyr"
-     }
-    },
-    {
-     "row_key": "L263",
-     "values": {
-      "mpg": 19.2,
-      "cylinders": 8,
-      "displacement": 305,
-      "horsepower": 145,
-      "weight": 3425,
-      "acceleration": 13.2,
-      "model_year": 78,
-      "origin": 1,
-      "car_name": "chevrolet monte carlo landau"
-     }
-    },
-    {
-     "row_key": "L274",
-     "values": {
-      "mpg": 23.9,
-      "cylinders": 4,
-      "displacement": 119,
-      "horsepower": 97,
-      "weight": 2405,
-      "acceleration": 14.9,
-      "model_year": 78,
       "origin": 3,
-      "car_name": "datsun 200-sx"
+      "car_name": "toyota carina"
      }
     },
     {
-     "row_key": "L299",
+     "row_key": "L238",
      "values": {
-      "mpg": 23,
-      "cylinders": 8,
-      "displacement": 350,
-      "horsepower": 125,
-      "weight": 3900,
-      "acceleration": 17.4,
+      "mpg": 30.5,
+      "cylinders": 4,
+      "displacement": 98,
+      "horsepower": 63,
+      "weight": 2051,
+      "acceleration": 17,
+      "model_year": 77,
+      "origin": 1,
+      "car_name": "chevrolet chevette"
+     }
+    },
+    {
+     "row_key": "L284",
+     "values": {
+      "mpg": 20.2,
+      "cylinders": 6,
+      "displacement": 232,
+      "horsepower": 90,
+      "weight": 3265,
+      "acceleration": 18.2,
       "model_year": 79,
       "origin": 1,
-      "car_name": "cadillac eldorado"
+      "car_name": "amc concord dl 6"
      }
     },
     {
-     "row_key": "L361",
+     "row_key": "L378",
      "values": {
-      "mpg": 30.7,
-      "cylinders": 6,
-      "displacement": 145,
-      "horsepower": 76,
-      "weight": 3160,
-      "acceleration": 19.6,
-      "model_year": 81,
-      "origin": 2,
-      "car_name": "volvo diesel"
+      "mpg": 31,
+      "cylinders": 4,
+      "displacement": 91,
+      "horsepower": 68,
+      "weight": 1970,
+      "acceleration": 17.6,
+      "model_year": 82,
+      "origin": 3,
+      "car_name": "mazda glc custom"
+     }
+    },
+    {
+     "row_key": "L394",
+     "values": {
+      "mpg": 27,
+      "cylinders": 4,
+      "displacement": 140,
+      "horsepower": 86,
+      "weight": 2790,
+      "acceleration": 15.6,
+      "model_year": 82,
+      "origin": 1,
+      "car_name": "ford mustang gl"
      }
     }
    ],
-   "seed": "b7a808475944f0bc",
+   "seed": "8124216ef97c08c5",
    "target_shown": true,
    "exposure": {
-    "exposure_id": "x_6969fa2abeb049c9a318278249ea7398",
+    "exposure_id": "x_1b406c678f9347bbbf9b7c2f0596ec10",
     "purpose": "development_target_sample",
     "recorded": true,
     "withheld": null

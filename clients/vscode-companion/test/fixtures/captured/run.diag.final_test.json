@@ -859,7 +859,7 @@
    "started_revision": 36,
    "invalidation": null,
    "exposure_ids": [
-    "x_012ba18e3abc4a0583084c3d24bcd5e1"
+    "x_1fbc6b2226384019850ad20fba25db79"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -911,7 +911,7 @@
    "recommended": null,
    "question": null,
    "junior_digest": "Next: the data quality check, run without asking you. Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
-   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Quality (6 of 14).",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Quality check (6 of 14).",
    "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",

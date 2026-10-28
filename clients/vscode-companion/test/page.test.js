@@ -65,8 +65,9 @@ test('PATH-2, PATH-3, PATH-6, HON-3: phases fold by their state; automatic decis
   assert.deepEqual(kinds(page('captured/summary.regression.done')), { frame: 'done', evidence: 'done', compare: 'done', conclude: 'done' });
   const review = page('captured/summary.regression.review');
   const states = steps(review).reduce((acc, x) => ({ ...acc, [x.state]: (acc[x.state] || 0) + 1 }), {});
-  // The mockup's `auto` state: seven automatic decisions (one under review is Now's), three computations.
-  assert.equal(states.auto, 6);
+  // The mockup's `auto` state: eight automatic decisions since the error measure (lot 2026-10-28; one
+  // under review is Now's), three computations.
+  assert.equal(states.auto, 7);
   assert.equal(steps(review).find(x => x.id === 'prediction_time').decision.basis, 'automatic');
   assert.equal(states.computed, 3);
   assert.ok(steps(review).filter(x => x.decision && x.decision.basis === 'automatic').every(x => x.state !== 'done'));
@@ -86,7 +87,7 @@ test('PATH-2, PATH-3, PATH-6, HON-3: phases fold by their state; automatic decis
 test('PG-9, PG-6, PG-7, HON-5: the progress counts the review; the pills come from the engine only', () => {
   const review = page('captured/summary.regression.review');
   assert.equal(review.progress.mode, 'review');
-  assert.deepEqual([review.progress.k, review.progress.n], [1, 7]);
+  assert.deepEqual([review.progress.k, review.progress.n], [1, 8]);   // lot 2026-10-28: + the error measure
   assert.ok(review.progress.groups[0].segments.every(s => s.state !== 'done'), 'no automatic decision counted done');
   assert.deepEqual(review.header.automation, { state: 'ended', variant: 'until_final_test' });
   assert.equal(review.header.defensibility.kind, 'warn');
@@ -217,6 +218,6 @@ test('PATH-1, PATH-7, SINCE-3: the ledger counts, the channel of each result, an
   const explore = steps(choice).find(x => x.id === 'train_eda');
   assert.equal(explore.results.find(r => r.slot === 'eda.mean_by:model_year').channel, 'webview');
   const done = page('captured/summary.regression.done');
-  assert.deepEqual(done.journey, { steps: 13, ownWords: 9, looks: 11, openings: 1 });
+  assert.deepEqual(done.journey, { steps: 14, ownWords: 10, looks: 11, openings: 1 });   // lot 2026-10-28: 14 steps
   assert.equal(done.path.ledger.finalTest.openings, 1);
 });

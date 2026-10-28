@@ -14,7 +14,7 @@
   "schema": "hypotrail.data/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 38,
+  "revision": 40,
   "observation_unit": {
    "value": "A vehicle model for a model year",
    "status": "scenario_assumption",
@@ -389,122 +389,122 @@
    "order": "seeded sample",
    "items": [
     {
-     "row_key": "L64",
+     "row_key": "L74",
+     "values": {
+      "mpg": 13,
+      "cylinders": 8,
+      "displacement": 307,
+      "horsepower": 130,
+      "weight": 4098,
+      "acceleration": 14,
+      "model_year": 72,
+      "origin": 1,
+      "car_name": "chevrolet chevelle concours (sw)"
+     }
+    },
+    {
+     "row_key": "L160",
      "values": {
       "mpg": 14,
       "cylinders": 8,
-      "displacement": 400,
-      "horsepower": 175,
-      "weight": 4385,
-      "acceleration": 12,
-      "model_year": 72,
-      "origin": 1,
-      "car_name": "pontiac catalina"
-     }
-    },
-    {
-     "row_key": "L81",
-     "values": {
-      "mpg": 22,
-      "cylinders": 4,
-      "displacement": 122,
-      "horsepower": 86,
-      "weight": 2395,
-      "acceleration": 16,
-      "model_year": 72,
-      "origin": 1,
-      "car_name": "ford pinto (sw)"
-     }
-    },
-    {
-     "row_key": "L82",
-     "values": {
-      "mpg": 28,
-      "cylinders": 4,
-      "displacement": 97,
-      "horsepower": 92,
-      "weight": 2288,
-      "acceleration": 17,
-      "model_year": 72,
-      "origin": 3,
-      "car_name": "datsun 510 (sw)"
-     }
-    },
-    {
-     "row_key": "L96",
-     "values": {
-      "mpg": 12,
-      "cylinders": 8,
-      "displacement": 455,
-      "horsepower": 225,
-      "weight": 4951,
-      "acceleration": 11,
-      "model_year": 73,
-      "origin": 1,
-      "car_name": "buick electra 225 custom"
-     }
-    },
-    {
-     "row_key": "L166",
-     "values": {
-      "mpg": 20,
-      "cylinders": 8,
-      "displacement": 262,
-      "horsepower": 110,
-      "weight": 3221,
+      "displacement": 351,
+      "horsepower": 148,
+      "weight": 4657,
       "acceleration": 13.5,
       "model_year": 75,
       "origin": 1,
-      "car_name": "chevrolet monza 2+2"
+      "car_name": "ford ltd"
      }
     },
     {
-     "row_key": "L171",
+     "row_key": "L200",
      "values": {
-      "mpg": 23,
-      "cylinders": 4,
-      "displacement": 140,
-      "horsepower": 78,
-      "weight": 2592,
-      "acceleration": 18.5,
-      "model_year": 75,
+      "mpg": 20,
+      "cylinders": 6,
+      "displacement": 225,
+      "horsepower": 100,
+      "weight": 3651,
+      "acceleration": 17.7,
+      "model_year": 76,
       "origin": 1,
-      "car_name": "pontiac astro"
+      "car_name": "dodge aspen se"
      }
     },
     {
-     "row_key": "L236",
+     "row_key": "L263",
      "values": {
-      "mpg": 26,
+      "mpg": 19.2,
+      "cylinders": 8,
+      "displacement": 305,
+      "horsepower": 145,
+      "weight": 3425,
+      "acceleration": 13.2,
+      "model_year": 78,
+      "origin": 1,
+      "car_name": "chevrolet monte carlo landau"
+     }
+    },
+    {
+     "row_key": "L287",
+     "values": {
+      "mpg": 17.6,
+      "cylinders": 8,
+      "displacement": 302,
+      "horsepower": 129,
+      "weight": 3725,
+      "acceleration": 13.4,
+      "model_year": 79,
+      "origin": 1,
+      "car_name": "ford ltd landau"
+     }
+    },
+    {
+     "row_key": "L296",
+     "values": {
+      "mpg": 35.7,
       "cylinders": 4,
-      "displacement": 97,
-      "horsepower": 75,
-      "weight": 2265,
-      "acceleration": 18.2,
-      "model_year": 77,
+      "displacement": 98,
+      "horsepower": 80,
+      "weight": 1915,
+      "acceleration": 14.4,
+      "model_year": 79,
+      "origin": 1,
+      "car_name": "dodge colt hatchback custom"
+     }
+    },
+    {
+     "row_key": "L304",
+     "values": {
+      "mpg": 31.8,
+      "cylinders": 4,
+      "displacement": 85,
+      "horsepower": 65,
+      "weight": 2020,
+      "acceleration": 19.2,
+      "model_year": 79,
       "origin": 3,
-      "car_name": "toyota corolla liftback"
+      "car_name": "datsun 210"
      }
     },
     {
-     "row_key": "L243",
+     "row_key": "L331",
      "values": {
-      "mpg": 21.5,
+      "mpg": 40.9,
       "cylinders": 4,
-      "displacement": 121,
-      "horsepower": 110,
-      "weight": 2600,
-      "acceleration": 12.8,
-      "model_year": 77,
+      "displacement": 85,
+      "horsepower": null,
+      "weight": 1835,
+      "acceleration": 17.3,
+      "model_year": 80,
       "origin": 2,
-      "car_name": "bmw 320i"
+      "car_name": "renault lecar deluxe"
      }
     }
    ],
-   "seed": "c4382e7b283d370b",
+   "seed": "cea17c547a85dad6",
    "target_shown": true,
    "exposure": {
-    "exposure_id": "x_2cfae1531489499c898b40ae56caf15e",
+    "exposure_id": "x_f90adeabee524728a354342fd6190997",
     "purpose": "development_target_sample",
     "recorded": true,
     "withheld": null

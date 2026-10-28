@@ -371,8 +371,9 @@ def test_the_digest_summary_gives_every_junior_text_in_both_languages(tmp_path):
     flow.call('data', '--study', flow.study)
     out = flow.call('status', '--summary', '--digest', '--since', '0', '--study', flow.study)
     # Contract P1 (§17.2): the panel's digest keys follow ``texts``.
-    assert list(out)[-9] == 'texts' and list(out['texts']) == ['en', 'fr']
-    assert tuple(out)[-8:] == view_mod.DIGEST_SUMMARY_KEYS[-8:]
+    after = view_mod.DIGEST_SUMMARY_KEYS[view_mod.DIGEST_SUMMARY_KEYS.index('texts') + 1:]
+    assert list(out)[-len(after) - 1] == 'texts' and list(out['texts']) == ['en', 'fr']
+    assert tuple(out)[-len(after):] == after
     for lang in ('en', 'fr'):
         table = out['texts'][lang]
         assert tuple(table) == view_mod.LANGUAGE_TEXT_KEYS
@@ -447,6 +448,8 @@ def _scan(payload, lang: str, label: str, where: list) -> None:
             continue
         if decided and path.endswith('.goal.prediction_time'):
             continue
+        if '.step_cards.steps[' in path and path.endswith('.decision.words'):
+            continue                    # lot 2026-10-28 (§18.8): the junior's words, as written
         for s in g.foreign_sentences(text, lang, min_words=5):
             where.append((label, path, s))
 

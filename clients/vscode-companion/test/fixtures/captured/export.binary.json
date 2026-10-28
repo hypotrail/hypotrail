@@ -31,12 +31,12 @@
    },
    {
     "path": "study.html",
-    "sha256": "ee17963b37173694bcd67ba83ea5cff660e15879f481e1be876eaa07acfe7957",
-    "bytes": 985587
+    "sha256": "039e5e252dc8b5f5f671944b91dffcbf99f2d064cef8dfeb749a71d154e00697",
+    "bytes": 985595
    },
    {
     "path": "SHA256SUMS",
-    "sha256": "d2b95c831221f0c4ba982b49649eb421f02d4b317639f01b9947dbd78a2dc92f",
+    "sha256": "4d687650a148aacdbd2b6274e6609102ec2b714085696a1691431445bff80d2a",
     "bytes": 233
    }
   ],

@@ -43,6 +43,10 @@ def test_constants_follow_the_contract():
         # preprocessing; the session report's v0.1 table stays the table of an older study.
         pauses = {p: list(d) for p, d in cmd_session_report.TASK_PAUSES[task].items()}
         pauses[2] = ['split', 'success_criterion', 'preprocessing']
+        if task == 'regression':
+            # Lot 2026-10-28 (CLI-CONTRACT §18.1): a new regression study fixes its error
+            # measure before the criterion.
+            pauses[2] = ['split', 'error_metric', 'success_criterion', 'preprocessing']
         # WP-B1: the third pause names the variant first and may open the final test.
         choice = pauses[3][0]
         pauses[3] = (['model_variant', choice, 'policy', 'final_test', 'conclusion']
@@ -225,13 +229,16 @@ def test_digest_keeps_the_summary_and_appends_origin_last(binary):
     inner = ('open_proposals', 'results')
     assert {k: v for k, v in p.items() if k in cc.SUMMARY_KEYS and k not in inner} == {
         k: v for k, v in plain.items() if k not in inner}
-    assert [{k: v for k, v in o.items() if k not in ('origin', 'data_contingent')}
+    # Owner batch of 2026-10-28 (R40, CLI-CONTRACT §17.6): then ``evidence``, digest only, last.
+    assert [{k: v for k, v in o.items() if k not in ('origin', 'data_contingent', 'evidence')}
             for o in p['open_proposals']] == plain['open_proposals']
-    assert all(tuple(o)[-2:] == ('origin', 'data_contingent') for o in p['open_proposals'])
+    assert all(tuple(o)[-3:] == ('origin', 'data_contingent', 'evidence')
+               for o in p['open_proposals'])
     assert p['open_proposals'][0]['origin'] == {'channel': 'chat'}
-    assert {s: {k: v for k, v in r.items() if k != 'channel'}
+    # CLI-CONTRACT §17.2: each result gains ``step`` and ``channel``, the last two keys.
+    assert {s: {k: v for k, v in r.items() if k not in ('step', 'channel')}
             for s, r in p['results'].items()} == plain['results']
-    assert all(tuple(r)[-1] == 'channel' for r in p['results'].values())
+    assert all(tuple(r)[-2:] == ('step', 'channel') for r in p['results'].values())
 
 
 # --- Auto MPG: the regression vocabulary scan -----------------------------------------------

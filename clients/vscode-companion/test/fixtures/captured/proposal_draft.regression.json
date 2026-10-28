@@ -17,7 +17,7 @@
   "schema": "hypotrail.proposal_draft/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 38,
+  "revision": 40,
   "decision_id": "model_choice",
   "value": "fit.linear",
   "proposable": true,
@@ -60,7 +60,7 @@
     }
    ]
   },
-  "supersedes_proposal": "p_7",
+  "supersedes_proposal": "p_8",
   "recorded": false,
   "note": "Draft only: nothing was recorded. Proposing creates a proposal, not a decision."
  }

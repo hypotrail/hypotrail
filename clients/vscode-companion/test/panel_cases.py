@@ -12,6 +12,8 @@ view's read delivered. The page scripts below are the structural probes of the g
 """
 from __future__ import annotations
 
+import json
+
 import themes
 
 # Records every setAttribute('style', ...) of the page (the CSP forbids inline style
@@ -78,6 +80,17 @@ STYLE_ATTRS = """() => [...document.querySelectorAll('#app [style]')].map(n => n
 # engine (PANEL-ONE-PAGE-PLAN E-8): ``captured/summary.regression.<state>``. The review is an
 # Auto MPG study created with ``init --automation until_final_test``; the others are one study.
 STATES = ['step1', 'choice', 'reopened', 'review', 'done']
+
+
+def without_step_cards(summary: dict) -> dict:
+    """A captured digest as a study created before lot 2026-10-28 reads it: the engine sends
+    ``texts.<lang>.step_cards: null`` for such a study (CLI-CONTRACT §18.8), and the panel keeps
+    the Now of before (the PA-2 fallback). The captures of a new study have step cards."""
+    out = json.loads(json.dumps(summary))
+    for t in (out.get('texts') or {}).values():
+        if isinstance(t, dict):
+            t['step_cards'] = None
+    return out
 
 
 def load_views(model, payload) -> dict:

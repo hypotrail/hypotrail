@@ -101,7 +101,12 @@ def test_auto_mpg_initial_state_is_a_regression_study():
     # the models (st.REGRESSION_DECISION_IDS stays the set of a study created before);
     # WP-B1: it names a variant before the choice and may open the final test after it
     # (st.FULL_REGRESSION_DECISION_IDS stays the set of a study created before WP-B1).
-    assert tuple(auto['decisions']) == st.B1_REGRESSION_DECISION_IDS == (
+    # Lot 2026-10-28 (CLI-CONTRACT §18.1): it also fixes the error measure before the
+    # criterion (st.B1_REGRESSION_DECISION_IDS stays the set of a study created before).
+    assert tuple(auto['decisions']) == st.M1_REGRESSION_DECISION_IDS == (
+        'prediction_time', 'feature_availability', 'split', 'error_metric', 'success_criterion',
+        'preprocessing', 'model_variant', 'model_choice', 'final_test', 'conclusion')
+    assert st.B1_REGRESSION_DECISION_IDS == (
         'prediction_time', 'feature_availability', 'split', 'success_criterion',
         'preprocessing', 'model_variant', 'model_choice', 'final_test', 'conclusion')
     assert st.FULL_REGRESSION_DECISION_IDS == (
@@ -110,12 +115,17 @@ def test_auto_mpg_initial_state_is_a_regression_study():
     assert st.REGRESSION_DECISION_IDS == (
         'prediction_time', 'feature_availability', 'split', 'model_choice', 'conclusion')
     assert auto['decisions']['conclusion']['depends_on'] == [
-        'prediction_time', 'feature_availability', 'split', 'success_criterion',
+        'error_metric', 'prediction_time', 'feature_availability', 'split', 'success_criterion',
         'preprocessing', 'model_variant', 'model_choice', 'final_test']
+    assert auto['decisions']['success_criterion']['depends_on'] == ['error_metric']
     assert _a4(auto)['decisions']['conclusion']['depends_on'] == [
         'prediction_time', 'feature_availability', 'split', 'success_criterion',
         'preprocessing', 'model_choice']
-    assert [s['id'] for s in st.derive_plan(auto)] == list(st.B1_REGRESSION_STEP_IDS) == [
+    assert [s['id'] for s in st.derive_plan(auto)] == [
+        'discover_data', 'prediction_time', 'feature_availability', 'split', 'error_metric',
+        'success_criterion', 'train_eda', 'preprocessing', 'models', 'model_variant',
+        'model_choice', 'final_test', 'conclusion']
+    assert list(st.B1_REGRESSION_STEP_IDS) == [
         'discover_data', 'prediction_time', 'feature_availability', 'split', 'success_criterion',
         'train_eda', 'preprocessing', 'models', 'model_variant', 'model_choice', 'final_test',
         'conclusion']

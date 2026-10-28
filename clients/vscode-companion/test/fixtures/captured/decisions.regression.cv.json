@@ -14,7 +14,7 @@
   "schema": "hypotrail.decisions/1",
   "ok": true,
   "study": "/studies/auto mpg cv",
-  "revision": 61,
+  "revision": 63,
   "task": "regression",
   "decisions": [
    {
@@ -33,7 +33,7 @@
      "restatement": "You decide the prediction_time as stated.",
      "proposal_id": "p_1",
      "revision": 3,
-     "time": "2026-10-28T08:43:22.429024+00:00",
+     "time": "2026-10-28T12:47:06.650053+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -72,7 +72,7 @@
      "restatement": "You decide the feature_availability as stated.",
      "proposal_id": "p_2",
      "revision": 5,
-     "time": "2026-10-28T08:43:23.692005+00:00",
+     "time": "2026-10-28T12:47:08.038281+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -106,7 +106,7 @@
      "restatement": "You decide the split as stated.",
      "proposal_id": "p_3",
      "revision": 7,
-     "time": "2026-10-28T08:43:25.242877+00:00",
+     "time": "2026-10-28T12:47:09.607852+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -121,6 +121,38 @@
     "open_proposals": []
    },
    {
+    "decision_id": "error_metric",
+    "title": "Choose how the error is measured",
+    "pause": 2,
+    "step": "error_metric",
+    "status": "confirmed",
+    "value": {
+     "metric": "mae"
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the error_metric exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the error_metric as stated.",
+     "proposal_id": "p_4",
+     "revision": 9,
+     "time": "2026-10-28T12:47:11.131735+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false,
+     "label": "You decide the error_metric as stated.",
+     "adopted_from": null
+    },
+    "open_proposals": []
+   },
+   {
     "decision_id": "success_criterion",
     "title": "Fix the success criterion before seeing a model",
     "pause": 2,
@@ -130,16 +162,18 @@
      "metric": "mae_reduction",
      "min_share": 0.1
     },
-    "depends_on": [],
+    "depends_on": [
+     "error_metric"
+    ],
     "reason": null,
     "confirmation": {
      "user_words": "Yes, I want the success_criterion exactly as you stated it",
      "channel": "chat",
      "actor": "user",
      "restatement": "You decide the success_criterion as stated.",
-     "proposal_id": "p_4",
-     "revision": 9,
-     "time": "2026-10-28T08:43:26.776205+00:00",
+     "proposal_id": "p_5",
+     "revision": 11,
+     "time": "2026-10-28T12:47:12.952699+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -179,9 +213,9 @@
      "channel": "chat",
      "actor": "user",
      "restatement": "You keep the drafted preparation: each change rests on the quality check.",
-     "proposal_id": "p_5",
-     "revision": 17,
-     "time": "2026-10-28T08:43:33.438644+00:00",
+     "proposal_id": "p_6",
+     "revision": 19,
+     "time": "2026-10-28T12:47:20.035908+00:00",
      "authenticated": false,
      "basis": "endorsed",
      "delegation_scope": null,
@@ -221,9 +255,9 @@
      "channel": "chat",
      "actor": "user",
      "restatement": "You compare a tuned ridge and an EBM with the linear model.",
-     "proposal_id": "p_6",
-     "revision": 53,
-     "time": "2026-10-28T08:44:00.105108+00:00",
+     "proposal_id": "p_7",
+     "revision": 55,
+     "time": "2026-10-28T12:47:45.748320+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -263,6 +297,7 @@
     "status": "open",
     "value": null,
     "depends_on": [
+     "error_metric",
      "prediction_time",
      "feature_availability",
      "split",
@@ -283,6 +318,7 @@
     "status": "open",
     "value": null,
     "depends_on": [
+     "error_metric",
      "prediction_time",
      "feature_availability",
      "split",
@@ -306,7 +342,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 2,
-    "created": "2026-10-28T08:43:21.907925+00:00",
+    "created": "2026-10-28T12:47:06.105974+00:00",
     "closed_revision": 3,
     "closed_reason": "confirmed",
     "origin": {
@@ -328,7 +364,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 4,
-    "created": "2026-10-28T08:43:23.104075+00:00",
+    "created": "2026-10-28T12:47:07.436121+00:00",
     "closed_revision": 5,
     "closed_reason": "confirmed",
     "origin": {
@@ -347,7 +383,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 6,
-    "created": "2026-10-28T08:43:24.550310+00:00",
+    "created": "2026-10-28T12:47:08.939852+00:00",
     "closed_revision": 7,
     "closed_reason": "confirmed",
     "origin": {
@@ -356,16 +392,15 @@
    },
    {
     "proposal_id": "p_4",
-    "decision_id": "success_criterion",
+    "decision_id": "error_metric",
     "value": {
-     "metric": "mae_reduction",
-     "min_share": 0.1
+     "metric": "mae"
     },
-    "restatement": "You decide the success_criterion as stated.",
+    "restatement": "You decide the error_metric as stated.",
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 8,
-    "created": "2026-10-28T08:43:26.113344+00:00",
+    "created": "2026-10-28T12:47:10.447672+00:00",
     "closed_revision": 9,
     "closed_reason": "confirmed",
     "origin": {
@@ -374,6 +409,24 @@
    },
    {
     "proposal_id": "p_5",
+    "decision_id": "success_criterion",
+    "value": {
+     "metric": "mae_reduction",
+     "min_share": 0.1
+    },
+    "restatement": "You decide the success_criterion as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 10,
+    "created": "2026-10-28T12:47:12.019217+00:00",
+    "closed_revision": 11,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_6",
     "decision_id": "preprocessing",
     "value": {
      "caps": {},
@@ -391,16 +444,16 @@
     "restatement": "You keep the drafted preparation: each change rests on the quality check.",
     "rationale": "The quality check motivates it.",
     "status": "confirmed",
-    "revision": 16,
-    "created": "2026-10-28T08:43:32.169563+00:00",
-    "closed_revision": 17,
+    "revision": 18,
+    "created": "2026-10-28T12:47:18.186737+00:00",
+    "closed_revision": 19,
     "closed_reason": "confirmed",
     "origin": {
      "channel": "chat"
     }
    },
    {
-    "proposal_id": "p_6",
+    "proposal_id": "p_7",
     "decision_id": "model_variant",
     "value": {
      "variants": [
@@ -418,9 +471,9 @@
     "restatement": "You compare a tuned ridge and an EBM with the linear model.",
     "rationale": "The diagnostics show a curve for horsepower and weight.",
     "status": "confirmed",
-    "revision": 52,
-    "created": "2026-10-28T08:43:58.221176+00:00",
-    "closed_revision": 53,
+    "revision": 54,
+    "created": "2026-10-28T12:47:43.708196+00:00",
+    "closed_revision": 55,
     "closed_reason": "confirmed",
     "origin": {
      "channel": "chat"
@@ -430,7 +483,7 @@
   "history": [
    {
     "revision": 3,
-    "time": "2026-10-28T08:43:22.429101+00:00",
+    "time": "2026-10-28T12:47:06.650106+00:00",
     "decision_id": "prediction_time",
     "proposal_id": "p_1",
     "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
@@ -444,7 +497,7 @@
    },
    {
     "revision": 5,
-    "time": "2026-10-28T08:43:23.692088+00:00",
+    "time": "2026-10-28T12:47:08.038363+00:00",
     "decision_id": "feature_availability",
     "proposal_id": "p_2",
     "value": {
@@ -465,7 +518,7 @@
    },
    {
     "revision": 7,
-    "time": "2026-10-28T08:43:25.242978+00:00",
+    "time": "2026-10-28T12:47:09.607909+00:00",
     "decision_id": "split",
     "proposal_id": "p_3",
     "value": {
@@ -483,9 +536,25 @@
    },
    {
     "revision": 9,
-    "time": "2026-10-28T08:43:26.776261+00:00",
-    "decision_id": "success_criterion",
+    "time": "2026-10-28T12:47:11.131791+00:00",
+    "decision_id": "error_metric",
     "proposal_id": "p_4",
+    "value": {
+     "metric": "mae"
+    },
+    "user_words": "Yes, I want the error_metric exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 11,
+    "time": "2026-10-28T12:47:12.952834+00:00",
+    "decision_id": "success_criterion",
+    "proposal_id": "p_5",
     "value": {
      "metric": "mae_reduction",
      "min_share": 0.1
@@ -499,10 +568,10 @@
     "superseded_at": null
    },
    {
-    "revision": 17,
-    "time": "2026-10-28T08:43:33.438718+00:00",
+    "revision": 19,
+    "time": "2026-10-28T12:47:20.035979+00:00",
     "decision_id": "preprocessing",
-    "proposal_id": "p_5",
+    "proposal_id": "p_6",
     "value": {
      "caps": {},
      "data_contingent": false,
@@ -525,10 +594,10 @@
     "superseded_at": null
    },
    {
-    "revision": 53,
-    "time": "2026-10-28T08:44:00.112268+00:00",
+    "revision": 55,
+    "time": "2026-10-28T12:47:45.754854+00:00",
     "decision_id": "model_variant",
-    "proposal_id": "p_6",
+    "proposal_id": "p_7",
     "value": {
      "variants": [
       {

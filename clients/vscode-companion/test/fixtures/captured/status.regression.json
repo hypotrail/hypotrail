@@ -14,15 +14,15 @@
   "schema": "hypotrail.status/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 38,
+  "revision": 40,
   "since": null,
   "changed": null,
   "changes_since": null,
   "view": {
    "schema": "hypotrail.view/1",
    "study": "/studies/auto mpg",
-   "revision": 38,
-   "updated": "2026-10-28T08:41:29.054481+00:00",
+   "revision": 40,
+   "updated": "2026-10-28T12:45:04.537660+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
@@ -106,6 +106,23 @@
      "current": false
     },
     {
+     "id": "error_metric",
+     "title": "Choose how the error is measured",
+     "question": "The error of one prediction is the gap between the observed value and the predicted one. The mean absolute error (MAE) averages these gaps; the root mean squared error (RMSE) averages their squares, then takes the root, so one big miss weighs much more. Which of the two measures the error of this study? It is chosen now, before any model is fitted.",
+     "expected_output": "A confirmed error measure (MAE or RMSE), chosen before any model result is seen.",
+     "completion": "Decision error_metric is confirmed.",
+     "pause": 2,
+     "decision": "error_metric",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "split"
+     ],
+     "status": "done",
+     "current": false
+    },
+    {
      "id": "success_criterion",
      "title": "Fix the success criterion before seeing a model",
      "question": "The mean absolute error is the average size of a prediction's error, in the unit of the target. The mean baseline predicts, for every row of the validation set, the mean of the target on the training set. How much smaller than the error of the mean baseline should the validation error of the model be for it to be worth using? It is fixed now, before any model is fitted.",
@@ -117,7 +134,8 @@
      "decide_first": true,
      "missing_results": [],
      "requires": [
-      "split"
+      "split",
+      "error_metric"
      ],
      "status": "done",
      "current": false
@@ -252,11 +270,13 @@
      "pause": 3,
      "decision": "final_test",
      "activities": [
-      "final_test.evaluation"
+      "final_test.evaluation",
+      "diag.final_test"
      ],
      "decide_first": true,
      "missing_results": [
-      "final_test.evaluation"
+      "final_test.evaluation",
+      "diag.final_test"
      ],
      "requires": [
       "model_choice"
@@ -285,7 +305,7 @@
    "current_step": "model_choice",
    "next_action": {
     "kind": "await_user_words",
-    "proposal_id": "p_7",
+    "proposal_id": "p_8",
     "decision": "model_choice",
     "message": "Show the restatement, then ask the closed question \"Do you adopt this decision?\" and record the reply verbatim. A bare \"ok\" before that question is not a decision.",
     "audience": "agent",
@@ -294,7 +314,7 @@
     "recommended": null,
     "question": "Do you adopt this decision?",
     "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change.",
-    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Choice (11 of 13).",
+    "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Error measure, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Model choice); Conclude and hand over (Final test, Conclusion). Current step: Model choice (12 of 14).",
     "evidence": [
      "evaluate.regression"
     ],
@@ -302,11 +322,11 @@
      "schema": "hypotrail.pause/1",
      "kind": "decision",
      "language": "en",
-     "revision": 38,
+     "revision": 40,
      "position": {
       "step_id": "model_choice",
-      "completed": 10,
-      "total": 13
+      "completed": 11,
+      "total": 14
      },
      "learned": [],
      "limitations": [
@@ -323,7 +343,7 @@
        "text": "The data were explored or published before this study; its rows are not unseen."
       }
      ],
-     "proposal_id": "p_7",
+     "proposal_id": "p_8",
      "proposal_text": "Adopt the linear model.",
      "recommended_option": "adopt",
      "options": [
@@ -346,13 +366,13 @@
    },
    "open_proposals": [
     {
-     "proposal_id": "p_7",
+     "proposal_id": "p_8",
      "decision_id": "model_choice",
      "value": "fit.linear",
      "restatement": "Adopt the linear model.",
      "rationale": "Lower error on later years.",
-     "revision": 38,
-     "created": "2026-10-28T08:41:29.054444+00:00",
+     "revision": 40,
+     "created": "2026-10-28T12:45:04.537611+00:00",
      "labels": null,
      "label": "Adopt the linear model.",
      "origin": {
@@ -376,7 +396,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-28T08:41:07.035821+00:00",
+      "time": "2026-10-28T12:44:39.807847+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -415,7 +435,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-28T08:41:08.128187+00:00",
+      "time": "2026-10-28T12:44:41.185701+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -456,7 +476,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-28T08:41:09.596896+00:00",
+      "time": "2026-10-28T12:44:42.901728+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -471,6 +491,38 @@
      "open_proposals": [],
      "feature_basis": null
     },
+    "error_metric": {
+     "decision_id": "error_metric",
+     "status": "confirmed",
+     "value": {
+      "metric": "mae"
+     },
+     "proposal_id": "p_4",
+     "depends_on": [],
+     "revision": 9,
+     "reason": null,
+     "confirmation": {
+      "user_words": "Yes, I want the error_metric exactly as you stated it",
+      "channel": "chat",
+      "actor": "user",
+      "restatement": "You decide the error_metric as stated.",
+      "proposal_id": "p_4",
+      "revision": 9,
+      "time": "2026-10-28T12:44:44.530047+00:00",
+      "authenticated": false,
+      "basis": "restated",
+      "delegation_scope": null,
+      "agent_concern": null,
+      "mode": "guided",
+      "warnings": [],
+      "reason_given": null,
+      "adoption_question": false,
+      "label": "You decide the error_metric as stated.",
+      "adopted_from": null
+     },
+     "open_proposals": [],
+     "feature_basis": null
+    },
     "success_criterion": {
      "decision_id": "success_criterion",
      "status": "confirmed",
@@ -478,18 +530,20 @@
       "metric": "mae_reduction",
       "min_share": 0.1
      },
-     "proposal_id": "p_4",
-     "depends_on": [],
-     "revision": 9,
+     "proposal_id": "p_5",
+     "depends_on": [
+      "error_metric"
+     ],
+     "revision": 11,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the success_criterion exactly as you stated it",
       "channel": "chat",
       "actor": "user",
       "restatement": "You decide the success_criterion as stated.",
-      "proposal_id": "p_4",
-      "revision": 9,
-      "time": "2026-10-28T08:41:11.152609+00:00",
+      "proposal_id": "p_5",
+      "revision": 11,
+      "time": "2026-10-28T12:44:46.601355+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -516,18 +570,18 @@
       "rare_category_min_rows": 0,
       "target_looks_before": 0
      },
-     "proposal_id": "p_5",
+     "proposal_id": "p_6",
      "depends_on": [],
-     "revision": 11,
+     "revision": 13,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the preprocessing exactly as you stated it",
       "channel": "chat",
       "actor": "user",
       "restatement": "You decide the preprocessing as stated.",
-      "proposal_id": "p_5",
-      "revision": 11,
-      "time": "2026-10-28T08:41:12.835797+00:00",
+      "proposal_id": "p_6",
+      "revision": 13,
+      "time": "2026-10-28T12:44:48.361774+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -549,18 +603,18 @@
       "kind": "regularisation",
       "strength": "strong"
      },
-     "proposal_id": "p_6",
+     "proposal_id": "p_7",
      "depends_on": [],
-     "revision": 33,
+     "revision": 35,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the model_variant exactly as you stated it",
       "channel": "chat",
       "actor": "user",
       "restatement": "You decide the model_variant as stated.",
-      "proposal_id": "p_6",
-      "revision": 33,
-      "time": "2026-10-28T08:41:25.460077+00:00",
+      "proposal_id": "p_7",
+      "revision": 35,
+      "time": "2026-10-28T12:45:01.150860+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -579,7 +633,7 @@
      "decision_id": "model_choice",
      "status": "proposed",
      "value": "fit.linear",
-     "proposal_id": "p_7",
+     "proposal_id": "p_8",
      "depends_on": [
       "prediction_time",
       "feature_availability",
@@ -587,11 +641,11 @@
       "preprocessing",
       "model_variant"
      ],
-     "revision": 38,
+     "revision": 40,
      "reason": null,
      "confirmation": null,
      "open_proposals": [
-      "p_7"
+      "p_8"
      ],
      "feature_basis": null
     },
@@ -601,6 +655,7 @@
      "value": null,
      "proposal_id": null,
      "depends_on": [
+      "error_metric",
       "prediction_time",
       "feature_availability",
       "split",
@@ -621,6 +676,7 @@
      "value": null,
      "proposal_id": null,
      "depends_on": [
+      "error_metric",
       "prediction_time",
       "feature_availability",
       "split",
@@ -963,9 +1019,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_284db43c31758f9aef75cd0b",
-     "exposure_id": "x_c2ad1d94ea014d549d681b3d59631f8b",
-     "started_revision": 26,
+     "execution_id": "e_2033db067e905124ef78ea82",
+     "exposure_id": "x_f5bd76fa493a4b379d26c4d8b85b624a",
+     "started_revision": 28,
      "integrity": "ok"
     },
     "eda.distribution:weight": {
@@ -1113,9 +1169,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_622dd0c704d6af123eea761a",
-     "exposure_id": "x_f16effacc46c4553acc3ea5584b53063",
-     "started_revision": 24,
+     "execution_id": "e_aa1477c41bc44c975f9888ce",
+     "exposure_id": "x_58eec21065424072a7ed8fe8d0b65e2b",
+     "started_revision": 26,
      "integrity": "ok"
     },
     "eda.mean_by:model_year": {
@@ -1351,9 +1407,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_5f95a7d242e4ea751ed82afb",
-     "exposure_id": "x_8907b2a8e5ee4d5c9959b90f5a363514",
-     "started_revision": 22,
+     "execution_id": "e_284db43c31758f9aef75cd0b",
+     "exposure_id": "x_72688a735903411ca53c543472471635",
+     "started_revision": 24,
      "integrity": "ok"
     },
     "eda.quality": {
@@ -2595,9 +2651,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_808e66ec55e19cf01a72e71c",
-     "exposure_id": "x_fb7771ea7cc44e52980db128563e00d2",
-     "started_revision": 18,
+     "execution_id": "e_5f95a7d242e4ea751ed82afb",
+     "exposure_id": "x_24628a5876d248dfaca9f60765b0e928",
+     "started_revision": 20,
      "integrity": "ok"
     },
     "eda.single_feature_signal": {
@@ -2721,9 +2777,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_75c47b1ef767a30eb39cdb4d",
-     "exposure_id": "x_bebcd1f7b1a248cdb0b6e11d4b4ebedc",
-     "started_revision": 20,
+     "execution_id": "e_622dd0c704d6af123eea761a",
+     "exposure_id": "x_75306cdf1c774ed3b7c574ae9f44b0f2",
+     "started_revision": 22,
      "integrity": "ok"
     },
     "eda.special_values": {
@@ -2791,9 +2847,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_305370681065d9971a93f227",
-     "exposure_id": "x_37b2d0afdc6b4c5da372bb20091ca3df",
-     "started_revision": 16,
+     "execution_id": "e_75c47b1ef767a30eb39cdb4d",
+     "exposure_id": "x_e69624a967e44183b0910c448954f0bb",
+     "started_revision": 18,
      "integrity": "ok"
     },
     "eda.target_summary": {
@@ -2857,9 +2913,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_f37508d21e9ebda7c2ebce28",
-     "exposure_id": "x_f6c10ac23af84fba8c742ffa1a4415b0",
-     "started_revision": 14,
+     "execution_id": "e_808e66ec55e19cf01a72e71c",
+     "exposure_id": "x_1a0bd559cd0f489ca3acfda7683fc0ca",
+     "started_revision": 16,
      "integrity": "ok"
     },
     "evaluate.regression": {
@@ -3207,9 +3263,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_952532c3c79c0a600a6ca16b",
-     "exposure_id": "x_e83b49a9c8254dd6a9d61716998c9281",
-     "started_revision": 36,
+     "execution_id": "e_3a7193d6091b2b9b9c7123cb",
+     "exposure_id": "x_d70d1ed62ed54b3bba88853a16af8f7f",
+     "started_revision": 38,
      "integrity": "ok"
     },
     "fit.baseline": {
@@ -3287,9 +3343,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_aa1477c41bc44c975f9888ce",
-     "exposure_id": "x_7a6a4f2ec2774a36930c782d6f7d339b",
-     "started_revision": 28,
+     "execution_id": "e_ea00d1a0450c556a8e3289e1",
+     "exposure_id": "x_6b726cfda36e43b3a79bc13d8a2dd285",
+     "started_revision": 30,
      "integrity": "ok"
     },
     "fit.linear": {
@@ -3432,9 +3488,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_2033db067e905124ef78ea82",
-     "exposure_id": "x_47c44609b2554d82b2056062bc2bc790",
-     "started_revision": 30,
+     "execution_id": "e_e2a8db59374ecd02f11773fa",
+     "exposure_id": "x_f0a86039d9de4f78b9ee1de1b1487987",
+     "started_revision": 32,
      "integrity": "ok"
     },
     "fit.variant": {
@@ -3587,9 +3643,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_9ef87905207eafeced71da38",
-     "exposure_id": "x_33ddf07a141d49988388dd7f8fc224b1",
-     "started_revision": 34,
+     "execution_id": "e_bad9a6f0e28076da5c45d47f",
+     "exposure_id": "x_ac51a940eb0748e5b797c9e56a40897e",
+     "started_revision": 36,
      "integrity": "ok"
     },
     "split": {
@@ -3680,9 +3736,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_ea1ff066194e9ce5fbc1533b",
-     "exposure_id": "x_2f4fba9b182d4f509b938a8e60067950",
-     "started_revision": 12,
+     "execution_id": "e_305370681065d9971a93f227",
+     "exposure_id": "x_0429dc7d91ab4065a7a18be95e8554e3",
+     "started_revision": 14,
      "integrity": "ok"
     }
    },
@@ -3704,10 +3760,10 @@
       "error": null,
       "generated": false,
       "kind": "marimo_notebook",
-      "last_ok_revision": 38,
+      "last_ok_revision": 40,
       "path": "notebooks/study_editable.py",
-      "revision": 38,
-      "sha256": "17f1c8e64203dc437028f328ef0ee40fff4d54d3fa4575e50dfaa738c59cb059",
+      "revision": 40,
+      "sha256": "98b589a6769501f885e916fd4a61631c25b309760f263b93d87914aaa63b042a",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -3733,14 +3789,14 @@
        "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
        "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c"
       ],
-      "edit_check_sha256": "31673eaaa31332fd7d31a2154e72fc0cf8bab86ad114e9e3a8366bdc4cf752bb",
+      "edit_check_sha256": "988cf819ea14a39dc6747b0a5c6bbb85852a4e5d58ce6d4e879bad4a5a6a2bcb",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
-      "last_ok_revision": 38,
+      "last_ok_revision": 40,
       "path": "notebooks/study_generated.py",
-      "revision": 38,
-      "sha256": "2eaf8269f31603c7562f652168623942d9d3e42b896f14f2959879d0716b3ea6",
+      "revision": 40,
+      "sha256": "ed26abb6889a7388309c1590345a2fe04cc91c2aa5fb8cca85189ad6134a432f",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -3769,10 +3825,10 @@
       "error": null,
       "generated": true,
       "kind": "html",
-      "last_ok_revision": 38,
+      "last_ok_revision": 40,
       "path": "reports/study.html",
-      "revision": 38,
-      "sha256": "e3eba4531eb5da00838b73229af5ac092c1b8c8ffa7f2433ce5dba5019aedea1",
+      "revision": 40,
+      "sha256": "7e7db4aacc1d5b59bafa359317b8ef4d67592fcf947b2c313faf0d1d0176ad9b",
       "status": "ok",
       "template_version": 4,
       "user_edits_preserved": [],
@@ -4141,7 +4197,7 @@
    "claim_eligibility": null,
    "presentation": {
     "schema": "hypotrail.presentation/1",
-    "revision": 38,
+    "revision": 40,
     "result_ids": {
      "eda.correlation": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
      "eda.distribution:weight": "bedade14ed77dd17cb9d696a4706af59a70071a5da92bfea69c2230a50d194fc",
@@ -4178,11 +4234,11 @@
      "schema": "hypotrail.pause/1",
      "kind": "decision",
      "language": "en",
-     "revision": 38,
+     "revision": 40,
      "position": {
       "step_id": "model_choice",
-      "completed": 10,
-      "total": 13
+      "completed": 11,
+      "total": 14
      },
      "learned": [],
      "limitations": [
@@ -4199,7 +4255,7 @@
        "text": "The data were explored or published before this study; its rows are not unseen."
       }
      ],
-     "proposal_id": "p_7",
+     "proposal_id": "p_8",
      "proposal_text": "Adopt the linear model.",
      "recommended_option": "adopt",
      "options": [

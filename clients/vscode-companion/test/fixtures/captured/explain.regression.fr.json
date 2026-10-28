@@ -14,7 +14,7 @@
   "schema": "hypotrail.explain/1",
   "ok": true,
   "study": "/studies/auto mpg fr",
-  "revision": 32,
+  "revision": 34,
   "task": "regression",
   "terms": [
    {
@@ -119,7 +119,7 @@
     "example": {
      "segments": [
       {
-       "text": "Ici, la moyenne de référence prédit "
+       "text": "Ici, la référence (prédire la moyenne) prédit "
       },
       {
        "text": "20.57",
@@ -651,7 +651,7 @@
        "format": "f2"
       },
       {
-       "text": " mpg pour la moyenne de référence."
+       "text": " mpg pour la référence (prédire la moyenne)."
       }
      ]
     },
@@ -688,7 +688,7 @@
        "format": "f2"
       },
       {
-       "text": " mpg pour la moyenne de référence."
+       "text": " mpg pour la référence (prédire la moyenne)."
       }
      ]
     },
@@ -879,6 +879,14 @@
     },
     "text_status": "shown"
    },
+   "error_metric": {
+    "concept": null,
+    "context": null,
+    "method": null,
+    "interpretation": null,
+    "consequence": null,
+    "text_status": "shown"
+   },
    "success_criterion": {
     "concept": {
      "segments": [
@@ -897,7 +905,7 @@
     "method": {
      "segments": [
       {
-       "text": "Vous indiquez la plus petite réduction relative de l'erreur absolue moyenne de validation de la moyenne de référence qui rendrait le modèle utile."
+       "text": "Vous indiquez la plus petite réduction relative de l'erreur absolue moyenne de validation de la référence (prédire la moyenne) qui rendrait le modèle utile."
       }
      ]
     },
@@ -1038,7 +1046,7 @@
        "format": "f2"
       },
       {
-       "text": ", dans l'unité de la cible. La moyenne de référence prédit cette moyenne pour chaque ligne ; un modèle doit faire mieux pour être utile."
+       "text": ", dans l'unité de la cible. La référence (prédire la moyenne) prédit cette moyenne pour chaque ligne ; un modèle doit faire mieux pour être utile."
       }
      ]
     },
@@ -1062,7 +1070,7 @@
     "context": {
      "segments": [
       {
-       "text": "Une moyenne de référence et un modèle linéaire sont ajustés sur les lignes d'entraînement et prédisent les lignes de validation."
+       "text": "Une référence (prédire la moyenne) et un modèle linéaire sont ajustés sur les lignes d'entraînement et prédisent les lignes de validation."
       }
      ]
     },
@@ -1076,7 +1084,7 @@
     "interpretation": {
      "segments": [
       {
-       "text": "Sur les lignes de validation, la moyenne de référence a une erreur absolue moyenne de "
+       "text": "Sur les lignes de validation, la référence (prédire la moyenne) a une erreur absolue moyenne de "
       },
       {
        "text": "10.27",
@@ -1128,7 +1136,7 @@
     "context": {
      "segments": [
       {
-       "text": "L'usage prévu est : Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques. Un modèle n'est adopté que s'il réduit l'erreur de la moyenne de référence de plus que la variabilité de ces lignes de validation, et si ses résidus ne montrent pas de biais qui compte pour cet usage."
+       "text": "L'usage prévu est : Exercice : estimer la consommation d'un futur modèle à partir de ses caractéristiques techniques. Un modèle n'est adopté que s'il réduit l'erreur de la référence (prédire la moyenne) de plus que la variabilité de ces lignes de validation, et si ses résidus ne montrent pas de biais qui compte pour cet usage."
       }
      ]
     },
@@ -1283,7 +1291,7 @@
    {
     "id": "regression.model_choice.beats_mean",
     "step": "model_choice",
-    "question": "L'erreur du modèle linéaire sera-t-elle inférieure à celle de la moyenne de référence ?",
+    "question": "L'erreur du modèle linéaire sera-t-elle inférieure à celle de la référence (prédire la moyenne) ?",
     "choices": [
      {
       "id": "yes",
@@ -1321,7 +1329,7 @@
        "format": "f2"
       },
       {
-       "text": " mpg pour la moyenne de référence. L'écart apparié vaut "
+       "text": " mpg pour la référence (prédire la moyenne). L'écart apparié vaut "
       },
       {
        "text": "-3.79",

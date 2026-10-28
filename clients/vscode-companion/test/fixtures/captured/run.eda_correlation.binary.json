@@ -1101,7 +1101,7 @@
    "started_revision": 30,
    "invalidation": null,
    "exposure_ids": [
-    "x_bb97f08bdc4e4a50973d5b00b71eafe5"
+    "x_56a3f60a4ffd475883eec73d7655b70b"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -1156,7 +1156,7 @@
    "recommended": null,
    "question": null,
    "junior_digest": "Next: an outcome rate by group (age), run without asking you. The exploration continues with an outcome rate by group (age). It reads the target of the development rows: one more look, counted.",
-   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Explore (8 of 14).",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Exploration (8 of 14).",
    "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",

@@ -15,11 +15,11 @@
   "ok": true,
   "study": "/studies/auto mpg",
   "action": "run",
-  "request_id": "a25",
+  "request_id": "a27",
   "replayed": false,
-  "revision": 40,
+  "revision": 42,
   "activity": "diag.regression",
-  "execution_id": "e_bad9a6f0e28076da5c45d47f",
+  "execution_id": "e_68f4d49fa8038e7e3f15dc8a",
   "status": "promoted",
   "result_id": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
   "values": {
@@ -2684,18 +2684,18 @@
    }
   },
   "result": {
-   "execution_id": "e_bad9a6f0e28076da5c45d47f",
+   "execution_id": "e_68f4d49fa8038e7e3f15dc8a",
    "activity": "diag.regression",
    "slot": "diag.regression",
    "status": "promoted",
    "result_id": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
    "input_key": "ed79e40331b979abe1fb8c9a7fb6d86d78525319ab3b1252e22d694429895df9",
    "reason": null,
-   "started_revision": 39,
+   "started_revision": 41,
    "invalidation": null,
    "exposure_ids": [
-    "x_55fcfa40916f4ca78419cc3eba370401",
-    "x_163e0acfc16142a29ca9c3842c7f3d8b"
+    "x_62defc3090904588aab1166dc597f28c",
+    "x_2004f614c4164703988135f6b731e71b"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2704,24 +2704,24 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 40,
-    "last_ok_revision": 40,
+    "revision": 42,
+    "last_ok_revision": 42,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 40,
-    "last_ok_revision": 40,
+    "revision": 42,
+    "last_ok_revision": 42,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },
    "editable": {
     "status": "ok",
     "path": "notebooks/study_editable.py",
-    "revision": 40,
-    "last_ok_revision": 40,
+    "revision": 42,
+    "last_ok_revision": 42,
     "error": null,
     "tracked": false,
     "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence."
@@ -2738,7 +2738,7 @@
   },
   "next_action": {
    "kind": "await_user_words",
-   "proposal_id": "p_7",
+   "proposal_id": "p_8",
    "decision": "model_choice",
    "message": "Show the restatement, then ask the closed question \"Do you adopt this decision?\" and record the reply verbatim. A bare \"ok\" before that question is not a decision.",
    "audience": "agent",
@@ -2747,7 +2747,7 @@
    "recommended": null,
    "question": "Do you adopt this decision?",
    "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change.",
-   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Choice (11 of 13).",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Error measure, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Model choice); Conclude and hand over (Final test, Conclusion). Current step: Model choice (12 of 14).",
    "evidence": [
     "evaluate.regression",
     "diag.regression"
@@ -2756,11 +2756,11 @@
     "schema": "hypotrail.pause/1",
     "kind": "decision",
     "language": "en",
-    "revision": 40,
+    "revision": 42,
     "position": {
      "step_id": "model_choice",
-     "completed": 10,
-     "total": 13
+     "completed": 11,
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -2777,7 +2777,7 @@
       "text": "The data were explored or published before this study; its rows are not unseen."
      }
     ],
-    "proposal_id": "p_7",
+    "proposal_id": "p_8",
     "proposal_text": "Adopt the linear model.",
     "recommended_option": "adopt",
     "options": [

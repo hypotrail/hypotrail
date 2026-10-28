@@ -14,7 +14,7 @@
   "schema": "hypotrail.data/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 57,
+  "revision": 59,
   "observation_unit": {
    "value": "A vehicle model for a model year",
    "status": "scenario_assumption",
@@ -389,122 +389,122 @@
    "order": "seeded sample",
    "items": [
     {
-     "row_key": "L31",
+     "row_key": "L66",
      "values": {
-      "mpg": 28,
-      "cylinders": 4,
-      "displacement": 140,
-      "horsepower": 90,
-      "weight": 2264,
-      "acceleration": 15.5,
-      "model_year": 71,
-      "origin": 1,
-      "car_name": "chevrolet vega 2300"
-     }
-    },
-    {
-     "row_key": "L67",
-     "values": {
-      "mpg": 17,
+      "mpg": 14,
       "cylinders": 8,
-      "displacement": 304,
-      "horsepower": 150,
-      "weight": 3672,
-      "acceleration": 11.5,
+      "displacement": 351,
+      "horsepower": 153,
+      "weight": 4129,
+      "acceleration": 13,
       "model_year": 72,
       "origin": 1,
-      "car_name": "amc ambassador sst"
+      "car_name": "ford galaxie 500"
      }
     },
     {
-     "row_key": "L80",
+     "row_key": "L163",
      "values": {
-      "mpg": 26,
+      "mpg": 15,
+      "cylinders": 6,
+      "displacement": 258,
+      "horsepower": 110,
+      "weight": 3730,
+      "acceleration": 19,
+      "model_year": 75,
+      "origin": 1,
+      "car_name": "amc matador"
+     }
+    },
+    {
+     "row_key": "L166",
+     "values": {
+      "mpg": 20,
+      "cylinders": 8,
+      "displacement": 262,
+      "horsepower": 110,
+      "weight": 3221,
+      "acceleration": 13.5,
+      "model_year": 75,
+      "origin": 1,
+      "car_name": "chevrolet monza 2+2"
+     }
+    },
+    {
+     "row_key": "L176",
+     "values": {
+      "mpg": 29,
       "cylinders": 4,
-      "displacement": 96,
-      "horsepower": 69,
-      "weight": 2189,
-      "acceleration": 18,
-      "model_year": 72,
+      "displacement": 90,
+      "horsepower": 70,
+      "weight": 1937,
+      "acceleration": 14,
+      "model_year": 75,
       "origin": 2,
-      "car_name": "renault 12 (sw)"
+      "car_name": "volkswagen rabbit"
      }
     },
     {
-     "row_key": "L86",
+     "row_key": "L202",
      "values": {
-      "mpg": 13,
+      "mpg": 18.5,
+      "cylinders": 6,
+      "displacement": 250,
+      "horsepower": 110,
+      "weight": 3645,
+      "acceleration": 16.2,
+      "model_year": 76,
+      "origin": 1,
+      "car_name": "pontiac ventura sj"
+     }
+    },
+    {
+     "row_key": "L231",
+     "values": {
+      "mpg": 15.5,
       "cylinders": 8,
       "displacement": 350,
-      "horsepower": 175,
-      "weight": 4100,
-      "acceleration": 13,
-      "model_year": 73,
-      "origin": 1,
-      "car_name": "buick century 350"
-     }
-    },
-    {
-     "row_key": "L105",
-     "values": {
-      "mpg": 12,
-      "cylinders": 8,
-      "displacement": 400,
-      "horsepower": 167,
-      "weight": 4906,
-      "acceleration": 12.5,
-      "model_year": 73,
-      "origin": 1,
-      "car_name": "ford country"
-     }
-    },
-    {
-     "row_key": "L106",
-     "values": {
-      "mpg": 13,
-      "cylinders": 8,
-      "displacement": 360,
       "horsepower": 170,
-      "weight": 4654,
-      "acceleration": 13,
-      "model_year": 73,
+      "weight": 4165,
+      "acceleration": 11.4,
+      "model_year": 77,
       "origin": 1,
-      "car_name": "plymouth custom suburb"
+      "car_name": "chevrolet monte carlo landau"
      }
     },
     {
-     "row_key": "L258",
+     "row_key": "L276",
      "values": {
-      "mpg": 19.4,
+      "mpg": 17,
       "cylinders": 6,
-      "displacement": 232,
-      "horsepower": 90,
-      "weight": 3210,
-      "acceleration": 17.2,
+      "displacement": 163,
+      "horsepower": 125,
+      "weight": 3140,
+      "acceleration": 13.6,
       "model_year": 78,
-      "origin": 1,
-      "car_name": "amc concord"
+      "origin": 2,
+      "car_name": "volvo 264gl"
      }
     },
     {
-     "row_key": "L339",
+     "row_key": "L307",
      "values": {
-      "mpg": 27.2,
-      "cylinders": 4,
-      "displacement": 135,
-      "horsepower": 84,
-      "weight": 2490,
-      "acceleration": 15.7,
-      "model_year": 81,
+      "mpg": 28.8,
+      "cylinders": 6,
+      "displacement": 173,
+      "horsepower": 115,
+      "weight": 2595,
+      "acceleration": 11.3,
+      "model_year": 79,
       "origin": 1,
-      "car_name": "plymouth reliant"
+      "car_name": "chevrolet citation"
      }
     }
    ],
-   "seed": "1f6ad757c511e8b1",
+   "seed": "64020efccf00e8a9",
    "target_shown": true,
    "exposure": {
-    "exposure_id": "x_54cdd7c365aa4cc087df4fa17f038584",
+    "exposure_id": "x_cadb1310d77d4ff9a4b40830088ee973",
     "purpose": "development_target_sample",
     "recorded": true,
     "withheld": null

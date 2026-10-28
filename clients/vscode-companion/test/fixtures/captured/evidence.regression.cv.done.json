@@ -14,7 +14,7 @@
   "schema": "hypotrail.evidence/1",
   "ok": true,
   "study": "/studies/auto mpg cv",
-  "revision": 71,
+  "revision": 75,
   "task": "regression",
   "results": [
    {
@@ -52,10 +52,10 @@
      "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
      "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520"
     ],
-    "created": "2026-10-28T08:43:27.946877+00:00",
-    "started_revision": 10,
-    "execution_id": "e_45e56db55964c2ea7d665907",
-    "exposure_id": "x_2b9471f7e09041fe899fdb42a5ef837d",
+    "created": "2026-10-28T12:47:14.011764+00:00",
+    "started_revision": 12,
+    "execution_id": "e_0eee3a0bb608847ca1ac05a7",
+    "exposure_id": "x_350249ba494540eaab39183b316f2e80",
     "values": {
      "method": "temporal_folds",
      "folds": 5,
@@ -182,10 +182,10 @@
     },
     "upstream": {},
     "downstream": [],
-    "created": "2026-10-28T08:43:29.357013+00:00",
-    "started_revision": 12,
-    "execution_id": "e_ce9ad9e64710577437be7e6c",
-    "exposure_id": "x_380f68b02edb41b8a2f6aebe9f4e49ee",
+    "created": "2026-10-28T12:47:15.244724+00:00",
+    "started_revision": 14,
+    "execution_id": "e_2ab8c63a63b208bd8731b8b3",
+    "exposure_id": "x_fd495fbda4b44e26b24ad80667481891",
     "values": {
      "partition": "development",
      "n_rows": 318,
@@ -1422,10 +1422,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:30.682534+00:00",
-    "started_revision": 14,
-    "execution_id": "e_0eee3a0bb608847ca1ac05a7",
-    "exposure_id": "x_57ad4703cf484ebfb43e186f3ee0199f",
+    "created": "2026-10-28T12:47:16.646014+00:00",
+    "started_revision": 16,
+    "execution_id": "e_9c2f7f2c69f91be9c07e4331",
+    "exposure_id": "x_9a195789568f44039e767e29badd207c",
     "values": {
      "partition": "train",
      "column": "horsepower",
@@ -1599,10 +1599,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:34.635310+00:00",
-    "started_revision": 18,
-    "execution_id": "e_9c2f7f2c69f91be9c07e4331",
-    "exposure_id": "x_3e3bd70567ee4e0eb9c4740fcc90dea6",
+    "created": "2026-10-28T12:47:21.157988+00:00",
+    "started_revision": 20,
+    "execution_id": "e_afbcc5b5c6d6b10afa774b86",
+    "exposure_id": "x_b8863063738e4728992031f0f47477a2",
     "values": {
      "partition": "train",
      "target": "mpg",
@@ -1700,10 +1700,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:35.931984+00:00",
-    "started_revision": 20,
-    "execution_id": "e_c4434080afdaeb4edd1ce5b5",
-    "exposure_id": "x_641b8da74a4e45c0b28298a368476af8",
+    "created": "2026-10-28T12:47:22.508552+00:00",
+    "started_revision": 22,
+    "execution_id": "e_061502fb4d6e55bbb43de53a",
+    "exposure_id": "x_42d9cf8fc0e14d9895cc8558675f821b",
     "values": {
      "partition": "train",
      "n_rows": 318,
@@ -1785,10 +1785,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:37.198635+00:00",
-    "started_revision": 22,
-    "execution_id": "e_afbcc5b5c6d6b10afa774b86",
-    "exposure_id": "x_bc6416a05a8248868d62ab0dc7b35b71",
+    "created": "2026-10-28T12:47:23.794954+00:00",
+    "started_revision": 24,
+    "execution_id": "e_8b6b767c3df161e7401893c1",
+    "exposure_id": "x_446cb287715d4d47b345d943e926e0a3",
     "values": {
      "partition": "train",
      "column": "cylinders",
@@ -1977,10 +1977,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:38.662184+00:00",
-    "started_revision": 24,
-    "execution_id": "e_061502fb4d6e55bbb43de53a",
-    "exposure_id": "x_dcbd5f69906747579ff3d0c0215356cd",
+    "created": "2026-10-28T12:47:25.139684+00:00",
+    "started_revision": 26,
+    "execution_id": "e_a633b01aa452bb85d7c21822",
+    "exposure_id": "x_746a5019821a43d78987b24ed528cfb5",
     "values": {
      "partition": "train",
      "column": "displacement",
@@ -2160,10 +2160,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:40.068752+00:00",
-    "started_revision": 26,
-    "execution_id": "e_8b6b767c3df161e7401893c1",
-    "exposure_id": "x_28283a1e53b247888c1a52b8fa34c24f",
+    "created": "2026-10-28T12:47:26.497768+00:00",
+    "started_revision": 28,
+    "execution_id": "e_88662ab87ecb5884e6688116",
+    "exposure_id": "x_0c19b766ea994e0eae375cefa4a61b6b",
     "values": {
      "partition": "train",
      "column": "horsepower",
@@ -2366,10 +2366,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:41.399300+00:00",
-    "started_revision": 28,
-    "execution_id": "e_a633b01aa452bb85d7c21822",
-    "exposure_id": "x_d99e7ca166fd4af38b74042153a5593b",
+    "created": "2026-10-28T12:47:27.697401+00:00",
+    "started_revision": 30,
+    "execution_id": "e_947162f1b37ea74e53f6086a",
+    "exposure_id": "x_6bfe8d3d9340401f98532aea4aef4d16",
     "values": {
      "partition": "train",
      "column": "weight",
@@ -2549,10 +2549,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:42.785165+00:00",
-    "started_revision": 30,
-    "execution_id": "e_88662ab87ecb5884e6688116",
-    "exposure_id": "x_1ce8a1cba31f457e93152091ffebfd86",
+    "created": "2026-10-28T12:47:29.016511+00:00",
+    "started_revision": 32,
+    "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
+    "exposure_id": "x_1013e105c4e84cb0a8946d244d9e8e6b",
     "values": {
      "partition": "train",
      "column": "acceleration",
@@ -2732,10 +2732,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:44.088965+00:00",
-    "started_revision": 32,
-    "execution_id": "e_947162f1b37ea74e53f6086a",
-    "exposure_id": "x_3f7349e6895d44fdace1f5995560d400",
+    "created": "2026-10-28T12:47:30.296581+00:00",
+    "started_revision": 34,
+    "execution_id": "e_0b8fc9580cdd4e33bc5c14db",
+    "exposure_id": "x_a02a17d5901844c497b5f53c0f0d18ec",
     "values": {
      "partition": "train",
      "column": "origin",
@@ -2879,10 +2879,10 @@
     },
     "upstream": {},
     "downstream": [],
-    "created": "2026-10-28T08:43:45.460060+00:00",
-    "started_revision": 34,
-    "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
-    "exposure_id": "x_5370ec3b5be2409295d80ef5e328f648",
+    "created": "2026-10-28T12:47:31.542027+00:00",
+    "started_revision": 36,
+    "execution_id": "e_6f568a7e009178d11fe5261f",
+    "exposure_id": "x_858d0378da614e4fa7631f9c7dddab29",
     "values": {
      "partition": "development",
      "n_rows": 318,
@@ -3131,10 +3131,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:46.913909+00:00",
-    "started_revision": 36,
-    "execution_id": "e_0b8fc9580cdd4e33bc5c14db",
-    "exposure_id": "x_9959f7d5ba9e44d88764beed90cbab13",
+    "created": "2026-10-28T12:47:32.724598+00:00",
+    "started_revision": 38,
+    "execution_id": "e_c747f3646963f5be94a54bdb",
+    "exposure_id": "x_99689281ecc04e3ba7cf8a3e7a8f373e",
     "values": {
      "partition": "train",
      "column": "cylinders",
@@ -3241,10 +3241,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:48.297796+00:00",
-    "started_revision": 38,
-    "execution_id": "e_6f568a7e009178d11fe5261f",
-    "exposure_id": "x_3c75fcf4b8ef44d89a6a45f538fd0cea",
+    "created": "2026-10-28T12:47:34.008128+00:00",
+    "started_revision": 40,
+    "execution_id": "e_f09116e554021da514197565",
+    "exposure_id": "x_d86b69faa2ac4b5e9a98bc6acb35f026",
     "values": {
      "partition": "train",
      "column": "displacement",
@@ -3409,10 +3409,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:49.646978+00:00",
-    "started_revision": 40,
-    "execution_id": "e_c747f3646963f5be94a54bdb",
-    "exposure_id": "x_3a8a0d5acdeb47c7a8d8ea0d28e3ba6d",
+    "created": "2026-10-28T12:47:35.204594+00:00",
+    "started_revision": 42,
+    "execution_id": "e_ed89c3d6b5ceb43c540c9096",
+    "exposure_id": "x_e4aba04fb8344f88ab16f255b3fccb56",
     "values": {
      "partition": "train",
      "column": "weight",
@@ -3577,10 +3577,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:50.858869+00:00",
-    "started_revision": 42,
-    "execution_id": "e_f09116e554021da514197565",
-    "exposure_id": "x_23022e74a3bb48a7b8a9cd30cbe7a7bc",
+    "created": "2026-10-28T12:47:36.588176+00:00",
+    "started_revision": 44,
+    "execution_id": "e_f02c465bbc8626047ce0b4cc",
+    "exposure_id": "x_85aad0ec7c87409ca7697dd9cbcb4667",
     "values": {
      "partition": "train",
      "column": "acceleration",
@@ -3745,10 +3745,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:52.380712+00:00",
-    "started_revision": 44,
-    "execution_id": "e_ed89c3d6b5ceb43c540c9096",
-    "exposure_id": "x_4e3c82f2227e4e39b5726fee443b5cc2",
+    "created": "2026-10-28T12:47:37.949018+00:00",
+    "started_revision": 46,
+    "execution_id": "e_5904912825f5be2c5a9088d0",
+    "exposure_id": "x_955c84d975344803bfbaf0fb382b90a0",
     "values": {
      "partition": "train",
      "column": "origin",
@@ -3845,10 +3845,10 @@
     "downstream": [
      "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d"
     ],
-    "created": "2026-10-28T08:43:53.944790+00:00",
-    "started_revision": 46,
-    "execution_id": "e_f02c465bbc8626047ce0b4cc",
-    "exposure_id": "x_ccb2542605a24cde9f47c3f257e67944",
+    "created": "2026-10-28T12:47:39.306453+00:00",
+    "started_revision": 48,
+    "execution_id": "e_8519f7987822bead348d47d9",
+    "exposure_id": "x_c5e11579dfa84425882e4f0156f8662a",
     "values": {
      "model": "train_mean",
      "target": "mpg",
@@ -3990,12 +3990,12 @@
      "62f774885fc62eaccdd876e9c57560540b145f768a6c6b0988466d100fa6344e",
      "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
      "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
-     "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe"
+     "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f"
     ],
-    "created": "2026-10-28T08:43:55.424116+00:00",
-    "started_revision": 48,
-    "execution_id": "e_5904912825f5be2c5a9088d0",
-    "exposure_id": "x_1b0b93df908d4940865ee3c321a1d54e",
+    "created": "2026-10-28T12:47:40.753339+00:00",
+    "started_revision": 50,
+    "execution_id": "e_0840d5a4c86aa1a0c3b1ef84",
+    "exposure_id": "x_cdefb84af52e4354a0a65fb1f1019ec1",
     "values": {
      "model": "linear",
      "target": "mpg",
@@ -4201,10 +4201,10 @@
      "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
      "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520"
     ],
-    "created": "2026-10-28T08:44:04.229854+00:00",
-    "started_revision": 54,
-    "execution_id": "e_c7acc1c7811ed60617bfe6ae",
-    "exposure_id": "x_33c599b05e1840a4b479c558de2e8f0e",
+    "created": "2026-10-28T12:47:49.635894+00:00",
+    "started_revision": 56,
+    "execution_id": "e_2c515241b96823b32e92d4c1",
+    "exposure_id": "x_42f6bf88674346399c3a9104f5c94bef",
     "values": {
      "model": "ridge",
      "target": "mpg",
@@ -4566,10 +4566,10 @@
      "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
      "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520"
     ],
-    "created": "2026-10-28T08:44:16.123076+00:00",
-    "started_revision": 56,
-    "execution_id": "e_60f840ebe562aefdfb0411ae",
-    "exposure_id": "x_f1ef3b0f6c38462dacc30b950db0abdd",
+    "created": "2026-10-28T12:48:01.353714+00:00",
+    "started_revision": 58,
+    "execution_id": "e_8f8894cfd0d89135d5c3402c",
+    "exposure_id": "x_ebb371c3a66c4ba8bf4d1a0c2c3919fe",
     "values": {
      "model": "ebm",
      "family": "ebm",
@@ -5665,12 +5665,12 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [
-     "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe"
+     "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f"
     ],
-    "created": "2026-10-28T08:44:17.609015+00:00",
-    "started_revision": 58,
-    "execution_id": "e_2c515241b96823b32e92d4c1",
-    "exposure_id": "x_db41784baf684f8e89ba5afa06a0385d",
+    "created": "2026-10-28T12:48:02.941355+00:00",
+    "started_revision": 60,
+    "execution_id": "e_8f5c345335630fb2ac505a65",
+    "exposure_id": "x_e7c410b8d3d64c2eb52ce6c5b9910a21",
     "values": {
      "n": 318,
      "target": "mpg",
@@ -6242,10 +6242,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:44:19.318044+00:00",
-    "started_revision": 60,
-    "execution_id": "e_8f8894cfd0d89135d5c3402c",
-    "exposure_id": "x_f8764c79364a482c9177fc18c92e620a",
+    "created": "2026-10-28T12:48:04.453056+00:00",
+    "started_revision": 62,
+    "execution_id": "e_cca2d0a0feb38ddc0531cb38",
+    "exposure_id": "x_aef6a26e711e41798369f00ff0060357",
     "values": {
      "question": "Where are the predictions off, by how much, and does the error grow with the prediction or differ across groups?",
      "evidence": "development",
@@ -12366,7 +12366,7 @@
     "texts": null
    },
    {
-    "result_id": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
+    "result_id": "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f",
     "activity": "predictor.capture",
     "slot": "predictor.capture",
     "promoted": true,
@@ -12405,15 +12405,15 @@
      "fit.linear": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439"
     },
     "downstream": [
-     "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48"
+     "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9"
     ],
-    "created": "2026-10-28T08:44:25.259896+00:00",
-    "started_revision": 64,
-    "execution_id": "e_bf95f2dfd64b8f0afb7e4a7a",
-    "exposure_id": "x_b02766484fa84af2b3252c39123a9705",
+    "created": "2026-10-28T12:48:10.595615+00:00",
+    "started_revision": 66,
+    "execution_id": "e_7aa8a09ee84cf89c77a2e082",
+    "exposure_id": "x_7d47b4a3da924da0959e42dfb94b3b31",
     "values": {
-     "predictor_id": "a3cad912071bfbf055d400c93a7adde9ae55d6a5cc8a813154b1da47283527b8",
-     "bundle": "predictors/a3cad912071bfbf055d400c93a7adde9ae55d6a5cc8a813154b1da47283527b8+mlflow_pyfunc",
+     "predictor_id": "f6e0d42532aeb7eba9d2e03d839daa33ffd8d4fb020fb4b246752011c35a3eb2",
+     "bundle": "predictors/f6e0d42532aeb7eba9d2e03d839daa33ffd8d4fb020fb4b246752011c35a3eb2+mlflow_pyfunc",
      "reused": false,
      "profile": "workshop",
      "model": "fit.linear",
@@ -12431,7 +12431,7 @@
       "acceleration",
       "origin"
      ],
-     "recipe_sha256": "d6906e1ccdbf5a166ea97c78702edecc8272607eb3e38f79f0a0c05ff4801248",
+     "recipe_sha256": "244bc47bc06ac41306be44a9233834d0b5448b843a6f17e30275e01e32f12b06",
      "data_contract_sha256": "49cb2be6e9d56559e8c1e4906322ed17357b2be462d92cac12e984a62afb69b7",
      "training_scope": {
       "role": "final_development_refit",
@@ -12508,7 +12508,7 @@
      "packages": [
       {
        "format": "mlflow_pyfunc",
-       "artifact_id": "f5caf3788014e58c6ae61636f1fdbea3134aec4c5dce2de99922f92cb1dc974d"
+       "artifact_id": "339ac59d344a8cae30d66b09520e4c45becb7032323e019cb937ff3df2da3c6d"
       }
      ],
      "runtime": {
@@ -12516,7 +12516,7 @@
       "version": "1.0.0",
       "api_version": "1.0"
      },
-     "computation_id": "920388b55981c539327516ac3af46ad3e4a4d12ed00bcb9bf3ee5fbcb256e958",
+     "computation_id": "b422ff9db13e1d3199423ff8fa6b12725a77e323949cb79341dfb49a7d1feba7",
      "limitations": [
       "Trusted local serialisation (pickle): the bundle digest proves integrity, not safety; load it only from a source you control.",
       "Parity rows are development rows (features only): they check reproduction, not generalisation.",
@@ -12529,7 +12529,7 @@
     "texts": null
    },
    {
-    "result_id": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
+    "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
     "activity": "final_test.evaluation",
     "slot": "final_test.evaluation",
     "promoted": true,
@@ -12553,13 +12553,15 @@
      "task": "regression"
     },
     "upstream": {
-     "predictor.capture": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe"
+     "predictor.capture": "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f"
     },
-    "downstream": [],
-    "created": "2026-10-28T08:44:29.006294+00:00",
-    "started_revision": 68,
-    "execution_id": "e_d17cf79ff99b50941d8f5e6e",
-    "exposure_id": "x_7fd0c4d314ed427fb9a586e8fbb96099",
+    "downstream": [
+     "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6"
+    ],
+    "created": "2026-10-28T12:48:14.546628+00:00",
+    "started_revision": 70,
+    "execution_id": "e_e5ad655517547e7853ed55de",
+    "exposure_id": "x_be2fce959bd74810a367ba31a40293c9",
     "values": {
      "model": "fit.linear",
      "rule": null,
@@ -12677,8 +12679,8 @@
      },
      "note": "Measured once on the sealed final-test rows, with the configuration chosen on the development rows refitted on all of them: this is the study's independent evidence. Any later change is made after the final test.",
      "predictor": {
-      "predictor_id": "a3cad912071bfbf055d400c93a7adde9ae55d6a5cc8a813154b1da47283527b8",
-      "capture": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
+      "predictor_id": "f6e0d42532aeb7eba9d2e03d839daa33ffd8d4fb020fb4b246752011c35a3eb2",
+      "capture": "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f",
       "evaluated": "reloaded_capture",
       "parity_before_opening": "ok",
       "note": "The final-test rows were scored by the captured predictor, reloaded and checked on its parity rows before they were read; no model was refitted."
@@ -12686,6 +12688,1160 @@
     },
     "headline": null,
     "question_junior": null,
+    "texts": null
+   },
+   {
+    "result_id": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+    "activity": "diag.final_test",
+    "slot": "diag.final_test",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "final_test",
+    "n_rows": 80,
+    "params": {
+     "evaluation": "final_test",
+     "model": "fit.linear",
+     "residual_columns": [
+      "origin",
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration"
+     ],
+     "segments": [
+      "origin"
+     ]
+    },
+    "upstream": {
+     "final_test.evaluation": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9"
+    },
+    "downstream": [],
+    "created": "2026-10-28T12:48:16.702328+00:00",
+    "started_revision": 72,
+    "execution_id": "e_6a06be06b73074c1701dec63",
+    "exposure_id": "x_7a4ecd0abac04b728679af9f6cf2ba1c",
+    "values": {
+     "question": "On rows nothing had seen, where are the chosen model's predictions off, and does the error grow with the prediction?",
+     "evidence": "final",
+     "purpose": "final_evaluation",
+     "partition": "final_test",
+     "evaluation": "final_test",
+     "n": 80,
+     "model": "fit.linear",
+     "final_evaluation": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+     "target": "mpg",
+     "unit": "mpg",
+     "residual_columns": [
+      "origin",
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration"
+     ],
+     "residual_definition": "residual = observed minus predicted",
+     "target_transform": null,
+     "smearing": {
+      "applies": false,
+      "implemented": false,
+      "note": "The model predicts the target on its own scale (no transform of the target), so no retransformation correction such as Duan's smearing applies. Smearing is not implemented: a log-transformed target would need it."
+     },
+     "normality_note": "The quantile-quantile points compare the standardised residuals with a normal distribution. Normality is not needed for the mean error or the coefficients with this many rows (Lumley et al. 2002); it matters for prediction intervals, which this study does not give.",
+     "models": {
+      "fit.linear": {
+       "errors": {
+        "n": 80,
+        "mae": 2.7902411324982896,
+        "rmse": 3.628401946384057,
+        "mean_residual": -0.24265538105189166,
+        "median_abs_residual": 2.81384018662661,
+        "max_abs_residual": 11.665694983583293
+       },
+       "residuals": {
+        "n": 80,
+        "mean": -0.24265538105189166,
+        "sd": 3.643119966345466,
+        "min": -8.515265580777502,
+        "q05": -5.667028119601196,
+        "q25": -3.0382720808544708,
+        "median": -0.12706464508651738,
+        "q75": 1.7814854819435073,
+        "q95": 4.899284792102254,
+        "max": 11.665694983583293,
+        "skewness": 0.45167671304621465,
+        "excess_kurtosis": 0.5650262822201015
+       },
+       "qq": {
+        "points": [
+         {
+          "probability": 0.01,
+          "theoretical": -2.3263478740408408,
+          "sample": -1.86402188029876
+         },
+         {
+          "probability": 0.025,
+          "theoretical": -1.9599639845400545,
+          "sample": -1.6090739244945917
+         },
+         {
+          "probability": 0.05,
+          "theoretical": -1.6448536269514729,
+          "sample": -1.4889360736563042
+         },
+         {
+          "probability": 0.1,
+          "theoretical": -1.2815515655446004,
+          "sample": -1.1813808104435468
+         },
+         {
+          "probability": 0.15,
+          "theoretical": -1.0364333894937898,
+          "sample": -1.0755741773930632
+         },
+         {
+          "probability": 0.2,
+          "theoretical": -0.8416212335729142,
+          "sample": -0.8293655883013777
+         },
+         {
+          "probability": 0.25,
+          "theoretical": -0.6744897501960817,
+          "sample": -0.7673688282647895
+         },
+         {
+          "probability": 0.3,
+          "theoretical": -0.5244005127080409,
+          "sample": -0.645710060862351
+         },
+         {
+          "probability": 0.35,
+          "theoretical": -0.38532046640756773,
+          "sample": -0.38272792990360377
+         },
+         {
+          "probability": 0.4,
+          "theoretical": -0.2533471031357997,
+          "sample": -0.1205347182755606
+         },
+         {
+          "probability": 0.45,
+          "theoretical": -0.12566134685507402,
+          "sample": -0.03414935502573547
+         },
+         {
+          "probability": 0.5,
+          "theoretical": 0.0,
+          "sample": 0.03172850112902737
+         },
+         {
+          "probability": 0.55,
+          "theoretical": 0.12566134685507416,
+          "sample": 0.07231205268993966
+         },
+         {
+          "probability": 0.6,
+          "theoretical": 0.2533471031357997,
+          "sample": 0.1184786722609017
+         },
+         {
+          "probability": 0.65,
+          "theoretical": 0.38532046640756773,
+          "sample": 0.25021031393916376
+         },
+         {
+          "probability": 0.7,
+          "theoretical": 0.5244005127080407,
+          "sample": 0.4388001759328542
+         },
+         {
+          "probability": 0.75,
+          "theoretical": 0.6744897501960817,
+          "sample": 0.5556064257268699
+         },
+         {
+          "probability": 0.8,
+          "theoretical": 0.8416212335729143,
+          "sample": 0.8583815560477647
+         },
+         {
+          "probability": 0.85,
+          "theoretical": 1.0364333894937898,
+          "sample": 1.005865320124525
+         },
+         {
+          "probability": 0.9,
+          "theoretical": 1.2815515655446004,
+          "sample": 1.1843724027695408
+         },
+         {
+          "probability": 0.95,
+          "theoretical": 1.6448536269514722,
+          "sample": 1.411411158747044
+         },
+         {
+          "probability": 0.975,
+          "theoretical": 1.959963984540054,
+          "sample": 2.0518196203826573
+         },
+         {
+          "probability": 0.99,
+          "theoretical": 2.3263478740408408,
+          "sample": 2.6317882733313085
+         }
+        ],
+        "definition": "Quantiles of the residuals standardised by their mean and standard deviation, against the same quantiles of a normal distribution: on a straight diagonal line when the residuals are normal."
+       },
+       "by_prediction": {
+        "binning": "10 equal-count bins of the prediction, in prediction order",
+        "bins": [
+         {
+          "bin": 1,
+          "n": 8,
+          "prediction_min": 8.681480345845834,
+          "prediction_max": 13.735397271234191,
+          "mean_prediction": 10.875883116962996,
+          "mean_observed": 12.25,
+          "mean_residual": 1.3741168830370047,
+          "sd_residual": 1.3585847612240036,
+          "mae": 1.4969202643243462
+         },
+         {
+          "bin": 2,
+          "n": 8,
+          "prediction_min": 14.437421697204652,
+          "prediction_max": 15.867062875044352,
+          "mean_prediction": 15.204584881308966,
+          "mean_observed": 16.0625,
+          "mean_residual": 0.8579151186910334,
+          "sd_residual": 1.5627667754706587,
+          "mae": 1.4018224228173073
+         },
+         {
+          "bin": 3,
+          "n": 8,
+          "prediction_min": 15.875862619660388,
+          "prediction_max": 19.84577817969968,
+          "mean_prediction": 17.74603346549151,
+          "mean_observed": 17.0125,
+          "mean_residual": -0.7335334654915111,
+          "sd_residual": 3.401803027601847,
+          "mae": 2.6990069269928143
+         },
+         {
+          "bin": 4,
+          "n": 8,
+          "prediction_min": 20.507837806302522,
+          "prediction_max": 22.772659913179893,
+          "mean_prediction": 21.7106997323612,
+          "mean_observed": 20.3125,
+          "mean_residual": -1.3981997323612005,
+          "sd_residual": 1.8654651915103677,
+          "mae": 1.6666289509723842
+         },
+         {
+          "bin": 5,
+          "n": 8,
+          "prediction_min": 22.786684025208242,
+          "prediction_max": 23.872869035980365,
+          "mean_prediction": 23.312116269333288,
+          "mean_observed": 21.4625,
+          "mean_residual": -1.8496162693332856,
+          "sd_residual": 4.243989959883487,
+          "mae": 3.539338846406645
+         },
+         {
+          "bin": 6,
+          "n": 8,
+          "prediction_min": 24.008133820418983,
+          "prediction_max": 26.451222272112346,
+          "mean_prediction": 24.907092927430195,
+          "mean_observed": 22.3875,
+          "mean_residual": -2.519592927430195,
+          "sd_residual": 2.3470220060757883,
+          "mae": 2.565045252090229
+         },
+         {
+          "bin": 7,
+          "n": 8,
+          "prediction_min": 27.090988779569503,
+          "prediction_max": 28.95447358447837,
+          "mean_prediction": 28.00800957591727,
+          "mean_observed": 27.0,
+          "mean_residual": -1.0080095759172694,
+          "sd_residual": 4.974727132349306,
+          "mae": 3.9630260812749865
+         },
+         {
+          "bin": 8,
+          "n": 8,
+          "prediction_min": 29.244979539926675,
+          "prediction_max": 30.736076849622354,
+          "mean_prediction": 30.07718172329669,
+          "mean_observed": 32.0875,
+          "mean_residual": 2.010318276703314,
+          "sd_residual": 3.6918458223511,
+          "mae": 3.6235231164359436
+         },
+         {
+          "bin": 9,
+          "n": 8,
+          "prediction_min": 30.805991180998717,
+          "prediction_max": 32.508649131588434,
+          "mean_prediction": 31.52032996290563,
+          "mean_observed": 34.3125,
+          "mean_residual": 2.7921700370943685,
+          "sd_residual": 5.567240164692697,
+          "mae": 4.994977308157065
+         },
+         {
+          "bin": 10,
+          "n": 8,
+          "prediction_min": 32.600087682631234,
+          "prediction_max": 36.47067387223087,
+          "mean_prediction": 33.76462215551118,
+          "mean_observed": 31.8125,
+          "mean_residual": -1.9521221555111752,
+          "sd_residual": 1.4731463247701777,
+          "mae": 1.9521221555111752
+         }
+        ]
+       },
+       "heteroscedasticity": {
+        "abs_residual_prediction_correlation": 0.3129549103951054,
+        "spread_ratio_top_bottom": 1.9341653147363969,
+        "flag": true,
+        "rule": "Flagged when the rank correlation of the absolute residual with the prediction is at least 0.2 in size, or the residual standard deviation of the top third of the predictions is more than 1.5 times (or less than 1/1.5 of) that of the bottom third",
+        "meaning": "An error that grows with the prediction makes one interval width wrong for every row; the mean error stays a fair summary."
+       },
+       "by_feature": [
+        {
+         "column": "origin",
+         "binned": false,
+         "binning": null,
+         "groups": [
+          {
+           "value": "1",
+           "n": 52,
+           "mean_residual": 0.17550024058192987,
+           "mae": 2.6285477133182775,
+           "small_cell": false
+          },
+          {
+           "value": "2",
+           "n": 12,
+           "mean_residual": 0.6344448877106187,
+           "mae": 3.2514190397299907,
+           "small_cell": true
+          },
+          {
+           "value": "3",
+           "n": 16,
+           "mean_residual": -2.2594863529336946,
+           "mae": 2.9698613144095507,
+           "small_cell": true
+          }
+         ]
+        },
+        {
+         "column": "cylinders",
+         "binned": false,
+         "binning": null,
+         "groups": [
+          {
+           "value": "3",
+           "n": 1,
+           "mean_residual": -4.839489478840267,
+           "mae": 4.839489478840267,
+           "small_cell": true
+          },
+          {
+           "value": "4",
+           "n": 39,
+           "mean_residual": 0.3400604456778734,
+           "mae": 3.3721933852612267,
+           "small_cell": false
+          },
+          {
+           "value": "6",
+           "n": 17,
+           "mean_residual": -2.4343610329200196,
+           "mae": 2.5672419450446653,
+           "small_cell": true
+          },
+          {
+           "value": "8",
+           "n": 23,
+           "mean_residual": 0.5890799640387915,
+           "mae": 1.879180262177207,
+           "small_cell": true
+          }
+         ]
+        },
+        {
+         "column": "displacement",
+         "binned": true,
+         "binning": "5 quantile bins of the rows shown",
+         "groups": [
+          {
+           "value": "(69.999, 97.0]",
+           "n": 17,
+           "mean_residual": -0.6225417511699716,
+           "mae": 3.2014472385855064,
+           "small_cell": true
+          },
+          {
+           "value": "(97.0, 122.0]",
+           "n": 16,
+           "mean_residual": 0.6599511585686018,
+           "mae": 3.484766995449188,
+           "small_cell": true
+          },
+          {
+           "value": "(122.0, 227.4]",
+           "n": 15,
+           "mean_residual": -0.5352138843010666,
+           "mae": 2.8507177118681115,
+           "small_cell": true
+          },
+          {
+           "value": "(227.4, 318.0]",
+           "n": 20,
+           "mean_residual": -0.9062746260053072,
+           "mae": 2.532900170447192,
+           "small_cell": true
+          },
+          {
+           "value": "(318.0, 455.0]",
+           "n": 12,
+           "mean_residual": 0.5637717944385584,
+           "mae": 1.6349705441464202,
+           "small_cell": true
+          }
+         ]
+        },
+        {
+         "column": "horsepower",
+         "binned": true,
+         "binning": "5 quantile bins of the rows shown",
+         "groups": [
+          {
+           "value": "(47.999, 67.8]",
+           "n": 16,
+           "mean_residual": 0.8426425955421089,
+           "mae": 3.6114446583672537,
+           "small_cell": true
+          },
+          {
+           "value": "(67.8, 88.0]",
+           "n": 22,
+           "mean_residual": -1.0361095922084553,
+           "mae": 3.605083680310811,
+           "small_cell": true
+          },
+          {
+           "value": "(88.0, 100.0]",
+           "n": 13,
+           "mean_residual": -0.479799818091947,
+           "mae": 2.419419726065287,
+           "small_cell": true
+          },
+          {
+           "value": "(100.0, 141.0]",
+           "n": 13,
+           "mean_residual": -1.0395601331350994,
+           "mae": 2.2289520101657594,
+           "small_cell": true
+          },
+          {
+           "value": "(141.0, 225.0]",
+           "n": 16,
+           "mean_residual": 0.603211148857034,
+           "mae": 1.605968908009104,
+           "small_cell": true
+          }
+         ]
+        },
+        {
+         "column": "weight",
+         "binned": true,
+         "binning": "5 quantile bins of the rows shown",
+         "groups": [
+          {
+           "value": "(1759.999, 2129.0]",
+           "n": 16,
+           "mean_residual": 0.3243456866779155,
+           "mae": 2.5363385514432637,
+           "small_cell": true
+          },
+          {
+           "value": "(2129.0, 2438.6]",
+           "n": 16,
+           "mean_residual": 0.16179867642801304,
+           "mae": 4.95337755373412,
+           "small_cell": true
+          },
+          {
+           "value": "(2438.6, 3070.0]",
+           "n": 16,
+           "mean_residual": -1.0995522512981886,
+           "mae": 2.207308606763846,
+           "small_cell": true
+          },
+          {
+           "value": "(3070.0, 3892.0]",
+           "n": 16,
+           "mean_residual": -1.7793892228572799,
+           "mae": 2.849688261433873,
+           "small_cell": true
+          },
+          {
+           "value": "(3892.0, 4955.0]",
+           "n": 16,
+           "mean_residual": 1.1795202057900818,
+           "mae": 1.4044926891163454,
+           "small_cell": true
+          }
+         ]
+        },
+        {
+         "column": "acceleration",
+         "binned": true,
+         "binning": "5 quantile bins of the rows shown",
+         "groups": [
+          {
+           "value": "(7.999, 13.0]",
+           "n": 18,
+           "mean_residual": 0.36228851225160974,
+           "mae": 2.529086074141165,
+           "small_cell": true
+          },
+          {
+           "value": "(13.0, 14.7]",
+           "n": 16,
+           "mean_residual": 1.4222486695409093,
+           "mae": 2.7496545279896436,
+           "small_cell": true
+          },
+          {
+           "value": "(14.7, 15.58]",
+           "n": 14,
+           "mean_residual": -1.1776740080740635,
+           "mae": 2.7493960819303616,
+           "small_cell": true
+          },
+          {
+           "value": "(15.58, 17.02]",
+           "n": 16,
+           "mean_residual": -1.6924104924817829,
+           "mae": 2.3910844401203537,
+           "small_cell": true
+          },
+          {
+           "value": "(17.02, 23.7]",
+           "n": 16,
+           "mean_residual": -0.32022490153684013,
+           "mae": 3.5595232892835726,
+           "small_cell": true
+          }
+         ]
+        }
+       ],
+       "scatter": {
+        "n_rows": 80,
+        "n_shown": 80,
+        "sampling": "every row",
+        "points": [
+         {
+          "row_key": "L26",
+          "prediction": 8.681480345845834,
+          "observed": 10.0,
+          "residual": 1.3185196541541657
+         },
+         {
+          "row_key": "L28",
+          "prediction": 9.556724855943077,
+          "observed": 11.0,
+          "residual": 1.4432751440569227
+         },
+         {
+          "row_key": "L95",
+          "prediction": 9.781583222031271,
+          "observed": 13.0,
+          "residual": 3.218416777968729
+         },
+         {
+          "row_key": "L68",
+          "prediction": 10.42836183659634,
+          "observed": 11.0,
+          "residual": 0.5716381634036605
+         },
+         {
+          "row_key": "L9",
+          "prediction": 10.590435270721759,
+          "observed": 14.0,
+          "residual": 3.409564729278241
+         },
+         {
+          "row_key": "L43",
+          "prediction": 10.741868608182124,
+          "observed": 12.0,
+          "residual": 1.2581313918178765
+         },
+         {
+          "row_key": "L93",
+          "prediction": 13.491213525149366,
+          "observed": 13.0,
+          "residual": -0.4912135251493659
+         },
+         {
+          "row_key": "L39",
+          "prediction": 13.735397271234191,
+          "observed": 14.0,
+          "residual": 0.2646027287658086
+         },
+         {
+          "row_key": "L189",
+          "prediction": 14.437421697204652,
+          "observed": 16.0,
+          "residual": 1.5625783027953482
+         },
+         {
+          "row_key": "L42",
+          "prediction": 14.727806699925036,
+          "observed": 14.0,
+          "residual": -0.7278066999250363
+         },
+         {
+          "row_key": "L188",
+          "prediction": 15.11771625027517,
+          "observed": 17.5,
+          "residual": 2.382283749724831
+         },
+         {
+          "row_key": "L225",
+          "prediction": 15.174464850426043,
+          "observed": 15.0,
+          "residual": -0.17446485042604287
+         },
+         {
+          "row_key": "L116",
+          "prediction": 15.406294791109664,
+          "observed": 15.0,
+          "residual": -0.40629479110966393
+         },
+         {
+          "row_key": "L266",
+          "prediction": 15.408488068835556,
+          "observed": 17.5,
+          "residual": 2.091511931164444
+         },
+         {
+          "row_key": "L293",
+          "prediction": 15.49742381765126,
+          "observed": 18.5,
+          "residual": 3.00257618234874
+         },
+         {
+          "row_key": "L90",
+          "prediction": 15.867062875044352,
+          "observed": 15.0,
+          "residual": -0.8670628750443523
+         },
+         {
+          "row_key": "L222",
+          "prediction": 15.875862619660388,
+          "observed": 17.5,
+          "residual": 1.6241373803396115
+         },
+         {
+          "row_key": "L289",
+          "prediction": 16.16546975840737,
+          "observed": 18.2,
+          "residual": 2.0345302415926305
+         },
+         {
+          "row_key": "L288",
+          "prediction": 16.35099559622735,
+          "observed": 16.5,
+          "residual": 0.14900440377265056
+         },
+         {
+          "row_key": "L12",
+          "prediction": 17.128686862160933,
+          "observed": 14.0,
+          "residual": -3.128686862160933
+         },
+         {
+          "row_key": "L13",
+          "prediction": 17.40099731982721,
+          "observed": 15.0,
+          "residual": -2.4009973198272085
+         },
+         {
+          "row_key": "L136",
+          "prediction": 19.560850882999986,
+          "observed": 18.0,
+          "residual": -1.5608508829999863
+         },
+         {
+          "row_key": "L167",
+          "prediction": 19.639626504949174,
+          "observed": 13.0,
+          "residual": -6.639626504949174
+         },
+         {
+          "row_key": "L301",
+          "prediction": 19.84577817969968,
+          "observed": 23.9,
+          "residual": 4.05422182030032
+         },
+         {
+          "row_key": "L257",
+          "prediction": 20.507837806302522,
+          "observed": 20.5,
+          "residual": -0.007837806302521955
+         },
+         {
+          "row_key": "L193",
+          "prediction": 21.15049713361982,
+          "observed": 22.0,
+          "residual": 0.8495028663801811
+         },
+         {
+          "row_key": "L165",
+          "prediction": 21.267092073061814,
+          "observed": 21.0,
+          "residual": -0.26709207306181426
+         },
+         {
+          "row_key": "L36",
+          "prediction": 21.5140205017246,
+          "observed": 17.0,
+          "residual": -4.514020501724598
+         },
+         {
+          "row_key": "L390",
+          "prediction": 21.775785991935447,
+          "observed": 22.0,
+          "residual": 0.22421400806455338
+         },
+         {
+          "row_key": "L126",
+          "prediction": 22.17876640721451,
+          "observed": 20.0,
+          "residual": -2.1787664072145105
+         },
+         {
+          "row_key": "L170",
+          "prediction": 22.518938031851,
+          "observed": 20.0,
+          "residual": -2.5189380318510004
+         },
+         {
+          "row_key": "L208",
+          "prediction": 22.772659913179893,
+          "observed": 20.0,
+          "residual": -2.7726599131798935
+         },
+         {
+          "row_key": "L195",
+          "prediction": 22.786684025208242,
+          "observed": 22.5,
+          "residual": -0.2866840252082419
+         },
+         {
+          "row_key": "L102",
+          "prediction": 22.944229121385245,
+          "observed": 23.0,
+          "residual": 0.05577087861475505
+         },
+         {
+          "row_key": "L366",
+          "prediction": 23.073084035416755,
+          "observed": 20.2,
+          "residual": -2.873084035416756
+         },
+         {
+          "row_key": "L37",
+          "prediction": 23.1601611949403,
+          "observed": 19.0,
+          "residual": -4.160161194940301
+         },
+         {
+          "row_key": "L393",
+          "prediction": 23.424011534340952,
+          "observed": 27.0,
+          "residual": 3.575988465659048
+         },
+         {
+          "row_key": "L155",
+          "prediction": 23.515265580777502,
+          "observed": 15.0,
+          "residual": -8.515265580777502
+         },
+         {
+          "row_key": "L101",
+          "prediction": 23.720625626616922,
+          "observed": 18.0,
+          "residual": -5.720625626616922
+         },
+         {
+          "row_key": "L373",
+          "prediction": 23.872869035980365,
+          "observed": 27.0,
+          "residual": 3.127130964019635
+         },
+         {
+          "row_key": "L79",
+          "prediction": 24.008133820418983,
+          "observed": 21.0,
+          "residual": -3.0081338204189834
+         },
+         {
+          "row_key": "L194",
+          "prediction": 24.079664439746992,
+          "observed": 24.0,
+          "residual": -0.07966443974699189
+         },
+         {
+          "row_key": "L124",
+          "prediction": 24.166427508659357,
+          "observed": 20.0,
+          "residual": -4.166427508659357
+         },
+         {
+          "row_key": "L211",
+          "prediction": 24.664207198179316,
+          "observed": 19.0,
+          "residual": -5.664207198179316
+         },
+         {
+          "row_key": "L179",
+          "prediction": 24.70549185843279,
+          "observed": 23.0,
+          "residual": -1.70549185843279
+         },
+         {
+          "row_key": "L256",
+          "prediction": 24.918190701359865,
+          "observed": 25.1,
+          "residual": 0.18180929864013606
+         },
+         {
+          "row_key": "L62",
+          "prediction": 26.263405620531913,
+          "observed": 21.0,
+          "residual": -5.263405620531913
+         },
+         {
+          "row_key": "L131",
+          "prediction": 26.451222272112346,
+          "observed": 26.0,
+          "residual": -0.45122227211234645
+         },
+         {
+          "row_key": "L110",
+          "prediction": 27.090988779569503,
+          "observed": 21.0,
+          "residual": -6.0909887795695035
+         },
+         {
+          "row_key": "L392",
+          "prediction": 27.27155812890787,
+          "observed": 36.0,
+          "residual": 8.72844187109213
+         },
+         {
+          "row_key": "L142",
+          "prediction": 27.702793122894214,
+          "observed": 29.0,
+          "residual": 1.2972068771057863
+         },
+         {
+          "row_key": "L51",
+          "prediction": 27.90271995549418,
+          "observed": 28.0,
+          "residual": 0.09728004450581906
+         },
+         {
+          "row_key": "L319",
+          "prediction": 28.102862771272868,
+          "observed": 29.8,
+          "residual": 1.697137228727133
+         },
+         {
+          "row_key": "L15",
+          "prediction": 28.49919078588088,
+          "observed": 24.0,
+          "residual": -4.499190785880881
+         },
+         {
+          "row_key": "L335",
+          "prediction": 28.539489478840267,
+          "observed": 23.7,
+          "residual": -4.839489478840267
+         },
+         {
+          "row_key": "L197",
+          "prediction": 28.95447358447837,
+          "observed": 24.5,
+          "residual": -4.454473584478372
+         },
+         {
+          "row_key": "L312",
+          "prediction": 29.244979539926675,
+          "observed": 32.1,
+          "residual": 2.8550204600733267
+         },
+         {
+          "row_key": "L302",
+          "prediction": 29.753276791902376,
+          "observed": 34.2,
+          "residual": 4.446723208097627
+         },
+         {
+          "row_key": "L53",
+          "prediction": 29.800272359340454,
+          "observed": 30.0,
+          "residual": 0.19972764065954607
+         },
+         {
+          "row_key": "L352",
+          "prediction": 30.163586174611975,
+          "observed": 34.4,
+          "residual": 4.2364138253880235
+         },
+         {
+          "row_key": "L19",
+          "prediction": 30.22640967946526,
+          "observed": 27.0,
+          "residual": -3.2264096794652595
+         },
+         {
+          "row_key": "L30",
+          "prediction": 30.22640967946526,
+          "observed": 27.0,
+          "residual": -3.2264096794652595
+         },
+         {
+          "row_key": "L351",
+          "prediction": 30.46644271203914,
+          "observed": 34.7,
+          "residual": 4.233557287960863
+         },
+         {
+          "row_key": "L305",
+          "prediction": 30.736076849622354,
+          "observed": 37.3,
+          "residual": 6.563923150377644
+         },
+         {
+          "row_key": "L379",
+          "prediction": 30.805991180998717,
+          "observed": 38.0,
+          "residual": 7.194008819001283
+         },
+         {
+          "row_key": "L152",
+          "prediction": 31.013736630132314,
+          "observed": 31.0,
+          "residual": -0.013736630132314076
+         },
+         {
+          "row_key": "L143",
+          "prediction": 31.281837797090475,
+          "observed": 26.0,
+          "residual": -5.281837797090475
+         },
+         {
+          "row_key": "L246",
+          "prediction": 31.28832775307013,
+          "observed": 36.1,
+          "residual": 4.81167224692987
+         },
+         {
+          "row_key": "L206",
+          "prediction": 31.515654657027994,
+          "observed": 28.0,
+          "residual": -3.5156546570279943
+         },
+         {
+          "row_key": "L327",
+          "prediction": 31.734305016416705,
+          "observed": 43.4,
+          "residual": 11.665694983583293
+         },
+         {
+          "row_key": "L382",
+          "prediction": 32.01413753692028,
+          "observed": 36.0,
+          "residual": 3.9858624630797195
+         },
+         {
+          "row_key": "L219",
+          "prediction": 32.508649131588434,
+          "observed": 36.0,
+          "residual": 3.4913508684115655
+         },
+         {
+          "row_key": "L130",
+          "prediction": 32.600087682631234,
+          "observed": 31.0,
+          "residual": -1.6000876826312336
+         },
+         {
+          "row_key": "L132",
+          "prediction": 32.65109189978233,
+          "observed": 32.0,
+          "residual": -0.6510918997823296
+         },
+         {
+          "row_key": "L280",
+          "prediction": 32.716608753189405,
+          "observed": 29.5,
+          "residual": -3.216608753189405
+         },
+         {
+          "row_key": "L333",
+          "prediction": 32.719984892861774,
+          "observed": 29.8,
+          "residual": -2.9199848928617733
+         },
+         {
+          "row_key": "L240",
+          "prediction": 33.415029858101434,
+          "observed": 30.0,
+          "residual": -3.415029858101434
+         },
+         {
+          "row_key": "L295",
+          "prediction": 34.10853133586578,
+          "observed": 34.1,
+          "residual": -0.008531335865775702
+         },
+         {
+          "row_key": "L346",
+          "prediction": 35.43496894942658,
+          "observed": 35.1,
+          "residual": -0.33496894942658173
+         },
+         {
+          "row_key": "L182",
+          "prediction": 36.47067387223087,
+          "observed": 33.0,
+          "residual": -3.4706738722308685
+         }
+        ]
+       },
+       "examples": {
+        "largest_errors": [
+         {
+          "row_key": "L327",
+          "observed": 43.4,
+          "prediction": 31.734305016416705,
+          "residual": 11.665694983583293,
+          "values": {
+           "cylinders": "4",
+           "displacement": "90",
+           "horsepower": "48",
+           "weight": "2335",
+           "acceleration": "23.7",
+           "origin": "2"
+          }
+         },
+         {
+          "row_key": "L392",
+          "observed": 36.0,
+          "prediction": 27.27155812890787,
+          "residual": 8.72844187109213,
+          "values": {
+           "cylinders": "4",
+           "displacement": "135",
+           "horsepower": "84",
+           "weight": "2370",
+           "acceleration": "13",
+           "origin": "1"
+          }
+         },
+         {
+          "row_key": "L155",
+          "observed": 15.0,
+          "prediction": 23.515265580777502,
+          "residual": -8.515265580777502,
+          "values": {
+           "cylinders": "6",
+           "displacement": "250",
+           "horsepower": "72",
+           "weight": "3432",
+           "acceleration": "21",
+           "origin": "1"
+          }
+         },
+         {
+          "row_key": "L379",
+          "observed": 38.0,
+          "prediction": 30.805991180998717,
+          "residual": 7.194008819001283,
+          "values": {
+           "cylinders": "4",
+           "displacement": "105",
+           "horsepower": "63",
+           "weight": "2125",
+           "acceleration": "14.7",
+           "origin": "1"
+          }
+         },
+         {
+          "row_key": "L167",
+          "observed": 13.0,
+          "prediction": 19.639626504949174,
+          "residual": -6.639626504949174,
+          "values": {
+           "cylinders": "8",
+           "displacement": "302",
+           "horsepower": "129",
+           "weight": "3169",
+           "acceleration": "12",
+           "origin": "1"
+          }
+         }
+        ],
+        "features": [
+         "cylinders",
+         "displacement",
+         "horsepower",
+         "weight",
+         "acceleration",
+         "origin"
+        ],
+        "note": "The rows with the largest absolute residuals, with the feature values as written in the file."
+       },
+       "predictions": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9"
+      }
+     },
+     "note": "Final evidence: computed once the final test was opened, from the predictions of its one evaluation, on rows no choice had seen."
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Final-test diagnostics on "
+      },
+      {
+       "text": "80",
+       "result_id": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+       "path": "n",
+       "value": 80,
+       "format": "int"
+      },
+      {
+       "text": " rows"
+      }
+     ]
+    },
+    "question_junior": "On rows nothing had seen, where are the chosen model's predictions off, and does the error grow with the prediction?",
     "texts": null
    },
    {
@@ -12727,10 +13883,10 @@
      "split": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac"
     },
     "downstream": [],
-    "created": "2026-10-28T08:43:56.810773+00:00",
-    "started_revision": 50,
-    "execution_id": "e_8519f7987822bead348d47d9",
-    "exposure_id": "x_bfbea6cdd88f48b69ca7622cec64a50c",
+    "created": "2026-10-28T12:47:42.070717+00:00",
+    "started_revision": 52,
+    "execution_id": "e_c7acc1c7811ed60617bfe6ae",
+    "exposure_id": "x_e4824bb7ebc84462bcf70332aa7101b4",
     "values": null,
     "headline": null,
     "question_junior": null,
@@ -12768,6 +13924,12 @@
      "id": "decision:split",
      "kind": "decision",
      "label": "split",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:error_metric",
+     "kind": "decision",
+     "label": "error_metric",
      "status": "confirmed"
     },
     {
@@ -12945,15 +14107,21 @@
      "status": "current"
     },
     {
-     "id": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
+     "id": "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f",
      "kind": "result",
      "label": "predictor.capture",
      "status": "current"
     },
     {
-     "id": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
+     "id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
      "kind": "result",
      "label": "final_test.evaluation",
+     "status": "current"
+    },
+    {
+     "id": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+     "kind": "result",
+     "label": "diag.final_test",
      "status": "current"
     },
     {
@@ -13258,28 +14426,38 @@
     },
     {
      "from": "dataset",
-     "to": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
+     "to": "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f",
      "role": "rows"
     },
     {
      "from": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
-     "to": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
+     "to": "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f",
      "role": "evaluate.regression"
     },
     {
      "from": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
-     "to": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
+     "to": "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f",
      "role": "fit.linear"
     },
     {
      "from": "dataset",
-     "to": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
+     "to": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
      "role": "rows"
     },
     {
-     "from": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
-     "to": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
+     "from": "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f",
+     "to": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
      "role": "predictor.capture"
+    },
+    {
+     "from": "dataset",
+     "to": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+     "role": "rows"
+    },
+    {
+     "from": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+     "to": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+     "role": "final_test.evaluation"
     },
     {
      "from": "dataset",
@@ -13532,22 +14710,32 @@
      "role": "consumed"
     },
     {
-     "from": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
+     "from": "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
+     "from": "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
+     "from": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
+     "from": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
      "to": "artifact:notebook",
      "role": "consumed"
     }
@@ -13555,7 +14743,7 @@
   },
   "exposure": {
    "summary": {
-    "records": 34,
+    "records": 35,
     "rows_exposed": 398,
     "by_purpose": {
      "cross_validated_fit": 318,
@@ -13599,9 +14787,9 @@
    },
    "records": [
     {
-     "exposure_id": "x_40c51e7c792a47289340530b1d813293",
+     "exposure_id": "x_ccc9583fa29641378747aa9a0376b497",
      "revision": 1,
-     "time": "2026-10-28T08:43:21.796690+00:00",
+     "time": "2026-10-28T12:47:05.996009+00:00",
      "activity": "init.structure",
      "result_id": null,
      "execution_id": null,
@@ -13621,9 +14809,9 @@
      ]
     },
     {
-     "exposure_id": "x_66494b4d4bf946fd854e37b5d501ad18",
+     "exposure_id": "x_a7108f4ce0bd4d93a53690ff8721549f",
      "revision": 1,
-     "time": "2026-10-28T08:43:21.798758+00:00",
+     "time": "2026-10-28T12:47:05.997433+00:00",
      "activity": "data.sample",
      "result_id": null,
      "execution_id": null,
@@ -13643,9 +14831,9 @@
      ]
     },
     {
-     "exposure_id": "x_03c6edfb145b49b583355916cecef9bc",
+     "exposure_id": "x_c69b8c2acd4c4f019c4d641d37576cd1",
      "revision": 1,
-     "time": "2026-10-28T08:43:21.799255+00:00",
+     "time": "2026-10-28T12:47:05.997928+00:00",
      "activity": "init.final_test",
      "result_id": null,
      "execution_id": null,
@@ -13665,12 +14853,12 @@
      ]
     },
     {
-     "exposure_id": "x_2b9471f7e09041fe899fdb42a5ef837d",
-     "revision": 10,
-     "time": "2026-10-28T08:43:27.949767+00:00",
+     "exposure_id": "x_350249ba494540eaab39183b316f2e80",
+     "revision": 12,
+     "time": "2026-10-28T12:47:14.014954+00:00",
      "activity": "split",
      "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
-     "execution_id": "e_45e56db55964c2ea7d665907",
+     "execution_id": "e_0eee3a0bb608847ca1ac05a7",
      "purpose": "structural_inspection",
      "partition": "development",
      "n_rows": 318,
@@ -13680,12 +14868,12 @@
      ]
     },
     {
-     "exposure_id": "x_380f68b02edb41b8a2f6aebe9f4e49ee",
-     "revision": 12,
-     "time": "2026-10-28T08:43:29.360674+00:00",
+     "exposure_id": "x_fd495fbda4b44e26b24ad80667481891",
+     "revision": 14,
+     "time": "2026-10-28T12:47:15.248001+00:00",
      "activity": "eda.quality",
      "result_id": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
-     "execution_id": "e_ce9ad9e64710577437be7e6c",
+     "execution_id": "e_2ab8c63a63b208bd8731b8b3",
      "purpose": "structural_inspection",
      "partition": "development",
      "n_rows": 318,
@@ -13701,12 +14889,12 @@
      ]
     },
     {
-     "exposure_id": "x_57ad4703cf484ebfb43e186f3ee0199f",
-     "revision": 14,
-     "time": "2026-10-28T08:43:30.685306+00:00",
+     "exposure_id": "x_9a195789568f44039e767e29badd207c",
+     "revision": 16,
+     "time": "2026-10-28T12:47:16.648308+00:00",
      "activity": "eda.distribution",
      "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
-     "execution_id": "e_0eee3a0bb608847ca1ac05a7",
+     "execution_id": "e_9c2f7f2c69f91be9c07e4331",
      "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
@@ -13715,12 +14903,12 @@
      ]
     },
     {
-     "exposure_id": "x_3e3bd70567ee4e0eb9c4740fcc90dea6",
-     "revision": 18,
-     "time": "2026-10-28T08:43:34.638260+00:00",
+     "exposure_id": "x_b8863063738e4728992031f0f47477a2",
+     "revision": 20,
+     "time": "2026-10-28T12:47:21.160823+00:00",
      "activity": "eda.target_summary",
      "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
-     "execution_id": "e_9c2f7f2c69f91be9c07e4331",
+     "execution_id": "e_afbcc5b5c6d6b10afa774b86",
      "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
@@ -13729,57 +14917,57 @@
      ]
     },
     {
-     "exposure_id": "x_641b8da74a4e45c0b28298a368476af8",
-     "revision": 20,
-     "time": "2026-10-28T08:43:35.935246+00:00",
+     "exposure_id": "x_42d9cf8fc0e14d9895cc8558675f821b",
+     "revision": 22,
+     "time": "2026-10-28T12:47:22.510701+00:00",
      "activity": "eda.special_values",
      "result_id": "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
-     "execution_id": "e_c4434080afdaeb4edd1ce5b5",
-     "purpose": "train_eda",
-     "partition": "development",
-     "n_rows": 318,
-     "columns": [
-      "mpg",
-      "horsepower"
-     ]
-    },
-    {
-     "exposure_id": "x_bc6416a05a8248868d62ab0dc7b35b71",
-     "revision": 22,
-     "time": "2026-10-28T08:43:37.201611+00:00",
-     "activity": "eda.mean_by",
-     "result_id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
-     "execution_id": "e_afbcc5b5c6d6b10afa774b86",
-     "purpose": "train_eda",
-     "partition": "development",
-     "n_rows": 318,
-     "columns": [
-      "mpg",
-      "cylinders"
-     ]
-    },
-    {
-     "exposure_id": "x_dcbd5f69906747579ff3d0c0215356cd",
-     "revision": 24,
-     "time": "2026-10-28T08:43:38.665065+00:00",
-     "activity": "eda.mean_by",
-     "result_id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
      "execution_id": "e_061502fb4d6e55bbb43de53a",
      "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
      "columns": [
       "mpg",
+      "horsepower"
+     ]
+    },
+    {
+     "exposure_id": "x_446cb287715d4d47b345d943e926e0a3",
+     "revision": 24,
+     "time": "2026-10-28T12:47:23.798045+00:00",
+     "activity": "eda.mean_by",
+     "result_id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+     "execution_id": "e_8b6b767c3df161e7401893c1",
+     "purpose": "train_eda",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "mpg",
+      "cylinders"
+     ]
+    },
+    {
+     "exposure_id": "x_746a5019821a43d78987b24ed528cfb5",
+     "revision": 26,
+     "time": "2026-10-28T12:47:25.141859+00:00",
+     "activity": "eda.mean_by",
+     "result_id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+     "execution_id": "e_a633b01aa452bb85d7c21822",
+     "purpose": "train_eda",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "mpg",
       "displacement"
      ]
     },
     {
-     "exposure_id": "x_28283a1e53b247888c1a52b8fa34c24f",
-     "revision": 26,
-     "time": "2026-10-28T08:43:40.072372+00:00",
+     "exposure_id": "x_0c19b766ea994e0eae375cefa4a61b6b",
+     "revision": 28,
+     "time": "2026-10-28T12:47:26.500166+00:00",
      "activity": "eda.mean_by",
      "result_id": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
-     "execution_id": "e_8b6b767c3df161e7401893c1",
+     "execution_id": "e_88662ab87ecb5884e6688116",
      "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
@@ -13789,12 +14977,12 @@
      ]
     },
     {
-     "exposure_id": "x_d99e7ca166fd4af38b74042153a5593b",
-     "revision": 28,
-     "time": "2026-10-28T08:43:41.401938+00:00",
+     "exposure_id": "x_6bfe8d3d9340401f98532aea4aef4d16",
+     "revision": 30,
+     "time": "2026-10-28T12:47:27.700285+00:00",
      "activity": "eda.mean_by",
      "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
-     "execution_id": "e_a633b01aa452bb85d7c21822",
+     "execution_id": "e_947162f1b37ea74e53f6086a",
      "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
@@ -13804,12 +14992,12 @@
      ]
     },
     {
-     "exposure_id": "x_1ce8a1cba31f457e93152091ffebfd86",
-     "revision": 30,
-     "time": "2026-10-28T08:43:42.788636+00:00",
+     "exposure_id": "x_1013e105c4e84cb0a8946d244d9e8e6b",
+     "revision": 32,
+     "time": "2026-10-28T12:47:29.018701+00:00",
      "activity": "eda.mean_by",
      "result_id": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
-     "execution_id": "e_88662ab87ecb5884e6688116",
+     "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
      "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
@@ -13819,12 +15007,12 @@
      ]
     },
     {
-     "exposure_id": "x_3f7349e6895d44fdace1f5995560d400",
-     "revision": 32,
-     "time": "2026-10-28T08:43:44.091640+00:00",
+     "exposure_id": "x_a02a17d5901844c497b5f53c0f0d18ec",
+     "revision": 34,
+     "time": "2026-10-28T12:47:30.299001+00:00",
      "activity": "eda.mean_by",
      "result_id": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
-     "execution_id": "e_947162f1b37ea74e53f6086a",
+     "execution_id": "e_0b8fc9580cdd4e33bc5c14db",
      "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
@@ -13834,12 +15022,12 @@
      ]
     },
     {
-     "exposure_id": "x_5370ec3b5be2409295d80ef5e328f648",
-     "revision": 34,
-     "time": "2026-10-28T08:43:45.463658+00:00",
+     "exposure_id": "x_858d0378da614e4fa7631f9c7dddab29",
+     "revision": 36,
+     "time": "2026-10-28T12:47:31.544725+00:00",
      "activity": "eda.correlation",
      "result_id": "42942f014624a1094afb37e0c4a9a25e12cf9b44eff3a368f0cd0987739a0b1e",
-     "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
+     "execution_id": "e_6f568a7e009178d11fe5261f",
      "purpose": "structural_inspection",
      "partition": "development",
      "n_rows": 318,
@@ -13853,12 +15041,12 @@
      ]
     },
     {
-     "exposure_id": "x_9959f7d5ba9e44d88764beed90cbab13",
-     "revision": 36,
-     "time": "2026-10-28T08:43:46.918885+00:00",
+     "exposure_id": "x_99689281ecc04e3ba7cf8a3e7a8f373e",
+     "revision": 38,
+     "time": "2026-10-28T12:47:32.727517+00:00",
      "activity": "eda.distribution",
      "result_id": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
-     "execution_id": "e_0b8fc9580cdd4e33bc5c14db",
+     "execution_id": "e_c747f3646963f5be94a54bdb",
      "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
@@ -13867,12 +15055,12 @@
      ]
     },
     {
-     "exposure_id": "x_3c75fcf4b8ef44d89a6a45f538fd0cea",
-     "revision": 38,
-     "time": "2026-10-28T08:43:48.302234+00:00",
+     "exposure_id": "x_d86b69faa2ac4b5e9a98bc6acb35f026",
+     "revision": 40,
+     "time": "2026-10-28T12:47:34.011305+00:00",
      "activity": "eda.distribution",
      "result_id": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
-     "execution_id": "e_6f568a7e009178d11fe5261f",
+     "execution_id": "e_f09116e554021da514197565",
      "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
@@ -13881,12 +15069,12 @@
      ]
     },
     {
-     "exposure_id": "x_3a8a0d5acdeb47c7a8d8ea0d28e3ba6d",
-     "revision": 40,
-     "time": "2026-10-28T08:43:49.649927+00:00",
+     "exposure_id": "x_e4aba04fb8344f88ab16f255b3fccb56",
+     "revision": 42,
+     "time": "2026-10-28T12:47:35.206896+00:00",
      "activity": "eda.distribution",
      "result_id": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
-     "execution_id": "e_c747f3646963f5be94a54bdb",
+     "execution_id": "e_ed89c3d6b5ceb43c540c9096",
      "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
@@ -13895,12 +15083,12 @@
      ]
     },
     {
-     "exposure_id": "x_23022e74a3bb48a7b8a9cd30cbe7a7bc",
-     "revision": 42,
-     "time": "2026-10-28T08:43:50.862477+00:00",
+     "exposure_id": "x_85aad0ec7c87409ca7697dd9cbcb4667",
+     "revision": 44,
+     "time": "2026-10-28T12:47:36.591154+00:00",
      "activity": "eda.distribution",
      "result_id": "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
-     "execution_id": "e_f09116e554021da514197565",
+     "execution_id": "e_f02c465bbc8626047ce0b4cc",
      "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
@@ -13909,12 +15097,12 @@
      ]
     },
     {
-     "exposure_id": "x_4e3c82f2227e4e39b5726fee443b5cc2",
-     "revision": 44,
-     "time": "2026-10-28T08:43:52.384185+00:00",
+     "exposure_id": "x_955c84d975344803bfbaf0fb382b90a0",
+     "revision": 46,
+     "time": "2026-10-28T12:47:37.953600+00:00",
      "activity": "eda.distribution",
      "result_id": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
-     "execution_id": "e_ed89c3d6b5ceb43c540c9096",
+     "execution_id": "e_5904912825f5be2c5a9088d0",
      "purpose": "train_eda",
      "partition": "development",
      "n_rows": 318,
@@ -13923,12 +15111,12 @@
      ]
     },
     {
-     "exposure_id": "x_79deb328886e4e52b5e17a86199e513b",
-     "revision": 46,
-     "time": "2026-10-28T08:43:53.947434+00:00",
+     "exposure_id": "x_78bbd3eb16c1466a9fb1226eeb83ce08",
+     "revision": 48,
+     "time": "2026-10-28T12:47:39.308876+00:00",
      "activity": "fit.baseline",
      "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
-     "execution_id": "e_f02c465bbc8626047ce0b4cc",
+     "execution_id": "e_8519f7987822bead348d47d9",
      "purpose": "cross_validated_fit",
      "partition": "development",
      "n_rows": 318,
@@ -13937,12 +15125,12 @@
      ]
     },
     {
-     "exposure_id": "x_ccb2542605a24cde9f47c3f257e67944",
-     "revision": 46,
-     "time": "2026-10-28T08:43:53.948465+00:00",
+     "exposure_id": "x_c5e11579dfa84425882e4f0156f8662a",
+     "revision": 48,
+     "time": "2026-10-28T12:47:39.309800+00:00",
      "activity": "fit.baseline",
      "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
-     "execution_id": "e_f02c465bbc8626047ce0b4cc",
+     "execution_id": "e_8519f7987822bead348d47d9",
      "purpose": "out_of_fold_evaluation",
      "partition": "development",
      "n_rows": 318,
@@ -13951,52 +15139,52 @@
      ]
     },
     {
-     "exposure_id": "x_a2c89fc7486c4dc8a39234176bd349d3",
-     "revision": 48,
-     "time": "2026-10-28T08:43:55.427369+00:00",
-     "activity": "fit.linear",
-     "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
-     "execution_id": "e_5904912825f5be2c5a9088d0",
-     "purpose": "cross_validated_fit",
-     "partition": "development",
-     "n_rows": 318,
-     "columns": [
-      "cylinders",
-      "displacement",
-      "horsepower",
-      "weight",
-      "acceleration",
-      "origin",
-      "mpg"
-     ]
-    },
-    {
-     "exposure_id": "x_1b0b93df908d4940865ee3c321a1d54e",
-     "revision": 48,
-     "time": "2026-10-28T08:43:55.428525+00:00",
-     "activity": "fit.linear",
-     "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
-     "execution_id": "e_5904912825f5be2c5a9088d0",
-     "purpose": "out_of_fold_evaluation",
-     "partition": "development",
-     "n_rows": 318,
-     "columns": [
-      "cylinders",
-      "displacement",
-      "horsepower",
-      "weight",
-      "acceleration",
-      "origin",
-      "mpg"
-     ]
-    },
-    {
-     "exposure_id": "x_bfbea6cdd88f48b69ca7622cec64a50c",
+     "exposure_id": "x_b95a567e2424470e95b454c3560137c6",
      "revision": 50,
-     "time": "2026-10-28T08:43:56.815226+00:00",
+     "time": "2026-10-28T12:47:40.755664+00:00",
+     "activity": "fit.linear",
+     "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+     "execution_id": "e_0840d5a4c86aa1a0c3b1ef84",
+     "purpose": "cross_validated_fit",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_cdefb84af52e4354a0a65fb1f1019ec1",
+     "revision": 50,
+     "time": "2026-10-28T12:47:40.756325+00:00",
+     "activity": "fit.linear",
+     "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+     "execution_id": "e_0840d5a4c86aa1a0c3b1ef84",
+     "purpose": "out_of_fold_evaluation",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_e4824bb7ebc84462bcf70332aa7101b4",
+     "revision": 52,
+     "time": "2026-10-28T12:47:42.074167+00:00",
      "activity": "diag.regression",
      "result_id": "62f774885fc62eaccdd876e9c57560540b145f768a6c6b0988466d100fa6344e",
-     "execution_id": "e_8519f7987822bead348d47d9",
+     "execution_id": "e_c7acc1c7811ed60617bfe6ae",
      "purpose": "development_diagnostics",
      "partition": "development",
      "n_rows": 318,
@@ -14011,12 +15199,12 @@
      ]
     },
     {
-     "exposure_id": "x_3afcfe6c8fca4300a2f3d291a10a6677",
-     "revision": 54,
-     "time": "2026-10-28T08:44:04.233821+00:00",
+     "exposure_id": "x_1889df8b81814c2ba9e61cb119a097f4",
+     "revision": 56,
+     "time": "2026-10-28T12:47:49.638568+00:00",
      "activity": "fit.variant",
      "result_id": "d6a53e63450ea32206f5f7aad01e1e4dfdcdaffd43b83a36447dee6ec64e4856",
-     "execution_id": "e_c7acc1c7811ed60617bfe6ae",
+     "execution_id": "e_2c515241b96823b32e92d4c1",
      "purpose": "cross_validated_fit",
      "partition": "development",
      "n_rows": 318,
@@ -14031,12 +15219,12 @@
      ]
     },
     {
-     "exposure_id": "x_33c599b05e1840a4b479c558de2e8f0e",
-     "revision": 54,
-     "time": "2026-10-28T08:44:04.235047+00:00",
+     "exposure_id": "x_42f6bf88674346399c3a9104f5c94bef",
+     "revision": 56,
+     "time": "2026-10-28T12:47:49.639507+00:00",
      "activity": "fit.variant",
      "result_id": "d6a53e63450ea32206f5f7aad01e1e4dfdcdaffd43b83a36447dee6ec64e4856",
-     "execution_id": "e_c7acc1c7811ed60617bfe6ae",
+     "execution_id": "e_2c515241b96823b32e92d4c1",
      "purpose": "out_of_fold_evaluation",
      "partition": "development",
      "n_rows": 318,
@@ -14051,52 +15239,52 @@
      ]
     },
     {
-     "exposure_id": "x_00ce903295c946a09f261b799ce0e930",
-     "revision": 56,
-     "time": "2026-10-28T08:44:16.127192+00:00",
-     "activity": "fit.variant",
-     "result_id": "1c5d4f6559fc7252490f9fcfba04d981d066f897dd672fad39515d41bf5e84ff",
-     "execution_id": "e_60f840ebe562aefdfb0411ae",
-     "purpose": "cross_validated_fit",
-     "partition": "development",
-     "n_rows": 318,
-     "columns": [
-      "cylinders",
-      "displacement",
-      "horsepower",
-      "weight",
-      "acceleration",
-      "origin",
-      "mpg"
-     ]
-    },
-    {
-     "exposure_id": "x_f1ef3b0f6c38462dacc30b950db0abdd",
-     "revision": 56,
-     "time": "2026-10-28T08:44:16.128358+00:00",
-     "activity": "fit.variant",
-     "result_id": "1c5d4f6559fc7252490f9fcfba04d981d066f897dd672fad39515d41bf5e84ff",
-     "execution_id": "e_60f840ebe562aefdfb0411ae",
-     "purpose": "out_of_fold_evaluation",
-     "partition": "development",
-     "n_rows": 318,
-     "columns": [
-      "cylinders",
-      "displacement",
-      "horsepower",
-      "weight",
-      "acceleration",
-      "origin",
-      "mpg"
-     ]
-    },
-    {
-     "exposure_id": "x_db41784baf684f8e89ba5afa06a0385d",
+     "exposure_id": "x_549147bcd78d4deab6c13de84c3a4421",
      "revision": 58,
-     "time": "2026-10-28T08:44:17.612197+00:00",
+     "time": "2026-10-28T12:48:01.356162+00:00",
+     "activity": "fit.variant",
+     "result_id": "1c5d4f6559fc7252490f9fcfba04d981d066f897dd672fad39515d41bf5e84ff",
+     "execution_id": "e_8f8894cfd0d89135d5c3402c",
+     "purpose": "cross_validated_fit",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_ebb371c3a66c4ba8bf4d1a0c2c3919fe",
+     "revision": 58,
+     "time": "2026-10-28T12:48:01.356929+00:00",
+     "activity": "fit.variant",
+     "result_id": "1c5d4f6559fc7252490f9fcfba04d981d066f897dd672fad39515d41bf5e84ff",
+     "execution_id": "e_8f8894cfd0d89135d5c3402c",
+     "purpose": "out_of_fold_evaluation",
+     "partition": "development",
+     "n_rows": 318,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_e7c410b8d3d64c2eb52ce6c5b9910a21",
+     "revision": 60,
+     "time": "2026-10-28T12:48:02.943841+00:00",
      "activity": "evaluate.regression",
      "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
-     "execution_id": "e_2c515241b96823b32e92d4c1",
+     "execution_id": "e_8f5c345335630fb2ac505a65",
      "purpose": "out_of_fold_evaluation",
      "partition": "development",
      "n_rows": 318,
@@ -14106,12 +15294,12 @@
      ]
     },
     {
-     "exposure_id": "x_f8764c79364a482c9177fc18c92e620a",
-     "revision": 60,
-     "time": "2026-10-28T08:44:19.325338+00:00",
+     "exposure_id": "x_aef6a26e711e41798369f00ff0060357",
+     "revision": 62,
+     "time": "2026-10-28T12:48:04.459023+00:00",
      "activity": "diag.regression",
      "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
-     "execution_id": "e_8f8894cfd0d89135d5c3402c",
+     "execution_id": "e_cca2d0a0feb38ddc0531cb38",
      "purpose": "development_diagnostics",
      "partition": "development",
      "n_rows": 318,
@@ -14126,12 +15314,12 @@
      ]
     },
     {
-     "exposure_id": "x_b02766484fa84af2b3252c39123a9705",
-     "revision": 64,
-     "time": "2026-10-28T08:44:25.264311+00:00",
+     "exposure_id": "x_7d47b4a3da924da0959e42dfb94b3b31",
+     "revision": 66,
+     "time": "2026-10-28T12:48:10.598630+00:00",
      "activity": "predictor.capture",
-     "result_id": "ef3e8f9e0aef6f477bf90acd351aac8f97f8b9a59d4040552429868dfc1feefe",
-     "execution_id": "e_bf95f2dfd64b8f0afb7e4a7a",
+     "result_id": "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f",
+     "execution_id": "e_7aa8a09ee84cf89c77a2e082",
      "purpose": "train_fit",
      "partition": "development",
      "n_rows": 318,
@@ -14146,12 +15334,12 @@
      ]
     },
     {
-     "exposure_id": "x_6ffd4723ccdc44c7a1570535bb51b5b5",
-     "revision": 68,
-     "time": "2026-10-28T08:44:29.009368+00:00",
+     "exposure_id": "x_6e03596b75fe430c97e4b1dee27a9092",
+     "revision": 70,
+     "time": "2026-10-28T12:48:14.551077+00:00",
      "activity": "final_test.evaluation",
-     "result_id": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
-     "execution_id": "e_d17cf79ff99b50941d8f5e6e",
+     "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+     "execution_id": "e_e5ad655517547e7853ed55de",
      "purpose": "train_fit",
      "partition": "development",
      "n_rows": 318,
@@ -14166,12 +15354,32 @@
      ]
     },
     {
-     "exposure_id": "x_7fd0c4d314ed427fb9a586e8fbb96099",
-     "revision": 68,
-     "time": "2026-10-28T08:44:29.010180+00:00",
+     "exposure_id": "x_be2fce959bd74810a367ba31a40293c9",
+     "revision": 70,
+     "time": "2026-10-28T12:48:14.552858+00:00",
      "activity": "final_test.evaluation",
-     "result_id": "7c98eebc394b533ffc760918d770b4845d36b7b5a4f54f260b834fa96b52df48",
-     "execution_id": "e_d17cf79ff99b50941d8f5e6e",
+     "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+     "execution_id": "e_e5ad655517547e7853ed55de",
+     "purpose": "final_evaluation",
+     "partition": "final_test",
+     "n_rows": 80,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_7a4ecd0abac04b728679af9f6cf2ba1c",
+     "revision": 72,
+     "time": "2026-10-28T12:48:16.706012+00:00",
+     "activity": "diag.final_test",
+     "result_id": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+     "execution_id": "e_6a06be06b73074c1701dec63",
      "purpose": "final_evaluation",
      "partition": "final_test",
      "n_rows": 80,
@@ -14199,7 +15407,7 @@
       "eda.correlation"
      ],
      "first_revision": 1,
-     "last_revision": 34,
+     "last_revision": 36,
      "note": null
     },
     {
@@ -14213,8 +15421,8 @@
       "eda.special_values",
       "eda.mean_by"
      ],
-     "first_revision": 14,
-     "last_revision": 44,
+     "first_revision": 16,
+     "last_revision": 46,
      "note": null
     },
     {
@@ -14226,8 +15434,8 @@
       "predictor.capture",
       "final_test.evaluation"
      ],
-     "first_revision": 64,
-     "last_revision": 68,
+     "first_revision": 66,
+     "last_revision": 70,
      "note": null
     },
     {
@@ -14252,8 +15460,8 @@
       "fit.linear",
       "fit.variant"
      ],
-     "first_revision": 46,
-     "last_revision": 56,
+     "first_revision": 48,
+     "last_revision": 58,
      "note": null
     },
     {
@@ -14267,20 +15475,21 @@
       "fit.variant",
       "evaluate.regression"
      ],
-     "first_revision": 46,
-     "last_revision": 58,
+     "first_revision": 48,
+     "last_revision": 60,
      "note": null
     },
     {
      "purpose": "final_evaluation",
      "partition": "final_test",
      "rows": 80,
-     "records": 1,
+     "records": 2,
      "activities": [
-      "final_test.evaluation"
+      "final_test.evaluation",
+      "diag.final_test"
      ],
-     "first_revision": 68,
-     "last_revision": 68,
+     "first_revision": 70,
+     "last_revision": 72,
      "note": null
     },
     {
@@ -14291,8 +15500,8 @@
      "activities": [
       "diag.regression"
      ],
-     "first_revision": 50,
-     "last_revision": 60,
+     "first_revision": 52,
+     "last_revision": 62,
      "note": null
     },
     {
@@ -14332,6 +15541,7 @@
      "fit.variant",
      "evaluate.regression",
      "final_test.evaluation",
+     "diag.final_test",
      "diag.regression",
      "fit.variant:2",
      "predictor.capture"
@@ -14380,6 +15590,7 @@
      "fit.variant",
      "evaluate.regression",
      "final_test.evaluation",
+     "diag.final_test",
      "diag.regression",
      "fit.variant:2",
      "predictor.capture"
@@ -14446,6 +15657,7 @@
      "fit.variant",
      "evaluate.regression",
      "final_test.evaluation",
+     "diag.final_test",
      "diag.regression",
      "fit.variant:2",
      "predictor.capture"
@@ -14484,6 +15696,7 @@
      "fit.variant",
      "evaluate.regression",
      "final_test.evaluation",
+     "diag.final_test",
      "diag.regression",
      "fit.variant:2",
      "predictor.capture"
@@ -14530,6 +15743,7 @@
      "fit.variant",
      "evaluate.regression",
      "final_test.evaluation",
+     "diag.final_test",
      "diag.regression",
      "fit.variant:2",
      "predictor.capture"
@@ -14552,6 +15766,7 @@
      "fit.variant",
      "evaluate.regression",
      "final_test.evaluation",
+     "diag.final_test",
      "diag.regression",
      "fit.variant:2",
      "predictor.capture"
@@ -14618,6 +15833,7 @@
      "fit.variant",
      "evaluate.regression",
      "final_test.evaluation",
+     "diag.final_test",
      "diag.regression",
      "fit.variant:2",
      "predictor.capture"
@@ -14639,6 +15855,7 @@
      "fit.variant",
      "evaluate.regression",
      "final_test.evaluation",
+     "diag.final_test",
      "diag.regression",
      "predictor.capture"
     ],

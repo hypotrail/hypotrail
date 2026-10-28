@@ -14,7 +14,7 @@
   "schema": "hypotrail.data/1",
   "ok": true,
   "study": "/studies/auto mpg cv",
-  "revision": 61,
+  "revision": 63,
   "observation_unit": {
    "value": "A vehicle model for a model year",
    "status": "scenario_assumption",
@@ -389,122 +389,122 @@
    "order": "seeded sample",
    "items": [
     {
-     "row_key": "L25",
+     "row_key": "L27",
      "values": {
-      "mpg": 21,
-      "cylinders": 6,
-      "displacement": 199,
-      "horsepower": 90,
-      "weight": 2648,
+      "mpg": 10,
+      "cylinders": 8,
+      "displacement": 307,
+      "horsepower": 200,
+      "weight": 4376,
       "acceleration": 15,
       "model_year": 70,
       "origin": 1,
-      "car_name": "amc gremlin"
+      "car_name": "chevy c20"
      }
     },
     {
-     "row_key": "L35",
+     "row_key": "L29",
      "values": {
-      "mpg": 16,
-      "cylinders": 6,
-      "displacement": 225,
-      "horsepower": 105,
-      "weight": 3439,
+      "mpg": 9,
+      "cylinders": 8,
+      "displacement": 304,
+      "horsepower": 193,
+      "weight": 4732,
+      "acceleration": 18.5,
+      "model_year": 70,
+      "origin": 1,
+      "car_name": "hi 1200d"
+     }
+    },
+    {
+     "row_key": "L151",
+     "values": {
+      "mpg": 26,
+      "cylinders": 4,
+      "displacement": 108,
+      "horsepower": 93,
+      "weight": 2391,
       "acceleration": 15.5,
-      "model_year": 71,
-      "origin": 1,
-      "car_name": "plymouth satellite custom"
+      "model_year": 74,
+      "origin": 3,
+      "car_name": "subaru"
      }
     },
     {
-     "row_key": "L50",
+     "row_key": "L172",
      "values": {
-      "mpg": 23,
+      "mpg": 24,
       "cylinders": 4,
-      "displacement": 122,
-      "horsepower": 86,
-      "weight": 2220,
-      "acceleration": 14,
-      "model_year": 71,
-      "origin": 1,
-      "car_name": "mercury capri 2000"
-     }
-    },
-    {
-     "row_key": "L74",
-     "values": {
-      "mpg": 13,
-      "cylinders": 8,
-      "displacement": 307,
-      "horsepower": 130,
-      "weight": 4098,
-      "acceleration": 14,
-      "model_year": 72,
-      "origin": 1,
-      "car_name": "chevrolet chevelle concours (sw)"
-     }
-    },
-    {
-     "row_key": "L114",
-     "values": {
-      "mpg": 21,
-      "cylinders": 6,
-      "displacement": 155,
-      "horsepower": 107,
-      "weight": 2472,
-      "acceleration": 14,
-      "model_year": 73,
-      "origin": 1,
-      "car_name": "mercury capri v6"
-     }
-    },
-    {
-     "row_key": "L157",
-     "values": {
-      "mpg": 16,
-      "cylinders": 8,
-      "displacement": 400,
-      "horsepower": 170,
-      "weight": 4668,
-      "acceleration": 11.5,
+      "displacement": 134,
+      "horsepower": 96,
+      "weight": 2702,
+      "acceleration": 13.5,
       "model_year": 75,
-      "origin": 1,
-      "car_name": "pontiac catalina"
+      "origin": 3,
+      "car_name": "toyota corona"
      }
     },
     {
-     "row_key": "L237",
+     "row_key": "L263",
      "values": {
-      "mpg": 25.5,
-      "cylinders": 4,
-      "displacement": 140,
-      "horsepower": 89,
-      "weight": 2755,
-      "acceleration": 15.8,
-      "model_year": 77,
+      "mpg": 19.2,
+      "cylinders": 8,
+      "displacement": 305,
+      "horsepower": 145,
+      "weight": 3425,
+      "acceleration": 13.2,
+      "model_year": 78,
       "origin": 1,
-      "car_name": "ford mustang ii 2+2"
+      "car_name": "chevrolet monte carlo landau"
      }
     },
     {
-     "row_key": "L370",
+     "row_key": "L326",
      "values": {
-      "mpg": 34,
+      "mpg": 44.3,
       "cylinders": 4,
-      "displacement": 112,
-      "horsepower": 88,
-      "weight": 2395,
-      "acceleration": 18,
+      "displacement": 90,
+      "horsepower": 48,
+      "weight": 2085,
+      "acceleration": 21.7,
+      "model_year": 80,
+      "origin": 2,
+      "car_name": "vw rabbit c (diesel)"
+     }
+    },
+    {
+     "row_key": "L329",
+     "values": {
+      "mpg": 30,
+      "cylinders": 4,
+      "displacement": 146,
+      "horsepower": 67,
+      "weight": 3250,
+      "acceleration": 21.8,
+      "model_year": 80,
+      "origin": 2,
+      "car_name": "mercedes-benz 240d"
+     }
+    },
+    {
+     "row_key": "L384",
+     "values": {
+      "mpg": 38,
+      "cylinders": 4,
+      "displacement": 91,
+      "horsepower": 67,
+      "weight": 1965,
+      "acceleration": 15,
       "model_year": 82,
-      "origin": 1,
-      "car_name": "chevrolet cavalier 2-door"
+      "origin": 3,
+      "car_name": "honda civic"
      }
     }
    ],
-   "seed": "083993247f2126e5",
+   "seed": "e17bc8f27b2d1446",
    "target_shown": true,
    "exposure": {
-    "exposure_id": "x_66494b4d4bf946fd854e37b5d501ad18",
+    "exposure_id": "x_a7108f4ce0bd4d93a53690ff8721549f",
     "purpose": "development_target_sample",
     "recorded": true,
     "withheld": null

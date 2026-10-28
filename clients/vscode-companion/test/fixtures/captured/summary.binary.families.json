@@ -122,7 +122,7 @@
    "recommended": null,
    "question": null,
    "junior_digest": "Next: the data quality check, run without asking you. Which columns have missing cells, rare categories, or values outside their possible range? This check reads the development rows without the target, so the preparation decided from it comes before any look at the target.",
-   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Quality (6 of 14).",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Quality check (6 of 14).",
    "evidence": [],
    "pause": {
     "schema": "hypotrail.pause/1",
@@ -696,7 +696,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-28T08:40:03.225326+00:00",
+   "boundary_time": "2026-10-28T12:43:37.268670+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -705,7 +705,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-28T08:40:03.367798+00:00",
+     "time": "2026-10-28T12:43:37.394331+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -728,7 +728,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-28T08:40:04.093006+00:00",
+     "time": "2026-10-28T12:43:38.089611+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -758,7 +758,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-28T08:40:05.053253+00:00",
+     "time": "2026-10-28T12:43:39.181229+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -781,7 +781,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-28T08:40:06.119142+00:00",
+     "time": "2026-10-28T12:43:39.975766+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -811,7 +811,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-28T08:40:07.484225+00:00",
+     "time": "2026-10-28T12:43:41.573318+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -834,7 +834,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-28T08:40:08.741750+00:00",
+     "time": "2026-10-28T12:43:42.663407+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -864,7 +864,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-28T08:40:09.953680+00:00",
+     "time": "2026-10-28T12:43:44.120197+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -887,7 +887,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-28T08:40:11.057332+00:00",
+     "time": "2026-10-28T12:43:45.223553+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -917,7 +917,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-28T08:40:12.323308+00:00",
+     "time": "2026-10-28T12:43:46.531378+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -940,7 +940,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-28T08:40:13.700314+00:00",
+     "time": "2026-10-28T12:43:47.768122+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -970,7 +970,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-28T08:40:15.105127+00:00",
+     "time": "2026-10-28T12:43:49.359760+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -993,7 +993,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-28T08:40:16.548693+00:00",
+     "time": "2026-10-28T12:43:51.176346+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1016,7 +1016,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-28T08:40:18.077326+00:00",
+     "time": "2026-10-28T12:43:52.950166+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1039,7 +1039,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-28T08:40:20.042658+00:00",
+     "time": "2026-10-28T12:43:55.148855+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1062,7 +1062,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-28T08:40:21.983649+00:00",
+     "time": "2026-10-28T12:43:57.022701+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1085,7 +1085,7 @@
     },
     {
      "revision": 22,
-     "time": "2026-10-28T08:40:23.541883+00:00",
+     "time": "2026-10-28T12:43:58.614429+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1108,7 +1108,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-28T08:40:25.609007+00:00",
+     "time": "2026-10-28T12:44:00.781960+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1143,7 +1143,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-28T08:40:27.806162+00:00",
+     "time": "2026-10-28T12:44:02.791690+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1166,7 +1166,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-28T08:40:41.488124+00:00",
+     "time": "2026-10-28T12:44:15.888646+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1189,7 +1189,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-28T08:40:51.948183+00:00",
+     "time": "2026-10-28T12:44:25.108664+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1212,7 +1212,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-28T08:41:00.831272+00:00",
+     "time": "2026-10-28T12:44:33.870084+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1238,7 +1238,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-28T08:41:02.834992+00:00",
+     "time": "2026-10-28T12:44:35.797486+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1276,7 +1276,7 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "93e4d3874a642c7b",
+  "currency": "5ae97df0eb95a78d",
   "texts": {
    "en": {
     "plan": {
@@ -1372,9 +1372,23 @@
     },
     "data_contingent": {},
     "sample_note": "These eight rows' target values were shown at step 1, before the split. They stay counted as seen: with cross-validation they later fall in validation folds; with a holdout split, those in the validation rows were seen before.",
-    "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Quality (6 of 14).",
+    "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Rule); Conclude and hand over (Final test, Conclusion). Current step: Quality check (6 of 14).",
     "step_limit": "This check reads the development rows without the target: it is not a look at the target.",
-    "criterion_words": "precision gain over the baseline of at least 5 points"
+    "criterion_words": "precision gain over the baseline of at least 5 points",
+    "step_cards": null,
+    "case_brief": null,
+    "defensibility_note": {
+     "meaning": "Defensible means the study can support its conclusion before a reviewer: every decision taken in your words, the model chosen by you, the final test opened once, the conclusion written, and no stale figure.",
+     "checklist": {
+      "framing_in_your_words": "The framing decisions, taken in your words",
+      "model_chosen_by_you": "The model, chosen by you",
+      "final_test_opened_once": "The final test, opened once",
+      "conclusion_written": "The conclusion, written",
+      "no_stale_figure": "No stale figure"
+     },
+     "not_alarm": "This is not an alarm: it is the list of what the study must gather by the end. It turns to a warning only when something is wrong (a decision to confirm again, a stale figure, an automatic decision to review).",
+     "limits_lead": "The study is defensible, with these limits:"
+    }
    },
    "fr": {
     "plan": {
@@ -1470,9 +1484,23 @@
     },
     "data_contingent": {},
     "sample_note": "Les valeurs de la cible de ces huit lignes ont été montrées à l'étape 1, avant le découpage. Elles restent comptées comme vues : avec la validation croisée, elles tombent ensuite dans des blocs de validation ; avec un échantillon réservé, celles qui sont dans la validation ont été vues avant.",
-    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment, Variables, Découpage, Critère) ; Préparer les preuves (Qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Règle) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Qualité (6 sur 14).",
+    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment de la prédiction, Variables disponibles, Découpage, Critère de succès) ; Préparer les preuves (Contrôle de qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Règle) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Contrôle de qualité (6 sur 14).",
     "step_limit": "Ce contrôle lit les lignes de développement sans la cible : ce n'est pas un regard sur la cible.",
-    "criterion_words": "gain de précision sur le modèle de référence d'au moins 5 points"
+    "criterion_words": "gain de précision sur le modèle de référence d'au moins 5 points",
+    "step_cards": null,
+    "case_brief": null,
+    "defensibility_note": {
+     "meaning": "Défendable veut dire que l'étude peut soutenir sa conclusion devant un relecteur : chaque décision prise avec vos mots, le modèle choisi par vous, le test final ouvert une seule fois, la conclusion écrite, et aucun chiffre périmé.",
+     "checklist": {
+      "framing_in_your_words": "Les décisions de cadrage, prises avec vos mots",
+      "model_chosen_by_you": "Le modèle, choisi par vous",
+      "final_test_opened_once": "Le test final, ouvert une fois",
+      "conclusion_written": "La conclusion, écrite",
+      "no_stale_figure": "Aucun chiffre périmé"
+     },
+     "not_alarm": "Ce n'est pas une alerte : c'est la liste de ce que l'étude devra réunir d'ici la fin. Elle passe en alerte seulement si quelque chose pose problème (décision à reconfirmer, chiffre périmé, décision automatique à relire).",
+     "limits_lead": "L'étude est défendable, avec ces limites :"
+    }
    }
   },
   "panel_contract": 2,
@@ -1518,6 +1546,28 @@
      "id": "workbench_not_tracked",
      "severity": "context"
     }
+   ],
+   "checklist": [
+    {
+     "id": "framing_in_your_words",
+     "done": false
+    },
+    {
+     "id": "model_chosen_by_you",
+     "done": false
+    },
+    {
+     "id": "final_test_opened_once",
+     "done": false
+    },
+    {
+     "id": "conclusion_written",
+     "done": false
+    },
+    {
+     "id": "no_stale_figure",
+     "done": true
+    }
    ]
   },
   "ledger": {
@@ -1541,16 +1591,16 @@
    }
   },
   "sample": {
-   "seed": "5993bca26cdd13a2",
+   "seed": "eb435b060bd89c7a",
    "row_keys": [
-    "L896",
-    "L940",
-    "L998",
-    "L999",
-    "L1384",
-    "L2752",
-    "L3587",
-    "L3592"
+    "L723",
+    "L1000",
+    "L1295",
+    "L1992",
+    "L2841",
+    "L3497",
+    "L3708",
+    "L4258"
    ],
    "recorded": true
   },
@@ -1594,6 +1644,8 @@
    },
    "groups": []
   },
-  "quality_verdicts": null
+  "quality_verdicts": null,
+  "case_brief": null,
+  "case_display": null
  }
 }

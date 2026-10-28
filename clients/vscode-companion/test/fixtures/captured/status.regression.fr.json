@@ -14,15 +14,15 @@
   "schema": "hypotrail.status/1",
   "ok": true,
   "study": "/studies/auto mpg fr",
-  "revision": 32,
+  "revision": 34,
   "since": null,
   "changed": null,
   "changes_since": null,
   "view": {
    "schema": "hypotrail.view/1",
    "study": "/studies/auto mpg fr",
-   "revision": 32,
-   "updated": "2026-10-28T08:41:51.820047+00:00",
+   "revision": 34,
+   "updated": "2026-10-28T12:45:29.797740+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
@@ -106,9 +106,26 @@
      "current": false
     },
     {
+     "id": "error_metric",
+     "title": "Choisir comment l'erreur est mesurée",
+     "question": "L'erreur d'une prédiction est l'écart entre la valeur observée et la valeur prédite. L'erreur absolue moyenne (MAE) fait la moyenne de ces écarts ; la racine de l'erreur quadratique moyenne (RMSE) fait la moyenne de leurs carrés, puis en prend la racine : un gros raté y pèse beaucoup plus. Laquelle des deux mesure l'erreur de cette étude ? Elle est choisie maintenant, avant tout ajustement de modèle.",
+     "expected_output": "A confirmed error measure (MAE or RMSE), chosen before any model result is seen.",
+     "completion": "Decision error_metric is confirmed.",
+     "pause": 2,
+     "decision": "error_metric",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "split"
+     ],
+     "status": "done",
+     "current": false
+    },
+    {
      "id": "success_criterion",
      "title": "Fixer le critère de succès avant de voir un modèle",
-     "question": "L'erreur absolue moyenne (MAE) est la taille moyenne de l'erreur d'une prédiction, dans l'unité de la cible. La moyenne de référence prédit, pour chaque ligne du jeu de validation, la moyenne de la cible sur le jeu d'entraînement. De combien l'erreur de validation du modèle doit-elle être plus petite que celle de la moyenne de référence pour qu'il soit utile ? Le critère est fixé maintenant, avant tout ajustement de modèle.",
+     "question": "L'erreur absolue moyenne (MAE) est la taille moyenne de l'erreur d'une prédiction, dans l'unité de la cible. La référence (prédire la moyenne) prédit, pour chaque ligne du jeu de validation, la moyenne de la cible sur le jeu d'entraînement. De combien l'erreur de validation du modèle doit-elle être plus petite que celle de la référence (prédire la moyenne) pour qu'il soit utile ? Le critère est fixé maintenant, avant tout ajustement de modèle.",
      "expected_output": "A confirmed minimum relative error reduction over the mean baseline, stated before any model result is seen.",
      "completion": "Decision success_criterion is confirmed.",
      "pause": 2,
@@ -117,7 +134,8 @@
      "decide_first": true,
      "missing_results": [],
      "requires": [
-      "split"
+      "split",
+      "error_metric"
      ],
      "status": "done",
      "current": false
@@ -181,7 +199,7 @@
     },
     {
      "id": "models",
-     "title": "Ajuster une moyenne de référence et un modèle linéaire",
+     "title": "Ajuster une référence (prédire la moyenne) et un modèle linéaire",
      "question": "Quelles prédictions la moyenne du jeu d'entraînement et un modèle linéaire donnent-ils pour le jeu de validation ?",
      "expected_output": "Persisted validation predictions for the mean baseline and the linear model.",
      "completion": "Both fit results are current.",
@@ -223,7 +241,7 @@
     {
      "id": "model_choice",
      "title": "Choisir le modèle",
-     "question": "Le modèle linéaire réduit-il assez l'erreur de validation de la moyenne de référence, dans l'unité de la cible, pour être adopté, compte tenu des intervalles appariés et des résidus ?",
+     "question": "Le modèle linéaire réduit-il assez l'erreur de validation de la référence (prédire la moyenne), dans l'unité de la cible, pour être adopté, compte tenu des intervalles appariés et des résidus ?",
      "expected_output": "A current regression evaluation and a confirmed model choice.",
      "completion": "The regression evaluation is current and decision model_choice is confirmed.",
      "pause": 3,
@@ -252,11 +270,13 @@
      "pause": 3,
      "decision": "final_test",
      "activities": [
-      "final_test.evaluation"
+      "final_test.evaluation",
+      "diag.final_test"
      ],
      "decide_first": true,
      "missing_results": [
-      "final_test.evaluation"
+      "final_test.evaluation",
+      "diag.final_test"
      ],
      "requires": [
       "model_choice"
@@ -285,7 +305,7 @@
    "current_step": "model_choice",
    "next_action": {
     "kind": "await_user_words",
-    "proposal_id": "p_7",
+    "proposal_id": "p_8",
     "decision": "model_choice",
     "message": "Show the restatement, then ask the closed question \"Do you adopt this decision?\" and record the reply verbatim. A bare \"ok\" before that question is not a decision.",
     "audience": "agent",
@@ -294,7 +314,7 @@
     "recommended": null,
     "question": "Adoptez-vous cette décision ?",
     "junior_digest": "Proposition sur le choix du modèle : « Adopter le modèle linéaire. » Si elle vous convient, dites que vous l'adoptez ; sinon dites ce que vous changez.",
-    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment, Variables, Découpage, Critère) ; Préparer les preuves (Qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Choix) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Choix (11 sur 13).",
+    "plan_recap": "Le plan, dans l'ordre : Cadrer le changement (Données, Moment de la prédiction, Variables disponibles, Découpage, Mesure de l'erreur, Critère de succès) ; Préparer les preuves (Contrôle de qualité, Préparation, Exploration) ; Travailler et comparer (Modèles, Variantes, Choix du modèle) ; Conclure et transmettre (Test final, Conclusion). Étape actuelle : Choix du modèle (12 sur 14).",
     "evidence": [
      "evaluate.regression"
     ],
@@ -302,11 +322,11 @@
      "schema": "hypotrail.pause/1",
      "kind": "decision",
      "language": "fr",
-     "revision": 32,
+     "revision": 34,
      "position": {
       "step_id": "model_choice",
-      "completed": 10,
-      "total": 13
+      "completed": 11,
+      "total": 14
      },
      "learned": [],
      "limitations": [
@@ -323,7 +343,7 @@
        "text": "Les données ont été explorées ou publiées avant cette étude : ses lignes ne sont pas inédites."
       }
      ],
-     "proposal_id": "p_7",
+     "proposal_id": "p_8",
      "proposal_text": "Adopter le modèle linéaire.",
      "recommended_option": "adopt",
      "options": [
@@ -346,13 +366,13 @@
    },
    "open_proposals": [
     {
-     "proposal_id": "p_7",
+     "proposal_id": "p_8",
      "decision_id": "model_choice",
      "value": "fit.linear",
      "restatement": "Adopt the linear model.",
      "rationale": "Erreur plus faible sur les années récentes.",
-     "revision": 32,
-     "created": "2026-10-28T08:41:51.820005+00:00",
+     "revision": 34,
+     "created": "2026-10-28T12:45:29.797698+00:00",
      "labels": {
       "fr": "Adopter le modèle linéaire."
      },
@@ -378,7 +398,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-28T08:41:33.070920+00:00",
+      "time": "2026-10-28T12:45:09.209144+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -417,7 +437,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-28T08:41:34.288165+00:00",
+      "time": "2026-10-28T12:45:10.595827+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -458,7 +478,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-28T08:41:35.844194+00:00",
+      "time": "2026-10-28T12:45:12.262202+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -473,6 +493,38 @@
      "open_proposals": [],
      "feature_basis": null
     },
+    "error_metric": {
+     "decision_id": "error_metric",
+     "status": "confirmed",
+     "value": {
+      "metric": "mae"
+     },
+     "proposal_id": "p_4",
+     "depends_on": [],
+     "revision": 9,
+     "reason": null,
+     "confirmation": {
+      "user_words": "Yes, I want the error_metric exactly as you stated it",
+      "channel": "chat",
+      "actor": "user",
+      "restatement": "You decide the error_metric as stated.",
+      "proposal_id": "p_4",
+      "revision": 9,
+      "time": "2026-10-28T12:45:13.970282+00:00",
+      "authenticated": false,
+      "basis": "restated",
+      "delegation_scope": null,
+      "agent_concern": null,
+      "mode": "guided",
+      "warnings": [],
+      "reason_given": null,
+      "adoption_question": false,
+      "label": "You decide the error_metric as stated.",
+      "adopted_from": null
+     },
+     "open_proposals": [],
+     "feature_basis": null
+    },
     "success_criterion": {
      "decision_id": "success_criterion",
      "status": "confirmed",
@@ -480,18 +532,20 @@
       "metric": "mae_reduction",
       "min_share": 0.1
      },
-     "proposal_id": "p_4",
-     "depends_on": [],
-     "revision": 9,
+     "proposal_id": "p_5",
+     "depends_on": [
+      "error_metric"
+     ],
+     "revision": 11,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the success_criterion exactly as you stated it",
       "channel": "chat",
       "actor": "user",
       "restatement": "You decide the success_criterion as stated.",
-      "proposal_id": "p_4",
-      "revision": 9,
-      "time": "2026-10-28T08:41:37.581037+00:00",
+      "proposal_id": "p_5",
+      "revision": 11,
+      "time": "2026-10-28T12:45:15.676706+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -518,18 +572,18 @@
       "rare_category_min_rows": 0,
       "target_looks_before": 0
      },
-     "proposal_id": "p_5",
+     "proposal_id": "p_6",
      "depends_on": [],
-     "revision": 11,
+     "revision": 13,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the preprocessing exactly as you stated it",
       "channel": "chat",
       "actor": "user",
       "restatement": "You decide the preprocessing as stated.",
-      "proposal_id": "p_5",
-      "revision": 11,
-      "time": "2026-10-28T08:41:39.310886+00:00",
+      "proposal_id": "p_6",
+      "revision": 13,
+      "time": "2026-10-28T12:45:17.386488+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -551,18 +605,18 @@
       "kind": "regularisation",
       "strength": "strong"
      },
-     "proposal_id": "p_6",
+     "proposal_id": "p_7",
      "depends_on": [],
-     "revision": 27,
+     "revision": 29,
      "reason": null,
      "confirmation": {
       "user_words": "Yes, I want the model_variant exactly as you stated it",
       "channel": "chat",
       "actor": "user",
       "restatement": "You decide the model_variant as stated.",
-      "proposal_id": "p_6",
-      "revision": 27,
-      "time": "2026-10-28T08:41:48.570280+00:00",
+      "proposal_id": "p_7",
+      "revision": 29,
+      "time": "2026-10-28T12:45:26.595988+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -581,7 +635,7 @@
      "decision_id": "model_choice",
      "status": "proposed",
      "value": "fit.linear",
-     "proposal_id": "p_7",
+     "proposal_id": "p_8",
      "depends_on": [
       "prediction_time",
       "feature_availability",
@@ -589,11 +643,11 @@
       "preprocessing",
       "model_variant"
      ],
-     "revision": 32,
+     "revision": 34,
      "reason": null,
      "confirmation": null,
      "open_proposals": [
-      "p_7"
+      "p_8"
      ],
      "feature_basis": null
     },
@@ -603,6 +657,7 @@
      "value": null,
      "proposal_id": null,
      "depends_on": [
+      "error_metric",
       "prediction_time",
       "feature_availability",
       "split",
@@ -623,6 +678,7 @@
      "value": null,
      "proposal_id": null,
      "depends_on": [
+      "error_metric",
       "prediction_time",
       "feature_availability",
       "split",
@@ -943,9 +999,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_a2a3d5fe7f8806c9c98f6929",
-     "exposure_id": "x_a29b3cae80464dfc8a821f10855282a1",
-     "started_revision": 20,
+     "execution_id": "e_aff36faf73c7439f15bd6f24",
+     "exposure_id": "x_ae5692966c0041e59eec002dbd6df26d",
+     "started_revision": 22,
      "integrity": "ok"
     },
     "eda.quality": {
@@ -2187,9 +2243,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_b5c9bc6dc2acb308345f4b5b",
-     "exposure_id": "x_bbfdaf7b4645453d9e1506fc96bc5bb0",
-     "started_revision": 18,
+     "execution_id": "e_218811c490cacf105137f8c6",
+     "exposure_id": "x_f067b873fb684c7ea97a4901fc9678e9",
+     "started_revision": 20,
      "integrity": "ok"
     },
     "eda.special_values": {
@@ -2257,9 +2313,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_a6285653c29e349d0b0beb2b",
-     "exposure_id": "x_9e06a8e1ddf94e6b92b02564b8b32bb9",
-     "started_revision": 16,
+     "execution_id": "e_a2a3d5fe7f8806c9c98f6929",
+     "exposure_id": "x_8876fab9e2414678a7256560e873b8f2",
+     "started_revision": 18,
      "integrity": "ok"
     },
     "eda.target_summary": {
@@ -2323,9 +2379,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_92aaf17d67568d5f7880d18a",
-     "exposure_id": "x_4db89272e05f460288ef8e1674ed0c63",
-     "started_revision": 14,
+     "execution_id": "e_b5c9bc6dc2acb308345f4b5b",
+     "exposure_id": "x_dfc5efd5de1644b58d7cf28135901fd1",
+     "started_revision": 16,
      "integrity": "ok"
     },
     "evaluate.regression": {
@@ -2673,9 +2729,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_13402e84eaabec613a733a22",
-     "exposure_id": "x_646c7884c0b24b8d839e756243258823",
-     "started_revision": 30,
+     "execution_id": "e_4fbbb82d35cab38390aae187",
+     "exposure_id": "x_d62e59a8535543b7bedcc14f8d9cc11b",
+     "started_revision": 32,
      "integrity": "ok"
     },
     "fit.baseline": {
@@ -2753,9 +2809,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_218811c490cacf105137f8c6",
-     "exposure_id": "x_ee4bdb880ac8424c816bf158d57afc30",
-     "started_revision": 22,
+     "execution_id": "e_806737e6b19f6634e75c9e80",
+     "exposure_id": "x_79a36e3c7f5f43b1be905f74dafca4a0",
+     "started_revision": 24,
      "integrity": "ok"
     },
     "fit.linear": {
@@ -2898,9 +2954,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_aff36faf73c7439f15bd6f24",
-     "exposure_id": "x_081f162501e6446eb25b5bc78d686d9e",
-     "started_revision": 24,
+     "execution_id": "e_2ceccee6d2ca7d401ab8718b",
+     "exposure_id": "x_dfa3b44238c24f54b7d046cd1030c3da",
+     "started_revision": 26,
      "integrity": "ok"
     },
     "fit.variant": {
@@ -3053,9 +3109,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_0fce83ab7847d276df6d9250",
-     "exposure_id": "x_286aa26425e74685b26a819219a1a30e",
-     "started_revision": 28,
+     "execution_id": "e_4b7832830e252177080fb154",
+     "exposure_id": "x_ec43cb8b75c749798b64df3b173b1e7d",
+     "started_revision": 30,
      "integrity": "ok"
     },
     "split": {
@@ -3146,9 +3202,9 @@
       "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
       "python": "3.13.16"
      },
-     "execution_id": "e_839104bf9d2cae503476be39",
-     "exposure_id": "x_c73be721515349a6a16249285a4a499a",
-     "started_revision": 12,
+     "execution_id": "e_a6285653c29e349d0b0beb2b",
+     "exposure_id": "x_694fad3a54fb46b5b0d331cc73d02348",
+     "started_revision": 14,
      "integrity": "ok"
     }
    },
@@ -3170,10 +3226,10 @@
       "error": null,
       "generated": false,
       "kind": "marimo_notebook",
-      "last_ok_revision": 32,
+      "last_ok_revision": 34,
       "path": "notebooks/study_editable.py",
-      "revision": 32,
-      "sha256": "49022fb5c8de5f780a0a9454774399f23eb6fd8e4db5399ac575cde2ed99447a",
+      "revision": 34,
+      "sha256": "0da867d4836ca07241c287cc912f541a10f26017f9625bc3b1e9c7c738a106c6",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -3196,14 +3252,14 @@
        "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
        "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c"
       ],
-      "edit_check_sha256": "7c172a998bc6a9894bdd7d130a7b62851d9f0f5ee2e6bdc187aa75ef23b4c9a4",
+      "edit_check_sha256": "7df7202459916cc20047778b6042814186162a06e96baee23408d7efee65d43f",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
-      "last_ok_revision": 32,
+      "last_ok_revision": 34,
       "path": "notebooks/study_generated.py",
-      "revision": 32,
-      "sha256": "3d657f7e8e3aa36852ed5d9f46d010aef208918f32116f761b83ff8b07b0de89",
+      "revision": 34,
+      "sha256": "abdc3e20b9210c72d76c609ab89796ea800483042a024bb72678e99a09152b35",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -3229,10 +3285,10 @@
       "error": null,
       "generated": true,
       "kind": "html",
-      "last_ok_revision": 32,
+      "last_ok_revision": 34,
       "path": "reports/study.html",
-      "revision": 32,
-      "sha256": "820d2b993929db8c9e8a2bbf8e39924eef6617fabe9b0f465fb66b36635bf1fa",
+      "revision": 34,
+      "sha256": "5f22517d9eab1095ebe9b35feb91bcf9f8d7cb1d5bb6b31a7dc3c49596616f19",
       "status": "ok",
       "template_version": 4,
       "user_edits_preserved": [],
@@ -3599,7 +3655,7 @@
    "claim_eligibility": null,
    "presentation": {
     "schema": "hypotrail.presentation/1",
-    "revision": 32,
+    "revision": 34,
     "result_ids": {
      "eda.mean_by:model_year": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
      "eda.quality": "c985c7d9a5d39ad77c5e2b2f75248c632167edf7255747822e92a8be3802c22e",
@@ -3633,11 +3689,11 @@
      "schema": "hypotrail.pause/1",
      "kind": "decision",
      "language": "fr",
-     "revision": 32,
+     "revision": 34,
      "position": {
       "step_id": "model_choice",
-      "completed": 10,
-      "total": 13
+      "completed": 11,
+      "total": 14
      },
      "learned": [],
      "limitations": [
@@ -3654,7 +3710,7 @@
        "text": "Les données ont été explorées ou publiées avant cette étude : ses lignes ne sont pas inédites."
       }
      ],
-     "proposal_id": "p_7",
+     "proposal_id": "p_8",
      "proposal_text": "Adopter le modèle linéaire.",
      "recommended_option": "adopt",
      "options": [

@@ -15,7 +15,7 @@
   "schema": "hypotrail.summary/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 38,
+  "revision": 40,
   "since": null,
   "changed": null,
   "goal": {
@@ -57,6 +57,11 @@
    {
     "id": "split",
     "title": "Split the data before exploring it",
+    "status": "done"
+   },
+   {
+    "id": "error_metric",
+    "title": "Choose how the error is measured",
     "status": "done"
    },
    {
@@ -107,7 +112,7 @@
   ],
   "next_action": {
    "kind": "await_user_words",
-   "proposal_id": "p_7",
+   "proposal_id": "p_8",
    "decision": "model_choice",
    "message": "Show the restatement, then ask the closed question \"Do you adopt this decision?\" and record the reply verbatim. A bare \"ok\" before that question is not a decision.",
    "audience": "agent",
@@ -116,7 +121,7 @@
    "recommended": null,
    "question": "Do you adopt this decision?",
    "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change.",
-   "plan_recap": "The plan, in order: Frame the change (Data, Moment, Variables, Split, Criterion); Prepare evidence (Quality, Preparation, Explore); Work and compare (Models, Variants, Choice); Conclude and hand over (Final test, Conclusion). Current step: Choice (11 of 13).",
+   "plan_recap": "The plan, in order: Frame the change (Data, Prediction moment, Available variables, Split, Error measure, Success criterion); Prepare evidence (Quality check, Preparation, Exploration); Work and compare (Models, Variants, Model choice); Conclude and hand over (Final test, Conclusion). Current step: Model choice (12 of 14).",
    "evidence": [
     "evaluate.regression"
    ],
@@ -124,11 +129,11 @@
     "schema": "hypotrail.pause/1",
     "kind": "decision",
     "language": "en",
-    "revision": 38,
+    "revision": 40,
     "position": {
      "step_id": "model_choice",
-     "completed": 10,
-     "total": 13
+     "completed": 11,
+     "total": 14
     },
     "learned": [],
     "limitations": [
@@ -145,7 +150,7 @@
       "text": "The data were explored or published before this study; its rows are not unseen."
      }
     ],
-    "proposal_id": "p_7",
+    "proposal_id": "p_8",
     "proposal_text": "Adopt the linear model.",
     "recommended_option": "adopt",
     "options": [
@@ -168,11 +173,11 @@
   },
   "open_proposals": [
    {
-    "proposal_id": "p_7",
+    "proposal_id": "p_8",
     "decision_id": "model_choice",
     "value": "fit.linear",
     "restatement": "Adopt the linear model.",
-    "revision": 38
+    "revision": 40
    }
   ],
   "decisions": {
@@ -232,6 +237,18 @@
     "open_proposals": [],
     "feature_basis": null
    },
+   "error_metric": {
+    "status": "confirmed",
+    "value": {
+     "metric": "mae"
+    },
+    "basis": "restated",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the error_metric exactly as you stated it",
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
    "success_criterion": {
     "status": "confirmed",
     "value": {
@@ -284,7 +301,7 @@
     "user_words": null,
     "reason": null,
     "open_proposals": [
-     "p_7"
+     "p_8"
     ],
     "feature_basis": null
    },
@@ -388,24 +405,24 @@
    "items": {
     "editable": {
      "status": "ok",
-     "revision": 38,
-     "last_ok_revision": 38,
+     "revision": 40,
+     "last_ok_revision": 40,
      "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence.",
      "audience": "agent",
      "junior_message": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence."
     },
     "notebook": {
      "status": "ok",
-     "revision": 38,
-     "last_ok_revision": 38,
+     "revision": 40,
+     "last_ok_revision": 40,
      "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
      "audience": "agent",
      "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
-     "revision": 38,
-     "last_ok_revision": 38,
+     "revision": 40,
+     "last_ok_revision": 40,
      "message": "The report (reports/study.html) is up to date.",
      "audience": "agent",
      "junior_message": "The report is up to date."
@@ -509,7 +526,7 @@
   },
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
-   "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation).",
+   "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); error measure; success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation).",
    "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result f1f5a9a3); the report and notebook are up to date.",
    "Next: whether you adopt the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
@@ -517,7 +534,7 @@
   "recap_audience": "agent",
   "recap_junior": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
-   "Decided: the prediction moment; the feature availability (excluded acceleration); the split (ordinal cutoff on model_year, validation from 79); the success criterion (validation error at least 10% below the mean baseline); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation).",
+   "Decided: the prediction moment; the feature availability (excluded acceleration); the split (ordinal cutoff on model_year, validation from 79); the error measure; the success criterion (validation error at least 10% below the mean baseline); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation).",
    "Now: Choose the model, waiting for your answer (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg); the report and notebook are up to date.",
    "Next: whether you adopt the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
