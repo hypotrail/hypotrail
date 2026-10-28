@@ -132,7 +132,9 @@
     "ledger",
     "sample",
     "headlines",
-    "criterion_configurations"
+    "criterion_configurations",
+    "data_structure",
+    "quality_verdicts"
    ],
    "moments[]": [
     "id",
@@ -273,7 +275,8 @@
    "ledger": [
     "final_test",
     "target_looks",
-    "configurations"
+    "configurations",
+    "variants"
    ],
    "sample": [
     "seed",
