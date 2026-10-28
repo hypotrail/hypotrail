@@ -9,7 +9,7 @@ extension.js            vscode API only: flag and trust checks, commands, URI ha
 lib/flag.js             enabled, stage (v0-v3), learningLayer, reviewer, chatInsert (hidden, forced off: CR.8), env overrides
 lib/study.js            study discovery and agent.json validation (the CLI argv)
 lib/watch.js            fs.watch of .hypotrail/ (debounced), no polling
-lib/cli.js              THE ONLY child_process user: read builders (READS), write builders W4, W5, W7 (WRITES), run()
+lib/cli.js              THE ONLY child_process user: read builders (READS), write builders W4, W5, W7, W8 (WRITES), run()
                         (W1-W3 withdrawn in v0.3, ADR 0004 decision 8; W6 withdrawn by R31, decision 12;
                         check_layout refuses a `decide` write and an acknowledgement builder)
 lib/launch.js           the three Marimo launches (WP-A5, ADR 0004 "local launch"): marimo run of the generated
@@ -18,7 +18,8 @@ lib/protocol.js         hypotrail.panel/2 schema table and validators; emits med
 lib/controller.js       router: validation, stage gate, reviewer refusal, summary, load dispatch,
                         cache + coalescing + read limits, exclusive write lock, outcome mapping
 lib/cache.js            CLI payloads per read key and version (<revision>:<currency>, CR.1); preview:* keys in a bounded list
-lib/handlers/<view>.js  {types, loads, commands, onReady}: one module per view group
+lib/handlers/<view>.js  {types, loads, commands, onReady}: one module per view group (lot P: after.js, the Azure ML
+                        plan read `azureml` and W8; whatif.js `open_whatif`, the read-only What if? editor tab)
 lib/models/<view>.js    pure payload -> model functions (to<Name>Model) + FIXTURES
 lib/models/page.js      the page model (ADR 0004 d13), UMD: run by the host's tests and, concatenated by
                         lib/html.js, in the webview as Hypotrail.pageModel (header, To handle, Since, Now,
@@ -52,7 +53,9 @@ media/copy-fr/<view>.js the French translation of the same keys (v0.3, WP-E2, R2
 media/copy/junior.js    the junior-facing copy keyed by kind/code/id, and decision values in words (WP-A5,
                         two-layer copy, COMPANION-ADVANCED §15.1)
 media/views/page.js     the one page: the only view that renders (header, blocks in the fixed order, footer)
-media/views/<part>.js   parts providers (HT.parts.<name>: eda, evidence, decisions, whatif, learn, overview)
+media/views/<part>.js   parts providers (HT.parts.<name>: eda, evidence, decisions, whatif, learn, overview; lot P:
+                        figures, the figures behind each step, the method diagrams, the end's table, "And after",
+                        and the What if? tab drawn when `init.surface` is `whatif`, ADR 0004 decision 14)
                         whose functions page.js calls; they keep their onMessage and loads
 media/css/*.css         tokens.css (theme), core.css (frame, components), <view>.css
 ```
@@ -71,7 +74,7 @@ HT.send({type, ...})  -- {v: 2, ...} -->  controller.handle(raw)
                                             load -> handlers' loads[view] -> ctx.read --> (payload cached per read key and version,
                                                                                        projected by each loader's model)
                                             other -> handlers' types[type](message, ctx)
-                                                       ctx.write(op, {argv, record}) -> W4, W5, W7 argv (exclusive)
+                                                       ctx.write(op, {argv, record}) -> W4, W5, W7, W8 argv (exclusive)
 render(model, ctx) <-- {v: 2, ...} -----  ctx.post(...) validated by protocol.validateOutgoing
 ```
 

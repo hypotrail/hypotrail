@@ -18,6 +18,8 @@ The amendment paragraphs that follow are the history of the tabbed panel. Where 
 
 **Amended on 2026-10-27 (owner decision on `docs/plans/mockups/panel-lesson-style-fr.html`, notes R27 to R30): the lesson style** (§6.0).
 
+**Amended on 2026-10-28 (ADR 0004 decision 14; owner remarks R34 to R53 of [copilot-companion-2026-10-26](../acceptance/runs/copilot-companion-2026-10-26.md), lot P).** Now shows the figures behind every step and the method diagrams; the path replays each step's decision and figures inline; the end shows one development-vs-final table drawn as dots on one scale; "And after" offers the handoff export (W7), the Azure ML plan (a read) and the Azure ML export, a new write **W8** (stage v3, outside the study state, never an Azure job); What if? opens in its own read-only editor tab. Details at the end of §7.
+
 Requirement identifiers are written like `NOW-3`. Each one is testable, and the plan maps each one to a test. "MUST" and "MUST NOT" are binding. The visual target of the one page is the owner-approved mockup `docs/plans/mockups/panel-synthesis-fr.html` (five study states, widths 320, 420 and 600 px, stages v0 to v3; its numbers are illustrative except the step-1 sample), and, for the figures, the mockups named in Appendix A. Where a mockup and this document differ, this document wins; the mockup's sections "Ce que le moteur doit ajouter" and "États encore à dessiner" are covered by P1 and by §6.11.
 
 ## 1. Purpose
@@ -86,7 +88,7 @@ Each stage includes the earlier ones. An element of a later stage is **absent** 
 | v0 | the sticky header (study, final-test seal, the engine's "not yet defensible" pill, theme, more) and the progress; **To handle** read only; **Now** without figures: the question, the engine's options as plain text, "Copy the question", the limit line, the next line; **the path** with each step's decision value, basis and headline, and the ledger line; the **Deliverables** drawer with Open and the Marimo launches | L1, L2, L3 (no W) | P1 §17.1 (anchors), §17.2.1–§17.2.3 (`panel_contract`, `automation`, `review_queue`, `defensibility`, `ledger`, `headlines`, texts) |
 | v1 | Regenerate (W5) in To handle and the Deliverables drawer; **Since your last visit**; "What your answer will change" in Now; the checks of the deliverables; each step's history in the path; the study switch; reviewer mode | W5 | C1, C2, C3, C10 (check `location`) |
 | v2 | the data card with its sample (in Now at step 1, then in the Data drawer); the **figures** in Now and in the path's step details (EDA cards, evidence, variants, diagnostics, final test, the criterion per configuration); the **Data** drawer with "Run another chart" (W4); the **What if?** drawer; the ledger's table; deep links to a result | W4 | C4, C5, C8, C9, C10 (anchors), P1 §17.2.4–§17.2.6, §17.3, §17.4 |
-| v3 | the inline **notions** (a term expands in place) and the **My notions** drawer; the handoff export (W7) and the session report in the Deliverables drawer | W7 | C6, C7 |
+| v3 | the inline **notions** (a term expands in place) and the **My notions** drawer; the handoff export (W7) and the session report in the Deliverables drawer; at the end, "And after" with W7, the Azure ML plan and the Azure ML export (W8, ADR 0004 decision 14) | W7, W8 | C6, C7 |
 
 The default stage stays `v0`; it moves only through an ADR amendment after a stage's exit criteria are met (ADR 0004).
 
@@ -405,7 +407,7 @@ The "Copy …" buttons of Now, To handle, the path's details (v1: "Ask the agent
 
 ## 7. Allowed writes (whitelist)
 
-The one page (ADR 0004 d13) changes where the controls sit, not the whitelist: the writes are exactly **W4, W5 and W7**, plus the three Marimo launches L1–L3 of ADR 0004 decision 7, which are not writes.
+The one page (ADR 0004 d13) changes where the controls sit, not the whitelist: the writes are exactly **W4, W5, W7 and, since ADR 0004 decision 14 (owner request R49, 2026-10-28), W8**, plus the three Marimo launches L1–L3 of ADR 0004 decision 7, which are not writes. The Azure ML export plan (`export azureml --plan`) writes nothing and is a read (`azureml` view, §8).
 
 `A` is `agent.argv`, `S` is the study directory, `ID` is a fresh UUID v4, and `R` is the revision that the junior's view showed. The controller builds every argv. The webview sends only the identifiers and the typed words; it never sends argv fragments, restatements, or option names.
 
@@ -417,9 +419,10 @@ The one page (ADR 0004 d13) changes where the controls sit, not the whitelist: t
 | W4 | v2 | "Run another chart" in the Data drawer (TOOL-2) | `A run <activity> --column=<c> --channel=webview --request-id ID --expected-revision R --json --study S`; v0.3 (WP-E2): `A run eda.correlation --channel=webview --request-id ID --expected-revision R --json --study S` (no column) | `activity` ∈ the `eda_catalog.activities[].activity` values with `per_column: true` and `runnable: true` of the evidence read at revision R; `c` is one of that activity's `columns[].name`. Without a column: `activity` is a whole-study chart the panel knows (`eda.correlation` only, `lib/models/eda.js` `WHOLE_STUDY`) and its catalog entry has `per_column: false` and `runnable: true` |
 | W5 | v1 | Regenerate, in To handle or the Deliverables drawer | `A render --channel=webview --json --study S` | not reviewer; not busy |
 | W6 | — | **withdrawn** (owner decision R31, 2026-10-27; ADR 0004 amendment) | none: the acknowledgement of an interrupted execution is made in the chat, in the junior's words (`run --acknowledge-interruption`, a chat act); the panel copies a ready question for it | — |
-| W7 | v3 | Export a handoff pack, in the Deliverables drawer | `A export handoff --out=<chosen folder>/revision-<R> --channel=webview --expected-revision R --json --study S` (CR.6; never without `--expected-revision`: an older engine's refusal of the option is shown as such) | `R` is the last snapshot's revision; the folder comes from the VS Code dialog; it is not inside `S/.hypotrail` |
+| W7 | v3 | Export a handoff pack, in the Deliverables drawer and, at the end, in "And after" (R49) | `A export handoff --out=<chosen folder>/revision-<R> --channel=webview --expected-revision R --json --study S` (CR.6; never without `--expected-revision`: an older engine's refusal of the option is shown as such) | `R` is the last snapshot's revision; the folder comes from the VS Code dialog; it is not inside `S/.hypotrail` |
+| W8 | v3 | Export the Azure ML project, in "And after", next to the plan (ADR 0004 decision 14, R49) | `A export azureml --out=<chosen folder>/azureml-revision-<R> --expected-revision R --json --study S` (no `--channel`: the engine records nothing for this export, no state, event, exposure or channel record; never `--plan`, which is the read) | the study is `done` and `next_action.after_study.azureml.supported` is true (else `invalid`, "not supported"; the engine also refuses an unsupported model with `capability_not_supported`); `R` is the last snapshot's revision; the folder comes from the VS Code dialog and is not inside `S/.hypotrail`; not reviewer; not the What if? tab; not busy. **Never an Azure job**: no client source calls the Azure CLI or submits a job (`scripts/check_layout.py`) |
 
-**Channel (v0.3, WP-J, R35).** Every write of W4, W5 and W7 carries `--channel=webview`: the engine records it on the run (the reservation's parameters) and as a `channel_action` event for a render or an export, and `status --summary --digest` lists them in `digest.channel_actions`, so the agent can say what was done from the panel. It changes no identity, no result and no revision of its own.
+**Channel (v0.3, WP-J, R35).** Every write of W4, W5 and W7 carries `--channel=webview` (W8 does not: the Azure ML export records nothing in the study): the engine records it on the run (the reservation's parameters) and as a `channel_action` event for a render or an export, and `status --summary --digest` lists them in `digest.channel_actions`, so the agent can say what was done from the panel. It changes no identity, no result and no revision of its own.
 
 **WP-E1 narrowing (ADR 0004 decision 8).** W1, W2, and W3 are withdrawn at every stage: `lib/cli.js` has no builder for them, the protocol has no `confirm`, `withdraw`, or `propose` message, and `scripts/check_layout.py` refuses a client source that invokes `decide confirm`, `decide withdraw`, or `decide propose`. The rows above are kept for the record.
 
@@ -436,7 +439,7 @@ The one page (ADR 0004 d13) changes where the controls sit, not the whitelist: t
 - `check --text`;
 - `init`.
 
-A unit test enumerates the argv builder module and asserts that exactly the three builders W4, W5 and W7 exist (seven before WP-E1, four before R31).
+A unit test enumerates the argv builder module and asserts that exactly the four builders W4, W5, W7 and W8 exist (seven before WP-E1, four before R31, three before ADR 0004 decision 14), and `scripts/check_layout.py` refuses a fifth, a W8 with `--plan`, an `export azureml` argv outside `lib/cli.js`, and any Azure CLI call or job submission.
 
 **Outcome handling (all writes).**
 
@@ -449,7 +452,19 @@ A unit test enumerates the argv builder module and asserts that exactly the thre
 | no JSON, timeout, start failure | "The outcome is unknown: the refreshed panel shows whether anything was recorded." (v0) |
 | replayed | It cannot happen (new id per submission). If it does, it is shown as success with "(replayed, no effect)" |
 
-**Timeouts.** Reads: 30 s. W5 and W7: 120 s. W4: 300 s, because EDA loads the dataset with pandas.
+**Timeouts.** Reads: 30 s. W5, W7 and W8: 120 s. W4: 300 s, because EDA loads the dataset with pandas.
+
+**Lot P (owner remarks R34 to R53, 2026-10-28; ADR 0004 decision 14).** What the page shows changed as follows; the rules of §2 hold.
+
+- **To handle (R34).** A deliverable is listed only when it was rendered and is now stale, or its last render failed, each with its own sentence; a deliverable never rendered is not listed (the journey produces it later), and the Deliverables drawer says "not generated yet".
+- **The path (R38, R50).** Every done step line carries a headline: the engine's, else the decision value, else the panel's words (the data card: the engine's row counts). A long headline wraps; it is never cut. An opened done step shows its decision in words with who decided and the basis, the reason, then its figures drawn inline with their frame (no "See the figure" click) and its method diagrams; "Where it comes from" and "Ask the agent" are small secondary links.
+- **Now shows the figures behind each step, from v2 (R39–R45, R53).** Under the question, "To answer, look at" draws the registered results the proposal cites (`open_proposals[].evidence`, slots, when the engine sends it; else the results its value names in `motivated_by`; else the results filed under the step, `results.<slot>.step`, and those the step rests on: the quality check for the preparation, the linear diagnostics for the variants), each with its frame and "What we conclude". The quality check is one row per column (its range, its skewness, its missing cells), the changed columns first and marked, each column with the engine's verdict and bound when it sends one (`ranges[].verdict` or `verdicts[]`), else the figures the draft read and a line saying there is no verdict. The variants show observed against predicted (out of fold) and the mean residual along the columns, with the trial budget as a small bar. A result-dependent change is one calm line with its why in a fold. Each step also draws its method diagrams from registered values: the partition strip (development and sealed rows, how drawn), the time-ordered cross-validation blocks, the preparation pipeline, the one-standard-error rule, the exposure ledger as a timeline. A conclusion without a chart says "no chart for this point".
+- **Charts first (R42).** The per-fold values of each configuration are drawn as dots per configuration with the mean as a ring, the numbers written; the text tables stay one fold away. Every interval says what it is (bootstrap with its level, or ± one standard error over the folds).
+- **The running card and the limit line (R43).** "Computing, started from the chat. The result will appear here; nothing to answer yet.", naming the computation when the engine does. The limit line is the engine's `texts.<lang>.limit` when it sends one, else the panel's sentence for the step (before any model, at the final test, at the conclusion), else the recap's limit.
+- **Names (R45, R48).** A variant is named by what it is (ridge, EBM), from the variant decision; the reference of a regression is "reference (predict the mean)".
+- **The end (R48, R52).** One table: rows are the configurations, then the paired difference with the reference, then the criterion; columns "Development (out of fold, used to choose)" and "Final test (read once)", each value with its interval, the chosen row highlighted, an unmeasured final cell reading "not measured: the final test measures only the chosen model"; then the same as dots with intervals on one scale, development ◐ and final ●, the criterion's final-test bound as a line. The conclusion is split into what the study establishes, what it does not establish, and "And after"; judged on the final test, the criterion line speaks of "the error on the final test".
+- **And after (R49).** From v3: the handoff export (W7) and the Azure ML export plan, read with `export azureml --plan` (files per kind, model, template, statuses, the fields the team fills in, "never run in the cloud"), with the export itself (W8) when the engine says the model is supported; otherwise the engine's reason. No command that reaches the cloud is shown or run.
+- **What if? in its own tab (R51).** The What if? drawer holds a calm line, its why in a fold, and a button that opens What if? in a wide VS Code editor tab: a second read-only webview of the extension (`init.surface: "whatif"`, its controller refuses every write). For a binary task it is the policy sandbox; for a regression, the residual explorer (observed against predicted, the mean residual along each column, the largest errors, per configuration), from the registered diagnostics only. "Ask the agent to propose this" stays a clipboard copy. The panel keeps its one page.
 
 ## 8. Webview ↔ extension message protocol (`hypotrail.panel/2`)
 
@@ -478,6 +493,8 @@ A unit test enumerates the argv builder module and asserts that exactly the thre
 | `navigate_external` | `kind` ∈ `reveal_export`; `path` (string, must equal the last export's `out`) | v3 |
 | `ask_agent` | `about: {kind ∈ result, decision, proposal, step, limit, execution, term; id (string ≤ 100)}`, `question` (string ≤ 2000), `mode` ∈ `copy`, `insert` | v0 (v2 before WP-E1) |
 | `export_handoff` | `revision` | v3 |
+| `export_azureml` | `revision` (W8, ADR 0004 decision 14) | v3 |
+| `open_whatif` | — (opens the read-only What if? editor tab; not a write) | v2 |
 | `switch_study` | — | v1 |
 | `learn_set` | `key` ∈ `seen`, `prediction`, `prefs`, `reset_predictions`; `id` (`^[a-z0-9_.:-]+$`, ≤ 100); `value?` (a choice id for `prediction`, `{hideCards?: bool}` for `prefs`, none otherwise) | v3, learning layer on; stored by the extension in `globalState` (§10), never sent to the CLI (LE-1) |
 
@@ -485,12 +502,12 @@ A unit test enumerates the argv builder module and asserts that exactly the thre
 
 | `type` | Fields | Notes |
 |---|---|---|
-| `init` | `stage`, `reviewer` (bool), `learningLayer` (bool), `chatInsert` (bool), `task` (`binary`\|`regression`\|`null`), `study?` (the study key of §10, 16 hex; never the path; CR.2), `marimo?` (`{kernel, notebook, editable?, workbench}`: the engine environment and the three launch commands with study-relative files, display only; WP-A5), `language?` (`auto`\|`en`\|`fr`, the setting `hypotrail.companion.language`; v0.3, WP-E2), `panelContract` (the panel's `PANEL_CONTRACT`, P1 §17.1.5) | sent once after `ready`, and again when a setting changes. The theme is not sent: it is the webview's own state (THEME-2) |
+| `init` | `surface?` (`panel` or `whatif`, the read-only What if? tab of ADR 0004 decision 14), `stage`, `reviewer` (bool), `learningLayer` (bool), `chatInsert` (bool), `task` (`binary`\|`regression`\|`null`), `study?` (the study key of §10, 16 hex; never the path; CR.2), `marimo?` (`{kernel, notebook, editable?, workbench}`: the engine environment and the three launch commands with study-relative files, display only; WP-A5), `language?` (`auto`\|`en`\|`fr`, the setting `hypotrail.companion.language`; v0.3, WP-E2), `panelContract` (the panel's `PANEL_CONTRACT`, P1 §17.1.5) | sent once after `ready`, and again when a setting changes. The theme is not sent: it is the webview's own state (THEME-2) |
 | `snapshot` | `revision`, `currency?` (CR.1), `model: SummaryModel` | after every summary read |
 | `view_data` | `view`, `revision`, `currency?` (the version the model was read at, CR.1), `model` (the model of §9 for that view), `resultId?` | |
 | `load_error` | `view` (or `null` for the summary), `message`, `detail` | |
 | `busy` | `busy` (bool), `op` (W id or `read`) | |
-| `outcome` | `op` (`W4`–`W7`; `W1`–`W3` before WP-E1), `kind` ∈ `ok`, `ok_with_problems`, `not_promoted`, `refused`, `failed`, `invalid`, `cancelled`; `target?` (pid, eid, slot); `revision?`; `refusal?` (`{code, reason, engineMessage, human, details: [string], humanFr?, detailsFr?: [string]}`; the French pair since v0.3, WP-K); `recorded?` (`{userWords?, channel?, decisionId?, proposalId?, slot?, status?, files?: [{path, bytes}], out?, warnings?: [string]}`); `artifacts?` (`[{name, status, message}]`); `message?` | |
+| `outcome` | `op` (`W4`, `W5`, `W7`, `W8`; `W1`–`W3` before WP-E1), `kind` ∈ `ok`, `ok_with_problems`, `not_promoted`, `refused`, `failed`, `invalid`, `cancelled`; `target?` (pid, eid, slot); `revision?`; `refusal?` (`{code, reason, engineMessage, human, details: [string], humanFr?, detailsFr?: [string]}`; the French pair since v0.3, WP-K); `recorded?` (`{userWords?, channel?, decisionId?, proposalId?, slot?, status?, files?: [{path, bytes}], out?, warnings?: [string]}`); `artifacts?` (`[{name, status, message}]`); `message?` | |
 | `preview_policy_result` | `seq`, `revision`, `currency?`, `model: PolicyPreviewModel` | dropped by the webview when `seq` is not the latest it sent |
 | `effects` | `proposalId`, `revision`, `currency?`, `model: EffectsModel` | |
 | `draft_result` | `decisionId`, `value`, `revision`, `currency?`, `model: DraftModel` | |
@@ -710,7 +727,7 @@ This replaces the "verbatim" rule for engine texts shown as content (the refusal
 | `data-block` | each block of §4.2 | `header`, `progress`, `todo`, `since`, `now`, `waiting`, `path`, `tools` |
 | `data-anchor` | each place the engine can name (P1 §17.1.1) | `now`, `todo:<kind>`, `path`, `path:<step_id>`, `path:<step_id>/<slot>`, `tools:<drawer>` |
 | `data-stage` | any stage-gated element | `v1`, `v2`, `v3` |
-| `data-write` | every control that triggers W4, W5 or W7 | `run_eda`, `render`, `export` |
+| `data-write` | every control that triggers W4, W5, W7 or W8 | `run_eda`, `render`, `export`, `azureml` |
 | `data-fold-id` | every `details` and notion button (FOLD-1) | fold id |
 | `data-focus-id` | every focusable control (FOCUS-1) | stable id |
 | `data-pill` | the header's pills (PG-4) | `seal`, `defensible`, `automation`, `reviewer` |
