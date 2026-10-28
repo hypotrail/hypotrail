@@ -715,3 +715,14 @@ its warning.
   the wording must say what it means (no missing-value indicator column). Seen in the same
   session: Claude Code did show a picker at this proposal (R37's question is about the other
   pauses). Noted only, not fixed.
+- **R40. General rule: every data-backed conclusion comes with its chart (owner decision,
+  2026-10-28).** Whenever a statement, proposal or conclusion rests on the data (a
+  distribution, a missing-value pattern, a rare category, an association, an error, a
+  comparison), the panel shows the chart that supports it, with its frame (which rows, which
+  model, development or final) and its guided reading; the report does the same, and the chat
+  points to it. A conclusion without an available chart says so ("pas de graphique pour ce
+  point") rather than staying unsupported. This generalises R39 and applies to every step
+  (quality, preparation, exploration, models, variants, choice, final test, conclusion) and to
+  the automatic mode's summaries. Implementation: each engine draft or `junior_message` that
+  cites a data fact names the registered result that shows it, so Now can place the figure.
+  Noted only, not fixed.
