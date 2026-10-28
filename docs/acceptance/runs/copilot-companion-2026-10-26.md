@@ -844,3 +844,16 @@ its warning.
   new write W8 (stage v3, default off, `after_study.azureml.supported` only, refused for an
   unsupported model): it needs an ADR 0004 amendment and an AGENTS.md update, by this explicit
   owner request. No Azure job is ever run from the panel. Noted only, not fixed.
+- **R50. The path must replay the whole study: each step's decision and its evidence, charts
+  included (owner remark, 2026-10-28).** Opening a done step in the path shows almost nothing:
+  "Source : un résultat", a "Voir la figure" link (a further click), the step's question, an
+  "Ask the agent" button; for Models, "Modèle ajusté ; ses chiffres sont dans la comparaison des
+  modèles" twice with "D'où ça vient" folds. To fix: an opened step shows, in order, the
+  decision in words with its basis and who decided (your words / automatic), the reason given,
+  and the step's figures drawn inline (not behind "Voir la figure"), each with its frame and
+  its "what we conclude" line (quality: the per-column view; preparation: the distributions
+  behind each choice and each "no change"; exploration: its charts; models: the comparison and
+  observed vs predicted; variants: the diagnostics and the paired chart; choice: the selection
+  card; final test and conclusion: the final evidence). "D'où ça vient" and "Ask the agent"
+  stay as small secondary links. The path then reads as the study's notebook, consistent with
+  the report's chapters. Noted only, not fixed.
