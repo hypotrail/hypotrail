@@ -835,7 +835,25 @@ function toEvidenceModel(payload) {
     familyFits: familyFitsOf(rawResults),
     // R11 (owner session 2026-10-26): one card per compared variant, in slot order.
     variantCards: variantCardsOf(rawResults),
+    // Lot 2026-10-28 (PA-3): the registered values of every current, verified result, by
+    // result id and promoted slot, so a step card's chart reads the values its question cites
+    // (per-row predictions are left out: no chart draws them).
+    values: valuesOf(rawResults),
   });
+}
+
+/** `{byId: {resultId: values}, bySlot: {slot: resultId}}` of the current, verified results. */
+function valuesOf(rawResults) {
+  const byId = {};
+  const bySlot = {};
+  for (const r of rawResults) {
+    if (!r || !citable(r)) continue;
+    const v = {};
+    for (const [k, x] of Object.entries(r.values)) if (k !== 'predictions') v[k] = x;
+    byId[str(r.result_id)] = v;
+    if (r.slot && (r.promoted || !(r.slot in bySlot))) bySlot[r.slot] = str(r.result_id);
+  }
+  return { byId, bySlot };
 }
 
 const FIXTURES = ['evidence.binary', 'evidence.binary.detail', 'evidence.regression',

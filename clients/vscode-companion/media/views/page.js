@@ -31,6 +31,11 @@
     const p = String(study || '').split(/[\\/]/).filter(Boolean);
     return p[p.length - 1] || '';
   }
+  /** PA-5 (lot 2026-10-28): the step's full name from its card, else the short label. */
+  const fullName = (ctx, line) => {
+    const card = PARTS('stepcard').cardFor ? PARTS('stepcard').cardFor(ctx, line.id) : null;
+    return card ? card.name : shortName(line.id, line.title);
+  };
   const shortName = (id, title) => ((HT.copy.overview && HT.copy.overview.journeyLabels) || {})[id] || title || id;
   const num = (ctx, n) => (n === null || n === undefined ? '' : ctx.format.number(n, 'int'));
 
@@ -127,10 +132,17 @@
     return el('div', { className: 'ht-pop', id: 'ht-pop-def', role: 'dialog', tabindex: '-1', 'data-popover': 'def',
       'aria-labelledby': 'ht-pop-def-h' }, [
       el('h3', { id: 'ht-pop-def-h', text: c.headings[d.kind] }),
-      el('ol', { 'data-defensibility-items': String(d.items.length) }, d.items.map(i => el('li', { 'data-item': i.id }, [
+      // R65 (lot 2026-10-28): what "defensible" means, then the engine's list, a tick on what is
+      // done when the engine says so, "not an alarm" while the study is on its way.
+      el('p', { className: 'ht-def-meaning', 'data-def-meaning': true, text: c.meaning }),
+      el('ol', { 'data-defensibility-items': String(d.items.length) }, d.items.map(i => el('li', { 'data-item': i.id,
+        'data-done': typeof i.done === 'boolean' ? String(i.done) : null, className: i.done === true ? 'ht-def-done' : null }, [
+        typeof i.done === 'boolean' ? el('span', { className: 'ht-def-tick', 'aria-hidden': 'true', text: i.done ? '✓ ' : '○ ' }) : null,
+        typeof i.done === 'boolean' ? el('span', { className: 'sr-only', text: i.done ? c.doneWord : c.todoWord }) : null,
         engine(limitWords(ctx, i.id)),
         i.severity ? [' ', el('span', { className: `ht-tag ht-sev-${i.severity}`, 'data-severity': i.severity, text: c.severity[i.severity] })] : null,
       ]))),
+      d.kind === 'pending' ? el('p', { className: 'ht-def-note', 'data-def-note': true, text: c.notAlarm }) : null,
     ]);
   }
 
@@ -175,12 +187,18 @@
     return [line[0], el('span', { 'data-literal': 'age', text: ctx.ageText() }), line[1]];
   }
 
+  /** PA-5: the progress bar's tooltip keeps the short name. */
+  function segTitle(ctx, step) {
+    const card = step && PARTS('stepcard').cardFor ? PARTS('stepcard').cardFor(ctx, step) : null;
+    return card ? card.short : null;
+  }
+
   function progress(ctx, page) {
     const c = C().progress;
     const p = page.progress;
     const bar = el('div', { className: 'ht-bar', 'aria-hidden': 'true' }, p.groups.map(g => {
       const ph = el('span', { className: 'ht-ph', 'data-moment-bar': g.moment, css: { '--n': String(Math.max(1, g.segments.length)) } },
-        g.segments.map(s => el('i', { className: `ht-seg-${s.state}`, 'data-seg': s.step || s.state })));
+        g.segments.map(s => el('i', { className: `ht-seg-${s.state}`, 'data-seg': s.step || s.state, title: segTitle(ctx, s.step) })));
       return ph;
     }));
     let label;
@@ -574,15 +592,29 @@
     ];
   }
 
+  // Lot 2026-10-28 (PA-1, PA-2): the kinds of Now drawn as the step card's four blocks when the
+  // digest carries step cards; the others (a review, a reopened step, a hold, an interrupted
+  // run, the end) keep their own card.
+  const CARD_KINDS = ['proposal', 'question', 'choice', 'run', 'data_card', 'blocked'];
+
   function nowBlock(ctx, page) {
     const c = C();
     const now = page.now;
     if (now.kind === 'done') return doneBlock(ctx, page);
     const learn = PARTS('learn');
+    const sc = PARTS('stepcard');
+    if (ctx.atLeast('v2') && sc.now && CARD_KINDS.includes(now.kind) && sc.cardFor(ctx, now.step)) {
+      const four = sc.now(ctx, page, { questionParts: () => questionParts(ctx, now), extras: [
+        ctx.atLeast('v3') && ctx.learningLayer && learn.prediction ? learn.prediction(ctx, now.step) : null,
+        effectsFold(ctx, now)] });
+      if (four) return four;
+    }
     return [el('section', { className: 'ht-now', 'data-block': 'now', 'data-anchor': 'now', 'data-now': now.kind,
       'data-now-step': now.step || '', 'aria-labelledby': 'ht-now-h' }, [
       el('h2', { id: 'ht-now-h', text: heading(now, c) }),
       ...questionParts(ctx, now),
+      // §5 (lot 2026-10-28): before the figures' stage, block 2's questions as text.
+      !ctx.atLeast('v2') && sc.questions ? sc.questions(ctx, now.step) : null,
       ...nowContext(ctx, now),
       // R39-R45, R53 (lot P): the figures behind the step, inline, from v2.
       ctx.atLeast('v2') && PARTS('figures').nowFigures ? PARTS('figures').nowFigures(ctx, now) : null,
@@ -756,7 +788,7 @@
       : line.state === 'later' ? c.marks.later : c.marks.flagged;
     const head = [el('span', { className: `ht-mk ht-mk-${line.state}`, 'aria-hidden': 'true', text: mark }),
       el('span', { className: 'sr-only', text: `${markWord} ` }),
-      el('span', { className: 'ht-t', title: line.title, text: shortName(line.id, line.title) }),
+      el('span', { className: 'ht-t', title: line.title, text: fullName(ctx, line) }),
       el('span', { className: 'ht-v' }, [stepValue(ctx, line)]), stepBadge(line)];
     const attrs = { 'data-step': line.id, 'data-step-state': line.state, 'data-anchor': `path:${line.id}`,
       'aria-current': line.state === 'current' ? 'step' : null };
@@ -792,8 +824,28 @@
     className: 'ht-phase' }, steps)]);
   }
 
+  /** A done step's own extras under its review form: its decision history and "Ask". */
+  function stepExtras(ctx, line) {
+    const c = C();
+    const out = [];
+    if (ctx.atLeast('v1') && line.decision && PARTS('decisions').history) out.push(PARTS('decisions').history(ctx, line.id));
+    if (ctx.atLeast('v1')) {
+      out.push(el('p', { className: 'ht-small-links' }, [HT.askButton(ctx, { kind: 'step', id: line.id }, line.title,
+        { label: c.askStep, stage: 'v1', attrs: { 'data-ask-step': line.id } })]));
+    }
+    return out;
+  }
+
   function pathBlock(ctx, page) {
     const c = C();
+    // Lot 2026-10-28 (PA-4, PA-5): with step cards, from the figures' stage, every step by its
+    // full name and a done step opening its review form.
+    const sc = PARTS('stepcard');
+    if (ctx.atLeast('v2') && sc.path) {
+      const node = sc.path(ctx, page, { stepValue: line => stepValue(ctx, line), stepBadge, stepExtras: line => stepExtras(ctx, line),
+        ledger: () => ledgerBlock(ctx, page) });
+      if (node) return node;
+    }
     return el('section', { className: 'ht-pathblock', 'data-block': 'path', 'aria-labelledby': 'ht-path-h' }, [
       el('h2', { id: 'ht-path-h', text: c.path }),
       ledgerBlock(ctx, page),
@@ -814,16 +866,13 @@
       if (t.id === 'data') return drawer(ctx, 'data', c.drawers.data, () => (PARTS('eda').drawer ? PARTS('eda').drawer(ctx, page) : null), 'v2');
       if (t.id === 'whatif') {
         // R51 (lot P, ADR 0004 decision 14): What if? opens in its own wide, read-only editor
-        // tab; the drawer keeps the calm line, the why in a fold, and the button.
+        // tab. PA-12 (lot 2026-10-28): the drawer holds only the calm line and the button; the
+        // compact sandbox and its why left the drawer (the tab is unchanged).
         const W = FIG().whatif;
-        return drawer(ctx, 'whatif', c.drawers.whatif, () => el('div', { className: 'ht-drawer-body' }, [
+        return drawer(ctx, 'whatif', c.drawers.whatif, () => el('div', { className: 'ht-drawer-body', 'data-whatif-drawer': true }, [
           el('p', { className: 'ht-calm', 'data-whatif-warning': true, text: W.calm }),
-          el('details', { className: 'ht-why' }, [el('summary', { text: W.why }), el('p', { text: W.whyBody })]),
           el('button', { type: 'button', className: 'ht-act', 'data-open-whatif': true, 'data-stage': 'v2', text: W.open,
-            onclick: () => ctx.send({ type: 'open_whatif' }) }),
-          el('p', { className: 'ht-faint', text: W.openHint }),
-          // The compact sandbox stays in the drawer; the tab is its wide, complete form.
-          PARTS('whatif').body ? PARTS('whatif').body(ctx) : null]), 'v2');
+            onclick: () => ctx.send({ type: 'open_whatif' }) })]), 'v2');
       }
       if (t.id === 'notions') return drawer(ctx, 'notions', c.drawers.notions, () => (PARTS('learn').notions ? PARTS('learn').notions(ctx, page) : null), 'v3');
       return drawer(ctx, 'deliverables', c.drawers.deliverables, () => el('div', { className: 'ht-drawer-body' }, [

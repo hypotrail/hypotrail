@@ -57,8 +57,8 @@ body {
   body:not(.vscode-dark):not(.vscode-high-contrast):not(.vscode-high-contrast-light):not([data-theme="dark"]) {
     --board: #F1F3F1; --board2: #E4E8E4; --chalk: #1E2A36; --chalk2: #3E4A57; --dust: rgba(30, 42, 54, 0.35);
     --faint: #58636F; --line: rgba(30, 42, 54, 0.12); --line2: rgba(30, 42, 54, 0.3);
-    --yellow: #855810; --pink: #A3304D; --mint: #17643A; --teal: #0B6B60; --violet: #6B46C1; --blue: #1F5FA8;
-    --coral: #C0392B; --amber: #855810;
+    --yellow: #866600; --pink: #A3304D; --mint: #17643A; --teal: #0B6B60; --violet: #6B46C1; --blue: #1F5FA8;
+    --coral: #C0392B; --amber: #866600;
     --card: #FFFFFF; --cardsoft: #F1EFE9; --cardline: rgba(34, 48, 43, 0.12); --cardline2: rgba(34, 48, 43, 0.3);
     --gridmm: rgba(38, 72, 124, 0.035); --ruleline: rgba(34, 48, 43, 0.035);
     --onboard-red: var(--red);
@@ -74,8 +74,8 @@ body.vscode-light:not([data-theme="dark"]),
 body[data-theme="light"]:not(.vscode-high-contrast):not(.vscode-high-contrast-light) {
   --board: #F1F3F1; --board2: #E4E8E4; --chalk: #1E2A36; --chalk2: #3E4A57; --dust: rgba(30, 42, 54, 0.35);
   --faint: #58636F; --line: rgba(30, 42, 54, 0.12); --line2: rgba(30, 42, 54, 0.3);
-  --yellow: #855810; --pink: #A3304D; --mint: #17643A; --teal: #0B6B60; --violet: #6B46C1; --blue: #1F5FA8;
-  --coral: #C0392B; --amber: #855810;
+  --yellow: #866600; --pink: #A3304D; --mint: #17643A; --teal: #0B6B60; --violet: #6B46C1; --blue: #1F5FA8;
+  --coral: #C0392B; --amber: #866600;
   --card: #FFFFFF; --cardsoft: #F1EFE9; --cardline: rgba(34, 48, 43, 0.12); --cardline2: rgba(34, 48, 43, 0.3);
   --gridmm: rgba(38, 72, 124, 0.035); --ruleline: rgba(34, 48, 43, 0.035);
   --onboard-red: var(--red);

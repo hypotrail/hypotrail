@@ -53,6 +53,10 @@ media/copy-fr/<view>.js the French translation of the same keys (v0.3, WP-E2, R2
 media/copy/junior.js    the junior-facing copy keyed by kind/code/id, and decision values in words (WP-A5,
                         two-layer copy, COMPANION-ADVANCED §15.1)
 media/views/page.js     the one page: the only view that renders (header, blocks in the fixed order, footer)
+media/views/stepcard.js the step card (lot 2026-10-28, spec §6.13): Now in four blocks, the review form of a done
+                        step, the path by full names; HT.parts.stepcard, called by page.js when the digest has step cards
+media/components/stepcharts.js one drawing per step-card chart kind and per block-1 picture, from `chart_data` or
+                        the registered values of `evidence --json` (EvidenceModel.values); the timeline's slider is display only
 media/views/<part>.js   parts providers (HT.parts.<name>: eda, evidence, decisions, whatif, learn, overview; lot P:
                         figures, the figures behind each step, the method diagrams, the end's table, "And after",
                         and the What if? tab drawn when `init.surface` is `whatif`, ADR 0004 decision 14)

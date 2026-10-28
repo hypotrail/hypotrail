@@ -25,6 +25,8 @@
     split: 'the split',
     policy: regression(task) ? 'the third decision' : 'the decision rule',
     model_choice: 'the model choice',
+    // Lot 2026-10-28 (R60): the error measure, its own decision before the criterion.
+    error_metric: 'the error measure',
     success_criterion: 'the success criterion',
     preprocessing: 'the data preparation',
     // WP-B1: named in words; WP-B5 gives them their panel views.
@@ -41,6 +43,7 @@
     policy: regression(task) ? 'This decision turns the results into an action.'
       : 'The decision rule turns scores into an action: which cases to act on, given what the team can handle.',
     model_choice: 'The model choice picks the model whose errors on the validation rows fit your use.',
+    error_metric: 'The error measure says how a miss is counted: the mean absolute error (MAE) weighs every miss alike, the root mean squared error (RMSE) weighs one big miss much more.',
     success_criterion: 'The success criterion fixes, before you see the results, how much better than the baseline a model must be to be worth adopting.',
     preprocessing: 'The data preparation says how missing values, rare categories, extreme values and skewed columns are handled; it is learned on the training rows only.',
     // WP-B5: the two decisions of WP-B1.
@@ -201,8 +204,16 @@
     return `Open the final test once for ${modelName(v.model, task)}${r ? ` (${r.toLowerCase()})` : ''}`;
   }
 
+  /** Lot 2026-10-28 (R60): the error measure in words ({"metric": "mae" | "rmse"}). */
+  function errorMetric(raw) {
+    const v = parse(raw);
+    const m = v && typeof v === 'object' ? v.metric : raw;
+    return { mae: 'The mean absolute error (MAE)', rmse: 'The root mean squared error (RMSE)' }[m] || null;
+  }
+
   // v0.2a (WP-A4): the two governance decisions in words. The share is a recorded value
   // shown as a percentage, not a figure the panel computes from results.
+
   function criterion(raw) {
     const v = parse(raw);
     if (!v || typeof v !== 'object') return null;
@@ -280,6 +291,7 @@
         return parts.join(' · ');
       }
       case 'split': return split(raw);
+      case 'error_metric': return errorMetric(raw);
       case 'success_criterion': return criterion(raw);
       case 'preprocessing': return preparation(raw);
       case 'model_variant': return variant(raw);

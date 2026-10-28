@@ -46,7 +46,11 @@ const SUMMARY_KEYS = ['study', 'revision', 'task', 'recap', 'goal', 'currentStep
   // L3 (owner session 2026-10-26, R4, D4b): the junior texts of the summary in both languages
   // (`texts` of `status --summary --digest`), or null: the panel shows the ones of its own
   // language (media/core.js `localize`).
-  'texts'];
+  'texts',
+  // Lot 2026-10-28 (one structure for every step, R54-R67): the step cards of
+  // `texts.<lang>.step_cards` per language, the case's display names and its brief, and the
+  // data structure of step 1 (`data_structure`); null when the digest has none (an older engine).
+  'stepCards', 'caseDisplay', 'caseBrief', 'dataStructure'];
 // The tables of `texts.<language>` (CLI-CONTRACT-COMPANION §1, `view.LANGUAGE_TEXT_KEYS`).
 const TEXT_TABLES = ['plan', 'moments', 'choice_options', 'limits', 'artifacts', 'digest', 'goal', 'proposals',
   // Contract P1 (CLI-CONTRACT §17.2.3): the headlines of the done steps, the data-contingent
@@ -264,7 +268,10 @@ function defensibilityOf(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !DEFENSIBILITY_KINDS.includes(raw.kind)) return null;
   return { kind: raw.kind, count: int(raw.count) === null ? 0 : int(raw.count),
     items: list(raw.items).filter(i => i && typeof i.id === 'string' && i.id)
-      .map(i => ({ id: i.id, severity: SEVERITIES.includes(i.severity) ? i.severity : 'caveat' })) };
+      .map(i => ({ id: i.id, severity: SEVERITIES.includes(i.severity) ? i.severity : 'caveat',
+        // Lot 2026-10-28 (R65): whether the engine counts the item as done (its checklist's tick),
+        // null when it does not say (an older engine).
+        done: typeof i.done === 'boolean' ? i.done : null })) };
 }
 
 /** Contract P1 (§17.2.2): the counts of the path's ledger line; null when absent. */
@@ -312,11 +319,20 @@ function criterionConfigurationsOf(raw) {
       slot: c.slot, value: num(c.value), resultId: strOrNull(c.result_id), path: str(c.path),
       pointMeetsBound: c.point_meets_bound === true, gain: num(c.gain), low: num(c.low), high: num(c.high),
       status: CONFIG_STATUSES.includes(c.status) ? c.status : 'not_assessed',
-      judgedOn: c.judged_on === 'final_test' ? 'final_test' : 'development' })),
+      judgedOn: c.judged_on === 'final_test' ? 'final_test' : 'development', business: businessOf(c.business) })),
     // The configuration judged on the opened final test, every figure the final test's (its
     // bound from the final test's own baseline); null before the opening or from an older engine.
     finalTest: finalConfigurationOf(raw.final_test),
+    // Lot 2026-10-28 (R67): the business bar of a two-level criterion, null with one level.
+    business: businessOf(raw.business),
   };
+}
+
+/** R67: `{value, unit, status, met}` of the business bar (absolute, the measure's unit), or null. */
+function businessOf(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || num(raw.value) === null) return null;
+  return { value: num(raw.value), unit: strOrNull(raw.unit), status: CONFIG_STATUSES.includes(raw.status) ? raw.status : null,
+    met: typeof raw.met === 'boolean' ? raw.met : null, resultId: strOrNull(raw.result_id), path: str(raw.path) };
 }
 
 function finalConfigurationOf(raw) {
@@ -327,6 +343,7 @@ function finalConfigurationOf(raw) {
     pointMeetsBound: raw.point_meets_bound === true, gain: num(raw.gain), low: num(raw.low), high: num(raw.high),
     status: CONFIG_STATUSES.includes(raw.status) ? raw.status : 'not_assessed',
     bound: { value: num(b.value), reference: num(b.reference), minimum: num(b.minimum), resultId: strOrNull(b.result_id), path: str(b.path) },
+    business: businessOf(raw.business),
   };
 }
 
@@ -417,6 +434,135 @@ function currencyOf(summary) {
     }),
   };
   return crypto.createHash('sha256').update(JSON.stringify(basis)).digest('hex').slice(0, 16);
+}
+
+// --- lot 2026-10-28: the step cards (one structure for every step) ---------------------------
+
+const CARD_STATES = ['upcoming', 'current', 'done'];
+const QUESTION_STATUSES = ['answered', 'stale', 'pending', 'no_chart', 'failed'];
+const EVIDENCE_FRAMES = ['none', 'structure', 'development', 'final', 'illustration'];
+const WHO = ['you', 'automatic', 'delegated'];
+const text = x => (typeof x === 'string' && x.trim() ? x : null);
+const plain = x => (x && typeof x === 'object' && !Array.isArray(x) ? x : null);
+// chart_data and picture data are engine objects drawn as they are: copied as JSON, so a
+// value reaches the drawing as data only.
+const json = x => (x === null || x === undefined ? null : JSON.parse(JSON.stringify(x)));
+
+function readingOf(raw) {
+  const r = plain(raw);
+  if (!r) return null;
+  const out = { see: text(r.see), conclude: text(r.conclude), cannot: text(r.cannot) };
+  return out.see || out.conclude || out.cannot ? out : null;
+}
+
+function questionOf(q, i) {
+  const src = obj(q.source);
+  const frame = obj(q.frame);
+  const v = plain(q.verdict);
+  return {
+    id: str(q.id), n: int(q.n) || i + 1, text: text(q.text) || '',
+    source: { kind: strOrNull(src.kind), slot: strOrNull(src.slot), key: strOrNull(src.key) },
+    chart: strOrNull(q.chart), chartData: plain(q.chart_data) ? json(q.chart_data) : null,
+    otherCharts: list(q.other_charts).filter(o => o && typeof o === 'object').map(o => ({ slot: strOrNull(o.slot), chart: strOrNull(o.chart),
+      resultId: strOrNull(o.result_id), resultRevision: int(o.result_revision), status: strOrNull(o.status) })),
+    frame: { evidence: EVIDENCE_FRAMES.includes(frame.evidence) ? frame.evidence : 'none', rows: text(frame.rows) },
+    status: QUESTION_STATUSES.includes(q.status) ? q.status : 'pending',
+    resultId: strOrNull(q.result_id), resultRevision: int(q.result_revision),
+    reading: readingOf(q.reading),
+    cites: list(q.cites).filter(c => c && typeof c === 'object').map(c => ({ name: str(c.name), resultId: strOrNull(c.result_id),
+      path: str(c.path), value: typeof c.value === 'number' || typeof c.value === 'string' ? c.value : null, text: str(c.text) })),
+    verdict: v ? { label: text(v.label) || '', met: v.met === true, value: num(v.value), bound: num(v.bound),
+      resultId: strOrNull(v.result_id), path: str(v.path) } : null,
+    folds: { how: text(obj(q.folds).how), trap: text(obj(q.folds).trap) },
+  };
+}
+
+function cardOf(c) {
+  const pic = obj(c.picture);
+  const d = plain(c.decision);
+  return {
+    step: str(c.step), n: int(c.n), name: text(c.name) || str(c.step), short: text(c.short) || text(c.name) || str(c.step),
+    moment: text(c.moment), state: CARD_STATES.includes(c.state) ? c.state : 'upcoming',
+    picture: plain(c.picture) ? { kind: strOrNull(pic.kind), caption: text(pic.caption), more: text(pic.more),
+      illustrative: pic.illustrative === true, data: plain(pic.data) ? json(pic.data) : null } : null,
+    prepares: text(c.prepares),
+    questions: list(c.questions).filter(q => q && typeof q === 'object' && typeof q.id === 'string').map(questionOf),
+    noChart: text(c.no_chart), limit: text(c.limit), next: text(c.next),
+    decision: d ? { decisionId: strOrNull(d.decision_id), words: text(d.words), basis: strOrNull(d.basis),
+      who: WHO.includes(d.who) ? d.who : null } : null,
+  };
+}
+
+/** `texts.<lang>.step_cards` (`hypotrail.step_cards/1`) per language, or null when no language has one. */
+function stepCardsOf(texts) {
+  if (!plain(texts)) return null;
+  const out = {};
+  let any = false;
+  for (const lang of ['en', 'fr']) {
+    const t = plain(obj(texts[lang]).step_cards);
+    if (!t || t.schema !== 'hypotrail.step_cards/1' || !Array.isArray(t.steps)) { out[lang] = null; continue; }
+    out[lang] = { current: strOrNull(t.current), total: int(t.total) || t.steps.length,
+      steps: t.steps.filter(c => c && typeof c === 'object' && typeof c.step === 'string').map(cardOf) };
+    any = true;
+  }
+  return any ? out : null;
+}
+
+/** `case_display` (EN-18): `{columns: {name: {en, fr}}}`, or null. */
+function caseDisplayOf(raw) {
+  const r = plain(raw);
+  if (!r || !plain(r.columns)) return null;
+  const columns = {};
+  for (const [name, v] of Object.entries(r.columns)) {
+    const o = plain(v);
+    if (o && (text(o.en) || text(o.fr))) columns[name] = { en: text(o.en), fr: text(o.fr) };
+  }
+  return { columns };
+}
+
+const BRIEF_FIELDS = ['problem', 'decision', 'objective', 'production', 'data_provenance', 'users_and_cost_of_error',
+  'out_of_scope_and_risks'];
+
+/** A brief's field in one language: a string, or `{en, fr}`. */
+const inLang = (v, lang) => (typeof v === 'string' ? text(v) : plain(v) ? text(v[lang]) : null);
+
+/**
+ * R66: the case brief (`case_brief` of the digest, or `texts.<lang>.case_brief`), per language:
+ * its fields as the engine wrote them and the PO's two business numbers. Null when the case has none.
+ */
+function caseBriefOf(raw, texts) {
+  const out = {};
+  let any = false;
+  for (const lang of ['en', 'fr']) {
+    const own = plain(obj(obj(texts)[lang]).case_brief);
+    const top = plain(raw);
+    const b = own || (top && plain(top[lang]) ? top[lang] : top);
+    if (!b) { out[lang] = null; continue; }
+    const src = b.source;
+    const fields = {};
+    for (const f of BRIEF_FIELDS) fields[f] = inLang(b[f], lang);
+    const links = plain(b.links) && !text(b.links.en) && !text(b.links.fr)
+      ? Object.fromEntries(Object.entries(b.links).map(([k, v]) => [k, inLang(v, lang)]).filter(([, v]) => v))
+      : inLang(b.links, lang);
+    const numberOf = v => (typeof v === 'number' ? { value: num(v), unit: null } : plain(v) ? { value: num(v.value), unit: strOrNull(v.unit) } : null);
+    const source = typeof src === 'string' || (plain(src) && (text(src.en) || text(src.fr)))
+      ? { text: inLang(src, lang), fictitious: b.fictitious === true }
+      : plain(src) ? { text: inLang(src.text, lang) || inLang(src.label, lang), fictitious: src.fictitious === true || b.fictitious === true } : null;
+    if (!fields.problem && !fields.objective) { out[lang] = null; continue; }
+    out[lang] = { source, ...fields, links, currentMethodError: numberOf(b.current_method_error), targetError: numberOf(b.target_error) };
+    any = true;
+  }
+  return any ? out : null;
+}
+
+/** `data_structure` (P1, step 1): duplicates and repeated groups, counts only; null when absent. */
+function dataStructureOf(raw) {
+  const r = plain(raw);
+  if (!r) return null;
+  const d = obj(r.duplicates);
+  return { duplicates: { rows: int(d.rows), identicalFeatureRows: int(d.identical_feature_rows) },
+    groups: list(r.groups).filter(g => g && typeof g.column === 'string').map(g => ({ column: g.column, groups: int(g.groups),
+      rowsInRepeatedGroups: int(g.rows_in_repeated_groups) })) };
 }
 
 function toSummaryModel(summary) {
@@ -582,6 +728,10 @@ function toSummaryModel(summary) {
     criterionConfigurations: criterionConfigurationsOf(summary.criterion_configurations),
     // Lot P (R41): the per-column verdicts of the quality check (digest `quality_verdicts`).
     qualityVerdicts: qualityVerdictsOf(summary.quality_verdicts),
+    stepCards: stepCardsOf(summary.texts),
+    caseDisplay: caseDisplayOf(summary.case_display),
+    caseBrief: caseBriefOf(summary.case_brief, summary.texts),
+    dataStructure: dataStructureOf(summary.data_structure),
   };
 }
 
@@ -592,7 +742,11 @@ const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary'
   'captured/summary.regression.interrupted', 'captured/summary.regression.review', 'captured/summary.regression.done',
   // Lot P: the cross-validated Auto MPG study (the preparation, the variants, the choice, the end).
   'captured/summary.regression.cv.preparation', 'captured/summary.regression.cv.variants', 'captured/summary.regression.cv.choice',
-  'captured/summary.regression.cv.done'];
+  'captured/summary.regression.cv.done',
+  // Lot 2026-10-28: hand-made step-card states of Auto MPG (spec §7.2), to be recaptured.
+  'stepcards/summary.data', 'stepcards/summary.moment', 'stepcards/summary.split', 'stepcards/summary.metric',
+  'stepcards/summary.criterion', 'stepcards/summary.exploration', 'stepcards/summary.choice', 'stepcards/summary.conclusion',
+  'stepcards/summary.done'];
 
 // v0 name, kept for the migrated tests and older callers.
 const toModel = toSummaryModel;
