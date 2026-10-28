@@ -658,3 +658,13 @@ its warning.
   deliverables that were never rendered in To handle (keep them in the Deliverables drawer as
   "not generated yet"); list them only when a rendered deliverable is stale or failed, with the
   right sentence per status. Noted only, not fixed.
+- **R35. The panel line only when it adds something, and in a recognisable form.** On the one
+  page, Now always shows the current step at the top, so "Dans le panneau : Maintenant, …" on
+  every message is noise. Owner decision 2026-10-28: (1) no line when the anchor is `now`;
+  (2) a line when it points elsewhere (`todo:*`, `path:*`, `tools:*`, the end-of-study block),
+  so the junior knows where to look; (3) one line at the first message of a session, to recall
+  that the panel exists. Format: a block quote with a fixed marker and a bold label,
+  `> 🧭 **Panneau** · <place>` (EN `> 🧭 **Panel** · <place>`), so it stands out from the
+  message. Engine side (`companion_env`: `shown`/`where.line` null for `now` except at a
+  session's first message, the new line texts) and agent rule 6 in both flavours; this
+  narrows R1. Noted only, not fixed.
