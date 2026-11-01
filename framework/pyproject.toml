@@ -18,9 +18,9 @@ dependencies = [
     "interpret-core==0.7.3",
     "matplotlib>=3.8",
     # Library integration v1 (workstream A, docs/handoff/LIBRARIES-V1.md): the shared
-    # contracts and the complete predictor live in the separately installable runtime;
-    # Pydantic validates the contracts at the boundaries and Pandera the tabular data.
-    "hypotrail-runtime",
+    # contracts and the complete predictor live in the runtime (framework/runtime/, its own
+    # distribution `hypotrail-runtime`), which this wheel vendors (see the wheel target
+    # below); Pydantic validates the contracts at the boundaries and Pandera the tabular data.
     "pydantic>=2.7,<3",
     "pandera>=0.20",
     "pypdf>=5",
@@ -40,9 +40,6 @@ uncertainty = ["mapie==1.6.0"]
 # imports them outside mlkit.exporters.azureml and mlkit.integrations.mlflow_packaging.
 azureml = ["hydra-core==1.3.7", "omegaconf==2.3.1", "mlflow-skinny==3.17.2"]
 
-[tool.uv.sources]
-hypotrail-runtime = { path = "runtime", editable = true }
-
 [project.scripts]
 hypotrail = "mlkit.study.cli:main"
 
@@ -58,13 +55,31 @@ browser = ["playwright==1.55.0"]
 azureml = ["hydra-core==1.3.7", "omegaconf==2.3.1", "mlflow-skinny==3.17.2", "ruff==0.4.5"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["mlkit"]
+# Onboarding Lot 0 (docs/plans/ONBOARDING-SPEC.md): the runtime is vendored, not a path
+# dependency, so `uv tool install "git+https://github.com/hypotrail/hypotrail#subdirectory=framework"`
+# (or pip/pipx from a checkout) installs without a second distribution. `hypotrail_runtime`
+# lands at the top level of site-packages, exactly where the `hypotrail-runtime` wheel puts
+# it, so the bundle's own runtime wheel (hypotrail_runtime.wheel) is built from the same
+# files. framework/runtime/ still builds alone as `hypotrail-runtime` for exported projects;
+# do not install both distributions in one environment (they own the same files).
+packages = ["mlkit", "runtime/src/hypotrail_runtime"]
+
+# Onboarding Lot 1: the study panel's sources (clients/vscode-companion) ship as package data
+# (mlkit/study/panel/) for `hypotrail setup vscode`; hatch_build.py adds them to the wheel
+# and, under vscode-panel/, to the sdist.
+[tool.hatch.build.targets.wheel.hooks.custom]
+
+[tool.hatch.build.targets.sdist.hooks.custom]
 
 # mlkit/assets/design.css and the teaching texts mlkit/study/content/*.yaml ship inside
 # the package (hatch includes every file under mlkit/; read with importlib.resources). framework/notebooks/ and
 # framework/templates/ are read through Path(__file__).parents[1] (discover.py,
 # notebooks.py, tutorial.py), so they resolve only from a source checkout with the
-# editable install that `uv sync` creates. A non-editable wheel does not support them yet.
+# editable install that `uv sync` creates. A non-editable wheel does not support them yet
+# (the legacy pilot only; the study engine, `init`, `render` and the notebooks work from a
+# wheel). framework/uv.lock is not in the wheel: `uv tool install` resolves its own
+# versions, so an installed engine records no dependency lock (the understanding snapshot
+# lists it under unreadable_sources).
 
 [tool.pytest.ini_options]
 markers = [

@@ -221,10 +221,15 @@ def capture_context(state: Mapping, *, policy_digest: str | None, taskset_doc: M
     refs.update(_case_refs(case_file))
     entries.append({'logical_key': 'engine:code', 'origin': 'engine', 'path': None,
                     'role': 'engine_code', 'sha256': engine_fingerprint()})
+    missing = []
     if LOCK_FILE.is_file():
         entries.append({'logical_key': 'engine:dependency_lock', 'origin': 'engine',
                         'path': None, 'role': 'dependency_lock',
                         'sha256': _sha(LOCK_FILE.read_bytes())})
+    else:
+        # Onboarding Lot 0: an installed engine (`uv tool install`, a wheel) has no uv.lock;
+        # its absence is recorded, never silent, so a dependency on it reads ``unknown``.
+        missing.append({'logical_key': 'engine:dependency_lock', 'role': 'dependency_lock'})
     if policy_digest:
         entries.append({'logical_key': 'contract:policy', 'origin': 'contract', 'path': None,
                         'role': 'policy', 'sha256': policy_digest})
@@ -233,7 +238,6 @@ def capture_context(state: Mapping, *, policy_digest: str | None, taskset_doc: M
             entries.append({'logical_key': f'contract:rubric:{r["dimension_id"]}',
                             'origin': 'contract', 'path': None, 'role': 'rubric',
                             'sha256': canonical.digest(r)})
-    missing = []
     sources = validate_sources(sources)
     if len(sources) > MAX_SOURCES:
         raise refuse('path_outside_scope', f'At most {MAX_SOURCES} sources are mapped.',

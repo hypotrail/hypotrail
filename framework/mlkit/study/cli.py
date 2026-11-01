@@ -92,6 +92,11 @@ EXTENSIONS = {
     'automation': 'mlkit.study.cmd_automation',
     # R68 (minimal version, 2026-10-28): the product owner's PDF and the study's own brief.
     'brief': 'mlkit.study.cmd_brief',
+    # Onboarding Lots 0-1 (docs/plans/ONBOARDING-SPEC.md, agent P): install and start.
+    'new': 'mlkit.study.cmd_new',
+    'setup': 'mlkit.study.cmd_setup',
+    'doctor': 'mlkit.study.cmd_doctor',
+    'hook': 'mlkit.study.cmd_hook',
 }
 # One line per extension command for ``hypotrail --help`` (v0.2a, WP-A1): the help lists
 # every command without importing the extension modules.
@@ -109,7 +114,15 @@ EXTENSION_HELP = {
     'understanding': 'opt-in understanding and handover review (off by default; ADR 0008)',
     'automation': 'run the automatic mode chosen at init, or stop it in the junior\'s words',
     'brief': "import the product owner's PDF, or record the study's brief in the junior's words",
+    'new': 'create a study folder on a case, ready for VS Code (panel settings, agent hook)',
+    'setup': 'install the study panel into VS Code (setup vscode; no Node needed)',
+    'doctor': 'check this machine for a study (Python, uv, VS Code, panel, proxy); writes nothing',
+    'hook': "the chat agent's PreToolUse hook (hook pretool; JSON on stdin)",
 }
+# Onboarding (agent P): readable text of the install and start commands.
+TEXT_MODULES = {'hypotrail.new/1': 'mlkit.study.cmd_new',
+                'hypotrail.setup/1': 'mlkit.study.cmd_setup',
+                'hypotrail.doctor/1': 'mlkit.study.cmd_doctor'}
 REFUSALS = (CommandRefused, StudyError, CaseError)
 
 
@@ -465,6 +478,8 @@ def _text(payload: dict) -> str:
     if schema.startswith('hypotrail.understanding'):
         from .cmd_understanding import text
         return text(payload)
+    if schema in TEXT_MODULES:
+        return importlib.import_module(TEXT_MODULES[schema]).text(payload)
     if schema == 'hypotrail.automation/1':
         # Owner session 2026-10-27 (R23): the run in the junior's words, not the full JSON.
         from .automation_words import text_summary

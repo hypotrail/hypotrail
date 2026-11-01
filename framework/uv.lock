@@ -638,7 +638,6 @@ name = "hypotrail"
 version = "0.1.0.dev0"
 source = { editable = "." }
 dependencies = [
-    { name = "hypotrail-runtime" },
     { name = "interpret-core" },
     { name = "marimo" },
     { name = "matplotlib" },
@@ -685,7 +684,6 @@ dev = [
 requires-dist = [
     { name = "evidently", marker = "extra == 'diagnostics'", specifier = "==0.7.23" },
     { name = "hydra-core", marker = "extra == 'azureml'", specifier = "==1.3.7" },
-    { name = "hypotrail-runtime", editable = "runtime" },
     { name = "interpret-core", specifier = "==0.7.3" },
     { name = "mapie", marker = "extra == 'uncertainty'", specifier = "==1.6.0" },
     { name = "marimo", specifier = "==0.25.1" },
@@ -715,25 +713,6 @@ dev = [
     { name = "cmarkgfm", specifier = "==2024.11.20" },
     { name = "hypothesis", specifier = ">=6.100" },
     { name = "pytest", specifier = ">=8.0" },
-]
-
-[[package]]
-name = "hypotrail-runtime"
-version = "1.0.0"
-source = { editable = "runtime" }
-dependencies = [
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "pydantic" },
-    { name = "scikit-learn" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "numpy", specifier = ">=1.26" },
-    { name = "pandas", specifier = ">=2.1" },
-    { name = "pydantic", specifier = ">=2.7,<3" },
-    { name = "scikit-learn", specifier = ">=1.5" },
 ]
 
 [[package]]
