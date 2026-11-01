@@ -8,12 +8,12 @@ Fichiers concernés :
 
 | Fichier | Rôle |
 |---|---|
-| `.devcontainer/devcontainer.json` | Image Python 3.13, Node 22, extensions Copilot, Copilot Chat et Python, drapeau du panneau à `v3`, ports Marimo |
+| `.devcontainer/devcontainer.json` | Image Python 3.13 (sans Node), extensions Copilot, Copilot Chat et Python, drapeau du panneau à `v3`, ports Marimo |
 | `.devcontainer/post-create.sh` | Installe uv (version fixée), synchronise `framework/.venv` (groupes `dev` et `azureml`), empaquette le panneau en VSIX |
-| `scripts/workshop/install-panel.sh` | Empaquette (`@vscode/vsce` fixé, via `npx`) et installe le panneau dans le VS Code du codespace |
-| `scripts/workshop/new-mpg-study.sh` | Crée l'étude Auto MPG en français d'un binôme dans `studies/<nom>` (ignoré par git) et affiche la suite |
+| `scripts/workshop/install-panel.sh` | Enveloppe de `hypotrail setup vscode` : fabrique le VSIX en Python pur et installe le panneau dans le VS Code du codespace |
+| `scripts/workshop/new-mpg-study.sh` | Enveloppe de `hypotrail new` : crée l'étude Auto MPG en français d'un binôme dans `studies/<nom>` (ignoré par git) et affiche la suite |
 
-Le panneau n'est pas publié : `--extensionDevelopmentPath` n'existe pas dans Codespaces, donc `post-create.sh` en fait un VSIX (dans `.workshop-cache/`, ignoré par git) à partir d'une copie de `extension.js`, `package.json`, `README.md`, `lib/` et `media/`, sans modifier ses sources. L'installation a lieu quand VS Code s'attache au codespace (`postAttachCommand`), puis le script d'étude la vérifie de nouveau depuis le terminal intégré.
+Le panneau n'est pas publié : `--extensionDevelopmentPath` n'existe pas dans Codespaces, donc `post-create.sh` en fait un VSIX (dans `.workshop-cache/`, ignoré par git) avec `hypotrail setup vscode --vsix-out`, en Python pur, à partir de `extension.js`, `package.json`, `README.md`, `lib/` et `media/`, sans modifier ses sources ni demander Node. L'installation a lieu quand VS Code s'attache au codespace (`postAttachCommand`), puis `hypotrail new` la vérifie de nouveau depuis le terminal intégré. Hors du dépôt, sur un poste ou dans un autre codespace, les mêmes commandes viennent de l'outil installé : `uv tool install "git+https://github.com/hypotrail/hypotrail#subdirectory=framework"`, `hypotrail setup vscode`, `hypotrail doctor` ; le gabarit `templates/study-template/` en fait un codespace prêt à l'emploi.
 
 ## 1. Prérequis
 
@@ -103,9 +103,9 @@ Il liste les fichiers du projet Azure ML qui serait généré, leur statut et le
 scripts/workshop/install-panel.sh
 ```
 
-puis *Developer: Reload Window*. Sinon : vue Extensions > *…* > *Install from VSIX…* > `/workspaces/hypotrail/.workshop-cache/hypotrail-companion-0.1.0.vsix`. Si le VSIX manque : `scripts/workshop/install-panel.sh --force` le reconstruit (Node est installé dans l'image).
+puis *Developer: Reload Window*. Sinon : vue Extensions > *…* > *Install from VSIX…* > `/workspaces/hypotrail/.workshop-cache/hypotrail-companion-0.1.0.vsix`. Si le VSIX manque : `scripts/workshop/install-panel.sh --build-only` le reconstruit (sans Node). `hypotrail doctor` résume ce qui manque.
 
-**« Companion disabled (feature flag) »** : le dossier ouvert n'est pas une étude créée par le script, ou les réglages manquent. Vérifier `studies/<nom>/.vscode/settings.json` (`"hypotrail.companion.enabled": true`, `"hypotrail.companion.stage": "v3"`) ; `echo $HYPOTRAIL_COMPANION_STAGE` dans le terminal doit afficher `v3`.
+**« Companion disabled (feature flag) »** : le dossier ouvert n'est pas une étude créée par `hypotrail new` (ou le script), ou les réglages manquent. Vérifier `studies/<nom>/.vscode/settings.json` (`"hypotrail.companion.enabled": true`, `"hypotrail.companion.stage": "v3"`) ; `echo $HYPOTRAIL_COMPANION_STAGE` dans le terminal doit afficher `v3`.
 
 **Le panneau ne trouve pas l'étude** : ouvrir le dossier de l'étude (ou le dépôt : les études sont cherchées jusqu'à deux niveaux sous le dossier ouvert). Ne pas renommer ni déplacer une étude : le CLI refuse une étude déplacée ; en créer une nouvelle.
 

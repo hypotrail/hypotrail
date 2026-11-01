@@ -1,0 +1,39 @@
+// Hypotrail study codespace (template; Onboarding Lot 1, docs/plans/ONBOARDING-SPEC.md).
+//
+// Copy this folder as the root of a new repository (publishing it as its own template
+// repository is the owner's step). The codespace installs the hypotrail tool from Git with
+// uv, and the study panel into the codespace's VS Code; no Node, no checkout of the engine.
+//
+// - postCreateCommand runs .devcontainer/post-create.sh: uv, then
+//   `uv tool install "git+https://github.com/hypotrail/hypotrail#subdirectory=framework"`.
+// - postAttachCommand installs the study panel into the VS Code server once a client is
+//   attached (`hypotrail setup vscode`); `hypotrail new` checks it again from the terminal.
+{
+  "name": "Hypotrail study",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.13-bookworm",
+  "hostRequirements": { "cpus": 4, "memory": "8gb" },
+  "containerEnv": {
+    // The uv cache and /workspaces are different mounts: copy instead of hardlinking.
+    "UV_LINK_MODE": "copy"
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postAttachCommand": "hypotrail setup vscode --format text || true",
+  "forwardPorts": [2718, 2719, 2720],
+  "portsAttributes": {
+    "2718": { "label": "Marimo notebook 1", "onAutoForward": "notify" },
+    "2719": { "label": "Marimo notebook 2", "onAutoForward": "notify" },
+    "2720": { "label": "Marimo notebook 3", "onAutoForward": "notify" }
+  },
+  "customizations": {
+    "codespaces": { "openFiles": ["README.md"] },
+    "vscode": {
+      "extensions": ["GitHub.copilot", "GitHub.copilot-chat", "ms-python.python"],
+      "settings": {
+        "chat.agent.enabled": true,
+        "files.exclude": { "**/__marimo__": true },
+        // The raw data stay out of the chat's search; studies show them through hypotrail.
+        "search.exclude": { "cases/**/data/**": true }
+      }
+    }
+  }
+}

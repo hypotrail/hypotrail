@@ -457,7 +457,7 @@ hashes: the numeric differences come from the environment, not from this work.
 
 ## Dependency changes
 
-Base (installed for everyone): `hypotrail-runtime` (path dependency), `pydantic>=2.7,<3`,
+Base (installed for everyone): `hypotrail-runtime` (path dependency; since Onboarding Lot 0 vendored into the `hypotrail` wheel instead), `pydantic>=2.7,<3`,
 `pandera>=0.20` — new packages in the base export: pydantic 2.14.1, pydantic-core 2.50.1,
 annotated-types, typing-inspection, pandera 0.34.1, typeguard, typing-inspect,
 mypy-extensions. Dev group: `hypothesis>=6.100` (+ sortedcontainers). Extras:

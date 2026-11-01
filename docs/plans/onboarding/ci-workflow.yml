@@ -1,0 +1,98 @@
+# Continuous integration (Onboarding Lot 0, docs/plans/ONBOARDING-SPEC.md).
+#
+# TO INSTALL: copy this file to .github/workflows/ci.yml. It is kept here because the
+# session that wrote it could not push a workflow file (its token lacks the `workflow`
+# scope); the owner or the integrator moves it.
+#
+# One job per platform: uv, Python 3.13, the engine environment (framework/, groups dev and
+# azureml), the study test suite, the workshop hook test and the layout check. The panel's
+# Node tests run on Ubuntu only (Node is a developer tool here, never a user requirement).
+# A second job builds the wheel and installs it with `uv tool install`, outside the checkout.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.11.32"
+  PYTHONUTF8: "1"
+
+jobs:
+  study:
+    name: study suite (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    # Windows native is not supported yet: the study store needs a cross-platform lock
+    # (fcntl.flock today; lock.require_posix refuses os.name == "nt"). Onboarding Lot 4
+    # (agent W) replaces it; until that lot lands, the Windows job runs but may fail.
+    # Remove continue-on-error once Lot 4 is merged.
+    continue-on-error: ${{ matrix.os == 'windows-latest' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: framework/uv.lock
+      - name: Engine environment
+        run: uv sync --locked --project framework --group dev --group azureml
+      - name: Layout check
+        run: uv run --project framework python scripts/check_layout.py
+      - name: Study suite and workshop hook
+        run: uv run --project framework python -m pytest -q framework/tests/study framework/tests/workshop
+      - uses: actions/setup-node@v4
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          node-version: "22"
+      - name: Panel tests (Node, Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
+        run: node --test clients/vscode-companion/test/*.test.js
+
+  install:
+    name: wheel install (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.os == 'windows-latest' }}   # see the study job (Lot 4)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: "3.13"
+      - name: Build the wheel (sdist, then the wheel from the sdist)
+        run: uv build --project framework --out-dir dist
+      - name: Install it as a tool, outside the checkout
+        run: |
+          uv tool install --python 3.13 dist/*.whl
+          uv tool update-shell || true
+          echo "$(uv tool dir --bin)" >> "$GITHUB_PATH"
+      - name: Run the installed engine on Auto MPG
+        working-directory: ${{ runner.temp }}
+        run: |
+          hypotrail doctor --format text
+          hypotrail setup vscode --vsix-out panel.vsix --format text
+          hypotrail new mpg --case "$GITHUB_WORKSPACE/use-cases/auto-mpg" --format text
+          hypotrail status --summary --study mpg --format text

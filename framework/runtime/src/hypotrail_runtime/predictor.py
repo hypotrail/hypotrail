@@ -385,6 +385,13 @@ def runtime_closure(root: str = DISTRIBUTION) -> dict[str, str]:
         try:
             dist = distribution(name)
         except PackageNotFoundError:
+            if key != DISTRIBUTION:
+                continue
+            # Vendored in the ``hypotrail`` wheel (Onboarding Lot 0): no distribution of its
+            # own, so its version and requirements come from this package.
+            from . import DEPENDENCIES
+            seen[key] = __version__
+            todo.extend(m.group(1) for m in map(name_re.match, DEPENDENCIES) if m)
             continue
         seen[key] = dist.version
         for req in dist.requires or []:

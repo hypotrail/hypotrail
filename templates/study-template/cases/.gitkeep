@@ -1,0 +1,2 @@
+# Put each case here: cases/<case>/case.yaml and cases/<case>/data/<file>.
+# The raw data stay outside the study folders (studies/), out of the chat workspace.

@@ -224,3 +224,13 @@ From the [review synthesis §4](../plans/V0.2-REVIEW-SYNTHESIS.md#v03-and-later-
 6. **Engine-served pedagogy**: `next_action` carries the term, the misconception and the question, so the agent prompt shrinks (about 4,300 words, 16 "never"); key for **Copilot portability** and a Copilot acceptance run.
 7. A full-conversation agent run (E1) on Hotel booking demand (the discovery case since v0.3), with N > 3, before trusting pass rates.
 8. Later: counterfactual leakage branch ("what if `PageValues` were included?"), pilot designer, forward temporal backtest, more model families under a complexity budget, a grouped split by a group column, a multi-study portfolio, a local learning record, Online Retail II as an advanced cross-sell case, publication of the trap benchmark.
+
+## Onboarding Lots 0 and 1 (2026-11-01, agent P)
+
+From `docs/plans/ONBOARDING-SPEC.md`; contract in CLI-CONTRACT §20.
+
+- **Installable wheel.** `hypotrail_runtime` is vendored into the `hypotrail` wheel (no `hypotrail-runtime` path dependency; `framework/runtime/` still builds alone for exported projects; do not install both in one environment). `uv tool install "git+...#subdirectory=framework"` and `uv tool install ./framework` were verified outside the checkout (`init`, `new`, `data`, `status`, `render` on Auto MPG). Installed engines record the missing `uv.lock` under the snapshot's `unreadable_sources`.
+- **Portable `agent.json`.** The CLI command is an argument list (`uv_project`, `installed`, `python_module`, `python_path`), never `env PYTHONPATH=...`; displayed commands use PowerShell quoting on Windows.
+- **New commands.** `setup vscode` (pure-Python VSIX from the panel sources shipped as package data, byte-identical to the vsce-checked prototype; no Node), `doctor`, `hook pretool` (the workshop hook moved into the package), `new NAME --case PATH` (no `data` link; panel flag and stage v3; hook; `--open`). The workshop scripts are thin wrappers; `templates/study-template/` is a Codespaces template that installs the tool from Git.
+- **CI.** `docs/plans/onboarding/ci-workflow.yml`, to copy to `.github/workflows/ci.yml` (the writing session could not push a workflow file): ubuntu, windows, macos; the Windows jobs are `continue-on-error` until Lot 4 (cross-platform lock) lands.
+- **Limits.** Windows native still refuses study writes (`lock.require_posix`, Lot 4). The hook is a cooperative aid. `setup vscode` was tested with a fake `code` command, not a real VS Code; no Copilot acceptance session was run.
