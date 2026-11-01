@@ -48,7 +48,10 @@ def validate_name(name: str) -> str:
 
 
 def study_path(name: str, parent=None) -> Path:
-    """``PARENT/NAME`` (absolute), refused when it exists."""
+    """``PARENT/NAME`` (absolute), refused when it exists. ``NAME`` may also be a path
+    (``../studies/churn``) when ``--dir`` is not given: its last part is the name."""
+    if parent is None and Path(name).name != name:
+        parent, name = Path(name).expanduser().parent, Path(name).name
     validate_name(name)
     study = (Path(parent).expanduser() if parent else Path.cwd()).resolve() / name
     if os.path.lexists(study):

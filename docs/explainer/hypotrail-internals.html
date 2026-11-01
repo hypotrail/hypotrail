@@ -967,7 +967,7 @@ Le test final reste scellé : aucune ligne du test final n'a été lue.</pre>
 
 <!-- ======================================================== PARTIE 6 -->
 <section id="p6" style="--ac:var(--pink)"><div class="sh"><div class="n">06</div><div><p class="k">Partie 6</p><h2>Commandes, export, limites</h2></div></div>
-<nav class="chl"><a href="#commandes"><b>11</b>Les commandes</a><a href="#export"><b>12</b>Exporter</a><a href="#encours"><b>13</b>En cours : l'onboarding</a><a href="#limites"><b>14</b>Limites et garanties</a><a href="#glossaire"><b>G</b>Glossaire</a></nav>
+<nav class="chl"><a href="#commandes"><b>11</b>Les commandes</a><a href="#export"><b>12</b>Exporter</a><a href="#encours"><b>13</b>Nouveau : l'onboarding</a><a href="#limites"><b>14</b>Limites et garanties</a><a href="#glossaire"><b>G</b>Glossaire</a></nav>
 
 <div class="chap first" id="commandes"><span class="cn">11</span><h3>Les commandes</h3></div>
 <p class="lead">Chaque commande prend <code>--study DIR</code> et imprime <b>un seul document JSON</b> (<code>--format text</code> pour un résumé lisible). Toute écriture prend <code>--request-id</code> et <code>--expected-revision</code>.</p>
@@ -1044,14 +1044,14 @@ Le test final reste scellé : aucune ligne du test final n'a été lue.</pre>
 <div class="prose"><p>L'exporteur lit une révision via <code>read_export_source</code> et ne fait jamais d'ajustement, d'évaluation, de lecture du test final, de contact avec Azure ni de changement de l'étude. Le modèle évalué n'est exporté que s'il a été capturé (<code>run predictor.capture</code>). Ici il ne l'est pas, donc seule la recette part (<code>artifact_status: missing</code>). En fin d'étude, <code>next_action.after_study</code> donne la commande de passation et dit <code>cloud_status: not_qualified</code>.</p></div>
 <p class="src">sorties réelles de <code>export handoff</code> et <code>export azureml --plan --expected-revision 62</code> · <code>docs/specs/CLI-CONTRACT.md</code> §15 · <code>docs/handoff/AZUREML-EXPORT-V1.md</code> (« Generated project », « Not qualified »).</p>
 
-<div class="chap" id="encours"><span class="cn">13</span><h3>En cours : de « j'ai un fichier » à une étude</h3><span class="stamp">Pas encore disponible</span></div>
+<div class="chap" id="encours"><span class="cn">13</span><h3>Nouveau : de « j'ai un fichier » à une étude</h3><span class="stamp">Livré le 1er novembre 2026</span></div>
 <div class="wip">
-<span class="ribbon">En cours · spécification approuvée le 1er novembre 2026, non livrée</span>
-<p class="lead">Aujourd'hui, une étude part d'un cas déjà écrit. Le chantier d'onboarding vise <b>un fichier de données seul</b>, éventuellement un brief, sous Windows natif comme sous macOS, Linux et Codespaces, sans Node.</p>
+<span class="ribbon">Nouveau · livré le 1er novembre 2026, pas encore essayé en séance réelle</span>
+<p class="lead">Une étude peut maintenant partir d'<b>un fichier de données seul</b>, avec un brief, un contexte libre ou rien, sous Windows natif comme sous macOS, Linux et Codespaces, sans Node.</p>
 <figure class="fig"><svg class="viz" viewBox="0 0 760 270" role="img" aria-labelledby="f13t">
-              <title id="f13t">Les deux phases séparées par le scellement (projet)</title>
+              <title id="f13t">Les deux phases séparées par le scellement</title>
               <rect class="zone" x="12" y="14" width="420" height="244" rx="4"/>
-              <text class="th" x="26" y="38">Avant le scellement (projet)</text>
+              <text class="th" x="26" y="38">Avant le scellement</text>
               <text class="ts" x="26" y="58">inspection structurelle seulement, jamais la cible croisée</text>
               <rect class="bx" x="26" y="70" width="190" height="34" rx="3"/><text class="bt mono" x="36" y="92">hypotrail new --data</text>
               <rect class="bx" x="228" y="70" width="190" height="34" rx="3"/><text class="bt mono" x="238" y="92">case profile</text>
@@ -1072,15 +1072,15 @@ Le test final reste scellé : aucune ligne du test final n'a été lue.</pre>
               <text class="bt" x="642" y="156">inchangée</text>
               <text class="tf" x="448" y="214">À côté : setup vscode, doctor,</text>
               <text class="tf" x="448" y="230">hook pretool, verrou Windows</text>
-            </svg><figcaption>Le test final serait <b>déduit, pas choisi</b> : usage futur avec horloges documentées → temporel, entités récurrentes → groupé, sinon stratifié ou stratifié par quantiles. Fraction 0,2, refusée hors de [0,10 ; 0,35], au moins 100 lignes de test. <span class="scrollhint">↔</span></figcaption></figure>
-<div class="card" style="--c:var(--pink)"><h3>Les commandes prévues (aucune n'existe encore dans <code>hypotrail --help</code>)</h3><ul>
+            </svg><figcaption>Le test final est <b>déduit, pas choisi</b> : usage futur avec horloges documentées → temporel, entités récurrentes → groupé, sinon stratifié ou stratifié par quantiles. Fraction 0,2, refusée hors de [0,10 ; 0,35], au moins 100 lignes de test. <span class="scrollhint">↔</span></figcaption></figure>
+<div class="card" style="--c:var(--pink)"><h3>Les nouvelles commandes</h3><ul>
 <li><code>hypotrail new NAME --data FILE [--brief FILE] [--context …]</code> : un dossier <code>NAME.case/</code> à côté de l'étude, l'étude en état « preparing », sans partition.</li>
 <li><code>prepare answer</code> / <code>prepare status</code> : les six réponses, chacune avec les mots de l'utilisateur. Une réponse inférée reste « proposée, à confirmer ».</li>
 <li><code>case check --feasibility</code> : des comptes sans la cible, un réussi/échoué, pas de proportions par strate (« so a split cannot be shopped for »).</li>
 <li><code>seal</code> : exige les six réponses et la faisabilité, écrit <code>case.yaml</code>, lance <code>init</code> avec <code>review-v1</code> quand le contrat le permet.</li>
 <li><code>setup vscode</code> (panneau depuis un VSIX embarqué, sans Node), <code>doctor</code> (diagnostic de l'environnement), <code>hook pretool</code> (le hook d'atelier déplacé dans le paquet).</li>
-<li>Lot Windows natif : remplacer <code>fcntl.flock</code>, réessayer <code>os.replace</code>, UTF-8 partout, <code>--user-words-file</code>.</li>
-</ul><p class="src"><code>docs/plans/ONBOARDING-SPEC.md</code> (commit <code>147e94c</code>, « owner-approved plan, 1 November 2026 ») · <code>docs/plans/onboarding/</code></p></div>
+<li>Windows natif : verrous <code>msvcrt</code> à la place de <code>fcntl.flock</code>, <code>os.replace</code> réessayé, UTF-8 partout, <code>--user-words-file</code>. Confirmé par la CI Windows une fois activée.</li>
+</ul><p class="src"><code>docs/plans/ONBOARDING-SPEC.md</code> · <code>docs/specs/CLI-CONTRACT.md</code> §20–21 · <code>docs/decisions/0006-final-test-partition.md</code> (amendement du 1er novembre 2026)</p></div>
 </div>
 
 <div class="chap" id="limites"><span class="cn">14</span><h3>Limites et garanties</h3></div>

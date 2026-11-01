@@ -91,7 +91,7 @@ hypotrail doctor
 - `hypotrail setup vscode` installe le panneau d'étude dans VS Code, sans Node. Faites ensuite *Developer: Reload Window*. Sans commande `code`, `hypotrail setup vscode --vsix-out panneau.vsix` écrit le fichier : vue *Extensions*, menu **…**, puis *Install from VSIX…*.
 - `hypotrail doctor` vérifie le poste (Python, uv, VS Code, Copilot, panneau, proxy, dossier OneDrive, chemins longs sous Windows) et affiche la commande qui corrige chaque point.
 
-> **Windows :** tant que `hypotrail doctor` signale `platform` en échec, le moteur ne peut pas écrire d'étude sous Windows natif : passez par **WSL2** (Ubuntu, extension VS Code **WSL**, toutes les commandes dans WSL) ou par l'option 1.
+> **Windows :** le moteur fonctionne sous Windows natif, dans PowerShell. Si `hypotrail doctor` signale quand même `platform` en échec, passez par **WSL2** (Ubuntu, extension VS Code **WSL**) ou par l'option 1, et prévenez l'organisateur.
 
 > Si l'installation du panneau est refusée (« extension not allowed »), c'est que la politique de l'entreprise filtre les extensions. Le panneau est optionnel : le chat et le rapport suffisent. Prévenez l'organisateur.
 
@@ -140,7 +140,7 @@ Les hooks sont une fonction **en préversion** de VS Code. Si VS Code vous deman
 | Quelque chose ne marche pas sur le poste | `hypotrail doctor` : il indique la commande qui corrige chaque point |
 | L'agent hypotrail n'apparaît pas | Le dossier ouvert doit être l'étude elle-même. Faites *Reload Window*. En secours : mode Agent par défaut, puis « Suis les instructions de .github/agents/hypotrail.agent.md. On commence. » |
 | Pas de sélecteur de réponses | VS Code trop ancien ou `vscode/askQuestions` décoché : l'agent pose ses questions en texte, on continue |
-| `platform_unsupported` | Vous êtes sous Windows natif : passez par WSL2 ou Codespaces |
+| `platform_unsupported` | Verrous de fichiers indisponibles sur ce Python : passez par WSL2 ou Codespaces, et prévenez l'organisateur |
 | `uv tool install` échoue (réseau, certificat) | Proxy : voir les prérequis de l'option 2 (`UV_SYSTEM_CERTS=1`). Sinon, prenez Codespaces |
 | Marimo demande un jeton | Ouvrez le lien complet affiché dans le terminal |
 

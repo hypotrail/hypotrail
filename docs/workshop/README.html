@@ -186,7 +186,7 @@ hypotrail doctor</code></pre>
           <p>Pour mettre à jour : <code>uv tool install --force "git+https://github.com/hypotrail/hypotrail#subdirectory=framework"</code>, puis <code>hypotrail setup vscode</code>.</p>
         </div>
         <div class="card warn">
-          <p><b>Windows</b> : tant que <code>hypotrail doctor</code> signale <code>platform</code> en échec, le moteur ne peut pas écrire d'étude sous Windows natif : passez par <b>WSL2</b> (Ubuntu, extension VS Code <b>WSL</b>, toutes les commandes dans WSL) ou par l'option 1.</p>
+          <p><b>Windows</b> : le moteur fonctionne sous Windows natif, dans PowerShell. Si <code>hypotrail doctor</code> signale quand même <code>platform</code> en échec, passez par <b>WSL2</b> (Ubuntu, extension VS Code <b>WSL</b>) ou par l'option 1, et prévenez l'organisateur.</p>
           <p>Si l'installation du panneau est refusée (« extension not allowed »), c'est que la politique de l'entreprise filtre les extensions. Le panneau est optionnel : le chat et le rapport suffisent. Prévenez l'organisateur.</p>
         </div>
 
@@ -234,7 +234,7 @@ hypotrail new binome-XX --case hypotrail/use-cases/auto-mpg --brief hypotrail/us
               <tr><td>Quelque chose ne marche pas sur le poste</td><td><code>hypotrail doctor</code> : il indique la commande qui corrige chaque point.</td></tr>
               <tr><td>L'agent hypotrail n'apparaît pas</td><td>Le dossier ouvert doit être l'étude elle-même ; faites <i>Reload Window</i>. En secours : mode Agent par défaut, puis « Suis les instructions de .github/agents/hypotrail.agent.md. On commence. »</td></tr>
               <tr><td>Pas de sélecteur de réponses</td><td>VS Code trop ancien, ou <code>vscode/askQuestions</code> décoché. L'agent pose alors ses questions en texte : on continue.</td></tr>
-              <tr><td><code>platform_unsupported</code></td><td>Vous êtes sous Windows natif : passez par WSL2 ou Codespaces.</td></tr>
+              <tr><td><code>platform_unsupported</code></td><td>Verrous de fichiers indisponibles sur ce Python : passez par WSL2 ou Codespaces, et prévenez l'organisateur.</td></tr>
               <tr><td><code>uv tool install</code> échoue (réseau, certificat)</td><td>Pour le proxy, voir les prérequis de l'option 2 (<code>UV_SYSTEM_CERTS=1</code>). Sinon, prenez Codespaces.</td></tr>
               <tr><td>Marimo demande un jeton</td><td>Ouvrez le lien complet affiché dans le terminal.</td></tr>
             </tbody>

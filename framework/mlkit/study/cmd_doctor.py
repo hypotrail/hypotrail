@@ -88,13 +88,13 @@ def check_platform() -> dict:
     elif 'microsoft' in platform.release().lower():
         detail += ', WSL'
     try:
-        lock.require_posix()
+        backend = lock.require_locking()
     except Exception as exc:   # noqa: BLE001 - the lock module's own refusal
-        return check('platform', 'fail', f'{detail}: studies cannot be written here yet '
+        return check('platform', 'fail', f'{detail}: studies cannot be written here '
                      f'({getattr(exc, "message", exc)})',
-                     'Use WSL or a Codespace until Windows native support lands '
-                     '(docs/plans/ONBOARDING-SPEC.md, Lot 4).')
-    return check('platform', 'ok', detail)
+                     'Use a Linux, macOS or Windows Python with its standard library '
+                     '(fcntl or msvcrt), or a Codespace.')
+    return check('platform', 'ok', f'{detail}; file locks: {backend}')
 
 
 def check_code(found) -> dict:

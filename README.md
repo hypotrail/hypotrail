@@ -8,7 +8,18 @@ Repository: https://github.com/hypotrail/hypotrail. Workshop participants: [inst
 
 Start with [the implementation entry point](docs/START-HERE.md); [the handoff](docs/handoff/IMPLEMENTATION.md) lists what works and what does not.
 
-## Quickstart (Linux, macOS, Windows)
+## Start from your own data (Linux, macOS, Windows)
+
+```sh
+uv tool install "git+https://github.com/hypotrail/hypotrail#subdirectory=framework"
+hypotrail setup vscode      # the study panel, no Node needed
+hypotrail doctor            # what this machine still lacks, with the fix
+hypotrail new churn --data churn.csv [--brief brief.pdf | --context "one-line context"] --open
+```
+
+`new --data` keeps the data in `churn.case/`, next to the study folder `churn/`, and shows the chat agent only their structure. In the chat, say "Prepare the study": the agent asks six questions (prior exploration, target, row unit, prediction time, recurring entities, then the final test it deduces, in words and counts) and records your answers in your words; `hypotrail seal` then writes the case, sets the final test aside and creates the study. On an existing case: `hypotrail new NAME --case use-cases/auto-mpg --open`. See [CLI-CONTRACT §20–21](docs/specs/CLI-CONTRACT.md) and [how Hypotrail works inside](docs/explainer/hypotrail-internals.html) (in French).
+
+## Quickstart from this repository (Linux, macOS, Windows)
 
 ```sh
 uv sync --project framework --group dev

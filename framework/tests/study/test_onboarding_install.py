@@ -89,11 +89,11 @@ def test_deliverables_shell_matches_their_argv(tmp_path, synthetic_case_dir, mon
 
 def _panel_sources() -> set[str]:
     """The panel's shipped files, enumerated independently of cmd_setup: everything but the
-    tests and the two developer documents."""
+    tests, the two developer documents and hidden local folders (``.local/`` baselines)."""
     out = set()
     for p in PANEL.rglob('*'):
         rel = p.relative_to(PANEL).as_posix()
-        if p.is_file() and not rel.startswith('test/') and rel not in (
+        if p.is_file() and not rel.startswith(('test/', '.')) and rel not in (
                 'ARCHITECTURE.md', 'MANUAL-TEST.md'):
             out.add(rel)
     return out

@@ -481,7 +481,9 @@ EXTENSIONS = {'run': 'mlkit.study.cmd_run', 'render': 'mlkit.study.cmd_render',
               'brief': 'mlkit.study.cmd_brief',
               # Onboarding Lots 2 and 3 (2026-11-01): from one data file to a sealed study.
               'new': 'mlkit.study.cmd_new', 'case': 'mlkit.study.cmd_case',
-              'prepare': 'mlkit.study.cmd_prepare', 'seal': 'mlkit.study.cmd_seal'}
+              'prepare': 'mlkit.study.cmd_prepare', 'seal': 'mlkit.study.cmd_seal',
+              'setup': 'mlkit.study.cmd_setup', 'doctor': 'mlkit.study.cmd_doctor',
+              'hook': 'mlkit.study.cmd_hook'}
 # Post-v0.1 observation kit: ``session-report`` and the opt-in session log.
 SESSION_REPORT_SCHEMA = 'hypotrail.session_report/1'
 SESSION_REPORT_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'sources', 'span',
