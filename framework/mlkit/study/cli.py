@@ -92,6 +92,12 @@ EXTENSIONS = {
     'automation': 'mlkit.study.cmd_automation',
     # R68 (minimal version, 2026-10-28): the product owner's PDF and the study's own brief.
     'brief': 'mlkit.study.cmd_brief',
+    # Onboarding Lots 2 and 3 (ONBOARDING-SPEC, 2026-11-01): from one data file to a sealed
+    # study (``new --data``, the six questions, the feasibility check, the seal).
+    'new': 'mlkit.study.cmd_new',
+    'case': 'mlkit.study.cmd_case',
+    'prepare': 'mlkit.study.cmd_prepare',
+    'seal': 'mlkit.study.cmd_seal',
 }
 # One line per extension command for ``hypotrail --help`` (v0.2a, WP-A1): the help lists
 # every command without importing the extension modules.
@@ -109,6 +115,10 @@ EXTENSION_HELP = {
     'understanding': 'opt-in understanding and handover review (off by default; ADR 0008)',
     'automation': 'run the automatic mode chosen at init, or stop it in the junior\'s words',
     'brief': "import the product owner's PDF, or record the study's brief in the junior's words",
+    'new': 'start a study: from one data file (--data, prepared then sealed) or a case',
+    'case': 'before sealing: the structural profile, or the feasibility of the final test',
+    'prepare': "before sealing: the six questions, answered in the user's words",
+    'seal': 'write the case, set the deduced final test aside, and create the study',
 }
 REFUSALS = (CommandRefused, StudyError, CaseError)
 
@@ -530,7 +540,7 @@ def _run(argv: list) -> cmd.Outcome:
     # A command with a verb is named with it (`decide confirm`, `export handoff`), as its
     # own payloads name it (WP-I).
     command = ' '.join(argv[:2]) if name in ('decide', 'export', 'mode', 'understanding',
-                                             'automation', 'brief') \
+                                             'automation', 'brief', 'case', 'prepare') \
         else name
     try:
         extension = name if name in EXTENSIONS else None

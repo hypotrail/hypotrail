@@ -338,6 +338,24 @@ def _clock(frame, keys, spec: Mapping):
     return [float(value) for value in values]
 
 
+def _component_strata(keys: list[str], strata: list[str], component: Mapping[str, str]
+                      ) -> list[str]:
+    """One stratum per row in which every row of an entity component takes the component's
+    most frequent stratum (ties: the first in sorted order), so whole components can be
+    drawn per stratum (:func:`grouped_stratified`). A component whose rows share one stratum
+    (identical records, or an entity whose target never changes) keeps it: the draw is then
+    exactly the one of a row-level stratification of whole groups. Onboarding Lot 3: a
+    recurring entity (a customer) whose rows hold several target values used to stop the
+    draw with ``integrity_error``."""
+    counts: dict[str, dict[str, int]] = {}
+    for key, s_ in zip(keys, strata):
+        tally = counts.setdefault(component[key], {})
+        tally[s_] = tally.get(s_, 0) + 1
+    chosen = {g: sorted(tally.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
+              for g, tally in counts.items()}
+    return [chosen[component[key]] for key in keys]
+
+
 def _assign_review(case: Case, index, frame, *, fraction: float, seed: int) -> dict:
     """J1 final boundary: prediction clock, complete ties, delayed-label/group purge."""
     from .case import prior_exposed_keys
@@ -418,6 +436,8 @@ def _assign_review(case: Case, index, frame, *, fraction: float, seed: int) -> d
                                        'excluded_rows': len(excluded_prior)}
     else:
         strata = _strata(case, frame)
+        if components:
+            strata = _component_strata(keys, strata, component)
         eligible = [i for i, key in enumerate(keys) if key not in held]
         ekeys, estrata = [keys[i] for i in eligible], [strata[i] for i in eligible]
         mapping = {key: component[key] for key in ekeys}
@@ -448,6 +468,148 @@ def _assign_review(case: Case, index, frame, *, fraction: float, seed: int) -> d
                     for reason, rows in sorted(exclusion_reasons.items())]}
     return {'record': record, 'development': development, 'final_test': final,
             'training_excluded': sorted(set(training_excluded), key=lambda k: int(k[1:]))}
+
+
+# --- the deduction of the final test from the case's facts (onboarding, Lot 3) -----------
+#
+# ADR 0006 amendment of 2026-11-01: a study prepared with ``hypotrail new --data`` and sealed
+# with ``hypotrail seal`` does not choose its final test. The case declares facts
+# (``analysis_contract``: intended use, clocks, dependencies); :func:`deduce` names the method
+# the review-v1 planner (:func:`_assign_review`) applies to them and why, in this order:
+#
+# 1. a future use with two documented clocks: temporal on the prediction clock, development
+#    rows whose outcome is known only after the cut kept out of training (delayed labels);
+# 2. recurring entities: grouped (whole entities on one side), or grouped and temporal when a
+#    prediction clock is also declared;
+# 3. an assumed time dependence (a prediction clock without a documented future use):
+#    temporal;
+# 4. otherwise stratified on the target (binary) or on its quantile bins (regression);
+# 5. unknown dependencies: stratified too, the claims capped by the case
+#    (``permitted_claims`` without future predictive performance).
+#
+# :func:`guard_checks` then refuses a final test that is too small or too far from the
+# default share, with these documented constants; there is no silent fallback to another
+# method.
+
+MIN_FINAL_ROWS = 100
+MIN_MINORITY_EVENTS = 30
+FRACTION_RANGE = (0.10, 0.35)
+DEDUCTION_RULES = ('future_temporal', 'grouped_temporal', 'grouped', 'assumed_temporal',
+                   'stratified', 'unknown_stratified')
+GUARD_CHECKS = ('min_final_rows', 'min_minority_events', 'fraction_range')
+
+_REASONS = {
+    'future_temporal': {
+        'en': 'the use is about the future and both clocks are documented: the final test '
+              'holds the latest rows by {clock}, and development rows whose outcome is known '
+              'only after the cut are kept out of training',
+        'fr': "l'usage porte sur le futur et les deux horloges sont documentées : le test "
+              "final garde les lignes les plus récentes selon {clock}, et les lignes de "
+              "développement dont l'issue n'est connue qu'après la coupure sont écartées de "
+              "l'apprentissage"},
+    'grouped_temporal': {
+        'en': '{group} recurs and the rows follow {clock}: the final test holds the latest '
+              'rows, and every row of one {group} stays on one side',
+        'fr': "{group} revient et les lignes suivent {clock} : le test final garde les lignes "
+              "les plus récentes, et toutes les lignes d'un même {group} restent du même côté"},
+    'grouped': {
+        'en': '{group} recurs: every row of one {group} stays on one side, so the final test '
+              'measures entities the models never saw',
+        'fr': "{group} revient : toutes les lignes d'un même {group} restent du même côté, et "
+              "le test final mesure des entités que les modèles n'ont jamais vues"},
+    'assumed_temporal': {
+        'en': 'the rows may depend on time ({clock}) but no future use is documented: the '
+              'final test holds the latest rows by {clock}, and no future performance is '
+              'claimed',
+        'fr': "les lignes peuvent dépendre du temps ({clock}) sans usage futur documenté : le "
+              "test final garde les lignes les plus récentes selon {clock}, sans revendiquer "
+              "de performance future"},
+    'stratified': {
+        'en': 'no time order or recurring entity is declared: the final test is a random '
+              'share of the rows, in the same proportion for each value of the target',
+        'fr': "aucun ordre dans le temps ni entité récurrente n'est déclaré : le test final "
+              "est une part tirée au hasard, dans la même proportion pour chaque valeur de "
+              "la cible"},
+    'unknown_stratified': {
+        'en': 'whether rows depend on time or on recurring entities is unknown: the final '
+              'test is a random share of the rows, in the same proportion for each value of '
+              'the target, and the claims are capped (no future performance)',
+        'fr': "on ne sait pas si les lignes dépendent du temps ou d'entités récurrentes : le "
+              "test final est une part tirée au hasard, dans la même proportion pour chaque "
+              "valeur de la cible, et les affirmations sont plafonnées (pas de performance "
+              "future)"},
+}
+
+
+def deduce(contract: Mapping, task: str) -> dict:
+    """``{rule, method, clock, group_column, reason: {en, fr}}``: the final-test method the
+    review-v1 planner applies to ``contract`` (:func:`_assign_review`), and why. Reads no
+    data. The rule mirrors the planner exactly: temporal when the use is a future prediction
+    or the dependencies are temporal; whole groups when they are grouped."""
+    timing, dependencies = contract['timing'], contract['dependencies']
+    kind = dependencies['kind']
+    future = contract['intended_use'] == 'future_prediction'
+    clock_spec = timing.get('prediction_order')
+    clock = clock_spec['by'] if isinstance(clock_spec, Mapping) else None
+    group = dependencies.get('group_column') if kind in ('grouped', 'grouped_temporal') else None
+    temporal = future or kind in ('temporal', 'grouped_temporal')
+    if temporal and group:
+        rule = 'grouped_temporal'
+    elif future:
+        rule = 'future_temporal'
+    elif group:
+        rule = 'grouped'
+    elif temporal:
+        rule = 'assumed_temporal'
+    elif kind == 'unknown':
+        rule = 'unknown_stratified'
+    else:
+        rule = 'stratified'
+    if temporal:
+        method = 'temporal'
+    else:
+        method = 'stratified' if task == 'binary' else 'quantile_stratified'
+    words = {'clock': clock or '', 'group': group or ''}
+    return {'rule': rule, 'method': method, 'clock': clock, 'group_column': group,
+            'reason': {lang: text.format(**words) for lang, text in _REASONS[rule].items()}}
+
+
+def guard_checks(case: Case, frame, assigned: Mapping) -> list[dict]:
+    """``[{check, status: pass|fail, required, actual, reason}]``: the documented minimums
+    of an assignment (:func:`assign`). At least :data:`MIN_FINAL_ROWS` final-test rows; for
+    a binary target, at least :data:`MIN_MINORITY_EVENTS` rows of each label in the final
+    test (a pass or a fail only, ``actual`` null: no count or proportion of a label is
+    returned, so a final test cannot be shopped for); an effective fraction within
+    :data:`FRACTION_RANGE`."""
+    record = assigned['record']
+    n_final = len(assigned['final_test'])
+    n_rows = record['n_rows'] or 1
+    fraction = n_final / n_rows
+    out = [{'check': 'min_final_rows', 'status': 'pass' if n_final >= MIN_FINAL_ROWS else 'fail',
+            'required': MIN_FINAL_ROWS, 'actual': n_final,
+            'reason': f'the final test holds {n_final} rows; at least {MIN_FINAL_ROWS} are '
+                      f'needed for its figures to mean something'}]
+    if case.task == 'binary':
+        from .activities import matches
+        target = frame.loc[list(assigned['final_test']), case.target_column]
+        positive = int(matches(target, case.positive_label).sum())
+        minority = min(positive, n_final - positive)
+        ok = minority >= MIN_MINORITY_EVENTS
+        out.append({'check': 'min_minority_events', 'status': 'pass' if ok else 'fail',
+                    'required': MIN_MINORITY_EVENTS, 'actual': None,
+                    'reason': ('each value of the target occurs at least '
+                               f'{MIN_MINORITY_EVENTS} times in the final test' if ok else
+                               'the rarer value of the target occurs fewer than '
+                               f'{MIN_MINORITY_EVENTS} times in the final test, so its figures '
+                               'would rest on too few events (the count is not shown)')})
+    low, high = FRACTION_RANGE
+    ok = low <= fraction <= high
+    out.append({'check': 'fraction_range', 'status': 'pass' if ok else 'fail',
+                'required': [low, high], 'actual': round(fraction, 4),
+                'reason': f'the final test holds {fraction:.1%} of the rows; it must stay '
+                          f'between {low:.0%} and {high:.0%} (ties at the cut or large '
+                          f'entities can move it away from {DEFAULT_FRACTION:.0%})'})
+    return out
 
 
 # --- the final test's schema check (counts only) ----------------------------------------

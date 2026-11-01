@@ -164,13 +164,15 @@ l'étape 1 du panneau de l'étude, `hypotrail data --study .` ou les notebooks.
 }
 
 
-def install_readme(study_dir, case, language: str = 'en') -> bool:
+def install_readme(study_dir, case, language: str = 'en', *, data_link: bool = True) -> bool:
     """R69: ``README.md`` and the ``data`` link (relative, to the case's data folder), each
-    only if absent; the README alone where links cannot be made. True when the link exists."""
+    only if absent; the README alone where links cannot be made. True when the link exists.
+    ``data_link`` False (a study sealed by ``hypotrail seal``, onboarding §2.6) makes no link:
+    its data stay outside the chat workspace."""
     study = Path(study_dir).resolve()
     target = case.dataset_path.resolve().parent
     link = study / DATA_LINK
-    if not os.path.lexists(link):
+    if data_link and not os.path.lexists(link):
         try:
             os.symlink(os.path.relpath(target, study), link, target_is_directory=True)
         except (OSError, NotImplementedError):

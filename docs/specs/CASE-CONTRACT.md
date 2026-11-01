@@ -94,6 +94,8 @@ case-source invalidation; no new equivalence whitelist bypass is introduced.
 `case-supplement.yaml` may also contain `analysis_contract`; migration copies it
 and validates the resulting case. It does not import a human decision.
 
+A case prepared with `hypotrail new --data` ([Prepared cases](#prepared-cases-hypotrail-new---data-onboarding-2026-11-01)) always holds a contract built from the user's answers, and its study is created with `review-v1`.
+
 The opt-in `review-v1` profile executes the J1--J3 protocol described in
 `CLI-CONTRACT.md`: explicit row memberships, claim requirements and the declared
 business objective. Future and group-disjoint cases are initialized only when the
@@ -271,6 +273,33 @@ structure:
 ```
 
 `group_column` and `time_column` name a variable or are `null`. The variables with role `group_id` (respectively `time`) must be exactly that column.
+
+## Prepared cases (`hypotrail new --data`, onboarding 2026-11-01)
+
+A case may also be written by `hypotrail seal` ([ONBOARDING-SPEC](../plans/ONBOARDING-SPEC.md) Lots 2 and 3, `mlkit.study.case_draft`), from one data file and the user's answers to six questions. It follows this contract exactly; nothing is added to the schema. Its folder `NAME.case/` sits next to the study folder (never inside it) and holds:
+
+| File | Content |
+|---|---|
+| `data/FILE` | The user's file, copied byte for byte; `dataset.sha256` is its digest |
+| `profile.json` | `hypotrail.case-profile/1`: the structural profile of every row (per column: type, missing cells, distinct values, up to three examples, the label set when there are at most ten values, the range of a numeric column; exact duplicates). No count per value |
+| `case.draft.yaml` | `hypotrail.case-draft/1`: what the reading established and the `todo` list (the six questions and the suspicious columns). Not a case |
+| `prepare.json` | `hypotrail.prepare-state/1`: the answers (value, basis, the user's words, time), the proposals with their source, the history, the revision |
+| `case.yaml` | Written by `seal` only, from the profile and the answers |
+
+**Reading the file.** CSV only, UTF-8 strict (a byte-order mark is kept as `utf-8-sig`), a separator among comma, semicolon, tab and bar that gives every line the same number of fields, a header of unique names, one physical line per record. A multi-line record, another encoding, an inconsistent line or a file of fewer than 286 rows (no final test of 100 rows within 35 % of the file) is refused before anything is written. `dataset.decimal` is `.`; an empty cell is the only missing marker (`na_values: ['']`, with an `observed` special value per column that has one).
+
+**What is inferred, and what is not.** Types come from the cells: `integer`, `numeric`, `date` (ISO dates only), `binary` (two values), `category`, `string`. Values with leading zeros, a decimal comma, dates without a stated day/month order, or numbers mixed with other tokens stay text and are listed as suspicious, never converted; no token is put in `na_values`. A non-numeric column with one value per row gets role `identifier`. The target, the groups and the availability of every variable are never inferred: availability is `unknown` (a study decision), the target's and the outcome clock's `not_available`.
+
+**Statuses and sources.** Each answer records how the user knows it: `known` gives `documented_fact`, `assumed` (the default) `scenario_assumption`, `unknown` `unknown`. Every source quotes the user's words (`Preparation answer in the user's words (DATE): «…»`), plus `proposed from …` when the answer adopts the agent's proposal from a brief page, the context or the column names: a brief or a context is never a fact by itself.
+
+**What the answers become.** `target` and `task` (two values: binary, the other value as `negative_label`; a numeric column with more values: regression, with its unit; anything else is refused); `structure.row_unit`; `duplicates: {policy: group}` when rows repeat; `structure.time_column` (an integer prediction clock) with role `time`; `structure.group_column` with role `group_id`; the facts `observation_unit`, `target`, `prediction_time`, `intended_use`; two `prior_exposure` statements (the structural profile of every row before sealing, `observed`; what the user had already explored); and the `analysis_contract`:
+
+- `intended_use` `future_prediction` only for a future use whose two clocks are `known`; otherwise `retrospective_comparison`;
+- `timing` from the clocks (numeric columns only; a date is refused with the way forward);
+- `dependencies` `grouped` or `grouped_temporal` for recurring entities, `temporal` with a prediction clock, `independent` when entities do not recur and the use is stated, else `unknown`;
+- `permitted_claims` `retrospective_association`, plus `future_predictive_performance` only for a future prediction with known dependencies, when the user had not analysed the file with its target.
+
+The final test is then deduced from these facts ([ADR 0006](../decisions/0006-final-test-partition.md), amendment of 2026-11-01), never declared by a key of the case.
 
 ## Translations (`case.l10n.yaml`, owner session 2026-10-26, L3)
 
