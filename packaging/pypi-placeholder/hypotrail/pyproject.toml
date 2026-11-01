@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hypotrail"
+version = "0.0.0"
+description = "Name reserved for Hypotrail (agent-assisted ML studies). Not usable yet: install from GitHub."
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [{ name = "Hypotrail" }]
+
+[project.urls]
+Homepage = "https://github.com/hypotrail/hypotrail"
+
+[tool.hatch.build.targets.wheel]
+bypass-selection = true
