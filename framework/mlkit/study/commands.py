@@ -2297,11 +2297,18 @@ def _copy_agent_templates(study_dir: Path, task: str = st.DEFAULT_TASK) -> dict:
 
 
 def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
-         reliability_profile: str | None = None, automation: str | None = None) -> Outcome:
+         reliability_profile: str | None = None, automation: str | None = None, *,
+         data_link: bool = True, deduction: Mapping | None = None) -> Outcome:
     """Create a study on a case (revision 1). Never overwrites an existing study.
     ``language`` is the study language (ADR 0005, ``init --lang``). ``automation`` (L9, R20;
     ``init --automation``) is the automatic mode chosen at launch, ``until_final_test`` or
-    ``full_demo``; None (the default) creates a study without one, as before."""
+    ``full_demo``; None (the default) creates a study without one, as before.
+
+    Onboarding (``hypotrail seal``, ADR 0006 amendment of 2026-11-01): ``data_link`` False
+    creates no ``data`` link to the case's data (the data stay outside the chat workspace),
+    and ``deduction`` (:func:`partition.deduce`, with its guard checks) is recorded in the
+    review-v1 partition record as ``analysis_protocol.deduction``. Every other caller keeps
+    the defaults, so nothing changes for them."""
     guard.assert_writable()
     if automation is not None and automation not in st.AUTOMATION_MODES:
         raise StudyError('invalid_arguments',
@@ -2344,6 +2351,12 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
     counts = strata_counts(case, frame, assigned)
     if counts is not None:
         assigned['record']['strata_counts'] = counts
+    if deduction is not None:
+        protocol = assigned['record'].get('analysis_protocol')
+        if not isinstance(protocol, dict):
+            raise StudyError('integrity_error', 'A deduced final test needs the review-v1 '
+                                                'partition planner.')
+        protocol['deduction'] = dict(deduction)
     del frame
     try:
         development = dt.load_dataset(case, rows=assigned['development'])
@@ -2395,7 +2408,7 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
     notices = [n for n in (launch.install_settings(study_dir),) if n is not None]
     notices.extend(assurance.initial_notices(case, language))
     launch.install_gitignore(study_dir)
-    launch.install_readme(study_dir, case, language)
+    launch.install_readme(study_dir, case, language, data_link=data_link)
     ignored = sorted(n for n in IGNORED_CASE_SOURCES if (case.root / n).exists())
     snapshot = read.open(study_dir).state
     return Outcome({'schema': SCHEMAS['init'], 'ok': True, 'study': str(study_dir),

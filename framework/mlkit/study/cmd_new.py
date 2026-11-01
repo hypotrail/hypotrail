@@ -16,8 +16,9 @@ Onboarding spec (docs/plans/ONBOARDING-SPEC.md, Lot 1). In Python, what
 
 Nothing that exists is overwritten: an existing study folder is refused before any write.
 
-Lot 2 (agent S) adds ``--data FILE`` (a case prepared from a raw file): it reuses
-:func:`validate_name`, :func:`study_path`, :func:`finish_workspace` and :func:`create_study`.
+``--data FILE`` (Lot 2) starts from one raw data file instead: :func:`mlkit.study.cmd_prepare.start`
+makes the case folder ``NAME.case/`` and the study folder ``NAME/`` in a preparing state,
+sealed later by ``hypotrail seal``; the workspace steps 2 to 4 then apply to it as well.
 """
 from __future__ import annotations
 
@@ -221,14 +222,23 @@ def next_steps(payload: dict) -> list[str]:
 
 def configure(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('name', help='the study folder name (letters, digits, . _ -)')
-    parser.add_argument('--case', default=None, metavar='PATH',
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument('--case', default=None, metavar='PATH',
                         help='an existing case: case.yaml or its folder')
+    source.add_argument('--data', default=None, metavar='FILE',
+                        help='one data file (CSV, UTF-8): prepared with the six questions, '
+                             'then sealed (hypotrail seal)')
     parser.add_argument('--dir', default=None, metavar='PARENT',
                         help='where to create the study folder (default: the current folder)')
     parser.add_argument('--lang', choices=st.LANGUAGES, default=st.DEFAULT_LANGUAGE,
                         help='the study language')
     parser.add_argument('--brief', default=None, metavar='FILE',
-                        help="the product owner's brief (PDF), imported into the study")
+                        help="the product owner's brief (PDF; with --data also Word .docx, "
+                             'Markdown .md or .txt)')
+    parser.add_argument('--context', default=None,
+                        help='with --data: a short free-text context, instead of a brief')
+    parser.add_argument('--context-file', default=None, metavar='FILE',
+                        help='with --data: a UTF-8 file holding that context')
     parser.add_argument('--automation', choices=st.AUTOMATION_MODES, default=None,
                         help='the automatic mode, chosen at launch only')
     parser.add_argument('--open', action='store_true', dest='open_editor',
@@ -238,16 +248,43 @@ def configure(parser: argparse.ArgumentParser) -> None:
 def main(args: argparse.Namespace):
     if args.study:
         raise StudyError('invalid_arguments', 'new takes NAME and --dir, not --study.')
+    if args.data:
+        return start_from_data(args)
+    if args.context or args.context_file:
+        raise StudyError('invalid_arguments', '--context goes with --data.')
     if not args.case:
-        raise StudyError('invalid_arguments', '--case PATH is required (an existing case: '
-                         'case.yaml or its folder).')
+        raise StudyError('invalid_arguments', '--case PATH or --data FILE is required.')
     return create_study(args.name, case=args.case, parent=args.dir, language=args.lang,
                         brief=args.brief, automation=args.automation,
                         open_editor=args.open_editor)
 
 
+def start_from_data(args: argparse.Namespace):
+    """``new NAME --data FILE``: the preparing study (Lot 2), then the workspace steps."""
+    from . import cmd_prepare
+    if args.automation:
+        raise StudyError('invalid_arguments', '--automation is not available with --data yet: '
+                         'a prepared study is sealed by hypotrail seal, without automatic mode.')
+    study = study_path(args.name, args.dir)
+    study.parent.mkdir(parents=True, exist_ok=True)
+    out = cmd_prepare.start(str(study), args.data, brief=args.brief, context=args.context,
+                            context_file=args.context_file, language=args.lang)
+    if out.exit_code != 0:
+        return out
+    out.payload.update(finish_workspace(study, open_editor=args.open_editor))
+    return out
+
+
 def text(payload: dict) -> str:
     fr = payload.get('language') == 'fr'
+    if str(payload.get('schema', '')).startswith('hypotrail.prepare'):
+        lines = [(f'Étude en préparation : {payload["study"]} (cas : {payload.get("case")})' if fr
+                  else f'Study being prepared: {payload["study"]} (case: {payload.get("case")})'),
+                 ("Dans le chat : « Prépare l'étude », puis hypotrail seal" if fr else
+                  'In the chat: "Prepare the study", then hypotrail seal')]
+        if (payload.get('settings') or {}).get('notice'):
+            lines.append('note: ' + payload['settings']['notice'])
+        return '\n'.join(lines)
     lines = [(f'Étude prête : {payload["study"]} (révision {payload["revision"]})' if fr else
               f'Study ready: {payload["study"]} (revision {payload["revision"]})')]
     if payload.get('automation'):

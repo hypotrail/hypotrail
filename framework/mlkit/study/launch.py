@@ -189,14 +189,15 @@ def without_data_link():
         _DATA_LINK.pop()
 
 
-def install_readme(study_dir, case, language: str = 'en') -> bool:
+def install_readme(study_dir, case, language: str = 'en', *, data_link: bool = True) -> bool:
     """R69: ``README.md`` and the ``data`` link (relative, to the case's data folder), each
     only if absent; the README alone where links cannot be made, or inside
-    :func:`without_data_link`. True when the link exists."""
+    :func:`without_data_link`, or with ``data_link`` False (a study sealed by ``hypotrail seal``).
+    True when the link exists."""
     study = Path(study_dir).resolve()
     target = case.dataset_path.resolve().parent
     link = study / DATA_LINK
-    if _DATA_LINK[-1] and not os.path.lexists(link):
+    if data_link and _DATA_LINK[-1] and not os.path.lexists(link):
         try:
             os.symlink(os.path.relpath(target, study), link, target_is_directory=True)
         except (OSError, NotImplementedError):

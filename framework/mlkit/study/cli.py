@@ -105,6 +105,11 @@ EXTENSIONS = {
     'setup': 'mlkit.study.cmd_setup',
     'doctor': 'mlkit.study.cmd_doctor',
     'hook': 'mlkit.study.cmd_hook',
+    # Onboarding Lots 2 and 3 (ONBOARDING-SPEC, 2026-11-01): from one data file to a sealed
+    # study (``new --data``, the six questions, the feasibility check, the seal).
+    'case': 'mlkit.study.cmd_case',
+    'prepare': 'mlkit.study.cmd_prepare',
+    'seal': 'mlkit.study.cmd_seal',
 }
 # One line per extension command for ``hypotrail --help`` (v0.2a, WP-A1): the help lists
 # every command without importing the extension modules.
@@ -122,10 +127,13 @@ EXTENSION_HELP = {
     'understanding': 'opt-in understanding and handover review (off by default; ADR 0008)',
     'automation': 'run the automatic mode chosen at init, or stop it in the junior\'s words',
     'brief': "import the product owner's PDF, or record the study's brief in the junior's words",
-    'new': 'create a study folder on a case, ready for VS Code (panel settings, agent hook)',
+    'new': 'start a study: from one data file (--data, prepared then sealed) or a case (--case)',
     'setup': 'install the study panel into VS Code (setup vscode; no Node needed)',
     'doctor': 'check this machine for a study (Python, uv, VS Code, panel, proxy); writes nothing',
     'hook': "the chat agent's PreToolUse hook (hook pretool; JSON on stdin)",
+    'case': 'before sealing: the structural profile, or the feasibility of the final test',
+    'prepare': "before sealing: the six questions, answered in the user's words",
+    'seal': 'write the case, set the deduced final test aside, and create the study',
 }
 # Onboarding (agent P): readable text of the install and start commands.
 TEXT_MODULES = {'hypotrail.new/1': 'mlkit.study.cmd_new',
@@ -551,7 +559,7 @@ def _run(argv: list) -> cmd.Outcome:
     # A command with a verb is named with it (`decide confirm`, `export handoff`), as its
     # own payloads name it (WP-I).
     command = ' '.join(argv[:2]) if name in ('decide', 'export', 'mode', 'understanding',
-                                             'automation', 'brief') \
+                                             'automation', 'brief', 'case', 'prepare') \
         else name
     try:
         extension = name if name in EXTENSIONS else None
