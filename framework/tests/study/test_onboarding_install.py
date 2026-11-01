@@ -350,3 +350,24 @@ def test_absent_dependency_lock_is_recorded_not_silent(monkeypatch, tmp_path):
     assert 'engine:dependency_lock' not in keys
     assert {'logical_key': 'engine:dependency_lock', 'role': 'dependency_lock'} in \
         out['local']['unreadable_sources']
+
+
+def test_the_vendored_runtime_reports_its_version_and_closure(monkeypatch):
+    """Lot 0: with the runtime vendored (no `hypotrail-runtime` metadata), the engine still
+    finds its version and the predictor's dependency closure still holds its requirements."""
+    import importlib.metadata as md
+    import hypotrail_runtime
+    from hypotrail_runtime import predictor
+    from mlkit.contracts import context
+    real = md.distribution
+
+    def no_runtime(name):
+        if name.lower().replace('_', '-') == 'hypotrail-runtime':
+            raise md.PackageNotFoundError(name)
+        return real(name)
+    monkeypatch.setattr(md, 'distribution', no_runtime)
+    monkeypatch.setattr(context, 'version', lambda n: no_runtime(n).version)
+    assert context.installed_version('hypotrail-runtime') == hypotrail_runtime.__version__
+    closure = predictor.runtime_closure()
+    assert closure['hypotrail-runtime'] == hypotrail_runtime.__version__
+    assert {'numpy', 'pandas', 'scikit-learn', 'pydantic'} <= set(closure)

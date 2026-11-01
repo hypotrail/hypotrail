@@ -14,6 +14,7 @@ an incomplete environment never inherits a known proof.
 """
 from __future__ import annotations
 
+import importlib
 from importlib.metadata import PackageNotFoundError, version
 from typing import Callable, Iterable, Mapping
 
@@ -35,10 +36,22 @@ METHOD_DEPENDENCIES: dict[str, tuple[str, ...]] = {
 IDENTITY_EXCLUDED = ('activity_id', 'environment_lock_sha256')
 
 
+# Distributions the ``hypotrail`` wheel vendors (Onboarding Lot 0): installed without their
+# own metadata, their version is the vendored module's.
+VENDORED = {'hypotrail-runtime': 'hypotrail_runtime'}
+
+
 def installed_version(name: str) -> str | None:
     try:
         return version(name)
     except PackageNotFoundError:
+        pass
+    module = VENDORED.get(name)
+    if module is None:
+        return None
+    try:
+        return importlib.import_module(module).__version__
+    except ImportError:
         return None
 
 

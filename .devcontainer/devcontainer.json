@@ -4,17 +4,15 @@
 // Lifecycle:
 // - updateContentCommand runs .devcontainer/post-create.sh: installs uv, syncs the engine
 //   environment (framework/.venv, groups dev and azureml) and packages the study panel as a
-//   VSIX. It runs during a prebuild too, so a prebuilt codespace starts ready.
+//   VSIX (hypotrail setup vscode --vsix-out, pure Python). It runs during a prebuild too,
+//   so a prebuilt codespace starts ready.
 // - postAttachCommand installs that VSIX into the codespace's VS Code server once a client
-//   is attached (the server does not exist during a prebuild). scripts/workshop/new-mpg-study.sh
-//   checks it again from the integrated terminal.
+//   is attached (the server does not exist during a prebuild). `hypotrail new` (through
+//   scripts/workshop/new-mpg-study.sh) checks it again from the integrated terminal.
 {
   "name": "Hypotrail workshop (Auto MPG)",
   "image": "mcr.microsoft.com/devcontainers/python:1-3.13-bookworm",
-  "features": {
-    // Node runs @vscode/vsce (pinned in scripts/workshop/install-panel.sh) to package the panel.
-    "ghcr.io/devcontainers/features/node:1": { "version": "22" }
-  },
+  // No Node: the panel's VSIX is built in pure Python (hypotrail setup vscode).
   "hostRequirements": {
     // The Auto MPG fits (398 rows, cross-validation, EBM) are light; 4 cores keep the
     // Explainable Boosting Machine and the Marimo kernels responsive.
