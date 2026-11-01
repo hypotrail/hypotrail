@@ -13,14 +13,18 @@ and a file open in another process cannot be removed or replaced. Only CI on
 from __future__ import annotations
 
 import errno
-import fcntl
 import os
 import struct
 import sys
 import types
 
 LK_UNLCK, LK_LCK, LK_NBLCK, LK_RLCK, LK_NBRLCK = 0, 1, 2, 3, 4
-SUPPORTED = sys.platform.startswith('linux') and hasattr(fcntl, 'F_OFD_SETLK')
+try:   # Linux only: on Windows the real msvcrt is used and this module is never installed.
+    import fcntl
+except ImportError:   # pragma: no cover - Windows
+    fcntl = None
+SUPPORTED = (fcntl is not None and sys.platform.startswith('linux')
+             and hasattr(fcntl, 'F_OFD_SETLK'))
 
 
 def locking(fd: int, mode: int, nbytes: int) -> None:
