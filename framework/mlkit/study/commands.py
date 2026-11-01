@@ -2306,7 +2306,7 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
     if automation is not None and automation not in st.AUTOMATION_MODES:
         raise StudyError('invalid_arguments',
                          f'automation is one of {", ".join(st.AUTOMATION_MODES)}.')
-    lock.require_posix()
+    lock.require_locking()
     study_dir = Path(study_dir).resolve()
     store = StudyStore(study_dir)
     if store.exists():

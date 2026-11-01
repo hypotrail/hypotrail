@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from . import config, task_contract as tc
 from .classical import dataset, split, write
+from .study import platform_compat
 
 
 def signature(root, spec):
@@ -63,7 +64,7 @@ def report(root):
     # Positions du CSV dev, never values raw : trace d'exposition descriptive.
     # Migration cannot reconstruct prior data access.
     ledger = root / '.pilot' / 'exposures.json'
-    history = json.loads(ledger.read_text()) if ledger.exists() else []
+    history = json.loads(ledger.read_text(encoding='utf-8')) if ledger.exists() else []
     data_hash = hashlib.sha256(tc.data_path(root, spec).read_bytes()).hexdigest()
     exposed = set()
     for entry in history:
@@ -76,7 +77,8 @@ def report(root):
                         'train_positions': list(map(int, train_ids)), 'kind': 'descriptive_train'})
         ledger.parent.mkdir(parents=True, exist_ok=True)
         temporary = ledger.with_suffix('.json.tmp')
-        temporary.write_text(json.dumps(history)); os.replace(temporary, ledger)
+        temporary.write_text(json.dumps(history), encoding='utf-8')
+        platform_compat.replace(temporary, ledger)
     target = d['target_col']
     structure = {}
     group = d['group_col'] or d['query_col']

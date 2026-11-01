@@ -9,17 +9,19 @@
                      --restatement TEXT --rationale TEXT [--lang en|fr]
                      [--restatement-en TEXT] [--restatement-fr TEXT]
                      --request-id ID --expected-revision REV --study DIR
-    hypotrail decide confirm (PROPOSAL | --proposal PROPOSAL) [--user-words TEXT]
+    hypotrail decide confirm (PROPOSAL | --proposal PROPOSAL)
+                     [--user-words TEXT | --user-words-file PATH]
                      [--channel chat|cli|webview|choice] [--adoption-question] [--actor NAME]
                      [--basis explicit|delegated_default|automatic]
                      [--delegation-scope this_decision|standing] [--agent-concern TEXT]
                      --request-id ID --expected-revision REV --study DIR
     hypotrail decide withdraw PROPOSAL [--reason TEXT]
                      --request-id ID --expected-revision REV --study DIR
-    hypotrail decide note (--about DECISION | --resolve NOTE_ID | --withdraw NOTE_ID) --text TEXT
+    hypotrail decide note (--about DECISION | --resolve NOTE_ID | --withdraw NOTE_ID)
+                     (--text TEXT | --user-words-file PATH)
                      [--kind hold|correction]
                      --request-id ID --expected-revision REV --study DIR
-    hypotrail mode set guided|training|express [--user-words TEXT]
+    hypotrail mode set guided|training|express [--user-words TEXT | --user-words-file PATH]
                      --request-id ID --expected-revision REV --study DIR      (ADR 0005)
 
 Post-v0.1, read-only, for observed sessions (``cmd_session_report``, ``sessionlog``)::
@@ -43,6 +45,11 @@ human summary. One exception (owner session 2026-10-27, R23): ``automation run``
 ``--format`` or ``--json`` prints its readable summary when stdout is a terminal, and the JSON
 document otherwise (a pipe, a file, an agent's tool). ``--study`` is mandatory: the study is never taken from the current
 directory or from ``OSML_ROOT``.
+
+Every ``--user-words`` (and ``decide note --text``) has a ``--user-words-file PATH``
+twin (``-`` reads stdin), read as UTF-8 (:mod:`mlkit.study.user_words`): free text
+never has to survive a shell's quoting (PowerShell, ``cmd.exe``). stdout and stderr are
+UTF-8 whatever the console or locale encoding (Windows pipes default to a code page).
 
 Exit codes: 0 success or replay; 1 internal error; 2 refusal without effect; 3 the
 command committed but an artefact is stale or failed; 4 an execution has an unknown
@@ -68,6 +75,7 @@ from mlkit.reliability import CommandRefused
 
 from . import commands as cmd
 from . import state as st
+from . import user_words
 from .case import CaseError
 from .errors import StudyError
 
@@ -214,9 +222,8 @@ def build_parser(extension: str | None = None, *, listing: bool = False
     p.add_argument('proposal_id', nargs='?', default=None)
     p.add_argument('--proposal', default=None, dest='proposal_flag', metavar='PROPOSAL',
                    help='the open proposal the words answer (same as the positional PROPOSAL)')
-    p.add_argument('--user-words', default=None,
-                   help="the user's verbatim reply to the restatement (required, except with "
-                        '--basis automatic, which records no words)')
+    user_words.add(p, help="the user's verbatim reply to the restatement (required, except "
+                           'with --basis automatic, which records no words)')
     p.add_argument('--channel', choices=st.CONFIRMATION_CHANNELS, default=cmd.DEFAULT_CHANNEL,
                    help='chat (the default), cli, webview, or choice: the junior picked the '
                         'adoption option of an interactive choice; --user-words is the option '
@@ -253,7 +260,7 @@ def build_parser(extension: str | None = None, *, listing: bool = False
     target.add_argument('--withdraw', default=None, metavar='NOTE_ID',
                         help="withdraw an open hold that no longer applies, with the junior's "
                              'own words')
-    p.add_argument('--text', '--user-words', required=True, dest='text',
+    user_words.add(p, '--text', '--user-words', dest='text', required=True,
                    help="the junior's words, verbatim (the condition, or what resolves it)")
     p.add_argument('--kind', choices=st.NOTE_KINDS, default=None,
                    help='with --about: hold (the default) blocks the decision until resolved; '
@@ -265,9 +272,8 @@ def build_parser(extension: str | None = None, *, listing: bool = False
     mverbs = mode.add_subparsers(dest='verb', required=True, parser_class=Parser)
     p = mverbs.add_parser('set', parents=[common])
     p.add_argument('mode', help='guided, training, or express')
-    p.add_argument('--user-words', dest='user_words', default=None,
-                   help="the user's verbatim words asking for this mode (needed unless the "
-                        "change makes confirmations stricter)")
+    user_words.add(p, help="the user's verbatim words asking for this mode (needed unless "
+                           'the change makes confirmations stricter)')
     _mutation(p)
 
     if extension is not None:
@@ -539,6 +545,10 @@ def _run(argv: list) -> cmd.Outcome:
                              f'Command {extension!r} is not available in this version.',
                              details={'command': extension})
         args = build_parser(extension).parse_args(argv)
+        try:
+            user_words.resolve(args)
+        except user_words.WordsFileError as exc:
+            raise ArgumentError(str(exc)) from None
         return dispatch(args)
     except (*REFUSALS, ArgumentError) as exc:
         return cmd.refused(command or 'hypotrail', exc)
@@ -546,7 +556,25 @@ def _run(argv: list) -> cmd.Outcome:
         return cmd.Outcome(cmd.error_payload(command or 'hypotrail', exc), cmd.EXIT_INTERNAL)
 
 
+def utf8_streams() -> None:
+    """Write stdout and stderr as UTF-8 whatever the locale (Lot 4, Windows native).
+
+    The JSON document is written with ``ensure_ascii=False``: on Windows a pipe would
+    otherwise use the ANSI code page (cp1252), and the panel, which reads UTF-8, would show
+    mojibake or the write would fail on a character outside the code page.
+    """
+    for stream, errors in ((sys.stdout, None), (sys.stderr, 'backslashreplace')):
+        reconfigure = getattr(stream, 'reconfigure', None)
+        if reconfigure is None:
+            continue                     # replaced by a test or a host: leave it alone
+        try:
+            reconfigure(encoding='utf-8', errors=errors or stream.errors or 'strict')
+        except (ValueError, OSError):
+            pass
+
+
 def main(argv: Sequence[str] | None = None) -> int:
+    utf8_streams()
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv in (['-h'], ['--help']) or not argv:
         build_parser(listing=True).print_help()

@@ -300,9 +300,10 @@ def test_recovery_after_crash_before_commit_restores_files(store):
 
 
 CLIENT = textwrap.dedent('''
-    import contextlib, fcntl, json, os, sys, time
+    import contextlib, json, os, sys, time
     sys.path.insert(0, sys.argv[1])
     from mlkit import reliability as r
+    from mlkit.study import platform_compat
     from test_apply import DirStore, handlers
     store = DirStore(sys.argv[2])
     expected = int(sys.argv[4])
@@ -311,8 +312,8 @@ CLIENT = textwrap.dedent('''
         time.sleep(0.005)
     request = {'request_id': sys.argv[3], 'expected_revision': expected, 'action': 'set',
                'params': {'name': 'decision', 'value': 'confirmed by ' + sys.argv[3]}}
-    fd = os.open(os.path.join(sys.argv[2], 'writer.lock'), os.O_CREAT | os.O_RDWR, 0o600)
-    fcntl.flock(fd, fcntl.LOCK_EX)
+    fd = platform_compat.open_lock_file(os.path.join(sys.argv[2], 'writer.lock'))
+    platform_compat.lock(fd)
     try:
         state = store.load()          # reread under the lock
         try:

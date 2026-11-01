@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil, subprocess, sys, time
 import yaml
 from . import config
+from .study import platform_compat
 
 # PHASES values are persisted compatibility identifiers (in .pilot state, gate.py, and
 # question phases): keep their historical spelling; translate only displayed labels.
@@ -31,11 +32,11 @@ def home(): return config.ROOT/'.pilot'
 def digest(path): return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 def write(path, obj):
  path=Path(path); path.parent.mkdir(parents=True,exist_ok=True)
- tmp=path.with_suffix(path.suffix+'.tmp');tmp.write_text(json.dumps(obj,ensure_ascii=False,indent=2),encoding='utf-8');os.replace(tmp,path)
+ tmp=path.with_suffix(path.suffix+'.tmp');tmp.write_text(json.dumps(obj,ensure_ascii=False,indent=2),encoding='utf-8');platform_compat.replace(tmp,path)
 def load():
  p=home()/'state.json'
  if not p.exists(): raise ValueError('Start with python -m mlkit.pilot init --mode junior|senior|auto')
- return json.loads(p.read_text())
+ return json.loads(p.read_text(encoding='utf-8'))
 def save(s):
  s['revision']=s.get('revision',0)+1
  s['updated']=now();write(home()/'state.json',s)
@@ -43,16 +44,15 @@ def event(kind,**fields):
  with (home()/'events.jsonl').open('a',encoding='utf-8') as f:f.write(json.dumps({'time':now(),'kind':kind,**fields},ensure_ascii=False)+'\n')
 @contextlib.contextmanager
 def lock():
- # POSIX file lock: released by the OS even if a process exits unexpectedly.
- import fcntl
+ # File lock (flock, or msvcrt on Windows): released by the OS even if a process exits.
  home().mkdir(exist_ok=True)
- fd=os.open(home()/'writer.lock',os.O_CREAT|os.O_RDWR,0o600)
+ fd=platform_compat.open_lock_file(home()/'writer.lock')
  try:
-  try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
-  except BlockingIOError:raise ValueError('Pilot already active; wait for the process to finish')
-  os.ftruncate(fd,0);os.write(fd,str(os.getpid()).encode());yield
+  if not platform_compat.try_lock(fd):raise ValueError('Pilot already active; wait for the process to finish')
+  try:os.ftruncate(fd,0);os.write(fd,str(os.getpid()).encode());yield
+  finally:platform_compat.unlock(fd)
  finally:
-  fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)
+  os.close(fd)
 def questions():
  if (config.ROOT/'project.yaml').exists():
   from . import task_contract
@@ -90,7 +90,7 @@ def propose(s,qid,value,rationale,status='assumed',evidence=None):
  if status=='confirmed':
   path=config.ROOT/'answers.yaml';answers=optional_answers()
   answers[qid]={'answer':value,'by':'HUMAN','source':'explicit confirmation transcribed by the pilot; identity not authenticated'}
-  temp=path.with_suffix('.yaml.tmp');temp.write_text(yaml.safe_dump(answers,allow_unicode=True,sort_keys=False));os.replace(temp,path)
+  temp=path.with_suffix('.yaml.tmp');temp.write_text(yaml.safe_dump(answers,allow_unicode=True,sort_keys=False),encoding='utf-8');platform_compat.replace(temp,path)
  event('answer',question=qid,status=status,value=value,rationale=rationale);save(s)
 
 def snapshot(s,suffix=""):
@@ -110,7 +110,7 @@ def snapshot(s,suffix=""):
 
 def revise(s,changes_path,expected):
  if expected!=context_hash() or expected!=s.get('context'):raise ValueError('Decision is stale: context changed; present the choice again')
- change=json.loads(Path(changes_path).read_text())
+ change=json.loads(Path(changes_path).read_text(encoding='utf-8'))
  if set(change)!={'question','answer','rationale','updates'}:raise ValueError('Revision schema requires question, answer, rationale, and updates')
  if change['question'] not in {q['id'] for q in questions()}:raise ValueError('Question unknown')
  if not all(isinstance(change[x],str) and change[x].strip() for x in ['answer','rationale']):raise ValueError('Answer and rationale required')
@@ -132,7 +132,7 @@ def revise(s,changes_path,expected):
   from .task_contract import validate
   validate(frame)
  snapshot(s)
- path=contract_path();temp=path.with_suffix('.yaml.tmp');temp.write_text(yaml.safe_dump(frame,allow_unicode=True,sort_keys=False));os.replace(temp,path)
+ path=contract_path();temp=path.with_suffix('.yaml.tmp');temp.write_text(yaml.safe_dump(frame,allow_unicode=True,sort_keys=False),encoding='utf-8');platform_compat.replace(temp,path)
  # Without a dependency graph, conservatively reconfirm other decisions after a contract change.
  previous=s['steps'];s['steps']={};s['context']=context_hash();s['revision_pending']=True
  for task in s['tasks']:
@@ -185,10 +185,10 @@ def receive(s,task_id):
   raise ValueError('Task is stale: redispatch with current context')
  bundle=home()/'tasks'/task_id
  if digest(bundle/'request.json')!=task['request_hash']:raise ValueError('Request changed')
- req=json.loads((bundle/'request.json').read_text())
+ req=json.loads((bundle/'request.json').read_text(encoding='utf-8'))
  for rel,h in req['input_hashes'].items():
   if digest(bundle/'input'/rel)!=h:raise ValueError('Input changed by the delegate')
- path=bundle/'output/result.json';obj=json.loads(path.read_text())
+ path=bundle/'output/result.json';obj=json.loads(path.read_text(encoding='utf-8'))
  if set(obj)!={'summary','findings','recommendation','tradeoffs','artifacts'}:raise ValueError('Incomplete result schema or unknown fields')
  if not all(isinstance(obj[k],str) and obj[k].strip() for k in ['summary','recommendation']):raise ValueError('Summary and recommendation required')
  for f in obj['findings']:
@@ -241,8 +241,8 @@ def remaining(s):
   if 'quality' in s['steps']:
    try:
     fresh=quality.plan(config.ROOT,config.ROOT/s['test_ticket'],s.get('test_phase','pr'),s.get('test_changed',[]))
-    pointer=json.loads((config.ROOT/'.quality/latest.json').read_text())
-    prior=json.loads((config.ROOT/pointer['report']).read_text())
+    pointer=json.loads((config.ROOT/'.quality/latest.json').read_text(encoding='utf-8'))
+    prior=json.loads((config.ROOT/pointer['report']).read_text(encoding='utf-8'))
     if fresh['context']!=prior['context']:s['steps'].pop('quality')
    except (ValueError,OSError,KeyError):s['steps'].pop('quality',None)
   cmd=['quality','run','--ticket',s['test_ticket'],'--phase',s.get('test_phase','pr'),'--budget',str(max(1,min(480,int(s['max_seconds']-s['seconds_used']))))]
@@ -311,7 +311,7 @@ def step(s):
  if execution['status']=='stale':
   s['seconds_used']+=elapsed;sync_context(s);save(s)
   return STALE_RESULT
- (home()/'logs').mkdir(exist_ok=True);log=home()/'logs'/f'{key}.txt';log.write_text(output)
+ (home()/'logs').mkdir(exist_ok=True);log=home()/'logs'/f'{key}.txt';log.write_text(output, encoding='utf-8')
  s['steps'][key]={'command':argv,'returncode':code,'seconds':elapsed,'log':str(log.relative_to(config.ROOT)),'time':now(),'execution_id':execution['id'],'context':execution['context'],'provenance':execution['provenance']}
  s['seconds_used']+=elapsed
  if key not in {'render','notebooks'}:s['phase']='donnees' if key in {'discovery','classical-profile','profile','checks','preflight'} else 'evaluation' if key in {'evaluate','residuals'} else 'modelisation'
@@ -338,8 +338,8 @@ def render(s):
   from . import quality
   try:
    fresh=quality.plan(config.ROOT,config.ROOT/s['test_ticket'],s.get('test_phase','pr'),s.get('test_changed',[]))
-   latest=json.loads((config.ROOT/'.quality/latest.json').read_text())
-   old=json.loads((config.ROOT/latest['report']).read_text())
+   latest=json.loads((config.ROOT/'.quality/latest.json').read_text(encoding='utf-8'))
+   old=json.loads((config.ROOT/latest['report']).read_text(encoding='utf-8'))
    test_status=old.get('outcome','PLAN_NOT_EXECUTED') if fresh['context']==old['context'] else 'STALE: rerun tests after a change.'
    test_link='<a href="../'+e(str(Path(latest['report']).with_name('index.html')))+'">Open the test summary</a>'
   except (ValueError,OSError,KeyError):test_status='Test summary unavailable: plan or rerun checks.'
@@ -391,7 +391,7 @@ def main(argv=None):
    reliability.recover(sys.modules[__name__],s)
    sync_context(s)
    result=None
-   if args.action=='apply':result=reliability.apply(sys.modules[__name__],s,json.loads(Path(args.request).read_text()))
+   if args.action=='apply':result=reliability.apply(sys.modules[__name__],s,json.loads(Path(args.request).read_text(encoding='utf-8')))
    elif args.action=='acknowledge-interruption':
     interrupted=s.get('interrupted_execution')
     if not interrupted or interrupted['id']!=args.execution:raise ValueError('Interrupted execution with unknown outcome')

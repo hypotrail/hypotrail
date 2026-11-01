@@ -194,7 +194,19 @@ Remaining defects and small gaps:
 - The Overview concept card at a step's first appearance is not built (CI.16).
 - `delegation_scope` is not shown in the HTML or the notebook; `status --json` is large (agents use `--summary`); deliverables show execution liveness as `not_checked`.
 
-Platform: POSIX only (`fcntl`); editable install only; absolute paths recorded at `init` (moving a study or the checkout needs a new study); Marimo internal codegen pinned to `marimo==0.25.1` (rerun the spike after any upgrade, [ADR 0001](../decisions/0001-notebook-and-html.md); running the generated notebook refits one model); float time columns are still misread by the legacy `classical.split`.
+Platform: Linux, macOS and native Windows (see [Platform support](#platform-support)); editable install only; absolute paths recorded at `init` (moving a study or the checkout needs a new study); Marimo internal codegen pinned to `marimo==0.25.1` (rerun the spike after any upgrade, [ADR 0001](../decisions/0001-notebook-and-html.md); running the generated notebook refits one model); float time columns are still misread by the legacy `classical.split`.
+
+## Platform support
+
+Onboarding Lot 4 (1 November 2026, [ONBOARDING-SPEC](../plans/ONBOARDING-SPEC.md) §3) lifted the POSIX-only refusal; `init` and the store now run on native Windows. What changed, all in `framework/mlkit/study/platform_compat.py` (standard library only):
+
+- **Locks.** The writer lock and the execution leases use `fcntl.flock` on Linux and macOS and `msvcrt.locking` on Windows, on one byte at offset 2^30, beyond the content: Windows locks are mandatory on their range, and the holder and lease records must stay readable. Windows has no shared lock, so the read-only lease probe takes the byte for an instant (two concurrent probes may each report the lease as held, the conservative answer). A Windows lease is released by emptying it, unlocking, closing, then removing it, since an open file cannot be removed; an empty lease reads as starting, hence held. Only a platform with neither primitive is refused (`platform_unsupported`). The legacy pilot, `classical`, and the MAPIE calibration ledger use the same helpers.
+- **Atomic writes.** Every atomic replace of the engine (`store.atomic_write`, the notebook render, the legacy pilot and ledgers) goes through `platform_compat.replace`, which retries `os.replace` on `PermissionError` on Windows (a reader without delete sharing: the panel, Marimo, an antivirus), ten attempts with growing delays, about five seconds, then raises. Lease removal retries the same way. `hypotrail_runtime` (a separate wheel) still calls `os.replace` for its bundle folders.
+- **Text.** The CLI writes stdout and stderr as UTF-8 whatever the locale (a Windows pipe would otherwise use cp1252), and the engine opens text files with `encoding='utf-8'`.
+- **Free text.** Every `--user-words` (and `decide note --text`) has a `--user-words-file PATH` twin (`-` for stdin), read as UTF-8 (a byte-order mark is dropped; one trailing newline is removed; anything else is kept). A file that is not UTF-8 is refused with `invalid_arguments`.
+- **Paths and commands.** `platform_compat.venv_python`, `venv_executable` (`Scripts\python.exe`, `hypotrail.exe` on Windows) and `display_command` (`list2cmdline` on Windows, `shlex.join` elsewhere) are the helpers for the interpreter and command display of `launch.py` and `agent_files.py` (packaging lot).
+
+Tested on Linux, where the Windows lock branch runs against an emulation of `msvcrt.locking` with per-handle byte-range locks (`framework/tests/study/test_windows_native.py`): two processes contending for the writer lock, busy refusal with a readable holder, held, released and orphaned leases, replace retries, `--user-words-file`, and UTF-8 output under a cp1252 locale. Only CI on `windows-latest` confirms the real `msvcrt` (mandatory locks, release when a process dies), real sharing violations against `os.replace` and lease removal, and console and pipe encodings; no manual VS Code and Copilot session on Windows has been run yet.
 
 ## Legacy and preservation
 

@@ -44,10 +44,10 @@ def create(destination):
  df,info=experiment();destination.mkdir(parents=True)
  (destination/'data/dev').mkdir(parents=True);df.to_csv(destination/'data/dev/dataset.csv',index=False)
  contract=tc.template('binary');s=contract['spec'];s['data'].update(target_col='incident',features=info['features']);s['task']['purpose']='Synthetic exercise: detect incidents before they occur';s['split']['test_size']=.3
- (destination/'project.yaml').write_text(yaml.safe_dump(contract,allow_unicode=True,sort_keys=False))
+ (destination/'project.yaml').write_text(yaml.safe_dump(contract,allow_unicode=True,sort_keys=False), encoding='utf-8')
  write(destination/'reports/tutorial-results.json',info)
  write(destination/'tutorial-manifest.json',{'purpose':'onboarding_only','seed':SEED,'no_real_decisions':True,'no_holdout':True})
- template=(Path(__file__).resolve().parents[1]/'templates/tutorial.html').read_text()
- (destination/'tutorial.html').write_text(template.replace('__TUTORIAL_DATA__',json.dumps(info,ensure_ascii=False).replace('<','\\u003c')))
+ template=(Path(__file__).resolve().parents[1]/'templates/tutorial.html').read_text(encoding='utf-8')
+ (destination/'tutorial.html').write_text(template.replace('__TUTORIAL_DATA__',json.dumps(info,ensure_ascii=False).replace('<','\\u003c')), encoding='utf-8')
  (destination/'notebooks').mkdir();shutil.copy2(Path(__file__).resolve().parents[1]/'notebooks/tutorial.py',destination/'notebooks/tutorial.py')
  return {'tutorial':str(destination/'tutorial.html'),'notebook':str(destination/'notebooks/tutorial.py'),'dataset':str(destination/'data/dev/dataset.csv'),'status':'SYNTHETIC_TUTORIAL_ONLY','next':'The pilot opens the workflow, asks one question at a time, and explains choices; tutorial answers ratify no real project.'}

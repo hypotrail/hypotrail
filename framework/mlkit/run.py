@@ -249,7 +249,7 @@ def main(argv=None) -> int:
             config.STOPS_DIR.mkdir(parents=True, exist_ok=True)
             stop = {"stop_id": f"STOP-{run_id}", "run_id": run_id, "triggers": triggers,
                     "thresholds_private": private, "time": record["time"]}
-            (config.STOPS_DIR / f"STOP-{run_id}.json").write_text(json.dumps(stop, ensure_ascii=False, indent=2))
+            (config.STOPS_DIR / f"STOP-{run_id}.json").write_text(json.dumps(stop, ensure_ascii=False, indent=2), encoding='utf-8')
             print("STOP TRIGGERED: " + " ; ".join(triggers) +
                   f"\nPrepare the report: python -m mlkit.handoff --run {run_id} --role stop-writer", file=sys.stderr)
             code = 3

@@ -47,7 +47,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
-from . import code_cells, currency, guard, manifest as mf, render_html, texts
+from . import code_cells, currency, guard, manifest as mf, platform_compat, render_html, texts
 from .templates import workbench as wb_template
 
 GENERATED = mf.ARTIFACTS['notebook']
@@ -372,7 +372,7 @@ def _write_generated(study: Path, data: bytes, record: Mapping | None) -> list[s
             # Re-check immediately before the replace: an autosave in between is kept.
             again = path.read_bytes() if path.exists() else None
             if again == current:
-                os.replace(temp, path)
+                platform_compat.replace(temp, path)   # retried on Windows sharing
                 return preserved
             known = {'edit_check_sha256': edit_check_sha256(current) if current else None,
                      'revision': known.get('revision')}

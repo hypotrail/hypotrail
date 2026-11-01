@@ -34,7 +34,7 @@ from mlkit.reliability import CommandRefused, Handler
 from . import case_brief as cb
 from . import commands as cmd
 from . import confirm as cf
-from . import read
+from . import read, user_words
 from . import state as st
 from .errors import StudyError
 from .store import atomic_write_json
@@ -77,8 +77,7 @@ def configure(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('--file', default=None,
                         help='with set: the draft (YAML), the fields of case-brief.yaml plus '
                              'citations and open_questions')
-    parser.add_argument('--user-words', default=None,
-                        help="with set: the junior's verbatim words adopting the brief")
+    user_words.add(parser, help="with set: the junior's verbatim words adopting the brief")
     parser.add_argument('--request-id', default=None,
                         help='optional; derived from the content and the revision when absent')
     parser.add_argument('--expected-revision', required=True, type=int,
