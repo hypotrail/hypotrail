@@ -1,6 +1,6 @@
 # ADR 0006: A final test sealed at `init`
 
-- Status: accepted and implemented in v0.2a (WP-A3); amended and implemented in v0.2b (WP-B1): the opening ritual and cross-validation (see the amendment below). Diagnostics (WP-B4): on out-of-fold predictions before the opening, on the final test after it (CLI-CONTRACT §13). The "one variant" of the WP-B1 amendment (decision 4) is replaced in v0.3 by up to three variants within a trial budget, nested tuning and model families ([ADR 0007](0007-trial-budget-and-model-families.md)). Amended on 2026-10-26 (lot L9, R20): the demonstration's automatic opening (last amendment).
+- Status: accepted and implemented in v0.2a (WP-A3); amended and implemented in v0.2b (WP-B1): the opening ritual and cross-validation (see the amendment below). Diagnostics (WP-B4): on out-of-fold predictions before the opening, on the final test after it (CLI-CONTRACT §13). The "one variant" of the WP-B1 amendment (decision 4) is replaced in v0.3 by up to three variants within a trial budget, nested tuning and model families ([ADR 0007](0007-trial-budget-and-model-families.md)). Amended on 2026-10-26 (lot L9, R20): the demonstration's automatic opening. Amended on 2026-11-01 (onboarding): a final test deduced from the case's facts, with guards (last amendment).
 - Date: 19 October 2026
 - Sources: [V0.2-REVIEW-SYNTHESIS.md](../plans/V0.2-REVIEW-SYNTHESIS.md) §3 and §4 (owner decision 6, "holdout assigned and sealed at `init`"), [V0.2-IMPLEMENTATION-PLAN.md](../plans/V0.2-IMPLEMENTATION-PLAN.md) WP-A3
 - Contracts: [CLI-CONTRACT.md](../specs/CLI-CONTRACT.md) §4.1, [CASE-CONTRACT.md](../specs/CASE-CONTRACT.md) §Order
@@ -169,3 +169,27 @@ Each fold's out-of-fold scores come from a model fitted without that fold. Under
 
 - A demonstration shows the whole path, final evidence included, at the price of a final test no junior chose to open; it is never defensible as a study of the junior's own and says so.
 - The guarantees of this ADR (assigned at `init`, one choke point, opened once, consumed even when interrupted) hold in both variants.
+
+## Amendment (onboarding, 1 November 2026): a final test deduced from the case's facts, with guards
+
+- Date: 1 November 2026
+- Sources: [ONBOARDING-SPEC.md](../plans/ONBOARDING-SPEC.md) §2.4, §2.5 and Lot 3 (owner approval "ok implémente"); review B of the proposal ([review-B.md](../plans/onboarding/review-B.md) §3 to §5)
+- Contracts: [CLI-CONTRACT.md](../specs/CLI-CONTRACT.md) §20, [CASE-CONTRACT.md](../specs/CASE-CONTRACT.md) §Analysis contract and §Prepared cases
+
+### Context
+
+A user who arrives with their own file (`hypotrail new NAME --data FILE`) has no case author to declare an `order` or a contract. Asking them "which split method do you want?" would make the final test a choice, and repeated previews of its strata would let a favourable one be picked (review B, P2). The review-v1 planner already places a final test from facts (`analysis_contract`: intended use, clocks, dependencies).
+
+### Decision
+
+1. **No new case key, no user seed.** The preparation asks factual questions (the six questions of the spec) and writes their answers into the case as statements with an epistemic status quoting the user's words. The method is **deduced** from them by the existing review-v1 planner; `partition.deduce` names the rule and its reason, in this order: a future use with two documented clocks is temporal, with the delayed-label purge (`future_temporal`); recurring entities keep each entity on one side (`grouped`, or `grouped_temporal` with a prediction clock); an assumed time dependence (a prediction clock without a documented future use) is temporal (`assumed_temporal`); otherwise stratified on the target or its quantile bins (`stratified`); unknown dependencies are stratified too, with the claims capped (`unknown_stratified`: `permitted_claims` without future predictive performance). A whole-file exploration with the target stated at preparation also caps the claims, and the `prior_exposure` says the final test is not unseen.
+2. **Guards, documented constants, no fallback.** The fraction stays 0.2 (`DEFAULT_FRACTION`). `partition.guard_checks` requires at least `MIN_FINAL_ROWS` (100) final-test rows, for a binary target at least `MIN_MINORITY_EVENTS` (30) rows of each label in the final test, and an effective fraction within `FRACTION_RANGE` ([0.10, 0.35]); a failed check refuses the acceptance and the seal with its reason. A file with fewer than 286 rows (100 / 0.35) is refused at `new`. A failure is never replaced by another method.
+3. **Feasibility, not preview.** `case check --feasibility` returns counts without the target (rows, final and development rows, effective fraction, the period of the prediction clock, ties at the cut, groups, delayed-label rows) and a pass or fail per guard; the minority check never gives its count. The plan is shown in words and counts with a digest; the user's acceptance names that digest, and any later change of an answer drops it.
+4. **Entities whose target varies.** A review-v1 stratified draw of whole entity components used to stop with `integrity_error` when an entity's rows held several target values. Each component now takes its most frequent stratum (`partition._component_strata`); a component whose rows share one stratum (identical records, the only case before) is drawn exactly as before.
+5. **Recorded.** `init` (called by `seal`) stores the deduction in the partition record as `analysis_protocol.deduction` (`rule`, `method`, `clock`, `group_column`, `reason` in English and French, `guards`, `plan`, `words`, `counts`, and `accepted`: the user's words and time). The report's first chapter shows it ("How the final test was set aside"). The study is created without the `data` link (§2.6 of the spec).
+6. **The structural inspection before sealing is declared.** The profile reads every row structurally before the final test exists; this ADR's "before the first look" holds for every look but that one, which is recorded as a `prior_exposure` statement (`observed`) of the case.
+
+### Consequences
+
+- Dates are not clocks: a date column offered as a clock is refused with the way forward (an integer column derived in a documented copy, or a sorted copy, the Hotel model); no conversion is implicit. Missing target values are refused with the derived-copy option.
+- Studies and cases created before this amendment are unchanged: `deduce` and the guards run only through `hypotrail seal`, and `_component_strata` changes nothing for components of one stratum.

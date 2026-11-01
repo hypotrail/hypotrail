@@ -349,15 +349,23 @@ def test_writer_lock_needs_an_existing_study(tmp_path):
     assert not (tmp_path / '.hypotrail').exists()
 
 
-def test_native_windows_is_refused(study, monkeypatch):
-    monkeypatch.setattr(lock.os, 'name', 'nt')
+def test_a_platform_without_file_locking_is_refused(study, case_dir, tmp_path, monkeypatch):
+    """Lot 4: native Windows is supported (msvcrt); only a platform with neither fcntl
+    nor msvcrt is refused, before anything is written."""
+    from mlkit.study import platform_compat
+    monkeypatch.setattr(platform_compat, 'lock_backend', lambda: None)
     with pytest.raises(StudyError) as info:
-        lock.require_posix()
+        lock.require_locking()
     assert info.value.code == 'platform_unsupported'
     with pytest.raises(StudyError) as info:
         with lock.writer_lock(study.study_dir):
             pass
     assert info.value.code == 'platform_unsupported'
+    fresh = sto.StudyStore(tmp_path / 'fresh')
+    with pytest.raises(StudyError) as info:
+        fresh.create(st.initial_state(c.load_case(case_dir)))
+    assert info.value.code == 'platform_unsupported'
+    assert not fresh.exists()
 
 
 LEASE = textwrap.dedent('''

@@ -220,24 +220,89 @@ def targets(rel: str) -> tuple[tuple[str, str], ...]:
     return TARGETS.get(rel, ((default_target(rel), CLAUDE),))
 
 
-def cli_command() -> dict:
-    """How an agent runs the CLI from the study workspace.
+def quote_arg(arg: str, *, windows: bool | None = None) -> str:
+    """One argument quoted for the user's shell: POSIX ``sh`` (``shlex.quote``), or
+    PowerShell on Windows (single quotes, an inner quote doubled) when it needs quoting."""
+    windows = os.name == 'nt' if windows is None else windows
+    arg = str(arg)
+    if not windows:
+        return shlex.quote(arg)
+    if arg and re.fullmatch(r'[A-Za-z0-9_\-+=./\\:]+', arg):
+        return arg
+    return "'" + arg.replace("'", "''") + "'"
 
-    ``HYPOTRAIL_CLI`` (a shell command) wins. Otherwise, when this engine is the
-    ``framework/`` uv project and ``uv`` is on PATH, ``uv run --project <framework>
-    hypotrail`` (the locked environment, from any directory). Otherwise the current
-    interpreter with the engine on ``PYTHONPATH``.
+
+def display_command(argv, *, windows: bool | None = None) -> str:
+    """``argv`` as one line to paste in the user's shell (Onboarding Lot 0): ``shlex.join``
+    on POSIX; on Windows a PowerShell line, with the call operator ``&`` when the program
+    itself is quoted (PowerShell would otherwise read a quoted string, not a command).
+    ``platform_compat.display_command`` (Lot 4) gives the ``cmd.exe`` form
+    (``list2cmdline``) instead; the spec asks for PowerShell, the integrator picks one."""
+    windows = os.name == 'nt' if windows is None else windows
+    parts = [quote_arg(a, windows=windows) for a in argv]
+    if windows and parts and parts[0].startswith("'"):
+        parts.insert(0, '&')
+    return ' '.join(parts)
+
+
+def _installed_executable() -> Path | None:
+    """The ``hypotrail`` console script next to the running interpreter (a venv's ``bin/``,
+    ``Scripts\\`` on Windows, a ``uv tool`` environment), when it exists. The interpreter
+    path is kept as is (not resolved): a venv's ``python`` is often a link out of it."""
+    from .platform_compat import is_windows
+    candidate = Path(sys.executable).parent / ('hypotrail.exe' if is_windows() else 'hypotrail')
+    return candidate if candidate.is_file() else None
+
+
+def _importable_without_help(framework: Path) -> bool:
+    """Whether the running interpreter finds ``mlkit`` by itself (an installed or editable
+    package), not through ``PYTHONPATH`` or the current directory."""
+    extra = {os.path.normcase(os.path.abspath(p))
+             for p in os.environ.get('PYTHONPATH', '').split(os.pathsep) if p}
+    here = os.path.normcase(str(framework))
+    for entry in sys.path[1:]:
+        if not entry:
+            continue
+        norm = os.path.normcase(os.path.abspath(entry))
+        if norm == here and norm not in extra:
+            return True
+    return 'site-packages' in Path(__file__).resolve().parts or \
+        'dist-packages' in Path(__file__).resolve().parts
+
+
+def cli_command() -> dict:
+    """How an agent runs the CLI from the study workspace: ``{argv, shell, how}``.
+
+    ``argv`` is an argument list run without a shell (the panel's ``execFile``, the hook);
+    ``shell`` is the same command for the user's shell (:func:`display_command`: POSIX or
+    PowerShell). ``how``, in order (Onboarding Lot 0: never ``env PYTHONPATH=...``):
+
+    * ``override``: ``HYPOTRAIL_CLI`` (a shell command, split with POSIX rules);
+    * ``uv_project``: this engine is the ``framework/`` uv project of a checkout and ``uv``
+      is on PATH: ``uv run --project <framework> hypotrail`` (the locked environment);
+    * ``installed``: the ``hypotrail`` executable next to the running interpreter (``uv
+      tool install``, pipx, a venv; ``hypotrail.exe`` on Windows), by absolute path;
+    * ``python_module``: the running interpreter, ``-m mlkit.study.cli``, when it imports
+      the engine by itself;
+    * ``python_path``: otherwise the running interpreter puts the engine on ``sys.path``
+      itself (``-c``), which works on every platform without an ``env`` program.
     """
     framework = Path(__file__).resolve().parents[2]
     override = os.environ.get(CLI_ENV, '').strip()
+    executable = None
     if override:
         argv, how = shlex.split(override), 'override'
     elif (framework / 'pyproject.toml').is_file() and shutil.which('uv'):
         argv, how = ['uv', 'run', '--project', str(framework), 'hypotrail'], 'uv_project'
+    elif (executable := _installed_executable()) is not None:
+        argv, how = [str(executable)], 'installed'
+    elif _importable_without_help(framework):
+        argv, how = [sys.executable, '-m', 'mlkit.study.cli'], 'python_module'
     else:
-        argv, how = ['env', f'PYTHONPATH={framework}', sys.executable, '-m',
-                     'mlkit.study.cli'], 'python_module'
-    return {'argv': argv, 'shell': shlex.join(argv), 'how': how}
+        argv, how = [sys.executable, '-c',
+                     f'import sys; sys.path.insert(0, {str(framework)!r}); '
+                     'from mlkit.study.cli import main; sys.exit(main())'], 'python_path'
+    return {'argv': argv, 'shell': display_command(argv), 'how': how}
 
 
 def render(text: str, *, flavour: str, values: Mapping[str, str], source: str,
@@ -297,7 +362,7 @@ def install(study_dir, task: str = 'binary') -> dict:
         fd = os.open(glossary, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
         with os.fdopen(fd, 'wb') as handle:
             handle.write(glossary_bytes(task))
-    values = {'HYPOTRAIL': cli['shell'], 'STUDY': shlex.quote(str(study)),
+    values = {'HYPOTRAIL': cli['shell'], 'STUDY': quote_arg(str(study)),
               'GLOSSARY': str(glossary)}
     copied, skipped = [], []
     files = {}
@@ -319,7 +384,7 @@ def install(study_dir, task: str = 'binary') -> dict:
                              'tested': flavour == CLAUDE}
     agent_file = study / '.hypotrail' / AGENT_FILE
     record = {'schema': SCHEMA, 'study': str(study), 'cli': cli,
-              'invocation': f'{cli["shell"]} <command> ... --study {shlex.quote(str(study))}',
+              'invocation': f'{cli["shell"]} <command> ... --study {quote_arg(str(study))}',
               'glossary': str(glossary), 'glossary_source': str(GLOSSARY), 'files': files,
               'note': 'Run every hypotrail command with this invocation. The Copilot files are '
                       'generated from the same templates and are not tested (directive A1).'}

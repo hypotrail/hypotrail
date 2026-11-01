@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 
 def polish(document, *, quality=False):
-    css=(Path(__file__).parent/'assets/design.css').read_text()
+    css=(Path(__file__).parent/'assets/design.css').read_text(encoding='utf-8')
     base='../../../reports/' if quality else ''
     nav='<header class="export-nav"><span class="brand">Hypotrail</span><nav><a href="'+base+'pilot.html">The journey</a><a href="'+base+'dataset-discovery.html">Data</a><a href="'+base+'classical-study.html">Comparison</a></nav><span class="export-mode">Offline snapshot</span><button id="theme" onclick="document.body.classList.toggle(\'dark\')">Light / dark</button></header>'
     # Classical exports have one navigation bar; historical pages retain their links.

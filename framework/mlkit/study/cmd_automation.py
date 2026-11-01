@@ -31,14 +31,14 @@ import argparse
 import sys
 
 from . import commands as cmd
+from . import user_words
 
 
 def configure(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('verb', choices=('run', 'stop'),
                         help='run: follow the plan with the automatic mode; stop: end it in '
                              "the junior's words")
-    parser.add_argument('--user-words', default=None,
-                        help="with stop: the junior's verbatim words asking to stop it")
+    user_words.add(parser, help="with stop: the junior's verbatim words asking to stop it")
     parser.add_argument('--progress', action='store_true',
                         help='with run: what is going on, in the study language, on stderr '
                              '(decisions, results, a closing summary); stdout is unchanged')

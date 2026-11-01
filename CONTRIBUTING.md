@@ -8,7 +8,7 @@ Use English for maintained prose, interface text, code comments, and new example
 
 Use Python 3.13, uv, and a dedicated environment. Node.js (22 or later) is needed for the study panel's tests and for companion development.
 
-Supported platforms are Linux, macOS, and WSL. The engine relies on POSIX file locking (`fcntl`); native Windows is not supported.
+Supported platforms are Linux, macOS, native Windows, and WSL. File locks use `fcntl` on Linux and macOS and `msvcrt` on Windows (`framework/mlkit/study/platform_compat.py`); see [Platform support](docs/handoff/IMPLEMENTATION.md#platform-support) for what only CI on Windows confirms.
 
 The framework is a uv project (`framework/pyproject.toml`, locked by `framework/uv.lock`). Create its environment in `framework/.venv` with the `dev` group:
 

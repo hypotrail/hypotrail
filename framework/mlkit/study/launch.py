@@ -10,7 +10,8 @@ A study's notebooks import ``mlkit``, which is installed in the engine's environ
   ``.gitignore``, creating the file or appending the line once (:func:`install_gitignore`);
 * ``hypotrail init`` writes ``README.md`` (where the data are, what each folder holds, how to
   look at the data) and a ``data`` link to the case's data folder, never a copy, each only if
-  absent (:func:`install_readme`, owner remark R69);
+  absent (:func:`install_readme`, owner remark R69); ``hypotrail new`` makes no link
+  (:func:`without_data_link`, Onboarding spec §2.6);
 * :func:`deliverables` gives the exact commands that open the generated notebook read-only
   (``marimo run``) and the workbench for editing (``marimo edit``) with the engine's
   environment, for the init payload and ``status --summary``. Surfaces show or launch them;
@@ -20,9 +21,9 @@ Nothing that exists is overwritten. Free of pandas, numpy, and scikit-learn.
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import os
-import shlex
 import sys
 from pathlib import Path
 
@@ -49,10 +50,11 @@ def framework_dir() -> Path:
 
 
 def interpreter() -> str:
-    """The engine's Python: ``framework/.venv/bin/python`` when it exists (the
-    environment ``uv run --project framework`` uses), else the running interpreter.
-    The venv path is kept as is (not resolved), as an editor expects it."""
-    venv = framework_dir() / '.venv' / 'bin' / 'python'
+    """The engine's Python: ``framework/.venv/bin/python`` (``Scripts\\python.exe`` on
+    Windows) when it exists (the environment ``uv run --project framework`` uses), else the
+    running interpreter. The venv path is kept as is (not resolved), as an editor expects it."""
+    from .platform_compat import venv_python
+    venv = venv_python(framework_dir() / '.venv')
     if venv.exists():
         return str(venv)
     return sys.executable
@@ -118,8 +120,8 @@ The data are **not copied** into this folder. They stay in the case's folder:
 - data file: `{dataset}`
 - case description: `{case_file}`
 
-`{link}` is a link to the case's data folder, for convenience. Do not edit those files: the
-study recorded their fingerprint (`.hypotrail/`) and refuses data that changed.
+{link_line} Do not edit those files: the study recorded their fingerprint (`.hypotrail/`)
+and refuses data that changed.
 
 Opening the raw file shows every row, the sealed final-test rows included, and that look is
 not recorded. To look at the data in a way the study counts, use step 1 of the study panel,
@@ -143,9 +145,8 @@ Les données ne sont **pas copiées** dans ce dossier. Elles restent dans le dos
 - fichier de données : `{dataset}`
 - description du cas : `{case_file}`
 
-`{link}` est un lien vers le dossier de données du cas, pour y accéder facilement. Ne modifiez
-pas ces fichiers : l'étude a enregistré leur empreinte (`.hypotrail/`) et refuse des données
-qui ont changé.
+{link_line} Ne modifiez pas ces fichiers : l'étude a enregistré leur empreinte (`.hypotrail/`)
+et refuse des données qui ont changé.
 
 Ouvrir le fichier brut montre toutes les lignes, y compris celles du test final scellé, et ce
 regard n'est pas enregistré. Pour regarder les données d'une façon que l'étude compte, utilisez
@@ -164,13 +165,39 @@ l'étape 1 du panneau de l'étude, `hypotrail data --study .` ou les notebooks.
 }
 
 
-def install_readme(study_dir, case, language: str = 'en') -> bool:
+_LINK_LINES = {
+    'en': {True: "`data/` is a link to the case's data folder, for convenience.",
+           False: 'This folder holds no link to them ({target}), on purpose: the chat agent works '
+                  'here and must not read the raw file.'},
+    'fr': {True: "`data/` est un lien vers le dossier de données du cas, pour y accéder "
+                 "facilement.",
+           False: "Ce dossier n'a pas de lien vers elles ({target}), exprès : l'agent du chat "
+                  'travaille ici et ne doit pas lire le fichier brut.'},
+}
+# Onboarding Lot 1 (spec §2.6): a study created by ``hypotrail new`` gets no ``data`` link, so
+# the raw file stays outside the chat workspace; ``init`` alone keeps R69's link.
+_DATA_LINK = [True]
+
+
+@contextlib.contextmanager
+def without_data_link():
+    """Within this block, :func:`install_readme` makes no ``data`` link."""
+    _DATA_LINK.append(False)
+    try:
+        yield
+    finally:
+        _DATA_LINK.pop()
+
+
+def install_readme(study_dir, case, language: str = 'en', *, data_link: bool = True) -> bool:
     """R69: ``README.md`` and the ``data`` link (relative, to the case's data folder), each
-    only if absent; the README alone where links cannot be made. True when the link exists."""
+    only if absent; the README alone where links cannot be made, or inside
+    :func:`without_data_link`, or with ``data_link`` False (a study sealed by ``hypotrail seal``).
+    True when the link exists."""
     study = Path(study_dir).resolve()
     target = case.dataset_path.resolve().parent
     link = study / DATA_LINK
-    if not os.path.lexists(link):
+    if data_link and _DATA_LINK[-1] and not os.path.lexists(link):
         try:
             os.symlink(os.path.relpath(target, study), link, target_is_directory=True)
         except (OSError, NotImplementedError):
@@ -179,9 +206,10 @@ def install_readme(study_dir, case, language: str = 'en') -> bool:
     readme = study / README
     if not readme.exists():
         text = _README.get(language, _README['en'])
-        here = 'data/' if linked else '(no link: ' + str(target) + ')'
+        line = _LINK_LINES.get(language, _LINK_LINES['en'])[linked].format(target=target)
         readme.write_text(text.format(case=case.root.name, dataset=case.dataset_path.resolve(),
-                                      case_file=case.root.resolve() / 'case.yaml', link=here),
+                                      case_file=case.root.resolve() / 'case.yaml',
+                                      link_line=line),
                           encoding='utf-8')
     return linked
 
@@ -212,12 +240,16 @@ def _marimo_prefix(study: Path) -> list[str]:
 
 def deliverables(study_dir) -> dict:
     """``{interpreter, launch: {notebook, workbench}}``; each launch is ``{mode, path,
-    argv, shell}`` with absolute paths (an argument list, to run without a shell)."""
+    argv, shell}`` with absolute paths (an argument list, to run without a shell; ``shell``
+    is the same command quoted for the user's shell, PowerShell on Windows)."""
+    from .agent_files import display_command
+
     study = Path(study_dir).resolve()
     prefix = _marimo_prefix(study)
     launch = {}
     for name, rel, mode in NOTEBOOKS:
         path = str(study / rel)
         argv = [*prefix, mode, path]
-        launch[name] = {'mode': mode, 'path': rel, 'argv': argv, 'shell': shlex.join(argv)}
+        launch[name] = {'mode': mode, 'path': rel, 'argv': argv,
+                        'shell': display_command(argv)}
     return {'interpreter': interpreter(), 'launch': launch}

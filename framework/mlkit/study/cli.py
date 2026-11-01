@@ -9,17 +9,19 @@
                      --restatement TEXT --rationale TEXT [--lang en|fr]
                      [--restatement-en TEXT] [--restatement-fr TEXT]
                      --request-id ID --expected-revision REV --study DIR
-    hypotrail decide confirm (PROPOSAL | --proposal PROPOSAL) [--user-words TEXT]
+    hypotrail decide confirm (PROPOSAL | --proposal PROPOSAL)
+                     [--user-words TEXT | --user-words-file PATH]
                      [--channel chat|cli|webview|choice] [--adoption-question] [--actor NAME]
                      [--basis explicit|delegated_default|automatic]
                      [--delegation-scope this_decision|standing] [--agent-concern TEXT]
                      --request-id ID --expected-revision REV --study DIR
     hypotrail decide withdraw PROPOSAL [--reason TEXT]
                      --request-id ID --expected-revision REV --study DIR
-    hypotrail decide note (--about DECISION | --resolve NOTE_ID | --withdraw NOTE_ID) --text TEXT
+    hypotrail decide note (--about DECISION | --resolve NOTE_ID | --withdraw NOTE_ID)
+                     (--text TEXT | --user-words-file PATH)
                      [--kind hold|correction]
                      --request-id ID --expected-revision REV --study DIR
-    hypotrail mode set guided|training|express [--user-words TEXT]
+    hypotrail mode set guided|training|express [--user-words TEXT | --user-words-file PATH]
                      --request-id ID --expected-revision REV --study DIR      (ADR 0005)
 
 Post-v0.1, read-only, for observed sessions (``cmd_session_report``, ``sessionlog``)::
@@ -43,6 +45,11 @@ human summary. One exception (owner session 2026-10-27, R23): ``automation run``
 ``--format`` or ``--json`` prints its readable summary when stdout is a terminal, and the JSON
 document otherwise (a pipe, a file, an agent's tool). ``--study`` is mandatory: the study is never taken from the current
 directory or from ``OSML_ROOT``.
+
+Every ``--user-words`` (and ``decide note --text``) has a ``--user-words-file PATH``
+twin (``-`` reads stdin), read as UTF-8 (:mod:`mlkit.study.user_words`): free text
+never has to survive a shell's quoting (PowerShell, ``cmd.exe``). stdout and stderr are
+UTF-8 whatever the console or locale encoding (Windows pipes default to a code page).
 
 Exit codes: 0 success or replay; 1 internal error; 2 refusal without effect; 3 the
 command committed but an artefact is stale or failed; 4 an execution has an unknown
@@ -68,6 +75,7 @@ from mlkit.reliability import CommandRefused
 
 from . import commands as cmd
 from . import state as st
+from . import user_words
 from .case import CaseError
 from .errors import StudyError
 
@@ -92,6 +100,16 @@ EXTENSIONS = {
     'automation': 'mlkit.study.cmd_automation',
     # R68 (minimal version, 2026-10-28): the product owner's PDF and the study's own brief.
     'brief': 'mlkit.study.cmd_brief',
+    # Onboarding Lots 0-1 (docs/plans/ONBOARDING-SPEC.md, agent P): install and start.
+    'new': 'mlkit.study.cmd_new',
+    'setup': 'mlkit.study.cmd_setup',
+    'doctor': 'mlkit.study.cmd_doctor',
+    'hook': 'mlkit.study.cmd_hook',
+    # Onboarding Lots 2 and 3 (ONBOARDING-SPEC, 2026-11-01): from one data file to a sealed
+    # study (``new --data``, the six questions, the feasibility check, the seal).
+    'case': 'mlkit.study.cmd_case',
+    'prepare': 'mlkit.study.cmd_prepare',
+    'seal': 'mlkit.study.cmd_seal',
 }
 # One line per extension command for ``hypotrail --help`` (v0.2a, WP-A1): the help lists
 # every command without importing the extension modules.
@@ -109,7 +127,18 @@ EXTENSION_HELP = {
     'understanding': 'opt-in understanding and handover review (off by default; ADR 0008)',
     'automation': 'run the automatic mode chosen at init, or stop it in the junior\'s words',
     'brief': "import the product owner's PDF, or record the study's brief in the junior's words",
+    'new': 'start a study: from one data file (--data, prepared then sealed) or a case (--case)',
+    'setup': 'install the study panel into VS Code (setup vscode; no Node needed)',
+    'doctor': 'check this machine for a study (Python, uv, VS Code, panel, proxy); writes nothing',
+    'hook': "the chat agent's PreToolUse hook (hook pretool; JSON on stdin)",
+    'case': 'before sealing: the structural profile, or the feasibility of the final test',
+    'prepare': "before sealing: the six questions, answered in the user's words",
+    'seal': 'write the case, set the deduced final test aside, and create the study',
 }
+# Onboarding (agent P): readable text of the install and start commands.
+TEXT_MODULES = {'hypotrail.new/1': 'mlkit.study.cmd_new',
+                'hypotrail.setup/1': 'mlkit.study.cmd_setup',
+                'hypotrail.doctor/1': 'mlkit.study.cmd_doctor'}
 REFUSALS = (CommandRefused, StudyError, CaseError)
 
 
@@ -214,9 +243,8 @@ def build_parser(extension: str | None = None, *, listing: bool = False
     p.add_argument('proposal_id', nargs='?', default=None)
     p.add_argument('--proposal', default=None, dest='proposal_flag', metavar='PROPOSAL',
                    help='the open proposal the words answer (same as the positional PROPOSAL)')
-    p.add_argument('--user-words', default=None,
-                   help="the user's verbatim reply to the restatement (required, except with "
-                        '--basis automatic, which records no words)')
+    user_words.add(p, help="the user's verbatim reply to the restatement (required, except "
+                           'with --basis automatic, which records no words)')
     p.add_argument('--channel', choices=st.CONFIRMATION_CHANNELS, default=cmd.DEFAULT_CHANNEL,
                    help='chat (the default), cli, webview, or choice: the junior picked the '
                         'adoption option of an interactive choice; --user-words is the option '
@@ -253,7 +281,7 @@ def build_parser(extension: str | None = None, *, listing: bool = False
     target.add_argument('--withdraw', default=None, metavar='NOTE_ID',
                         help="withdraw an open hold that no longer applies, with the junior's "
                              'own words')
-    p.add_argument('--text', '--user-words', required=True, dest='text',
+    user_words.add(p, '--text', '--user-words', dest='text', required=True,
                    help="the junior's words, verbatim (the condition, or what resolves it)")
     p.add_argument('--kind', choices=st.NOTE_KINDS, default=None,
                    help='with --about: hold (the default) blocks the decision until resolved; '
@@ -265,9 +293,8 @@ def build_parser(extension: str | None = None, *, listing: bool = False
     mverbs = mode.add_subparsers(dest='verb', required=True, parser_class=Parser)
     p = mverbs.add_parser('set', parents=[common])
     p.add_argument('mode', help='guided, training, or express')
-    p.add_argument('--user-words', dest='user_words', default=None,
-                   help="the user's verbatim words asking for this mode (needed unless the "
-                        "change makes confirmations stricter)")
+    user_words.add(p, help="the user's verbatim words asking for this mode (needed unless "
+                           'the change makes confirmations stricter)')
     _mutation(p)
 
     if extension is not None:
@@ -465,6 +492,8 @@ def _text(payload: dict) -> str:
     if schema.startswith('hypotrail.understanding'):
         from .cmd_understanding import text
         return text(payload)
+    if schema in TEXT_MODULES:
+        return importlib.import_module(TEXT_MODULES[schema]).text(payload)
     if schema == 'hypotrail.automation/1':
         # Owner session 2026-10-27 (R23): the run in the junior's words, not the full JSON.
         from .automation_words import text_summary
@@ -530,7 +559,7 @@ def _run(argv: list) -> cmd.Outcome:
     # A command with a verb is named with it (`decide confirm`, `export handoff`), as its
     # own payloads name it (WP-I).
     command = ' '.join(argv[:2]) if name in ('decide', 'export', 'mode', 'understanding',
-                                             'automation', 'brief') \
+                                             'automation', 'brief', 'case', 'prepare') \
         else name
     try:
         extension = name if name in EXTENSIONS else None
@@ -539,6 +568,10 @@ def _run(argv: list) -> cmd.Outcome:
                              f'Command {extension!r} is not available in this version.',
                              details={'command': extension})
         args = build_parser(extension).parse_args(argv)
+        try:
+            user_words.resolve(args)
+        except user_words.WordsFileError as exc:
+            raise ArgumentError(str(exc)) from None
         return dispatch(args)
     except (*REFUSALS, ArgumentError) as exc:
         return cmd.refused(command or 'hypotrail', exc)
@@ -546,7 +579,25 @@ def _run(argv: list) -> cmd.Outcome:
         return cmd.Outcome(cmd.error_payload(command or 'hypotrail', exc), cmd.EXIT_INTERNAL)
 
 
+def utf8_streams() -> None:
+    """Write stdout and stderr as UTF-8 whatever the locale (Lot 4, Windows native).
+
+    The JSON document is written with ``ensure_ascii=False``: on Windows a pipe would
+    otherwise use the ANSI code page (cp1252), and the panel, which reads UTF-8, would show
+    mojibake or the write would fail on a character outside the code page.
+    """
+    for stream, errors in ((sys.stdout, None), (sys.stderr, 'backslashreplace')):
+        reconfigure = getattr(stream, 'reconfigure', None)
+        if reconfigure is None:
+            continue                     # replaced by a test or a host: leave it alone
+        try:
+            reconfigure(encoding='utf-8', errors=errors or stream.errors or 'strict')
+        except (ValueError, OSError):
+            pass
+
+
 def main(argv: Sequence[str] | None = None) -> int:
+    utf8_streams()
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv in (['-h'], ['--help']) or not argv:
         build_parser(listing=True).print_help()

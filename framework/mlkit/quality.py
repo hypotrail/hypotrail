@@ -58,11 +58,11 @@ def infer_changes(paths):
 
 def plan(root, ticket_path, phase='pr', changed=()):
     root = Path(root).resolve()
-    policy = json.loads((root / 'test-policy.json').read_text())
+    policy = json.loads((root / 'test-policy.json').read_text(encoding='utf-8'))
     ticket_path = Path(ticket_path).resolve()
     if not ticket_path.is_relative_to(root):
         raise ValueError('Ticket must be inside the project')
-    ticket = json.loads(ticket_path.read_text())
+    ticket = json.loads(ticket_path.read_text(encoding='utf-8'))
     if set(ticket) != {'id', 'changes', 'task', 'interpretability'}:
         raise ValueError('Ticket requires id, changes, task, and interpretability, with no extra fields')
     if not isinstance(ticket['id'], str) or not ticket['id'].strip():
@@ -106,9 +106,9 @@ def render(report, folder):
     <section><b>{e(report.get('outcome', 'PLAN NOT EXECUTED'))}</b><p>Changements : {e(', '.join(report['changes']))}. Type ML : {e(report['ticket']['task'])}.</p><p>Synthetic tests check software. They establish neither candidate business value nor production suitability. This policy performs no holdout reading or cloud submission.</p></section>
     <section class="scroll"><table><tr><th>Check</th><th>State</th><th>Reason / next action</th><th>Seconds</th><th>Evidence</th></tr>{rows}</table></section><p><a href="report.json">Structured results</a> · Fingerprint {e(report['context'][:16])}</p><p>Changes to code, tests, contracts, policy, or ticket make this summary stale. A skipped test is not a success. Protect critical policies and criteria through review and CI.</p></main></html>'''
     folder.mkdir(parents=True, exist_ok=True)
-    (folder / 'report.json').write_text(json.dumps(report, indent=2, ensure_ascii=False))
+    (folder / 'report.json').write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding='utf-8')
     from .presentation import polish
-    (folder / 'index.html').write_text(polish(page,quality=True))
+    (folder / 'index.html').write_text(polish(page,quality=True), encoding='utf-8')
 
 
 def execute(root, report, folder, budget=480):
@@ -134,7 +134,7 @@ def execute(root, report, folder, budget=480):
         begin = time.monotonic()
         env = {k: v for k, v in os.environ.items() if not k.startswith('OSML_')}
         env.update(OMP_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1', MLFLOW_DISABLE_AGENT_HINT='1')
-        with log.open('w') as stream:
+        with log.open('w', encoding='utf-8') as stream:
             process = subprocess.Popen(command, cwd=root, env=env, stdout=stream, stderr=subprocess.STDOUT,
                                        start_new_session=(os.name == 'posix'))
             try:
@@ -184,8 +184,8 @@ def main(argv=None):
         report = plan(root, root / args.ticket, args.phase, args.changed)
         if args.action == 'status':
             latest = root / '.quality/latest.json'
-            old = json.loads(latest.read_text())
-            saved = json.loads((root / old['report']).read_text())
+            old = json.loads(latest.read_text(encoding='utf-8'))
+            saved = json.loads((root / old['report']).read_text(encoding='utf-8'))
             fresh = saved['context'] == report['context']
             print(json.dumps({'fresh': fresh, 'outcome': saved['outcome'] if fresh else 'STALE', 'report': old['report']}))
             return 0 if fresh and saved['outcome'] == 'SOFTWARE_CHECKS_PASSED' else 2
@@ -196,7 +196,7 @@ def main(argv=None):
             code = 0
         else:
             code = execute(root, report, folder, args.budget)
-        (root / '.quality/latest.json').write_text(json.dumps({'report': str((folder / 'report.json').relative_to(root))}))
+        (root / '.quality/latest.json').write_text(json.dumps({'report': str((folder / 'report.json').relative_to(root))}), encoding='utf-8')
         print(json.dumps({'outcome': report['outcome'], 'report': str(folder / 'index.html'),
                           'required': [s['id'] for s in report['suites'] if s['required']]}, ensure_ascii=False))
         return code

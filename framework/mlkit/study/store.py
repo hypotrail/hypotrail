@@ -17,7 +17,7 @@ Layout::
       commit.pending.json present only while a commit is being finished
 
 Writes are atomic: a temporary file in the same directory, fsync, then
-``os.replace``. Registry entries and blobs are created with ``O_EXCL`` and never
+``os.replace`` (retried on Windows sharing violations, ``platform_compat.replace``). Registry entries and blobs are created with ``O_EXCL`` and never
 rewritten. A study is named explicitly (``--study DIR``) and recognised by its
 ``.hypotrail/`` marker; it is never searched for, and there is no global index.
 
@@ -45,7 +45,7 @@ from typing import Iterator, Mapping
 
 from mlkit import reliability
 
-from . import guard, lock, state as st
+from . import guard, lock, platform_compat, state as st
 from .errors import StudyError
 
 HOME = lock.HOME
@@ -73,7 +73,10 @@ def _fsync_dir(path: Path) -> None:
 
 
 def atomic_write(path: Path, data: bytes) -> None:
-    """Replace ``path`` with ``data`` atomically (temporary file, fsync, os.replace)."""
+    """Replace ``path`` with ``data`` atomically (temporary file, fsync, os.replace).
+
+    On Windows the replace is retried while another process holds ``path`` open.
+    """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_name(f'.{path.name}.{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp')
@@ -82,7 +85,7 @@ def atomic_write(path: Path, data: bytes) -> None:
             handle.write(data)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(temp, path)
+        platform_compat.replace(temp, path)
     except BaseException:
         temp.unlink(missing_ok=True)
         raise
@@ -219,7 +222,7 @@ class StudyStore:
         ``state`` comes from :func:`mlkit.study.state.initial_state` (revision 0).
         """
         guard.assert_writable()
-        lock.require_posix()
+        lock.require_locking()
         if self.exists():
             raise StudyError('state_exists', 'A study already exists here; it is never '
                                              'overwritten.',

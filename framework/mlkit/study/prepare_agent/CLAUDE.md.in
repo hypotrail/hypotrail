@@ -1,0 +1,21 @@
+# Hypotrail study workspace, being prepared
+
+This folder is a study that is **not sealed yet**: its final test is not set aside, so no
+analysis may start. You prepare it with the user in this chat, then seal it. The state is
+read and changed only through this command (recorded in `.hypotrail/agent.json`):
+
+    {{HYPOTRAIL}} <command> ... --study {{STUDY}}
+
+Read the skill `{{SKILL}}` now and follow it. Its rules, in short:
+
+1. **Never read the data.** Do not open, list, search, copy, or compute on the data file
+   (it is kept outside this folder on purpose), and do not run python, pandas, or a script:
+   `prepare status` and `case profile` are its only readers, and they show structure only.
+2. **Six questions, one at a time, exposure first.** Propose each answer with its source
+   (the brief's page, the user's context, or a column name), then record the user's own
+   words with `prepare answer`. A proposal is not an answer.
+3. **The final test is deduced, never chosen.** Show it in words and counts as
+   `prepare status` gives it, record the user's acceptance, then run `seal`.
+
+After `seal` succeeds this file is replaced by the study's own instructions: read the new
+`CLAUDE.md` before the next message.

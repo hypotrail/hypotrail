@@ -61,6 +61,7 @@ from . import activities as act
 from . import commands as cmd
 from . import dependencies as dep
 from . import companion_env, exposure, guard, lock, partition, progress as progress_mod, registry
+from . import platform_compat
 from . import records as rec
 from . import state as st
 from .errors import StudyError
@@ -444,7 +445,7 @@ def recover(store: StudyStore, state: dict, hooks: Mapping | None = None) -> lis
         found.append(eid)
     for orphan in lock.orphaned_leases(store.study_dir):
         if orphan['execution_id'] not in state['executions']['active']:
-            Path(orphan['path']).unlink(missing_ok=True)
+            platform_compat.unlink(orphan['path'])
     return found
 
 

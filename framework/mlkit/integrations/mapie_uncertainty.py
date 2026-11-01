@@ -80,6 +80,8 @@ from hypotrail_runtime import canonical
 from hypotrail_runtime.contracts import UncertaintyResult, parse
 from hypotrail_runtime.errors import ContractError
 
+from mlkit.study import platform_compat
+
 RULES = ('threshold',)
 REFUSED_RULES = ('capacity', 'share', 'top_k')
 SELECTION_RULES = {'max_recall': 'recall', 'max_selected_fraction': 'predicted_positive_fraction'}
@@ -248,16 +250,17 @@ class CalibrationLedger:
                 fh.write(data)
                 fh.flush()
                 os.fsync(fh.fileno())
-            os.replace(tmp, self.path)
+            platform_compat.replace(tmp, self.path)
         except BaseException:
             with contextlib.suppress(FileNotFoundError):
                 os.unlink(tmp)
             raise
-        dirfd = os.open(self.path.parent, os.O_RDONLY)
-        try:
-            os.fsync(dirfd)
-        finally:
-            os.close(dirfd)
+        if os.name != 'nt':                 # Windows cannot open a directory to fsync it
+            dirfd = os.open(self.path.parent, os.O_RDONLY)
+            try:
+                os.fsync(dirfd)
+            finally:
+                os.close(dirfd)
         self.repairs.append(dict(torn))
         warnings.warn(LedgerRepaired(
             f'The calibration ledger {self.path.name} ended with a torn line {torn["line"]} '
@@ -285,21 +288,20 @@ class CalibrationLedger:
 
     @contextlib.contextmanager
     def _locked(self):
-        """An exclusive ``flock`` on the ledger's lock file for one read-check-append."""
-        if os.name == 'nt':
+        """An exclusive file lock on the ledger's lock file for one read-check-append
+        (``flock``, or ``msvcrt`` on Windows: :mod:`mlkit.study.platform_compat`)."""
+        if platform_compat.lock_backend() is None:
             raise ContractError('capability_not_supported', 'The calibration ledger needs '
-                                'POSIX file locking (fcntl.flock).',
-                                remediation='Use Linux, macOS or WSL.')
-        import fcntl
+                                'file locking (fcntl or msvcrt), unavailable here.',
+                                remediation='Use Linux, macOS, Windows or WSL.')
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        fd = os.open(self.path.with_name(self.path.name + '.lock'), os.O_CREAT | os.O_RDWR,
-                     0o600)
+        fd = platform_compat.open_lock_file(self.path.with_name(self.path.name + '.lock'))
         try:
-            fcntl.flock(fd, fcntl.LOCK_EX)
+            platform_compat.lock(fd)
             try:
                 yield
             finally:
-                fcntl.flock(fd, fcntl.LOCK_UN)
+                platform_compat.unlock(fd)
         finally:
             os.close(fd)
 

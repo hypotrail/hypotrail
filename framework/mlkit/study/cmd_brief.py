@@ -34,7 +34,7 @@ from mlkit.reliability import CommandRefused, Handler
 from . import case_brief as cb
 from . import commands as cmd
 from . import confirm as cf
-from . import read
+from . import read, user_words
 from . import state as st
 from .errors import StudyError
 from .store import atomic_write_json
@@ -77,8 +77,7 @@ def configure(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('--file', default=None,
                         help='with set: the draft (YAML), the fields of case-brief.yaml plus '
                              'citations and open_questions')
-    parser.add_argument('--user-words', default=None,
-                        help="with set: the junior's verbatim words adopting the brief")
+    user_words.add(parser, help="with set: the junior's verbatim words adopting the brief")
     parser.add_argument('--request-id', default=None,
                         help='optional; derived from the content and the revision when absent')
     parser.add_argument('--expected-revision', required=True, type=int,
@@ -111,6 +110,94 @@ def extract(path: Path) -> tuple[bytes, list[dict]]:
                        'the product owner for a PDF with text, or copy its text.',
                        field='pdf', reason='empty_extraction', pages=len(pages))
     return data, pages
+
+
+# Onboarding (Lot 2): the brief may also be a Word file, Markdown or plain text, or a short
+# free-text context typed by the user (kind ``context``). Their "pages" are sections: a new
+# one at each heading, and after :data:`SECTION_LINES` paragraphs or lines without one, so a
+# draft cites them as it cites the pages of a PDF.
+DOCUMENT_KINDS = {'.pdf': 'pdf', '.docx': 'docx', '.md': 'markdown', '.markdown': 'markdown',
+                  '.txt': 'text'}
+CONTEXT_KIND = 'context'
+CONTEXT_FILE = 'context.txt'
+SECTION_LINES = 40
+_DOCX_NS = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
+
+
+def _sections(paragraphs: list[tuple[bool, str]]) -> list[dict]:
+    """``[{n, text}]`` from ``(is_heading, text)`` paragraphs."""
+    sections: list[list[str]] = []
+    for heading, text in paragraphs:
+        if not sections or (heading and any(t.strip() for t in sections[-1])) \
+                or len(sections[-1]) >= SECTION_LINES:
+            sections.append([])
+        sections[-1].append(text)
+    pages = []
+    for lines in sections:
+        text = '\n'.join(lines).strip()
+        if text:
+            pages.append({'n': len(pages) + 1, 'text': text})
+    return pages
+
+
+def _docx_paragraphs(path: Path, data: bytes) -> list[tuple[bool, str]]:
+    import zipfile
+    from xml.etree import ElementTree
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            root = ElementTree.fromstring(archive.read('word/document.xml'))
+    except Exception as exc:              # noqa: BLE001 - any reader failure is a refusal
+        raise _invalid(f'{path.name} cannot be read as a Word document: {exc}', field='brief',
+                       reason='unreadable_document') from exc
+    out = []
+    for p in root.iter(f'{_DOCX_NS}p'):
+        style = p.find(f'{_DOCX_NS}pPr/{_DOCX_NS}pStyle')
+        name = (style.get(f'{_DOCX_NS}val') or '') if style is not None else ''
+        heading = name.lower().startswith(('heading', 'titre', 'title'))
+        out.append((heading, ''.join(t.text or '' for t in p.iter(f'{_DOCX_NS}t'))))
+    return out
+
+
+def text_pages(text: str) -> list[dict]:
+    """The sections of a Markdown or plain text (a heading is a line starting with ``#``)."""
+    return _sections([(line.lstrip().startswith('#'), line.rstrip())
+                      for line in text.splitlines()])
+
+
+def extract_document(path: Path) -> tuple[bytes, list[dict], str]:
+    """The bytes, the pages or sections ``[{n, text}]`` and the kind of a brief: a PDF
+    (:func:`extract`), a Word file (``.docx``), Markdown (``.md``) or plain text (``.txt``,
+    UTF-8). Another format, an unreadable file or one without text is refused."""
+    path = Path(path)
+    kind = DOCUMENT_KINDS.get(path.suffix.lower())
+    if kind is None:
+        raise _invalid(f'{path.name}: a brief is a PDF, a Word file (.docx), Markdown (.md) or '
+                       'plain text (.txt).', field='brief', reason='unsupported_brief_format')
+    if kind == 'pdf':
+        data, pages = extract(path)
+        return data, pages, kind
+    if not path.is_file():
+        raise _invalid(f'No file at {path}.', field='brief', reason='missing_file')
+    data = path.read_bytes()
+    if kind == 'docx':
+        pages = _sections(_docx_paragraphs(path, data))
+    else:
+        try:
+            text = data.decode('utf-8-sig')
+        except UnicodeDecodeError as exc:
+            raise _invalid(f'{path.name} is not UTF-8 text.', field='brief',
+                           reason='not_utf8') from exc
+        pages = text_pages(text)
+    if not pages:
+        raise _invalid(f'No text could be read from {path.name}.', field='brief',
+                       reason='empty_extraction')
+    return data, pages, kind
+
+
+def write_source(study: Path, path: Path, data: bytes, pages: list[dict], kind: str) -> None:
+    """``brief/source.json`` and a copy of the brief in the study's ``brief/`` folder (the
+    kind is recorded for a brief that is not a PDF)."""
+    _write_source(study, path, data, pages, kind=kind)
 
 
 def _import(ctx: cmd.Context) -> Handler:
@@ -171,12 +258,15 @@ def _request_id(args, verb: str, content: bytes) -> str:
     return f'brief-{verb}-{digest}-r{args.expected_revision}'
 
 
-def _write_source(study: Path, pdf: Path, data: bytes, pages: list[dict]) -> None:
+def _write_source(study: Path, pdf: Path, data: bytes, pages: list[dict],
+                  kind: str = 'pdf') -> None:
     folder = study / FOLDER
     folder.mkdir(exist_ok=True)
-    atomic_write_json(folder / SOURCE_FILE,
-                      {'schema': SOURCE_SCHEMA, 'pdf': pdf.name,
-                       'sha256': hashlib.sha256(data).hexdigest(), 'pages': pages})
+    source = {'schema': SOURCE_SCHEMA, 'pdf': pdf.name,
+              'sha256': hashlib.sha256(data).hexdigest(), 'pages': pages}
+    if kind != 'pdf':
+        source['kind'] = kind
+    atomic_write_json(folder / SOURCE_FILE, source)
     target = folder / pdf.name
     if pdf.resolve() != target.resolve():
         shutil.copyfile(pdf, target)
@@ -198,8 +288,12 @@ def then(study: Path, revision: int, lang: str | None = None) -> dict:
 
 def import_pdf(study: Path, pdf: Path, expected_revision: int,
                request_id: str | None = None) -> cmd.Outcome:
-    """``brief import``: also run by ``init --brief-pdf`` right after the study is created."""
-    data, pages = extract(pdf)
+    """``brief import``: also run by ``init --brief-pdf`` right after the study is created,
+    and by ``hypotrail seal`` for the brief given to ``new --data`` (a PDF, a Word file,
+    Markdown, plain text, or the user's context)."""
+    data, pages, kind = extract_document(pdf)
+    if pdf.name == CONTEXT_FILE and pdf.parent.name == FOLDER:
+        kind = CONTEXT_KIND
     sha = hashlib.sha256(data).hexdigest()
     rid = request_id or (f'brief-import-{hashlib.sha256(data).hexdigest()[:16]}'
                          f'-r{expected_revision}')
@@ -208,7 +302,7 @@ def import_pdf(study: Path, pdf: Path, expected_revision: int,
                         request_id=rid, expected_revision=expected_revision,
                         command='brief import', quiet=True)
     # The state records the import; the files follow it (again on a replay).
-    _write_source(study, pdf, data, pages)
+    _write_source(study, pdf, data, pages, kind=kind)
     outcome.payload['next_action'] = cmd.refreshed_next_action(study)
     outcome.payload['then'] = then(study, outcome.payload['revision'])
     return outcome

@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import sklearn
 import yaml
+from .study import platform_compat
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -23,7 +24,7 @@ from . import task_contract as tc
 
 def write(path,obj):
  path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)
- tmp=path.with_suffix(path.suffix+'.tmp');tmp.write_text(json.dumps(obj,ensure_ascii=False,indent=2,allow_nan=False));os.replace(tmp,path)
+ tmp=path.with_suffix(path.suffix+'.tmp');tmp.write_text(json.dumps(obj,ensure_ascii=False,indent=2,allow_nan=False),encoding='utf-8');platform_compat.replace(tmp,path)
 
 def dataset(root,s):
  d=s['data'];df=pd.read_csv(tc.data_path(root,s))
@@ -120,15 +121,14 @@ def constraints(name,s,model=None,seconds=None,batch_ms=None,size_mb=None):
 
 def reserve(root,s,count):
  """Cooperative local log; not a control against a hostile agent."""
- import fcntl
  folder=Path(root)/'.osml/classical';folder.mkdir(parents=True,exist_ok=True)
- with (folder/'budget.lock').open('a') as lock:
-  fcntl.flock(lock,fcntl.LOCK_EX)
-  ledger=folder/'fits.jsonl';rows=[json.loads(x) for x in ledger.read_text().splitlines()] if ledger.exists() else []
+ with (folder/'budget.lock').open('a',encoding='utf-8') as lock:
+  platform_compat.lock(lock.fileno())
+  ledger=folder/'fits.jsonl';rows=[json.loads(x) for x in ledger.read_text(encoding='utf-8').splitlines()] if ledger.exists() else []
   spent=sum(r['reserved'] for r in rows)
   if spent+count>s['budget']['max_fits']:raise ValueError(f'Total budget exceeded: {spent}+{count}>{s["budget"]["max_fits"]}; a revision does not reset the counter')
   run=uuid.uuid4().hex[:12]
-  with ledger.open('a') as f:f.write(json.dumps({'run':run,'reserved':count,'time':time.time()})+'\n')
+  with ledger.open('a',encoding='utf-8') as f:f.write(json.dumps({'run':run,'reserved':count,'time':time.time()})+'\n')
  return run
 
 def profile(root):
@@ -181,7 +181,7 @@ def render(root,obj):
  e=lambda v:html.escape(str(v),quote=True)
  rows=''.join('<tr><td>'+e(r['model'])+'</td><td>'+e(r['status'])+'</td><td>'+e(r['metrics'].get(obj['primary'],'—'))+'</td><td>'+('Eligible' if r['eligible'] else 'Ineligible')+'</td><td>'+('<br>'.join(e(c['kind']+': '+c['status']+' — '+c['reason']) for c in r['constraints']) or e(r.get('error','No constraint requested')))+'</td></tr>' for r in obj['results'])
  content=f'''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hypotrail · ML study</title><style>body{{font:16px/1.6 system-ui;background:#f1f5ef;color:#193a32;margin:0}}main{{max-width:1100px;margin:auto;padding:40px 24px}}h1{{font-size:42px}}section{{background:white;border:1px solid #d4e2d9;border-radius:18px;padding:25px;margin:22px 0}}table{{width:100%;border-collapse:collapse}}td,th{{padding:12px;text-align:left;border-bottom:1px solid #ddd;vertical-align:top}}.scroll{{overflow:auto}}.tag{{color:#8b5409}}summary{{cursor:pointer}}</style><main><p>HYPOTRAIL / CLASSICAL STUDY</p><h1>{e(obj['task'])} · results and limitations</h1><p class="tag">Exploration only; no production acceptance</p><section><h2>What limits the conclusion</h2><p>No confirmatory evidence of generalization. A gain establishes neither business availability nor split validity. Keeping the reference or concluding insufficient evidence remains possible.</p><ul>{"".join("<li>"+e(x)+"</li>" for x in obj["limitations"])}</ul></section><section><h2>Pilot recommendation</h2><p>Candidate to examine: <b>{e(obj['suggested_candidate'] or 'no eligible candidate')}</b> according to {e(obj['primary'])} ({e(obj['direction'])}). Soft preferences remain trade-offs and are not added to the score.</p><p>Interpretability: {('declared requirement' if any(c['kind']=='interpretability' for c in obj['contract']['constraints']) else 'not requested (optional)')}.</p></section><section class="scroll"><table><tr><th>Model</th><th>State</th><th>{e(obj['primary'])}</th><th>Contract constraints</th><th>Evidence / limits</th></tr>{rows}</table></section><section><h2>Before deciding</h2><ul>{''.join('<li>'+e(x)+'</li>' for x in obj['limitations'])}</ul><details><summary>Contract and provenance</summary><pre style="white-space:pre-wrap">{e(json.dumps({'contract':obj['contract'],'hashes':obj['hashes'],'versions':obj['versions']},ensure_ascii=False,indent=2))}</pre></details></section></main></html>'''
- (Path(root)/'reports/classical-study.html').write_text(__import__('mlkit.presentation',fromlist=['polish']).polish(content))
+ (Path(root)/'reports/classical-study.html').write_text(__import__('mlkit.presentation',fromlist=['polish']).polish(content), encoding='utf-8')
 
 def main(argv=None):
  ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('--root',default=os.environ.get('OSML_ROOT','.'));sub=ap.add_subparsers(dest='action',required=True)
@@ -191,7 +191,7 @@ def main(argv=None):
  try:
   if args.action=='init':
    root.mkdir(parents=True,exist_ok=True)
-   with (root/'project.yaml').open('x') as f:yaml.safe_dump(tc.template(args.task),f,allow_unicode=True,sort_keys=False)
+   with (root/'project.yaml').open('x', encoding='utf-8') as f:yaml.safe_dump(tc.template(args.task),f,allow_unicode=True,sort_keys=False)
    obj={'contract':str(root/'project.yaml')}
   elif args.action=='plan':obj=tc.plan(tc.load(root))
   elif args.action=='profile':obj=profile(root)

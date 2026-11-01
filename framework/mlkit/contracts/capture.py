@@ -57,6 +57,7 @@ from hypotrail_runtime import RUNTIME_API_VERSION, __version__ as RUNTIME_VERSIO
 from hypotrail_runtime.errors import ContractError
 
 from . import errors as cerr
+from ..study import platform_compat
 
 CAPTURE = 'predictor.capture'
 PROFILES = ('base', 'workshop')
@@ -642,7 +643,7 @@ def _place(root: Path, staging: Path, descriptor):
                                             'again; never re-package or edit a bundle.',
                                 details={'reason': PACKAGES_DIFFER, 'changed': changed})
         return final, True, held
-    os.replace(staging, final)
+    platform_compat.replace(staging, final)
     return final, False, list(descriptor.bundle.optional_packages)
 
 

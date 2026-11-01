@@ -147,81 +147,79 @@ footer{color:var(--faint);font-size:13px;margin-top:40px;border-top:1px solid va
 
       <section class="blk" id="local" style="--ac:var(--blue)">
         <h2>Option 2 · En local</h2>
+        <p>Sur votre poste, le moteur s'installe comme un outil, <code>hypotrail</code>, avec <b>uv</b>. Node n'est pas nécessaire.</p>
 
         <h3>1. Prérequis</h3>
         <div class="card pen">
-          <table>
-            <thead><tr><th>Système</th><th>À faire</th></tr></thead>
-            <tbody>
-              <tr><td><b>Linux</b></td><td>Rien de particulier.</td></tr>
-              <tr><td><b>macOS</b></td><td>Installer la commande <code>code</code> : dans VS Code, ouvrir la palette, puis <i>Shell Command: Install 'code' command in PATH</i>.</td></tr>
-              <tr><td><b>Windows</b></td><td>Le moteur ne fonctionne <b>pas</b> sous Windows natif. Installez <b>WSL2</b> (Ubuntu) et l'extension VS Code <b>WSL</b>. Faites toutes les étapes suivantes <b>dans WSL</b>, puis ouvrez VS Code en mode WSL (<code>code .</code> depuis le terminal WSL). Sans droits pour installer WSL2, prenez l'option 1.</td></tr>
-            </tbody>
-          </table>
-          <p class="lbl" style="margin-top:12px">Et aussi</p>
           <ul>
-            <li><b>git</b> ;</li>
-            <li><b>uv</b>, qui installe lui-même Python 3.13 s'il manque : <code>curl -LsSf https://astral.sh/uv/install.sh | sh</code>, ou <code>brew install uv</code> sous macOS ;</li>
-            <li><b>Node.js 18 ou plus</b>, seulement pour fabriquer le panneau. Inutile si l'organisateur vous a fourni <code>hypotrail-companion-0.1.0.vsix</code>.</li>
+            <li><b>uv</b>, qui installe lui-même Python 3.13 s'il manque. Rouvrez ensuite le terminal.</li>
           </ul>
+          <div class="grid2">
+            <div class="card pen">
+              <div class="lbl">Windows (PowerShell)</div>
+<pre><code>powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"</code></pre>
+            </div>
+            <div class="card pen">
+              <div class="lbl">macOS et Linux</div>
+<pre><code>curl -LsSf https://astral.sh/uv/install.sh | sh</code></pre>
+              <p>ou <code>brew install uv</code> sous macOS.</p>
+            </div>
+          </div>
+          <ul>
+            <li><b>git</b>, pour récupérer le cas de l'atelier (Auto MPG) ;</li>
+            <li><b>VS Code</b> et sa commande <code>code</code>. Sous macOS : palette, puis <i>Shell Command: Install 'code' command in PATH</i>. Sous Windows, l'installeur l'ajoute.</li>
+          </ul>
+          <p><b>Derrière un proxy d'entreprise</b> : définissez <code>HTTPS_PROXY</code> et <code>UV_SYSTEM_CERTS=1</code> avant les commandes <code>uv</code> (PowerShell : <code>$env:UV_SYSTEM_CERTS = "1"</code>), ainsi que <code>UV_DEFAULT_INDEX</code> si l'entreprise a un miroir PyPI.</p>
         </div>
 
-        <h3>2. Cloner et installer l'environnement</h3>
-        <p>Clonez votre fork (ou le dépôt) dans un chemin <b>sans espaces</b> :</p>
-<pre><code>git clone https://github.com/&lt;votre-compte&gt;/hypotrail.git ~/hypotrail
-# ou, sans fork : git clone https://github.com/hypotrail/hypotrail.git ~/hypotrail
-cd ~/hypotrail
-uv sync --project framework --group azureml</code></pre>
+        <h3>2. Installer l'outil et le panneau</h3>
+        <p>Les mêmes commandes sous PowerShell, macOS et Linux :</p>
+<pre><code>uv tool install "git+https://github.com/hypotrail/hypotrail#subdirectory=framework"
+hypotrail setup vscode
+hypotrail doctor</code></pre>
         <div class="card">
-          <p>L'environnement fait environ <b>650 Mo</b> sur disque (pandas, scikit-learn, SciPy, Marimo, InterpretML…). Faites cette étape sur un bon réseau.</p>
-          <p><b>Derrière un proxy d'entreprise</b> : définissez <code>HTTPS_PROXY</code> et <code>UV_SYSTEM_CERTS=1</code> avant <code>uv sync</code>, ainsi que <code>UV_DEFAULT_INDEX</code> si l'entreprise a un miroir PyPI.</p>
+          <ul>
+            <li><code>uv tool install</code> installe le moteur et ses dépendances (environ <b>650 Mo</b> : pandas, scikit-learn, SciPy, Marimo, InterpretML…). Faites cette étape sur un bon réseau. Si <code>hypotrail</code> n'est pas trouvé ensuite : <code>uv tool update-shell</code>, puis rouvrez le terminal.</li>
+            <li><code>hypotrail setup vscode</code> installe le panneau d'étude dans VS Code, sans Node. Faites ensuite <i>Developer: Reload Window</i>. Sans commande <code>code</code>, <code>hypotrail setup vscode --vsix-out panneau.vsix</code> écrit le fichier : vue <i>Extensions</i>, menu <b>…</b>, puis <i>Install from VSIX…</i>.</li>
+            <li><code>hypotrail doctor</code> vérifie le poste (Python, uv, VS Code, Copilot, panneau, proxy, dossier OneDrive, chemins longs sous Windows) et affiche la commande qui corrige chaque point.</li>
+          </ul>
+          <p>Pour mettre à jour : <code>uv tool install --force "git+https://github.com/hypotrail/hypotrail#subdirectory=framework"</code>, puis <code>hypotrail setup vscode</code>.</p>
         </div>
-
-        <h3>3. Installer le panneau d'étude</h3>
-        <div class="grid2">
-          <div class="card pen">
-            <div class="lbl">Avec Node</div>
-<pre><code>bash scripts/workshop/install-panel.sh</code></pre>
-          </div>
-          <div class="card pen">
-            <div class="lbl">Sans Node, avec le fichier fourni</div>
-            <p>Dans VS Code : vue <i>Extensions</i>, menu <b>…</b>, puis <i>Install from VSIX…</i>, et choisissez <code>hypotrail-companion-0.1.0.vsix</code>.</p>
-          </div>
-        </div>
-        <p>Faites ensuite <i>Developer: Reload Window</i>. Pour mettre à jour un panneau déjà installé : <code>bash scripts/workshop/install-panel.sh --force</code>.</p>
         <div class="card warn">
-          <p>Si l'installation est refusée (« extension not allowed »), c'est que la politique de l'entreprise filtre les extensions. Le panneau est optionnel : le chat et le rapport suffisent. Prévenez l'organisateur.</p>
+          <p><b>Windows</b> : le moteur fonctionne sous Windows natif, dans PowerShell. Si <code>hypotrail doctor</code> signale quand même <code>platform</code> en échec, passez par <b>WSL2</b> (Ubuntu, extension VS Code <b>WSL</b>) ou par l'option 1, et prévenez l'organisateur.</p>
+          <p>Si l'installation du panneau est refusée (« extension not allowed »), c'est que la politique de l'entreprise filtre les extensions. Le panneau est optionnel : le chat et le rapport suffisent. Prévenez l'organisateur.</p>
         </div>
 
-        <h3>4. Créer votre étude</h3>
-        <p>Depuis le <b>terminal intégré de VS Code</b>, à la racine du clone :</p>
-<pre><code>bash scripts/workshop/new-mpg-study.sh binome-XX --from-pdf --open</code></pre>
-        <p>Remplacez <code>XX</code> par votre numéro de binôme, puis passez à <a href="#verif">Ouvrir l'étude</a>.</p>
+        <h3>3. Créer votre étude</h3>
+        <p>Récupérez le cas de l'atelier, dans un chemin <b>sans espaces</b>, puis créez l'étude depuis le <b>terminal intégré de VS Code</b> :</p>
+<pre><code>git clone https://github.com/hypotrail/hypotrail.git hypotrail
+hypotrail new binome-XX --case hypotrail/use-cases/auto-mpg --brief hypotrail/use-cases/auto-mpg/po/fiche-cas-usage-mpg.pdf --lang fr --dir studies --open</code></pre>
+        <p>Remplacez <code>XX</code> par votre numéro de binôme, puis passez à <a href="#verif">Ouvrir l'étude</a>. L'étude est créée dans <code>studies/binome-XX</code> ; les données restent dans le dossier du cas, hors du dossier de l'étude.</p>
       </section>
 
       <section class="blk" id="verif">
         <h2>Ouvrir l'étude</h2>
         <div class="card">
           <ol class="steps">
-            <li>La fenêtre VS Code se rouvre sur <code>studies/binome-XX</code>. Si VS Code le demande, <b>faites confiance au dossier</b>.</li>
+            <li>La fenêtre VS Code se rouvre sur <code>studies/binome-XX</code> (sinon : <code>code -r studies/binome-XX</code>). Si VS Code le demande, <b>faites confiance au dossier</b>.</li>
             <li>Ouvrez la palette (<code>Ctrl+Shift+P</code>, ou <code>Cmd+Shift+P</code> sur Mac) et lancez <b>Hypotrail: open the study panel</b>. Le panneau s'affiche.</li>
             <li>Ouvrez le chat Copilot (<code>Ctrl+Alt+I</code>), passez en mode <b>Agent</b> et choisissez l'agent <b>hypotrail</b>. Dans <i>Configure Tools</i>, vérifiez que <code>vscode/askQuestions</code> est coché.</li>
-            <li>Écrivez <span class="say">« Prépare l'étude à partir de la fiche du PO »</span>. L'agent lit le PDF, rédige la fiche du besoin et lance des commandes <code>uv run … hypotrail</code>.</li>
+            <li>Écrivez <span class="say">« Prépare l'étude à partir de la fiche du PO »</span>. L'agent lit le PDF, rédige la fiche du besoin et lance des commandes <code>hypotrail</code> (en Codespaces : <code>uv run … hypotrail</code>).</li>
           </ol>
         </div>
       </section>
 
       <section class="blk" id="regle" style="--ac:var(--pink)">
         <h2>La règle de l'agent, visible</h2>
-        <p>Le script installe dans l'étude une <b>règle de l'atelier</b>, un « hook » Copilot écrit dans <code>.github/hooks/hypotrail.json</code>. Elle s'applique avant chaque action de l'agent :</p>
+        <p><code>hypotrail new</code> installe dans l'étude une <b>règle de l'atelier</b>, un « hook » Copilot écrit dans <code>.github/hooks/hypotrail.json</code> (il lance <code>hypotrail hook pretool</code>). Elle s'applique avant chaque action de l'agent :</p>
         <div class="grid2">
-          <div class="card ok"><span class="stamp ok">autorisé</span><p>Une commande simple du moteur, <code>uv run … hypotrail …</code>. Vous n'avez pas à valider chaque étape de l'étude.</p></div>
+          <div class="card ok"><span class="stamp ok">autorisé</span><p>Une commande simple du moteur, exactement celle que l'étude a enregistrée (<code>uv run … hypotrail …</code> en Codespaces, l'exécutable <code>hypotrail</code> en local). Vous n'avez pas à valider chaque étape de l'étude.</p></div>
           <div class="card warn"><span class="stamp no">refusé</span><p>Toute lecture directe du fichier de données brut (<code>auto-mpg.data</code>). Il contient aussi les lignes du test final, scellées. On regarde les données par le panneau, <code>hypotrail data</code> ou les notebooks, et l'étude compte ces regards.</p></div>
           <div class="card"><span class="stamp ask">demandé</span><p>Tout le reste, comme d'habitude.</p></div>
           <div class="card pen"><span class="stamp rec">noté</span><p>Chaque décision de la règle est écrite dans <code>.github/hooks/hypotrail-hook.log</code>, que l'on regardera ensemble.</p></div>
         </div>
         <div class="card warn">
-          <p>Les hooks sont une fonction <b>en préversion</b> de VS Code. Si VS Code vous demande quand même d'autoriser une commande <code>uv run … hypotrail</code>, lisez-la, puis choisissez <b>Allow in this Session</b>. N'utilisez pas « Allow all » : il autoriserait toutes les actions de l'agent, y compris les modifications de fichiers.</p>
+          <p>Les hooks sont une fonction <b>en préversion</b> de VS Code. Si VS Code vous demande quand même d'autoriser une commande du moteur <code>hypotrail</code>, lisez-la, puis choisissez <b>Allow in this Session</b>. N'utilisez pas « Allow all » : il autoriserait toutes les actions de l'agent, y compris les modifications de fichiers.</p>
         </div>
       </section>
 
@@ -231,12 +229,13 @@ uv sync --project framework --group azureml</code></pre>
           <table>
             <thead><tr><th>Symptôme</th><th>À faire</th></tr></thead>
             <tbody>
-              <tr><td>La commande « Hypotrail: open the study panel » n'existe pas</td><td><code>bash scripts/workshop/install-panel.sh</code>, puis <i>Developer: Reload Window</i>.</td></tr>
-              <tr><td>« Companion disabled (feature flag) »</td><td>Le dossier ouvert n'est pas une étude créée par le script : rouvrez <code>studies/&lt;nom&gt;</code>.</td></tr>
+              <tr><td>La commande « Hypotrail: open the study panel » n'existe pas</td><td><code>hypotrail setup vscode</code> (en Codespaces : <code>bash scripts/workshop/install-panel.sh</code>), puis <i>Developer: Reload Window</i>.</td></tr>
+              <tr><td>« Companion disabled (feature flag) »</td><td>Le dossier ouvert n'est pas une étude créée par <code>hypotrail new</code> : rouvrez <code>studies/&lt;nom&gt;</code>.</td></tr>
+              <tr><td>Quelque chose ne marche pas sur le poste</td><td><code>hypotrail doctor</code> : il indique la commande qui corrige chaque point.</td></tr>
               <tr><td>L'agent hypotrail n'apparaît pas</td><td>Le dossier ouvert doit être l'étude elle-même ; faites <i>Reload Window</i>. En secours : mode Agent par défaut, puis « Suis les instructions de .github/agents/hypotrail.agent.md. On commence. »</td></tr>
               <tr><td>Pas de sélecteur de réponses</td><td>VS Code trop ancien, ou <code>vscode/askQuestions</code> décoché. L'agent pose alors ses questions en texte : on continue.</td></tr>
-              <tr><td><code>platform_unsupported</code></td><td>Vous êtes sous Windows natif : passez par WSL2 ou Codespaces.</td></tr>
-              <tr><td><code>uv sync</code> échoue (réseau)</td><td>Pour le proxy, voir l'étape 2 de l'option 2. Sinon, prenez Codespaces.</td></tr>
+              <tr><td><code>platform_unsupported</code></td><td>Verrous de fichiers indisponibles sur ce Python : passez par WSL2 ou Codespaces, et prévenez l'organisateur.</td></tr>
+              <tr><td><code>uv tool install</code> échoue (réseau, certificat)</td><td>Pour le proxy, voir les prérequis de l'option 2 (<code>UV_SYSTEM_CERTS=1</code>). Sinon, prenez Codespaces.</td></tr>
               <tr><td>Marimo demande un jeton</td><td>Ouvrez le lien complet affiché dans le terminal.</td></tr>
             </tbody>
           </table>

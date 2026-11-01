@@ -80,7 +80,7 @@ def validate(contract):
   if kindc=='custom' and (not str(c['name']).strip() or not str(c['evidence_required']).strip()):raise ValueError('External constraint: a name and the expected evidence are required')
  return s
 
-def load(root):return validate(yaml.safe_load((Path(root)/'project.yaml').read_text()))
+def load(root):return validate(yaml.safe_load((Path(root)/'project.yaml').read_text(encoding='utf-8')))
 def data_path(root,s):
  p=(Path(root)/s['data']['path']).resolve()
  if not p.is_relative_to(Path(root).resolve()):raise ValueError('Development data outside the project: prepare an explicitly authorized copy')

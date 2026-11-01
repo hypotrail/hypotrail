@@ -194,7 +194,19 @@ Remaining defects and small gaps:
 - The Overview concept card at a step's first appearance is not built (CI.16).
 - `delegation_scope` is not shown in the HTML or the notebook; `status --json` is large (agents use `--summary`); deliverables show execution liveness as `not_checked`.
 
-Platform: POSIX only (`fcntl`); editable install only; absolute paths recorded at `init` (moving a study or the checkout needs a new study); Marimo internal codegen pinned to `marimo==0.25.1` (rerun the spike after any upgrade, [ADR 0001](../decisions/0001-notebook-and-html.md); running the generated notebook refits one model); float time columns are still misread by the legacy `classical.split`.
+Platform: Linux, macOS and native Windows (see [Platform support](#platform-support)); editable install only; absolute paths recorded at `init` (moving a study or the checkout needs a new study); Marimo internal codegen pinned to `marimo==0.25.1` (rerun the spike after any upgrade, [ADR 0001](../decisions/0001-notebook-and-html.md); running the generated notebook refits one model); float time columns are still misread by the legacy `classical.split`.
+
+## Platform support
+
+Onboarding Lot 4 (1 November 2026, [ONBOARDING-SPEC](../plans/ONBOARDING-SPEC.md) §3) lifted the POSIX-only refusal; `init` and the store now run on native Windows. What changed, all in `framework/mlkit/study/platform_compat.py` (standard library only):
+
+- **Locks.** The writer lock and the execution leases use `fcntl.flock` on Linux and macOS and `msvcrt.locking` on Windows, on one byte at offset 2^30, beyond the content: Windows locks are mandatory on their range, and the holder and lease records must stay readable. Windows has no shared lock, so the read-only lease probe takes the byte for an instant (two concurrent probes may each report the lease as held, the conservative answer). A Windows lease is released by emptying it, unlocking, closing, then removing it, since an open file cannot be removed; an empty lease reads as starting, hence held. Only a platform with neither primitive is refused (`platform_unsupported`). The legacy pilot, `classical`, and the MAPIE calibration ledger use the same helpers.
+- **Atomic writes.** Every atomic replace of the engine (`store.atomic_write`, the notebook render, the legacy pilot and ledgers) goes through `platform_compat.replace`, which retries `os.replace` on `PermissionError` on Windows (a reader without delete sharing: the panel, Marimo, an antivirus), ten attempts with growing delays, about five seconds, then raises. Lease removal retries the same way. `hypotrail_runtime` (a separate wheel) still calls `os.replace` for its bundle folders.
+- **Text.** The CLI writes stdout and stderr as UTF-8 whatever the locale (a Windows pipe would otherwise use cp1252), and the engine opens text files with `encoding='utf-8'`.
+- **Free text.** Every `--user-words` (and `decide note --text`) has a `--user-words-file PATH` twin (`-` for stdin), read as UTF-8 (a byte-order mark is dropped; one trailing newline is removed; anything else is kept). A file that is not UTF-8 is refused with `invalid_arguments`.
+- **Paths and commands.** `platform_compat.venv_python`, `venv_executable` (`Scripts\python.exe`, `hypotrail.exe` on Windows) and `display_command` (`list2cmdline` on Windows, `shlex.join` elsewhere) are the helpers for the interpreter and command display of `launch.py` and `agent_files.py` (packaging lot).
+
+Tested on Linux, where the Windows lock branch runs against an emulation of `msvcrt.locking` with per-handle byte-range locks (`framework/tests/study/test_windows_native.py`): two processes contending for the writer lock, busy refusal with a readable holder, held, released and orphaned leases, replace retries, `--user-words-file`, and UTF-8 output under a cp1252 locale. Only CI on `windows-latest` confirms the real `msvcrt` (mandatory locks, release when a process dies), real sharing violations against `os.replace` and lease removal, and console and pipe encodings; no manual VS Code and Copilot session on Windows has been run yet.
 
 ## Legacy and preservation
 
@@ -212,3 +224,13 @@ From the [review synthesis §4](../plans/V0.2-REVIEW-SYNTHESIS.md#v03-and-later-
 6. **Engine-served pedagogy**: `next_action` carries the term, the misconception and the question, so the agent prompt shrinks (about 4,300 words, 16 "never"); key for **Copilot portability** and a Copilot acceptance run.
 7. A full-conversation agent run (E1) on Hotel booking demand (the discovery case since v0.3), with N > 3, before trusting pass rates.
 8. Later: counterfactual leakage branch ("what if `PageValues` were included?"), pilot designer, forward temporal backtest, more model families under a complexity budget, a grouped split by a group column, a multi-study portfolio, a local learning record, Online Retail II as an advanced cross-sell case, publication of the trap benchmark.
+
+## Onboarding Lots 0 and 1 (2026-11-01, agent P)
+
+From `docs/plans/ONBOARDING-SPEC.md`; contract in CLI-CONTRACT §20.
+
+- **Installable wheel.** `hypotrail_runtime` is vendored into the `hypotrail` wheel (no `hypotrail-runtime` path dependency; `framework/runtime/` still builds alone for exported projects; do not install both in one environment). `uv tool install "git+...#subdirectory=framework"` and `uv tool install ./framework` were verified outside the checkout (`init`, `new`, `data`, `status`, `render` on Auto MPG). Installed engines record the missing `uv.lock` under the snapshot's `unreadable_sources`.
+- **Portable `agent.json`.** The CLI command is an argument list (`uv_project`, `installed`, `python_module`, `python_path`), never `env PYTHONPATH=...`; displayed commands use PowerShell quoting on Windows.
+- **New commands.** `setup vscode` (pure-Python VSIX from the panel sources shipped as package data, byte-identical to the vsce-checked prototype; no Node), `doctor`, `hook pretool` (the workshop hook moved into the package), `new NAME --case PATH` (no `data` link; panel flag and stage v3; hook; `--open`). The workshop scripts are thin wrappers; `templates/study-template/` is a Codespaces template that installs the tool from Git.
+- **CI.** `docs/plans/onboarding/ci-workflow.yml`, to copy to `.github/workflows/ci.yml` (the writing session could not push a workflow file): ubuntu, windows, macos; the Windows jobs are `continue-on-error` until Lot 4 (cross-platform lock) lands.
+- **Limits.** Windows native still refuses study writes (`lock.require_posix`, Lot 4). The hook is a cooperative aid. `setup vscode` was tested with a fake `code` command, not a real VS Code; no Copilot acceptance session was run.

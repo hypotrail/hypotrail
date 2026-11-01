@@ -52,6 +52,7 @@ from pathlib import Path
 
 from . import activities as act
 from . import commands as cmd
+from . import user_words
 
 FAULT_ENV = 'HYPOTRAIL_FAULT'
 HOOKS_ENV = 'HYPOTRAIL_TEST_HOOKS'
@@ -80,9 +81,8 @@ def configure(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('--acknowledge-interruption', dest='acknowledge', default=None,
                         metavar='EXECUTION_ID',
                         help='acknowledge an execution with an unknown outcome (no restart)')
-    parser.add_argument('--user-words', default=None,
-                        help="with --acknowledge-interruption: the junior's verbatim reply after "
-                             'being told the outcome is unknown')
+    user_words.add(parser, help="with --acknowledge-interruption: the junior's verbatim reply "
+                                'after being told the outcome is unknown')
     # v0.3 (WP-J, R35): where the run came from; the study panel passes webview. No argparse
     # choices: a value outside state.CHANNELS is invalid_value (details.field).
     parser.add_argument('--channel', default=None,
@@ -105,7 +105,7 @@ def _die(_plan) -> None:
 def _pause(folder: Path):
     def hook(_plan) -> None:
         folder.mkdir(parents=True, exist_ok=True)
-        (folder / 'ready').write_text(str(os.getpid()))
+        (folder / 'ready').write_text(str(os.getpid()), encoding='utf-8')
         deadline = time.monotonic() + PAUSE_TIMEOUT
         while not (folder / 'go').exists():
             if time.monotonic() > deadline:

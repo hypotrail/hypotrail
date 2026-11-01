@@ -393,6 +393,39 @@ BRIEF_LABELS = {
 }
 
 
+def _set_aside(c: Context) -> str:
+    """Onboarding (ADR 0006 amendment of 2026-11-01): how the final test of a study prepared
+    with ``hypotrail new --data`` was set aside, from the deduction ``hypotrail seal``
+    recorded in the partition (``analysis_protocol.deduction``): the plan in words and
+    counts, why this method follows from the case's facts, and the user's words accepting
+    it. Empty for every other study."""
+    study = c.view.get('study')
+    if not study:
+        return ''
+    try:
+        from . import read
+        state = read.open(study).state
+        deduction = state['partition']['analysis_protocol']['deduction']
+        words, reason = deduction['words'], deduction['reason']
+        accepted = deduction['accepted']['user_words']
+    except Exception:                    # noqa: BLE001 - no deduction recorded: nothing shown
+        return ''
+    lang = 'fr' if c.lang == 'fr' else 'en'
+    head = ('Comment le test final a été mis de côté' if lang == 'fr'
+            else 'How the final test was set aside')
+    lead = ('Le test final a été déduit des réponses de la préparation, pas choisi : '
+            if lang == 'fr' else
+            'The final test was deduced from the answers of the preparation, not chosen: ')
+    because = 'parce que ' if lang == 'fr' else 'because '
+    agreed = 'Accepté dans vos mots : ' if lang == 'fr' else 'Accepted in your words: '
+    return (f'<div class="choice case card plain" id="final-test-set-aside" '
+            f'data-deduction="{e(str(deduction.get("rule")))}">'
+            f'<div class="lbl">{e(head)}</div>'
+            f'<p>{e(lead)}{lit("structure", words[lang])}</p>'
+            f'<p>{e(because)}{lit("structure", reason[lang])}.</p>'
+            f'<p class="cap">{e(agreed)}{lit("user_words", accepted)}</p></div>')
+
+
 def _brief(c: Context) -> str:
     """R66: the use-case brief (``case-brief.yaml`` next to the case), in the edition's
     language, or nothing without one. Its numbers come from the product owner, never from the
@@ -467,7 +500,7 @@ def _ch1(c: Context, steps, status) -> Parts:
                     + f'<div class="meta">{g.stamp("scenario")}<span>'
                       f'{e(g.say("ui.nothing_decided"))}</span></div></div></div>')
     # Lot 2026-10-28 (R66): the product owner's brief of the use case opens the report.
-    p.choice = _brief(c) + (p.choice or '')
+    p.choice = _brief(c) + _set_aside(c) + (p.choice or '')
     final = view.get('final_test') or {}
     opened = final.get('status') == 'opened'
     language = c.lang

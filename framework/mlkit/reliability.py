@@ -245,14 +245,14 @@ class PilotStore:
 
     def snapshot_files(self) -> dict:
         root = self.pilot.config.ROOT
-        return {n: (root / n).read_text() if (root / n).exists() else None for n in self.TRACKED}
+        return {n: (root / n).read_text(encoding='utf-8') if (root / n).exists() else None for n in self.TRACKED}
 
     def write_transaction(self, row: dict) -> None:
         self.pilot.write(self.transaction_path, row)
 
     def read_transaction(self) -> dict | None:
         path = self.transaction_path
-        return json.loads(path.read_text()) if path.exists() else None
+        return json.loads(path.read_text(encoding='utf-8')) if path.exists() else None
 
     def clear_transaction(self) -> None:
         self.transaction_path.unlink()
@@ -263,8 +263,9 @@ class PilotStore:
             path.unlink(missing_ok=True)
         else:
             temp = path.with_suffix(path.suffix + '.recovery')
-            temp.write_text(content)
-            os.replace(temp, path)
+            temp.write_text(content, encoding='utf-8')
+            from mlkit.study import platform_compat     # lazy: the core imports no mlkit
+            platform_compat.replace(temp, path)
 
     @contextlib.contextmanager
     def mutating(self):

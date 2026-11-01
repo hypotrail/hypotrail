@@ -8,13 +8,26 @@ Repository: https://github.com/hypotrail/hypotrail. Workshop participants: [inst
 
 Start with [the implementation entry point](docs/START-HERE.md); [the handoff](docs/handoff/IMPLEMENTATION.md) lists what works and what does not.
 
-## Quickstart (Linux, macOS, or WSL)
+## Start from your own data (Linux, macOS, Windows)
+
+```sh
+uv tool install "git+https://github.com/hypotrail/hypotrail#subdirectory=framework"
+hypotrail setup vscode      # the study panel, no Node needed
+hypotrail doctor            # what this machine still lacks, with the fix
+hypotrail new churn --data churn.csv [--brief brief.pdf | --context "one-line context"] --open
+```
+
+`new --data` keeps the data in `churn.case/`, next to the study folder `churn/`, and shows the chat agent only their structure. In the chat, say "Prepare the study": the agent asks six questions (prior exploration, target, row unit, prediction time, recurring entities, then the final test it deduces, in words and counts) and records your answers in your words; `hypotrail seal` then writes the case, sets the final test aside and creates the study. On an existing case: `hypotrail new NAME --case use-cases/auto-mpg --open`. See [CLI-CONTRACT §20–21](docs/specs/CLI-CONTRACT.md) and [how Hypotrail works inside](docs/explainer/hypotrail-internals.html) (in French).
+
+## Quickstart from this repository (Linux, macOS, Windows)
 
 ```sh
 uv sync --project framework --group dev
 uv run --project framework hypotrail init --case use-cases/hotel-booking/case.yaml --study ~/studies/hotel
 cd ~/studies/hotel && claude
 ```
+
+On native Windows (PowerShell), name the study folder in full, for example `--study "$HOME\studies\hotel"`; the engine's locks, atomic writes and output encoding work there too (see [Platform support](docs/handoff/IMPLEMENTATION.md#platform-support)). Pass the junior's words with `--user-words-file` (a UTF-8 file, or `-` for stdin) rather than through shell quoting.
 
 The discovery case is [Hotel booking demand](use-cases/hotel-booking/README.md) (Resort Hotel): which new bookings the reservations team should contact, or ask for a deposit, when it can handle only some, with a clear timeline from the booking to the cancellation and leakage traps to find. Then try [Bank Marketing](use-cases/bank-marketing/README.md) (`use-cases/bank-marketing/case.yaml`, the v0.1/v0.2a reference) or its [full file in time order](use-cases/bank-marketing-full/README.md) (`use-cases/bank-marketing-full/case.yaml`, a temporal final test), and [Auto MPG](use-cases/auto-mpg/README.md) for regression. [Online Shoppers](use-cases/online-shoppers/README.md) is an advanced case: its scenario has a documented limitation (the target is known at the prediction moment).
 
@@ -40,7 +53,7 @@ Optional study panel (VS Code 1.90 or later, flag off by default): `HYPOTRAIL_CO
 
 ## Development
 
-Use Python 3.13 and uv on Linux, macOS, or WSL. The engine relies on POSIX file locking; native Windows is not supported. Create a dedicated environment; do not copy an environment from another checkout.
+Use Python 3.13 and uv on Linux, macOS, Windows, or WSL. The engine's file locks use `fcntl` on Linux and macOS and `msvcrt` on Windows (`framework/mlkit/study/platform_compat.py`). Create a dedicated environment; do not copy an environment from another checkout.
 
 `framework/pyproject.toml` and `framework/uv.lock` define the reproducible environment. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full gate (with the `browser` group), the opt-in Marimo spike and agent acceptance, and current limitations.
 
