@@ -235,7 +235,9 @@ def quote_arg(arg: str, *, windows: bool | None = None) -> str:
 def display_command(argv, *, windows: bool | None = None) -> str:
     """``argv`` as one line to paste in the user's shell (Onboarding Lot 0): ``shlex.join``
     on POSIX; on Windows a PowerShell line, with the call operator ``&`` when the program
-    itself is quoted (PowerShell would otherwise read a quoted string, not a command)."""
+    itself is quoted (PowerShell would otherwise read a quoted string, not a command).
+    ``platform_compat.display_command`` (Lot 4) gives the ``cmd.exe`` form
+    (``list2cmdline``) instead; the spec asks for PowerShell, the integrator picks one."""
     windows = os.name == 'nt' if windows is None else windows
     parts = [quote_arg(a, windows=windows) for a in argv]
     if windows and parts and parts[0].startswith("'"):
@@ -247,7 +249,8 @@ def _installed_executable() -> Path | None:
     """The ``hypotrail`` console script next to the running interpreter (a venv's ``bin/``,
     ``Scripts\\`` on Windows, a ``uv tool`` environment), when it exists. The interpreter
     path is kept as is (not resolved): a venv's ``python`` is often a link out of it."""
-    candidate = Path(sys.executable).parent / ('hypotrail.exe' if os.name == 'nt' else 'hypotrail')
+    from .platform_compat import is_windows
+    candidate = Path(sys.executable).parent / ('hypotrail.exe' if is_windows() else 'hypotrail')
     return candidate if candidate.is_file() else None
 
 

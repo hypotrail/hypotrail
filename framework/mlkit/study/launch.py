@@ -50,10 +50,11 @@ def framework_dir() -> Path:
 
 
 def interpreter() -> str:
-    """The engine's Python: ``framework/.venv/bin/python`` when it exists (the
-    environment ``uv run --project framework`` uses), else the running interpreter.
-    The venv path is kept as is (not resolved), as an editor expects it."""
-    venv = framework_dir() / '.venv' / 'bin' / 'python'
+    """The engine's Python: ``framework/.venv/bin/python`` (``Scripts\\python.exe`` on
+    Windows) when it exists (the environment ``uv run --project framework`` uses), else the
+    running interpreter. The venv path is kept as is (not resolved), as an editor expects it."""
+    from .platform_compat import venv_python
+    venv = venv_python(framework_dir() / '.venv')
     if venv.exists():
         return str(venv)
     return sys.executable
