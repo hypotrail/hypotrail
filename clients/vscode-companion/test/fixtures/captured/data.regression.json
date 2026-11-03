@@ -389,101 +389,87 @@
    "order": "seeded sample",
    "items": [
     {
-     "row_key": "L74",
+     "row_key": "L174",
      "values": {
-      "mpg": 13,
-      "cylinders": 8,
-      "displacement": 307,
-      "horsepower": 130,
-      "weight": 4098,
-      "acceleration": 14,
-      "model_year": 72,
-      "origin": 1,
-      "car_name": "chevrolet chevelle concours (sw)"
-     }
-    },
-    {
-     "row_key": "L160",
-     "values": {
-      "mpg": 14,
-      "cylinders": 8,
-      "displacement": 351,
-      "horsepower": 148,
-      "weight": 4657,
-      "acceleration": 13.5,
+      "mpg": 24,
+      "cylinders": 4,
+      "displacement": 119,
+      "horsepower": 97,
+      "weight": 2545,
+      "acceleration": 17,
       "model_year": 75,
-      "origin": 1,
-      "car_name": "ford ltd"
+      "origin": 3,
+      "car_name": "datsun 710"
      }
     },
     {
-     "row_key": "L200",
+     "row_key": "L176",
      "values": {
-      "mpg": 20,
-      "cylinders": 6,
-      "displacement": 225,
-      "horsepower": 100,
-      "weight": 3651,
-      "acceleration": 17.7,
+      "mpg": 29,
+      "cylinders": 4,
+      "displacement": 90,
+      "horsepower": 70,
+      "weight": 1937,
+      "acceleration": 14,
+      "model_year": 75,
+      "origin": 2,
+      "car_name": "volkswagen rabbit"
+     }
+    },
+    {
+     "row_key": "L185",
+     "values": {
+      "mpg": 25,
+      "cylinders": 4,
+      "displacement": 140,
+      "horsepower": 92,
+      "weight": 2572,
+      "acceleration": 14.9,
       "model_year": 76,
       "origin": 1,
-      "car_name": "dodge aspen se"
+      "car_name": "capri ii"
      }
     },
     {
-     "row_key": "L263",
+     "row_key": "L247",
      "values": {
-      "mpg": 19.2,
+      "mpg": 32.8,
+      "cylinders": 4,
+      "displacement": 78,
+      "horsepower": 52,
+      "weight": 1985,
+      "acceleration": 19.4,
+      "model_year": 78,
+      "origin": 3,
+      "car_name": "mazda glc deluxe"
+     }
+    },
+    {
+     "row_key": "L277",
+     "values": {
+      "mpg": 21.6,
+      "cylinders": 4,
+      "displacement": 121,
+      "horsepower": 115,
+      "weight": 2795,
+      "acceleration": 15.7,
+      "model_year": 78,
+      "origin": 2,
+      "car_name": "saab 99gle"
+     }
+    },
+    {
+     "row_key": "L286",
+     "values": {
+      "mpg": 17,
       "cylinders": 8,
       "displacement": 305,
-      "horsepower": 145,
-      "weight": 3425,
-      "acceleration": 13.2,
-      "model_year": 78,
-      "origin": 1,
-      "car_name": "chevrolet monte carlo landau"
-     }
-    },
-    {
-     "row_key": "L287",
-     "values": {
-      "mpg": 17.6,
-      "cylinders": 8,
-      "displacement": 302,
-      "horsepower": 129,
-      "weight": 3725,
-      "acceleration": 13.4,
+      "horsepower": 130,
+      "weight": 3840,
+      "acceleration": 15.4,
       "model_year": 79,
       "origin": 1,
-      "car_name": "ford ltd landau"
-     }
-    },
-    {
-     "row_key": "L296",
-     "values": {
-      "mpg": 35.7,
-      "cylinders": 4,
-      "displacement": 98,
-      "horsepower": 80,
-      "weight": 1915,
-      "acceleration": 14.4,
-      "model_year": 79,
-      "origin": 1,
-      "car_name": "dodge colt hatchback custom"
-     }
-    },
-    {
-     "row_key": "L304",
-     "values": {
-      "mpg": 31.8,
-      "cylinders": 4,
-      "displacement": 85,
-      "horsepower": 65,
-      "weight": 2020,
-      "acceleration": 19.2,
-      "model_year": 79,
-      "origin": 3,
-      "car_name": "datsun 210"
+      "car_name": "chevrolet caprice classic"
      }
     },
     {
@@ -499,12 +485,26 @@
       "origin": 2,
       "car_name": "renault lecar deluxe"
      }
+    },
+    {
+     "row_key": "L376",
+     "values": {
+      "mpg": 36,
+      "cylinders": 4,
+      "displacement": 105,
+      "horsepower": 74,
+      "weight": 1980,
+      "acceleration": 15.3,
+      "model_year": 82,
+      "origin": 2,
+      "car_name": "volkswagen rabbit l"
+     }
     }
    ],
-   "seed": "cea17c547a85dad6",
+   "seed": "51a523d7298d4ece",
    "target_shown": true,
    "exposure": {
-    "exposure_id": "x_f90adeabee524728a354342fd6190997",
+    "exposure_id": "x_5fc3fcf08bb6485db24cfe36f00f45cc",
     "purpose": "development_target_sample",
     "recorded": true,
     "withheld": null

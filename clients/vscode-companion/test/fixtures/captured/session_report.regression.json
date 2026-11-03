@@ -28,9 +28,9 @@
    "artifacts_status": "ok"
   },
   "span": {
-   "first": "2026-10-28T12:44:39.144035+00:00",
-   "last": "2026-10-28T12:45:06.944424+00:00",
-   "seconds": 27.8,
+   "first": "2026-11-03T18:32:42.658037+00:00",
+   "last": "2026-11-03T18:33:05.859630+00:00",
+   "seconds": 23.2,
    "revisions": 40
   },
   "commands": {
@@ -45,10 +45,10 @@
    {
     "proposal_id": "p_1",
     "decision_id": "prediction_time",
-    "proposed_at": "2026-10-28T12:44:39.271394+00:00",
+    "proposed_at": "2026-11-03T18:32:42.766797+00:00",
     "proposed_revision": 2,
     "outcome": "confirmed",
-    "closed_at": "2026-10-28T12:44:39.807910+00:00",
+    "closed_at": "2026-11-03T18:32:43.236028+00:00",
     "seconds_open": 0.5,
     "basis": "restated",
     "delegation_scope": null,
@@ -58,11 +58,11 @@
    {
     "proposal_id": "p_2",
     "decision_id": "feature_availability",
-    "proposed_at": "2026-10-28T12:44:40.576391+00:00",
+    "proposed_at": "2026-11-03T18:32:43.895846+00:00",
     "proposed_revision": 4,
     "outcome": "confirmed",
-    "closed_at": "2026-10-28T12:44:41.185773+00:00",
-    "seconds_open": 0.6,
+    "closed_at": "2026-11-03T18:32:44.412786+00:00",
+    "seconds_open": 0.5,
     "basis": "restated",
     "delegation_scope": null,
     "refused_confirmations": 0,
@@ -71,11 +71,11 @@
    {
     "proposal_id": "p_3",
     "decision_id": "split",
-    "proposed_at": "2026-10-28T12:44:42.137307+00:00",
+    "proposed_at": "2026-11-03T18:32:45.211541+00:00",
     "proposed_revision": 6,
     "outcome": "confirmed",
-    "closed_at": "2026-10-28T12:44:42.901807+00:00",
-    "seconds_open": 0.8,
+    "closed_at": "2026-11-03T18:32:45.884511+00:00",
+    "seconds_open": 0.7,
     "basis": "restated",
     "delegation_scope": null,
     "refused_confirmations": 0,
@@ -84,11 +84,11 @@
    {
     "proposal_id": "p_4",
     "decision_id": "error_metric",
-    "proposed_at": "2026-10-28T12:44:43.768717+00:00",
+    "proposed_at": "2026-11-03T18:32:46.623838+00:00",
     "proposed_revision": 8,
     "outcome": "confirmed",
-    "closed_at": "2026-10-28T12:44:44.530108+00:00",
-    "seconds_open": 0.8,
+    "closed_at": "2026-11-03T18:32:47.235687+00:00",
+    "seconds_open": 0.6,
     "basis": "restated",
     "delegation_scope": null,
     "refused_confirmations": 0,
@@ -97,11 +97,11 @@
    {
     "proposal_id": "p_5",
     "decision_id": "success_criterion",
-    "proposed_at": "2026-10-28T12:44:45.592061+00:00",
+    "proposed_at": "2026-11-03T18:32:47.950926+00:00",
     "proposed_revision": 10,
     "outcome": "confirmed",
-    "closed_at": "2026-10-28T12:44:46.601410+00:00",
-    "seconds_open": 1.0,
+    "closed_at": "2026-11-03T18:32:48.586691+00:00",
+    "seconds_open": 0.6,
     "basis": "restated",
     "delegation_scope": null,
     "refused_confirmations": 0,
@@ -110,11 +110,11 @@
    {
     "proposal_id": "p_6",
     "decision_id": "preprocessing",
-    "proposed_at": "2026-10-28T12:44:47.479276+00:00",
+    "proposed_at": "2026-11-03T18:32:49.433377+00:00",
     "proposed_revision": 12,
     "outcome": "confirmed",
-    "closed_at": "2026-10-28T12:44:48.361883+00:00",
-    "seconds_open": 0.9,
+    "closed_at": "2026-11-03T18:32:50.195274+00:00",
+    "seconds_open": 0.8,
     "basis": "restated",
     "delegation_scope": null,
     "refused_confirmations": 0,
@@ -123,10 +123,10 @@
    {
     "proposal_id": "p_7",
     "decision_id": "model_variant",
-    "proposed_at": "2026-10-28T12:45:00.298953+00:00",
+    "proposed_at": "2026-11-03T18:33:00.545559+00:00",
     "proposed_revision": 34,
     "outcome": "confirmed",
-    "closed_at": "2026-10-28T12:45:01.150916+00:00",
+    "closed_at": "2026-11-03T18:33:01.420500+00:00",
     "seconds_open": 0.9,
     "basis": "restated",
     "delegation_scope": null,
@@ -136,7 +136,7 @@
    {
     "proposal_id": "p_8",
     "decision_id": "model_choice",
-    "proposed_at": "2026-10-28T12:45:04.537660+00:00",
+    "proposed_at": "2026-11-03T18:33:04.154595+00:00",
     "proposed_revision": 40,
     "outcome": "open",
     "closed_at": null,
@@ -154,9 +154,9 @@
      "prediction_time",
      "feature_availability"
     ],
-    "opened_at": "2026-10-28T12:44:39.271394+00:00",
-    "closed_at": "2026-10-28T12:44:41.185773+00:00",
-    "seconds": 1.9,
+    "opened_at": "2026-11-03T18:32:42.766797+00:00",
+    "closed_at": "2026-11-03T18:32:44.412786+00:00",
+    "seconds": 1.6,
     "proposals": 2,
     "confirmed": [
      "feature_availability",
@@ -173,9 +173,9 @@
      "success_criterion",
      "preprocessing"
     ],
-    "opened_at": "2026-10-28T12:44:42.137307+00:00",
-    "closed_at": "2026-10-28T12:44:48.361883+00:00",
-    "seconds": 6.2,
+    "opened_at": "2026-11-03T18:32:45.211541+00:00",
+    "closed_at": "2026-11-03T18:32:50.195274+00:00",
+    "seconds": 5.0,
     "proposals": 4,
     "confirmed": [
      "error_metric",
@@ -194,7 +194,7 @@
      "final_test",
      "conclusion"
     ],
-    "opened_at": "2026-10-28T12:45:00.298953+00:00",
+    "opened_at": "2026-11-03T18:33:00.545559+00:00",
     "closed_at": null,
     "seconds": null,
     "proposals": 2,
@@ -211,45 +211,45 @@
     "activity": "split",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T12:44:49.441312+00:00",
+    "started_at": "2026-11-03T18:32:50.951650+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T12:44:49.526403+00:00",
+    "ended_at": "2026-11-03T18:32:51.007308+00:00",
     "seconds": 0.1,
     "slot": "split",
-    "result_id": "3c4563d5"
+    "result_id": "a03a89ee"
    },
    {
     "execution_id": "e_808e66ec55e19cf01a72e71c",
     "activity": "eda.target_summary",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T12:44:50.488037+00:00",
+    "started_at": "2026-11-03T18:32:51.771157+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T12:44:50.561158+00:00",
+    "ended_at": "2026-11-03T18:32:51.839687+00:00",
     "seconds": 0.1,
     "slot": "eda.target_summary",
-    "result_id": "90390311"
+    "result_id": "ae233b39"
    },
    {
     "execution_id": "e_75c47b1ef767a30eb39cdb4d",
     "activity": "eda.special_values",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T12:44:51.477798+00:00",
+    "started_at": "2026-11-03T18:32:52.793067+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T12:44:51.545669+00:00",
+    "ended_at": "2026-11-03T18:32:52.851090+00:00",
     "seconds": 0.1,
     "slot": "eda.special_values",
-    "result_id": "693e6c9b"
+    "result_id": "ad5c6a5a"
    },
    {
     "execution_id": "e_5f95a7d242e4ea751ed82afb",
     "activity": "eda.quality",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T12:44:52.484030+00:00",
+    "started_at": "2026-11-03T18:32:53.674272+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T12:44:52.595195+00:00",
+    "ended_at": "2026-11-03T18:32:53.750814+00:00",
     "seconds": 0.1,
     "slot": "eda.quality",
     "result_id": "c985c7d9"
@@ -259,45 +259,45 @@
     "activity": "eda.single_feature_signal",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T12:44:53.553362+00:00",
+    "started_at": "2026-11-03T18:32:54.633191+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T12:44:53.947232+00:00",
-    "seconds": 0.4,
+    "ended_at": "2026-11-03T18:32:54.926792+00:00",
+    "seconds": 0.3,
     "slot": "eda.single_feature_signal",
-    "result_id": "99cecf88"
+    "result_id": "b0d6de45"
    },
    {
     "execution_id": "e_284db43c31758f9aef75cd0b",
     "activity": "eda.mean_by",
     "rules": null,
     "column": "model_year",
-    "started_at": "2026-10-28T12:44:54.939548+00:00",
+    "started_at": "2026-11-03T18:32:55.760377+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T12:44:55.012006+00:00",
+    "ended_at": "2026-11-03T18:32:55.827765+00:00",
     "seconds": 0.1,
     "slot": "eda.mean_by:model_year",
-    "result_id": "54d72772"
+    "result_id": "67aebaa1"
    },
    {
     "execution_id": "e_aa1477c41bc44c975f9888ce",
     "activity": "eda.distribution",
     "rules": null,
     "column": "weight",
-    "started_at": "2026-10-28T12:44:56.026355+00:00",
+    "started_at": "2026-11-03T18:32:56.693949+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T12:44:56.093119+00:00",
+    "ended_at": "2026-11-03T18:32:56.756411+00:00",
     "seconds": 0.1,
     "slot": "eda.distribution:weight",
-    "result_id": "bedade14"
+    "result_id": "b93ccd21"
    },
    {
     "execution_id": "e_2033db067e905124ef78ea82",
     "activity": "eda.correlation",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T12:44:57.018932+00:00",
+    "started_at": "2026-11-03T18:32:57.636014+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T12:44:57.100912+00:00",
+    "ended_at": "2026-11-03T18:32:57.708419+00:00",
     "seconds": 0.1,
     "slot": "eda.correlation",
     "result_id": "42942f01"
@@ -307,53 +307,53 @@
     "activity": "fit.baseline",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T12:44:58.127474+00:00",
+    "started_at": "2026-11-03T18:32:58.604741+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T12:44:58.198681+00:00",
+    "ended_at": "2026-11-03T18:32:58.667839+00:00",
     "seconds": 0.1,
     "slot": "fit.baseline",
-    "result_id": "a3648c6e"
+    "result_id": "6cbbfc68"
    },
    {
     "execution_id": "e_e2a8db59374ecd02f11773fa",
     "activity": "fit.linear",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T12:44:59.185954+00:00",
+    "started_at": "2026-11-03T18:32:59.536607+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T12:44:59.283868+00:00",
+    "ended_at": "2026-11-03T18:32:59.611955+00:00",
     "seconds": 0.1,
     "slot": "fit.linear",
-    "result_id": "8639586c"
+    "result_id": "9ad54724"
    },
    {
     "execution_id": "e_bad9a6f0e28076da5c45d47f",
     "activity": "fit.variant",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T12:45:02.186738+00:00",
+    "started_at": "2026-11-03T18:33:02.276507+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T12:45:02.300525+00:00",
+    "ended_at": "2026-11-03T18:33:02.358387+00:00",
     "seconds": 0.1,
     "slot": "fit.variant",
-    "result_id": "84b648d6"
+    "result_id": "7b4eae58"
    },
    {
     "execution_id": "e_3a7193d6091b2b9b9c7123cb",
     "activity": "evaluate.regression",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-28T12:45:03.319610+00:00",
+    "started_at": "2026-11-03T18:33:03.223775+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-28T12:45:03.459575+00:00",
+    "ended_at": "2026-11-03T18:33:03.318861+00:00",
     "seconds": 0.1,
     "slot": "evaluate.regression",
-    "result_id": "f1f5a9a3"
+    "result_id": "aee04d53"
    }
   ],
   "renders": [
    {
-    "time": "2026-10-28T12:44:39.721552+00:00",
+    "time": "2026-11-03T18:32:43.161612+00:00",
     "command": "decide",
     "revision": 2,
     "artifacts": {
@@ -364,7 +364,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:40.398693+00:00",
+    "time": "2026-11-03T18:32:43.751258+00:00",
     "command": "decide",
     "revision": 3,
     "artifacts": {
@@ -375,7 +375,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:41.062530+00:00",
+    "time": "2026-11-03T18:32:44.311939+00:00",
     "command": "decide",
     "revision": 4,
     "artifacts": {
@@ -386,7 +386,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:41.960383+00:00",
+    "time": "2026-11-03T18:32:45.026921+00:00",
     "command": "decide",
     "revision": 5,
     "artifacts": {
@@ -397,7 +397,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:42.734355+00:00",
+    "time": "2026-11-03T18:32:45.753772+00:00",
     "command": "decide",
     "revision": 6,
     "artifacts": {
@@ -408,7 +408,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:43.596287+00:00",
+    "time": "2026-11-03T18:32:46.506112+00:00",
     "command": "decide",
     "revision": 7,
     "artifacts": {
@@ -419,7 +419,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:44.379097+00:00",
+    "time": "2026-11-03T18:32:47.143672+00:00",
     "command": "decide",
     "revision": 8,
     "artifacts": {
@@ -430,7 +430,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:45.369643+00:00",
+    "time": "2026-11-03T18:32:47.798966+00:00",
     "command": "decide",
     "revision": 9,
     "artifacts": {
@@ -441,7 +441,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:46.305138+00:00",
+    "time": "2026-11-03T18:32:48.449308+00:00",
     "command": "decide",
     "revision": 10,
     "artifacts": {
@@ -452,7 +452,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:47.293356+00:00",
+    "time": "2026-11-03T18:32:49.226908+00:00",
     "command": "decide",
     "revision": 11,
     "artifacts": {
@@ -463,7 +463,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:48.067901+00:00",
+    "time": "2026-11-03T18:32:50.050756+00:00",
     "command": "decide",
     "revision": 12,
     "artifacts": {
@@ -474,7 +474,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:49.208106+00:00",
+    "time": "2026-11-03T18:32:50.785514+00:00",
     "command": "decide",
     "revision": 13,
     "artifacts": {
@@ -485,7 +485,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:50.288390+00:00",
+    "time": "2026-11-03T18:32:51.603161+00:00",
     "command": "run",
     "revision": 15,
     "artifacts": {
@@ -496,7 +496,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:51.283605+00:00",
+    "time": "2026-11-03T18:32:52.631166+00:00",
     "command": "run",
     "revision": 17,
     "artifacts": {
@@ -507,7 +507,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:52.289342+00:00",
+    "time": "2026-11-03T18:32:53.493903+00:00",
     "command": "run",
     "revision": 19,
     "artifacts": {
@@ -518,7 +518,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:53.357598+00:00",
+    "time": "2026-11-03T18:32:54.467536+00:00",
     "command": "run",
     "revision": 21,
     "artifacts": {
@@ -529,7 +529,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:54.739122+00:00",
+    "time": "2026-11-03T18:32:55.583750+00:00",
     "command": "run",
     "revision": 23,
     "artifacts": {
@@ -540,7 +540,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:55.822889+00:00",
+    "time": "2026-11-03T18:32:56.522531+00:00",
     "command": "run",
     "revision": 25,
     "artifacts": {
@@ -551,7 +551,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:56.828750+00:00",
+    "time": "2026-11-03T18:32:57.459707+00:00",
     "command": "run",
     "revision": 27,
     "artifacts": {
@@ -562,7 +562,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:57.937053+00:00",
+    "time": "2026-11-03T18:32:58.428257+00:00",
     "command": "run",
     "revision": 29,
     "artifacts": {
@@ -573,7 +573,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:44:58.987132+00:00",
+    "time": "2026-11-03T18:32:59.396864+00:00",
     "command": "run",
     "revision": 31,
     "artifacts": {
@@ -584,7 +584,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:45:00.099818+00:00",
+    "time": "2026-11-03T18:33:00.367122+00:00",
     "command": "run",
     "revision": 33,
     "artifacts": {
@@ -595,7 +595,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:45:01.001531+00:00",
+    "time": "2026-11-03T18:33:01.159433+00:00",
     "command": "decide",
     "revision": 34,
     "artifacts": {
@@ -606,7 +606,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:45:01.992733+00:00",
+    "time": "2026-11-03T18:33:02.107418+00:00",
     "command": "decide",
     "revision": 35,
     "artifacts": {
@@ -617,7 +617,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:45:03.130457+00:00",
+    "time": "2026-11-03T18:33:03.057786+00:00",
     "command": "run",
     "revision": 37,
     "artifacts": {
@@ -628,7 +628,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:45:04.350636+00:00",
+    "time": "2026-11-03T18:33:04.029921+00:00",
     "command": "run",
     "revision": 39,
     "artifacts": {
@@ -639,7 +639,7 @@
     }
    },
    {
-    "time": "2026-10-28T12:45:05.279550+00:00",
+    "time": "2026-11-03T18:33:04.708955+00:00",
     "command": "decide",
     "revision": 40,
     "artifacts": {
@@ -654,20 +654,20 @@
   "gaps": [],
   "timeline": [
    {
-    "time": "2026-10-28T12:44:39.144035+00:00",
+    "time": "2026-11-03T18:32:42.658037+00:00",
     "source": "revision",
     "revision": 1,
     "action": "init"
    },
    {
-    "time": "2026-10-28T12:44:39.147380+00:00",
+    "time": "2026-11-03T18:32:42.661216+00:00",
     "source": "event",
     "kind": "study_created",
     "revision": 1
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:39.182829+00:00",
+    "time": "2026-11-03T18:32:42.692744+00:00",
     "command": "init",
     "verb": null,
     "exit_code": 0,
@@ -677,7 +677,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:39.265009+00:00",
+    "time": "2026-11-03T18:32:42.760483+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -688,7 +688,7 @@
     "next_action": "show_data_card"
    },
    {
-    "time": "2026-10-28T12:44:39.271394+00:00",
+    "time": "2026-11-03T18:32:42.766797+00:00",
     "source": "revision",
     "revision": 2,
     "action": "decide.propose",
@@ -698,7 +698,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:39.721552+00:00",
+    "time": "2026-11-03T18:32:43.161612+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -718,7 +718,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:39.795143+00:00",
+    "time": "2026-11-03T18:32:43.225981+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -729,7 +729,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-28T12:44:39.807910+00:00",
+    "time": "2026-11-03T18:32:43.236028+00:00",
     "source": "revision",
     "revision": 3,
     "action": "decide.confirm",
@@ -744,7 +744,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:40.398693+00:00",
+    "time": "2026-11-03T18:32:43.751258+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -769,7 +769,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:40.553157+00:00",
+    "time": "2026-11-03T18:32:43.875437+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -780,7 +780,7 @@
     "next_action": "propose"
    },
    {
-    "time": "2026-10-28T12:44:40.576391+00:00",
+    "time": "2026-11-03T18:32:43.895846+00:00",
     "source": "revision",
     "revision": 4,
     "action": "decide.propose",
@@ -790,7 +790,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:41.062530+00:00",
+    "time": "2026-11-03T18:32:44.311939+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -810,7 +810,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:41.160433+00:00",
+    "time": "2026-11-03T18:32:44.390662+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -821,7 +821,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-28T12:44:41.185773+00:00",
+    "time": "2026-11-03T18:32:44.412786+00:00",
     "source": "revision",
     "revision": 5,
     "action": "decide.confirm",
@@ -836,7 +836,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:41.960383+00:00",
+    "time": "2026-11-03T18:32:45.026921+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -861,7 +861,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:42.129520+00:00",
+    "time": "2026-11-03T18:32:45.203819+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -872,7 +872,7 @@
     "next_action": "propose"
    },
    {
-    "time": "2026-10-28T12:44:42.137307+00:00",
+    "time": "2026-11-03T18:32:45.211541+00:00",
     "source": "revision",
     "revision": 6,
     "action": "decide.propose",
@@ -882,7 +882,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:42.734355+00:00",
+    "time": "2026-11-03T18:32:45.753772+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -902,7 +902,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:42.892405+00:00",
+    "time": "2026-11-03T18:32:45.877277+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -913,7 +913,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-28T12:44:42.901807+00:00",
+    "time": "2026-11-03T18:32:45.884511+00:00",
     "source": "revision",
     "revision": 7,
     "action": "decide.confirm",
@@ -928,7 +928,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:43.596287+00:00",
+    "time": "2026-11-03T18:32:46.506112+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -953,7 +953,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:43.760154+00:00",
+    "time": "2026-11-03T18:32:46.618070+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -964,7 +964,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:44:43.768717+00:00",
+    "time": "2026-11-03T18:32:46.623838+00:00",
     "source": "revision",
     "revision": 8,
     "action": "decide.propose",
@@ -974,7 +974,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:44.379097+00:00",
+    "time": "2026-11-03T18:32:47.143672+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -994,7 +994,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:44.520421+00:00",
+    "time": "2026-11-03T18:32:47.229412+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1005,7 +1005,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-28T12:44:44.530108+00:00",
+    "time": "2026-11-03T18:32:47.235687+00:00",
     "source": "revision",
     "revision": 9,
     "action": "decide.confirm",
@@ -1020,7 +1020,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:45.369643+00:00",
+    "time": "2026-11-03T18:32:47.798966+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -1045,7 +1045,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:45.583555+00:00",
+    "time": "2026-11-03T18:32:47.944902+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1056,7 +1056,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:44:45.592061+00:00",
+    "time": "2026-11-03T18:32:47.950926+00:00",
     "source": "revision",
     "revision": 10,
     "action": "decide.propose",
@@ -1066,7 +1066,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:46.305138+00:00",
+    "time": "2026-11-03T18:32:48.449308+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -1086,7 +1086,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:46.589206+00:00",
+    "time": "2026-11-03T18:32:48.578858+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1097,7 +1097,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-28T12:44:46.601410+00:00",
+    "time": "2026-11-03T18:32:48.586691+00:00",
     "source": "revision",
     "revision": 11,
     "action": "decide.confirm",
@@ -1112,7 +1112,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:47.293356+00:00",
+    "time": "2026-11-03T18:32:49.226908+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -1137,7 +1137,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:47.437306+00:00",
+    "time": "2026-11-03T18:32:49.386280+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1148,7 +1148,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:44:47.479276+00:00",
+    "time": "2026-11-03T18:32:49.433377+00:00",
     "source": "revision",
     "revision": 12,
     "action": "decide.propose",
@@ -1158,7 +1158,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:48.067901+00:00",
+    "time": "2026-11-03T18:32:50.050756+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -1178,7 +1178,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:48.320829+00:00",
+    "time": "2026-11-03T18:32:50.173314+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1189,7 +1189,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-28T12:44:48.361883+00:00",
+    "time": "2026-11-03T18:32:50.195274+00:00",
     "source": "revision",
     "revision": 13,
     "action": "decide.confirm",
@@ -1204,7 +1204,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:49.208106+00:00",
+    "time": "2026-11-03T18:32:50.785514+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -1229,7 +1229,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:49.415452+00:00",
+    "time": "2026-11-03T18:32:50.924301+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1240,7 +1240,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:44:49.441312+00:00",
+    "time": "2026-11-03T18:32:50.951650+00:00",
     "source": "revision",
     "revision": 14,
     "action": "run.reserve",
@@ -1249,7 +1249,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-28T12:44:49.526403+00:00",
+    "time": "2026-11-03T18:32:51.007308+00:00",
     "source": "revision",
     "revision": 15,
     "action": "run.promote",
@@ -1257,11 +1257,11 @@
     "execution_id": "e_305370681065d9971a93f227",
     "slot": "split",
     "status": "promoted",
-    "result_id": "3c4563d5"
+    "result_id": "a03a89ee"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:50.288390+00:00",
+    "time": "2026-11-03T18:32:51.603161+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1277,11 +1277,11 @@
      "workbench": "ok"
     },
     "slot": "split",
-    "result_id": "3c4563d5"
+    "result_id": "a03a89ee"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:50.461414+00:00",
+    "time": "2026-11-03T18:32:51.747220+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1292,7 +1292,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:44:50.488037+00:00",
+    "time": "2026-11-03T18:32:51.771157+00:00",
     "source": "revision",
     "revision": 16,
     "action": "run.reserve",
@@ -1301,7 +1301,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-28T12:44:50.561158+00:00",
+    "time": "2026-11-03T18:32:51.839687+00:00",
     "source": "revision",
     "revision": 17,
     "action": "run.promote",
@@ -1309,11 +1309,11 @@
     "execution_id": "e_808e66ec55e19cf01a72e71c",
     "slot": "eda.target_summary",
     "status": "promoted",
-    "result_id": "90390311"
+    "result_id": "ae233b39"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:51.283605+00:00",
+    "time": "2026-11-03T18:32:52.631166+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1329,11 +1329,11 @@
      "workbench": "ok"
     },
     "slot": "eda.target_summary",
-    "result_id": "90390311"
+    "result_id": "ae233b39"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:51.451230+00:00",
+    "time": "2026-11-03T18:32:52.769926+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1344,7 +1344,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:44:51.477798+00:00",
+    "time": "2026-11-03T18:32:52.793067+00:00",
     "source": "revision",
     "revision": 18,
     "action": "run.reserve",
@@ -1353,7 +1353,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-28T12:44:51.545669+00:00",
+    "time": "2026-11-03T18:32:52.851090+00:00",
     "source": "revision",
     "revision": 19,
     "action": "run.promote",
@@ -1361,11 +1361,11 @@
     "execution_id": "e_75c47b1ef767a30eb39cdb4d",
     "slot": "eda.special_values",
     "status": "promoted",
-    "result_id": "693e6c9b"
+    "result_id": "ad5c6a5a"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:52.289342+00:00",
+    "time": "2026-11-03T18:32:53.493903+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1381,11 +1381,11 @@
      "workbench": "ok"
     },
     "slot": "eda.special_values",
-    "result_id": "693e6c9b"
+    "result_id": "ad5c6a5a"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:52.447916+00:00",
+    "time": "2026-11-03T18:32:53.648765+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1396,7 +1396,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:44:52.484030+00:00",
+    "time": "2026-11-03T18:32:53.674272+00:00",
     "source": "revision",
     "revision": 20,
     "action": "run.reserve",
@@ -1405,7 +1405,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-28T12:44:52.595195+00:00",
+    "time": "2026-11-03T18:32:53.750814+00:00",
     "source": "revision",
     "revision": 21,
     "action": "run.promote",
@@ -1417,7 +1417,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:53.357598+00:00",
+    "time": "2026-11-03T18:32:54.467536+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1437,7 +1437,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:53.524435+00:00",
+    "time": "2026-11-03T18:32:54.608672+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1448,7 +1448,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:44:53.553362+00:00",
+    "time": "2026-11-03T18:32:54.633191+00:00",
     "source": "revision",
     "revision": 22,
     "action": "run.reserve",
@@ -1457,7 +1457,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-28T12:44:53.947232+00:00",
+    "time": "2026-11-03T18:32:54.926792+00:00",
     "source": "revision",
     "revision": 23,
     "action": "run.promote",
@@ -1465,11 +1465,11 @@
     "execution_id": "e_622dd0c704d6af123eea761a",
     "slot": "eda.single_feature_signal",
     "status": "promoted",
-    "result_id": "99cecf88"
+    "result_id": "b0d6de45"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:54.739122+00:00",
+    "time": "2026-11-03T18:32:55.583750+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1485,11 +1485,11 @@
      "workbench": "ok"
     },
     "slot": "eda.single_feature_signal",
-    "result_id": "99cecf88"
+    "result_id": "b0d6de45"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:54.907577+00:00",
+    "time": "2026-11-03T18:32:55.734738+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1500,7 +1500,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:44:54.939548+00:00",
+    "time": "2026-11-03T18:32:55.760377+00:00",
     "source": "revision",
     "revision": 24,
     "action": "run.reserve",
@@ -1510,7 +1510,7 @@
     "column": "model_year"
    },
    {
-    "time": "2026-10-28T12:44:55.012006+00:00",
+    "time": "2026-11-03T18:32:55.827765+00:00",
     "source": "revision",
     "revision": 25,
     "action": "run.promote",
@@ -1518,11 +1518,11 @@
     "execution_id": "e_284db43c31758f9aef75cd0b",
     "slot": "eda.mean_by:model_year",
     "status": "promoted",
-    "result_id": "54d72772"
+    "result_id": "67aebaa1"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:55.822889+00:00",
+    "time": "2026-11-03T18:32:56.522531+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1540,11 +1540,11 @@
      "workbench": "ok"
     },
     "slot": "eda.mean_by:model_year",
-    "result_id": "54d72772"
+    "result_id": "67aebaa1"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:55.998468+00:00",
+    "time": "2026-11-03T18:32:56.669244+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1555,7 +1555,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:44:56.026355+00:00",
+    "time": "2026-11-03T18:32:56.693949+00:00",
     "source": "revision",
     "revision": 26,
     "action": "run.reserve",
@@ -1565,7 +1565,7 @@
     "column": "weight"
    },
    {
-    "time": "2026-10-28T12:44:56.093119+00:00",
+    "time": "2026-11-03T18:32:56.756411+00:00",
     "source": "revision",
     "revision": 27,
     "action": "run.promote",
@@ -1573,11 +1573,11 @@
     "execution_id": "e_aa1477c41bc44c975f9888ce",
     "slot": "eda.distribution:weight",
     "status": "promoted",
-    "result_id": "bedade14"
+    "result_id": "b93ccd21"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:56.828750+00:00",
+    "time": "2026-11-03T18:32:57.459707+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1595,11 +1595,11 @@
      "workbench": "ok"
     },
     "slot": "eda.distribution:weight",
-    "result_id": "bedade14"
+    "result_id": "b93ccd21"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:56.992431+00:00",
+    "time": "2026-11-03T18:32:57.611093+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1610,7 +1610,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:44:57.018932+00:00",
+    "time": "2026-11-03T18:32:57.636014+00:00",
     "source": "revision",
     "revision": 28,
     "action": "run.reserve",
@@ -1619,7 +1619,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-28T12:44:57.100912+00:00",
+    "time": "2026-11-03T18:32:57.708419+00:00",
     "source": "revision",
     "revision": 29,
     "action": "run.promote",
@@ -1631,7 +1631,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:57.937053+00:00",
+    "time": "2026-11-03T18:32:58.428257+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1651,7 +1651,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:58.099292+00:00",
+    "time": "2026-11-03T18:32:58.578759+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1662,7 +1662,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:44:58.127474+00:00",
+    "time": "2026-11-03T18:32:58.604741+00:00",
     "source": "revision",
     "revision": 30,
     "action": "run.reserve",
@@ -1671,7 +1671,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-28T12:44:58.198681+00:00",
+    "time": "2026-11-03T18:32:58.667839+00:00",
     "source": "revision",
     "revision": 31,
     "action": "run.promote",
@@ -1679,11 +1679,11 @@
     "execution_id": "e_ea00d1a0450c556a8e3289e1",
     "slot": "fit.baseline",
     "status": "promoted",
-    "result_id": "a3648c6e"
+    "result_id": "6cbbfc68"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:58.987132+00:00",
+    "time": "2026-11-03T18:32:59.396864+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1699,11 +1699,11 @@
      "workbench": "ok"
     },
     "slot": "fit.baseline",
-    "result_id": "a3648c6e"
+    "result_id": "6cbbfc68"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:44:59.157940+00:00",
+    "time": "2026-11-03T18:32:59.515758+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1714,7 +1714,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:44:59.185954+00:00",
+    "time": "2026-11-03T18:32:59.536607+00:00",
     "source": "revision",
     "revision": 32,
     "action": "run.reserve",
@@ -1723,7 +1723,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-28T12:44:59.283868+00:00",
+    "time": "2026-11-03T18:32:59.611955+00:00",
     "source": "revision",
     "revision": 33,
     "action": "run.promote",
@@ -1731,11 +1731,11 @@
     "execution_id": "e_e2a8db59374ecd02f11773fa",
     "slot": "fit.linear",
     "status": "promoted",
-    "result_id": "8639586c"
+    "result_id": "9ad54724"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:45:00.099818+00:00",
+    "time": "2026-11-03T18:33:00.367122+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1751,11 +1751,11 @@
      "workbench": "ok"
     },
     "slot": "fit.linear",
-    "result_id": "8639586c"
+    "result_id": "9ad54724"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:45:00.273587+00:00",
+    "time": "2026-11-03T18:33:00.517483+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1766,7 +1766,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:45:00.298953+00:00",
+    "time": "2026-11-03T18:33:00.545559+00:00",
     "source": "revision",
     "revision": 34,
     "action": "decide.propose",
@@ -1776,7 +1776,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:45:01.001531+00:00",
+    "time": "2026-11-03T18:33:01.159433+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -1796,7 +1796,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:45:01.127413+00:00",
+    "time": "2026-11-03T18:33:01.381767+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1807,7 +1807,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-28T12:45:01.150916+00:00",
+    "time": "2026-11-03T18:33:01.420500+00:00",
     "source": "revision",
     "revision": 35,
     "action": "decide.confirm",
@@ -1822,7 +1822,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:45:01.992733+00:00",
+    "time": "2026-11-03T18:33:02.107418+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -1847,7 +1847,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:45:02.158915+00:00",
+    "time": "2026-11-03T18:33:02.251841+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1858,7 +1858,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:45:02.186738+00:00",
+    "time": "2026-11-03T18:33:02.276507+00:00",
     "source": "revision",
     "revision": 36,
     "action": "run.reserve",
@@ -1867,7 +1867,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-28T12:45:02.300525+00:00",
+    "time": "2026-11-03T18:33:02.358387+00:00",
     "source": "revision",
     "revision": 37,
     "action": "run.promote",
@@ -1875,11 +1875,11 @@
     "execution_id": "e_bad9a6f0e28076da5c45d47f",
     "slot": "fit.variant",
     "status": "promoted",
-    "result_id": "84b648d6"
+    "result_id": "7b4eae58"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:45:03.130457+00:00",
+    "time": "2026-11-03T18:33:03.057786+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1895,11 +1895,11 @@
      "workbench": "ok"
     },
     "slot": "fit.variant",
-    "result_id": "84b648d6"
+    "result_id": "7b4eae58"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:45:03.292868+00:00",
+    "time": "2026-11-03T18:33:03.200127+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1910,7 +1910,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:45:03.319610+00:00",
+    "time": "2026-11-03T18:33:03.223775+00:00",
     "source": "revision",
     "revision": 38,
     "action": "run.reserve",
@@ -1919,7 +1919,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-28T12:45:03.459575+00:00",
+    "time": "2026-11-03T18:33:03.318861+00:00",
     "source": "revision",
     "revision": 39,
     "action": "run.promote",
@@ -1927,11 +1927,11 @@
     "execution_id": "e_3a7193d6091b2b9b9c7123cb",
     "slot": "evaluate.regression",
     "status": "promoted",
-    "result_id": "f1f5a9a3"
+    "result_id": "aee04d53"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:45:04.350636+00:00",
+    "time": "2026-11-03T18:33:04.029921+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1947,11 +1947,11 @@
      "workbench": "ok"
     },
     "slot": "evaluate.regression",
-    "result_id": "f1f5a9a3"
+    "result_id": "aee04d53"
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:45:04.529358+00:00",
+    "time": "2026-11-03T18:33:04.146726+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1962,7 +1962,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-28T12:45:04.537660+00:00",
+    "time": "2026-11-03T18:33:04.154595+00:00",
     "source": "revision",
     "revision": 40,
     "action": "decide.propose",
@@ -1972,7 +1972,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:45:05.279550+00:00",
+    "time": "2026-11-03T18:33:04.708955+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -1992,7 +1992,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:45:05.443987+00:00",
+    "time": "2026-11-03T18:33:04.885585+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -2007,7 +2007,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:45:06.532376+00:00",
+    "time": "2026-11-03T18:33:05.558041+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -2023,7 +2023,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-28T12:45:06.944424+00:00",
+    "time": "2026-11-03T18:33:05.859630+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,

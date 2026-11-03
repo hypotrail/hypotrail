@@ -389,122 +389,122 @@
    "order": "seeded sample",
    "items": [
     {
-     "row_key": "L27",
+     "row_key": "L180",
      "values": {
-      "mpg": 10,
-      "cylinders": 8,
-      "displacement": 307,
-      "horsepower": 200,
-      "weight": 4376,
-      "acceleration": 15,
-      "model_year": 70,
-      "origin": 1,
-      "car_name": "chevy c20"
-     }
-    },
-    {
-     "row_key": "L29",
-     "values": {
-      "mpg": 9,
-      "cylinders": 8,
-      "displacement": 304,
-      "horsepower": 193,
-      "weight": 4732,
-      "acceleration": 18.5,
-      "model_year": 70,
-      "origin": 1,
-      "car_name": "hi 1200d"
-     }
-    },
-    {
-     "row_key": "L151",
-     "values": {
-      "mpg": 26,
+      "mpg": 22,
       "cylinders": 4,
-      "displacement": 108,
-      "horsepower": 93,
-      "weight": 2391,
-      "acceleration": 15.5,
-      "model_year": 74,
-      "origin": 3,
-      "car_name": "subaru"
-     }
-    },
-    {
-     "row_key": "L172",
-     "values": {
-      "mpg": 24,
-      "cylinders": 4,
-      "displacement": 134,
-      "horsepower": 96,
-      "weight": 2702,
-      "acceleration": 13.5,
+      "displacement": 121,
+      "horsepower": 98,
+      "weight": 2945,
+      "acceleration": 14.5,
       "model_year": 75,
-      "origin": 3,
-      "car_name": "toyota corona"
+      "origin": 2,
+      "car_name": "volvo 244dl"
      }
     },
     {
-     "row_key": "L263",
+     "row_key": "L187",
      "values": {
-      "mpg": 19.2,
+      "mpg": 27,
+      "cylinders": 4,
+      "displacement": 101,
+      "horsepower": 83,
+      "weight": 2202,
+      "acceleration": 15.3,
+      "model_year": 76,
+      "origin": 2,
+      "car_name": "renault 12tl"
+     }
+    },
+    {
+     "row_key": "L205",
+     "values": {
+      "mpg": 32,
+      "cylinders": 4,
+      "displacement": 85,
+      "horsepower": 70,
+      "weight": 1990,
+      "acceleration": 17,
+      "model_year": 76,
+      "origin": 3,
+      "car_name": "datsun b-210"
+     }
+    },
+    {
+     "row_key": "L223",
+     "values": {
+      "mpg": 17,
       "cylinders": 8,
-      "displacement": 305,
-      "horsepower": 145,
-      "weight": 3425,
-      "acceleration": 13.2,
+      "displacement": 260,
+      "horsepower": 110,
+      "weight": 4060,
+      "acceleration": 19,
+      "model_year": 77,
+      "origin": 1,
+      "car_name": "oldsmobile cutlass supreme"
+     }
+    },
+    {
+     "row_key": "L248",
+     "values": {
+      "mpg": 39.4,
+      "cylinders": 4,
+      "displacement": 85,
+      "horsepower": 70,
+      "weight": 2070,
+      "acceleration": 18.6,
+      "model_year": 78,
+      "origin": 3,
+      "car_name": "datsun b210 gx"
+     }
+    },
+    {
+     "row_key": "L265",
+     "values": {
+      "mpg": 18.1,
+      "cylinders": 8,
+      "displacement": 302,
+      "horsepower": 139,
+      "weight": 3205,
+      "acceleration": 11.2,
       "model_year": 78,
       "origin": 1,
-      "car_name": "chevrolet monte carlo landau"
+      "car_name": "ford futura"
      }
     },
     {
-     "row_key": "L326",
+     "row_key": "L328",
      "values": {
-      "mpg": 44.3,
-      "cylinders": 4,
-      "displacement": 90,
-      "horsepower": 48,
-      "weight": 2085,
-      "acceleration": 21.7,
+      "mpg": 36.4,
+      "cylinders": 5,
+      "displacement": 121,
+      "horsepower": 67,
+      "weight": 2950,
+      "acceleration": 19.9,
       "model_year": 80,
       "origin": 2,
-      "car_name": "vw rabbit c (diesel)"
+      "car_name": "audi 5000s (diesel)"
      }
     },
     {
-     "row_key": "L329",
+     "row_key": "L344",
      "values": {
-      "mpg": 30,
+      "mpg": 39.1,
       "cylinders": 4,
-      "displacement": 146,
-      "horsepower": 67,
-      "weight": 3250,
-      "acceleration": 21.8,
-      "model_year": 80,
-      "origin": 2,
-      "car_name": "mercedes-benz 240d"
-     }
-    },
-    {
-     "row_key": "L384",
-     "values": {
-      "mpg": 38,
-      "cylinders": 4,
-      "displacement": 91,
-      "horsepower": 67,
-      "weight": 1965,
-      "acceleration": 15,
-      "model_year": 82,
+      "displacement": 79,
+      "horsepower": 58,
+      "weight": 1755,
+      "acceleration": 16.9,
+      "model_year": 81,
       "origin": 3,
-      "car_name": "honda civic"
+      "car_name": "toyota starlet"
      }
     }
    ],
-   "seed": "e17bc8f27b2d1446",
+   "seed": "63a40916fb04e44f",
    "target_shown": true,
    "exposure": {
-    "exposure_id": "x_a7108f4ce0bd4d93a53690ff8721549f",
+    "exposure_id": "x_a832201c4ad24a6094b5942164b2b3aa",
     "purpose": "development_target_sample",
     "recorded": true,
     "withheld": null

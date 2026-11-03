@@ -33,7 +33,7 @@
      "restatement": "You decide the prediction_time as stated.",
      "proposal_id": "p_1",
      "revision": 3,
-     "time": "2026-10-28T12:47:06.650053+00:00",
+     "time": "2026-11-03T18:34:50.876953+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -72,7 +72,7 @@
      "restatement": "You decide the feature_availability as stated.",
      "proposal_id": "p_2",
      "revision": 5,
-     "time": "2026-10-28T12:47:08.038281+00:00",
+     "time": "2026-11-03T18:34:52.032438+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -106,7 +106,7 @@
      "restatement": "You decide the split as stated.",
      "proposal_id": "p_3",
      "revision": 7,
-     "time": "2026-10-28T12:47:09.607852+00:00",
+     "time": "2026-11-03T18:34:53.575199+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -138,7 +138,7 @@
      "restatement": "You decide the error_metric as stated.",
      "proposal_id": "p_4",
      "revision": 9,
-     "time": "2026-10-28T12:47:11.131735+00:00",
+     "time": "2026-11-03T18:34:55.081201+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -173,7 +173,7 @@
      "restatement": "You decide the success_criterion as stated.",
      "proposal_id": "p_5",
      "revision": 11,
-     "time": "2026-10-28T12:47:12.952699+00:00",
+     "time": "2026-11-03T18:34:56.608589+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -215,7 +215,7 @@
      "restatement": "You keep the drafted preparation: each change rests on the quality check.",
      "proposal_id": "p_6",
      "revision": 19,
-     "time": "2026-10-28T12:47:20.035908+00:00",
+     "time": "2026-11-03T18:35:03.088959+00:00",
      "authenticated": false,
      "basis": "endorsed",
      "delegation_scope": null,
@@ -257,7 +257,7 @@
      "restatement": "You compare a tuned ridge and an EBM with the linear model.",
      "proposal_id": "p_7",
      "revision": 55,
-     "time": "2026-10-28T12:47:45.748320+00:00",
+     "time": "2026-11-03T18:35:25.585137+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -342,7 +342,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 2,
-    "created": "2026-10-28T12:47:06.105974+00:00",
+    "created": "2026-11-03T18:34:50.399619+00:00",
     "closed_revision": 3,
     "closed_reason": "confirmed",
     "origin": {
@@ -364,7 +364,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 4,
-    "created": "2026-10-28T12:47:07.436121+00:00",
+    "created": "2026-11-03T18:34:51.514747+00:00",
     "closed_revision": 5,
     "closed_reason": "confirmed",
     "origin": {
@@ -383,7 +383,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 6,
-    "created": "2026-10-28T12:47:08.939852+00:00",
+    "created": "2026-11-03T18:34:52.901549+00:00",
     "closed_revision": 7,
     "closed_reason": "confirmed",
     "origin": {
@@ -400,7 +400,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 8,
-    "created": "2026-10-28T12:47:10.447672+00:00",
+    "created": "2026-11-03T18:34:54.428640+00:00",
     "closed_revision": 9,
     "closed_reason": "confirmed",
     "origin": {
@@ -418,7 +418,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 10,
-    "created": "2026-10-28T12:47:12.019217+00:00",
+    "created": "2026-11-03T18:34:55.847950+00:00",
     "closed_revision": 11,
     "closed_reason": "confirmed",
     "origin": {
@@ -445,7 +445,7 @@
     "rationale": "The quality check motivates it.",
     "status": "confirmed",
     "revision": 18,
-    "created": "2026-10-28T12:47:18.186737+00:00",
+    "created": "2026-11-03T18:35:01.630759+00:00",
     "closed_revision": 19,
     "closed_reason": "confirmed",
     "origin": {
@@ -472,7 +472,7 @@
     "rationale": "The diagnostics show a curve for horsepower and weight.",
     "status": "confirmed",
     "revision": 54,
-    "created": "2026-10-28T12:47:43.708196+00:00",
+    "created": "2026-11-03T18:35:23.892716+00:00",
     "closed_revision": 55,
     "closed_reason": "confirmed",
     "origin": {
@@ -483,7 +483,7 @@
   "history": [
    {
     "revision": 3,
-    "time": "2026-10-28T12:47:06.650106+00:00",
+    "time": "2026-11-03T18:34:50.877007+00:00",
     "decision_id": "prediction_time",
     "proposal_id": "p_1",
     "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
@@ -497,7 +497,7 @@
    },
    {
     "revision": 5,
-    "time": "2026-10-28T12:47:08.038363+00:00",
+    "time": "2026-11-03T18:34:52.032533+00:00",
     "decision_id": "feature_availability",
     "proposal_id": "p_2",
     "value": {
@@ -518,7 +518,7 @@
    },
    {
     "revision": 7,
-    "time": "2026-10-28T12:47:09.607909+00:00",
+    "time": "2026-11-03T18:34:53.575278+00:00",
     "decision_id": "split",
     "proposal_id": "p_3",
     "value": {
@@ -536,7 +536,7 @@
    },
    {
     "revision": 9,
-    "time": "2026-10-28T12:47:11.131791+00:00",
+    "time": "2026-11-03T18:34:55.081256+00:00",
     "decision_id": "error_metric",
     "proposal_id": "p_4",
     "value": {
@@ -552,7 +552,7 @@
    },
    {
     "revision": 11,
-    "time": "2026-10-28T12:47:12.952834+00:00",
+    "time": "2026-11-03T18:34:56.608646+00:00",
     "decision_id": "success_criterion",
     "proposal_id": "p_5",
     "value": {
@@ -569,7 +569,7 @@
    },
    {
     "revision": 19,
-    "time": "2026-10-28T12:47:20.035979+00:00",
+    "time": "2026-11-03T18:35:03.089039+00:00",
     "decision_id": "preprocessing",
     "proposal_id": "p_6",
     "value": {
@@ -595,7 +595,7 @@
    },
    {
     "revision": 55,
-    "time": "2026-10-28T12:47:45.754854+00:00",
+    "time": "2026-11-03T18:35:25.591085+00:00",
     "decision_id": "model_variant",
     "proposal_id": "p_7",
     "value": {

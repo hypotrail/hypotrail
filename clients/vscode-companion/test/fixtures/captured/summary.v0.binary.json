@@ -349,7 +349,7 @@
   },
   "results": {
    "diag.binary": {
-    "result_id": "afaa453cc8f7d53ad432be8dffee226bfdd66c8fd342bece0473c320a12625db",
+    "result_id": "cebb6c6376f17193ea3d9e404bb2c36e3473979361c97fb1f56f7aefab62df7c",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -361,19 +361,19 @@
     "integrity": "ok"
    },
    "eda.distribution:age": {
-    "result_id": "e355985f3e935f00111229333a94078dafa8c1696a1d0214d8680c81824b32e2",
+    "result_id": "fdc3cbf8cffadd240a32b2fc653f12e5c5b87565ead84402b25deed0731192db",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:job": {
-    "result_id": "38d11b8c56663281600d7990f032fb758103dce7808e196a2ab5d1f6e5d01070",
+    "result_id": "38b0cf0f2f557df651626c2cca5fa2b2f2351e46c05dc6e38155319529ad93e4",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:previous": {
-    "result_id": "65258127a2d99e43bef73ec8f6c21faff933a9cd52110bdb5c7b5fa8fe484d27",
+    "result_id": "42fa58566f99154db90b5a96f69598ed37e66135d08db2bfa0d74311ff8c865c",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -385,55 +385,55 @@
     "integrity": "ok"
    },
    "eda.rate_by:job": {
-    "result_id": "df1bd4e68b536adea82668704d986c02a293a6ef486f187e93a0e2c172c501f7",
+    "result_id": "00c910d484b44865838815c15ac12b2c603de2bb9ad3701d51e98096a21a0d51",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "54312bf6cfae81cf93c8a28ea71e6321eb0cff3612992b7ad87733dd880d68b0",
+    "result_id": "6150b4b39e2b138c5c3e82348c9d430e56122b14d23c06a57f8748b792a8e8cd",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "1fa97eb7e0b16b7eca521d7ef7fa0e03e5c41c1fe69e5c82e6cba0e9a4f65509",
+    "result_id": "84b51ca15898e713ac1b9a64138c90bafb7d108f9444b4510b2c82819af64083",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_rate": {
-    "result_id": "80c0c7169535603c9a5e42355090ba21d341cfdc702654ea2b613c04a8fb7f01",
+    "result_id": "871275ba5e5e44fcf158d128dbd4ed8a230a2f3322d28e15c3c67d793b33838d",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "9abd65918f72482d5dccd75d48e58bc0253c45bdc4e6c6de0519a60b5e0f22fd",
+    "result_id": "39888538a072535aef1b6b57ee6a15b7c84525b292f8b173c5026cf19df2a66e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.logistic": {
-    "result_id": "3c6fd1dc403d60d9e2733e78500db47196ded2d65d48e4e73d854fc08bd96249",
+    "result_id": "e251f2956199c0d657f686d6e55888d3a365c275bf956d53c0ea575394b61be7",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "688c2df4c82592b31ada7e6b4ceeb8459c10e721ef7182c04f525aabbd3d83c4",
+    "result_id": "96512bd5b647c0d627a78bad2776f79b2b26f2ec9f379639e83c9f0686576253",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "policy.evaluation": {
-    "result_id": "7badf1dfdfc32377b33e9376f05c914cad989474d248eec173bac6b1581b493b",
+    "result_id": "fe2937d25e155208abba09cd11aefae0f4a0aa4db62a822c1e1c5db3577ced28",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "911dd1efe7cca40b504db86c60b7d27be6a1930e02c0fbd9734dbe3437f94127",
+    "result_id": "0826db4881671e667a2bf6fb0a3f2a44ce489fb0c172f295b7eed38db2825f48",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -558,16 +558,16 @@
   "eda_looks": {
    "target_looks": 5,
    "results": [
-    "80c0c7169535603c9a5e42355090ba21d341cfdc702654ea2b613c04a8fb7f01",
-    "1fa97eb7e0b16b7eca521d7ef7fa0e03e5c41c1fe69e5c82e6cba0e9a4f65509",
-    "54312bf6cfae81cf93c8a28ea71e6321eb0cff3612992b7ad87733dd880d68b0",
-    "df1bd4e68b536adea82668704d986c02a293a6ef486f187e93a0e2c172c501f7",
-    "afaa453cc8f7d53ad432be8dffee226bfdd66c8fd342bece0473c320a12625db"
+    "871275ba5e5e44fcf158d128dbd4ed8a230a2f3322d28e15c3c67d793b33838d",
+    "84b51ca15898e713ac1b9a64138c90bafb7d108f9444b4510b2c82819af64083",
+    "6150b4b39e2b138c5c3e82348c9d430e56122b14d23c06a57f8748b792a8e8cd",
+    "00c910d484b44865838815c15ac12b2c603de2bb9ad3701d51e98096a21a0d51",
+    "cebb6c6376f17193ea3d9e404bb2c36e3473979361c97fb1f56f7aefab62df7c"
    ]
   },
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
-   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); model choice: the logistic model; policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result 7badf1df).",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); model choice: the logistic model; policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result fe2937d2).",
    "Now: Open the final test once; the report and notebook are up to date.",
    "Next: whether you adopt the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."
