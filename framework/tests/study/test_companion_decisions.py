@@ -156,10 +156,12 @@ def test_regression_decisions(tmp_path):
     assert p['task'] == 'regression'
     # WP-A4: the two decisions of the split pause before the models.
     # WP-B1: the variant before the model choice, the final test after it.
+    # Lot 2026-10-28 (CLI-CONTRACT §18.1): the error measure before the criterion, pause 2.
     assert [d['decision_id'] for d in p['decisions']] == ['prediction_time',
                                                           'feature_availability', 'split',
-                                                          'success_criterion', 'preprocessing',
-                                                          'model_variant', 'model_choice',
-                                                          'final_test', 'conclusion']
-    assert [d['pause'] for d in p['decisions']] == [1, 1, 2, 2, 2, 3, 3, 3, 3]
+                                                          'error_metric', 'success_criterion',
+                                                          'preprocessing', 'model_variant',
+                                                          'model_choice', 'final_test',
+                                                          'conclusion']
+    assert [d['pause'] for d in p['decisions']] == [1, 1, 2, 2, 2, 2, 3, 3, 3, 3]
     assert p['history'] == [] and p['proposals'] == []

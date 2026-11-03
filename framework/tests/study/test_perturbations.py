@@ -173,6 +173,11 @@ class Walk:
                       'validation_fraction': 0.3, 'seed': 7})
         self.decide('split', split)
         # WP-A4: the success criterion and the default preprocessing, before any model.
+        # Lot 2026-10-28 (CLI-CONTRACT §18.1): a new regression study fixes its error measure
+        # before the criterion.
+        from mlkit.study import read, state as st
+        if st.ERROR_METRIC in read.open(self.study).state['decisions']:
+            self.decide(st.ERROR_METRIC, {'metric': 'mae'})
         self.decide('success_criterion', fk.criterion(case.task))
         self.decide('preprocessing', dict(governance.DEFAULT_PREPROCESSING))
         parts = self.run('split')['values']

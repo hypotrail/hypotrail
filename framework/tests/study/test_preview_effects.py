@@ -202,5 +202,6 @@ def test_auto_mpg_walkthrough_previews_equal_every_confirmation(tmp_path):
     flow.confirm(pid, 'Yes, I want the model_choice switched back, exactly as you stated it, '
                       'because it errs less')
     # WP-A4: the success criterion and the preprocessing; WP-B1: the variant and (R9E-4,
-    # before the adopting conclusion) the final test.
-    assert len(flow.previews) == 10
+    # before the adopting conclusion) the final test; lot 2026-10-28 (CLI-CONTRACT §18.1):
+    # the error measure.
+    assert len(flow.previews) == 11

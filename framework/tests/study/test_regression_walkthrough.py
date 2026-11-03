@@ -190,8 +190,9 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     # WP-A4: step 0, the success criterion and the preprocessing join the plan; WP-B1: the
     # variant before the model choice, the opening of the final test after it. Owner session
     # 2026-10-26 (L5, D5): the structural check, then the preparation, then the target.
+    # Lot 2026-10-28 (CLI-CONTRACT §18.1): the error measure before the criterion (14 steps).
     assert [s['id'] for s in init['plan']] == ['discover_data', 'prediction_time',
-                                               'feature_availability', 'split',
+                                               'feature_availability', 'split', 'error_metric',
                                                'success_criterion', 'structural_eda',
                                                'preprocessing', 'train_eda', 'models',
                                                'model_variant', 'model_choice', 'final_test',
@@ -276,6 +277,11 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     else:
         assert 'grouped_split_unsupported' not in nyd
 
+    # Lot 2026-10-28 (CLI-CONTRACT §18.1): the error measure first; the criterion is then
+    # fixed on it.
+    p = chat.propose('error_metric', {'metric': 'mae'},
+                     'The error is measured as the mean absolute error, in the target unit.')
+    chat.confirm(p, 'I confirm: the mean absolute error.')
     # WP-A4: the success criterion, fixed before any model.
     p = chat.propose('success_criterion', {'metric': 'mae_reduction', 'min_share': 0.1},
                      'The model is worth using only if its validation error is at least 10% '
@@ -368,12 +374,17 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     assert opened['result']['opening']['status'] == 'promoted'
     final_ev = fk.read.open(study).current('final_test.evaluation')['output']['values']
     assert final_ev['model'] == choice and final_ev['n'] > 0
+    # Lot 2026-10-28 (CLI-CONTRACT §18.1): diag.final_test joins the final test step of a
+    # regression study holding error_metric; the plan runs it before the conclusion.
+    assert chat.status()['view']['next_action']['activity'] == 'diag.final_test'
+    chat.run('diag.final_test')
 
     # 8. a new process sees everything without any chat memory
     resume = Chat(study, work, 'chat4')
     view = resume.view
-    for d in ('prediction_time', 'feature_availability', 'split', 'success_criterion',
-              'preprocessing', 'model_variant', 'model_choice', 'final_test'):
+    for d in ('prediction_time', 'feature_availability', 'split', 'error_metric',
+              'success_criterion', 'preprocessing', 'model_variant', 'model_choice',
+              'final_test'):
         assert view['decisions'][d]['status'] == 'confirmed', d
     # the resume recap (T8) names the model choice and the ordinal split, never a policy
     recap = resume('status', '--summary')['recap']
