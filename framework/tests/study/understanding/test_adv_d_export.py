@@ -226,7 +226,7 @@ def test_hostile_config_never_runs(done, tmp_path):
     script.write_text(f'#!/bin/sh\necho "$0 $@" >> {trace}\ncat\n')
     script.chmod(0o755)
     inc = tmp_path / 'inc.config'
-    inc.write_text(f'[core]\n\tfsmonitor = {script}\n')
+    inc.write_text(f'[core]\n\tfsmonitor = {script.as_posix()}\n')   # no backslash escape
     cfg = [('core.fsmonitor', str(script)), ('core.pager', str(script)),
            ('pager.ls-files', str(script)), ('diff.external', str(script)),
            ('filter.evil.smudge', str(script)), ('filter.evil.clean', str(script)),

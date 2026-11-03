@@ -227,7 +227,7 @@ def installed_runtime():
         return None, {}
     root = Path(locations[0]).resolve()
     files = {}
-    for path in sorted(root.rglob("*")):
+    for path in sorted(root.rglob("*"), key=lambda p: p.parts):
         rel = path.relative_to(root)
         if "__pycache__" in rel.parts or path.suffix.lower() in (".pyc", ".pyo"):
             continue
@@ -520,7 +520,7 @@ def _inventory(root: Path) -> list[dict]:
     never skipped (round 3)."""
     refuse_bytecode(root)
     out = []
-    for path in sorted(root.rglob('*')):
+    for path in sorted(root.rglob('*'), key=lambda p: p.parts):
         if path.is_symlink():
             raise PackagingError('artifact_integrity_failed',
                                  'A package may not contain a symbolic link.',
@@ -1201,7 +1201,7 @@ def layout_issues(root: Path, *, with_descriptor: bool = True) -> dict:
     ``evidence/`` or ``packages/`` folder and anything in it are unexpected (round 5)."""
     root = Path(root)
     unexpected = []
-    for path in sorted(root.rglob('*')):
+    for path in sorted(root.rglob('*'), key=lambda p: p.parts):
         rel = path.relative_to(root).as_posix()
         if rel.startswith(EMBEDDED_BUNDLE + '/'):
             # Round 5 (R5-A2): the embedded bundle carries no evidence and no package.

@@ -37,7 +37,10 @@ from pathlib import Path
 from mlkit.study import cli
 from mlkit.study.understanding import export as ex
 def die(src, dst):
-    os.kill(os.getpid(), signal.SIGKILL)
+    # Windows has no SIGKILL: os._exit stops as abruptly (no finally, no atexit, no flush).
+    if hasattr(signal, 'SIGKILL'):
+        os.kill(os.getpid(), signal.SIGKILL)
+    os._exit(137)
 ex.rename_noreplace = die
 argv = sys.argv[1:]
 cli.run(argv)

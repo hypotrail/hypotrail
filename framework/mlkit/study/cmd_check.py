@@ -561,7 +561,7 @@ def declared_files(view: Mapping) -> set[Path]:
 def untracked_files(study_dir: Path, declared: Iterable[Path] = ()) -> list[str]:
     declared = {Path(p).resolve() for p in declared}
     out = []
-    for path in sorted(study_dir.rglob('*')):
+    for path in sorted(study_dir.rglob('*'), key=lambda p: p.parts):
         rel = path.relative_to(study_dir)
         if not path.is_file() or set(rel.parts[:-1]) & IGNORED_DIRS or rel.parts[0] in IGNORED_DIRS:
             continue

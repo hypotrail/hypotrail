@@ -51,7 +51,7 @@ def read_files(root: Path) -> dict[str, bytes]:
     """Every file under ``root`` by POSIX relative path; a symlink or a Python bytecode
     cache (``__pycache__``, ``*.pyc``) is refused, as the runtime refuses it in a bundle."""
     out, total = {}, 0
-    for path in sorted(root.rglob('*')):
+    for path in sorted(root.rglob('*'), key=lambda p: p.parts):
         rel = path.relative_to(root).as_posix()
         if '__pycache__' in path.relative_to(root).parts or path.suffix in ('.pyc', '.pyo'):
             raise ExportError('artifact_integrity_failed', 'The bundle holds a Python bytecode '

@@ -130,7 +130,7 @@ def unvalidated_bytecode(source: Path) -> Path | None:
 def _members() -> list[tuple[str, bytes]]:
     root = Path(__file__).resolve().parent
     out = []
-    for path in sorted(root.rglob('*')):
+    for path in sorted(root.rglob('*'), key=lambda p: p.parts):
         if not path.is_file() or not wheel_member(path.relative_to(root)):
             continue
         out.append((f'{PACKAGE}/{path.relative_to(root).as_posix()}', path.read_bytes()))
@@ -197,7 +197,7 @@ def installed_files(root: Path | None = None) -> dict[str, str]:
     if root is None:
         return {}
     out = {}
-    for path in sorted(root.rglob('*')):
+    for path in sorted(root.rglob('*'), key=lambda p: p.parts):
         rel = path.relative_to(root)
         if not path.is_file():
             continue

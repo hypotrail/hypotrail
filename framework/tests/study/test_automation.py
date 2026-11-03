@@ -569,7 +569,10 @@ def test_the_text_summary_and_the_terminal_default(until, tmp_path):
     assert cli._wanted_format(run + ['--format', 'text'], io.StringIO()) == 'text'
     assert cli._wanted_format(['status', '--study', 's'], Terminal()) == 'json'
     assert cli.TEXT_ON_A_TERMINAL == (('automation', 'run'),)
-    # In a real process on a terminal (a study without automation: nothing to do).
+    # In a real process on a terminal (a study without automation: nothing to do). Windows
+    # has no pseudo-terminal (no pty, no termios): the checks above are its whole coverage.
+    if os.name == 'nt':
+        pytest.skip('no pseudo-terminal on Windows; the in-process checks above passed')
     import pty
     plain = _created(tmp_path / 'plain')
     for extra, readable in (((), True), (('--json',), False)):
