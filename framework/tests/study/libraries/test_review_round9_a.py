@@ -134,7 +134,7 @@ def test_a_sourceless_package_shadowing_a_bound_module_is_refused(tmp_path, bund
              root / 'hypotrail_runtime' / 'predictor' / '__init__.pyc',
              py_compile.PycInvalidationMode.UNCHECKED_HASH)
     out = _probe(tmp_path, bundle, root)
-    assert out['predictor_module'].endswith('predictor/__init__.pyc')
+    assert Path(out['predictor_module']).as_posix().endswith('predictor/__init__.pyc')
     assert out['refused'] == 'environment_unqualified', out
     assert out['details']['reason'] == 'runtime_not_bound'
     assert out['details']['unexpected'] == ['predictor/__init__.pyc']

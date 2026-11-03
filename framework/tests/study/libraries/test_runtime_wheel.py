@@ -51,7 +51,8 @@ def test_bundle_wheel_installs_and_predicts_in_a_fresh_environment(tmp_path):
             if d['distribution'] != 'hypotrail-runtime']
     env = tmp_path / 'venv'
     subprocess.run([UV, 'venv', '-q', '--python', '3.13', str(env)], check=True)
-    python = env / 'bin' / 'python'
+    from mlkit.study.platform_compat import venv_python
+    python = venv_python(env)                          # Scripts\python.exe on Windows
     subprocess.run([UV, 'pip', 'install', '-q', '--python', str(python), str(wheel), *pins],
                    check=True)
     script = tmp_path / 'check.py'

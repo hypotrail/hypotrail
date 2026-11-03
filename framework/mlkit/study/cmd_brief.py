@@ -275,15 +275,15 @@ def _write_source(study: Path, pdf: Path, data: bytes, pages: list[dict],
 def then(study: Path, revision: int, lang: str | None = None) -> dict:
     """What the agent does after ``brief import`` (``then`` of its payload, and of
     ``view.brief`` while the brief is pending): draft, cite, ask, record (R68)."""
-    import shlex
+    from .agent_files import quote_arg
     lang = lang or st.language_of(read.open(study).state)
     root = study.resolve()
     draft = root / DRAFT
     return {'text': THEN_TEXT, 'source': str(root / FOLDER / SOURCE_FILE), 'draft': str(draft),
             'options': list(OPTIONS.get(lang, OPTIONS['en'])),
-            'command': f'hypotrail brief set --file {shlex.quote(str(draft))} --user-words '
+            'command': f'hypotrail brief set --file {quote_arg(str(draft))} --user-words '
                        f'"<the option label, verbatim>" --expected-revision {revision} '
-                       f'--study {shlex.quote(str(root))}'}
+                       f'--study {quote_arg(str(root))}'}
 
 
 def import_pdf(study: Path, pdf: Path, expected_revision: int,

@@ -650,7 +650,13 @@ _RENAME_NOREPLACE = 1
 def rename_noreplace(src: Path, dst: Path) -> None:
     """Rename ``src`` onto ``dst`` only if ``dst`` does not exist (atomic, never a
     replacement). ``FileExistsError`` when it exists; ``OSError`` when the platform has no
-    such primitive (the publication is then refused, never emulated with a race)."""
+    such primitive (the publication is then refused, never emulated with a race).
+
+    On Windows, ``os.rename`` is that primitive: ``MoveFileExW`` without
+    ``MOVEFILE_REPLACE_EXISTING`` refuses an existing target (``FileExistsError``)."""
+    if os.name == 'nt':
+        os.rename(src, dst)
+        return
     libc = ctypes.CDLL(ctypes.util.find_library('c') or None, use_errno=True)
     if sys.platform.startswith('linux') and hasattr(libc, 'renameat2'):
         AT_FDCWD = -100
@@ -668,6 +674,8 @@ def rename_noreplace(src: Path, dst: Path) -> None:
 
 
 def _fsync_dir(path: Path) -> None:
+    if os.name == 'nt':           # Windows cannot open a directory to fsync it
+        return
     fd = os.open(path, os.O_RDONLY)
     try:
         os.fsync(fd)
@@ -734,11 +742,31 @@ def _clear_leftovers(parent: Path, review_id_: str) -> None:
             continue                      # left as is; the verifier reports it
 
 
+def _real(path) -> Path:
+    """``os.path.realpath`` without the ``\\\\?\\`` prefix Windows may keep on a path that
+    does not exist (CPython's non-strict resolution)."""
+    real = os.path.realpath(path)
+    if os.name == 'nt' and real.startswith('\\\\?\\') and not real.startswith('\\\\?\\UNC\\'):
+        real = real[4:]
+    return Path(real)
+
+
+def _real_within(path: Path, root: Path) -> bool:
+    """True when ``path`` resolves inside ``root``: its deepest existing ancestor (links
+    followed) is inside, and the rest are plain names to be created."""
+    existing, tail = Path(path), []
+    while not os.path.lexists(existing) and existing != existing.parent:
+        tail.append(existing.name)
+        existing = existing.parent
+    if any(part in ('', '.', '..') for part in tail):
+        return False
+    return _real(existing).joinpath(*reversed(tail)).is_relative_to(_real(root))
+
+
 def publish(repo: Path, review_id_: str, files: Mapping[str, bytes], *, fault=None) -> str:
     """Publish one generation; ``'published'`` or ``'already_published'`` (same bytes)."""
     parent = Path(repo) / EXPORT_DIR
-    real_repo = Path(os.path.realpath(repo))
-    if not Path(os.path.realpath(parent)).is_relative_to(real_repo):
+    if not _real_within(parent, Path(repo)):
         raise refuse('path_outside_scope', 'docs/understanding leaves the repository.',
                      'Remove the link.')
     parent.mkdir(parents=True, exist_ok=True)

@@ -68,7 +68,10 @@ def feature_names() -> list[str]:
 
 
 def _package_bytes() -> bytes:
-    return resources.files('sklearn.datasets.data').joinpath('breast_cancer.csv').read_bytes()
+    """The package file with LF line ends: scikit-learn's Windows wheels ship it with CRLF
+    (1.9.1, cp313 win_amd64), its other wheels with LF; the values are the same."""
+    raw = resources.files('sklearn.datasets.data').joinpath('breast_cancer.csv').read_bytes()
+    return raw.replace(b'\r\n', b'\n')
 
 
 def dataset_bytes() -> tuple[bytes, bytes]:

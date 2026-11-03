@@ -265,6 +265,8 @@ def test_cli_allow_user_text(study, tmp_path):
     assert code == 2 and payload['error']['code'] == 'invalid_arguments'
 
 
+@pytest.mark.skipif(os.name == 'nt', reason='process substitution is a POSIX shell feature; '
+                    'on Windows the words are passed in a file')
 def test_cli_reads_the_juniors_words_from_a_shell_pipe(study):
     """The agent passes the junior's words with a process substitution, ``<(printf ...)``,
     and the draft on stdin: no file is written anywhere."""

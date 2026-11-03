@@ -29,6 +29,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 
 from . import records as rec
@@ -57,7 +58,9 @@ def _jsonl(path: Path) -> list[dict]:
     return out
 
 
-READ_ATTEMPTS = 3
+# Windows makes a file briefly unreadable while a writer replaces or removes it, and retries
+# there take longer: more attempts, the same delays.
+READ_ATTEMPTS = 8 if os.name == 'nt' else 3
 
 
 def _read_optional(path: Path) -> str | None:
@@ -117,6 +120,11 @@ def load_state(study_dir) -> dict:
             if attempt == READ_ATTEMPTS - 1:
                 raise StudyError('study_missing', f'No study here: {path} does not exist.',
                                  details={'study': str(Path(study_dir))}) from None
+        except PermissionError:
+            # Windows: a file the writer is replacing or removing at this instant cannot be
+            # opened (sharing violation, delete pending); the next attempt reads the result.
+            if os.name != 'nt' or attempt == READ_ATTEMPTS - 1:
+                raise
         time.sleep(0.01 * (attempt + 1))
     raise AssertionError('unreachable')
 

@@ -227,7 +227,8 @@ def test_concurrent_first_exports(tmp_path):
     u = ukit.U(tmp_path)
     sid = ukit.full_flow(u)
     ukit.approve_all(u, sid)
-    ctx = mp.get_context('fork')
+    # fork where it exists (POSIX); Windows has only spawn, which imports this module again
+    ctx = mp.get_context('fork' if hasattr(os, 'fork') else 'spawn')
     q = ctx.Queue()
     ps = [ctx.Process(target=_child_write, args=(u.study, sid, u.repo, f'cw{i}', q))
           for i in range(3)]
@@ -248,6 +249,8 @@ def test_concurrent_first_exports(tmp_path):
 
 # --- R3-6: a publication killed mid-write leaves a temporary folder ------------------------
 
+@pytest.mark.skipif(not hasattr(os, 'fork'), reason='kills a forked child mid-write; '
+                    'Windows has no fork')
 def test_killed_publication_leftover(tmp_path):
     from mlkit.study import cmd_understanding as cu
     u = ukit.U(tmp_path)

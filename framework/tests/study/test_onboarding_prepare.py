@@ -384,5 +384,5 @@ def test_the_preparation_templates_are_not_loaded_in_this_repository():
     from mlkit.study import agent_files as af, cmd_prepare
     stored = [p.relative_to(cmd_prepare.AGENT_SOURCE) for p in cmd_prepare.AGENT_SOURCE.rglob('*')]
     assert not [p for p in stored if set(p.parts) & set(af.LOADED_NAMES)]
-    assert {str(p) for p in stored if (cmd_prepare.AGENT_SOURCE / p).is_file()} == \
+    assert {p.as_posix() for p in stored if (cmd_prepare.AGENT_SOURCE / p).is_file()} == \
         set(cmd_prepare.AGENT_TARGETS)

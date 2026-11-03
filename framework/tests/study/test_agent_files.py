@@ -5,7 +5,6 @@ import inspect
 import json
 import os
 import re
-import shlex
 import subprocess
 from pathlib import Path
 
@@ -67,8 +66,8 @@ def test_init_installs_both_agents_with_the_exact_invocation(study):
     assert set(info['copied']) == CLAUDE_TARGETS | COPILOT_TARGETS
     record = json.loads((target / '.hypotrail' / af.AGENT_FILE).read_text())
     assert record['schema'] == af.SCHEMA and record['study'] == str(target.resolve())
-    assert record['cli']['shell'] == info['cli'] == shlex.join(record['cli']['argv'])
-    invocation = f'{record["cli"]["shell"]} status --json --study {shlex.quote(str(target.resolve()))}'
+    assert record['cli']['shell'] == info['cli'] == af.display_command(record['cli']['argv'])
+    invocation = f'{record["cli"]["shell"]} status --json --study {af.quote_arg(str(target.resolve()))}'
     for rel in CLAUDE_TARGETS | COPILOT_TARGETS:
         text = (target / rel).read_text()
         assert '{{' not in text and '}}' not in text, rel

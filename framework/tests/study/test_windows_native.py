@@ -139,9 +139,9 @@ def test_two_processes_contending_for_the_writer_lock_lose_no_update(study, back
 
 
 HOLD = SETUP + textwrap.dedent('''
-    import time
+    import os, time
     with lock.writer_lock(sys.argv[2]):
-        print('held', flush=True)
+        print('held', os.getpid(), flush=True)
         time.sleep(float(sys.argv[3]))
 ''')
 
@@ -149,12 +149,15 @@ HOLD = SETUP + textwrap.dedent('''
 @pytest.mark.parametrize('backend', BACKENDS, indirect=True)
 def test_a_killed_writer_releases_the_lock(study, backend):
     holder = _spawn(HOLD, backend, study.study_dir, 30)
-    assert holder.stdout.readline().strip() == 'held'
+    # The child's own pid: on Windows a venv's python.exe is a launcher that starts the
+    # interpreter as a second process, so Popen.pid is not the lock holder's pid.
+    word, pid = holder.stdout.readline().split()
+    assert word == 'held'
     with pytest.raises(StudyError) as info:
         with lock.writer_lock(study.study_dir, timeout=0.2):
             pass
     assert info.value.code == 'study_busy'
-    assert info.value.details['holder']['pid'] == holder.pid
+    assert info.value.details['holder']['pid'] == int(pid)
     holder.kill()
     holder.communicate(timeout=30)
     with lock.writer_lock(study.study_dir, timeout=5):
@@ -164,7 +167,7 @@ def test_a_killed_writer_releases_the_lock(study, backend):
 LEASE = SETUP + textwrap.dedent('''
     import os
     lock.acquire_lease(sys.argv[2], sys.argv[3], activity='fit.logistic')
-    print('leased', flush=True)
+    print('leased', os.getpid(), flush=True)
     if sys.argv[4] == 'die':
         os._exit(0)     # dies without releasing: the outcome is unknown
     sys.stdin.readline()
@@ -191,18 +194,19 @@ def test_leases_held_released_and_orphaned(study, backend):
                               'wait'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, text=True, env=_env())
     try:
-        assert alive.stdout.readline().strip() == 'leased'
+        word, pid = alive.stdout.readline().split()
+        assert word == 'leased'
         assert lock.lease_is_held(lock.lease_path(study.study_dir, 'e2'))
         assert lock.orphaned_leases(study.study_dir) == []
     finally:
         alive.communicate('\n', timeout=30)
     # Its process ended without releasing: an orphan, with its record.
     [orphan] = lock.orphaned_leases(study.study_dir)
-    assert orphan['execution_id'] == 'e2' and orphan['pid'] == alive.pid
+    assert orphan['execution_id'] == 'e2' and orphan['pid'] == int(pid)
     assert lock.probe_leases(study.study_dir) == {'e2': False}
 
     dead = _spawn(LEASE, backend, study.study_dir, 'e3', 'die')
-    assert dead.stdout.readline().strip() == 'leased'
+    assert dead.stdout.readline().split()[0] == 'leased'
     dead.communicate(timeout=30)
     assert {o['execution_id'] for o in lock.orphaned_leases(study.study_dir)} == {'e2', 'e3'}
     lock.remove_orphaned_lease(study.study_dir, 'e2')

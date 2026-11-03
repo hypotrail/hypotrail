@@ -301,7 +301,7 @@ def test_generated_with_stamp_is_the_only_version_coupling(study):
     text = notebook.read_text()
     bumped = text.replace('__generated_with = "0.25.1"', '__generated_with = "0.99.0"')
     assert bumped != text and not contents_differ_excluding_generated_with(text, bumped)
-    notebook.write_text(bumped)
+    notebook.write_bytes(bumped.encode('utf-8'))      # LF, as the engine writes it
     assert render(study)['preserved'] == []
 
 

@@ -269,7 +269,7 @@ def test_new_hook_command_decides_on_real_calls(mpg_study):
         assert proc.returncode == 0, proc.stderr
         return json.loads(proc.stdout).get('hookSpecificOutput', {})
 
-    engine = f'{record["cli"]["shell"]} status --summary --study {shlex.quote(str(study))}'
+    engine = f'{record["cli"]["shell"]} status --summary --study {af.quote_arg(str(study))}'
     allowed = decide(_run(engine))
     assert allowed['permissionDecision'] == 'allow'
     assert 'autorisée' in allowed['permissionDecisionReason']   # the study's language (fr)

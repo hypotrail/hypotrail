@@ -313,10 +313,10 @@ def test_chat_and_webview_confirm_the_same_proposal_concurrently(study, tmp_path
 # --- lock and leases --------------------------------------------------------------------
 
 HOLD = textwrap.dedent('''
-    import sys, time
+    import os, sys, time
     from mlkit.study import lock
     with lock.writer_lock(sys.argv[1]):
-        print('held', flush=True)
+        print('held', os.getpid(), flush=True)
         time.sleep(float(sys.argv[2]))
 ''')
 
@@ -329,12 +329,15 @@ def _spawn(code: str, *args) -> subprocess.Popen:
 
 def test_writer_lock_refuses_when_busy_and_is_released_on_exit(study):
     holder = _spawn(HOLD, study.study_dir, 30)
-    assert holder.stdout.readline().strip() == 'held'
+    # The child's own pid: on Windows a venv's python.exe is a launcher that starts the
+    # interpreter as a second process, so Popen.pid is not the lock holder's pid.
+    word, pid = holder.stdout.readline().split()
+    assert word == 'held'
     with pytest.raises(StudyError) as info:
         with lock.writer_lock(study.study_dir, timeout=0.2):
             pass
     assert info.value.code == 'study_busy'
-    assert info.value.details['holder']['pid'] == holder.pid
+    assert info.value.details['holder']['pid'] == int(pid)
     holder.kill()
     holder.communicate(timeout=30)
     with lock.writer_lock(study.study_dir, timeout=5):   # the OS released the dead holder
@@ -372,7 +375,7 @@ LEASE = textwrap.dedent('''
     import os, sys
     from mlkit.study import lock
     lock.acquire_lease(sys.argv[1], sys.argv[2], activity='fit.logistic')
-    print('leased', flush=True)
+    print('leased', os.getpid(), flush=True)
     os._exit(0)     # dies without releasing: the outcome is unknown
 ''')
 
@@ -391,10 +394,11 @@ def test_lease_held_released_and_orphaned(study):
     assert not lease.path.exists()
 
     proc = _spawn(LEASE, study.study_dir, 'e2')
-    assert proc.stdout.readline().strip() == 'leased'
+    word, pid = proc.stdout.readline().split()
+    assert word == 'leased'
     proc.communicate(timeout=30)
     [orphan] = lock.orphaned_leases(study.study_dir)
     assert orphan['execution_id'] == 'e2' and orphan['activity'] == 'fit.logistic'
-    assert orphan['pid'] == proc.pid
+    assert orphan['pid'] == int(pid)
     lock.remove_orphaned_lease(study.study_dir, 'e2')
     assert lock.orphaned_leases(study.study_dir) == []

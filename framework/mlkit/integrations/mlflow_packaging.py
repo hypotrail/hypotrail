@@ -813,7 +813,7 @@ class ArtifactPackager:
         try:
             package_dir = staging / 'package'
             wrapper = staging / WRAPPER_FILE
-            wrapper.write_text(WRAPPER_SOURCE, encoding='utf-8')
+            wrapper.write_bytes(WRAPPER_SOURCE.encode('utf-8'))   # no CRLF on Windows
             bundle_copy = staging / NATIVE_ARTIFACT
             shutil.copytree(bundle_dir, bundle_copy,
                             ignore=_skip(bundle_dir, bundle, out, staging))
