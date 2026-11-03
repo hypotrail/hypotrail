@@ -1,7 +1,7 @@
 """``hypotrail new NAME --case PATH``: a ready-to-open study on an existing case (Lot 1).
 
-Onboarding spec (docs/plans/ONBOARDING-SPEC.md, Lot 1). In Python, what
-``scripts/workshop/new-mpg-study.sh`` did in bash, for any case:
+Onboarding spec (docs/plans/ONBOARDING-SPEC.md, Lot 1). In Python, what the workshop's bash
+script (``scripts/workshop/``) did for its one case, for any case:
 
 1. ``init`` on the case, into ``PARENT/NAME`` (``--dir``, default the current folder), with
    ``--lang``, ``--automation`` and, for a PDF ``--brief``, the PO brief import of
@@ -266,8 +266,11 @@ def start_from_data(args: argparse.Namespace):
     """``new NAME --data FILE``: the preparing study (Lot 2), then the workspace steps."""
     from . import cmd_prepare
     if args.automation:
-        raise StudyError('invalid_arguments', '--automation is not available with --data yet: '
-                         'a prepared study is sealed by hypotrail seal, without automatic mode.')
+        raise StudyError('invalid_arguments', '--automation is chosen when the study is '
+                         'created, and with --data that is hypotrail seal: run seal '
+                         '--automation until_final_test|full_demo once the six questions are '
+                         'answered.', details={'next_action': 'hypotrail seal --automation '
+                                                              f'{args.automation}'})
     study = study_path(args.name, args.dir)
     study.parent.mkdir(parents=True, exist_ok=True)
     out = cmd_prepare.start(str(study), args.data, brief=args.brief, context=args.context,

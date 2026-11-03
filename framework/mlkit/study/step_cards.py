@@ -70,8 +70,6 @@ CHART_KINDS = ('sample_table', 'structure_bars', 'moment_timeline', 'variables_b
 
 # Engine constants of the illustrations (EN-10, R67), cited as ``engine:<NAME>``.
 METRIC_EXAMPLE_ERRORS = (1, 1, 1, 1, 6)
-UNIT_NOTE_MPG = 25
-MPG_TO_L100 = 235.215
 CRITERION_EXAMPLE_REFERENCE = 7.0
 DEFAULT_MIN_SHARE = 0.1
 # The bounds of the readings' rules, in the unit of the target (named, cited, LOT §8.7).
@@ -368,11 +366,10 @@ def f_metric(x: Ctx) -> Fill:
                   sum=C(sum(errors), 'int', None, f'{e}:sum'),
                   big_square=C(max(squares), 'int', None, f'{e}:max_square'),
                   sum_square=C(sum(squares), 'int', None, f'{e}:sum_square'))
-    unit_note = None
-    if x.unit == 'mpg':
-        per = MPG_TO_L100 / UNIT_NOTE_MPG
-        unit_note = (f'{cite.format_value(UNIT_NOTE_MPG, "int", x.lang)} mpg ≈ '
-                     f'{cite.format_value(per, "f1", x.lang)} L/100 km')
+    # A reading aid for the target's unit, from the case's display file (case knowledge,
+    # never the engine's).
+    from . import case_display
+    unit_note = case_display.unit_note(x.display, x.lang) if x.unit else None
     data = {'illustrative': True, 'errors': errors, 'squares': squares, 'mae': mae,
             'mean_square': mean_square, 'rmse': rmse, 'unit': x.unit or None,
             'unit_note': unit_note}

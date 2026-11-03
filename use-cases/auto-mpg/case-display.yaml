@@ -15,6 +15,9 @@ columns:
   model_year: {en: model year, fr: année du modèle}
   origin: {en: origin, fr: origine}
   car_name: {en: car name, fr: nom de la voiture}
+# A reading aid for the target's unit, shown under the error-measure illustration:
+# 235.215 / 25 = 9.4 litres per 100 km (US gallon, statute mile).
+unit_note: {en: 25 mpg ≈ 9.4 L/100 km, fr: '25 mpg ≈ 9,4 L/100 km'}
 timeline:
   status: scenario_assumption
   source: Teaching scenario assumption
