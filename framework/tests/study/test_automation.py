@@ -580,8 +580,20 @@ def test_the_text_summary_and_the_terminal_default(until, tmp_path):
                                    str(plain.rev()), '--study', str(plain.study)],
                                   stdout=slave, stderr=subprocess.PIPE, text=True,
                                   env=fk.env(), timeout=600)
+            # Read before closing the slave end: macOS drops what is pending on the master
+            # once the last slave descriptor closes (Linux keeps it).
+            import select
+            chunks = []
+            while select.select([master], [], [], 0.5)[0]:
+                try:
+                    data = os.read(master, 1 << 16)
+                except OSError:
+                    break
+                if not data:
+                    break
+                chunks.append(data)
             os.close(slave)
-            shown = os.read(master, 1 << 16).decode('utf-8').replace('\r\n', '\n')
+            shown = b''.join(chunks).decode('utf-8').replace('\r\n', '\n')
         finally:
             os.close(master)
         assert proc.returncode == 0 and proc.stderr == '', proc.stderr
