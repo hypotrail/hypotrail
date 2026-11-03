@@ -95,12 +95,15 @@ def git(repo, *args, check=True) -> str:
 
 
 def make_repo(root: Path) -> Path:
+    """A project whose sources are LF bytes on every system (``newline``: Windows would write
+    CRLF, and a test of Git's end-of-line conversion would then have nothing to convert)."""
     repo = root / 'project'
     (repo / 'src').mkdir(parents=True)
-    (repo / 'src/pipeline.py').write_text('def predict(row):\n    return score(select(row))\n')
-    (repo / 'src/transforms.py').write_text('def fit_imputer(train):\n    return train.mean()\n')
-    (repo / 'SECURITY.md').write_text('Every new dependency is reviewed before adoption.\n')
-    (repo / 'README.md').write_text('Project.\n')
+    for path, text in (('src/pipeline.py', 'def predict(row):\n    return score(select(row))\n'),
+                       ('src/transforms.py', 'def fit_imputer(train):\n    return train.mean()\n'),
+                       ('SECURITY.md', 'Every new dependency is reviewed before adoption.\n'),
+                       ('README.md', 'Project.\n')):
+        (repo / path).write_text(text, newline='\n')
     git(repo, 'init', '-q', '-b', 'main')
     git(repo, 'add', '--', 'src/pipeline.py', 'src/transforms.py', 'SECURITY.md', 'README.md')
     git(repo, 'commit', '-q', '-m', 'project sources')
