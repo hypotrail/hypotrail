@@ -71,6 +71,11 @@ def _until(f: fk.Flow, stop, limit=40) -> dict:
         if stop(nxt):
             return nxt
         kind = nxt['kind']
+        if kind == 'read_exploration':
+            # Lot 2026-10-28 (EN-12; CLI-CONTRACT §5, §18): the pause after the exploration;
+            # the junior answers "continue" and the agent runs ``then`` as given.
+            nxt = dict(nxt['then'])
+            kind = nxt['kind']
         if kind == 'show_data_card':
             _adopt(f, 'prediction_time', 'when the record is created, before the outcome')
         elif kind == 'run':

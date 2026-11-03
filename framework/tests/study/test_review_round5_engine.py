@@ -586,6 +586,11 @@ def _follow(f, task, review, limit=60):
         if kind == 'show_data_card':
             nxt = {'kind': 'propose', 'decision': 'prediction_time'}
             kind = 'propose'
+        if kind == 'read_exploration':
+            # Lot 2026-10-28 (EN-12; CLI-CONTRACT §5, §18): the pause after the exploration;
+            # the junior answers "continue" and the agent runs ``then`` as given.
+            assert nxt['then']['kind'] == 'run' and nxt['question'], nxt
+            nxt, kind = dict(nxt['then'], junior_digest=''), 'run'   # its question is the pause's
         if kind == 'run':
             digest = nxt['junior_digest']
             assert not digest.rstrip().endswith('?') or any(

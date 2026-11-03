@@ -88,6 +88,11 @@ def _execute(f, nxt: dict) -> dict:
     a proposal or reconfirmation with its ``default_value`` (the recommended value, or for
     the conclusion the first verdict it names), the junior's words on a waiting proposal."""
     kind = nxt['kind']
+    if kind == 'read_exploration':
+        # Lot 2026-10-28 (EN-12; CLI-CONTRACT §5, §18): the pause after the exploration; the
+        # junior answers "continue" and the agent runs ``then`` as given.
+        nxt = dict(nxt['then'])
+        kind = nxt['kind']
     if kind == 'run':
         args = [nxt['activity']]
         for rule in nxt.get('rules') or []:
@@ -703,6 +708,10 @@ def _review_regression_flow(base: Path, monkeypatch, language: str) -> fk.Flow:
                                 'time')
     f.decide('feature_availability', fk.availability(f.case_dir))
     f.decide('split', st.b1_default_value(f.state(), 'split'))
+    # Lot 2026-10-28 (CLI-CONTRACT §18.1): a new regression study fixes its error measure
+    # before the criterion (MAE, the measure of the criterion below).
+    if st.ERROR_METRIC in f.state()['decisions']:
+        f.decide(st.ERROR_METRIC, {'metric': 'mae'})
     f.decide('success_criterion', REG_CRITERION)
     f.decide('preprocessing', dict(governance.DEFAULT_PREPROCESSING))
     f.run('split')

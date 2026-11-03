@@ -171,6 +171,11 @@ def execute(s: Study, nxt: dict) -> dict:
         # Informational; its message says to propose the prediction moment next.
         nxt = {'kind': 'propose', 'decision': 'prediction_time'}
         kind = 'propose'
+    if kind == 'read_exploration':
+        # Lot 2026-10-28 (EN-12; CLI-CONTRACT §5, §18): the pause after the exploration; the
+        # junior answers "continue" and the agent runs ``then`` as given.
+        nxt = dict(nxt['then'])
+        kind = nxt['kind']
     if kind == 'run':
         args = [nxt['activity']]
         for rule in nxt.get('rules') or []:
@@ -313,7 +318,17 @@ def _interrupt(s: Study) -> None:
     ``eda.quality``, which a structural-first study has already run as a plan step, so its
     run would be ``already_current`` and reserve nothing)."""
     env = fk.env(HYPOTRAIL_TEST_HOOKS='1', HYPOTRAIL_FAULT='run_after_reserve')
-    subprocess.run([sys.executable, '-m', 'mlkit.study.cli', 'run', 'eda.correlation',
+    # Owner batch of 2026-10-28 (R40, R45): the exploration step now runs the correlation
+    # matrix and each kept feature's distribution itself, so the run is the first of these
+    # target-free charts that is not current (a current one would reserve nothing).
+    from mlkit.study import case as c
+    state = s.state()
+    features = [v['name'] for v in c.case_of(state).document['variables']
+                if v['role'] == 'feature']
+    candidates = [('eda.correlation', 'eda.correlation', [])] + [
+        ('eda.distribution', f'eda.distribution:{f}', ['--column', f]) for f in features]
+    activity, _, args = next(x for x in candidates if not st.is_current(state, x[1]))
+    subprocess.run([sys.executable, '-m', 'mlkit.study.cli', 'run', activity, *args,
                     '--request-id', f'kill{s.rev()}', '--expected-revision', str(s.rev()),
                     '--study', str(s.study)], env=env, capture_output=True, text=True,
                    timeout=600)
@@ -447,6 +462,7 @@ def confirmed(decision):
 
 def at_run(nxt, s) -> bool:
     return nxt['kind'] == 'run' and nxt.get('activity') in ('fit.logistic', 'fit.linear')
+
 
 
 def choice_of(s: Study) -> str:
