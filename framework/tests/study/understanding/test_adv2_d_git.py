@@ -41,8 +41,15 @@ def test_verifier_lazy_fetch_runs_configured_program_in_partial_clone(done, tmp_
     out = verify(clone, 'HEAD')
     print('OBSERVED', out, trace.read_text() if trace.exists() else 'no program ran')
     assert not trace.exists(), 'the verifier ran a configured program (lazy fetch)'
-    # A partial clone is refused rather than read (fix of D2-5).
-    assert out['error']['code'] == 'git_index_conflict'
+    from mlkit.study.understanding import verify as vf
+    if vf.git_version() < vf.NO_LAZY_FETCH_SINCE:
+        # A partial clone is refused rather than read (fix of D2-5).
+        assert out['error']['code'] == 'git_index_conflict'
+    else:
+        # Git 2.44 and later honour GIT_NO_LAZY_FETCH (verify.Tree): the clone is read, a
+        # missing blob is an error, never a fetch, so its generation is never valid.
+        assert 'error' not in out, out
+        assert out['public_integrity'] != 'valid', out
 
 
 def test_git_plan_hides_staged_submodule_change_with_ignore_config(done, tmp_path):

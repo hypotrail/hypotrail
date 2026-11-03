@@ -150,7 +150,7 @@ def test_the_default_target_and_its_second_export(study):
     assert again['error']['details']['path'] == str(default)
     # The pack is the engine's own output: check does not report it as untracked.
     findings = cli.run(['check', '--study', str(study)]).payload['findings']
-    assert 'untracked_files' not in [f['code'] for f in findings]
+    assert 'untracked_files' not in [f['code'] for f in findings], findings
 
 
 @pytest.mark.parametrize('inside', ['.hypotrail/pack', 'reports', 'notebooks/pack/deeper'])
