@@ -32,7 +32,7 @@ docs/specs/CLI-CONTRACT.md, then read any additional specifications I provide.
 
 v0.2 (Bank Marketing, Bank full, Auto MPG, and Online Shoppers, now an
 advanced case; Hotel booking demand is the discovery case from v0.3;
-Claude Code; sealed final test, cross-validation, nine decisions; HTML report
+Claude Code; sealed final test, cross-validation, ten decisions; HTML report
 and generated Marimo notebook) is implemented. Put reusable code in framework
 and case material in use-cases. The experimental companion is paused; the
 flagged study panel (clients/vscode-companion, ADRs 0003 and 0004) is off by
