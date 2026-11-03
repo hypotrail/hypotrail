@@ -386,3 +386,101 @@ def test_the_preparation_templates_are_not_loaded_in_this_repository():
     assert not [p for p in stored if set(p.parts) & set(af.LOADED_NAMES)]
     assert {p.as_posix() for p in stored if (cmd_prepare.AGENT_SOURCE / p).is_file()} == \
         set(cmd_prepare.AGENT_TARGETS)
+
+
+def test_the_hook_refuses_the_raw_file_while_the_study_is_prepared(tmp_path):
+    """Before ``seal`` the study has no state: the hook reads ``.hypotrail/preparing.json``
+    and ``NAME.case/``, and denies a call naming the copied file, the original file or the
+    case's data folder; after ``seal`` it still denies the file (from the state)."""
+    from mlkit.study import cmd_hook
+    data = binary_time_csv(tmp_path / 'bookings.csv')
+    code, out = hyp('new', tmp_path / 'hotel', '--data', data, '--context',
+                    'Hotel bookings; predict cancellations at booking time.', cwd=tmp_path)
+    assert code == 0, out
+    study = tmp_path / 'hotel'
+    assert (study / cmd_hook.HOOK_FILE).is_file()               # installed while preparing
+    prefixes, files, language = cmd_hook.study_rule(study)
+    assert prefixes and 'bookings.csv' in files and language == 'en'
+    assert {'hotel.case/data', 'hotel.case\\data'} <= set(files)
+
+    def decided(tool, args):
+        return cmd_hook.decide({'tool_name': tool, 'tool_input': args}, prefixes, files)[0]
+    assert decided('read_file', {'filePath': str(tmp_path / 'hotel.case' / 'data' /
+                                                 'bookings.csv')}) == 'deny'
+    assert decided('run_in_terminal', {'command': 'head -5 ../bookings.csv'}) == 'deny'
+    assert decided('run_in_terminal', {'command': 'ls ../hotel.case/data'}) == 'deny'
+    assert decided('run_in_terminal', {'command': 'ls'}) is None
+    out = prepare(study, FUTURE, tmp_path)
+    accept_and_seal(study, out, tmp_path)
+    _, after, _ = cmd_hook.study_rule(study)
+    assert after == ['bookings.csv']                              # from the sealed state
+
+
+def test_the_hook_command_is_written_for_each_shell():
+    """``powershell`` runs on Windows and ``bash`` elsewhere (hooks reference): each line is
+    quoted for its shell, so a path with spaces works under both."""
+    from mlkit.study import agent_files as af, cmd_hook
+    exe = r'C:\Users\Ana Lima\AppData\Roaming\uv\tools\hypotrail\Scripts\hypotrail.exe'
+    config = cmd_hook.hook_config([exe], r'C:\Users\Ana Lima\Études\hotel')
+    [entry] = config['hooks']['PreToolUse']
+    assert config['version'] == 1 and entry['type'] == 'command'
+    assert entry['powershell'].startswith("& 'C:\\Users\\Ana Lima\\AppData\\")
+    assert "--study 'C:\\Users\\Ana Lima\\Études\\hotel'" in entry['powershell']
+    words = cmd_hook.tokens(entry['powershell'], windows=True)
+    assert words[:4] == [exe, 'hook', 'pretool', '--study']
+    import shlex
+    assert shlex.split(entry['bash'])[:3] == [exe, 'hook', 'pretool']
+    assert entry['command'] in (entry['bash'], entry['powershell'])
+    assert entry['command'] == af.display_command(shlex.split(entry['bash']))
+
+
+def _prepared(tmp_path, name='hotel'):
+    data = binary_time_csv(tmp_path / f'{name}.csv')
+    code, out = hyp('new', tmp_path / name, '--data', data, '--context',
+                    'Hotel bookings; predict cancellations at booking time.', cwd=tmp_path)
+    assert code == 0, out
+    study = tmp_path / name
+    out = prepare(study, FUTURE, tmp_path)
+    final = out['final_test']
+    out = answer(study, 'final_test', {'accept': True, 'plan': final['plan']},
+                 "D'accord, je l'accepte.", out['revision'], cwd=tmp_path)
+    return study, out
+
+
+def test_the_automatic_mode_is_chosen_at_seal_the_launch_of_a_prepared_study(tmp_path):
+    """ADR 0005: the automatic mode is chosen when the study is created; with ``--data``
+    that is ``seal``. ``new --data --automation`` names it; ``seal --automation`` records the
+    mode as ``init --automation`` does; a study sealed without it has none."""
+    data = binary_time_csv(tmp_path / 'x.csv')
+    code, out = hyp('new', tmp_path / 'early', '--data', data, '--automation',
+                    'until_final_test', cwd=tmp_path)
+    assert code == 2 and out['error']['code'] == 'invalid_arguments', out
+    assert 'seal --automation' in out['error']['message']
+    assert not (tmp_path / 'early').exists() and not (tmp_path / 'early.case').exists()
+
+    study, out = _prepared(tmp_path)
+    code, bad = hyp('seal', '--expected-revision', out['revision'], '--automation', 'always',
+                    '--study', study, cwd=tmp_path)
+    assert code == 2 and bad['error']['code'] == 'invalid_arguments'
+    code, sealed = hyp('seal', '--expected-revision', out['revision'], '--automation',
+                       'until_final_test', '--study', study, cwd=tmp_path)
+    assert code == 0, sealed
+    state = json.loads((study / '.hypotrail' / 'state.json').read_text(encoding='utf-8'))
+    assert state['automation'] == {'mode': 'until_final_test', 'status': 'running',
+                                   'started_revision': 1, 'ended': None}
+    assert sealed['deduction']['accepted']['user_words'] == "D'accord, je l'accepte."
+    # The prepared case documents no availability: the automatic mode records the framing
+    # it can, then stops at the columns and asks the junior, instead of excluding them all.
+    code, run = hyp('automation', 'run', '--json', '--request-id', 'a1', '--expected-revision',
+                    sealed['revision'], '--study', study, cwd=tmp_path)
+    assert code == 0, run
+    assert (run['status'], run['reason']) == ('stopped', 'no_automatic_value'), run
+    assert run['stopped_at']['decision'] == 'feature_availability' and run['refusal'] is None
+    assert [s['decision'] for s in run['steps'] if s['decision']][:1] == ['prediction_time']
+
+    plain, out = _prepared(tmp_path, 'plain')
+    code, sealed = hyp('seal', '--expected-revision', out['revision'], '--study', plain,
+                       cwd=tmp_path)
+    assert code == 0, sealed
+    state = json.loads((plain / '.hypotrail' / 'state.json').read_text(encoding='utf-8'))
+    assert state.get('automation') is None
