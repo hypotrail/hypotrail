@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import re
 import stat
 import subprocess
 import sys
@@ -401,7 +403,13 @@ def summary_golden_text(study: Path) -> str:
     # uv project), which differs between checkouts: it reads ``<engine>``.
     from mlkit.study import launch
     engine = json.dumps(str(launch.framework_dir().parent))[1:-1]
-    return proc.stdout.replace(json.dumps(str(study))[1:-1], '<study>').replace(engine, '<engine>')
+    text = proc.stdout.replace(json.dumps(str(study))[1:-1], '<study>').replace(engine, '<engine>')
+    if os.sep == '\\':
+        # The paths under these roots are native (Windows separators): the golden output
+        # writes them with ``/``, one reading on every system.
+        text = re.sub(r'<(?:study|engine)>[^"]*',
+                      lambda m: m.group(0).replace('\\\\', '/'), text)
+    return text
 
 
 
