@@ -1,0 +1,133 @@
+# Release to PyPI with Trusted Publishing (OIDC, no token stored in the repository).
+#
+# TO INSTALL: copy this file to .github/workflows/release.yml (a session cannot push a
+# workflow file; the owner does). One-time setup, by the owner, before the first release:
+#   1. On pypi.org, for each project (hypotrail, hypotrail-runtime): Manage > Publishing >
+#      "Add a new publisher" > GitHub: owner `hypotrail`, repository `hypotrail`, workflow
+#      `release.yml`, environment `pypi`. (The 0.0.0 placeholders already own the names.)
+#   2. On GitHub: Settings > Environments > New environment `pypi`; add yourself as a
+#      required reviewer, so every upload waits for your approval.
+#   3. Optionally the same with `testpypi` on test.pypi.org for a dry run (see `target`).
+#
+# How to release (from main, after CI is green):
+#   - the engine: set `version` in framework/pyproject.toml (0.1.0 or above, no `.dev`),
+#     commit, then push the tag `v<version>` (for example `git tag v0.1.0 && git push origin
+#     v0.1.0`);
+#   - the runtime alone: set `version` in framework/runtime/pyproject.toml, then push the tag
+#     `runtime-v<version>`.
+# The tag must equal the version in the pyproject, or the build job stops before anything is
+# uploaded. A version already on PyPI is refused by PyPI itself (a version is never replaced).
+#
+# Note: the `hypotrail` wheel vendors `hypotrail_runtime` (Onboarding Lot 0); installing both
+# distributions in one environment is not supported. `hypotrail-runtime` is for the projects
+# an export ships (it predicts without the engine).
+name: release
+
+on:
+  push:
+    tags: ['v*', 'runtime-v*']
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'which distribution to build'
+        type: choice
+        options: [hypotrail, hypotrail-runtime]
+        default: hypotrail
+      target:
+        description: 'where to upload (testpypi for a dry run)'
+        type: choice
+        options: [testpypi, pypi]
+        default: testpypi
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  UV_VERSION: "0.11.32"
+  PYTHONUTF8: "1"
+
+jobs:
+  build:
+    name: build and check
+    runs-on: ubuntu-latest
+    outputs:
+      package: ${{ steps.which.outputs.package }}
+      target: ${{ steps.which.outputs.target }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: "3.13"
+      - name: Which distribution, which version
+        id: which
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            package="${{ inputs.package }}"; target="${{ inputs.target }}"; tag=""
+          else
+            tag="${GITHUB_REF_NAME}"; target="pypi"
+            case "$tag" in
+              runtime-v*) package="hypotrail-runtime" ;;
+              v*) package="hypotrail" ;;
+            esac
+          fi
+          if [ "$package" = "hypotrail" ]; then project="framework"; else project="framework/runtime"; fi
+          version="$(python3 -c 'import sys,tomllib;print(tomllib.load(open(sys.argv[1],"rb"))["project"]["version"])' "$project/pyproject.toml")"
+          echo "package=$package project=$project version=$version tag=$tag target=$target"
+          case "$version" in *dev*|*a*|*b*|*rc*) [ "$target" = "pypi" ] && { echo "::error::$version is a pre-release; publish it to testpypi only"; exit 1; } ;; esac
+          if [ -n "$tag" ]; then
+            want="${tag#runtime-}"; want="${want#v}"
+            [ "$want" = "$version" ] || { echo "::error::tag $tag does not match version $version in $project/pyproject.toml"; exit 1; }
+          fi
+          echo "package=$package" >> "$GITHUB_OUTPUT"
+          echo "project=$project" >> "$GITHUB_OUTPUT"
+          echo "target=$target" >> "$GITHUB_OUTPUT"
+      - name: Build (sdist, then the wheel from the sdist)
+        run: uv build --project "${{ steps.which.outputs.project }}" --out-dir dist
+      - name: The wheel installs and runs outside the checkout
+        working-directory: ${{ runner.temp }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv venv -q --python 3.13 smoke
+          uv pip install -q --python smoke/bin/python "$GITHUB_WORKSPACE"/dist/*.whl
+          if [ "${{ steps.which.outputs.package }}" = "hypotrail" ]; then
+            smoke/bin/hypotrail --help > /dev/null
+            smoke/bin/hypotrail doctor --format text || true
+          else
+            smoke/bin/python -I -c "import hypotrail_runtime; print(hypotrail_runtime.__file__)"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: upload to ${{ needs.build.outputs.target }}
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ needs.build.outputs.target }}
+      url: https://${{ needs.build.outputs.target == 'testpypi' && 'test.' || '' }}pypi.org/project/${{ needs.build.outputs.package }}/
+    permissions:
+      id-token: write          # the OIDC token PyPI trusts; nothing else is granted
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Publish to TestPyPI
+        if: needs.build.outputs.target == 'testpypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+      - name: Publish to PyPI
+        if: needs.build.outputs.target == 'pypi'
+        uses: pypa/gh-action-pypi-publish@release/v1

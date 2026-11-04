@@ -15,6 +15,7 @@ import ast
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -124,8 +125,14 @@ def test_app_run_shows_the_numbers_of_the_report(study):
     page = report.read_text() if report.exists() else None
     assert out['data'] and all('data-result-id=' in d for d in out['data'])
     if page is not None:                 # the HTML report cites the same values
+        # The lesson report shortens the hover title of a cited number to "result <first
+        # twelve characters>" (render_lesson._short_titles, lesson report R28): the citation
+        # (value, result id, path, shown text) is compared, the tooltip is not.
+        untitled = re.compile(r' title="[^"]*"')
+        cited = set(untitled.sub('', d) for d in
+                    re.findall(r'<data\b[^>]*>[^<]*</data>', page))
         for d in out['data']:
-            assert d in page, d
+            assert untitled.sub('', d) in cited, d
 
 
 # --- 2. no fit and no state write -------------------------------------------------------
@@ -301,7 +308,7 @@ def test_generated_with_stamp_is_the_only_version_coupling(study):
     text = notebook.read_text()
     bumped = text.replace('__generated_with = "0.25.1"', '__generated_with = "0.99.0"')
     assert bumped != text and not contents_differ_excluding_generated_with(text, bumped)
-    notebook.write_text(bumped)
+    notebook.write_bytes(bumped.encode('utf-8'))      # LF, as the engine writes it
     assert render(study)['preserved'] == []
 
 

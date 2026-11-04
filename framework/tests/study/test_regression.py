@@ -313,7 +313,8 @@ def test_regression_view_names_its_task(tmp_path):
     flow.init()
     view = flow.view()
     assert view['task'] == 'regression'
-    assert tuple(view['decisions']) == st.B1_REGRESSION_DECISION_IDS
+    # Lot 2026-10-28 (CLI-CONTRACT §18.1): a new regression study also decides error_metric.
+    assert tuple(view['decisions']) == st.M1_REGRESSION_DECISION_IDS
     # WP-A4: step 0 first (the data card), then the first decision's question.
     assert view['next_action']['kind'] == 'show_data_card'
     flow.call('data', '--study', flow.study)

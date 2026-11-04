@@ -63,6 +63,9 @@ def test_the_data_card_shows_development_rows_grouped_without_any_rate(tmp_path)
     assert card['schema'] == 'hypotrail.data/1' and card['ok'] is True
     final = flow.view()['final_test']
     duplicates = card['development'].pop('duplicates')      # v0.2b (WP-B3), additive
+    # Owner batch of 2026-10-28 (R38, CLI-CONTRACT §18): the declared groups, additive; Bank
+    # declares no group or identifier column.
+    assert card['development'].pop('groups') == []
     assert card['development'] == {'rows': final['development_rows'], 'columns': 17,
                                    'partition': 'development'}
     assert duplicates['policy'] is None and duplicates['n_groups'] == 0

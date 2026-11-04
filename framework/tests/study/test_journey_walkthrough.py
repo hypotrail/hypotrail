@@ -229,6 +229,15 @@ def test_j_panel_every_write_names_its_place_and_every_read_none(tmp_path, monke
     opening = [p for label, p in writes if label == 'confirm:final_test']
     assert len(opening) == 1
     action = opening[0]['next_action']
+    from mlkit.study import state as st
+    if st.has_error_metric(f.state()):
+        # Lot 2026-10-28 (CLI-CONTRACT §18.1): in a regression study holding error_metric,
+        # diag.final_test joins the final test step; the conclusion follows its run.
+        labels = [label for label, _ in writes]
+        at = labels.index('confirm:final_test')
+        assert (action['kind'], action['activity']) == ('run', 'diag.final_test'), action
+        assert labels[at + 1] == 'run:diag.final_test', labels[at:at + 3]
+        action = writes[at + 1][1]['next_action']
     assert action['decision'] == 'conclusion' and action['choice_options'], action
     assert action['recommended'] is None and action['pause']['kind'] == 'choice'
     for anchor in ('now', 'path:split', 'path:prediction_time',

@@ -33,7 +33,7 @@ def _case(tmp_path, keys, *, ordered=True, n_rows=200, sha=None, rows=None):
         'rows': len(keys) if rows is None else rows, 'match': 'row_key',
         'status': 'observed', 'source': 'test: a tutorial published these rows'}
     case_dir = variant.write()
-    (case_dir / PRIOR).write_text(text, encoding='utf-8')
+    (case_dir / PRIOR).write_bytes(text.encode('utf-8'))   # the bytes hashed above (no CRLF)
     return case_dir
 
 

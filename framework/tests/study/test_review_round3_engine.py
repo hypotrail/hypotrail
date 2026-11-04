@@ -107,6 +107,10 @@ def _regression_flow(base: Path, monkeypatch, *, delay: int, name: str = 'reg') 
                                 'time')
     f.decide('feature_availability', fk.availability(f.case_dir))
     f.decide('split', st.b1_default_value(f.state(), 'split'))
+    # Lot 2026-10-28 (CLI-CONTRACT §18.1): a new regression study fixes its error measure
+    # before the criterion (MAE, the measure of the criterion below).
+    if st.ERROR_METRIC in f.state()['decisions']:
+        f.decide(st.ERROR_METRIC, {'metric': 'mae'})
     f.decide('success_criterion', REG_CRITERION)
     from mlkit.study import governance
     f.decide('preprocessing', dict(governance.DEFAULT_PREPROCESSING))

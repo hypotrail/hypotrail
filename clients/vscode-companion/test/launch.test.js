@@ -55,3 +55,15 @@ test('an agent argv of no known form gives no launch', () => {
   assert.equal(launchFor({ studyDir: STUDY, argv: ['/usr/local/bin/hypotrail'] }, 'notebook'), null);
   assert.equal(launchFor({ studyDir: STUDY, argv: ['bash', '-m', 'x'] }, 'notebook'), null);
 });
+
+test('the shown command uses the platform quoting: PowerShell on Windows', () => {
+  const { commandLine, display } = require('../lib/launch');
+  const exe = 'C:\\Users\\Ana Lima\\AppData\\Roaming\\uv\\tools\\hypotrail\\Scripts\\python.exe';
+  assert.equal(commandLine([exe, '-m', 'marimo', 'run', 'notebooks/study_generated.py'], 'win32'),
+    "& 'C:\\Users\\Ana Lima\\AppData\\Roaming\\uv\\tools\\hypotrail\\Scripts\\python.exe' -m marimo run notebooks/study_generated.py");
+  assert.equal(commandLine(['uv', 'run', '--project', 'D:\\a\\framework', 'marimo', 'edit', "it's.py"], 'win32'),
+    "uv run --project D:\\a\\framework marimo edit 'it''s.py'");
+  assert.equal(commandLine(['/opt/my env/bin/python', '-m', 'marimo'], 'linux'), '"/opt/my env/bin/python" -m marimo');
+  const shown = display({ studyDir: STUDY, argv: ['uv', 'run', '--project', '/x y', 'hypotrail'] }, 'win32');
+  assert.equal(shown.notebook, "uv run --project '/x y' marimo run notebooks/study_generated.py");
+});

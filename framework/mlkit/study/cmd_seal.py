@@ -1,7 +1,7 @@
 """``hypotrail seal``: write the case, set the final test aside, create the study (onboarding
 Lots 2 and 3; ADR 0006 amendment of 2026-11-01; CLI-CONTRACT §20).
 
-    hypotrail seal --expected-revision REV --study DIR
+    hypotrail seal --expected-revision REV [--automation until_final_test|full_demo] --study DIR
 
 Preconditions: the six answers recorded in the user's words, the ``final_test`` answer
 naming the current plan, and a passing feasibility check (:func:`cmd_case.feasibility`).
@@ -15,6 +15,12 @@ Then, in this order:
    user's words accepting it) in the partition record as ``analysis_protocol.deduction``.
    The report's first chapter shows it as how the final test was set aside;
 4. the brief or the context given to ``new`` is imported into the study (``brief import``).
+
+``--automation`` (ADR 0005 amendment of 2026-10-26, R20) is the automatic mode, chosen at
+the study's launch only: for a prepared study the launch is this ``seal`` (``new --data``
+creates no study yet, so it refuses the flag and names this one). It is passed to ``init``
+unchanged, with the same meaning and the same refusals as ``init --automation``; without it
+the study has no automatic mode, and none can be added later.
 
 There is no silent fallback: a refused ``init`` restores the preparation (its instructions
 and its state) and answers with the refusal. Reliability profile ``review-v1`` is always
@@ -33,12 +39,15 @@ from .errors import StudyError
 SCHEMA = 'hypotrail.seal/1'
 
 
-def seal(study, expected_revision: int) -> cmd.Outcome:
+def seal(study, expected_revision: int, automation: str | None = None) -> cmd.Outcome:
     from . import case as c
     from . import cmd_brief, cmd_case, lock
     from . import state as st
     from .guard import assert_writable
     assert_writable()
+    if automation is not None and automation not in st.AUTOMATION_MODES:
+        raise StudyError('invalid_arguments', 'automation is one of '
+                         + ', '.join(st.AUTOMATION_MODES) + '.')
     study, case_dir = prep.locate(study)
     with lock.writer_lock(study):
         record = prep.load(case_dir)
@@ -86,7 +95,8 @@ def seal(study, expected_revision: int) -> cmd.Outcome:
                               'time': accepted['time']}}
     try:
         out = cmd.init(case_dir, study, language=record['language'],
-                       reliability_profile='review-v1', data_link=False, deduction=deduction)
+                       reliability_profile='review-v1', automation=automation,
+                       data_link=False, deduction=deduction)
     except Exception:
         _restore(study, case_dir)
         raise
@@ -146,9 +156,14 @@ def _restore(study: Path, case_dir: Path) -> None:
 
 
 def configure(parser: argparse.ArgumentParser) -> None:
+    from . import state as st
     parser.add_argument('--expected-revision', type=int, required=True,
                         help='the revision prepare status gave')
+    parser.add_argument('--automation', choices=st.AUTOMATION_MODES, default=None,
+                        help='the automatic mode, chosen now or never (ADR 0005): '
+                             'until_final_test, or full_demo (also opens the final test, a '
+                             'demonstration marked as such for good)')
 
 
 def main(args: argparse.Namespace) -> cmd.Outcome:
-    return seal(args.study, args.expected_revision)
+    return seal(args.study, args.expected_revision, automation=args.automation)

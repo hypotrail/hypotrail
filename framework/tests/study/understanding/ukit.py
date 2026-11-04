@@ -12,12 +12,45 @@ import json
 import os
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 import flowkit as fk
 from mlkit.study import case as c, cli, read
 
 FIXTURES = fk.TESTS / 'fixtures' / 'understanding'
+
+
+def _probe_temp_filesystem() -> tuple[bool, bool]:
+    """Whether the temporary folder's filesystem keeps two names that differ only in case
+    (Linux: yes; macOS and Windows by default: no), and accepts a file name that is not
+    UTF-8 (APFS and NTFS refuse one). Some tests build such a tree on disk."""
+    with tempfile.TemporaryDirectory() as d:
+        (Path(d) / 'a').write_bytes(b'')
+        case_sensitive = not (Path(d) / 'A').exists()
+        try:
+            with open(os.path.join(os.fsencode(d), b'n-\xe9'), 'wb'):
+                pass
+            non_utf8 = True
+        except (OSError, ValueError):
+            non_utf8 = False
+    return case_sensitive, non_utf8
+
+
+CASE_SENSITIVE_FS, NON_UTF8_NAMES = _probe_temp_filesystem()
+
+
+def rmtree(path) -> None:
+    """``shutil.rmtree`` that also removes read-only files: Git writes its objects read-only,
+    and Windows refuses to delete a read-only file."""
+    import stat
+
+    def clear(function, target, _exc):
+        os.chmod(target, stat.S_IWRITE)
+        function(target)
+    shutil.rmtree(path, onexc=clear)
+NEEDS_CASE_SENSITIVE = ('builds two names that differ only in case on disk: needs a '
+                        'case-sensitive filesystem (not macOS or Windows by default)')
 SIM = {'source': 'reviewer_file',
        'statement': 'SIMULATED test fixture: no person made this review.'}
 
@@ -62,12 +95,15 @@ def git(repo, *args, check=True) -> str:
 
 
 def make_repo(root: Path) -> Path:
+    """A project whose sources are LF bytes on every system (``newline``: Windows would write
+    CRLF, and a test of Git's end-of-line conversion would then have nothing to convert)."""
     repo = root / 'project'
     (repo / 'src').mkdir(parents=True)
-    (repo / 'src/pipeline.py').write_text('def predict(row):\n    return score(select(row))\n')
-    (repo / 'src/transforms.py').write_text('def fit_imputer(train):\n    return train.mean()\n')
-    (repo / 'SECURITY.md').write_text('Every new dependency is reviewed before adoption.\n')
-    (repo / 'README.md').write_text('Project.\n')
+    for path, text in (('src/pipeline.py', 'def predict(row):\n    return score(select(row))\n'),
+                       ('src/transforms.py', 'def fit_imputer(train):\n    return train.mean()\n'),
+                       ('SECURITY.md', 'Every new dependency is reviewed before adoption.\n'),
+                       ('README.md', 'Project.\n')):
+        (repo / path).write_text(text, newline='\n')
     git(repo, 'init', '-q', '-b', 'main')
     git(repo, 'add', '--', 'src/pipeline.py', 'src/transforms.py', 'SECURITY.md', 'README.md')
     git(repo, 'commit', '-q', '-m', 'project sources')

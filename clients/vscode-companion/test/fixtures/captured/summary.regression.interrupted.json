@@ -321,7 +321,7 @@
   },
   "results": {
    "diag.regression": {
-    "result_id": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+    "result_id": "4c902b3e741f18481560eb34eb2e723583f5e8b8b45226ef6c8cf74c6674e1a6",
     "current": false,
     "stale_reason": {
      "reason": "preprocessing changed (§3.7 row 14: preprocessing)",
@@ -340,7 +340,7 @@
     "channel": "chat"
    },
    "eda.distribution:cylinders": {
-    "result_id": "abaa0ff1b69f9ef16029e575977967dda3d33b720f3600b5145dc4d25ff89d66",
+    "result_id": "350111f0e5c3f2a55876137e4f7a16512b800268ebffc16c30a5965be83343d5",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -348,7 +348,7 @@
     "channel": "chat"
    },
    "eda.distribution:displacement": {
-    "result_id": "8269de3c39b61fcb6d0ba8921ff6ed7e96c81b46c8c313dae12a781d99fb89b2",
+    "result_id": "397b13f2168072a110f399787f221bfad3eb693990537c487169a3bddb65cfca",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -356,7 +356,7 @@
     "channel": "chat"
    },
    "eda.distribution:horsepower": {
-    "result_id": "0bb6517c6fa11b311b2a7f187869255fc97f97e74187326c39e2afba67352308",
+    "result_id": "0348076d7346c06a9e71daa03cc7c272e25e76330e50bfe8311e89664e8a791f",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -364,7 +364,7 @@
     "channel": "chat"
    },
    "eda.distribution:origin": {
-    "result_id": "56cc994eab94aea0b1f650fe229922c75e95395ccfc0133625c60d0ea5d4d3c6",
+    "result_id": "cd7f249ed2f1afb7e34afd6a66c3375d20231de74141df4e40dabf2e39f0f6cb",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -372,7 +372,7 @@
     "channel": "chat"
    },
    "eda.distribution:weight": {
-    "result_id": "bedade14ed77dd17cb9d696a4706af59a70071a5da92bfea69c2230a50d194fc",
+    "result_id": "b93ccd211cc124b0b844ba6d79ed24f5b64d5ac3ea1dbb0cbb388511200c8196",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -380,7 +380,7 @@
     "channel": "chat"
    },
    "eda.mean_by:cylinders": {
-    "result_id": "c4482186eeb1f3c7a61df53def6cb81437edf14b7dbc5481f98084defc9526a8",
+    "result_id": "43f96455ccc615c2a3da2a32c7ec3ad3113eb0b710949868e2964f6ed9a1e77f",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -388,7 +388,7 @@
     "channel": "chat"
    },
    "eda.mean_by:displacement": {
-    "result_id": "b51c0551969026c7adb31bd44303a5b404c9f060acde45332e3d2f02c9d80bdb",
+    "result_id": "d6abf71b9f2f529875773667c8c7fb5768a5e5b69e709a9c17e353c2843a2554",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -396,7 +396,7 @@
     "channel": "chat"
    },
    "eda.mean_by:horsepower": {
-    "result_id": "2f1edbf1345c892f0f9f052d940d202752d0c63dbfcb8ca0ebf743449ec318aa",
+    "result_id": "b52f6b69868f65b98f881ac7fa21d67fefeb0c36dd83d777d8af24f311a2635a",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -404,7 +404,7 @@
     "channel": "chat"
    },
    "eda.mean_by:model_year": {
-    "result_id": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
+    "result_id": "67aebaa1d2c2898d7b877377002e2d8e011df4c34147fca25ef74794d8a04027",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -412,7 +412,7 @@
     "channel": "webview"
    },
    "eda.mean_by:origin": {
-    "result_id": "f38db57bfbce3a9737dc3cdb7ab38c80f8217253ecb583d73fe62cdc3ad51d99",
+    "result_id": "e3d214aeff77f826b33621ed9069ae3c6d55abdb3a9462fe4bcdcfa39d4d6f09",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -420,7 +420,7 @@
     "channel": "chat"
    },
    "eda.mean_by:weight": {
-    "result_id": "14b2379e03941123f73a919b135349c28cc3676d84ea126312500f0cd5aae323",
+    "result_id": "79a5db6126762beb966b969c9d02bf99faffdecbd7e5e3454233fd40e33e743e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -436,7 +436,7 @@
     "channel": "chat"
    },
    "eda.special_values": {
-    "result_id": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+    "result_id": "ad5c6a5a642bcdc701847444661db0a3e944edd6f12520ab549f46ffc8ac3c82",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -444,7 +444,7 @@
     "channel": "chat"
    },
    "eda.target_summary": {
-    "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+    "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -452,7 +452,7 @@
     "channel": "chat"
    },
    "evaluate.regression": {
-    "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+    "result_id": "aee04d53e892293291bdc07984370f7b4f8a1c76c90dcb319d207364fe34fb1f",
     "current": false,
     "stale_reason": {
      "reason": "preprocessing changed (§3.7 row 14: preprocessing)",
@@ -463,7 +463,7 @@
     "channel": "chat"
    },
    "fit.baseline": {
-    "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+    "result_id": "6cbbfc68000f96af98d40568ce9c7b145a80b66da8b683cd21f5086bff4a073d",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -471,7 +471,7 @@
     "channel": "chat"
    },
    "fit.linear": {
-    "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+    "result_id": "9ad54724f12e06dfb53d813cfeafee4dd312bf8e1f50beda62ecde513137b190",
     "current": false,
     "stale_reason": {
      "reason": "preprocessing changed (§3.7 row 14: preprocessing)",
@@ -482,7 +482,7 @@
     "channel": "chat"
    },
    "fit.variant": {
-    "result_id": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+    "result_id": "7b4eae587174123abc4622341aaaeac0be2298f1dc9e1854644ce2c9754b5e83",
     "current": false,
     "stale_reason": {
      "reason": "preprocessing changed (§3.7 row 14: preprocessing)",
@@ -493,7 +493,7 @@
     "channel": "chat"
    },
    "split": {
-    "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+    "result_id": "a03a89ee7077e027d15e3de00b0bbb704442fe8320697cb2afffcf67047f52dc",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -637,16 +637,16 @@
   "eda_looks": {
    "target_looks": 10,
    "results": [
-    "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
-    "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
-    "c4482186eeb1f3c7a61df53def6cb81437edf14b7dbc5481f98084defc9526a8",
-    "b51c0551969026c7adb31bd44303a5b404c9f060acde45332e3d2f02c9d80bdb",
-    "2f1edbf1345c892f0f9f052d940d202752d0c63dbfcb8ca0ebf743449ec318aa",
-    "14b2379e03941123f73a919b135349c28cc3676d84ea126312500f0cd5aae323",
-    "f38db57bfbce3a9737dc3cdb7ab38c80f8217253ecb583d73fe62cdc3ad51d99",
-    "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f",
-    "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
-    "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77"
+    "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
+    "ad5c6a5a642bcdc701847444661db0a3e944edd6f12520ab549f46ffc8ac3c82",
+    "43f96455ccc615c2a3da2a32c7ec3ad3113eb0b710949868e2964f6ed9a1e77f",
+    "d6abf71b9f2f529875773667c8c7fb5768a5e5b69e709a9c17e353c2843a2554",
+    "b52f6b69868f65b98f881ac7fa21d67fefeb0c36dd83d777d8af24f311a2635a",
+    "79a5db6126762beb966b969c9d02bf99faffdecbd7e5e3454233fd40e33e743e",
+    "e3d214aeff77f826b33621ed9069ae3c6d55abdb3a9462fe4bcdcfa39d4d6f09",
+    "3b9d388f5d8361d44779d5134d5e154a766e6ebb07b2aedae6d9fd3479cea373",
+    "4c902b3e741f18481560eb34eb2e723583f5e8b8b45226ef6c8cf74c6674e1a6",
+    "67aebaa1d2c2898d7b877377002e2d8e011df4c34147fca25ef74794d8a04027"
    ]
   },
   "recap": [
@@ -797,7 +797,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-28T12:45:31.711728+00:00",
+   "boundary_time": "2026-11-03T18:33:28.870544+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -806,7 +806,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-28T12:45:32.644776+00:00",
+     "time": "2026-11-03T18:33:29.682914+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -829,7 +829,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-28T12:45:33.166593+00:00",
+     "time": "2026-11-03T18:33:30.059660+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -859,7 +859,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-28T12:45:33.891745+00:00",
+     "time": "2026-11-03T18:33:30.732013+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -882,7 +882,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-28T12:45:34.474666+00:00",
+     "time": "2026-11-03T18:33:31.316419+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -912,7 +912,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-28T12:45:35.398193+00:00",
+     "time": "2026-11-03T18:33:32.385691+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -935,7 +935,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-28T12:45:36.144723+00:00",
+     "time": "2026-11-03T18:33:33.005922+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -965,7 +965,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-28T12:45:37.061798+00:00",
+     "time": "2026-11-03T18:33:33.792543+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "error_metric",
@@ -988,7 +988,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-28T12:45:37.783412+00:00",
+     "time": "2026-11-03T18:33:34.611040+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "error_metric",
@@ -1018,7 +1018,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-28T12:45:38.714478+00:00",
+     "time": "2026-11-03T18:33:35.390680+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -1041,7 +1041,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-28T12:45:39.549142+00:00",
+     "time": "2026-11-03T18:33:36.111869+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -1071,7 +1071,7 @@
     },
     {
      "revision": 12,
-     "time": "2026-10-28T12:45:40.483941+00:00",
+     "time": "2026-11-03T18:33:36.978306+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -1094,7 +1094,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-28T12:45:41.380460+00:00",
+     "time": "2026-11-03T18:33:37.740103+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -1124,7 +1124,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-28T12:45:42.634118+00:00",
+     "time": "2026-11-03T18:33:38.779833+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1132,7 +1132,7 @@
      "note_id": null,
      "activity": "split",
      "slot": "split",
-     "result_id": "3c4563d57f9ab593b74477a4b84ddb86baf585314b7ad2fa6a2118b011ce01ba",
+     "result_id": "a03a89ee7077e027d15e3de00b0bbb704442fe8320697cb2afffcf67047f52dc",
      "execution_id": "e_01e009ee66e5659fa376f9c8",
      "rules": null,
      "column": null,
@@ -1147,7 +1147,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-28T12:45:43.896297+00:00",
+     "time": "2026-11-03T18:33:39.859906+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1170,7 +1170,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-28T12:45:45.063953+00:00",
+     "time": "2026-11-03T18:33:41.033547+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1178,7 +1178,7 @@
      "note_id": null,
      "activity": "eda.target_summary",
      "slot": "eda.target_summary",
-     "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+     "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
      "execution_id": "e_47e14a8659b67b6ecc88b5f7",
      "rules": null,
      "column": null,
@@ -1193,7 +1193,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-28T12:45:46.285308+00:00",
+     "time": "2026-11-03T18:33:42.145282+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1201,7 +1201,7 @@
      "note_id": null,
      "activity": "eda.special_values",
      "slot": "eda.special_values",
-     "result_id": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+     "result_id": "ad5c6a5a642bcdc701847444661db0a3e944edd6f12520ab549f46ffc8ac3c82",
      "execution_id": "e_d8c0a36ea30eea85e955656e",
      "rules": null,
      "column": null,
@@ -1216,7 +1216,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-28T12:45:47.568869+00:00",
+     "time": "2026-11-03T18:33:43.200026+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1224,7 +1224,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:cylinders",
-     "result_id": "c4482186eeb1f3c7a61df53def6cb81437edf14b7dbc5481f98084defc9526a8",
+     "result_id": "43f96455ccc615c2a3da2a32c7ec3ad3113eb0b710949868e2964f6ed9a1e77f",
      "execution_id": "e_742cb865548c9b2f674c0f23",
      "rules": null,
      "column": "cylinders",
@@ -1239,7 +1239,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-28T12:45:48.831920+00:00",
+     "time": "2026-11-03T18:33:44.246548+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1247,7 +1247,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:displacement",
-     "result_id": "b51c0551969026c7adb31bd44303a5b404c9f060acde45332e3d2f02c9d80bdb",
+     "result_id": "d6abf71b9f2f529875773667c8c7fb5768a5e5b69e709a9c17e353c2843a2554",
      "execution_id": "e_9b5a307c93714d054dab44ec",
      "rules": null,
      "column": "displacement",
@@ -1262,7 +1262,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-28T12:45:50.164840+00:00",
+     "time": "2026-11-03T18:33:45.139086+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1270,7 +1270,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:horsepower",
-     "result_id": "2f1edbf1345c892f0f9f052d940d202752d0c63dbfcb8ca0ebf743449ec318aa",
+     "result_id": "b52f6b69868f65b98f881ac7fa21d67fefeb0c36dd83d777d8af24f311a2635a",
      "execution_id": "e_acd92bfdf1765b950c8316a8",
      "rules": null,
      "column": "horsepower",
@@ -1285,7 +1285,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-28T12:45:51.470906+00:00",
+     "time": "2026-11-03T18:33:46.307638+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1293,7 +1293,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:weight",
-     "result_id": "14b2379e03941123f73a919b135349c28cc3676d84ea126312500f0cd5aae323",
+     "result_id": "79a5db6126762beb966b969c9d02bf99faffdecbd7e5e3454233fd40e33e743e",
      "execution_id": "e_8142a37e0a93ddb744855aa8",
      "rules": null,
      "column": "weight",
@@ -1308,7 +1308,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-28T12:45:52.779288+00:00",
+     "time": "2026-11-03T18:33:47.559331+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1316,7 +1316,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:origin",
-     "result_id": "f38db57bfbce3a9737dc3cdb7ab38c80f8217253ecb583d73fe62cdc3ad51d99",
+     "result_id": "e3d214aeff77f826b33621ed9069ae3c6d55abdb3a9462fe4bcdcfa39d4d6f09",
      "execution_id": "e_2e0d6c177d108bbe4bb3bf56",
      "rules": null,
      "column": "origin",
@@ -1331,7 +1331,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-28T12:45:54.071004+00:00",
+     "time": "2026-11-03T18:33:48.730215+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1354,7 +1354,7 @@
     },
     {
      "revision": 35,
-     "time": "2026-10-28T12:45:55.348890+00:00",
+     "time": "2026-11-03T18:33:49.751155+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1362,7 +1362,7 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:cylinders",
-     "result_id": "abaa0ff1b69f9ef16029e575977967dda3d33b720f3600b5145dc4d25ff89d66",
+     "result_id": "350111f0e5c3f2a55876137e4f7a16512b800268ebffc16c30a5965be83343d5",
      "execution_id": "e_4ba73dbb8f60ee57805069ab",
      "rules": null,
      "column": "cylinders",
@@ -1377,7 +1377,7 @@
     },
     {
      "revision": 37,
-     "time": "2026-10-28T12:45:56.651895+00:00",
+     "time": "2026-11-03T18:33:50.814869+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1385,7 +1385,7 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:displacement",
-     "result_id": "8269de3c39b61fcb6d0ba8921ff6ed7e96c81b46c8c313dae12a781d99fb89b2",
+     "result_id": "397b13f2168072a110f399787f221bfad3eb693990537c487169a3bddb65cfca",
      "execution_id": "e_45be80197b00c439ae8b996d",
      "rules": null,
      "column": "displacement",
@@ -1400,7 +1400,7 @@
     },
     {
      "revision": 39,
-     "time": "2026-10-28T12:45:58.130846+00:00",
+     "time": "2026-11-03T18:33:52.159739+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1408,7 +1408,7 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:horsepower",
-     "result_id": "0bb6517c6fa11b311b2a7f187869255fc97f97e74187326c39e2afba67352308",
+     "result_id": "0348076d7346c06a9e71daa03cc7c272e25e76330e50bfe8311e89664e8a791f",
      "execution_id": "e_3cce5a55affa8b851abebc12",
      "rules": null,
      "column": "horsepower",
@@ -1423,7 +1423,7 @@
     },
     {
      "revision": 41,
-     "time": "2026-10-28T12:45:59.503304+00:00",
+     "time": "2026-11-03T18:33:53.422082+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1431,7 +1431,7 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:weight",
-     "result_id": "bedade14ed77dd17cb9d696a4706af59a70071a5da92bfea69c2230a50d194fc",
+     "result_id": "b93ccd211cc124b0b844ba6d79ed24f5b64d5ac3ea1dbb0cbb388511200c8196",
      "execution_id": "e_7e66b22d4e31fa7c48a2de13",
      "rules": null,
      "column": "weight",
@@ -1446,7 +1446,7 @@
     },
     {
      "revision": 43,
-     "time": "2026-10-28T12:46:00.932125+00:00",
+     "time": "2026-11-03T18:33:54.536222+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1454,7 +1454,7 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:origin",
-     "result_id": "56cc994eab94aea0b1f650fe229922c75e95395ccfc0133625c60d0ea5d4d3c6",
+     "result_id": "cd7f249ed2f1afb7e34afd6a66c3375d20231de74141df4e40dabf2e39f0f6cb",
      "execution_id": "e_62f4c37fe186a371147175df",
      "rules": null,
      "column": "origin",
@@ -1469,7 +1469,7 @@
     },
     {
      "revision": 45,
-     "time": "2026-10-28T12:46:02.210574+00:00",
+     "time": "2026-11-03T18:33:56.040050+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1477,7 +1477,7 @@
      "note_id": null,
      "activity": "fit.baseline",
      "slot": "fit.baseline",
-     "result_id": "a3648c6e3a3d59312afe147bb49ee006a8ec7179e1a7a3c0739586903365bf70",
+     "result_id": "6cbbfc68000f96af98d40568ce9c7b145a80b66da8b683cd21f5086bff4a073d",
      "execution_id": "e_9562864c0fd20d384a545966",
      "rules": null,
      "column": null,
@@ -1492,7 +1492,7 @@
     },
     {
      "revision": 47,
-     "time": "2026-10-28T12:46:03.578836+00:00",
+     "time": "2026-11-03T18:33:57.218915+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1500,7 +1500,7 @@
      "note_id": null,
      "activity": "fit.linear",
      "slot": "fit.linear",
-     "result_id": "8639586c6a113dfa50a0212c2faf51abfae8fb36defd89d2774227af568ea29f",
+     "result_id": "9ad54724f12e06dfb53d813cfeafee4dd312bf8e1f50beda62ecde513137b190",
      "execution_id": "e_abf640fd9c7fa4196d91789f",
      "rules": null,
      "column": null,
@@ -1515,7 +1515,7 @@
     },
     {
      "revision": 49,
-     "time": "2026-10-28T12:46:04.909763+00:00",
+     "time": "2026-11-03T18:33:58.560776+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1523,7 +1523,7 @@
      "note_id": null,
      "activity": "diag.regression",
      "slot": "diag.regression",
-     "result_id": "398e5cf652c34b99675a3b7513e8bc06d44d5844d810a9121e44f43219e2684f",
+     "result_id": "3b9d388f5d8361d44779d5134d5e154a766e6ebb07b2aedae6d9fd3479cea373",
      "execution_id": "e_cd6758dbdfb250aca711ad8f",
      "rules": null,
      "column": null,
@@ -1538,7 +1538,7 @@
     },
     {
      "revision": 50,
-     "time": "2026-10-28T12:46:06.303784+00:00",
+     "time": "2026-11-03T18:33:59.783015+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1561,7 +1561,7 @@
     },
     {
      "revision": 51,
-     "time": "2026-10-28T12:46:07.440561+00:00",
+     "time": "2026-11-03T18:34:00.691935+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1596,7 +1596,7 @@
     },
     {
      "revision": 53,
-     "time": "2026-10-28T12:46:08.765707+00:00",
+     "time": "2026-11-03T18:34:01.883599+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1604,7 +1604,7 @@
      "note_id": null,
      "activity": "fit.variant",
      "slot": "fit.variant",
-     "result_id": "84b648d6f8368a4c303a347d18f35462e8ca1007f371a6f1d98bd90fb8619ac0",
+     "result_id": "7b4eae587174123abc4622341aaaeac0be2298f1dc9e1854644ce2c9754b5e83",
      "execution_id": "e_682b0aeeca4e660d1e6ba6f2",
      "rules": null,
      "column": null,
@@ -1619,7 +1619,7 @@
     },
     {
      "revision": 55,
-     "time": "2026-10-28T12:46:10.148150+00:00",
+     "time": "2026-11-03T18:34:03.187706+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1627,7 +1627,7 @@
      "note_id": null,
      "activity": "evaluate.regression",
      "slot": "evaluate.regression",
-     "result_id": "f1f5a9a330424299e90e805d8ee932bb4cde108c1a35bae2aad64a299c48f02c",
+     "result_id": "aee04d53e892293291bdc07984370f7b4f8a1c76c90dcb319d207364fe34fb1f",
      "execution_id": "e_6a53c569c15f166a86da500c",
      "rules": null,
      "column": null,
@@ -1642,7 +1642,7 @@
     },
     {
      "revision": 57,
-     "time": "2026-10-28T12:46:11.610372+00:00",
+     "time": "2026-11-03T18:34:04.447329+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1650,7 +1650,7 @@
      "note_id": null,
      "activity": "diag.regression",
      "slot": "diag.regression",
-     "result_id": "2561dd9cb7cb2c7fc4e3ccfb64cd0abd7398d526d5abe8b5592df6fb2fb7cdb2",
+     "result_id": "4c902b3e741f18481560eb34eb2e723583f5e8b8b45226ef6c8cf74c6674e1a6",
      "execution_id": "e_5886f523fa5699d045fe1858",
      "rules": null,
      "column": null,
@@ -1665,7 +1665,7 @@
     },
     {
      "revision": 59,
-     "time": "2026-10-28T12:46:13.080289+00:00",
+     "time": "2026-11-03T18:34:05.536247+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1673,7 +1673,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:model_year",
-     "result_id": "54d72772d575cb8d64c73440b8123c67ec85ab41d4ffebdfbd86934d4e8c1e77",
+     "result_id": "67aebaa1d2c2898d7b877377002e2d8e011df4c34147fca25ef74794d8a04027",
      "execution_id": "e_652a57bfe02cfb4ce76a3a62",
      "rules": null,
      "column": "model_year",
@@ -1688,7 +1688,7 @@
     },
     {
      "revision": 60,
-     "time": "2026-10-28T12:46:15.382088+00:00",
+     "time": "2026-11-03T18:34:08.047948+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -1711,7 +1711,7 @@
     },
     {
      "revision": 61,
-     "time": "2026-10-28T12:46:16.460543+00:00",
+     "time": "2026-11-03T18:34:09.307711+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -1751,7 +1751,7 @@
     },
     {
      "revision": 62,
-     "time": "2026-10-28T12:46:17.557625+00:00",
+     "time": "2026-11-03T18:34:10.270125+00:00",
      "action": "decide.note",
      "kind": "hold_recorded",
      "decision_id": "preprocessing",
@@ -1785,7 +1785,7 @@
     },
     {
      "revision": 63,
-     "time": "2026-10-28T12:46:18.557988+00:00",
+     "time": "2026-11-03T18:34:11.192163+00:00",
      "action": "decide.resolve_note",
      "kind": "hold_resolved",
      "decision_id": "preprocessing",
@@ -1826,12 +1826,12 @@
      "channel": "webview",
      "revision": 58,
      "activity": "eda.mean_by",
-     "time": "2026-10-28T12:46:12.986352+00:00"
+     "time": "2026-11-03T18:34:05.469360+00:00"
     }
    ]
   },
   "task": "regression",
-  "currency": "2878eeda026e0391",
+  "currency": "6af9c0c7f239858d",
   "texts": {
    "en": {
     "plan": {
@@ -3462,7 +3462,7 @@
           {
            "slot": "eda.special_values",
            "chart": "bars",
-           "result_id": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+           "result_id": "ad5c6a5a642bcdc701847444661db0a3e944edd6f12520ab549f46ffc8ac3c82",
            "result_revision": 21,
            "status": "answered"
           }
@@ -3472,7 +3472,7 @@
           "rows": "Development evidence · development rows (318) · looks at the target, counted (looks: 11)"
          },
          "status": "answered",
-         "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+         "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
          "result_revision": 19,
          "reading": {
           "see": "mpg goes from 9.0 to 43.1 mpg, median 19.2, over 222 development rows.",
@@ -3482,49 +3482,49 @@
          "cites": [
           {
            "name": "min",
-           "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+           "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
            "path": "min",
            "value": 9.0,
            "text": "9.0"
           },
           {
            "name": "max",
-           "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+           "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
            "path": "max",
            "value": 43.1,
            "text": "43.1"
           },
           {
            "name": "median",
-           "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+           "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
            "path": "median",
            "value": 19.2,
            "text": "19.2"
           },
           {
            "name": "q25",
-           "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+           "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
            "path": "q25",
            "value": 15.5,
            "text": "15.5"
           },
           {
            "name": "q75",
-           "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+           "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
            "path": "q75",
            "value": 25.0,
            "text": "25.0"
           },
           {
            "name": "mean",
-           "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+           "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
            "path": "mean",
            "value": 20.565315315315317,
            "text": "20.6"
           },
           {
            "name": "n",
-           "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+           "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
            "path": "n",
            "value": 222,
            "text": "222"
@@ -3551,28 +3551,28 @@
           {
            "slot": "eda.mean_by:cylinders",
            "chart": "trend_by_bins",
-           "result_id": "c4482186eeb1f3c7a61df53def6cb81437edf14b7dbc5481f98084defc9526a8",
+           "result_id": "43f96455ccc615c2a3da2a32c7ec3ad3113eb0b710949868e2964f6ed9a1e77f",
            "result_revision": 23,
            "status": "answered"
           },
           {
            "slot": "eda.mean_by:displacement",
            "chart": "trend_by_bins",
-           "result_id": "b51c0551969026c7adb31bd44303a5b404c9f060acde45332e3d2f02c9d80bdb",
+           "result_id": "d6abf71b9f2f529875773667c8c7fb5768a5e5b69e709a9c17e353c2843a2554",
            "result_revision": 25,
            "status": "answered"
           },
           {
            "slot": "eda.mean_by:horsepower",
            "chart": "trend_by_bins",
-           "result_id": "2f1edbf1345c892f0f9f052d940d202752d0c63dbfcb8ca0ebf743449ec318aa",
+           "result_id": "b52f6b69868f65b98f881ac7fa21d67fefeb0c36dd83d777d8af24f311a2635a",
            "result_revision": 27,
            "status": "answered"
           },
           {
            "slot": "eda.mean_by:origin",
            "chart": "trend_by_bins",
-           "result_id": "f38db57bfbce3a9737dc3cdb7ab38c80f8217253ecb583d73fe62cdc3ad51d99",
+           "result_id": "e3d214aeff77f826b33621ed9069ae3c6d55abdb3a9462fe4bcdcfa39d4d6f09",
            "result_revision": 31,
            "status": "answered"
           }
@@ -3582,7 +3582,7 @@
           "rows": "Development evidence · development rows (318) · looks at the target, counted (looks: 11)"
          },
          "status": "answered",
-         "result_id": "14b2379e03941123f73a919b135349c28cc3676d84ea126312500f0cd5aae323",
+         "result_id": "79a5db6126762beb966b969c9d02bf99faffdecbd7e5e3454233fd40e33e743e",
          "result_revision": 29,
          "reading": {
           "see": "Along weight, the mean of mpg goes from 29.2 in the lowest band to 13.8 in the highest.",
@@ -3592,14 +3592,14 @@
          "cites": [
           {
            "name": "first_mean",
-           "result_id": "14b2379e03941123f73a919b135349c28cc3676d84ea126312500f0cd5aae323",
+           "result_id": "79a5db6126762beb966b969c9d02bf99faffdecbd7e5e3454233fd40e33e743e",
            "path": "groups.0.mean",
            "value": 29.24,
            "text": "29.2"
           },
           {
            "name": "last_mean",
-           "result_id": "14b2379e03941123f73a919b135349c28cc3676d84ea126312500f0cd5aae323",
+           "result_id": "79a5db6126762beb966b969c9d02bf99faffdecbd7e5e3454233fd40e33e743e",
            "path": "groups.4.mean",
            "value": 13.766666666666667,
            "text": "13.8"
@@ -5446,7 +5446,7 @@
           {
            "slot": "eda.special_values",
            "chart": "bars",
-           "result_id": "693e6c9b9ab01d7ceb40be4885d73057be697ce10b93319b7c976ed566fd7f81",
+           "result_id": "ad5c6a5a642bcdc701847444661db0a3e944edd6f12520ab549f46ffc8ac3c82",
            "result_revision": 21,
            "status": "answered"
           }
@@ -5456,7 +5456,7 @@
           "rows": "Preuve de développement · lignes de développement (318) · regards sur la cible, comptés (regards : 11)"
          },
          "status": "answered",
-         "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+         "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
          "result_revision": 19,
          "reading": {
           "see": "mpg va de 9,0 à 43,1 mpg, médiane 19,2, sur 222 lignes de développement.",
@@ -5466,49 +5466,49 @@
          "cites": [
           {
            "name": "min",
-           "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+           "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
            "path": "min",
            "value": 9.0,
            "text": "9,0"
           },
           {
            "name": "max",
-           "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+           "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
            "path": "max",
            "value": 43.1,
            "text": "43,1"
           },
           {
            "name": "median",
-           "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+           "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
            "path": "median",
            "value": 19.2,
            "text": "19,2"
           },
           {
            "name": "q25",
-           "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+           "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
            "path": "q25",
            "value": 15.5,
            "text": "15,5"
           },
           {
            "name": "q75",
-           "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+           "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
            "path": "q75",
            "value": 25.0,
            "text": "25,0"
           },
           {
            "name": "mean",
-           "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+           "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
            "path": "mean",
            "value": 20.565315315315317,
            "text": "20,6"
           },
           {
            "name": "n",
-           "result_id": "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305",
+           "result_id": "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f",
            "path": "n",
            "value": 222,
            "text": "222"
@@ -5535,28 +5535,28 @@
           {
            "slot": "eda.mean_by:cylinders",
            "chart": "trend_by_bins",
-           "result_id": "c4482186eeb1f3c7a61df53def6cb81437edf14b7dbc5481f98084defc9526a8",
+           "result_id": "43f96455ccc615c2a3da2a32c7ec3ad3113eb0b710949868e2964f6ed9a1e77f",
            "result_revision": 23,
            "status": "answered"
           },
           {
            "slot": "eda.mean_by:displacement",
            "chart": "trend_by_bins",
-           "result_id": "b51c0551969026c7adb31bd44303a5b404c9f060acde45332e3d2f02c9d80bdb",
+           "result_id": "d6abf71b9f2f529875773667c8c7fb5768a5e5b69e709a9c17e353c2843a2554",
            "result_revision": 25,
            "status": "answered"
           },
           {
            "slot": "eda.mean_by:horsepower",
            "chart": "trend_by_bins",
-           "result_id": "2f1edbf1345c892f0f9f052d940d202752d0c63dbfcb8ca0ebf743449ec318aa",
+           "result_id": "b52f6b69868f65b98f881ac7fa21d67fefeb0c36dd83d777d8af24f311a2635a",
            "result_revision": 27,
            "status": "answered"
           },
           {
            "slot": "eda.mean_by:origin",
            "chart": "trend_by_bins",
-           "result_id": "f38db57bfbce3a9737dc3cdb7ab38c80f8217253ecb583d73fe62cdc3ad51d99",
+           "result_id": "e3d214aeff77f826b33621ed9069ae3c6d55abdb3a9462fe4bcdcfa39d4d6f09",
            "result_revision": 31,
            "status": "answered"
           }
@@ -5566,7 +5566,7 @@
           "rows": "Preuve de développement · lignes de développement (318) · regards sur la cible, comptés (regards : 11)"
          },
          "status": "answered",
-         "result_id": "14b2379e03941123f73a919b135349c28cc3676d84ea126312500f0cd5aae323",
+         "result_id": "79a5db6126762beb966b969c9d02bf99faffdecbd7e5e3454233fd40e33e743e",
          "result_revision": 29,
          "reading": {
           "see": "Selon « poids », la moyenne de mpg va de 29,2 dans la tranche la plus basse à 13,8 dans la plus haute.",
@@ -5576,14 +5576,14 @@
          "cites": [
           {
            "name": "first_mean",
-           "result_id": "14b2379e03941123f73a919b135349c28cc3676d84ea126312500f0cd5aae323",
+           "result_id": "79a5db6126762beb966b969c9d02bf99faffdecbd7e5e3454233fd40e33e743e",
            "path": "groups.0.mean",
            "value": 29.24,
            "text": "29,2"
           },
           {
            "name": "last_mean",
-           "result_id": "14b2379e03941123f73a919b135349c28cc3676d84ea126312500f0cd5aae323",
+           "result_id": "79a5db6126762beb966b969c9d02bf99faffdecbd7e5e3454233fd40e33e743e",
            "path": "groups.4.mean",
            "value": 13.766666666666667,
            "text": "13,8"
@@ -5894,16 +5894,16 @@
    }
   },
   "sample": {
-   "seed": "64020efccf00e8a9",
+   "seed": "4728ced34f420bcb",
    "row_keys": [
-    "L66",
-    "L163",
-    "L166",
-    "L176",
-    "L202",
-    "L231",
-    "L276",
-    "L307"
+    "L1",
+    "L3",
+    "L125",
+    "L192",
+    "L210",
+    "L263",
+    "L274",
+    "L277"
    ],
    "recorded": true
   },
@@ -5944,7 +5944,7 @@
     "decision_id": null,
     "basis": null,
     "results": [
-     "90390311ee0011eabd6d494dd08220a1b6e19c49a8709237fd00f15d72af5305"
+     "ae233b391cf58201c3e701acbc6b18691b568b662a875a433c60de9f2191920f"
     ]
    }
   },

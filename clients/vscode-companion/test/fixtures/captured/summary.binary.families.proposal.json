@@ -389,7 +389,7 @@
   },
   "results": {
    "diag.binary": {
-    "result_id": "e06ba880cdfc83b1fb98ba7e067115bc9300ddc8322ddb39bf003a23e4e9039c",
+    "result_id": "e10bad271dcf67c675ad4db086fcf2948bbafdedec2b0dd0177cb273c1b0cf83",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -397,7 +397,7 @@
     "channel": "chat"
    },
    "eda.target_rate": {
-    "result_id": "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
+    "result_id": "9d7d66b5706e4ef99b54b2acf41649c6ed6c9a018357394324e2789f0eecef26",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -405,7 +405,7 @@
     "channel": "chat"
    },
    "fit.baseline": {
-    "result_id": "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
+    "result_id": "5d549963f10b3a61e48a4212a9798eb8ca88fa6fa6d84d56cb9d4a3a73c692ef",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -413,7 +413,7 @@
     "channel": "chat"
    },
    "fit.logistic": {
-    "result_id": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
+    "result_id": "5e344c2633116c36adf2a3f6c9f61d05ae0883a91eb1bf4b7a6703e6b4d5c953",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -421,7 +421,7 @@
     "channel": "chat"
    },
    "split": {
-    "result_id": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
+    "result_id": "580d5d78a8ae1ed416fc5580444b4613c5a0c7e7df4ecd12ad1d18cc2e58ed36",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -548,8 +548,8 @@
   "eda_looks": {
    "target_looks": 2,
    "results": [
-    "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
-    "e06ba880cdfc83b1fb98ba7e067115bc9300ddc8322ddb39bf003a23e4e9039c"
+    "9d7d66b5706e4ef99b54b2acf41649c6ed6c9a018357394324e2789f0eecef26",
+    "e10bad271dcf67c675ad4db086fcf2948bbafdedec2b0dd0177cb273c1b0cf83"
    ]
   },
   "recap": [
@@ -699,7 +699,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-28T12:43:37.268670+00:00",
+   "boundary_time": "2026-11-03T18:31:46.630739+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -708,7 +708,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-28T12:43:37.394331+00:00",
+     "time": "2026-11-03T18:31:46.803788+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -731,7 +731,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-28T12:43:38.089611+00:00",
+     "time": "2026-11-03T18:31:47.534420+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -761,7 +761,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-28T12:43:39.181229+00:00",
+     "time": "2026-11-03T18:31:48.490949+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -784,7 +784,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-28T12:43:39.975766+00:00",
+     "time": "2026-11-03T18:31:49.220658+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -814,7 +814,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-28T12:43:41.573318+00:00",
+     "time": "2026-11-03T18:31:50.710192+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -837,7 +837,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-28T12:43:42.663407+00:00",
+     "time": "2026-11-03T18:31:51.684385+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -867,7 +867,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-28T12:43:44.120197+00:00",
+     "time": "2026-11-03T18:31:52.782427+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -890,7 +890,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-28T12:43:45.223553+00:00",
+     "time": "2026-11-03T18:31:53.643369+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -920,7 +920,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-28T12:43:46.531378+00:00",
+     "time": "2026-11-03T18:31:54.794334+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -943,7 +943,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-28T12:43:47.768122+00:00",
+     "time": "2026-11-03T18:31:56.023106+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -973,7 +973,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-28T12:43:49.359760+00:00",
+     "time": "2026-11-03T18:31:57.457518+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -981,7 +981,7 @@
      "note_id": null,
      "activity": "split",
      "slot": "split",
-     "result_id": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
+     "result_id": "580d5d78a8ae1ed416fc5580444b4613c5a0c7e7df4ecd12ad1d18cc2e58ed36",
      "execution_id": "e_bb85e451e092b31aedb250d1",
      "rules": null,
      "column": null,
@@ -996,7 +996,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-28T12:43:51.176346+00:00",
+     "time": "2026-11-03T18:31:58.734803+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1004,7 +1004,7 @@
      "note_id": null,
      "activity": "eda.target_rate",
      "slot": "eda.target_rate",
-     "result_id": "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
+     "result_id": "9d7d66b5706e4ef99b54b2acf41649c6ed6c9a018357394324e2789f0eecef26",
      "execution_id": "e_a8274014a4c678f4a2a235d2",
      "rules": null,
      "column": null,
@@ -1019,7 +1019,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-28T12:43:52.950166+00:00",
+     "time": "2026-11-03T18:32:00.105099+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1027,7 +1027,7 @@
      "note_id": null,
      "activity": "fit.baseline",
      "slot": "fit.baseline",
-     "result_id": "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
+     "result_id": "5d549963f10b3a61e48a4212a9798eb8ca88fa6fa6d84d56cb9d4a3a73c692ef",
      "execution_id": "e_eff39ccb2204a33ff345cb41",
      "rules": null,
      "column": null,
@@ -1042,7 +1042,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-28T12:43:55.148855+00:00",
+     "time": "2026-11-03T18:32:01.959095+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1050,7 +1050,7 @@
      "note_id": null,
      "activity": "fit.logistic",
      "slot": "fit.logistic",
-     "result_id": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
+     "result_id": "5e344c2633116c36adf2a3f6c9f61d05ae0883a91eb1bf4b7a6703e6b4d5c953",
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
      "rules": null,
      "column": null,
@@ -1065,7 +1065,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-28T12:43:57.022701+00:00",
+     "time": "2026-11-03T18:32:03.521161+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1073,7 +1073,7 @@
      "note_id": null,
      "activity": "diag.binary",
      "slot": "diag.binary",
-     "result_id": "e06ba880cdfc83b1fb98ba7e067115bc9300ddc8322ddb39bf003a23e4e9039c",
+     "result_id": "e10bad271dcf67c675ad4db086fcf2948bbafdedec2b0dd0177cb273c1b0cf83",
      "execution_id": "e_e3011a6950ece5ea44c0419c",
      "rules": null,
      "column": null,
@@ -1088,7 +1088,7 @@
     },
     {
      "revision": 22,
-     "time": "2026-10-28T12:43:58.614429+00:00",
+     "time": "2026-11-03T18:32:04.754749+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1126,7 +1126,7 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "c7b6cdb6573d1456",
+  "currency": "a19c92df79e61514",
   "texts": {
    "en": {
     "plan": {
@@ -1433,16 +1433,16 @@
    }
   },
   "sample": {
-   "seed": "eb435b060bd89c7a",
+   "seed": "3822edfe567321e7",
    "row_keys": [
-    "L723",
-    "L1000",
-    "L1295",
-    "L1992",
-    "L2841",
-    "L3497",
-    "L3708",
-    "L4258"
+    "L38",
+    "L69",
+    "L1749",
+    "L1866",
+    "L1923",
+    "L2547",
+    "L2724",
+    "L4227"
    ],
    "recorded": true
   },

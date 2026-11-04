@@ -1674,7 +1674,10 @@ def _runnable(study: read.Study, state: Mapping, action: dict | None) -> dict | 
         if kind == 'run' and activity == 'fit.baseline' and st.has_error_metric(state) \
                 and drafts.exploration_complete(study, state):
             # Lot 2026-10-28 (EN-12, R61): a pause, so the charts are read before any model.
-            return st.read_exploration_action(action)
+            # It replaces an action already annotated, so it is annotated too: every
+            # next_action has its audience and junior_message (CLI-CONTRACT §3, WP-A1).
+            return audience.next_action(st.read_exploration_action(action),
+                                        st.language_of(state))
     if kind == 'propose' and st.structural_first(state) \
             and action.get('decision') in (st.PREPROCESSING, st.MODEL_VARIANT):
         # Owner session 2026-10-26 (L5, R5, R13; D6, D9): the drafts read the evidence. The

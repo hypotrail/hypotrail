@@ -125,7 +125,7 @@ def engine_fingerprint() -> str:
     """Digest of the engine sources a study runs (``mlkit/study`` without the review
     package itself, so the review code never stales the reviewed context)."""
     h = hashlib.sha256()
-    for path in sorted(ENGINE_DIR.rglob('*.py')):
+    for path in sorted(ENGINE_DIR.rglob('*.py'), key=lambda p: p.parts):
         rel = path.relative_to(ENGINE_DIR).as_posix()
         if rel.startswith('understanding/') or '__pycache__' in rel:
             continue

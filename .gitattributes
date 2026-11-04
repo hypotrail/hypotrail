@@ -1,4 +1,6 @@
-* text=auto
+# Text files keep LF on every platform: the engine hashes and compares bytes (wrappers,
+# templates, fixtures), and a Windows checkout must give the same bytes as Linux.
+* text=auto eol=lf
 *.py text eol=lf
 *.js text eol=lf
 *.json text eol=lf
@@ -15,3 +17,14 @@ use-cases/*/data/** -text -whitespace
 
 # Panel pixel baselines (clients/vscode-companion/test/baselines)
 *.png binary
+
+# Binary documents and archives: never converted (a PDF without a NUL byte in its first
+# bytes was detected as text and got CRLF on Windows).
+*.pdf binary
+*.docx binary
+*.xlsx binary
+*.zip binary
+*.vsix binary
+*.whl binary
+*.woff2 binary
+*.ttf binary

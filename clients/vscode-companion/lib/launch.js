@@ -84,22 +84,34 @@ function launchFor(agent, name, engine = null) {
     ? { name, mode: nb.mode, file, argv, source: 'agent', terminalName } : null;
 }
 
-const quote = a => (/^[A-Za-z0-9_@%+=:,./-]+$/.test(a) ? a : `"${a.replace(/(["\\$`])/g, '\\$1')}"`);
+// Display quoting (never run): POSIX sh, or PowerShell on Windows, the engine's
+// `agent_files.quote_arg` rules: single quotes, an inner quote doubled, and the call
+// operator `&` before a quoted program (PowerShell would read a quoted string, not a command).
+const quotePosix = a => (/^[A-Za-z0-9_@%+=:,./-]+$/.test(a) ? a : `"${a.replace(/(["\\$`])/g, '\\$1')}"`);
+const quotePowerShell = a => (/^[A-Za-z0-9_\-+=./\\:]+$/.test(a) ? a : `'${a.replace(/'/g, "''")}'`);
+
+/** One command line to show, for `platform` (`process.platform` by default). */
+function commandLine(argv, platform = process.platform) {
+  if (platform !== 'win32') return argv.map(quotePosix).join(' ');
+  const parts = argv.map(quotePowerShell);
+  return (parts.length && parts[0].startsWith("'") ? ['&', ...parts] : parts).join(' ');
+}
 
 /**
  * What the panel shows next to the buttons (display only, never run): the command of each
  * notebook with its study-relative file, and the engine environment, from agent.json.
+ * The engine environment of a uv project is its `.venv` folder (`path.join`: `\` on Windows).
  */
-function display(agent) {
+function display(agent, platform = process.platform) {
   const out = { kernel: null, notebook: null, editable: null, workbench: null };
   if (!agent) return out;
   const prefix = prefixFromAgent(agent.argv);
   if (prefix) out.kernel = prefix[0] === 'uv' ? path.join(prefix[3], '.venv') : prefix[0];
   for (const name of Object.keys(NOTEBOOKS)) {
     const l = launchFor(agent, name);
-    if (l) out[name] = [...l.argv.slice(0, -1), NOTEBOOKS[name].path].map(quote).join(' ');
+    if (l) out[name] = commandLine([...l.argv.slice(0, -1), NOTEBOOKS[name].path], platform);
   }
   return out;
 }
 
-module.exports = { NOTEBOOKS, launchFor, isMarimoLaunch, prefixFromAgent, fileOf, display };
+module.exports = { NOTEBOOKS, launchFor, isMarimoLaunch, prefixFromAgent, fileOf, display, commandLine };

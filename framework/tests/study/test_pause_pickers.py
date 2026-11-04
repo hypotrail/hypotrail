@@ -192,7 +192,9 @@ def test_choice_options_are_exactly_the_accepted_values(tmp_path, monkeypatch, b
     assert words['inconclusive'] == {'en': 'Do not conclude (inconclusive)',
                                      'fr': 'Ne pas conclure (non concluant)'}[language]
     if regression:
-        assert words['keep_baseline'] == 'Garder la moyenne de référence'
+        # Lot 2026-10-28 (EN-21; CLI-CONTRACT §18): the reference is named by what it predicts
+        # (``junior.REGRESSION_KEEP_LABEL``).
+        assert words['keep_baseline'] == 'Garder la référence (prédire la moyenne)'
     check_choice_options(s, nxt, tmp_path / 'conclusion')
 
 

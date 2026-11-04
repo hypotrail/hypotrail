@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-families",
    "revision": 22,
-   "updated": "2026-10-28T12:43:58.614429+00:00",
+   "updated": "2026-11-03T18:32:04.754749+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -397,7 +397,7 @@
      "restatement": "You compare three variants of the candidate, each with its question.",
      "rationale": "One penalty change and two model families, inside the budget of three.",
      "revision": 22,
-     "created": "2026-10-28T12:43:58.613299+00:00",
+     "created": "2026-11-03T18:32:04.753788+00:00",
      "labels": null,
      "label": "You compare three variants of the candidate, each with its question.",
      "origin": {
@@ -421,7 +421,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-28T12:43:38.089562+00:00",
+      "time": "2026-11-03T18:31:47.534367+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -470,7 +470,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-28T12:43:39.975687+00:00",
+      "time": "2026-11-03T18:31:49.220599+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -521,7 +521,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-28T12:43:42.663325+00:00",
+      "time": "2026-11-03T18:31:51.684328+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -554,7 +554,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-28T12:43:45.223473+00:00",
+      "time": "2026-11-03T18:31:53.643326+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -592,7 +592,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-28T12:43:47.768056+00:00",
+      "time": "2026-11-03T18:31:56.022940+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -793,7 +793,7 @@
    "results": {
     "diag.binary": {
      "slot": "diag.binary",
-     "result_id": "e06ba880cdfc83b1fb98ba7e067115bc9300ddc8322ddb39bf003a23e4e9039c",
+     "result_id": "e10bad271dcf67c675ad4db086fcf2948bbafdedec2b0dd0177cb273c1b0cf83",
      "activity": "diag.binary",
      "current": true,
      "stale_reason": null,
@@ -1970,7 +1970,7 @@
          "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
          "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
         },
-        "predictions": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e"
+        "predictions": "5e344c2633116c36adf2a3f6c9f61d05ae0883a91eb1bf4b7a6703e6b4d5c953"
        }
       },
       "coefficient_rows": 3617,
@@ -2252,15 +2252,15 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "fit.logistic": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
-       "split": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b"
+       "fit.logistic": "5e344c2633116c36adf2a3f6c9f61d05ae0883a91eb1bf4b7a6703e6b4d5c953",
+       "split": "580d5d78a8ae1ed416fc5580444b4613c5a0c7e7df4ecd12ad1d18cc2e58ed36"
       },
       "target": {
        "column": "y",
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "96a78981862239f242fa57ac4d0dfb9a95a0d6700fded9a3a3fc83c322d9bcae",
+     "code_fingerprint": "7ee73bf7c46a42b9d5defc3314b9945bd1db3bf45577b9bae152a552bbcaf377",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2270,17 +2270,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "Linux-6.18.44-fc-v230-x86_64-with-glibc2.39",
+      "python": "3.13.18"
      },
      "execution_id": "e_e3011a6950ece5ea44c0419c",
-     "exposure_id": "x_23817e1920d04b3887ef55ad2c8b4521",
+     "exposure_id": "x_79dafda61507425aad87541cfe2a7f26",
      "started_revision": 20,
      "integrity": "ok"
     },
     "eda.target_rate": {
      "slot": "eda.target_rate",
-     "result_id": "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
+     "result_id": "9d7d66b5706e4ef99b54b2acf41649c6ed6c9a018357394324e2789f0eecef26",
      "activity": "eda.target_rate",
      "current": true,
      "stale_reason": null,
@@ -2312,7 +2312,7 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "split": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b"
+       "split": "580d5d78a8ae1ed416fc5580444b4613c5a0c7e7df4ecd12ad1d18cc2e58ed36"
       },
       "target": {
        "column": "y",
@@ -2329,17 +2329,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "Linux-6.18.44-fc-v230-x86_64-with-glibc2.39",
+      "python": "3.13.18"
      },
      "execution_id": "e_a8274014a4c678f4a2a235d2",
-     "exposure_id": "x_2dfc989707e34199b4747adc83cbad67",
+     "exposure_id": "x_fda2595fe6554b8988a008d0e59b0865",
      "started_revision": 14,
      "integrity": "ok"
     },
     "fit.baseline": {
      "slot": "fit.baseline",
-     "result_id": "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
+     "result_id": "5d549963f10b3a61e48a4212a9798eb8ca88fa6fa6d84d56cb9d4a3a73c692ef",
      "activity": "fit.baseline",
      "current": true,
      "stale_reason": null,
@@ -2447,7 +2447,7 @@
        "scheme": "cross_validation"
       },
       "results": {
-       "split": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b"
+       "split": "580d5d78a8ae1ed416fc5580444b4613c5a0c7e7df4ecd12ad1d18cc2e58ed36"
       },
       "target": {
        "column": "y",
@@ -2464,17 +2464,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "Linux-6.18.44-fc-v230-x86_64-with-glibc2.39",
+      "python": "3.13.18"
      },
      "execution_id": "e_eff39ccb2204a33ff345cb41",
-     "exposure_id": "x_aff51584c68340538b8930459d092323",
+     "exposure_id": "x_de7d7c27e93c4f2883102e30555d957a",
      "started_revision": 16,
      "integrity": "ok"
     },
     "fit.logistic": {
      "slot": "fit.logistic",
-     "result_id": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
+     "result_id": "5e344c2633116c36adf2a3f6c9f61d05ae0883a91eb1bf4b7a6703e6b4d5c953",
      "activity": "fit.logistic",
      "current": true,
      "stale_reason": null,
@@ -2695,7 +2695,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b"
+       "split": "580d5d78a8ae1ed416fc5580444b4613c5a0c7e7df4ecd12ad1d18cc2e58ed36"
       },
       "special_values": [
        {
@@ -2724,7 +2724,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "770d1a57981b945f8ee6b8bc4a99478fe0b5b621af83277928791cd574136976",
+     "code_fingerprint": "68cfbc885a86f0f4b41ad17513bf70fca680f0a385fc58d620ac4d5a3ae3c29e",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2734,17 +2734,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "Linux-6.18.44-fc-v230-x86_64-with-glibc2.39",
+      "python": "3.13.18"
      },
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
-     "exposure_id": "x_dd522776e55545bf866d4ac6d2b1a8f0",
+     "exposure_id": "x_389f573df19b47c1a82bd9dc04ff148a",
      "started_revision": 18,
      "integrity": "ok"
     },
     "split": {
      "slot": "split",
-     "result_id": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
+     "result_id": "580d5d78a8ae1ed416fc5580444b4613c5a0c7e7df4ecd12ad1d18cc2e58ed36",
      "activity": "split",
      "current": true,
      "stale_reason": null,
@@ -2829,7 +2829,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "ad76c8f679bef6227136b4322c280f3d61635e8195e860fc92a586938c49fe16",
+     "code_fingerprint": "b6a7c6e22fdfbc9eaaffa12c6ff7c2496a3313d0f4dce216dbbaa2d688556b30",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2839,11 +2839,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v180-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "Linux-6.18.44-fc-v230-x86_64-with-glibc2.39",
+      "python": "3.13.18"
      },
      "execution_id": "e_bb85e451e092b31aedb250d1",
-     "exposure_id": "x_a190f090956f43c0a0f85828b6854835",
+     "exposure_id": "x_2ccab4b44b2a49c087ec21e90ca578b5",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -2869,7 +2869,7 @@
       "last_ok_revision": 22,
       "path": "notebooks/study_editable.py",
       "revision": 22,
-      "sha256": "f5a0a67487dc6679f23a37d74bf55992744cdac18105477a67bd96fe7c5cfa68",
+      "sha256": "ea08fb42f0b50cd63ee7912021fba1e778f963d766dc0a6cff7ecd0f5533ba3c",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -2882,20 +2882,20 @@
      "notebook": {
       "candidate": null,
       "consumed": [
-       "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
-       "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
-       "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
-       "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
-       "e06ba880cdfc83b1fb98ba7e067115bc9300ddc8322ddb39bf003a23e4e9039c"
+       "580d5d78a8ae1ed416fc5580444b4613c5a0c7e7df4ecd12ad1d18cc2e58ed36",
+       "5d549963f10b3a61e48a4212a9798eb8ca88fa6fa6d84d56cb9d4a3a73c692ef",
+       "5e344c2633116c36adf2a3f6c9f61d05ae0883a91eb1bf4b7a6703e6b4d5c953",
+       "9d7d66b5706e4ef99b54b2acf41649c6ed6c9a018357394324e2789f0eecef26",
+       "e10bad271dcf67c675ad4db086fcf2948bbafdedec2b0dd0177cb273c1b0cf83"
       ],
-      "edit_check_sha256": "8212c9c07f2622d5ac6d2c7daad7f36134bcb21f9255b5dc7bf7199b0e962f56",
+      "edit_check_sha256": "670bf7ff9dc80b28323cb023b86d90ae5f839dd8957bce4ffc7d8f0a69acc7f5",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
       "last_ok_revision": 22,
       "path": "notebooks/study_generated.py",
       "revision": 22,
-      "sha256": "8ff24c10397dfda4817928edf7361827d30ed16608d76fcc1d54a628e9d25a7a",
+      "sha256": "83de976846458e0197b99fac9ee17d12cdfc6c74b3bb46d9e2d62f44e5867797",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -2908,11 +2908,11 @@
      "report": {
       "candidate": null,
       "consumed": [
-       "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b",
-       "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
-       "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
-       "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
-       "e06ba880cdfc83b1fb98ba7e067115bc9300ddc8322ddb39bf003a23e4e9039c"
+       "580d5d78a8ae1ed416fc5580444b4613c5a0c7e7df4ecd12ad1d18cc2e58ed36",
+       "5d549963f10b3a61e48a4212a9798eb8ca88fa6fa6d84d56cb9d4a3a73c692ef",
+       "5e344c2633116c36adf2a3f6c9f61d05ae0883a91eb1bf4b7a6703e6b4d5c953",
+       "9d7d66b5706e4ef99b54b2acf41649c6ed6c9a018357394324e2789f0eecef26",
+       "e10bad271dcf67c675ad4db086fcf2948bbafdedec2b0dd0177cb273c1b0cf83"
       ],
       "error": null,
       "generated": true,
@@ -2920,7 +2920,7 @@
       "last_ok_revision": 22,
       "path": "reports/study.html",
       "revision": 22,
-      "sha256": "ea3f8b582fe35ddfc57ea64136a6cd2b50010b5c45b979970bfb7c530e1770ba",
+      "sha256": "6f3cb0f5ea8fffec930a7d06cd2fa2d5c2c2dd315edceacd7064e0dad056f9d8",
       "status": "ok",
       "template_version": 4,
       "user_edits_preserved": [],
@@ -3171,8 +3171,8 @@
    "eda_looks": {
     "target_looks": 2,
     "results": [
-     "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
-     "e06ba880cdfc83b1fb98ba7e067115bc9300ddc8322ddb39bf003a23e4e9039c"
+     "9d7d66b5706e4ef99b54b2acf41649c6ed6c9a018357394324e2789f0eecef26",
+     "e10bad271dcf67c675ad4db086fcf2948bbafdedec2b0dd0177cb273c1b0cf83"
     ],
     "by_activity": {
      "diag.binary": 1,
@@ -3190,7 +3190,7 @@
    "trials": {
     "count": 1,
     "results": [
-     "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e"
+     "5e344c2633116c36adf2a3f6c9f61d05ae0883a91eb1bf4b7a6703e6b4d5c953"
     ],
     "note": "Each candidate or variant configuration fitted is a trial. Choosing the best of several trials on the same rows makes its figures slightly optimistic; the final test, opened once, is not affected."
    },
@@ -3286,7 +3286,7 @@
      "declared": false
     },
     "evidence": {
-     "source": "e06ba880cdfc83b1fb98ba7e067115bc9300ddc8322ddb39bf003a23e4e9039c",
+     "source": "e10bad271dcf67c675ad4db086fcf2948bbafdedec2b0dd0177cb273c1b0cf83",
      "checked": true,
      "flags": [],
      "checks": {
@@ -3626,11 +3626,11 @@
     "schema": "hypotrail.presentation/1",
     "revision": 22,
     "result_ids": {
-     "diag.binary": "e06ba880cdfc83b1fb98ba7e067115bc9300ddc8322ddb39bf003a23e4e9039c",
-     "eda.target_rate": "6a659ff734dfbf116948cfec9d25563fc7395006c3de2f8d17d5bbc34ee05c18",
-     "fit.baseline": "d4a9ce4b37d8762d375e4729d1b333302702de52363f71bd583e2d1484dd882a",
-     "fit.logistic": "22c27d4a578ffc7a783808089e59b103a2888b5e86065bcba2b5aa025cef057e",
-     "split": "01c68a5dad196e63ed244db0af098e16f29e1235acb87fe4c895e2036c85a52b"
+     "diag.binary": "e10bad271dcf67c675ad4db086fcf2948bbafdedec2b0dd0177cb273c1b0cf83",
+     "eda.target_rate": "9d7d66b5706e4ef99b54b2acf41649c6ed6c9a018357394324e2789f0eecef26",
+     "fit.baseline": "5d549963f10b3a61e48a4212a9798eb8ca88fa6fa6d84d56cb9d4a3a73c692ef",
+     "fit.logistic": "5e344c2633116c36adf2a3f6c9f61d05ae0883a91eb1bf4b7a6703e6b4d5c953",
+     "split": "580d5d78a8ae1ed416fc5580444b4613c5a0c7e7df4ecd12ad1d18cc2e58ed36"
     },
     "eligibility": null,
     "uncertainty": {},

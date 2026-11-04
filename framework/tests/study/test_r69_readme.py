@@ -11,7 +11,11 @@ def test_init_writes_the_readme_and_the_data_link(tmp_path):
     study = tmp_path / 'study'
     commands.init(CASE, study, language='fr')
     link = study / 'data'
-    assert link.is_symlink() and not os.path.isabs(os.readlink(link))
+    # A relative link, except across two Windows drives, where none exists: the link is then
+    # absolute (launch.install_readme).
+    same_drive = os.path.splitdrive(str(CASE.resolve()))[0].lower() \
+        == os.path.splitdrive(str(study.resolve()))[0].lower()
+    assert link.is_symlink() and os.path.isabs(os.readlink(link)) is not same_drive
     assert (link / 'auto-mpg.data').resolve() == (CASE / 'data' / 'auto-mpg.data').resolve()
     text = (study / 'README.md').read_text(encoding='utf-8')
     assert str((CASE / 'data' / 'auto-mpg.data').resolve()) in text

@@ -78,9 +78,10 @@ def test_killed_run_is_reported_outcome_unknown_by_a_fresh_status_process(flow, 
         assert live['next_action']['kind'] != 'outcome_unknown'
         assert _status(flow, '--summary')['executions']['active'] == [eid]
     finally:
-        os.kill(proc.pid, signal.SIGKILL)
+        proc.kill()
         proc.communicate(timeout=60)
-    assert proc.returncode == -signal.SIGKILL
+    # SIGKILL on POSIX; TerminateProcess (exit code 1) on Windows, which has no signals.
+    assert proc.returncode == (1 if os.name == 'nt' else -signal.SIGKILL)
     home = flow.study / '.hypotrail'
     before = {p.name: p.read_bytes() for p in home.iterdir() if p.is_file()}
     rev = flow.rev()
@@ -126,7 +127,7 @@ def test_killed_run_is_reported_outcome_unknown_by_a_fresh_status_process(flow, 
 
 def test_suspected_execution_can_be_acknowledged_with_the_juniors_words(flow, tmp_path):
     proc, gate, eid = _paused_run(flow, tmp_path)
-    os.kill(proc.pid, signal.SIGKILL)
+    proc.kill()
     proc.communicate(timeout=60)
     assert _status(flow)['view']['next_action']['kind'] == 'outcome_unknown'
     words = 'The split run stopped and its outcome is unknown; record that, I will decide later.'
@@ -166,7 +167,7 @@ def test_view_without_probe_marks_liveness_not_checked(flow, tmp_path):
         held = lock.probe_leases(flow.study)
         assert held == {eid: True}
     finally:
-        os.kill(proc.pid, signal.SIGKILL)
+        proc.kill()
         proc.communicate(timeout=60)
     assert lock.probe_leases(flow.study) == {eid: False}
     assert view.build(read.open(flow.study), leases={})['executions']['active'][eid][

@@ -18,6 +18,7 @@ from pathlib import Path
 import pytest
 
 from hypotrail_runtime.errors import ContractError
+from mlkit.study.platform_compat import venv_python
 
 FRAMEWORK = Path(__file__).resolve().parents[3]
 UV = shutil.which('uv')
@@ -110,7 +111,7 @@ def test_extras_install_alone_and_together(tmp_path, extras):
                    check=True, env=environ)
     script = tmp_path / 'smoke.py'
     script.write_text(SMOKE)
-    out = subprocess.run([str(env / 'bin' / 'python'), str(script), ','.join(extras)],
+    out = subprocess.run([str(venv_python(env)), str(script), ','.join(extras)],
                          capture_output=True, text=True, cwd=tmp_path)
     assert out.returncode == 0, out.stderr
     result = json.loads(out.stdout)

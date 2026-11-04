@@ -149,9 +149,14 @@ def decide(event: dict, prefixes: Sequence[Sequence[str]], data_files: Sequence[
 
 
 def respond(decision: str | None, reason: str) -> dict:
+    """The decision in both documented forms: top-level ``permissionDecision`` and
+    ``permissionDecisionReason`` (VS Code and GitHub Copilot hooks reference) and the same
+    inside ``hookSpecificOutput`` (the Claude-compatible ``PreToolUse`` form). ``{}`` is no
+    decision."""
     if decision is None:
         return {}
-    return {'hookSpecificOutput': {'hookEventName': 'PreToolUse',
+    return {'permissionDecision': decision, 'permissionDecisionReason': reason,
+            'hookSpecificOutput': {'hookEventName': 'PreToolUse',
                                    'permissionDecision': decision,
                                    'permissionDecisionReason': reason}}
 
@@ -194,7 +199,42 @@ def study_rule(study_dir) -> tuple[list[list[str]], list[str], str]:
         language = state.get('language') or 'en'
     except (OSError, ValueError, AttributeError):
         pass
+    if not data_files:
+        found, prep_language = preparing_data(home)
+        data_files += found
+        language = prep_language or language
     return prefixes, data_files, language
+
+
+def preparing_data(home: Path) -> tuple[list[str], str | None]:
+    """Before ``seal`` (no ``state.json`` yet): what names the raw data of a study in
+    preparation, from ``.hypotrail/preparing.json`` and its case folder ``NAME.case/``: the
+    copied file's name, the original file's name, and the case's data folder written both
+    ways (``NAME.case/data``, ``NAME.case\\data``), so a listing or a glob of it is refused
+    too. ``([], None)`` when the study is not in preparation."""
+    try:
+        marker = json.loads((home / 'preparing.json').read_text(encoding='utf-8'))
+        case = Path(marker['case'])
+    except (OSError, ValueError, KeyError, TypeError):
+        return [], None
+    names: list[str] = []
+    language = None
+    try:
+        record = json.loads((case / 'prepare.json').read_text(encoding='utf-8'))
+        data = record.get('data') or {}
+        for key in ('path', 'original'):
+            if isinstance(data.get(key), str) and data[key]:
+                names.append(ntpath.basename(data[key]) if '\\' in data[key]
+                             else Path(data[key]).name)
+        language = record.get('language') if isinstance(record.get('language'), str) else None
+    except (OSError, ValueError, AttributeError):
+        pass
+    try:
+        names += [p.name for p in (case / 'data').iterdir() if p.is_file()]
+    except OSError:
+        pass
+    names += [f'{case.name}/data', f'{case.name}\\data']
+    return list(dict.fromkeys(n for n in names if n)), language
 
 
 def read_event(stream=None):
@@ -212,11 +252,17 @@ def hook_command(cli_argv: Sequence[str], study, log_file) -> list[str]:
 
 def hook_config(cli_argv: Sequence[str], study) -> dict:
     """The ``.github/hooks/hypotrail.json`` document of a study (VS Code agent hooks): one
-    ``PreToolUse`` command, quoted for the user's shell (PowerShell on Windows)."""
+    ``PreToolUse`` command. The hooks reference runs ``powershell`` on Windows and ``bash``
+    elsewhere, ``command`` being the fallback copied to both: each is written for its own
+    shell (PowerShell: single quotes and the call operator ``&`` before a quoted program, so
+    a path with spaces works; bash: POSIX quoting), and ``command`` is this platform's."""
     from .agent_files import display_command
     study = Path(study)
     argv = hook_command(cli_argv, study, study / LOG_FILE)
-    return {'hooks': {'PreToolUse': [{'type': 'command', 'command': display_command(argv),
+    return {'version': 1,
+            'hooks': {'PreToolUse': [{'type': 'command', 'command': display_command(argv),
+                                      'bash': display_command(argv, windows=False),
+                                      'powershell': display_command(argv, windows=True),
                                       'timeout': 15}]}}
 
 

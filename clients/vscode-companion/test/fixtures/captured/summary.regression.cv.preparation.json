@@ -359,7 +359,7 @@
   },
   "results": {
    "eda.distribution:horsepower": {
-    "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+    "result_id": "16443debaadb78bc27897be6cf7bc39544797906c61e631ac74871531128525e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -375,7 +375,7 @@
     "channel": "chat"
    },
    "split": {
-    "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+    "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -649,7 +649,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-28T12:47:05.991964+00:00",
+   "boundary_time": "2026-11-03T18:34:50.291022+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -658,7 +658,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-28T12:47:06.106010+00:00",
+     "time": "2026-11-03T18:34:50.399651+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -681,7 +681,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-28T12:47:06.650106+00:00",
+     "time": "2026-11-03T18:34:50.877007+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -711,7 +711,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-28T12:47:07.436165+00:00",
+     "time": "2026-11-03T18:34:51.514790+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -734,7 +734,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-28T12:47:08.038363+00:00",
+     "time": "2026-11-03T18:34:52.032533+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -764,7 +764,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-28T12:47:08.939885+00:00",
+     "time": "2026-11-03T18:34:52.901582+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -787,7 +787,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-28T12:47:09.607909+00:00",
+     "time": "2026-11-03T18:34:53.575278+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -817,7 +817,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-28T12:47:10.447709+00:00",
+     "time": "2026-11-03T18:34:54.428677+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "error_metric",
@@ -840,7 +840,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-28T12:47:11.131791+00:00",
+     "time": "2026-11-03T18:34:55.081256+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "error_metric",
@@ -870,7 +870,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-28T12:47:12.019252+00:00",
+     "time": "2026-11-03T18:34:55.847995+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -893,7 +893,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-28T12:47:12.952834+00:00",
+     "time": "2026-11-03T18:34:56.608646+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -923,7 +923,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-28T12:47:14.043180+00:00",
+     "time": "2026-11-03T18:34:57.664367+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -931,7 +931,7 @@
      "note_id": null,
      "activity": "split",
      "slot": "split",
-     "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
      "execution_id": "e_0eee3a0bb608847ca1ac05a7",
      "rules": null,
      "column": null,
@@ -946,7 +946,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-28T12:47:15.272731+00:00",
+     "time": "2026-11-03T18:34:58.846122+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -969,7 +969,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-28T12:47:16.670201+00:00",
+     "time": "2026-11-03T18:35:00.092923+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -977,7 +977,7 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:horsepower",
-     "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+     "result_id": "16443debaadb78bc27897be6cf7bc39544797906c61e631ac74871531128525e",
      "execution_id": "e_9c2f7f2c69f91be9c07e4331",
      "rules": null,
      "column": "horsepower",
@@ -992,7 +992,7 @@
     },
     {
      "revision": 18,
-     "time": "2026-10-28T12:47:18.186871+00:00",
+     "time": "2026-11-03T18:35:01.630817+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -1030,7 +1030,7 @@
    "channel_actions": []
   },
   "task": "regression",
-  "currency": "18d5842f5b2d26c7",
+  "currency": "41043bce56f6aeb8",
   "texts": {
    "en": {
     "plan": {
@@ -2170,7 +2170,7 @@
           "rows": "Structure · development rows (318), without the target"
          },
          "status": "answered",
-         "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+         "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
          "result_revision": 13,
          "reading": {
           "see": "The 318 development rows in 5 blocks of 63 to 64 rows, in the order of model year; the 80 sealed rows stay aside.",
@@ -2194,21 +2194,21 @@
           },
           {
            "name": "k",
-           "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+           "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
            "path": "folds",
            "value": 5,
            "text": "5"
           },
           {
            "name": "min_rows",
-           "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+           "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
            "path": "fold_rows.3.n_rows",
            "value": 63,
            "text": "63"
           },
           {
            "name": "max_rows",
-           "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+           "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
            "path": "fold_rows.0.n_rows",
            "value": 64,
            "text": "64"
@@ -2697,7 +2697,7 @@
           "rows": "Structure · development rows (318), without the target"
          },
          "status": "answered",
-         "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+         "result_id": "16443debaadb78bc27897be6cf7bc39544797906c61e631ac74871531128525e",
          "result_revision": 17,
          "reading": {
           "see": "horsepower has a tail of high values, skewness 1.05 for a limit of 1; the log draws the large values closer.",
@@ -4077,7 +4077,7 @@
           "rows": "Structure · lignes de développement (318), sans la cible"
          },
          "status": "answered",
-         "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+         "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
          "result_revision": 13,
          "reading": {
           "see": "Les 318 lignes de développement en 5 blocs de 63 à 64 lignes, dans l'ordre de « année du modèle » ; les 80 lignes scellées restent à part.",
@@ -4101,21 +4101,21 @@
           },
           {
            "name": "k",
-           "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+           "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
            "path": "folds",
            "value": 5,
            "text": "5"
           },
           {
            "name": "min_rows",
-           "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+           "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
            "path": "fold_rows.3.n_rows",
            "value": 63,
            "text": "63"
           },
           {
            "name": "max_rows",
-           "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+           "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
            "path": "fold_rows.0.n_rows",
            "value": 64,
            "text": "64"
@@ -4604,7 +4604,7 @@
           "rows": "Structure · lignes de développement (318), sans la cible"
          },
          "status": "answered",
-         "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+         "result_id": "16443debaadb78bc27897be6cf7bc39544797906c61e631ac74871531128525e",
          "result_revision": 17,
          "reading": {
           "see": "« puissance » a une traîne de valeurs hautes, asymétrie 1,05 pour un seuil de 1 ; le log resserre les grandes valeurs.",
@@ -4931,16 +4931,16 @@
    }
   },
   "sample": {
-   "seed": "e17bc8f27b2d1446",
+   "seed": "63a40916fb04e44f",
    "row_keys": [
-    "L27",
-    "L29",
-    "L151",
-    "L172",
-    "L263",
-    "L326",
-    "L329",
-    "L384"
+    "L180",
+    "L187",
+    "L205",
+    "L223",
+    "L248",
+    "L265",
+    "L328",
+    "L344"
    ],
    "recorded": true
   },

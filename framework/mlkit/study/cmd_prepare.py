@@ -32,10 +32,10 @@ import argparse
 import hashlib
 import json
 import os
-import shlex
 from pathlib import Path
 from typing import Any, Mapping
 
+from . import agent_files as af
 from . import case_draft as cd
 from . import commands as cmd
 from .errors import StudyError
@@ -121,15 +121,13 @@ def _sha(path: Path) -> str:
 # --- the preparation agent instructions ---------------------------------------------------
 
 def _agent_values(study: Path) -> dict:
-    from . import agent_files as af
     cli = af.cli_command()
-    return {'HYPOTRAIL': cli['shell'], 'STUDY': shlex.quote(str(study))}, cli
+    return {'HYPOTRAIL': cli['shell'], 'STUDY': af.quote_arg(str(study))}, cli
 
 
 def install_agent(study: Path) -> dict:
     """Write the preparation instructions (never over an existing file) and
     ``.hypotrail/agent.json``; ``{target: sha256}`` of the files written."""
-    from . import agent_files as af
     from .store import atomic_write_json
     values, cli = _agent_values(study)
     written = {}
@@ -159,7 +157,7 @@ def install_agent(study: Path) -> dict:
     if not agent_file.exists():
         atomic_write_json(agent_file, {
             'schema': af.SCHEMA, 'study': str(study), 'cli': cli,
-            'invocation': f'{cli["shell"]} <command> ... --study {shlex.quote(str(study))}',
+            'invocation': f'{cli["shell"]} <command> ... --study {af.quote_arg(str(study))}',
             'phase': PREPARING,
             'note': 'A study in preparation: run every hypotrail command with this invocation. '
                     'Replaced by the study record when hypotrail seal creates the study.'})
@@ -324,11 +322,11 @@ def status_payload(study: Path, case_dir: Path, *, command: str = 'prepare statu
         out['next'] = None
     elif not pending:
         out['next'] = f'{hyp} seal --expected-revision {record["revision"]} --study ' \
-                      f'{shlex.quote(str(study))}'
+                      f'{af.quote_arg(str(study))}'
     else:
         out['next'] = (f'{hyp} prepare answer {pending[0]} --value-json \'...\' --user-words '
                        f'"<the user\'s words>" --expected-revision {record["revision"]} '
-                       f'--study {shlex.quote(str(study))}')
+                       f'--study {af.quote_arg(str(study))}')
     return out
 
 

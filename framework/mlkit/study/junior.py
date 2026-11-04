@@ -32,7 +32,10 @@ from . import state as st
 
 EN, FR = 'en', 'fr'
 MAX_DIGEST_WORDS = 200
-ENRICH_KEYS = ('language', 'junior_digest', 'recommended', 'question', 'pause')
+# Owner batch of 2026-10-28 (R36, R40; CLI-CONTRACT §18): ``plan_recap`` and ``evidence`` are
+# junior-ready keys too, set by :func:`enrich` with the others.
+ENRICH_KEYS = ('language', 'junior_digest', 'recommended', 'question', 'pause', 'plan_recap',
+               'evidence')
 RECOMMENDED_KEYS = ('value', 'why')
 
 

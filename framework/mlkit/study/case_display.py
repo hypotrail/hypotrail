@@ -4,14 +4,16 @@
 An optional file ``use-cases/<id>/case-display.yaml`` (schema ``hypotrail.case-display/1``)::
 
     columns:            # short display names (titles, axes, matrix)
-      model_year: {en: model year, fr: année du modèle}
+      build_year: {en: build year, fr: année de construction}
+    unit_note: {en: 1 kWh = 3.6 MJ, fr: 1 kWh = 3,6 MJ}  # optional: a reading aid for the
+                                                         # target's unit, as written
     timeline:
       status: scenario_assumption
       source: Teaching scenario assumption
       milestones:       # in time order
         - {id: design, label: {en: Engine designed, fr: Moteur conçu}}
       proposed_after: body          # the moment sits after this milestone
-      known_at: {cylinders: design, weight: body, mpg: measured}
+      known_at: {rooms: design, weight: body, price: measured}
 
 It is validated against the case: every column it names is a case variable; a column whose
 availability is ``available_at_prediction`` sits at or before ``proposed_after``; the target
@@ -40,7 +42,7 @@ import yaml
 SCHEMA = 'hypotrail.case-display/1'
 FILE = 'case-display.yaml'
 LANGS = ('en', 'fr')
-TOP_KEYS = ('schema', 'columns', 'timeline')
+TOP_KEYS = ('schema', 'columns', 'timeline', 'unit_note')
 TIMELINE_KEYS = ('status', 'source', 'milestones', 'proposed_after', 'known_at')
 CHART_KEYS = ('milestones', 'moment_after', 'slider', 'decided', 'status', 'columns',
               'positions')
@@ -87,7 +89,9 @@ def validate(document: Any, case_document: Mapping) -> dict:
         if name not in variables:
             raise DisplayError(f'columns.{name} is not a variable of the case.')
         columns[name] = _pair(pair, f'columns.{name}')
-    out = {'schema': SCHEMA, 'columns': columns, 'timeline': None}
+    out = {'schema': SCHEMA, 'columns': columns, 'timeline': None, 'unit_note': None}
+    if document.get('unit_note') is not None:
+        out['unit_note'] = _pair(document['unit_note'], 'unit_note')
     timeline = document.get('timeline')
     if timeline is None:
         return out
@@ -154,6 +158,13 @@ def digest(display: Mapping | None) -> dict | None:
     if display is None:
         return None
     return {'columns': {k: dict(v) for k, v in display['columns'].items()}}
+
+
+def unit_note(display: Mapping | None, lang: str) -> str | None:
+    """The case's reading aid for its target's unit (``unit_note``), as the file writes it in
+    ``lang``; None when the file gives none. Display only: no result cites it."""
+    pair = (display or {}).get('unit_note')
+    return pair.get(lang) or pair.get('en') if isinstance(pair, Mapping) else None
 
 
 def column_name(display: Mapping | None, column: str, lang: str) -> str:

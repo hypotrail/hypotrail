@@ -23,6 +23,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -569,22 +570,44 @@ def test_the_text_summary_and_the_terminal_default(until, tmp_path):
     assert cli._wanted_format(run + ['--format', 'text'], io.StringIO()) == 'text'
     assert cli._wanted_format(['status', '--study', 's'], Terminal()) == 'json'
     assert cli.TEXT_ON_A_TERMINAL == (('automation', 'run'),)
-    # In a real process on a terminal (a study without automation: nothing to do).
+    # In a real process on a terminal (a study without automation: nothing to do). Windows
+    # has no pseudo-terminal (no pty, no termios): the checks above are its whole coverage.
+    if os.name == 'nt':
+        pytest.skip('no pseudo-terminal on Windows; the in-process checks above passed')
     import pty
     plain = _created(tmp_path / 'plain')
     for extra, readable in (((), True), (('--json',), False)):
         master, slave = pty.openpty()
         try:
-            proc = subprocess.run([sys.executable, '-m', 'mlkit.study.cli', 'automation', 'run',
-                                   *extra, '--request-id', 'p', '--expected-revision',
-                                   str(plain.rev()), '--study', str(plain.study)],
-                                  stdout=slave, stderr=subprocess.PIPE, text=True,
-                                  env=fk.env(), timeout=600)
-            os.close(slave)
-            shown = os.read(master, 1 << 16).decode('utf-8').replace('\r\n', '\n')
+            proc = subprocess.Popen([sys.executable, '-m', 'mlkit.study.cli', 'automation', 'run',
+                                     *extra, '--request-id', 'p', '--expected-revision',
+                                     str(plain.rev()), '--study', str(plain.study)],
+                                    stdout=slave, stderr=subprocess.PIPE, text=True,
+                                    env=fk.env())
+            # Read while the child runs: a pseudo-terminal holds little (about 1 KB on macOS),
+            # so a child writing more blocks until it is read. The slave end stays open here
+            # until everything is read: macOS drops what is pending on the master once the
+            # last slave descriptor closes (Linux keeps it).
+            import select
+            chunks, deadline = [], time.monotonic() + 600
+            while time.monotonic() < deadline:
+                if not select.select([master], [], [], 0.5)[0]:
+                    if proc.poll() is not None:
+                        break
+                    continue
+                try:
+                    data = os.read(master, 1 << 16)
+                except OSError:
+                    break
+                if not data:
+                    break
+                chunks.append(data)
+            stderr = proc.communicate(timeout=60)[1]
+            shown = b''.join(chunks).decode('utf-8').replace('\r\n', '\n')
         finally:
+            os.close(slave)
             os.close(master)
-        assert proc.returncode == 0 and proc.stderr == '', proc.stderr
+        assert proc.returncode == 0 and stderr == '', stderr
         if readable:
             assert shown.startswith('Automatic mode · Auto MPG · UCI · revision 1\n'), shown
             assert 'Nothing was done: this study has no automatic mode in force.' in shown

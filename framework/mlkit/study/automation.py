@@ -144,6 +144,12 @@ def _conclusion(view: Mapping, action: Mapping) -> dict | None:
     return {'verdict': verdict, 'text': CONCLUSION_TEXTS[lang if lang == FR else 'en'][key]}
 
 
+def _leaves_a_feature(value) -> bool:
+    """Whether a ``feature_availability`` value keeps at least one variable for the models."""
+    return isinstance(value, Mapping) and any(
+        v in ('available_at_prediction', 'uncertain_included') for v in value.values())
+
+
 def auto_value(view: Mapping, state: Mapping, action: Mapping) -> Any:
     """The value the automatic mode records for the decision ``action`` proposes, or None
     when the engine has none (the junior is then asked). See :data:`RULES`."""
@@ -155,6 +161,11 @@ def auto_value(view: Mapping, state: Mapping, action: Mapping) -> Any:
     value = action.get('default_value')
     if value is None:
         value = (action.get('recommended') or {}).get('value')
+    if decision == 'feature_availability' and not _leaves_a_feature(value):
+        # A draft that excludes every variable (a case that documents no availability, such
+        # as a study prepared from one data file) is no value to record: no model could be
+        # fitted on it. The junior decides which columns are known at the prediction moment.
+        return None
     if value is not None:
         return copy.deepcopy(value)
     if decision == 'model_choice':

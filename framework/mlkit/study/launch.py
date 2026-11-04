@@ -199,7 +199,13 @@ def install_readme(study_dir, case, language: str = 'en', *, data_link: bool = T
     link = study / DATA_LINK
     if data_link and _DATA_LINK[-1] and not os.path.lexists(link):
         try:
-            os.symlink(os.path.relpath(target, study), link, target_is_directory=True)
+            # On Windows a relative path between two drives does not exist (relpath raises
+            # ValueError): the link then names the folder by its absolute path.
+            pointed = os.path.relpath(target, study)
+        except ValueError:
+            pointed = str(target)
+        try:
+            os.symlink(pointed, link, target_is_directory=True)
         except (OSError, NotImplementedError):
             pass
     linked = link.is_symlink()

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -225,7 +226,7 @@ def test_hostile_config_never_runs(done, tmp_path):
     script.write_text(f'#!/bin/sh\necho "$0 $@" >> {trace}\ncat\n')
     script.chmod(0o755)
     inc = tmp_path / 'inc.config'
-    inc.write_text(f'[core]\n\tfsmonitor = {script}\n')
+    inc.write_text(f'[core]\n\tfsmonitor = {script.as_posix()}\n')   # no backslash escape
     cfg = [('core.fsmonitor', str(script)), ('core.pager', str(script)),
            ('pager.ls-files', str(script)), ('diff.external', str(script)),
            ('filter.evil.smudge', str(script)), ('filter.evil.clean', str(script)),
@@ -423,7 +424,8 @@ def test_processes_export_concurrently(done):
     u, sid = done
     ukit.approve_all(u, sid)
     rev = u.rev()
-    ctx = mp.get_context('fork')
+    # fork where it exists (POSIX); Windows has only spawn, which imports this module again
+    ctx = mp.get_context('fork' if hasattr(os, 'fork') else 'spawn')
     q = ctx.Queue()
     ps = [ctx.Process(target=_proc_write, args=(str(u.study), sid, str(u.repo), f'cw{i}', rev, q))
           for i in range(6)]

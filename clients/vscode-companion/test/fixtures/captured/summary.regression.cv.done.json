@@ -358,7 +358,7 @@
   },
   "results": {
    "diag.final_test": {
-    "result_id": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+    "result_id": "81f23a76fac8d35aa6a8ff11c21496c3c5de7c3dd005334040898012c25b50dc",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -366,7 +366,7 @@
     "channel": "chat"
    },
    "diag.regression": {
-    "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+    "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -382,7 +382,7 @@
     "channel": "chat"
    },
    "eda.distribution:acceleration": {
-    "result_id": "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+    "result_id": "1814d4adcbf969b624c82cb2f7a453988c6a2f58dede9f32ccf63c97c156b72e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -390,7 +390,7 @@
     "channel": "chat"
    },
    "eda.distribution:cylinders": {
-    "result_id": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+    "result_id": "fb80777d019a6d88f5d090b0ad4b4fe79d8a4b7573cbe7f34a9f3a3cad6b99e8",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -398,7 +398,7 @@
     "channel": "chat"
    },
    "eda.distribution:displacement": {
-    "result_id": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+    "result_id": "c52ea33d7934741535769440bccd0b1ea258766a3183d51f7c70079d3fc79418",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -406,7 +406,7 @@
     "channel": "chat"
    },
    "eda.distribution:horsepower": {
-    "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+    "result_id": "16443debaadb78bc27897be6cf7bc39544797906c61e631ac74871531128525e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -414,7 +414,7 @@
     "channel": "chat"
    },
    "eda.distribution:origin": {
-    "result_id": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
+    "result_id": "58c2954187e6e712d8bc0792dc78ccc17df4f4ff0c66707e34d3e38b68569b56",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -422,7 +422,7 @@
     "channel": "chat"
    },
    "eda.distribution:weight": {
-    "result_id": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+    "result_id": "ce95633ba3b0a37f7049c0fcfb6677adae08770936598aa55b3e9954a49088e7",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -430,7 +430,7 @@
     "channel": "chat"
    },
    "eda.mean_by:acceleration": {
-    "result_id": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+    "result_id": "90972542994368b6997e2c71c6aed78977b96ef3b10cfde0aaac03d1385d2fe1",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -438,7 +438,7 @@
     "channel": "chat"
    },
    "eda.mean_by:cylinders": {
-    "result_id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+    "result_id": "14f641a84a412528cfacac102cc84a2d527ddd8a9e6003b8ed4a7e2e6836b35e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -446,7 +446,7 @@
     "channel": "chat"
    },
    "eda.mean_by:displacement": {
-    "result_id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+    "result_id": "ae384a61bf51e3efb70f85d6b51811118da50ea477472641f781bdfb25ce5306",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -454,7 +454,7 @@
     "channel": "chat"
    },
    "eda.mean_by:horsepower": {
-    "result_id": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+    "result_id": "e8f926e1861eb12607a56d7f4da81dbd3f787a9fc969d6f38df44610805c5b6b",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -462,7 +462,7 @@
     "channel": "chat"
    },
    "eda.mean_by:origin": {
-    "result_id": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+    "result_id": "8f8165e176640ae7435ad8cceaae28143accdeb40d59753c8363170b7a1cc40c",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -470,7 +470,7 @@
     "channel": "chat"
    },
    "eda.mean_by:weight": {
-    "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+    "result_id": "4cb2f9d76b106e273a640d49bfb83e15d2fc30cb16383c482a3de08da755e0f8",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -486,7 +486,7 @@
     "channel": "chat"
    },
    "eda.special_values": {
-    "result_id": "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
+    "result_id": "c9d3dd9f07d1da9bd19d2a1cc1fbc8228c04690a4ab4ed7b9b56bc2ed1e4aea7",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -494,7 +494,7 @@
     "channel": "chat"
    },
    "eda.target_summary": {
-    "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+    "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -502,7 +502,7 @@
     "channel": "chat"
    },
    "evaluate.regression": {
-    "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+    "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -510,7 +510,7 @@
     "channel": "chat"
    },
    "final_test.evaluation": {
-    "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+    "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -518,7 +518,7 @@
     "channel": "chat"
    },
    "fit.baseline": {
-    "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
+    "result_id": "cc8f47312d0357246662b23014923b40240123a7e0030c598f62c87152471dea",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -526,7 +526,7 @@
     "channel": "chat"
    },
    "fit.linear": {
-    "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+    "result_id": "4901063be324f8eaf8f494ea94c5ebcd5344f3dff0c68820ff29f73a765e823e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -534,7 +534,7 @@
     "channel": "chat"
    },
    "fit.variant": {
-    "result_id": "d6a53e63450ea32206f5f7aad01e1e4dfdcdaffd43b83a36447dee6ec64e4856",
+    "result_id": "71081e77c55163a0ebf54dfcaac20740e4711bea08467691894ea4dbd14cf303",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -542,7 +542,7 @@
     "channel": "chat"
    },
    "fit.variant:2": {
-    "result_id": "1c5d4f6559fc7252490f9fcfba04d981d066f897dd672fad39515d41bf5e84ff",
+    "result_id": "7c81baa0eba195d32b614eefef1e9bac85792fd6d2630915618c0a42bf750d69",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -550,7 +550,7 @@
     "channel": "chat"
    },
    "predictor.capture": {
-    "result_id": "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f",
+    "result_id": "ac24858b983647a5859f6a8f17aa62696937ba54039679caf3c2a1c3260380fd",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -558,7 +558,7 @@
     "channel": "chat"
    },
    "split": {
-    "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+    "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
@@ -660,9 +660,9 @@
     "revision": 70,
     "model": "fit.linear",
     "rule": null,
-    "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+    "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
     "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
-    "time": "2026-10-28T12:48:14.367667+00:00"
+    "time": "2026-11-03T18:35:51.246037+00:00"
    },
    "post_final_test": false,
    "changed_after": [],
@@ -681,7 +681,7 @@
    "minimum": 0.1,
    "unit": "share",
    "rule": null,
-   "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+   "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
    "contradicts_verdict": false,
    "final_test": {
     "status": "met",
@@ -698,7 +698,7 @@
     "decision_rule": null,
     "decision_status": null,
     "basis": null,
-    "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9"
+    "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d"
    },
    "model": "fit.linear",
    "judged_on": "final_test",
@@ -707,21 +707,21 @@
   "eda_looks": {
    "target_looks": 10,
    "results": [
-    "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
-    "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
-    "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
-    "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
-    "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
-    "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
-    "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
-    "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
-    "62f774885fc62eaccdd876e9c57560540b145f768a6c6b0988466d100fa6344e",
-    "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520"
+    "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
+    "c9d3dd9f07d1da9bd19d2a1cc1fbc8228c04690a4ab4ed7b9b56bc2ed1e4aea7",
+    "14f641a84a412528cfacac102cc84a2d527ddd8a9e6003b8ed4a7e2e6836b35e",
+    "ae384a61bf51e3efb70f85d6b51811118da50ea477472641f781bdfb25ce5306",
+    "e8f926e1861eb12607a56d7f4da81dbd3f787a9fc969d6f38df44610805c5b6b",
+    "4cb2f9d76b106e273a640d49bfb83e15d2fc30cb16383c482a3de08da755e0f8",
+    "90972542994368b6997e2c71c6aed78977b96ef3b10cfde0aaac03d1385d2fe1",
+    "8f8165e176640ae7435ad8cceaae28143accdeb40d59753c8363170b7a1cc40c",
+    "a5b8bd51a25b0e2b72586e1e275911a990df5eaf7aa412a4b590bc7ec8fd1d16",
+    "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4"
    ]
   },
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
-   "Decided: prediction moment; feature availability (every feature kept); split (5-fold cross-validation, temporal folds); error measure; success criterion (out-of-fold error at least 10% below the mean baseline); preprocessing (log transform of horsepower); variant (penalty chosen by nested cross-validation and an Explainable Boosting Machine); model choice: the linear model (out-of-fold MAE 3.64 mpg, result 5276f891); final test opened (the linear model); conclusion adopt model.",
+   "Decided: prediction moment; feature availability (every feature kept); split (5-fold cross-validation, temporal folds); error measure; success criterion (out-of-fold error at least 10% below the mean baseline); preprocessing (log transform of horsepower); variant (penalty chosen by nested cross-validation and an Explainable Boosting Machine); model choice: the linear model (out-of-fold MAE 3.64 mpg, result 84e3ddf6); final test opened (the linear model); conclusion adopt model.",
    "Now: every step is done; the report and notebook are up to date.",
    "Next: nothing left in the plan; review what is not yet defensible.",
    "Limit: Some results are stale and must be recomputed before they are cited."
@@ -871,7 +871,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-28T12:47:05.991964+00:00",
+   "boundary_time": "2026-11-03T18:34:50.291022+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -880,7 +880,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-28T12:47:06.106010+00:00",
+     "time": "2026-11-03T18:34:50.399651+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -903,7 +903,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-28T12:47:06.650106+00:00",
+     "time": "2026-11-03T18:34:50.877007+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -933,7 +933,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-28T12:47:07.436165+00:00",
+     "time": "2026-11-03T18:34:51.514790+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -956,7 +956,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-28T12:47:08.038363+00:00",
+     "time": "2026-11-03T18:34:52.032533+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -986,7 +986,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-28T12:47:08.939885+00:00",
+     "time": "2026-11-03T18:34:52.901582+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -1009,7 +1009,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-28T12:47:09.607909+00:00",
+     "time": "2026-11-03T18:34:53.575278+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -1039,7 +1039,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-28T12:47:10.447709+00:00",
+     "time": "2026-11-03T18:34:54.428677+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "error_metric",
@@ -1062,7 +1062,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-28T12:47:11.131791+00:00",
+     "time": "2026-11-03T18:34:55.081256+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "error_metric",
@@ -1092,7 +1092,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-28T12:47:12.019252+00:00",
+     "time": "2026-11-03T18:34:55.847995+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -1115,7 +1115,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-28T12:47:12.952834+00:00",
+     "time": "2026-11-03T18:34:56.608646+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -1145,7 +1145,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-28T12:47:14.043180+00:00",
+     "time": "2026-11-03T18:34:57.664367+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1153,7 +1153,7 @@
      "note_id": null,
      "activity": "split",
      "slot": "split",
-     "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+     "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
      "execution_id": "e_0eee3a0bb608847ca1ac05a7",
      "rules": null,
      "column": null,
@@ -1168,7 +1168,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-28T12:47:15.272731+00:00",
+     "time": "2026-11-03T18:34:58.846122+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1191,7 +1191,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-28T12:47:16.670201+00:00",
+     "time": "2026-11-03T18:35:00.092923+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1199,7 +1199,7 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:horsepower",
-     "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+     "result_id": "16443debaadb78bc27897be6cf7bc39544797906c61e631ac74871531128525e",
      "execution_id": "e_9c2f7f2c69f91be9c07e4331",
      "rules": null,
      "column": "horsepower",
@@ -1214,7 +1214,7 @@
     },
     {
      "revision": 18,
-     "time": "2026-10-28T12:47:18.186871+00:00",
+     "time": "2026-11-03T18:35:01.630817+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -1237,7 +1237,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-28T12:47:20.035979+00:00",
+     "time": "2026-11-03T18:35:03.089039+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -1267,7 +1267,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-28T12:47:21.185216+00:00",
+     "time": "2026-11-03T18:35:04.148046+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1275,7 +1275,7 @@
      "note_id": null,
      "activity": "eda.target_summary",
      "slot": "eda.target_summary",
-     "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+     "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
      "execution_id": "e_afbcc5b5c6d6b10afa774b86",
      "rules": null,
      "column": null,
@@ -1290,7 +1290,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-28T12:47:22.529468+00:00",
+     "time": "2026-11-03T18:35:05.159496+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1298,7 +1298,7 @@
      "note_id": null,
      "activity": "eda.special_values",
      "slot": "eda.special_values",
-     "result_id": "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
+     "result_id": "c9d3dd9f07d1da9bd19d2a1cc1fbc8228c04690a4ab4ed7b9b56bc2ed1e4aea7",
      "execution_id": "e_061502fb4d6e55bbb43de53a",
      "rules": null,
      "column": null,
@@ -1313,7 +1313,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-28T12:47:23.828929+00:00",
+     "time": "2026-11-03T18:35:06.251882+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1321,7 +1321,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:cylinders",
-     "result_id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+     "result_id": "14f641a84a412528cfacac102cc84a2d527ddd8a9e6003b8ed4a7e2e6836b35e",
      "execution_id": "e_8b6b767c3df161e7401893c1",
      "rules": null,
      "column": "cylinders",
@@ -1336,7 +1336,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-28T12:47:25.161244+00:00",
+     "time": "2026-11-03T18:35:07.393536+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1344,7 +1344,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:displacement",
-     "result_id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+     "result_id": "ae384a61bf51e3efb70f85d6b51811118da50ea477472641f781bdfb25ce5306",
      "execution_id": "e_a633b01aa452bb85d7c21822",
      "rules": null,
      "column": "displacement",
@@ -1359,7 +1359,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-28T12:47:26.521187+00:00",
+     "time": "2026-11-03T18:35:08.536150+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1367,7 +1367,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:horsepower",
-     "result_id": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+     "result_id": "e8f926e1861eb12607a56d7f4da81dbd3f787a9fc969d6f38df44610805c5b6b",
      "execution_id": "e_88662ab87ecb5884e6688116",
      "rules": null,
      "column": "horsepower",
@@ -1382,7 +1382,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-28T12:47:27.719768+00:00",
+     "time": "2026-11-03T18:35:09.537109+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1390,7 +1390,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:weight",
-     "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+     "result_id": "4cb2f9d76b106e273a640d49bfb83e15d2fc30cb16383c482a3de08da755e0f8",
      "execution_id": "e_947162f1b37ea74e53f6086a",
      "rules": null,
      "column": "weight",
@@ -1405,7 +1405,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-28T12:47:29.038972+00:00",
+     "time": "2026-11-03T18:35:10.455194+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1413,7 +1413,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:acceleration",
-     "result_id": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+     "result_id": "90972542994368b6997e2c71c6aed78977b96ef3b10cfde0aaac03d1385d2fe1",
      "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
      "rules": null,
      "column": "acceleration",
@@ -1428,7 +1428,7 @@
     },
     {
      "revision": 35,
-     "time": "2026-10-28T12:47:30.317956+00:00",
+     "time": "2026-11-03T18:35:11.450116+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1436,7 +1436,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:origin",
-     "result_id": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+     "result_id": "8f8165e176640ae7435ad8cceaae28143accdeb40d59753c8363170b7a1cc40c",
      "execution_id": "e_0b8fc9580cdd4e33bc5c14db",
      "rules": null,
      "column": "origin",
@@ -1451,7 +1451,7 @@
     },
     {
      "revision": 37,
-     "time": "2026-10-28T12:47:31.564765+00:00",
+     "time": "2026-11-03T18:35:12.514720+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1474,7 +1474,7 @@
     },
     {
      "revision": 39,
-     "time": "2026-10-28T12:47:32.747569+00:00",
+     "time": "2026-11-03T18:35:13.637657+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1482,7 +1482,7 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:cylinders",
-     "result_id": "49598053d05118455bc6c73abe6b6b435b63051fc07b1862d47010bf5d3cc213",
+     "result_id": "fb80777d019a6d88f5d090b0ad4b4fe79d8a4b7573cbe7f34a9f3a3cad6b99e8",
      "execution_id": "e_c747f3646963f5be94a54bdb",
      "rules": null,
      "column": "cylinders",
@@ -1497,7 +1497,7 @@
     },
     {
      "revision": 41,
-     "time": "2026-10-28T12:47:34.029157+00:00",
+     "time": "2026-11-03T18:35:14.848812+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1505,7 +1505,7 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:displacement",
-     "result_id": "6434ee280dcce4a4091c5c081ebd22bb12573d8fb5836c7d98c5b29aa52a276c",
+     "result_id": "c52ea33d7934741535769440bccd0b1ea258766a3183d51f7c70079d3fc79418",
      "execution_id": "e_f09116e554021da514197565",
      "rules": null,
      "column": "displacement",
@@ -1520,7 +1520,7 @@
     },
     {
      "revision": 43,
-     "time": "2026-10-28T12:47:35.226046+00:00",
+     "time": "2026-11-03T18:35:16.136146+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1528,7 +1528,7 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:weight",
-     "result_id": "d27f58c3b831525c5a0f3b70390448d480cbbed47bd1c4146d7a97dd6bfd04b7",
+     "result_id": "ce95633ba3b0a37f7049c0fcfb6677adae08770936598aa55b3e9954a49088e7",
      "execution_id": "e_ed89c3d6b5ceb43c540c9096",
      "rules": null,
      "column": "weight",
@@ -1543,7 +1543,7 @@
     },
     {
      "revision": 45,
-     "time": "2026-10-28T12:47:36.612193+00:00",
+     "time": "2026-11-03T18:35:17.445121+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1551,7 +1551,7 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:acceleration",
-     "result_id": "6da8415a1e65280fb75ca221ad0cb643db93cd87f1ac1b1eafeffd5e04ba7adc",
+     "result_id": "1814d4adcbf969b624c82cb2f7a453988c6a2f58dede9f32ccf63c97c156b72e",
      "execution_id": "e_f02c465bbc8626047ce0b4cc",
      "rules": null,
      "column": "acceleration",
@@ -1566,7 +1566,7 @@
     },
     {
      "revision": 47,
-     "time": "2026-10-28T12:47:37.980642+00:00",
+     "time": "2026-11-03T18:35:18.668258+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1574,7 +1574,7 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:origin",
-     "result_id": "0a531d2baaaf3144067e6678bb401c4df047068391c971d6197d7c2b05d5b041",
+     "result_id": "58c2954187e6e712d8bc0792dc78ccc17df4f4ff0c66707e34d3e38b68569b56",
      "execution_id": "e_5904912825f5be2c5a9088d0",
      "rules": null,
      "column": "origin",
@@ -1589,7 +1589,7 @@
     },
     {
      "revision": 49,
-     "time": "2026-10-28T12:47:39.331939+00:00",
+     "time": "2026-11-03T18:35:19.912376+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1597,7 +1597,7 @@
      "note_id": null,
      "activity": "fit.baseline",
      "slot": "fit.baseline",
-     "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
+     "result_id": "cc8f47312d0357246662b23014923b40240123a7e0030c598f62c87152471dea",
      "execution_id": "e_8519f7987822bead348d47d9",
      "rules": null,
      "column": null,
@@ -1612,7 +1612,7 @@
     },
     {
      "revision": 51,
-     "time": "2026-10-28T12:47:40.774419+00:00",
+     "time": "2026-11-03T18:35:21.111578+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1620,7 +1620,7 @@
      "note_id": null,
      "activity": "fit.linear",
      "slot": "fit.linear",
-     "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+     "result_id": "4901063be324f8eaf8f494ea94c5ebcd5344f3dff0c68820ff29f73a765e823e",
      "execution_id": "e_0840d5a4c86aa1a0c3b1ef84",
      "rules": null,
      "column": null,
@@ -1635,7 +1635,7 @@
     },
     {
      "revision": 53,
-     "time": "2026-10-28T12:47:42.090930+00:00",
+     "time": "2026-11-03T18:35:22.402293+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1643,7 +1643,7 @@
      "note_id": null,
      "activity": "diag.regression",
      "slot": "diag.regression",
-     "result_id": "62f774885fc62eaccdd876e9c57560540b145f768a6c6b0988466d100fa6344e",
+     "result_id": "a5b8bd51a25b0e2b72586e1e275911a990df5eaf7aa412a4b590bc7ec8fd1d16",
      "execution_id": "e_c7acc1c7811ed60617bfe6ae",
      "rules": null,
      "column": null,
@@ -1658,7 +1658,7 @@
     },
     {
      "revision": 54,
-     "time": "2026-10-28T12:47:43.709690+00:00",
+     "time": "2026-11-03T18:35:23.894216+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1681,7 +1681,7 @@
     },
     {
      "revision": 55,
-     "time": "2026-10-28T12:47:45.754854+00:00",
+     "time": "2026-11-03T18:35:25.591085+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1716,7 +1716,7 @@
     },
     {
      "revision": 57,
-     "time": "2026-10-28T12:47:49.660316+00:00",
+     "time": "2026-11-03T18:35:28.729604+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1724,7 +1724,7 @@
      "note_id": null,
      "activity": "fit.variant",
      "slot": "fit.variant",
-     "result_id": "d6a53e63450ea32206f5f7aad01e1e4dfdcdaffd43b83a36447dee6ec64e4856",
+     "result_id": "71081e77c55163a0ebf54dfcaac20740e4711bea08467691894ea4dbd14cf303",
      "execution_id": "e_2c515241b96823b32e92d4c1",
      "rules": null,
      "column": null,
@@ -1739,7 +1739,7 @@
     },
     {
      "revision": 59,
-     "time": "2026-10-28T12:48:01.374173+00:00",
+     "time": "2026-11-03T18:35:39.489211+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1747,7 +1747,7 @@
      "note_id": null,
      "activity": "fit.variant",
      "slot": "fit.variant:2",
-     "result_id": "1c5d4f6559fc7252490f9fcfba04d981d066f897dd672fad39515d41bf5e84ff",
+     "result_id": "7c81baa0eba195d32b614eefef1e9bac85792fd6d2630915618c0a42bf750d69",
      "execution_id": "e_8f8894cfd0d89135d5c3402c",
      "rules": null,
      "column": null,
@@ -1762,7 +1762,7 @@
     },
     {
      "revision": 61,
-     "time": "2026-10-28T12:48:02.975995+00:00",
+     "time": "2026-11-03T18:35:40.791298+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1770,7 +1770,7 @@
      "note_id": null,
      "activity": "evaluate.regression",
      "slot": "evaluate.regression",
-     "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+     "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
      "execution_id": "e_8f5c345335630fb2ac505a65",
      "rules": null,
      "column": null,
@@ -1785,7 +1785,7 @@
     },
     {
      "revision": 63,
-     "time": "2026-10-28T12:48:04.489329+00:00",
+     "time": "2026-11-03T18:35:42.273176+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1793,7 +1793,7 @@
      "note_id": null,
      "activity": "diag.regression",
      "slot": "diag.regression",
-     "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+     "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
      "execution_id": "e_cca2d0a0feb38ddc0531cb38",
      "rules": null,
      "column": null,
@@ -1808,7 +1808,7 @@
     },
     {
      "revision": 64,
-     "time": "2026-10-28T12:48:07.274483+00:00",
+     "time": "2026-11-03T18:35:45.041253+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1831,7 +1831,7 @@
     },
     {
      "revision": 65,
-     "time": "2026-10-28T12:48:08.316847+00:00",
+     "time": "2026-11-03T18:35:46.057782+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_choice",
@@ -1866,7 +1866,7 @@
     },
     {
      "revision": 67,
-     "time": "2026-10-28T12:48:10.619815+00:00",
+     "time": "2026-11-03T18:35:48.212801+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1874,7 +1874,7 @@
      "note_id": null,
      "activity": "predictor.capture",
      "slot": "predictor.capture",
-     "result_id": "02502058226060c0e8e6878e50e5f5ecdeee875d3a3d8cb786794f1ab961a10f",
+     "result_id": "ac24858b983647a5859f6a8f17aa62696937ba54039679caf3c2a1c3260380fd",
      "execution_id": "e_7aa8a09ee84cf89c77a2e082",
      "rules": null,
      "column": null,
@@ -1889,7 +1889,7 @@
     },
     {
      "revision": 68,
-     "time": "2026-10-28T12:48:12.569764+00:00",
+     "time": "2026-11-03T18:35:50.059672+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "final_test",
@@ -1912,7 +1912,7 @@
     },
     {
      "revision": 69,
-     "time": "2026-10-28T12:48:14.262419+00:00",
+     "time": "2026-11-03T18:35:51.169220+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "final_test",
@@ -1947,7 +1947,7 @@
     },
     {
      "revision": 71,
-     "time": "2026-10-28T12:48:14.590899+00:00",
+     "time": "2026-11-03T18:35:51.405360+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1955,7 +1955,7 @@
      "note_id": null,
      "activity": "final_test.evaluation",
      "slot": "final_test.evaluation",
-     "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+     "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
      "execution_id": "e_e5ad655517547e7853ed55de",
      "rules": null,
      "column": null,
@@ -1970,7 +1970,7 @@
     },
     {
      "revision": 73,
-     "time": "2026-10-28T12:48:16.725083+00:00",
+     "time": "2026-11-03T18:35:53.049032+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1978,7 +1978,7 @@
      "note_id": null,
      "activity": "diag.final_test",
      "slot": "diag.final_test",
-     "result_id": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+     "result_id": "81f23a76fac8d35aa6a8ff11c21496c3c5de7c3dd005334040898012c25b50dc",
      "execution_id": "e_6a06be06b73074c1701dec63",
      "rules": null,
      "column": null,
@@ -1993,7 +1993,7 @@
     },
     {
      "revision": 74,
-     "time": "2026-10-28T12:48:18.301664+00:00",
+     "time": "2026-11-03T18:35:54.827047+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "conclusion",
@@ -2016,7 +2016,7 @@
     },
     {
      "revision": 75,
-     "time": "2026-10-28T12:48:19.351065+00:00",
+     "time": "2026-11-03T18:35:55.742817+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "conclusion",
@@ -2066,7 +2066,7 @@
    "channel_actions": []
   },
   "task": "regression",
-  "currency": "84f07ab38e2a74bb",
+  "currency": "bf1912a3004d0696",
   "texts": {
    "en": {
     "plan": {
@@ -3238,7 +3238,7 @@
           "rows": "Structure · development rows (318), without the target"
          },
          "status": "answered",
-         "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+         "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
          "result_revision": 13,
          "reading": {
           "see": "The 318 development rows in 5 blocks of 63 to 64 rows, in the order of model year; the 80 sealed rows stay aside.",
@@ -3262,21 +3262,21 @@
           },
           {
            "name": "k",
-           "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+           "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
            "path": "folds",
            "value": 5,
            "text": "5"
           },
           {
            "name": "min_rows",
-           "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+           "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
            "path": "fold_rows.3.n_rows",
            "value": 63,
            "text": "63"
           },
           {
            "name": "max_rows",
-           "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+           "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
            "path": "fold_rows.0.n_rows",
            "value": 64,
            "text": "64"
@@ -3765,7 +3765,7 @@
           "rows": "Structure · development rows (318), without the target"
          },
          "status": "answered",
-         "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+         "result_id": "16443debaadb78bc27897be6cf7bc39544797906c61e631ac74871531128525e",
          "result_revision": 17,
          "reading": {
           "see": "horsepower has a tail of high values, skewness 1.05 for a limit of 1; the log draws the large values closer.",
@@ -3875,7 +3875,7 @@
           {
            "slot": "eda.special_values",
            "chart": "bars",
-           "result_id": "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
+           "result_id": "c9d3dd9f07d1da9bd19d2a1cc1fbc8228c04690a4ab4ed7b9b56bc2ed1e4aea7",
            "result_revision": 23,
            "status": "answered"
           }
@@ -3885,7 +3885,7 @@
           "rows": "Development evidence · development rows (318) · looks at the target, counted (looks: 11)"
          },
          "status": "answered",
-         "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+         "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
          "result_revision": 21,
          "reading": {
           "see": "mpg goes from 9.0 to 46.6 mpg, median 23.0, over 318 development rows.",
@@ -3895,49 +3895,49 @@
          "cites": [
           {
            "name": "min",
-           "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+           "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
            "path": "min",
            "value": 9.0,
            "text": "9.0"
           },
           {
            "name": "max",
-           "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+           "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
            "path": "max",
            "value": 46.6,
            "text": "46.6"
           },
           {
            "name": "median",
-           "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+           "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
            "path": "median",
            "value": 23.0,
            "text": "23.0"
           },
           {
            "name": "q25",
-           "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+           "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
            "path": "q25",
            "value": 17.125,
            "text": "17.1"
           },
           {
            "name": "q75",
-           "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+           "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
            "path": "q75",
            "value": 29.0,
            "text": "29.0"
           },
           {
            "name": "mean",
-           "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+           "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
            "path": "mean",
            "value": 23.52578616352201,
            "text": "23.5"
           },
           {
            "name": "n",
-           "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+           "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
            "path": "n",
            "value": 318,
            "text": "318"
@@ -3964,35 +3964,35 @@
           {
            "slot": "eda.mean_by:cylinders",
            "chart": "trend_by_bins",
-           "result_id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+           "result_id": "14f641a84a412528cfacac102cc84a2d527ddd8a9e6003b8ed4a7e2e6836b35e",
            "result_revision": 25,
            "status": "answered"
           },
           {
            "slot": "eda.mean_by:displacement",
            "chart": "trend_by_bins",
-           "result_id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+           "result_id": "ae384a61bf51e3efb70f85d6b51811118da50ea477472641f781bdfb25ce5306",
            "result_revision": 27,
            "status": "answered"
           },
           {
            "slot": "eda.mean_by:horsepower",
            "chart": "trend_by_bins",
-           "result_id": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+           "result_id": "e8f926e1861eb12607a56d7f4da81dbd3f787a9fc969d6f38df44610805c5b6b",
            "result_revision": 29,
            "status": "answered"
           },
           {
            "slot": "eda.mean_by:acceleration",
            "chart": "trend_by_bins",
-           "result_id": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+           "result_id": "90972542994368b6997e2c71c6aed78977b96ef3b10cfde0aaac03d1385d2fe1",
            "result_revision": 33,
            "status": "answered"
           },
           {
            "slot": "eda.mean_by:origin",
            "chart": "trend_by_bins",
-           "result_id": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+           "result_id": "8f8165e176640ae7435ad8cceaae28143accdeb40d59753c8363170b7a1cc40c",
            "result_revision": 35,
            "status": "answered"
           }
@@ -4002,7 +4002,7 @@
           "rows": "Development evidence · development rows (318) · looks at the target, counted (looks: 11)"
          },
          "status": "answered",
-         "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+         "result_id": "4cb2f9d76b106e273a640d49bfb83e15d2fc30cb16383c482a3de08da755e0f8",
          "result_revision": 31,
          "reading": {
           "see": "Along weight, the mean of mpg goes from 33.2 in the lowest band to 14.3 in the highest.",
@@ -4012,14 +4012,14 @@
          "cites": [
           {
            "name": "first_mean",
-           "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+           "result_id": "4cb2f9d76b106e273a640d49bfb83e15d2fc30cb16383c482a3de08da755e0f8",
            "path": "groups.0.mean",
            "value": 33.1765625,
            "text": "33.2"
           },
           {
            "name": "last_mean",
-           "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+           "result_id": "4cb2f9d76b106e273a640d49bfb83e15d2fc30cb16383c482a3de08da755e0f8",
            "path": "groups.4.mean",
            "value": 14.3265625,
            "text": "14.3"
@@ -4121,7 +4121,7 @@
           {
            "slot": "fit.baseline",
            "chart": "model_dots",
-           "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
+           "result_id": "cc8f47312d0357246662b23014923b40240123a7e0030c598f62c87152471dea",
            "result_revision": 49,
            "status": "answered"
           }
@@ -4131,7 +4131,7 @@
           "rows": "Development evidence · development rows (318) · looks at the target, counted (looks: 11)"
          },
          "status": "answered",
-         "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+         "result_id": "4901063be324f8eaf8f494ea94c5ebcd5344f3dff0c68820ff29f73a765e823e",
          "result_revision": 51,
          "reading": {
           "see": "Out of fold, the linear model errs by 3.64 mpg (MAE), the reference by 7.16; the linear model errs less in 5 of 5 folds.",
@@ -4141,28 +4141,28 @@
          "cites": [
           {
            "name": "linear",
-           "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+           "result_id": "4901063be324f8eaf8f494ea94c5ebcd5344f3dff0c68820ff29f73a765e823e",
            "path": "validation.mae",
            "value": 3.6370466545031004,
            "text": "3.64"
           },
           {
            "name": "reference",
-           "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
+           "result_id": "cc8f47312d0357246662b23014923b40240123a7e0030c598f62c87152471dea",
            "path": "validation.mae",
            "value": 7.164709319770103,
            "text": "7.16"
           },
           {
            "name": "n_better",
-           "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+           "result_id": "4901063be324f8eaf8f494ea94c5ebcd5344f3dff0c68820ff29f73a765e823e",
            "path": "cross_validation.per_fold",
            "value": 5,
            "text": "5"
           },
           {
            "name": "k",
-           "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+           "result_id": "4901063be324f8eaf8f494ea94c5ebcd5344f3dff0c68820ff29f73a765e823e",
            "path": "cross_validation.folds",
            "value": 5,
            "text": "5"
@@ -4191,7 +4191,7 @@
           "rows": "Development evidence · development rows (318) · looks at the target, counted (looks: 11)"
          },
          "status": "answered",
-         "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+         "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
          "result_revision": 63,
          "reading": {
           "see": "Over the 318 rows predicted out of fold, the size of the error grows with the prediction: rank correlation 0.39 between them.",
@@ -4201,14 +4201,14 @@
          "cites": [
           {
            "name": "n",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "path": "models.[fit.linear].scatter.n_rows",
            "value": 318,
            "text": "318"
           },
           {
            "name": "rho",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "path": "models.[fit.linear].heteroscedasticity.abs_residual_prediction_correlation",
            "value": 0.3901960231879018,
            "text": "0.39"
@@ -4257,35 +4257,35 @@
           {
            "slot": "diag.regression#origin",
            "chart": "residual_by_feature",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "result_revision": 63,
            "status": "answered"
           },
           {
            "slot": "diag.regression#cylinders",
            "chart": "residual_by_feature",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "result_revision": 63,
            "status": "answered"
           },
           {
            "slot": "diag.regression#displacement",
            "chart": "residual_by_feature",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "result_revision": 63,
            "status": "answered"
           },
           {
            "slot": "diag.regression#weight",
            "chart": "residual_by_feature",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "result_revision": 63,
            "status": "answered"
           },
           {
            "slot": "diag.regression#acceleration",
            "chart": "residual_by_feature",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "result_revision": 63,
            "status": "answered"
           }
@@ -4295,7 +4295,7 @@
           "rows": "Development evidence · development rows (318) · looks at the target, counted (looks: 11)"
          },
          "status": "answered",
-         "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+         "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
          "result_revision": 63,
          "reading": {
           "see": "Along horsepower, the mean residual by band goes from -2.4 to 1.9 mpg.",
@@ -4305,14 +4305,14 @@
          "cites": [
           {
            "name": "low",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "path": "models.[fit.linear].by_feature.3.groups.2.mean_residual",
            "value": -2.35526215563991,
            "text": "-2.4"
           },
           {
            "name": "high",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "path": "models.[fit.linear].by_feature.3.groups.0.mean_residual",
            "value": 1.911513313533542,
            "text": "1.9"
@@ -4348,7 +4348,7 @@
           "rows": "Development evidence · development rows (318) · looks at the target, counted (looks: 11)"
          },
          "status": "answered",
-         "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+         "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
          "result_revision": 61,
          "reading": {
           "see": "The linear model's mean residual goes from -2.4 mpg in the first band of model year to 5.1 in the last band.",
@@ -4358,14 +4358,14 @@
          "cites": [
           {
            "name": "first_bias",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "residuals_by.0.groups.0.models.[fit.linear].mean_residual",
            "value": -2.365151076010823,
            "text": "-2.4"
           },
           {
            "name": "last_bias",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "residuals_by.0.groups.4.models.[fit.linear].mean_residual",
            "value": 5.141489738460804,
            "text": "5.1"
@@ -4379,7 +4379,7 @@
           },
           {
            "name": "n_bands",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "residuals_by.0.groups",
            "value": 5,
            "text": "5"
@@ -4433,7 +4433,7 @@
           {
            "slot": "evaluate.regression",
            "chart": "paired_intervals",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "result_revision": 61,
            "status": "answered"
           }
@@ -4443,7 +4443,7 @@
           "rows": "Development evidence · development rows (318) · looks at the target, counted (looks: 11)"
          },
          "status": "answered",
-         "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+         "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
          "result_revision": 61,
          "reading": {
           "see": "Lowest mean error, The second variant · an Explainable Boosting Machine: 3.36 mpg; the linear model: 3.64.",
@@ -4453,21 +4453,21 @@
          "cites": [
           {
            "name": "best_mean",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "model_selection.configurations.2.mean",
            "value": 3.361842818276986,
            "text": "3.36"
           },
           {
            "name": "linear_mean",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "model_selection.configurations.0.mean",
            "value": 3.6425706293552693,
            "text": "3.64"
           },
           {
            "name": "optimism",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "model_selection.optimism.estimate",
            "value": 0.006237593521645479,
            "text": "0.01"
@@ -4478,7 +4478,7 @@
           "met": true,
           "value": 3.3558393259124206,
           "bound": 6.448238387793093,
-          "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+          "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
           "path": "models.[fit.variant:2].mae"
          },
          "folds": {
@@ -4503,7 +4503,7 @@
           "rows": "Development evidence · development rows (318) · looks at the target, counted (looks: 11)"
          },
          "status": "answered",
-         "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+         "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
          "result_revision": 61,
          "reading": {
           "see": "The one-standard-error bound is 3.97 mpg, the lowest mean plus one standard error of 0.61; 3 configuration(s) sit under it.",
@@ -4513,21 +4513,21 @@
          "cites": [
           {
            "name": "bound",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "model_selection.one_se.bound",
            "value": 3.972003693405833,
            "text": "3.97"
           },
           {
            "name": "se",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "model_selection.one_se.se_of_best",
            "value": 0.610160875128847,
            "text": "0.61"
           },
           {
            "name": "n_within",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "model_selection.configurations",
            "value": 3,
            "text": "3"
@@ -4538,7 +4538,7 @@
           "met": true,
           "value": 3.6370466545031004,
           "bound": 6.448238387793093,
-          "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+          "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
           "path": "models.[fit.linear].mae"
          },
          "folds": {
@@ -4692,12 +4692,12 @@
           "development": {
            "model": 3.6370466545031004,
            "reference": 7.164709319770103,
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d"
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce"
           },
           "final": {
            "model": 2.7902411324982896,
            "reference": 6.636933962264152,
-           "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9"
+           "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d"
           }
          },
          "other_charts": [],
@@ -4706,7 +4706,7 @@
           "rows": "Final evidence · the 80 sealed rows, measured once"
          },
          "status": "answered",
-         "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+         "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
          "result_revision": 71,
          "reading": {
           "see": "On the final test, the linear model errs by 2.79 mpg, the reference by 6.64; in development it erred by 3.64.",
@@ -4716,21 +4716,21 @@
          "cites": [
           {
            "name": "final",
-           "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+           "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
            "path": "models.[fit.linear].mae",
            "value": 2.7902411324982896,
            "text": "2.79"
           },
           {
            "name": "final_reference",
-           "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+           "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
            "path": "models.[fit.baseline].mae",
            "value": 6.636933962264152,
            "text": "6.64"
           },
           {
            "name": "development",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "models.[fit.linear].mae",
            "value": 3.6370466545031004,
            "text": "3.64"
@@ -4759,7 +4759,7 @@
           "rows": "Final evidence · the 80 sealed rows, measured once"
          },
          "status": "answered",
-         "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+         "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
          "result_revision": 71,
          "reading": {
           "see": "Reduction of 58.0% [44.6% ; 71.4%] of the reference's error, against a minimum of 10%.",
@@ -4769,28 +4769,28 @@
          "cites": [
           {
            "name": "gain",
-           "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+           "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
            "path": "criterion.gain",
            "value": 0.5795888359952259,
            "text": "58.0%"
           },
           {
            "name": "low",
-           "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+           "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
            "path": "criterion.low",
            "value": 0.4455930935756849,
            "text": "44.6%"
           },
           {
            "name": "high",
-           "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+           "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
            "path": "criterion.high",
            "value": 0.7137089200871493,
            "text": "71.4%"
           },
           {
            "name": "min_share",
-           "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+           "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
            "path": "criterion.minimum",
            "value": 0.1,
            "text": "10%"
@@ -4801,7 +4801,7 @@
           "met": true,
           "value": 2.7902411324982896,
           "bound": 5.973240566037737,
-          "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+          "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
           "path": "models.[fit.linear].mae"
          },
          "folds": {
@@ -4826,7 +4826,7 @@
           "rows": "Final evidence · the 80 sealed rows, measured once"
          },
          "status": "answered",
-         "result_id": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+         "result_id": "81f23a76fac8d35aa6a8ff11c21496c3c5de7c3dd005334040898012c25b50dc",
          "result_revision": 73,
          "reading": {
           "see": "On the 80 final rows, the mean residual is -0.24 mpg and the largest absolute error 11.7.",
@@ -4836,21 +4836,21 @@
          "cites": [
           {
            "name": "n",
-           "result_id": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+           "result_id": "81f23a76fac8d35aa6a8ff11c21496c3c5de7c3dd005334040898012c25b50dc",
            "path": "models.[fit.linear].errors.n",
            "value": 80,
            "text": "80"
           },
           {
            "name": "mean_residual",
-           "result_id": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+           "result_id": "81f23a76fac8d35aa6a8ff11c21496c3c5de7c3dd005334040898012c25b50dc",
            "path": "models.[fit.linear].errors.mean_residual",
            "value": -0.24265538105189166,
            "text": "-0.24"
           },
           {
            "name": "max_abs",
-           "result_id": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+           "result_id": "81f23a76fac8d35aa6a8ff11c21496c3c5de7c3dd005334040898012c25b50dc",
            "path": "models.[fit.linear].errors.max_abs_residual",
            "value": 11.665694983583293,
            "text": "11.7"
@@ -6082,7 +6082,7 @@
           "rows": "Structure · lignes de développement (318), sans la cible"
          },
          "status": "answered",
-         "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+         "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
          "result_revision": 13,
          "reading": {
           "see": "Les 318 lignes de développement en 5 blocs de 63 à 64 lignes, dans l'ordre de « année du modèle » ; les 80 lignes scellées restent à part.",
@@ -6106,21 +6106,21 @@
           },
           {
            "name": "k",
-           "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+           "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
            "path": "folds",
            "value": 5,
            "text": "5"
           },
           {
            "name": "min_rows",
-           "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+           "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
            "path": "fold_rows.3.n_rows",
            "value": 63,
            "text": "63"
           },
           {
            "name": "max_rows",
-           "result_id": "db66816ec1a4f936b4103e172b471028b19319caed858adb95832dcc68bf20ac",
+           "result_id": "360b57b1660a216f46c10a5d10a2ec40e01ca1053c7380477683dd0b58905264",
            "path": "fold_rows.0.n_rows",
            "value": 64,
            "text": "64"
@@ -6609,7 +6609,7 @@
           "rows": "Structure · lignes de développement (318), sans la cible"
          },
          "status": "answered",
-         "result_id": "512268180f62e2852ced9d828941b61b7b517b977af8f2dcfbc1ff7f417362d3",
+         "result_id": "16443debaadb78bc27897be6cf7bc39544797906c61e631ac74871531128525e",
          "result_revision": 17,
          "reading": {
           "see": "« puissance » a une traîne de valeurs hautes, asymétrie 1,05 pour un seuil de 1 ; le log resserre les grandes valeurs.",
@@ -6719,7 +6719,7 @@
           {
            "slot": "eda.special_values",
            "chart": "bars",
-           "result_id": "814a6c6a9b617245daa4714ca1605be19bea0796dedc2dc2b397ac3b21663229",
+           "result_id": "c9d3dd9f07d1da9bd19d2a1cc1fbc8228c04690a4ab4ed7b9b56bc2ed1e4aea7",
            "result_revision": 23,
            "status": "answered"
           }
@@ -6729,7 +6729,7 @@
           "rows": "Preuve de développement · lignes de développement (318) · regards sur la cible, comptés (regards : 11)"
          },
          "status": "answered",
-         "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+         "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
          "result_revision": 21,
          "reading": {
           "see": "mpg va de 9,0 à 46,6 mpg, médiane 23,0, sur 318 lignes de développement.",
@@ -6739,49 +6739,49 @@
          "cites": [
           {
            "name": "min",
-           "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+           "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
            "path": "min",
            "value": 9.0,
            "text": "9,0"
           },
           {
            "name": "max",
-           "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+           "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
            "path": "max",
            "value": 46.6,
            "text": "46,6"
           },
           {
            "name": "median",
-           "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+           "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
            "path": "median",
            "value": 23.0,
            "text": "23,0"
           },
           {
            "name": "q25",
-           "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+           "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
            "path": "q25",
            "value": 17.125,
            "text": "17,1"
           },
           {
            "name": "q75",
-           "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+           "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
            "path": "q75",
            "value": 29.0,
            "text": "29,0"
           },
           {
            "name": "mean",
-           "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+           "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
            "path": "mean",
            "value": 23.52578616352201,
            "text": "23,5"
           },
           {
            "name": "n",
-           "result_id": "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b",
+           "result_id": "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016",
            "path": "n",
            "value": 318,
            "text": "318"
@@ -6808,35 +6808,35 @@
           {
            "slot": "eda.mean_by:cylinders",
            "chart": "trend_by_bins",
-           "result_id": "bae28b0b7740ac6c5c8eec11a2a9a83fdbd49a352e6772e46669ec952c5401fb",
+           "result_id": "14f641a84a412528cfacac102cc84a2d527ddd8a9e6003b8ed4a7e2e6836b35e",
            "result_revision": 25,
            "status": "answered"
           },
           {
            "slot": "eda.mean_by:displacement",
            "chart": "trend_by_bins",
-           "result_id": "00f7b8825962f5c59a97b9a46bf10be431e1f9622e031f4fee1d4344b95a0ce8",
+           "result_id": "ae384a61bf51e3efb70f85d6b51811118da50ea477472641f781bdfb25ce5306",
            "result_revision": 27,
            "status": "answered"
           },
           {
            "slot": "eda.mean_by:horsepower",
            "chart": "trend_by_bins",
-           "result_id": "52f437a72b0e6b622e24c12429d6f8a100997e48d89a904114fa58af91a2f712",
+           "result_id": "e8f926e1861eb12607a56d7f4da81dbd3f787a9fc969d6f38df44610805c5b6b",
            "result_revision": 29,
            "status": "answered"
           },
           {
            "slot": "eda.mean_by:acceleration",
            "chart": "trend_by_bins",
-           "result_id": "23f0ff2e7e71c215315916ae8463c34c7eb7dc5cdf1edb293697262ddd7eb1e6",
+           "result_id": "90972542994368b6997e2c71c6aed78977b96ef3b10cfde0aaac03d1385d2fe1",
            "result_revision": 33,
            "status": "answered"
           },
           {
            "slot": "eda.mean_by:origin",
            "chart": "trend_by_bins",
-           "result_id": "33f6e2ddb3e110924bd719d91ebbda7bb9d2a4d445abcb61fcc5be3758998fa2",
+           "result_id": "8f8165e176640ae7435ad8cceaae28143accdeb40d59753c8363170b7a1cc40c",
            "result_revision": 35,
            "status": "answered"
           }
@@ -6846,7 +6846,7 @@
           "rows": "Preuve de développement · lignes de développement (318) · regards sur la cible, comptés (regards : 11)"
          },
          "status": "answered",
-         "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+         "result_id": "4cb2f9d76b106e273a640d49bfb83e15d2fc30cb16383c482a3de08da755e0f8",
          "result_revision": 31,
          "reading": {
           "see": "Selon « poids », la moyenne de mpg va de 33,2 dans la tranche la plus basse à 14,3 dans la plus haute.",
@@ -6856,14 +6856,14 @@
          "cites": [
           {
            "name": "first_mean",
-           "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+           "result_id": "4cb2f9d76b106e273a640d49bfb83e15d2fc30cb16383c482a3de08da755e0f8",
            "path": "groups.0.mean",
            "value": 33.1765625,
            "text": "33,2"
           },
           {
            "name": "last_mean",
-           "result_id": "7a4b0878e1534bc1428e29966b552efdf776bca660dca57665e283c0a1d3581e",
+           "result_id": "4cb2f9d76b106e273a640d49bfb83e15d2fc30cb16383c482a3de08da755e0f8",
            "path": "groups.4.mean",
            "value": 14.3265625,
            "text": "14,3"
@@ -6965,7 +6965,7 @@
           {
            "slot": "fit.baseline",
            "chart": "model_dots",
-           "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
+           "result_id": "cc8f47312d0357246662b23014923b40240123a7e0030c598f62c87152471dea",
            "result_revision": 49,
            "status": "answered"
           }
@@ -6975,7 +6975,7 @@
           "rows": "Preuve de développement · lignes de développement (318) · regards sur la cible, comptés (regards : 11)"
          },
          "status": "answered",
-         "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+         "result_id": "4901063be324f8eaf8f494ea94c5ebcd5344f3dff0c68820ff29f73a765e823e",
          "result_revision": 51,
          "reading": {
           "see": "Hors pli, le modèle linéaire se trompe de 3,64 mpg (MAE), la référence de 7,16 ; le linéaire se trompe moins dans 5 plis sur 5.",
@@ -6985,28 +6985,28 @@
          "cites": [
           {
            "name": "linear",
-           "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+           "result_id": "4901063be324f8eaf8f494ea94c5ebcd5344f3dff0c68820ff29f73a765e823e",
            "path": "validation.mae",
            "value": 3.6370466545031004,
            "text": "3,64"
           },
           {
            "name": "reference",
-           "result_id": "9b3615214da1dcf85ce89639b772226a796dd6e192b22fa405cef09180768788",
+           "result_id": "cc8f47312d0357246662b23014923b40240123a7e0030c598f62c87152471dea",
            "path": "validation.mae",
            "value": 7.164709319770103,
            "text": "7,16"
           },
           {
            "name": "n_better",
-           "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+           "result_id": "4901063be324f8eaf8f494ea94c5ebcd5344f3dff0c68820ff29f73a765e823e",
            "path": "cross_validation.per_fold",
            "value": 5,
            "text": "5"
           },
           {
            "name": "k",
-           "result_id": "bd92ab7c3657d808aa77e0dbe919b2b062adede2ee960230f9ea778d55c8c439",
+           "result_id": "4901063be324f8eaf8f494ea94c5ebcd5344f3dff0c68820ff29f73a765e823e",
            "path": "cross_validation.folds",
            "value": 5,
            "text": "5"
@@ -7035,7 +7035,7 @@
           "rows": "Preuve de développement · lignes de développement (318) · regards sur la cible, comptés (regards : 11)"
          },
          "status": "answered",
-         "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+         "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
          "result_revision": 63,
          "reading": {
           "see": "Sur les 318 lignes prédites hors pli, la taille de l'erreur grandit avec la prédiction : corrélation de rang 0,39 entre elles.",
@@ -7045,14 +7045,14 @@
          "cites": [
           {
            "name": "n",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "path": "models.[fit.linear].scatter.n_rows",
            "value": 318,
            "text": "318"
           },
           {
            "name": "rho",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "path": "models.[fit.linear].heteroscedasticity.abs_residual_prediction_correlation",
            "value": 0.3901960231879018,
            "text": "0,39"
@@ -7101,35 +7101,35 @@
           {
            "slot": "diag.regression#origin",
            "chart": "residual_by_feature",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "result_revision": 63,
            "status": "answered"
           },
           {
            "slot": "diag.regression#cylinders",
            "chart": "residual_by_feature",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "result_revision": 63,
            "status": "answered"
           },
           {
            "slot": "diag.regression#displacement",
            "chart": "residual_by_feature",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "result_revision": 63,
            "status": "answered"
           },
           {
            "slot": "diag.regression#weight",
            "chart": "residual_by_feature",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "result_revision": 63,
            "status": "answered"
           },
           {
            "slot": "diag.regression#acceleration",
            "chart": "residual_by_feature",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "result_revision": 63,
            "status": "answered"
           }
@@ -7139,7 +7139,7 @@
           "rows": "Preuve de développement · lignes de développement (318) · regards sur la cible, comptés (regards : 11)"
          },
          "status": "answered",
-         "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+         "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
          "result_revision": 63,
          "reading": {
           "see": "Selon « puissance », le résidu moyen par tranche va de -2,4 à 1,9 mpg.",
@@ -7149,14 +7149,14 @@
          "cites": [
           {
            "name": "low",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "path": "models.[fit.linear].by_feature.3.groups.2.mean_residual",
            "value": -2.35526215563991,
            "text": "-2,4"
           },
           {
            "name": "high",
-           "result_id": "059d3f3158fd014ca1bf9028d49abe27b28d4a67611209c595b5e685fde33520",
+           "result_id": "924de1de3090bfcc06ed6fe39bbb036565309a2e0a41539ced3188710e2406b4",
            "path": "models.[fit.linear].by_feature.3.groups.0.mean_residual",
            "value": 1.911513313533542,
            "text": "1,9"
@@ -7192,7 +7192,7 @@
           "rows": "Preuve de développement · lignes de développement (318) · regards sur la cible, comptés (regards : 11)"
          },
          "status": "answered",
-         "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+         "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
          "result_revision": 61,
          "reading": {
           "see": "Le résidu moyen du modèle linéaire passe de -2,4 mpg dans la première tranche de « année du modèle » à 5,1 dans la dernière.",
@@ -7202,14 +7202,14 @@
          "cites": [
           {
            "name": "first_bias",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "residuals_by.0.groups.0.models.[fit.linear].mean_residual",
            "value": -2.365151076010823,
            "text": "-2,4"
           },
           {
            "name": "last_bias",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "residuals_by.0.groups.4.models.[fit.linear].mean_residual",
            "value": 5.141489738460804,
            "text": "5,1"
@@ -7223,7 +7223,7 @@
           },
           {
            "name": "n_bands",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "residuals_by.0.groups",
            "value": 5,
            "text": "5"
@@ -7277,7 +7277,7 @@
           {
            "slot": "evaluate.regression",
            "chart": "paired_intervals",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "result_revision": 61,
            "status": "answered"
           }
@@ -7287,7 +7287,7 @@
           "rows": "Preuve de développement · lignes de développement (318) · regards sur la cible, comptés (regards : 11)"
          },
          "status": "answered",
-         "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+         "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
          "result_revision": 61,
          "reading": {
           "see": "Plus petite erreur moyenne, La deuxième variante · une Explainable Boosting Machine (EBM) : 3,36 mpg ; le modèle linéaire : 3,64.",
@@ -7297,21 +7297,21 @@
          "cites": [
           {
            "name": "best_mean",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "model_selection.configurations.2.mean",
            "value": 3.361842818276986,
            "text": "3,36"
           },
           {
            "name": "linear_mean",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "model_selection.configurations.0.mean",
            "value": 3.6425706293552693,
            "text": "3,64"
           },
           {
            "name": "optimism",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "model_selection.optimism.estimate",
            "value": 0.006237593521645479,
            "text": "0,01"
@@ -7322,7 +7322,7 @@
           "met": true,
           "value": 3.3558393259124206,
           "bound": 6.448238387793093,
-          "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+          "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
           "path": "models.[fit.variant:2].mae"
          },
          "folds": {
@@ -7347,7 +7347,7 @@
           "rows": "Preuve de développement · lignes de développement (318) · regards sur la cible, comptés (regards : 11)"
          },
          "status": "answered",
-         "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+         "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
          "result_revision": 61,
          "reading": {
           "see": "La borne d'une erreur type vaut 3,97 mpg, la plus basse moyenne plus une erreur type de 0,61 ; 3 configuration(s) sont sous elle.",
@@ -7357,21 +7357,21 @@
          "cites": [
           {
            "name": "bound",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "model_selection.one_se.bound",
            "value": 3.972003693405833,
            "text": "3,97"
           },
           {
            "name": "se",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "model_selection.one_se.se_of_best",
            "value": 0.610160875128847,
            "text": "0,61"
           },
           {
            "name": "n_within",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "model_selection.configurations",
            "value": 3,
            "text": "3"
@@ -7382,7 +7382,7 @@
           "met": true,
           "value": 3.6370466545031004,
           "bound": 6.448238387793093,
-          "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+          "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
           "path": "models.[fit.linear].mae"
          },
          "folds": {
@@ -7536,12 +7536,12 @@
           "development": {
            "model": 3.6370466545031004,
            "reference": 7.164709319770103,
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d"
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce"
           },
           "final": {
            "model": 2.7902411324982896,
            "reference": 6.636933962264152,
-           "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9"
+           "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d"
           }
          },
          "other_charts": [],
@@ -7550,7 +7550,7 @@
           "rows": "Preuve finale · les 80 lignes scellées, mesurées une fois"
          },
          "status": "answered",
-         "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+         "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
          "result_revision": 71,
          "reading": {
           "see": "Sur le test final, le modèle linéaire se trompe de 2,79 mpg, la référence de 6,64 ; en développement il se trompait de 3,64.",
@@ -7560,21 +7560,21 @@
          "cites": [
           {
            "name": "final",
-           "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+           "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
            "path": "models.[fit.linear].mae",
            "value": 2.7902411324982896,
            "text": "2,79"
           },
           {
            "name": "final_reference",
-           "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+           "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
            "path": "models.[fit.baseline].mae",
            "value": 6.636933962264152,
            "text": "6,64"
           },
           {
            "name": "development",
-           "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+           "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
            "path": "models.[fit.linear].mae",
            "value": 3.6370466545031004,
            "text": "3,64"
@@ -7603,7 +7603,7 @@
           "rows": "Preuve finale · les 80 lignes scellées, mesurées une fois"
          },
          "status": "answered",
-         "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+         "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
          "result_revision": 71,
          "reading": {
           "see": "Réduction de 58,0 % [44,6 % ; 71,4 %] de l'erreur de la référence, pour un minimum de 10 %.",
@@ -7613,28 +7613,28 @@
          "cites": [
           {
            "name": "gain",
-           "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+           "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
            "path": "criterion.gain",
            "value": 0.5795888359952259,
            "text": "58,0 %"
           },
           {
            "name": "low",
-           "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+           "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
            "path": "criterion.low",
            "value": 0.4455930935756849,
            "text": "44,6 %"
           },
           {
            "name": "high",
-           "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+           "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
            "path": "criterion.high",
            "value": 0.7137089200871493,
            "text": "71,4 %"
           },
           {
            "name": "min_share",
-           "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+           "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
            "path": "criterion.minimum",
            "value": 0.1,
            "text": "10 %"
@@ -7645,7 +7645,7 @@
           "met": true,
           "value": 2.7902411324982896,
           "bound": 5.973240566037737,
-          "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+          "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
           "path": "models.[fit.linear].mae"
          },
          "folds": {
@@ -7670,7 +7670,7 @@
           "rows": "Preuve finale · les 80 lignes scellées, mesurées une fois"
          },
          "status": "answered",
-         "result_id": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+         "result_id": "81f23a76fac8d35aa6a8ff11c21496c3c5de7c3dd005334040898012c25b50dc",
          "result_revision": 73,
          "reading": {
           "see": "Sur les 80 lignes finales, le résidu moyen vaut -0,24 mpg et la plus grande erreur absolue 11,7.",
@@ -7680,21 +7680,21 @@
          "cites": [
           {
            "name": "n",
-           "result_id": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+           "result_id": "81f23a76fac8d35aa6a8ff11c21496c3c5de7c3dd005334040898012c25b50dc",
            "path": "models.[fit.linear].errors.n",
            "value": 80,
            "text": "80"
           },
           {
            "name": "mean_residual",
-           "result_id": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+           "result_id": "81f23a76fac8d35aa6a8ff11c21496c3c5de7c3dd005334040898012c25b50dc",
            "path": "models.[fit.linear].errors.mean_residual",
            "value": -0.24265538105189166,
            "text": "-0,24"
           },
           {
            "name": "max_abs",
-           "result_id": "6a9f425749f6d3b9f8e6e3388b961226a44ab4e2b2be27913c0215adf7bf2ed6",
+           "result_id": "81f23a76fac8d35aa6a8ff11c21496c3c5de7c3dd005334040898012c25b50dc",
            "path": "models.[fit.linear].errors.max_abs_residual",
            "value": 11.665694983583293,
            "text": "11,7"
@@ -7837,16 +7837,16 @@
    }
   },
   "sample": {
-   "seed": "e17bc8f27b2d1446",
+   "seed": "63a40916fb04e44f",
    "row_keys": [
-    "L27",
-    "L29",
-    "L151",
-    "L172",
-    "L263",
-    "L326",
-    "L329",
-    "L384"
+    "L180",
+    "L187",
+    "L205",
+    "L223",
+    "L248",
+    "L265",
+    "L328",
+    "L344"
    ],
    "recorded": true
   },
@@ -7892,7 +7892,7 @@
     "decision_id": null,
     "basis": null,
     "results": [
-     "28dd3204cb2b23f542bc261bf15dc6a135a8e985868f34f5a3f26550c5eaf71b"
+     "b79683e072721fa59329652bbf51974cccb1c84ec83594cac60ff0eea5b1c016"
     ]
    },
    "model_variant": {
@@ -7904,14 +7904,14 @@
     "decision_id": "model_choice",
     "basis": "restated",
     "results": [
-     "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d"
+     "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce"
     ]
    },
    "final_test": {
     "decision_id": "final_test",
     "basis": "restated",
     "results": [
-     "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9"
+     "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d"
     ]
    },
    "conclusion": {
@@ -7927,14 +7927,14 @@
     "value": 6.448238387793093,
     "reference": 7.164709319770103,
     "minimum": 0.1,
-    "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+    "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
     "path": "models.[fit.baseline].mae"
    },
    "configurations": [
     {
      "slot": "fit.linear",
      "value": 3.6370466545031004,
-     "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+     "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
      "path": "models.[fit.linear].mae",
      "point_meets_bound": true,
      "gain": 0.49236647403585054,
@@ -7946,7 +7946,7 @@
     {
      "slot": "fit.variant",
      "value": 3.6293781301837074,
-     "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+     "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
      "path": "models.[fit.variant].mae",
      "point_meets_bound": true,
      "gain": 0.493436793008629,
@@ -7958,7 +7958,7 @@
     {
      "slot": "fit.variant:2",
      "value": 3.3558393259124206,
-     "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+     "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
      "path": "models.[fit.variant:2].mae",
      "point_meets_bound": true,
      "gain": 0.5316154255340954,
@@ -7970,7 +7970,7 @@
     {
      "slot": "fit.baseline",
      "value": 7.164709319770103,
-     "result_id": "5276f891ccdcaa3812ccb5433b21ac0780fa3da9af29a48efb5df8cd4a99015d",
+     "result_id": "84e3ddf68b328be6fcf22517d2bae6fb14256026d489e19aa6c451393a48e2ce",
      "path": "models.[fit.baseline].mae",
      "point_meets_bound": false,
      "gain": null,
@@ -7983,7 +7983,7 @@
    "final_test": {
     "slot": "fit.linear",
     "value": 2.7902411324982896,
-    "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+    "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
     "path": "models.[fit.linear].mae",
     "point_meets_bound": true,
     "gain": 0.5795888359952259,
@@ -7994,7 +7994,7 @@
      "value": 5.973240566037737,
      "reference": 6.636933962264152,
      "minimum": 0.1,
-     "result_id": "17ab439019e400ea4ab61869dd1e3e651a571d41a7bca092e0634deceeeb24e9",
+     "result_id": "8c7fc6706d137b9b56000a3164a1049f236c421373e99390afc510486d08354d",
      "path": "models.[fit.baseline].mae"
     }
    },

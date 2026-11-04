@@ -202,6 +202,7 @@ def test_r9cd2_a_real_difference_is_not_called_a_conversion(tmp_path):
 
 # --- R9CD-3 ---------------------------------------------------------------------------------
 
+@pytest.mark.skipif(not ukit.CASE_SENSITIVE_FS, reason=ukit.NEEDS_CASE_SENSITIVE)
 def test_r9cd3_a_tree_problem_invalidates_every_generation(tmp_path):
     """p4 (the generation's variant only). A case variant of a generation folder, with
     other bytes, is committed next to it: every generation is invalid, blocked and
@@ -242,19 +243,19 @@ def test_r9cd4_not_current_generation_revalidated_after_a_revert(tmp_path):
     receipt kept) and ``git-plan`` plans A."""
     u = U(tmp_path)
     sid = custom_flow(u, REQ)
-    orig = (u.repo / 'src/pipeline.py').read_text()
+    orig = (u.repo / 'src/pipeline.py').read_bytes()     # the revert is byte for byte
     ukit.approve_all(u, sid)
     args = argparse.Namespace(study=str(u.study), session=sid, repo=str(u.repo), latest=False,
                               request_id='w-1', expected_revision=u.rev())
     with pytest.raises(RuntimeError):
         cu._export_write(args, fault='after_rename')
     [rid_a] = [x['review_id'] for x in u.ext()['exports'].values()]
-    (u.repo / 'src/pipeline.py').write_text('def predict(row):\n    return 0\n')
+    (u.repo / 'src/pipeline.py').write_text('def predict(row):\n    return 0\n', newline='\n')
     ukit.approve_all(u, sid)
     rid_b = u.m('export', 'write', '--session', sid, '--repo', u.repo)['review_id']
     status = {x['review_id']: x['status'] for x in u.ext()['exports'].values()}
     assert status == {rid_a: 'not_current', rid_b: 'published'}
-    (u.repo / 'src/pipeline.py').write_text(orig)
+    (u.repo / 'src/pipeline.py').write_bytes(orig)
     plan = u.call('git-plan', '--session', sid, '--repo', u.repo)
     assert plan['review_id'] == rid_b
     assert plan['exported_content_current'] is False and plan['consistent'] is False
@@ -288,7 +289,7 @@ def test_r9cd5_repo_must_be_the_top_level(tmp_path):
     u = U(tmp_path)
     mono = tmp_path / 'mono'
     mono.mkdir()
-    shutil.rmtree(u.repo / '.git')
+    ukit.rmtree(u.repo / '.git')
     shutil.move(str(u.repo), str(mono / 'proj'))
     ukit.git(mono, 'init', '-q', '-b', 'main')
     ukit.git(mono, 'add', '-A')
@@ -325,6 +326,7 @@ def test_r9cd5_git_steps_refuse_a_subdirectory(tmp_path):
 
 # --- R9CD-6 ---------------------------------------------------------------------------------
 
+@pytest.mark.skipif(not ukit.CASE_SENSITIVE_FS, reason=ukit.NEEDS_CASE_SENSITIVE)
 def test_r9cd6_case_variant_of_a_mapped_source(tmp_path):
     """p7. ``security.md`` (other bytes) is committed next to the reviewed ``SECURITY.md``: a
     case-insensitive checkout writes one of the two at the reviewed path. The variant is a
@@ -348,6 +350,7 @@ def test_r9cd6_case_variant_of_a_mapped_source(tmp_path):
             assert gen['gate_result']['decision'] == 'blocked'
 
 
+@pytest.mark.skipif(not ukit.CASE_SENSITIVE_FS, reason=ukit.NEEDS_CASE_SENSITIVE)
 def test_r9cd6_unicode_variant_is_flagged(tmp_path):
     """The NFC and NFD spellings of one name, and a case variant of a folder, are variants;
     the exact path itself is not."""

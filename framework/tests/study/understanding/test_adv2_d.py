@@ -199,6 +199,8 @@ def test_interrupted_generation_then_change_breaks_local_verification(done):
 
 # --- D2-5: git-plan with a non-UTF-8 staged path ------------------------------------------
 
+@pytest.mark.skipif(not ukit.NON_UTF8_NAMES, reason='the filesystem refuses a file name '
+                    'that is not UTF-8 (APFS, NTFS)')
 def test_git_plan_non_utf8_staged_path(done):
     u, sid = done
     exported(u, sid)
@@ -216,6 +218,7 @@ def test_git_plan_non_utf8_staged_path(done):
 
 # --- D2-6: case-variant paths alias the verified generation on case-insensitive checkouts ---
 
+@pytest.mark.skipif(not ukit.CASE_SENSITIVE_FS, reason=ukit.NEEDS_CASE_SENSITIVE)
 def test_case_variant_generation_path_is_not_seen(done):
     u, sid = done
     rid = exported(u, sid)

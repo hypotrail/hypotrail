@@ -1243,12 +1243,13 @@ def _relocate(ctx) -> Handler:
     content of the new place: whoever controls the repository can still fake freshness
     (the review is cooperative, assurance ``human_declared``)."""
     def run(state, params):
+        import os
         from pathlib import Path
         sv.require_mode(ctx.store, state)
         ext = model.require_writable(state)
         s = _session(ext, params['session_id'])
         repo = params['repo']
-        if not isinstance(repo, str) or not repo.startswith('/') or len(repo) > 4000:
+        if not isinstance(repo, str) or not os.path.isabs(repo) or len(repo) > 4000:
             raise refuse('path_outside_scope', 'repo is an absolute path.', 'Give --repo.')
         author = model.actor(params['author_declared_id'], 'author_declared_id')
         reason = model.text(params['reason'], 'reason', limit=1000)

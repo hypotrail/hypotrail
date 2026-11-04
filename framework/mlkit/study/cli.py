@@ -605,11 +605,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     outcome = run(argv)
     try:
         emit(outcome, _wanted_format(argv))
-    except BrokenPipeError:
+    except OSError as exc:
         # The reader closed the pipe (``status | head``): the outcome stands, nothing more
         # can be told, and no traceback goes to stderr (a handled outcome writes none).
+        if not _closed_pipe(exc):
+            raise
         _silence_stdout()
     return outcome.exit_code
+
+
+def _closed_pipe(exc: OSError) -> bool:
+    """A write to a pipe whose reader is gone: ``BrokenPipeError`` on POSIX; on Windows the
+    same write fails with ``EINVAL`` (``[Errno 22] Invalid argument``)."""
+    import errno
+    import os
+    return isinstance(exc, BrokenPipeError) or (os.name == 'nt' and exc.errno == errno.EINVAL)
 
 
 def _silence_stdout() -> None:

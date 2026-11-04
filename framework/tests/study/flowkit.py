@@ -273,8 +273,10 @@ def prepare(case_dir: Path, study: Path, upto: str = 'fits') -> Path:
 
 
 def clone(source: Path, target: Path) -> Path:
-    """Copy a prepared study (state holds no path to the study directory itself)."""
-    shutil.copytree(source, target)
+    """Copy a prepared study (state holds no path to the study directory itself). Links stay
+    links: the ``data`` link of R69 points to the case's data, which a study never holds (a
+    plain copy would put the data files in the study folder, where ``check`` reports them)."""
+    shutil.copytree(source, target, symlinks=True)
     return target
 
 

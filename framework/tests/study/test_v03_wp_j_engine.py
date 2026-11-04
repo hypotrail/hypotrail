@@ -380,12 +380,12 @@ def test_a_hotel_study_started_before_the_constraint_keeps_its_case(tmp_path):
     # addition is deliberately not an equivalent case change (tested separately).
     current = current[:current.index('analysis_contract:\n')] + current[current.index('constraints:\n'):]
     earlier = current[:current.index('constraints:\n')]
-    (case_dir / 'case.yaml').write_text(earlier, encoding='utf-8')
+    (case_dir / 'case.yaml').write_bytes(earlier.encode('utf-8'))      # LF on every platform
     assert (c.sha256_file(case_dir / 'case.yaml'), hashlib.sha256(current.encode('utf-8')).hexdigest()) \
         in c.EQUIVALENT_CASE_FILES
     flow = Flow(tmp_path / 'study', case_dir, prefix='h')
     flow.init()
-    (case_dir / 'case.yaml').write_text(current, encoding='utf-8')
+    (case_dir / 'case.yaml').write_bytes(current.encode('utf-8'))
     view = flow.view()
     assert 'sources_changed' not in [x['id'] for x in view['not_yet_defensible']]
     assert view['model_families']['constraints']['interpretability'] == 'preferred'
