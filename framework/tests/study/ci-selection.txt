@@ -1,1 +1,2 @@
-framework/tests/study/understanding/test_review_round9_cd.py::test_r9cd4_not_current_generation_revalidated_after_a_revert
+# TEMPORARY (never merged): the Windows check of r9cd4.
+tests/study/understanding/test_review_round9_cd.py::test_r9cd4_not_current_generation_revalidated_after_a_revert
