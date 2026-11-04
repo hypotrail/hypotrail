@@ -243,19 +243,19 @@ def test_r9cd4_not_current_generation_revalidated_after_a_revert(tmp_path):
     receipt kept) and ``git-plan`` plans A."""
     u = U(tmp_path)
     sid = custom_flow(u, REQ)
-    orig = (u.repo / 'src/pipeline.py').read_text()
+    orig = (u.repo / 'src/pipeline.py').read_bytes()     # the revert is byte for byte
     ukit.approve_all(u, sid)
     args = argparse.Namespace(study=str(u.study), session=sid, repo=str(u.repo), latest=False,
                               request_id='w-1', expected_revision=u.rev())
     with pytest.raises(RuntimeError):
         cu._export_write(args, fault='after_rename')
     [rid_a] = [x['review_id'] for x in u.ext()['exports'].values()]
-    (u.repo / 'src/pipeline.py').write_text('def predict(row):\n    return 0\n')
+    (u.repo / 'src/pipeline.py').write_text('def predict(row):\n    return 0\n', newline='\n')
     ukit.approve_all(u, sid)
     rid_b = u.m('export', 'write', '--session', sid, '--repo', u.repo)['review_id']
     status = {x['review_id']: x['status'] for x in u.ext()['exports'].values()}
     assert status == {rid_a: 'not_current', rid_b: 'published'}
-    (u.repo / 'src/pipeline.py').write_text(orig)
+    (u.repo / 'src/pipeline.py').write_bytes(orig)
     plan = u.call('git-plan', '--session', sid, '--repo', u.repo)
     assert plan['review_id'] == rid_b
     assert plan['exported_content_current'] is False and plan['consistent'] is False
