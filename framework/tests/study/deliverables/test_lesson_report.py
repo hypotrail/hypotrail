@@ -35,7 +35,9 @@ AUTO_MPG = REPO / 'use-cases' / 'auto-mpg'
 sys.path.insert(0, str(REPO / 'framework' / 'tests' / 'acceptance' / 'agent'))
 import graders_v03 as g  # noqa: E402
 
-BUDGET_BYTES = 1_100_000         # two editions of a real study (about 0.8 MB on Auto MPG)
+# Two editions of a real study: about 0.8 MB on Auto MPG, 1.21 MB for the automatic full_demo
+# study (2026-11-04). Raised from 1.1 MB by owner decision on 2026-11-05.
+BUDGET_BYTES = 1_300_000
 
 
 def _automatic(base: Path, case: Path, lang: str, mode: str = 'until_final_test') -> Path:

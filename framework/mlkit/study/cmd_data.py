@@ -174,9 +174,57 @@ def structure_of(study) -> dict | None:
         state = study.state
         case = c.case_of(state, verify_data=True)
         keys = partition.development_keys(study.blob, partition.inputs(state))
-        return structure(case, dt.load_development(case, keys).frame)
+        return structure_records(case, dt.development_records(case, keys))
     except Exception:                     # noqa: BLE001 - a read never fails on this addition
         return None
+
+
+def _comparable(case, records: list, column: str) -> list:
+    """One column's values as :func:`structure` compares them on the pandas frame: numbers
+    when every present field reads as a number (the case's decimal mark; NaN as missing),
+    else the text; a missing value is None (equal to another, as ``duplicated`` counts it)."""
+    raw = [r[column] for r in records]
+    decimal = case.dataset['decimal']
+    try:
+        numbers = [None if v is None else float(v.strip().replace(decimal, '.'))
+                   for v in raw if v is None or ('_' not in v and v.strip())]
+    except ValueError:
+        return raw
+    if len(numbers) != len(raw):
+        return raw
+    return [None if v is None or v != v else v for v in numbers]
+
+
+def structure_records(case, records: list) -> dict:
+    """:func:`structure` of the development ``records`` (:func:`data.development_records`),
+    with the standard library only: the panel digest is a read and imports neither pandas
+    nor numpy (CC R3). ``test_data_structure_records`` holds both equal on every case."""
+    from collections import Counter
+    roles = {v['name']: v['role'] for v in case.document['variables']}
+    columns = list(case.column_names)
+    values = {c: _comparable(case, records, c) for c in columns}
+
+    def repeated(names: list) -> int:
+        if not names or not records:
+            return 0
+        rows = list(zip(*(values[n] for n in names)))
+        counts = Counter(rows)
+        return sum(1 for row in rows if counts[row] > 1)
+
+    describing = [c for c in columns if roles.get(c) in DESCRIBING_ROLES]
+    grouped = [v['name'] for v in case.document['variables']
+               if v['role'] in GROUP_ROLES and v['name'] in values]
+    declared = (((case.document.get('structure') or {}).get('group_column') or {})
+                .get('value'))
+    if isinstance(declared, str) and declared in columns and declared not in grouped:
+        grouped.append(declared)
+    groups = []
+    for column in grouped:
+        counts = Counter(v for v in values[column] if v is not None)
+        groups.append({'column': column, 'groups': len(counts),
+                       'rows_in_repeated_groups': sum(n for n in counts.values() if n > 1)})
+    return {'duplicates': {'rows': repeated(columns), 'identical_feature_rows': repeated(describing)},
+            'groups': groups}
 
 
 def sample_rows(study, frame, case) -> dict:

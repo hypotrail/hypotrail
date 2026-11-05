@@ -19,7 +19,7 @@ deduplicated silently, unless the case declares ``duplicates: {policy: group}``
 kept whole on one side of the final test, the split, and the folds. Every record keeps its
 own row key, and exposure still counts rows.
 
-:func:`row_index` uses the standard library only. :func:`load_dataset` imports pandas
+:func:`row_index` and :func:`development_records` use the standard library only. :func:`load_dataset` imports pandas
 when it is called, never at module import time.
 """
 from __future__ import annotations
@@ -92,15 +92,9 @@ def content_hash(fields: list[str]) -> str:
     return hashlib.sha256(json.dumps(fields, ensure_ascii=False).encode('utf-8')).hexdigest()
 
 
-def row_index(case: Case, *, verify: bool = True) -> RowIndex:
-    """Verify the dataset and compute its row keys and content hashes.
-
-    Refusals: ``dataset_missing`` and ``dataset_changed`` (from the case), ``invalid_case``
-    when a line does not hold exactly one record, and ``unsupported_capability`` when
-    records repeat (see the module docstring).
-    """
-    if verify:
-        verify_dataset(case)
+def _records(case: Case) -> list[tuple[str, list[str]]]:
+    """``[(row_key, fields)]`` of every record of the dataset file, in file order (standard
+    library only); ``invalid_case`` when a line does not hold exactly one record."""
     d = case.dataset
     text = case.dataset_path.read_bytes().decode(d['encoding'])
     lines = text.split('\n')
@@ -110,7 +104,7 @@ def row_index(case: Case, *, verify: bool = True) -> RowIndex:
     body = lines[1:] if d['header'] else lines
     split = _field_splitter(case)
     width = len(case.column_names)
-    keys, hashes, problems = [], [], []
+    records, problems = [], []
     for offset, raw in enumerate(body):
         line = first + offset
         fields = split(raw.rstrip('\r'))
@@ -120,12 +114,50 @@ def row_index(case: Case, *, verify: bool = True) -> RowIndex:
             if len(problems) >= MAX_LISTED:
                 break
             continue
-        keys.append(f'L{line}')
-        hashes.append(content_hash(fields))
+        records.append((f'L{line}', fields))
     if problems:
         raise CaseError('invalid_case', 'The row_key rule source_line needs exactly one record '
                                         'per physical line.', problems=problems)
-    index = RowIndex(d['sha256'], tuple(keys), tuple(hashes))
+    return records
+
+
+def development_records(case: Case, development) -> list[dict[str, str | None]]:
+    """The development records of a study as ``{column: field}``, in file order, with the
+    case's ``na_values`` as None: the standard-library counterpart of
+    :func:`load_development` for a count that needs no value check and no pandas (the
+    panel digest's ``data_structure``). The sealed final-test rows are dropped as there;
+    ``development=None`` (a legacy study) keeps every record. Fields are the raw text: a
+    caller comparing numbers normalizes them (``cmd_data.structure_records``)."""
+    verify_dataset(case)
+    records = _records(case)
+    if development is not None:
+        wanted = set(development)
+        unknown = wanted - {k for k, _ in records}
+        if unknown:
+            from .errors import StudyError
+            raise StudyError('integrity_error', 'The recorded development rows are not '
+                                                'records of this dataset.',
+                             details={'unknown_rows': len(unknown),
+                                      'dataset_sha256': case.dataset['sha256']})
+        records = [(k, f) for k, f in records if k in wanted]
+    missing = set(case.dataset.get('na_values', []))
+    names = case.column_names
+    return [{n: (None if v in missing else v) for n, v in zip(names, fields)}
+            for _, fields in records]
+
+
+def row_index(case: Case, *, verify: bool = True) -> RowIndex:
+    """Verify the dataset and compute its row keys and content hashes.
+
+    Refusals: ``dataset_missing`` and ``dataset_changed`` (from the case), ``invalid_case``
+    when a line does not hold exactly one record, and ``unsupported_capability`` when
+    records repeat (see the module docstring).
+    """
+    if verify:
+        verify_dataset(case)
+    records = _records(case)
+    index = RowIndex(case.dataset['sha256'], tuple(k for k, _ in records),
+                     tuple(content_hash(f) for _, f in records))
     if case.duplicates_policy != DUPLICATES_GROUP:
         _refuse_duplicates(index)
     return index
