@@ -102,6 +102,19 @@ node --test experimental/companion/vscode-extension/test/assistant.test.js
 
 Browser tests use loopback services, temporary databases, and a simulated model. A real Copilot acceptance session is separate. Do not run preparation scripts merely to view existing results: they train models.
 
+## Tests on every platform
+
+CI runs the study suite on Ubuntu, Windows, and macOS. The Windows failures fixed on 2026-11-04 came from a few habits; avoid them in new tests:
+
+- Write a file whose bytes matter with `write_text(text, newline='\n')`, or with `write_bytes`. On Windows, `write_text` writes CRLF. To revert a file, save it with `read_bytes` and restore it with `write_bytes`.
+- Git for Windows sets `core.autocrlf=true` system-wide, and the engine drops inherited `GIT_*` variables. A test that builds a Git repository neutralizes the setting through `HOME` (see `framework/tests/study/understanding/conftest.py`).
+- Sort paths with `key=lambda p: p.parts`: `WindowsPath` ordering ignores case.
+- Write paths inside a Git config file with `as_posix()`: Git reads a backslash as an escape.
+- Windows has no `SIGKILL` or pseudo-terminal: fall back to `os._exit`, or skip only the pty part.
+- Compare golden output with `/` paths, and do not assume that a symlink is relative: across drives it is absolute.
+
+A read command (`status --summary --digest`, `decisions`, `preview effects`) imports neither pandas nor numpy (`test_e1_reads_are_read_only_and_import_no_heavy_module`). Compute a read's figures with the standard library, as `cmd_data.structure_records` does.
+
 ## Data and local state
 
 Keep dataset attribution and hashes. Separate exploratory results from independent evidence. Do not commit local sessions, credentials, environments, generated bundles, or personal annotations. Run tests in temporary studies and preserve existing user decisions.
