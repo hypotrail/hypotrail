@@ -482,12 +482,14 @@ def check_answer(question: str, value: Any, prof: Mapping, answers: Mapping) -> 
                 raise refused(
                     'unsupported_capability',
                     f'{name!r} holds dates; this version reads a clock as a number only and '
-                    'never converts a date silently. Two ways forward (the Hotel model, '
-                    'CASE-CONTRACT §Order): add to a copy of the file an integer column '
-                    'derived from the date (for example the day number since 1970-01-01, or '
-                    'yyyymmdd), write down how it was derived, and start again with '
-                    'hypotrail new on that copy; or sort the copy by the date and state '
-                    'the order (a retrospective study only).', 'date_clock', column=name,
+                    'never converts a date silently. The way forward: add an integer column '
+                    'derived from the date, the day number since 1970-01-01, with '
+                    f'hypotrail prepare derive-clock --column {name} --date-format FORMAT (the '
+                    'format the dates are written in, such as %Y-%m-%d), then name the new '
+                    'column here. Otherwise sort a copy of the file by the date, state the '
+                    'order and start again with hypotrail new on it (a retrospective study '
+                    'only).', 'date_clock', column=name,
+                    derive=f'prepare derive-clock --column {name} --date-format FORMAT',
                     capability='temporal split on a date or non-integer time column (v0.2)')
             if col['type'] not in CLOCK_TYPES:
                 raise _invalid(f'{key}: {name!r} is of type {col["type"]}; a clock is a '
@@ -619,10 +621,14 @@ EXPOSURE_TEXTS = {
 
 
 def build_case(prof: Mapping, answers: Mapping, *, case_id: str, title: str,
-               data_path: str, profile_sha256: str, original_name: str) -> dict:
+               data_path: str, profile_sha256: str, original_name: str,
+               derived=()) -> dict:
     """The ``hypotrail.case/1`` document from the profile and the answers (every question
     but ``final_test`` answered). Never a decision: statuses come from how the user knows
-    each answer (:data:`BASIS_STATUS`), sources quote their words."""
+    each answer (:data:`BASIS_STATUS`), sources quote their words. ``derived`` lists the
+    columns ``prepare derive-clock`` appended (documented in the variable and the
+    provenance)."""
+    derived_by = {d['column']: d for d in derived}
     file_name = Path(data_path).name
     tgt = answers['target']['value']
     unit = answers['row_unit']
@@ -661,13 +667,15 @@ def build_case(prof: Mapping, answers: Mapping, *, case_id: str, title: str,
         entry = {'name': name, 'type': kind, 'role': role}
         if role == 'target' and tgt['unit']:
             entry['unit'] = tgt['unit']
+        made = derived_by.get(name)
         entry.update({
             'description': (f'The target named at preparation: {_quote(answers["target"]["user_words"])}.'
-                            if role == 'target' else
+                            if role == 'target' else _derived_text(made) if made else
                             f'Column {name} of {file_name}; no description yet.'),
-            'status': _status(answers['target']) if role == 'target' else 'unknown',
+            'status': _status(answers['target']) if role == 'target' else
+                      'observed' if made else 'unknown',
             'source': _source(answers['target']) if role == 'target' else
-                      'Not documented at preparation.',
+                      _derived_source(made) if made else 'Not documented at preparation.',
             'availability': availability,
             'special_values': ([{'value': '', 'meaning': 'An empty cell, read as missing.',
                                  'status': 'observed', 'source': inspected}]
@@ -704,7 +712,15 @@ def build_case(prof: Mapping, answers: Mapping, *, case_id: str, title: str,
                         if task == 'binary' else
                         f'Estimate {tgt["column"]} for each row ({unit["value"]["row_unit"]}).'),
         'provenance': {'kind': 'unspecified', 'copied_from': original_name,
-                       'copied_by': 'hypotrail new --data', 'profile_sha256': profile_sha256},
+                       'copied_by': 'hypotrail new --data'
+                                    + (', then hypotrail prepare derive-clock' if derived
+                                       else ''),
+                       'profile_sha256': profile_sha256}
+        | ({'derived_columns': [
+            {k: d[k] for k in ('column', 'from', 'format', 'rule', 'empty', 'from_file',
+                               'from_sha256', 'file', 'sha256')}
+            | ({'user_words': d['user_words']} if d.get('user_words') else {})
+            for d in derived]} if derived else {}),
         'dataset': dataset,
         'target': {'column': tgt['column'], 'positive_label': tgt['positive_label']}
         | ({'negative_label': tgt['negative_label']} if task == 'binary' else {}),
@@ -743,6 +759,22 @@ def build_case(prof: Mapping, answers: Mapping, *, case_id: str, title: str,
                                        + _source(unit)}
     doc['analysis_contract'] = the_contract
     return doc
+
+
+def _derived_text(made: Mapping) -> str:
+    return (f'The day number ({made["rule"]}) of the date in {made["from"]}, read with the '
+            f'format {made["format"]}; a time of day is dropped'
+            + (f', and {made["empty"]} empty dates stay empty' if made['empty'] else '')
+            + '. Derived by hypotrail prepare derive-clock, so the date can serve as a clock.')
+
+
+def _derived_source(made: Mapping) -> str:
+    text = (f'hypotrail prepare derive-clock ({made["time"][:10]}): appended to '
+            f'{made["from_file"]} (sha256 {made["from_sha256"]}), giving {made["file"]} '
+            f'(sha256 {made["sha256"]}); every other byte is unchanged')
+    if made.get('user_words'):
+        text += f'; the order of day and month in the user\'s words: {_quote(made["user_words"])}'
+    return text
 
 
 HEADER = ('# Generated by hypotrail seal from the structural profile and the answers to the six\n'

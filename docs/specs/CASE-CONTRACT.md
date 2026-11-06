@@ -295,7 +295,7 @@ A case may also be written by `hypotrail seal` ([ONBOARDING-SPEC](../plans/ONBOA
 **What the answers become.** `target` and `task` (two values: binary, the other value as `negative_label`; a numeric column with more values: regression, with its unit; anything else is refused); `structure.row_unit`; `duplicates: {policy: group}` when rows repeat; `structure.time_column` (an integer prediction clock) with role `time`; `structure.group_column` with role `group_id`; the facts `observation_unit`, `target`, `prediction_time`, `intended_use`; two `prior_exposure` statements (the structural profile of every row before sealing, `observed`; what the user had already explored); and the `analysis_contract`:
 
 - `intended_use` `future_prediction` only for a future use whose two clocks are `known`; otherwise `retrospective_comparison`;
-- `timing` from the clocks (numeric columns only; a date is refused with the way forward);
+- `timing` from the clocks (numeric columns only; a date is refused with the way forward, `hypotrail prepare derive-clock`, which appends its day number since 1970-01-01 to a derived copy of the data; the case then reads that copy and documents the derived column in its variable and in `provenance.derived_columns`);
 - `dependencies` `grouped` or `grouped_temporal` for recurring entities, `temporal` with a prediction clock, `independent` when entities do not recur and the use is stated, else `unknown`;
 - `permitted_claims` `retrospective_association`, plus `future_predictive_performance` only for a future prediction with known dependencies, when the user had not analysed the file with its target.
 

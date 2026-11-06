@@ -191,5 +191,5 @@ A user who arrives with their own file (`hypotrail new NAME --data FILE`) has no
 
 ### Consequences
 
-- Dates are not clocks: a date column offered as a clock is refused with the way forward (an integer column derived in a documented copy, or a sorted copy, the Hotel model); no conversion is implicit. Missing target values are refused with the derived-copy option.
+- Dates are not clocks: a date column offered as a clock is refused with the way forward (an integer column derived in a documented copy, or a sorted copy, the Hotel model); no conversion is implicit. Since 2026-11-06 (owner decision), `hypotrail prepare derive-clock --column DATE --date-format FMT` builds that documented copy: the day number since 1970-01-01, read with an explicit format, appended to a derived file whose lines otherwise keep every byte; a format whose day and month could be swapped needs the user's words. A native date clock stays out of scope (it would touch the partition, the folds, the purge, the report and the notebook). Missing target values are refused with the derived-copy option.
 - Studies and cases created before this amendment are unchanged: `deduce` and the guards run only through `hypotrail seal`, and `_component_strata` changes nothing for components of one stratum.
