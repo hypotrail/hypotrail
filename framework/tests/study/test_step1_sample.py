@@ -17,6 +17,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 import flowkit as fk
 from mlkit.study import cmd_data, exposure, partition, read
 from mlkit.study import records as rec
@@ -24,6 +26,13 @@ from mlkit.study.store import StudyStore
 
 SPLIT_HOLDOUT = {'method': 'stratified_random', 'validation_fraction': 0.3, 'seed': 20261017}
 SPLIT_OTHER = {'method': 'stratified_random', 'validation_fraction': 0.25, 'seed': 7}
+
+
+@pytest.fixture(autouse=True)
+def _contract_seed(monkeypatch):
+    """These tests are about the seed itself: the creation stamp, not the suite's fixed
+    stand-in (conftest, ``partition.SAMPLE_STAMP_ENV``)."""
+    monkeypatch.delenv(partition.SAMPLE_STAMP_ENV, raising=False)
 
 
 def test_the_seed_and_the_draw_are_fixed_by_the_contract():
