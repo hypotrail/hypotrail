@@ -341,7 +341,24 @@ def _check(study: Path, text: str, tmp_path: Path) -> dict:
     return cli.run(['check', '--study', str(study), '--text', str(path)]).payload
 
 
-def test_the_limit_text_passes_check_in_english_and_french(delayed, tmp_path):
+@pytest.fixture
+def no_sample_rows(monkeypatch):
+    """The data card's five sample rows are drawn per study (``partition.sample_seed`` hashes
+    the creation stamp), and ``check`` rightly traces a number to a cell they show (WP-A8): a
+    drawn ``prediction_tick`` may be 241. These tests are about the partition's values, so the
+    card they check against shows no sample rows; everything else in it is unchanged."""
+    from mlkit.study import cmd_check
+    original = cmd_check._data_card
+
+    def card(study_dir):
+        out = original(study_dir)
+        if out and out.get('rows'):
+            out = dict(out, rows=dict(out['rows'], items=[]))
+        return out
+    monkeypatch.setattr(cmd_check, '_data_card', card)
+
+
+def test_the_limit_text_passes_check_in_english_and_french(delayed, tmp_path, no_sample_rows):
     item = st.delayed_labels_limit(delayed.state())
     for text in (item['text'], junior.limit_fr(item)):
         out = _check(delayed.study, text, tmp_path)
@@ -351,7 +368,8 @@ def test_the_limit_text_passes_check_in_english_and_french(delayed, tmp_path):
              'value': 241.0}] * 2
 
 
-def test_the_partition_values_are_traced_only_where_the_limit_writes_them(delayed, tmp_path):
+def test_the_partition_values_are_traced_only_where_the_limit_writes_them(delayed, tmp_path,
+                                                                          no_sample_rows):
     # Elsewhere the final boundary stays untraceable, as any other number.
     for text in ('The model reached 241 clients.', 'The final test starts at 241.',
                  'prediction_tick 9241 was the last tick.'):
