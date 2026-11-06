@@ -9,6 +9,9 @@
                   --expected-revision REV --study DIR
     hypotrail prepare answer QUESTION --propose --source TEXT --value-json JSON
                   [--basis ...] --expected-revision REV --study DIR
+    hypotrail prepare derive-clock --column DATE --date-format FMT [--name NAME]
+                  [--user-words TEXT | --user-words-file FILE] --expected-revision REV
+                  --study DIR                                           (:func:`derive_clock`)
 
 :func:`start` creates two sibling folders. ``NAME.case/`` holds the copied data
 (``data/FILE``, its sha256), the structural profile of every row (``profile.json``), the
@@ -25,6 +28,13 @@ answer. ``exposure`` is answered first. ``final_test`` is the acceptance of the 
 test, shown in words and counts by ``prepare status``; it names the plan digest it accepts,
 and any later change of an answer drops it. Writes reread ``prepare.json`` under the study
 writer lock and refuse a stale ``--expected-revision``.
+
+``prepare derive-clock`` is the way forward of a date offered as a clock (ADR 0006, the
+derived-copy option; owner decision 2026-11-06): it writes ``data/<stem>.derived<suffix>``,
+the current data file with one integer column appended, the day number since 1970-01-01 of
+each date read with the explicit ``--date-format``, and records how it was derived. The copy of
+the user's file is never changed; the row keys (physical lines) are unchanged. The case then
+reads the derived file, and ``case.yaml`` documents the derived column and its source.
 """
 from __future__ import annotations
 
@@ -448,12 +458,190 @@ def answer(study, question: str, value: Any, *, user_words: str | None, propose:
     return cmd.Outcome(out)
 
 
+# --- derive-clock -----------------------------------------------------------------------------
+
+EPOCH = 'days since 1970-01-01'
+DERIVED_INFIX = '.derived'
+_NAME = __import__('re').compile(r'[A-Za-z_][A-Za-z0-9_]*')
+_DIRECTIVES = __import__('re').compile(r'%(.)')
+_ALLOWED_DIRECTIVES = set('YmdHMS%')
+
+
+def _check_format(fmt: str) -> None:
+    used = _DIRECTIVES.findall(fmt)
+    unknown = sorted(set(used) - _ALLOWED_DIRECTIVES)
+    missing = [d for d in 'Ymd' if d not in used]
+    if unknown or missing or any(used.count(d) > 1 for d in 'YmdHMS'):
+        raise cd.refused('invalid_value',
+                         f'--date-format {fmt!r}: a date format names the year, the month and the '
+                         'day once each (%Y, %m, %d), and may add a time of day (%H, %M, %S); '
+                         'other directives (such as %y, a two-digit year, or a month name) '
+                         'are not read.', 'clock_format', format=fmt, unknown=unknown,
+                         missing=missing)
+
+
+def _days(cells: list[str], fmt: str) -> tuple[list[str], list[int]]:
+    """The day numbers of ``cells`` (empty stays empty) and the 2-based lines that do not
+    match ``fmt``."""
+    from datetime import datetime
+    epoch = datetime(1970, 1, 1)
+    out, bad = [], []
+    for i, cell in enumerate(cells):
+        if cell == '':
+            out.append('')
+            continue
+        try:
+            moment = datetime.strptime(cell, fmt)
+        except ValueError:
+            bad.append(i + 2)
+            out.append('')
+            continue
+        out.append(str((moment.replace(hour=0, minute=0, second=0) - epoch).days))
+    return out, bad
+
+
+def _append_column(raw: bytes, sep: str, name: str, values: list[str]) -> bytes:
+    """``raw`` with ``name`` and ``values`` appended to its physical lines (header first);
+    every other byte is kept (a byte-order mark, the line ends, the quoting)."""
+    import codecs
+    bom = codecs.BOM_UTF8 if raw.startswith(codecs.BOM_UTF8) else b''
+    text = raw[len(bom):].decode('utf-8')
+    lines = text.split('\n')
+    trailing = lines and lines[-1] == ''
+    if trailing:
+        lines.pop()
+    if len(lines) != len(values) + 1:
+        raise StudyError('integrity_error', 'The data file changed while it was read.')
+    out = []
+    for line, value in zip(lines, [name, *values]):
+        end = '\r' if line.endswith('\r') else ''
+        out.append((line[:-1] if end else line) + sep + value + end)
+    return bom + ('\n'.join(out) + ('\n' if trailing else '')).encode('utf-8')
+
+
+def derive_clock(study, column: str, fmt: str, *, name: str | None, user_words: str | None,
+                 expected_revision: int) -> cmd.Outcome:
+    """Append to a derived copy of the data the day number of a date column (ADR 0006: an
+    integer column derived from the date in a documented copy), so it can be a clock."""
+    from . import confirm as cf
+    from . import lock
+    from . import state as st
+    from .guard import assert_writable
+    from .store import atomic_write, atomic_write_json
+    assert_writable()
+    study, case_dir = locate(study)
+    _check_format(fmt)
+    name = name or f'{column}_day'
+    if not _NAME.fullmatch(name):
+        raise cd.refused('invalid_value', f'--name {name!r}: a derived column name is letters, '
+                                          'digits and underscores, starting with a letter.',
+                         'clock_name', name=name)
+    if user_words is not None:
+        if not user_words.strip():
+            raise StudyError('invalid_arguments', 'The user words are empty.')
+        if cf.is_question(user_words):
+            raise StudyError('ambiguous_confirmation', 'These words are a question: answer '
+                                                       'it, then ask again.',
+                             details={'reason': 'question_reply', 'user_words': user_words})
+    with lock.writer_lock(study):
+        record = load(case_dir)
+        if record['status'] != PREPARING:
+            raise StudyError('precondition_missing', f'The preparation is {record["status"]}.',
+                             details={'reason': record['status']})
+        if expected_revision != record['revision']:
+            raise StudyError('stale_revision', 'The preparation changed since you read it: '
+                                               'read prepare status again.',
+                             details={'expected_revision': expected_revision,
+                                      'current_revision': record['revision']})
+        prof = load_profile(case_dir)
+        by_name = {c['name']: c for c in prof['variables']}
+        if column not in by_name:
+            raise cd.refused('invalid_value', f'{column!r} is not a column of the file.',
+                             'unknown_column', column=column)
+        if name in by_name:
+            raise cd.refused('invalid_value', f'{name!r} is already a column of the file: name '
+                                              'the derived column with --name.',
+                             'clock_name_taken', name=name)
+        target = ((record['answers'].get('target') or {}).get('value') or {}).get('column')
+        if column == target:
+            raise cd.refused('invalid_value', 'The target cannot date the rows.',
+                             'clock_is_target', column=column)
+        current = case_dir / record['data']['path']
+        if _sha(current) != record['data']['sha256']:
+            raise StudyError('integrity_error', f'{record["data"]["path"]} differs from the '
+                                                'file the preparation recorded.')
+        table = cd.read_table(current)
+        cells = [row[table['header'].index(column)] for row in table['rows']]
+        values, bad = _days(cells, fmt)
+        if bad:
+            examples = [cells[line - 2] for line in bad[:MAX_SHOWN]]
+            raise cd.refused('invalid_value',
+                             f'{len(bad)} cells of {column!r} do not match --date-format {fmt!r} '
+                             f'(lines {", ".join(map(str, bad[:MAX_SHOWN]))}: '
+                             f'{", ".join(map(repr, examples))}). Nothing was written.',
+                             'clock_unparsed', column=column, format=fmt, count=len(bad),
+                             lines=bad[:MAX_SHOWN])
+        swapped = fmt.replace('%d', '\0').replace('%m', '%d').replace('\0', '%m')
+        other, other_bad = _days(cells, swapped)
+        if not other_bad and other != values and user_words is None:
+            raise StudyError('ambiguous_confirmation',
+                             f'Every cell of {column!r} also reads with {swapped!r}, with other '
+                             'dates: the day and the month cannot be told apart from the '
+                             'values. Ask the user which comes first and record their words '
+                             '(--user-words).',
+                             details={'reason': 'ambiguous_format', 'format': fmt,
+                                      'also': swapped, 'column': column})
+        original = Path(record['data']['path'])
+        stem = original.name.split(DERIVED_INFIX, 1)[0] if DERIVED_INFIX in original.name \
+            else original.stem
+        derived_path = f'{cd.DATA_DIR}/{stem}{DERIVED_INFIX}{original.suffix}'
+        raw = _append_column(current.read_bytes(), table['sep'], name, values)
+        target_file = case_dir / derived_path
+        atomic_write(target_file, raw)
+        new_table = cd.read_table(target_file)
+        if new_table['rows'] and [r[:-1] for r in new_table['rows']] != table['rows']:
+            raise StudyError('integrity_error', 'The derived copy does not keep the rows.')
+        new_prof = cd.profile(new_table, derived_path)
+        atomic_write_json(case_dir / cd.PROFILE_FILE, new_prof)
+        import yaml
+        (case_dir / cd.DRAFT_FILE).write_text(
+            yaml.safe_dump(cd.draft(new_prof, record['case_id'], derived_path),
+                           sort_keys=False, allow_unicode=True, width=100), encoding='utf-8')
+        revision = record['revision'] + 1
+        time = st.now()
+        entry = {'column': name, 'from': column, 'format': fmt, 'rule': EPOCH,
+                 'empty': sum(1 for v in values if v == ''),
+                 'from_file': record['data']['path'], 'from_sha256': record['data']['sha256'],
+                 'file': derived_path, 'sha256': new_table['sha256'],
+                 'user_words': user_words.strip() if user_words else None,
+                 'revision': revision, 'time': time}
+        record.setdefault('derived', []).append(entry)
+        record['data'] = dict(record['data'], path=derived_path, sha256=new_table['sha256'])
+        record['profile_sha256'] = _sha(case_dir / cd.PROFILE_FILE)
+        if 'final_test' in record['answers']:
+            record['answers'].pop('final_test')
+            record['history'].append({'revision': revision, 'question': 'final_test',
+                                      'action': 'dropped', 'because': 'derive-clock'})
+        record['history'].append({'revision': revision, 'action': 'derive-clock',
+                                  'column': name, 'from': column, 'time': time})
+        record['revision'] = revision
+        _write(case_dir, record)
+    out = status_payload(study, case_dir, command='prepare derive-clock')
+    out['derived'] = entry
+    return cmd.Outcome(out)
+
+
+MAX_SHOWN = 5
+
+
 # --- CLI ------------------------------------------------------------------------------------
 
 def configure(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument('verb', choices=('status', 'answer'),
+    parser.add_argument('verb', choices=('status', 'answer', 'derive-clock'),
                         help='status: what is answered, proposed and missing; answer: record '
-                             "one answer in the user's words, or a proposal with its source")
+                             "one answer in the user's words, or a proposal with its source; "
+                             'derive-clock: add the day number of a date column to a derived '
+                             'copy of the data, so it can be a clock')
     parser.add_argument('question', nargs='?', default=None, choices=cd.QUESTIONS,
                         help='with answer: the question')
     parser.add_argument('--value-json', default=None, help='with answer: the value (JSON)')
@@ -470,15 +658,37 @@ def configure(parser: argparse.ArgumentParser) -> None:
                         help='how the user knows it: known (a fact they state), assumed (the '
                              'default), unknown')
     parser.add_argument('--expected-revision', type=int, default=None,
-                        help='with answer: the revision prepare status gave')
+                        help='with answer and derive-clock: the revision prepare status gave')
+    parser.add_argument('--column', default=None,
+                        help='with derive-clock: the date column')
+    parser.add_argument('--date-format', dest='date_format', default=None,
+                        help='with derive-clock: how its dates are written, e.g. %%Y-%%m-%%d or '
+                             '%%d/%%m/%%Y (%%Y, %%m and %%d required; %%H, %%M, %%S allowed)')
+    parser.add_argument('--name', default=None,
+                        help='with derive-clock: the derived column (default COLUMN_day)')
 
 
 def main(args: argparse.Namespace) -> cmd.Outcome:
+    clock_args = (args.column, args.date_format, args.name)
     if args.verb == 'status':
-        if args.question or args.value_json or args.expected_revision is not None:
+        if args.question or args.value_json or args.expected_revision is not None \
+                or any(a is not None for a in clock_args):
             raise StudyError('invalid_arguments', 'prepare status takes only --study.')
         study, case_dir = locate(args.study)
         return cmd.Outcome(status_payload(study, case_dir))
+    if args.verb == 'derive-clock':
+        if args.question or args.value_json or args.propose or args.source or args.basis:
+            raise StudyError('invalid_arguments', 'prepare derive-clock takes --column, '
+                                                  '--date-format, [--name], [--user-words] and '
+                                                  '--expected-revision.')
+        if args.column is None or args.date_format is None or args.expected_revision is None:
+            raise StudyError('invalid_arguments', 'prepare derive-clock takes --column, '
+                                                  '--date-format and --expected-revision.')
+        return derive_clock(args.study, args.column, args.date_format, name=args.name,
+                            user_words=_words(args), expected_revision=args.expected_revision)
+    if any(a is not None for a in clock_args):
+        raise StudyError('invalid_arguments', '--column, --date-format and --name go with '
+                                              'derive-clock.')
     if args.question is None or args.value_json is None or args.expected_revision is None:
         raise StudyError('invalid_arguments', 'prepare answer takes QUESTION, --value-json and '
                                               '--expected-revision.')

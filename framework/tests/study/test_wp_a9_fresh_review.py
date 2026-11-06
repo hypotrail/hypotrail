@@ -77,7 +77,8 @@ def _numbers(out, code='untraceable_number'):
 # --- H2: free-text tracing ------------------------------------------------------------------
 
 def _card_cells(study) -> set[float]:
-    """Every number the data card shows, its five sample rows included."""
+    """Every number the data card shows, its five sample rows included, and every value of
+    check's pool."""
     from mlkit.study import numtrace
     found: set[float] = set()
 
@@ -99,6 +100,14 @@ def _card_cells(study) -> set[float]:
                 walk(v)
     for _, value in numtrace.data_card_figures(cmd_check._data_card(study)):
         walk(value)
+    # Every figure check's pool holds besides: the values of results and literals depend on
+    # the study's own split ("52 to 87 years", a group's 53 positives), and a text quoting
+    # one traces to it rightly. A figure outside them all can only be traced through an
+    # internal, which is what the test below guards against.
+    pool = numtrace.study_pool(study)
+    for name in ('current', 'stale', 'literal', 'thresholds', 'structure', 'partition_facts'):
+        for item in getattr(pool, name, ()):
+            walk(item.get('value'))
     return found
 
 
@@ -110,7 +119,8 @@ def _card_cells(study) -> set[float]:
 def test_a_false_figure_is_not_traced_to_an_unrelated_internal(bank, template, base):
     """The figure is ``base`` unless the data card shows it: the card's five sample rows are
     drawn anew for each study (the seed hashes its creation stamp), and a text quoting one of
-    their cells traces to it rightly (WP-A8). The figure is then the next one no card cell
+    their cells traces to it rightly (WP-A8); so do a rate_by group's bounds and counts, which
+    follow the study's split. The figure is then the next one no card cell or pool value
     holds, so the check stays about a result's internals and the words nearby."""
     cells = _card_cells(bank)
     figure = next(k for k in range(base, base + 100)

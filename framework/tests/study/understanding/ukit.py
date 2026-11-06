@@ -105,6 +105,10 @@ def make_repo(root: Path) -> Path:
                        ('README.md', 'Project.\n')):
         (repo / path).write_text(text, newline='\n')
     git(repo, 'init', '-q', '-b', 'main')
+    # No automatic maintenance: Git detaches it after a commit (2.47+), and the tests copy
+    # the repository while it may still hold .git/objects/maintenance.lock.
+    git(repo, 'config', 'maintenance.auto', 'false')
+    git(repo, 'config', 'gc.auto', '0')
     git(repo, 'add', '--', 'src/pipeline.py', 'src/transforms.py', 'SECURITY.md', 'README.md')
     git(repo, 'commit', '-q', '-m', 'project sources')
     return repo

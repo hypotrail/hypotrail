@@ -167,7 +167,15 @@ class Reporter:
 
         def beat() -> None:
             k = 1
-            while not finished.wait(max(0.0, start + k * self.interval - self.clock())):
+            while True:
+                # A wait may return a little early (Windows timer granularity): wait again
+                # until the beat is due, so the 10 s beat never reads "9 s".
+                due = start + k * self.interval
+                while (left := due - self.clock()) > 0:
+                    if finished.wait(left):
+                        return
+                if finished.is_set():
+                    return
                 self._write(self._running(label, start), end=False)
                 k += 1
 

@@ -356,9 +356,25 @@ def test_lang_names_the_language_of_the_restatement(flow):
     assert p['labels'] == {'fr': PT_FR} and p['label'] == PT_FR      # no English label
 
 
+def _unheld_figure(study, start: int) -> int:
+    """The first whole number from ``start`` that check's pool does not hold: the data card's
+    five sample rows are drawn anew for each study, and a label quoting one of their cells
+    is traced to it rightly (WP-A8)."""
+    from mlkit.study import numtrace
+    pool = numtrace.study_pool(study)
+    held = {float(item['value']) for name in ('current', 'stale', 'literal', 'thresholds',
+                                              'structure', 'partition_facts')
+            for item in getattr(pool, name, ())
+            if isinstance(item.get('value'), (int, float))
+            and not isinstance(item.get('value'), bool)}
+    return next(k for k in range(start, start + 1000) if float(k) not in held)
+
+
 def test_labels_are_checked(flow):
+    figure = _unheld_figure(flow.study, 42)
     out = flow.call('decide', 'propose', 'prediction_time', '--value', PT, '--restatement',
-                    PT_RESTATEMENT, '--rationale', 'r', '--restatement-fr', 'Avant 42 appels.',
+                    PT_RESTATEMENT, '--rationale', 'r', '--restatement-fr',
+                    f'Avant {figure} appels.',
                     '--request-id', flow.rid(), '--expected-revision', flow.rev(),
                     '--study', flow.study, expect=2)
     assert out['error']['code'] == 'literal_number_in_text'

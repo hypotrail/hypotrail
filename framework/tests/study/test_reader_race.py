@@ -22,9 +22,12 @@ WRITER = textwrap.dedent('''
     import sys, time, uuid
     from mlkit.study import commands as cmd
     from mlkit.study.store import StudyStore
-    store, deadline = StudyStore(sys.argv[1]), time.monotonic() + float(sys.argv[2])
+    store, start = StudyStore(sys.argv[1]), time.monotonic()
+    deadline, least, cap = start + float(sys.argv[2]), int(sys.argv[3]), start + 60.0
     n = 0
-    while time.monotonic() < deadline:
+    # At least ``least`` commits, however slow the runner: a loaded Windows runner made only
+    # 17 in four seconds, and the race needs commits to race with.
+    while (time.monotonic() < deadline or n < least) and time.monotonic() < cap:
         s = store.load_state()
         rid = uuid.uuid4().hex
         req = {'request_id': rid, 'expected_revision': s['revision'], 'action': 'decide.propose',
@@ -35,17 +38,19 @@ WRITER = textwrap.dedent('''
     print(n)
 ''')
 SECONDS = 4.0
+LEAST_COMMITS = 25
 
 
 def test_reads_during_commits_are_consistent(tmp_path, synthetic_case_dir):
     study = tmp_path / 'study'
     fk.Flow(study, synthetic_case_dir).init()
-    writer = subprocess.Popen([sys.executable, '-c', WRITER, str(study), str(SECONDS)],
+    writer = subprocess.Popen([sys.executable, '-c', WRITER, str(study), str(SECONDS),
+                               str(LEAST_COMMITS)],
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
                               env=fk.env())
     store, errors, reads = StudyStore(study), [], 0
     revisions = []
-    deadline = time.monotonic() + SECONDS + 30
+    deadline = time.monotonic() + 90
     while writer.poll() is None and time.monotonic() < deadline:
         for load in (store.load_state, lambda: read.load_state(study)):
             try:

@@ -38,7 +38,8 @@ def case_document(case_dir: Path, record: Mapping, prof: Mapping) -> dict:
     return cd.build_case(prof, record['answers'], case_id=record['case_id'],
                          title=record['title'], data_path=record['data']['path'],
                          profile_sha256=record['profile_sha256'],
-                         original_name=Path(record['data']['original']).name)
+                         original_name=Path(record['data']['original']).name,
+                         derived=record.get('derived') or ())
 
 
 def _number(value):

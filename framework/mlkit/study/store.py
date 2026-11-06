@@ -267,7 +267,7 @@ class StudyStore:
         never reached it. Call under the writer lock. Returns True if one was found."""
         pending = self._pending()
         if pending is None:
-            self.pending_path.unlink(missing_ok=True)
+            platform_compat.unlink(self.pending_path)   # a lock-free reader may hold it open
             return False
         data = self.state_path.read_bytes() if self.exists() else b''
         if st.digest(data) == pending['state_sha256']:
@@ -277,7 +277,7 @@ class StudyStore:
             if not logged or logged[-1].get('revision', 0) < record['revision']:
                 append_jsonl(self.revisions_path, record)
             self.event('commit_completed_after_interruption', revision=record['revision'])
-        self.pending_path.unlink(missing_ok=True)
+        platform_compat.unlink(self.pending_path)
         return True
 
     @contextlib.contextmanager
@@ -390,7 +390,7 @@ class StudyStore:
         try:
             atomic_write(self.sha_path, st.sha_line(sha).encode())
             append_jsonl(self.revisions_path, record)
-            self.pending_path.unlink(missing_ok=True)
+            platform_compat.unlink(self.pending_path)
         except OSError:
             pass   # completed by finish_pending_commit under the next writer lock
 

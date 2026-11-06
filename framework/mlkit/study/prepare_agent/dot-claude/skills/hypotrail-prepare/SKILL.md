@@ -50,8 +50,11 @@ plausible guess, `unknown` when they do not know. Never pass `known` because a b
 4. `timing`: `{"use": "future" | "retrospective" | "unknown", "statement": "<when the
    prediction is made>", "prediction_clock": C or null, "outcome_clock": C or null}`. A
    **clock** is a column of numbers on one ascending scale: the moment of the prediction, and
-   the moment the outcome becomes known. A date column is refused with the way forward:
-   relay it.
+   the moment the outcome becomes known. A date column is not a clock: derive one with
+   `{{HYPOTRAIL}} prepare derive-clock --column C --date-format FMT --expected-revision N
+   --study {{STUDY}}` (FMT as the dates are written, e.g. `%Y-%m-%d`; it appends `C_day`,
+   the day number), then name `C_day` as the clock. If it answers `ambiguous_format`, ask
+   the user whether the day or the month comes first and pass their words.
 5. `entities`: `{"recurring": "yes" | "no" | "unknown", "column": C or null}`: does a customer,
    a vehicle, a patient appear on several rows?
 6. `final_test`: once `final_test.status` is `pass`, show `final_test.words` (and the rule's

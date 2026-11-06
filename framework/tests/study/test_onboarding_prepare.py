@@ -15,6 +15,7 @@ Nothing here touches ``use-cases/`` or an existing study.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import random
 
@@ -336,6 +337,130 @@ def test_a_date_clock_is_refused_with_the_way_forward(tmp_path):
                  out['revision'], expect=2)
     assert out['error']['details']['reason'] == 'date_clock'
     assert 'derived from the date' in out['error']['message']
+
+
+
+def dated_csv(path, n=1500, seed=4, sep=',', day_first=False, crlf=False):
+    """Bookings dated as text: the booking date and the date the outcome is known."""
+    import datetime as dt
+    rng = random.Random(seed)
+    start = dt.date(2021, 1, 1)
+    fmt = '%d/%m/%Y' if day_first else '%Y-%m-%d'
+    lines = [sep.join(['booking_id', 'booked_on', 'known_on', 'lead_time', 'country',
+                       'canceled'])]
+    for i in range(n):
+        booked = start + dt.timedelta(days=i // 3)
+        lead = rng.randint(1, 60)
+        canceled = 'yes' if rng.random() < 0.3 + lead / 300 else 'no'
+        lines.append(sep.join([f'B{i:05d}', booked.strftime(fmt),
+                               (booked + dt.timedelta(days=lead)).strftime(fmt), str(lead),
+                               rng.choice(['FR', 'DE', 'PT']), canceled]))
+    end = '\r\n' if crlf else '\n'
+    path.write_bytes((end.join(lines) + end).encode('utf-8'))
+    return path
+
+
+def derive(study, column, fmt, rev, *, name=None, words=None, expect=0, cwd=None):
+    args = ['prepare', 'derive-clock', '--column', column, '--date-format', fmt,
+            '--expected-revision', rev, '--study', study]
+    if name:
+        args += ['--name', name]
+    if words:
+        args += ['--user-words', words]
+    code, out = hyp(*args, cwd=cwd or study.parent)
+    assert code == expect, out
+    return out
+
+
+def test_a_date_becomes_a_clock_through_a_documented_derived_copy(tmp_path):
+    """Owner decision 2026-11-06 (ADR 0006, the derived-copy option): the day number of a
+    date, appended to a derived copy, is a clock; the user's copy and the row keys stay."""
+    data = dated_csv(tmp_path / 'bookings.csv', crlf=True)
+    code, out = hyp('new', tmp_path / 'hotel', '--data', data, cwd=tmp_path)
+    assert code == 0, out
+    study, case_dir = tmp_path / 'hotel', tmp_path / 'hotel.case'
+    copy = case_dir / 'data' / 'bookings.csv'
+    before = copy.read_bytes()
+    out = answer(study, 'exposure', {'explored': 'not_explored'}, 'Non.', out['revision'])
+    out = derive(study, 'booked_on', '%Y-%m-%d', out['revision'])
+    made = out['derived']
+    assert made['column'] == 'booked_on_day' and made['file'] == 'data/bookings.derived.csv'
+    assert made['rule'] == 'days since 1970-01-01' and made['empty'] == 0
+    out = derive(study, 'known_on', '%Y-%m-%d', out['revision'], name='known_day')
+    assert out['derived']['from_file'] == 'data/bookings.derived.csv'
+    # The copy of the user's file is untouched; the derived copy keeps every byte of each
+    # line (CRLF included) and appends the day numbers.
+    assert copy.read_bytes() == before
+    derived = (case_dir / 'data' / 'bookings.derived.csv').read_bytes().split(b'\r\n')
+    assert derived[0] == before.split(b'\r\n')[0] + b',booked_on_day,known_day'
+    first = before.split(b'\r\n')[1]
+    assert derived[1] == first + b',18628,' + str(18628 + int(first.split(b',')[3])).encode()
+    columns = {c['name']: c for c in out['columns']}
+    assert columns['booked_on_day']['type'] == 'integer'
+    # A date is still refused as a clock, with the command that derives one.
+    code, refused = hyp('prepare', 'answer', 'timing', '--value-json', json.dumps(
+        {'use': 'future', 'statement': 'At booking.', 'prediction_clock': 'booked_on'}),
+        '--user-words', 'À la réservation.', '--expected-revision', out['revision'],
+        '--study', study, cwd=tmp_path)
+    assert code == 2 and refused['error']['details']['reason'] == 'date_clock'
+    assert 'prepare derive-clock --column booked_on' in refused['error']['message']
+    for question, value, words, basis in FUTURE[1:]:
+        if question == 'timing':
+            value = dict(value, prediction_clock='booked_on_day', outcome_clock='known_day')
+        out = answer(study, question, value, words, out['revision'], basis=basis)
+    final = out['final_test']
+    assert final['rule'] == 'future_temporal' and final['counts']['delayed_label_rows'] > 0
+    final, sealed = accept_and_seal(study, out, tmp_path)
+    assert sealed['final_test']['method'] == 'temporal'
+    case = c.load_case(case_dir)
+    doc = case.document
+    assert doc['dataset']['path'] == 'data/bookings.derived.csv'
+    assert doc['structure']['time_column']['value'] == 'booked_on_day'
+    [booked] = [v for v in doc['variables'] if v['name'] == 'booked_on_day']
+    assert booked['role'] == 'time' and booked['status'] == 'observed'
+    assert 'booked_on' in booked['description'] and '%Y-%m-%d' in booked['description']
+    assert [d['column'] for d in doc['provenance']['derived_columns']] == \
+        ['booked_on_day', 'known_day']
+    assert doc['provenance']['derived_columns'][0]['from_sha256'] == \
+        hashlib.sha256(before).hexdigest()
+    assert doc['analysis_contract']['intended_use'] == 'future_prediction'
+
+
+def test_derive_clock_refuses_what_it_cannot_read_and_asks_the_day_month_order(tmp_path):
+    data = dated_csv(tmp_path / 'loans.csv', n=600, sep=';', day_first=True)
+    code, out = hyp('new', tmp_path / 'loans', '--data', data, cwd=tmp_path)
+    assert code == 0, out
+    study, case_dir = tmp_path / 'loans', tmp_path / 'loans.case'
+    rev = out['revision']
+    for fmt, reason in (('%y-%m-%d', 'clock_format'), ('%Y-%m', 'clock_format'),
+                        ('%Y-%m-%d', 'clock_unparsed'), ('%m/%d/%Y', 'clock_unparsed')):
+        out = derive(study, 'booked_on', fmt, rev, expect=2)
+        assert out['error']['details']['reason'] == reason, (fmt, out)
+    for column, name, reason in (('nope', None, 'unknown_column'),
+                                 ('booked_on', 'lead_time', 'clock_name_taken'),
+                                 ('booked_on', 'day number', 'clock_name')):
+        out = derive(study, column, '%d/%m/%Y', rev, name=name, expect=2)
+        assert out['error']['details']['reason'] == reason, out
+    out = derive(study, 'booked_on', '%d/%m/%Y', rev + 1, expect=2)
+    assert out['error']['code'] == 'stale_revision'
+    assert not (case_dir / 'data' / 'loans.derived.csv').exists()
+    # 600 rows over 200 days, from 1 January: every day is at most 12 only in the first
+    # weeks, so the order is settled by the values; a short file where every day and month
+    # are at most 12 is not, and asks the user.
+    out = derive(study, 'booked_on', '%d/%m/%Y', rev)
+    assert out['derived']['user_words'] is None
+    short = tmp_path / 'short.csv'
+    short.write_text('day;amount;late\n' + ''.join(
+        f'{1 + i % 12:02d}/{1 + i // 12 % 12:02d}/2024;{i};{"yn"[i % 2]}\n' for i in range(600)),
+        encoding='utf-8')
+    code, out = hyp('new', tmp_path / 'short', '--data', short, cwd=tmp_path)
+    assert code == 0, out
+    out = derive(tmp_path / 'short', 'day', '%d/%m/%Y', out['revision'], expect=2)
+    assert out['error']['code'] == 'ambiguous_confirmation'
+    assert out['error']['details']['reason'] == 'ambiguous_format'
+    out = derive(tmp_path / 'short', 'day', '%d/%m/%Y', out['error']['details'].get(
+        'current_revision', 1), words='Le jour vient en premier, puis le mois.')
+    assert out['derived']['user_words'] == 'Le jour vient en premier, puis le mois.'
 
 
 def _docx(path, paragraphs):
