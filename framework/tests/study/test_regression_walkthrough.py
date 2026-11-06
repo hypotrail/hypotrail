@@ -44,7 +44,7 @@ from pathlib import Path
 import pytest
 
 import flowkit as fk
-from mlkit.study import sessionlog
+from mlkit.study import numtrace, sessionlog
 
 AUTO = fk.REPO / 'use-cases' / 'auto-mpg'
 BINARY_VOCABULARY = re.compile(r'threshold|positive class|precision|recall|capacity', re.I)
@@ -606,6 +606,10 @@ def _check_words_in_the_target_unit(study: Path, work: Path, ev: dict, view: dic
                           timeout=120)
     assert card.returncode == 0, card.stderr
     known = list(_numbers(view)) + list(_numbers(json.loads(card.stdout)))
+    # A decision's fraction may be written as its complement or as whole percents (check's
+    # documented forms): a 0.1 reduction allows "ninety" percent.
+    known += [form for d in view['decisions'].values() for v in _numbers(d.get('value'))
+              for form in numtrace._fraction_forms(v)]
     free = next((k for k in range(97, 1, -1) if all(abs(k - v) > 0.5 for v in known)), None)
     if free is not None:
         out = check(f'On the validation rows, the linear model was off by about '
