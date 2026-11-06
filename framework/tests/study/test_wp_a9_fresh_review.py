@@ -76,12 +76,47 @@ def _numbers(out, code='untraceable_number'):
 
 # --- H2: free-text tracing ------------------------------------------------------------------
 
-@pytest.mark.parametrize('text, number', (
-    ('La précision du modèle est de 10 %.', '10 %'),
-    ('The model finds 50 clients.', '50'),
-    ('The precision of the model is 10%.', '10%'),
+def _card_cells(study) -> set[float]:
+    """Every number the data card shows, its five sample rows included."""
+    from mlkit.study import numtrace
+    found: set[float] = set()
+
+    def walk(value):
+        if isinstance(value, bool):
+            return
+        if isinstance(value, (int, float)):
+            found.add(float(value))
+        elif isinstance(value, str):
+            try:
+                found.add(float(value.replace(',', '.')))
+            except ValueError:
+                pass
+        elif isinstance(value, dict):
+            for v in value.values():
+                walk(v)
+        elif isinstance(value, list):
+            for v in value:
+                walk(v)
+    for _, value in numtrace.data_card_figures(cmd_check._data_card(study)):
+        walk(value)
+    return found
+
+
+@pytest.mark.parametrize('template, base', (
+    ('La précision du modèle est de {} %.', 10),
+    ('The model finds {} clients.', 50),
+    ('The precision of the model is {}%.', 10),
 ))
-def test_a_false_figure_is_not_traced_to_an_unrelated_internal(bank, text, number):
+def test_a_false_figure_is_not_traced_to_an_unrelated_internal(bank, template, base):
+    """The figure is ``base`` unless the data card shows it: the card's five sample rows are
+    drawn anew for each study (the seed hashes its creation stamp), and a text quoting one of
+    their cells traces to it rightly (WP-A8). The figure is then the next one no card cell
+    holds, so the check stays about a result's internals and the words nearby."""
+    cells = _card_cells(bank)
+    figure = next(k for k in range(base, base + 100)
+                  if float(k) not in cells and k / 100 not in cells)
+    text = template.format(figure)
+    number = f'{figure}{" %" if "{} %" in template else "%" if "{}%" in template else ""}'
     out = _check(bank, text)
     assert out['clean'] is False, out['traced']
     assert number in _numbers(out), out
