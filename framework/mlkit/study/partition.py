@@ -933,15 +933,22 @@ def validate(part: Any) -> list[dict]:
 SAMPLE_ROWS = 8
 SAMPLE_SEED_PREFIX = 'hypotrail.sample/1'
 SAMPLE_SEED_HEX = 16
+# Tests only: a fixed stand-in for the creation stamp, so the sample (and the data card rows
+# drawn from it) is the same in every run of the suite. A test that picks a figure "no value
+# of the study holds" would otherwise fail whenever a drawn row happened to hold it.
+SAMPLE_STAMP_ENV = 'HYPOTRAIL_TEST_SAMPLE_STAMP'
 
 
 def sample_seed(state: Mapping) -> str:
     """The seed of the step-1 sample: the first :data:`SAMPLE_SEED_HEX` hex characters of the
     SHA-256 of ``"hypotrail.sample/1\\n" + case id + "\\n" + created + "\\n" + dataset
     sha256``. The study's key is its case id and creation stamp (a moved study keeps them),
-    the data's key the recorded dataset digest (a changed dataset draws a new sample)."""
+    the data's key the recorded dataset digest (a changed dataset draws a new sample).
+    The test suite sets :data:`SAMPLE_STAMP_ENV` in place of the creation stamp."""
     import hashlib
-    text = '\n'.join((SAMPLE_SEED_PREFIX, str(state['case']['id']), str(state['created']),
+    import os
+    created = os.environ.get(SAMPLE_STAMP_ENV) or state['created']
+    text = '\n'.join((SAMPLE_SEED_PREFIX, str(state['case']['id']), str(created),
                       str(state['dataset']['sha256'])))
     return hashlib.sha256(text.encode('utf-8')).hexdigest()[:SAMPLE_SEED_HEX]
 

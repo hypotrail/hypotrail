@@ -5,6 +5,7 @@ Nothing here touches ``use-cases/`` or an existing study.
 from __future__ import annotations
 
 import importlib.util
+import os
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,13 @@ _spec = importlib.util.spec_from_file_location('synthetic_make_case_for_conftest
 _module = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_module)
 make_case = _module.make_case
+
+# One step-1 sample per case and dataset in every run (partition.SAMPLE_STAMP_ENV): the data
+# card's example rows no longer change with each study's creation stamp, so a test picking a
+# figure "no value of the study holds" cannot fail on the run where a drawn row holds it. Set
+# in the environment, so the CLI processes the tests start inherit it. A test of the seed
+# itself removes it (``monkeypatch.delenv``).
+os.environ.setdefault('HYPOTRAIL_TEST_SAMPLE_STAMP', '2026-01-01T00:00:00+00:00')
 
 
 @pytest.fixture(scope='module')
