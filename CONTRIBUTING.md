@@ -115,6 +115,14 @@ CI runs the study suite on Ubuntu, Windows, and macOS. The Windows failures fixe
 
 A read command (`status --summary --digest`, `decisions`, `preview effects`) imports neither pandas nor numpy (`test_e1_reads_are_read_only_and_import_no_heavy_module`). Compute a read's figures with the standard library, as `cmd_data.structure_records` does.
 
+CI splits the suite into 4 shards per platform (`HYPOTRAIL_SHARD=k/n`, `framework/tests/study/ci_shards.py`), each run with `pytest -n auto --dist loadfile`. To reproduce one shard locally:
+
+```bash
+HYPOTRAIL_SHARD=2/4 uv run --project framework python -m pytest -q -n auto --dist loadfile framework/tests/study framework/tests/workshop
+```
+
+Tests therefore run in parallel processes: write only under `tmp_path`, and never depend on the order of tests or on another file. Shards are balanced by `framework/tests/study/ci-durations.json` (seconds per file). After adding or lengthening a long test file, refresh it from a `--junitxml` run (sum the `time` of each file's test cases). A file that runs for several minutes and uses no costly module fixture can be listed in `ci_shards.SPLIT`, so its tests are spread across workers.
+
 ## Data and local state
 
 Keep dataset attribution and hashes. Separate exploratory results from independent evidence. Do not commit local sessions, credentials, environments, generated bundles, or personal annotations. Run tests in temporary studies and preserve existing user decisions.

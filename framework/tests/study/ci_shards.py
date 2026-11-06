@@ -7,6 +7,12 @@ far (longest processing time first). A file the table does not know counts as th
 file. The spread depends only on the file list and the table, so every job of a run
 computes the same partition and every file runs in exactly one shard.
 
+Within a shard, pytest-xdist runs a whole file on one worker (``--dist loadfile``, the
+scheduler of ``scheduler()``), except the files of ``SPLIT``: their tests are independent
+(each builds its study in its own ``tmp_path`` and uses no module fixture but a cheap one),
+and one of them alone runs for most of an hour, so each of their tests is scheduled on its
+own. A module fixture of a split file is built once per worker that runs its tests.
+
 Refresh the table after adding a long test file (CONTRIBUTING.md, "Tests on every platform").
 """
 from __future__ import annotations
@@ -17,6 +23,16 @@ from pathlib import Path
 
 DURATIONS = Path(__file__).with_name('ci-durations.json')
 ENV = 'HYPOTRAIL_SHARD'
+
+# Files scheduled test by test within a shard (measured at over five minutes each, 2026-11-06).
+SPLIT = frozenset({
+    'tests/study/test_perturbations.py',
+    'tests/study/test_review_round5_engine.py',
+    'tests/study/test_review_round6_engine.py',
+    'tests/study/test_review_round9_e.py',
+    'tests/study/understanding/test_review_round3_c.py',
+    'tests/study/understanding/test_review_round5_cd.py',
+})
 
 
 def parse(value: str | None) -> tuple[int, int] | None:
@@ -65,3 +81,19 @@ def selected(nodeids, value: str | None = None) -> set[str] | None:
     nodeids = list(nodeids)
     mine = set(partition({file_of(i) for i in nodeids}, n, load_durations())[k - 1])
     return {i for i in nodeids if file_of(i) in mine}
+
+
+def scope(nodeid: str) -> str:
+    """The unit xdist schedules on one worker: the file, or the test for a file of SPLIT."""
+    path = file_of(nodeid.replace('\\', '/'))
+    return nodeid if path in SPLIT else file_of(nodeid)
+
+
+def scheduler(config, log):
+    """The ``--dist loadfile`` scheduler with the files of SPLIT scheduled test by test."""
+    from xdist.scheduler import LoadFileScheduling
+
+    class Scheduling(LoadFileScheduling):
+        def _split_scope(self, nodeid: str) -> str:
+            return scope(nodeid)
+    return Scheduling(config, log)

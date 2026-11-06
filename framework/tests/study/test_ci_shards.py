@@ -50,3 +50,11 @@ def test_the_environment_names_the_shard(monkeypatch):
     for bad in ('0/2', '3/2', '1', 'a/b'):
         with pytest.raises(ValueError):
             cs.parse(bad)
+
+
+def test_the_split_files_are_scheduled_test_by_test():
+    assert cs.SPLIT <= set(_files())
+    split, whole = sorted(cs.SPLIT)[0], 'tests/study/test_ci_shards.py'
+    assert cs.scope(f'{split}::test_x[a]') == f'{split}::test_x[a]'
+    assert cs.scope(split.replace('/', '\\') + '::t') == split.replace('/', '\\') + '::t'
+    assert cs.scope(f'{whole}::test_x[a]') == cs.scope(f'{whole}::test_y') == whole

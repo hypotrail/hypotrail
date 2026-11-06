@@ -31,7 +31,8 @@ jobs:
   study:
     # The suite (about 4 h 30 in one job) runs in 4 shards per platform (HYPOTRAIL_SHARD=k/n,
     # framework/tests/study/ci_shards.py: whole files, spread by ci-durations.json), each on
-    # every core of its runner (pytest-xdist, one file per worker). 12 jobs, about 20-25 min.
+    # every core of its runner (pytest-xdist, one file per worker, except the long files of
+    # ci_shards.SPLIT, scheduled test by test). 12 jobs, about 20-25 min each.
     name: study suite (${{ matrix.os }}, ${{ matrix.shard }}/4)
     runs-on: ${{ matrix.os }}
     timeout-minutes: 75

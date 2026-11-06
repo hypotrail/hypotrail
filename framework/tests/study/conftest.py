@@ -72,3 +72,12 @@ def pytest_collection_modifyitems(config, items):
     if deselected:
         config.hook.pytest_deselected(items=deselected)
         items[:] = selected
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_xdist_make_scheduler(config, log):
+    # ``--dist loadfile`` keeps a file on one worker, except the long files of ci_shards.SPLIT.
+    if config.getvalue('dist') != 'loadfile':
+        return None
+    from ci_shards import scheduler
+    return scheduler(config, log)
