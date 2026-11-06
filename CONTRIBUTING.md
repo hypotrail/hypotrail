@@ -115,13 +115,13 @@ CI runs the study suite on Ubuntu, Windows, and macOS. The Windows failures fixe
 
 A read command (`status --summary --digest`, `decisions`, `preview effects`) imports neither pandas nor numpy (`test_e1_reads_are_read_only_and_import_no_heavy_module`). Compute a read's figures with the standard library, as `cmd_data.structure_records` does.
 
-CI splits the suite into 4 shards per platform (`HYPOTRAIL_SHARD=k/n`, `framework/tests/study/ci_shards.py`), each run with `pytest -n auto --dist loadfile`. To reproduce one shard locally:
+CI splits the suite into 4 shards on Ubuntu and macOS and 6 on Windows (`HYPOTRAIL_SHARD=k/n`, `framework/tests/study/ci_shards.py`), each run with `pytest -n auto --dist loadfile`. To reproduce one shard locally:
 
 ```bash
 HYPOTRAIL_SHARD=2/4 uv run --project framework python -m pytest -q -n auto --dist loadfile framework/tests/study framework/tests/workshop
 ```
 
-Tests therefore run in parallel processes: write only under `tmp_path`, and never depend on the order of tests or on another file. Shards are balanced by `framework/tests/study/ci-durations.json` (seconds per file). After adding or lengthening a long test file, refresh it from a `--junitxml` run (sum the `time` of each file's test cases). A file that runs for several minutes and uses no costly module fixture can be listed in `ci_shards.SPLIT`, so its tests are spread across workers.
+Tests therefore run in parallel processes: write only under `tmp_path`, and never depend on the order of tests or on another file. The study tests set `HYPOTRAIL_TEST_SAMPLE_STAMP` (`framework/tests/study/conftest.py`), so the data card's example rows are the same in every run; a test of the sample seed itself removes it. Shards are balanced by `framework/tests/study/ci-durations.json` (seconds per file). After adding or lengthening a long test file, refresh it from a `--junitxml` run (sum the `time` of each file's test cases). A file that runs for several minutes and uses no costly module fixture can be listed in `ci_shards.SPLIT`, so its tests are spread across workers.
 
 ## Data and local state
 
