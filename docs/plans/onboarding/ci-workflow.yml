@@ -29,17 +29,18 @@ env:
 
 jobs:
   study:
-    name: study suite (${{ matrix.os }})
+    # The suite (about 4 h 30 in one job) runs in 4 shards per platform (HYPOTRAIL_SHARD=k/n,
+    # framework/tests/study/ci_shards.py: whole files, spread by ci-durations.json), each on
+    # every core of its runner (pytest-xdist, one file per worker, except the long files of
+    # ci_shards.SPLIT, scheduled test by test). 12 jobs, about 20-25 min each.
+    name: study suite (${{ matrix.os }}, ${{ matrix.shard }}/4)
     runs-on: ${{ matrix.os }}
-    # Windows native is not supported yet: the study store needs a cross-platform lock
-    # (fcntl.flock today; lock.require_posix refuses os.name == "nt"). Onboarding Lot 4
-    # (agent W) replaces it; until that lot lands, the Windows job runs but may fail.
-    # Remove continue-on-error once Lot 4 is merged.
-    continue-on-error: ${{ matrix.os == 'windows-latest' }}
+    timeout-minutes: 75
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        shard: [1, 2, 3, 4]
     defaults:
       run:
         shell: bash
@@ -54,21 +55,26 @@ jobs:
       - name: Engine environment
         run: uv sync --locked --project framework --group dev --group azureml
       - name: Layout check
+        if: matrix.shard == 1
         run: uv run --project framework python scripts/check_layout.py
-      - name: Study suite and workshop hook
-        run: uv run --project framework python -m pytest -q framework/tests/study framework/tests/workshop
+      - name: Study suite and workshop hook (one shard)
+        env:
+          HYPOTRAIL_SHARD: ${{ matrix.shard }}/4
+        run: >-
+          uv run --project framework python -m pytest -q -n auto --dist loadfile
+          --durations=15 framework/tests/study framework/tests/workshop
       - uses: actions/setup-node@v4
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && matrix.shard == 1
         with:
           node-version: "22"
       - name: Panel tests (Node, Ubuntu only)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && matrix.shard == 1
         run: node --test clients/vscode-companion/test/*.test.js
 
   install:
     name: wheel install (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.os == 'windows-latest' }}   # see the study job (Lot 4)
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:

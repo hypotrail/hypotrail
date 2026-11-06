@@ -610,5 +610,7 @@ def _check_words_in_the_target_unit(study: Path, work: Path, ev: dict, view: dic
     if free is not None:
         out = check(f'On the validation rows, the linear model was off by about '
                     f'{_english(free)} {unit} on average.')
-        [finding] = [f for f in out['findings'] if f['code'] == 'untraceable_number']
+        found = [f for f in out['findings'] if f['code'] == 'untraceable_number']
+        assert len(found) == 1, (free, out['traced'], out['findings'])
+        [finding] = found
         assert finding['details']['in_words'] is True and finding['details']['value'] == free

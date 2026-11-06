@@ -52,11 +52,19 @@ def _selection() -> set[str] | None:
 
 
 def pytest_collection_modifyitems(config, items):
+    # ``HYPOTRAIL_SHARD=k/n``: the k-th of n CI shards (ci_shards.py), after any selection.
+    from ci_shards import selected as shard_selected
     wanted = _selection()
-    if wanted is None:
+    shard = shard_selected(i.nodeid.replace('\\', '/') for i in items)
+    if wanted is None and shard is None:
         return
 
     def kept(nodeid: str) -> bool:
+        nodeid = nodeid.replace('\\', '/')
+        if shard is not None and nodeid not in shard:
+            return False
+        if wanted is None:
+            return True
         base = nodeid.split('[', 1)[0]
         return nodeid in wanted or base in wanted or base.split('::', 1)[0] in wanted
     selected = [i for i in items if kept(i.nodeid)]
@@ -64,3 +72,12 @@ def pytest_collection_modifyitems(config, items):
     if deselected:
         config.hook.pytest_deselected(items=deselected)
         items[:] = selected
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_xdist_make_scheduler(config, log):
+    # ``--dist loadfile`` keeps a file on one worker, except the long files of ci_shards.SPLIT.
+    if config.getvalue('dist') != 'loadfile':
+        return None
+    from ci_shards import scheduler
+    return scheduler(config, log)
