@@ -99,10 +99,11 @@ def test_the_library_v1_edges_target_the_current_bytes():
 
 
 def test_the_library_v1_edges_start_at_the_506180a_bytes():
-    probe = subprocess.run(['git', '-C', str(REPO), 'cat-file', '-e', f'{BASE_COMMIT}^{{commit}}'],
-                           capture_output=True)
-    if probe.returncode != 0:
-        pytest.skip(f'{BASE_COMMIT} is not in this clone')
+    for commit in (BASE_COMMIT, LIBRARY_COMMIT):          # a shallow clone may hold only one
+        probe = subprocess.run(['git', '-C', str(REPO), 'cat-file', '-e', f'{commit}^{{commit}}'],
+                               capture_output=True)
+        if probe.returncode != 0:
+            pytest.skip(f'{commit} is not in this clone')
     for commit, digests in ((BASE_COMMIT, BASE), (LIBRARY_COMMIT, LIBRARY)):
         for module, path in FILES.items():
             blob = subprocess.run(['git', '-C', str(REPO), 'show', f'{commit}:{path}'],
