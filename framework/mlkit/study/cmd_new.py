@@ -201,9 +201,11 @@ def next_steps(payload: dict) -> list[str]:
     study, lang = payload['study'], payload.get('language')
     pdf = (payload.get('brief') or {}).get('result', {}) or {}
     fr = lang == 'fr'
-    first = ('On commence' if not pdf else
-             ("Prépare l'étude à partir de la fiche du PO" if fr else
-              "Prepare the study from the PO's brief"))
+    if pdf:
+        first = ("Prépare l'étude à partir de la fiche du PO" if fr else
+                 "Prepare the study from the PO's brief")
+    else:
+        first = 'On commence' if fr else "Let's start"
     if fr:
         return [f'Ouvrir le dossier de l\'étude dans VS Code : code -r "{study}" (ou File > Open '
                 'Folder..., et faire confiance au dossier)',
