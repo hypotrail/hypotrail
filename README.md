@@ -8,6 +8,11 @@ Repository: https://github.com/hypotrail/hypotrail. Workshop participants: [inst
 
 Start with [the implementation entry point](docs/START-HERE.md); [the handoff](docs/handoff/IMPLEMENTATION.md) lists what works and what does not.
 
+**Install and start:** [step-by-step guide](docs/INSTALL.md). It covers three ways in:
+- letting your coding agent set everything up from [one prompt](docs/INSTALL.md#a-let-your-coding-agent-set-everything-up);
+- starting on an example;
+- starting on your own data, with a context, a brief, or nothing.
+
 ## Start from your own data (Linux, macOS, Windows)
 
 ```sh

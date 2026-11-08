@@ -371,3 +371,17 @@ def test_the_vendored_runtime_reports_its_version_and_closure(monkeypatch):
     closure = predictor.runtime_closure()
     assert closure['hypotrail-runtime'] == hypotrail_runtime.__version__
     assert {'numpy', 'pandas', 'scikit-learn', 'pydantic'} <= set(closure)
+
+
+@pytest.mark.parametrize('language, brief, first', [
+    ('en', None, "Type: Let's start"),
+    ('fr', None, 'Écrire : On commence'),
+    ('en', {'result': {'pages': 2}}, "Type: Prepare the study from the PO's brief"),
+    ('fr', {'result': {'pages': 2}}, "Écrire : Prépare l'étude à partir de la fiche du PO"),
+])
+def test_new_first_message_is_in_the_study_language(language, brief, first):
+    """The first chat message `new` suggests is in the study language, with or without a
+    PO brief (an English study without a brief used to be told "On commence")."""
+    steps = cmd_new.next_steps({'study': '/s', 'language': language, 'brief': brief,
+                                'cli': 'hypotrail'})
+    assert first in steps
